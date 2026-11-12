@@ -170,7 +170,10 @@ void main() {
       'tcBorders',
       'noWrap',
       'tcMar',
+      'textDirection',
+      'tcFitText',
       'vAlign',
+      'hideMark',
     ]);
   });
 

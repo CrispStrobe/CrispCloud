@@ -45,6 +45,7 @@ extension _WordTableText on _StructuredWordParser {
       final conditions = <LegacyWordTableCondition, List<_Sprm>>{};
       final code = paragraph ? 0xc666 : 0xca85;
       for (final operation in operations) {
+        _validateTableStyleOperation(operation, paragraph ? 1 : 2);
         if (operation.code != code) {
           if (_tableTextPropertySupported(operation, paragraph)) {
             if (operation.code == 0x2a0c) {
@@ -65,12 +66,14 @@ extension _WordTableText on _StructuredWordParser {
           throw const FormatException('Invalid Word text style condition.');
         }
         final condition = LegacyWordTableCondition.values[mask.bitLength - 1];
-        final nested = _readProperties(value.slice(2, value.length - 2));
+        final nested = _decodeSprms(value.slice(2, value.length - 2), budget);
         final result = conditions.putIfAbsent(condition, () => []);
         for (final item in nested) {
-          if (const {0xc666, 0xca85, 0xd66a}.contains(item.code)) {
-            throw const FormatException('Nested Word text style condition.');
-          }
+          _validateTableStyleOperation(
+            item,
+            paragraph ? 1 : 2,
+            conditional: true,
+          );
           if (_tableTextPropertySupported(item, paragraph)) {
             if (item.code == 0x2a0c) {
               warnings.add(LegacyWordWarning.unsupportedFormatting);
@@ -297,6 +300,7 @@ bool _tableTextPropertySupported(_Sprm operation, bool paragraph) {
     0x2a0c,
     0x2a48,
     0x4845,
+    0x484b,
     0x8840,
   }.contains(code);
 }

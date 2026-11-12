@@ -109,8 +109,17 @@ extension _WordTableStyleWriter on _StructuredWordWriter {
       }
       xml.add('</w:tcMar>');
     }
+    if (format.textDirection != null) {
+      xml.add('<w:textDirection w:val="${format.textDirection!.name}"/>');
+    }
+    if (format.fitText != null) {
+      xml.add('<w:tcFitText w:val="${format.fitText! ? 'on' : 'off'}"/>');
+    }
     if (format.verticalAlignment != null) {
       xml.add('<w:vAlign w:val="${format.verticalAlignment!.name}"/>');
+    }
+    if (format.hideMark != null) {
+      xml.add('<w:hideMark w:val="${format.hideMark! ? 'on' : 'off'}"/>');
     }
   }
 

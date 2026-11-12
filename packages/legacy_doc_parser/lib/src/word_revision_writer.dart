@@ -63,7 +63,8 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     final listId = style.listId?.abs();
     final change = paragraph.numberingRevision;
     final numbered = listId != null && listId != 0;
-    final supported = numbered && _numberingIds.contains(listId);
+    final outputId = _resolvedParagraphNumbering[paragraph];
+    final supported = numbered && outputId != null;
     if (change?.sourceRecord != null) {
       _preserveEvidence('numberingRevisionRecord', change!.sourceRecord!, {
         'cp': paragraph.startCp,
@@ -103,9 +104,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     if (supported) {
       _xml.add('<w:ilvl w:val="${style.listLevel ?? 0}"/>');
     }
-    _xml.add(
-      '<w:numId w:val="${supported ? _numberingReferences[listId] : 0}"/>',
-    );
+    _xml.add('<w:numId w:val="${supported ? outputId : 0}"/>');
     if (change?.previouslyNumbered == true) {
       final original = change!.original;
       if (original == null) {
@@ -195,6 +194,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     _sectionProperties(
       ownChange ? previous : section,
       mergeIncoming ? incomingPrevious.breakKind : currentBreakBefore,
+      historical: true,
     );
     _xml.add('</w:sectPr></w:sectPrChange>');
     _count('sectionFormattingRevisions');

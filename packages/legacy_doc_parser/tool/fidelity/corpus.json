@@ -7,6 +7,19 @@
       "commit": "ca9853b5b08784beac50df5680176cb4e5b3cb25",
       "license": "MIT",
       "license_file": "third_party/quds-fixtures-MIT.txt"
+    },
+    "libreoffice-word-qa": {
+      "repository": "LibreOffice/core",
+      "commit": "9a3be2502bf7762400fd0b655b6e42714cf2bb36",
+      "license": "MPL-2.0",
+      "license_file": "test/fixtures/word_native/COPYING.LibreOffice"
+    },
+    "apache-poi-table-qa": {
+      "repository": "apache/poi",
+      "blob": "1a5ff5f7109fcc8352530ace3d8c0b2c3bcd75aa",
+      "license": "Apache-2.0",
+      "license_file": "third_party/apache-poi-fixtures-LICENSE.txt",
+      "notice_file": "third_party/apache-poi-fixtures-NOTICE.txt"
     }
   },
   "cases": [
@@ -149,6 +162,138 @@
         "embedded-content"
       ],
       "origin": "independently authored OOXML; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "linked-textboxes",
+      "path": "test/fixtures/fidelity/linked-textboxes.docx",
+      "sha256": "e1032597da63f7dce5a956d7296d5817b17e76c03ee73c77a37b6304da190148",
+      "source": "authored-package-fixture",
+      "features": [
+        "linked-textbox-reflow",
+        "pagination"
+      ],
+      "origin": "Independent OOXML authored by tool/fidelity/authored_cases.py; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "officeart-shapes",
+      "path": "test/fixtures/fidelity/officeart-shapes.docx",
+      "sha256": "f95be8f8d4283f7d2fd4cfc178cbd108300ea99b1be9a14ab1dd56bf1897f53b",
+      "source": "authored-package-fixture",
+      "features": [
+        "officeart-geometry",
+        "officeart-effects",
+        "floating-drawings"
+      ],
+      "origin": "Independent OOXML authored by tool/fidelity/authored_cases.py; native DOC bridge must be measured separately"
+    },
+    {
+      "id": "linked-textboxes-native",
+      "path": "test/fixtures/word_native/linked-textboxes-extended.doc",
+      "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "source": "authored-package-fixture",
+      "features": [
+        "linked-textbox-reflow",
+        "pagination"
+      ],
+      "origin": "Pinned LibreOfficeDev 26.8alpha binary from independent linked-textboxes.docx; preserves observed stale FTXBXS count for regression"
+    },
+    {
+      "id": "emf-vectors",
+      "path": "test/fixtures/fidelity/media/emf-vectors.docx",
+      "sha256": "68c1368568e8a5664e5aa0bc770d14b8da64b6c436747c647d24a1757f7fbe59",
+      "source": "authored-package-fixture",
+      "features": [
+        "metafile-rendering",
+        "images",
+        "pagination"
+      ],
+      "origin": "Independent GDI records and OOXML authored by tool/fidelity/metafile_cases.dart; native DOC bridge measured separately"
+    },
+    {
+      "id": "wmf-vectors",
+      "path": "test/fixtures/fidelity/media/wmf-vectors.docx",
+      "sha256": "fcf94d85aa01ce7f30b0c7551535e264a329af2f8e7ab57adc6c098040c0112f",
+      "source": "authored-package-fixture",
+      "features": [
+        "metafile-rendering",
+        "images",
+        "pagination"
+      ],
+      "origin": "Independent GDI records and OOXML authored by tool/fidelity/metafile_cases.dart; native DOC bridge measured separately"
+    },
+    {
+      "id": "linked-textboxes-compact",
+      "path": "test/fixtures/word_native/linked-textboxes.doc",
+      "sha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "source": "authored-package-fixture",
+      "features": [
+        "linked-textbox-reflow",
+        "pagination"
+      ],
+      "origin": "Independent compact eight-marker binary probe preserved from parallel checkpoint71025ea; original filename disambiguated during integration"
+    },
+    {
+      "id": "list-continue",
+      "path": "test/fixtures/word_native/list-continue.doc",
+      "sha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "source": "authored-package-fixture",
+      "features": [
+        "list-continuation",
+        "pagination"
+      ],
+      "origin": "Independently assembled binary from test/support/list_sequence_fixture.dart; confirmed by installed Office in doc/list-sequence-native-check.json"
+    },
+    {
+      "id": "list-restart",
+      "path": "test/fixtures/word_native/list-restart.doc",
+      "sha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "source": "authored-package-fixture",
+      "features": [
+        "list-continuation",
+        "pagination"
+      ],
+      "origin": "Independently assembled binary from test/support/list_sequence_fixture.dart; confirmed by installed Office in doc/list-sequence-native-check.json"
+    },
+    {
+      "id": "word14-margin-origin",
+      "path": "test/fixtures/word_native/word14-margin-origin.doc",
+      "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+      "source": "libreoffice-word-qa",
+      "source_path": "sw/qa/extras/ww8export/data/tdf101826_xattrTextBoxFill.doc",
+      "features": [
+        "officeart-positioning",
+        "textboxes",
+        "officeart-effects",
+        "pagination"
+      ],
+      "origin": "Unmodified Word 14 binary from public LibreOffice QA; source producer metadata and textbox spare-range recovery are recorded independently"
+    },
+    {
+      "id": "word16-page-origin",
+      "path": "test/fixtures/word_native/word16-page-origin.doc",
+      "sha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "source": "libreoffice-word-qa",
+      "source_path": "sw/qa/extras/ww8import/data/tdf124601.doc",
+      "features": [
+        "officeart-positioning",
+        "floating-drawings",
+        "pagination"
+      ],
+      "origin": "Unmodified Word 16 binary from public LibreOffice QA; validates explicit page origin independently of the shape anchor fallback"
+    },
+    {
+      "id": "poi-simple-table2",
+      "path": "test/fixtures/word_native/poi-simple-table2.doc",
+      "sha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc",
+      "source": "apache-poi-table-qa",
+      "source_path": "test-data/document/simple-table2.doc",
+      "features": [
+        "tables",
+        "table-styles",
+        "table-operations",
+        "pagination"
+      ],
+      "origin": "Unmodified public Apache POI binary; independently demonstrates table-style PAPX framing and TInsert/TDxaCol/TIstd operation order"
     }
   ],
   "reference_expectations": [

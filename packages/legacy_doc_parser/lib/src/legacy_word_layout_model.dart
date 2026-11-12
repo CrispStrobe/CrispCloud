@@ -56,12 +56,20 @@ class LegacyWordNoteNumbering {
     this.restart = LegacyWordNoteRestart.continuous,
     this.sourceFormatCode,
     this.sourceContinuousOffset,
+    this.usesDecimalFallback = false,
   });
+
+  /// Native OOXML numbering format, or null for an unknown binary format.
+  /// `none` is an explicit no-label instruction, distinct from null.
   final String? format;
   final int start;
   final LegacyWordNoteRestart restart;
   final int? sourceFormatCode;
   final int? sourceContinuousOffset;
+
+  /// The source requested bullet or the legacy 0x28 format, for which the
+  /// conversion uses decimal and retains the original code with a diagnostic.
+  final bool usesDecimalFallback;
 }
 
 /// A source column's width and the space following it, in twips.

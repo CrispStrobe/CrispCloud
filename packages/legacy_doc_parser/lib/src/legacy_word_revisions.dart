@@ -396,7 +396,11 @@ extension _WordRevisions on _StructuredWordParser {
 
   _Props _characterAt(int cp, _Props characterBase) {
     final piece = source.pieceAt(cp);
-    final chpx = characterFormatting.at(piece.fc(cp));
+    final fc = piece.fc(cp);
+    final chpx = characterFormatting.at(fc);
+    if (chpx.endFc - fc < (piece.compressed ? 1 : 2)) {
+      throw const FormatException('Unaligned Word character formatting.');
+    }
     final character = <String, Object?>{...characterBase};
     _applyCharacter(
       [...chpx.operations, ..._pieceProperties(piece)],
@@ -424,7 +428,12 @@ extension _WordRevisions on _StructuredWordParser {
     return character;
   }
 
-  LegacyWordParagraphMark _paragraphMark(int cp, _Props base) {
+  LegacyWordParagraphMark? _paragraphMark(int cp, _Props base) {
+    if (_terminalMarkFormattingUnavailable(cp)) {
+      warnings.add(LegacyWordWarning.terminalMarkFormattingUnavailable);
+      warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
+      return null;
+    }
     final properties = _characterAt(cp, base);
     final inserted = properties['inserted'] == true;
     final deleted = properties['deleted'] == true;
@@ -439,5 +448,44 @@ extension _WordRevisions on _StructuredWordParser {
       formattingRevision: _characterRevision(properties),
       formattingSaveId: properties['formattingSaveId'] as int?,
     );
+  }
+
+  bool _terminalMarkFormattingUnavailable(int cp) {
+    // Some native exports omit exactly the last main-story CR from both the
+    // CHPX bin table and its final page. MS-DOC 2.4.6.2 makes those endpoints
+    // exclusive: there is no character formatting to inherit or reconstruct.
+    // Retain the paragraph, report the unknown mark, and never borrow the
+    // preceding run (which can be a drawing or a tracked deletion).
+    if (cp <= 0 ||
+        cp != source.bodyLength - 1 ||
+        source.totalLength != source.bodyLength ||
+        body[cp] != 0x0d ||
+        characterFormatting.fallback != null ||
+        characterFormatting.runs.isEmpty ||
+        paragraphFormatting.fallback != null ||
+        paragraphFormatting.runs.isEmpty) {
+      return false;
+    }
+    final piece = source.pieceAt(cp);
+    if (cp <= piece.startCp ||
+        piece.endCp != source.totalLength ||
+        piece.prm != 0) {
+      return false;
+    }
+    final width = piece.compressed ? 1 : 2;
+    final fc = piece.fc(cp);
+    final lastCharacter = characterFormatting.runs.last;
+    if (lastCharacter.endFc != fc ||
+        characterFormatting.finalPageEndFc != fc ||
+        lastCharacter.startFc > fc - width) {
+      return false;
+    }
+    // Require an independently covered complete mark and an exact final
+    // physical paragraph boundary, not a partial UTF-16 unit or an unrelated
+    // larger range. All other missing-format cases still use strict lookup.
+    final lastParagraph = paragraphFormatting.runs.last;
+    return lastParagraph.startFc <= fc &&
+        lastParagraph.endFc == fc + width &&
+        paragraphFormatting.finalPageEndFc == fc + width;
   }
 }

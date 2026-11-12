@@ -12,6 +12,10 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install -r tool/fidelity/requirements-test.txt
       - run: dart pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze --fatal-infos
@@ -20,3 +24,24 @@ jobs:
       - run: python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
       - run: python3 tool/verify_web.py
       - run: dart pub publish --dry-run
+  openxml-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dart pub get
+      - run: python3 tool/fidelity/schema.py --out build/schema-ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openxml-schema-receipts
+          path: |
+            build/schema-ci/*.json
+            build/schema-ci/*.log
+            build/schema-ci/corpus
+            build/schema-ci/controls

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "method": "Independently assembled binary DOC and parser-produced DOCX each rendered to PDF in an isolated macros-disabled, link-update-disabled profile; text extracted with pdftotext -layout. Neither renderer output is used as an automatic golden.",
+  "scope": "Two single-level source/conversion cases; not a complete Word-version or pagination equivalence claim.",
+  "cases": [
+    {
+      "case": "continue",
+      "sourceDocSha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "converterDocxSha256": "b13f790b2e5797caa83f467d73c544b93612c9ea7125fde1f48a26d519cef24e",
+      "sourcePdfSha256": "b5c6b00483e45c3c8c959786a42f8e44c63594c2bebe80d060347639decdb540",
+      "convertedPdfSha256": "e57c066cc145bbd3e6b3c98bc9e80b71cabbeced582ff3251364ed30a68aeb5e",
+      "sourceText": "1.   P1\n2.   P2\n3.   P3\n4.   P4\n5.   P5\n\f",
+      "convertedText": "1.   P1\n2.   P2\n3.   P3\n4.   P4\n5.   P5\n\f",
+      "sameLayoutTextOnThisRenderer": true
+    },
+    {
+      "case": "restart",
+      "sourceDocSha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "converterDocxSha256": "0ae54c395c3dabc0c54c6760541d7bcf1918affdcc146245dc071afc148edd4e",
+      "sourcePdfSha256": "8b85fb82a084fb5e946950992a91937e1a99e69a1dc1cba9e5c61ccb5f9c68f8",
+      "convertedPdfSha256": "6a6e4ec2ecfdc679f3971557964cd73afb776e306e82abda7ee7219c857d90ed",
+      "sourceText": "1.   P1\n2.   P2\n7.   P3\n8.   P4\n3.   P5\n9.   P6\n\f",
+      "convertedText": "1.   P1\n2.   P2\n7.   P3\n8.   P4\n3.   P5\n9.   P6\n\f",
+      "sameLayoutTextOnThisRenderer": true
+    }
+  ]
+}

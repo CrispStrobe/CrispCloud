@@ -48,6 +48,8 @@ Uint8List tableFixture(
   Map<int, WordFixtureStyle> styles = const {
     0: WordFixtureStyle(name: 'Normal', builtinId: 0),
   },
+  List<WordFixtureSection> sections = const [],
+  Map<int, List<int>> extraTablePairs = const {},
 }) {
   var offset = 8192;
   final paragraphRuns = <WordFixtureFkpRun>[];
@@ -82,5 +84,7 @@ Uint8List tableFixture(
     paragraphRuns: paragraphRuns,
     characterRuns: characterRuns,
     styles: styles,
+    sections: sections,
+    extraTablePairs: extraTablePairs,
   ).build();
 }

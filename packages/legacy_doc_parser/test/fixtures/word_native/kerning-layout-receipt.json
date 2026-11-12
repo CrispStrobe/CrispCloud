@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "observation": "Preserve MS-DOC sprmCHpsKern including the default and explicit zero/off value",
+  "observedDate": "2026-11-12",
+  "converterBaseCommit": "fed662c717d2e68308029b40fe1b04dad7cd5bce",
+  "environment": {
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "rasterizerVersion": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "textExtractorVersion": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+    "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745"
+  },
+  "profile": "Fresh isolated profile with macros and document-link updates disabled; pdf:writer_pdf_Export",
+  "source": {
+    "path": "test/fixtures/word_native/linked-textboxes.doc",
+    "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c"
+  },
+  "independentSourceGolden": {
+    "path": "test/fixtures/fidelity/goldens/linked-textboxes-native/source-render.json",
+    "sha256": "9b788ebc7c22080c563c3880c2a986f2165e5eb9ce70f0a3247e03830c4f3398"
+  },
+  "controlledDifference": {
+    "partNamesEqual": true,
+    "changedParts": [
+      "word/document.xml"
+    ],
+    "insertedXml": "<w:kern w:val=\"0\"/>",
+    "insertedCount": 5,
+    "location": "Before each w:sz in word/document.xml",
+    "allOtherUncompressedPartBytesEqual": true,
+    "priorDocxSha256": "b6d5c71c57e9197ede471d57f09d62a921d17ea88b2f02aac0ac591b53ac986b",
+    "mutatedDocxSha256": "fbbd763871e234141c15d4f55cd8e60ed1edd1b2d2fc6308c2d74b24393fb850",
+    "priorLayout": {
+      "referencePages": 1,
+      "actualPages": 1,
+      "pageDimensionsMatch": true,
+      "pageTextMatches": true,
+      "maximumWordDriftPoints": 1.740000000000009,
+      "tolerancePoints": 0.25,
+      "matchesWithinTolerance": false
+    },
+    "mutatedLayout": {
+      "referencePages": 1,
+      "actualPages": 1,
+      "pageDimensionsMatch": true,
+      "pageTextMatches": true,
+      "maximumWordDriftPoints": 0.0,
+      "tolerancePoints": 0.25,
+      "matchesWithinTolerance": true
+    }
+  },
+  "productionConversion": {
+    "docxSha256": "de4570931afb6e473142ea450171dcbab47dd4589fc4d3e9f0abc773c2fb11d0",
+    "sourceWordCount": 36,
+    "textboxFlowMarkers": 24,
+    "documentKernZeroCount": 5,
+    "layoutAgainstIndependentSourceGolden": {
+      "referencePages": 1,
+      "actualPages": 1,
+      "pageDimensionsMatch": true,
+      "pageTextMatches": true,
+      "maximumWordDriftPoints": 0.0,
+      "tolerancePoints": 0.25,
+      "matchesWithinTolerance": true
+    },
+    "embeddedFont": "LiberationSerif"
+  },
+  "reproduction": [
+    "Convert test/fixtures/word_native/linked-textboxes.doc with tool/fidelity/convert.dart.",
+    "For the controlled comparison only, start from the prior DOCX identified above and insert the exact kern element before its five w:sz elements without changing any other uncompressed part bytes.",
+    "Render each DOCX with the recorded installed LibreOffice build in a fresh macro/link-disabled profile and pdf:writer_pdf_Export.",
+    "Extract bounding boxes with pdftotext -bbox-layout -enc UTF-8 and compare word text, order, page size and boxes to the independently rendered source DOC snapshot."
+  ],
+  "limitations": [
+    "This measures all 36 word boxes on one page, including 24 linked-textbox FLOW markers. It does not assert raster equality or other documents, fonts or consumers.",
+    "Microsoft Word native validation was not available; w:kern val0 matches this LibreOffice native export/import observation and the explicit MS-DOC zero/off source semantics.",
+    "Hashes identify this observed experiment, not stable output goldens; native metadata and ZIP serialization may differ on another run.",
+    "The existing native-DOC chain-count recovery and its explicit warnings remain; kerning support does not remove unrelated conversion limitations."
+  ]
+}

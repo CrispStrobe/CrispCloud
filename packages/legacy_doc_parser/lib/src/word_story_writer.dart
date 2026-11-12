@@ -828,160 +828,6 @@ extension _WordStories on _StructuredWordWriter {
     }
   }
 
-  void _writeNumbering() {
-    if (document.numbering.isEmpty) return;
-    final xml = _wordPart('numbering');
-    for (final definition in document.numbering) {
-      if (definition.continuationOf != null) continue;
-      xml.add(
-        '<w:abstractNum w:abstractNumId="${definition.id}"><w:multiLevelType w:val="multilevel"/>',
-      );
-      final levels = [...definition.levels]
-        ..sort((a, b) => a.level.compareTo(b.level));
-      final seen = <int>{};
-      for (final level in levels) {
-        if (level.level < 0 ||
-            level.level > 8 ||
-            !seen.add(level.level) ||
-            level.startAt < 0 ||
-            !const {
-              'decimal',
-              'upperRoman',
-              'lowerRoman',
-              'upperLetter',
-              'lowerLetter',
-              'ordinal',
-              'cardinalText',
-              'ordinalText',
-              'hex',
-              'chicago',
-              'ideographDigital',
-              'japaneseCounting',
-              'aiueo',
-              'iroha',
-              'decimalFullWidth',
-              'decimalHalfWidth',
-              'japaneseLegal',
-              'japaneseDigitalTenThousand',
-              'decimalEnclosedCircle',
-              'decimalFullWidth2',
-              'aiueoFullWidth',
-              'irohaFullWidth',
-              'decimalZero',
-              'bullet',
-              'none',
-              'ganada',
-              'chosung',
-              'decimalEnclosedFullstop',
-              'decimalEnclosedParen',
-              'decimalEnclosedCircleChinese',
-              'ideographEnclosedCircle',
-              'ideographTraditional',
-              'ideographZodiac',
-              'ideographZodiacTraditional',
-              'taiwaneseCounting',
-              'ideographLegalTraditional',
-              'taiwaneseCountingThousand',
-              'taiwaneseDigital',
-              'chineseCounting',
-              'chineseLegalSimplified',
-              'chineseCountingThousand',
-              'koreanDigital',
-              'koreanCounting',
-              'koreanLegal',
-              'koreanDigital2',
-              'hebrew1',
-              'hebrew2',
-              'arabicAlpha',
-              'arabicAbjad',
-              'hindiVowels',
-              'hindiConsonants',
-              'hindiNumbers',
-              'hindiCounting',
-              'thaiLetters',
-              'thaiNumbers',
-              'thaiCounting',
-              'vietnameseCounting',
-              'numberInDash',
-              'russianLower',
-              'russianUpper',
-            }.contains(level.format)) {
-          throw const FormatException(
-            'Invalid or unsupported Word numbering level.',
-          );
-        }
-        xml.add(
-          '<w:lvl w:ilvl="${level.level}"><w:start w:val="${level.startAt}"/><w:numFmt w:val="${level.format}"/>',
-        );
-        if (level.restartAfterLevel != null) {
-          if (level.restartAfterLevel! < 0 ||
-              level.restartAfterLevel! > level.level) {
-            throw const FormatException('Invalid Word numbering restart.');
-          }
-          xml.add('<w:lvlRestart w:val="${level.restartAfterLevel}"/>');
-        }
-        if (level.legal) xml.add('<w:isLgl/>');
-        xml.add('<w:suff w:val="${level.suffix.name}"/><w:lvlText w:val="');
-        xml.text(level.text, attribute: true);
-        xml.add('"/>');
-        xml.add(
-          '<w:lvlJc w:val="${level.markerAlignment == LegacyWordAlignment.justify ? 'both' : level.markerAlignment.name}"/>',
-        );
-        final paragraph = level.paragraphStyle;
-        xml.add('<w:pPr>');
-        _paragraphDecorations(paragraph, xml, null);
-        xml.add(
-          '<w:ind w:left="${paragraph.leftIndentTwips}" w:right="${paragraph.rightIndentTwips}"',
-        );
-        xml.add(
-          paragraph.firstLineIndentTwips < 0
-              ? ' w:hanging="${-paragraph.firstLineIndentTwips}"'
-              : ' w:firstLine="${paragraph.firstLineIndentTwips}"',
-        );
-        xml.add('/></w:pPr><w:rPr>');
-        final character = level.characterStyle;
-        if (character.fontName != null) {
-          xml.add('<w:rFonts w:ascii="');
-          xml.text(character.fontName!, attribute: true);
-          xml.add('" w:hAnsi="');
-          xml.text(character.fontName!, attribute: true);
-          xml.add('"/>');
-        }
-        xml.add(
-          '<w:b w:val="${character.bold ? 1 : 0}"/><w:i w:val="${character.italic ? 1 : 0}"/>',
-        );
-        if (character.colorHex != null) {
-          xml.add(
-            '<w:color w:val="${_StructuredWordWriter._color(character.colorHex!)}"/>',
-          );
-        }
-        if (character.fontSizeHalfPoints != null) {
-          xml.add('<w:sz w:val="${character.fontSizeHalfPoints}"/>');
-        }
-        xml.add('<w:u w:val="${_underlineValue(character)}"/></w:rPr></w:lvl>');
-      }
-      xml.add('</w:abstractNum>');
-    }
-    for (final definition in document.numbering) {
-      if (definition.continuationOf != null) continue;
-      xml.add(
-        '<w:num w:numId="${definition.id}"><w:abstractNumId w:val="${definition.id}"/></w:num>',
-      );
-      _count('numberingDefinitions');
-    }
-    xml.add('</w:numbering>');
-    _package.addXml(
-      'word/numbering.xml',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml',
-      xml,
-    );
-    _package.relate(
-      'word/document.xml',
-      '$_relationshipNamespace/numbering',
-      'numbering.xml',
-    );
-  }
-
   void _summarizeLimitations() {
     for (final warning in document.warnings) {
       switch (warning) {
@@ -992,6 +838,8 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.recoveredNonconformingProperties:
         case LegacyWordWarning.recoveredEmptySection:
         case LegacyWordWarning.recoveredTextboxChainLength:
+        case LegacyWordWarning.terminalMarkFormattingUnavailable:
+        case LegacyWordWarning.recoveredGlobalTextboxSentinel:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);
@@ -1014,6 +862,7 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.headersFootersOmitted:
           limitations.add(LegacyWordConversionLimitation.headersFooters);
         case LegacyWordWarning.notesOmitted:
+        case LegacyWordWarning.unsupportedNoteNumberFormat:
           limitations.add(LegacyWordConversionLimitation.notesComments);
         case LegacyWordWarning.commentsOmitted:
           limitations.add(LegacyWordConversionLimitation.notesComments);

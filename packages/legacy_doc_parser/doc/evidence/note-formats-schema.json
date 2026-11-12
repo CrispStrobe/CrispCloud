@@ -1,0 +1,260 @@
+{
+  "cases": [
+    {
+      "name": "note-formats-east-asian-sepx",
+      "outputSha256": "0f9a92ebeac3027da42e0812f8b58db2d8bf611d39c195a6e99f8376ba3c8d11",
+      "sourceSha256": "aad4b27fb2f922351768a46e7860a850abfa58304a06e6dfe077e5c96e84a902"
+    },
+    {
+      "name": "note-formats-korean-sepx",
+      "outputSha256": "a70761c1d81ab9c3700bfe175d7da5cfb5aad8188aa3e301062491f6552d7aa2",
+      "sourceSha256": "8d63adb57bafa9d421e66db151203f9c57cb8814e3d493ba08af45fdac369d8d"
+    },
+    {
+      "name": "note-formats-rtl-dop",
+      "outputSha256": "5c07d64832a544aa68d6d1b8f3d5485ad9f27b4294fb57dd683676542e6060a6",
+      "sourceSha256": "36fba52a202bb0b10cd1239246f17c1cb0904683ab6293f8186e1df8fc344618"
+    },
+    {
+      "name": "note-formats-south-asian-dop",
+      "outputSha256": "6299f95a9c043be7b8ce43eb6079e4b56c5088176044b3eb548b533bf3b981c8",
+      "sourceSha256": "a9a180f55f9c033d4c0df097835885157ec251e7f5875e005a62b570d53f1d3e"
+    },
+    {
+      "name": "note-formats-cyrillic-sepx",
+      "outputSha256": "3413617e349283e94f9097212645c9df8047cbfdfb48ab0db986529d23f0370c",
+      "sourceSha256": "badd40f589c8e4f8b3d66e228c6306bdeb99ffe7272ca94f5562aacb33ee494e"
+    },
+    {
+      "name": "note-formats-none-sepx",
+      "outputSha256": "990f59c0139cea44db53d5f14b38bbaa6696a5728217773632be0d0012a55a8b",
+      "sourceSha256": "abb1ed8255a9ad79740eba884bc0871c48ec1c38035a745ab3ac24a8fb917a69"
+    },
+    {
+      "name": "note-formats-fallback-sepx",
+      "outputSha256": "da5660b033b79dc29a4e42ec6f4a06d31507c2da36f8d4bdaf1dd5a1da1f5f55",
+      "sourceSha256": "bd5685b9cfe67627b43cf5b8a77cc3d66b5beb51fb742cd4c53b00e47e8d10dc"
+    },
+    {
+      "name": "note-formats-unknown-sepx",
+      "outputSha256": "e706a6af56be37cc317be0bbd08d3a70348b803386adda930958b99de843220f",
+      "sourceSha256": "3a5dd01b716555dd114428944487b49a667d6db2c89e8a48f479d60fd9e22725"
+    },
+    {
+      "name": "note-formats-revision",
+      "outputSha256": "c3fbe719451a0e41659053c35a726170875c57951ed2d402847b7abd033f006c",
+      "sourceSha256": "3ca9a0fc423d6504d74cce0fc4041435a50c021e709eed6d9c4eb74377dd2b6e"
+    }
+  ],
+  "commitBase": "f0a245e6dd4596cfb75646c06665346c16190b62",
+  "dart": {
+    "command": [
+      "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "--version"
+    ],
+    "exitCode": 0,
+    "output": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\""
+  },
+  "generation": {
+    "command": [
+      "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+      "run",
+      "tool/fidelity/note_format_fixture.dart",
+      "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt"
+    ],
+    "exitCode": 0,
+    "output": ""
+  },
+  "repeatGenerationIdentical": true,
+  "schema": "legacy-doc-parser/note-format-schema-receipt",
+  "schemaReport": {
+    "Failures": 0,
+    "Files": 9,
+    "Reports": [
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-cyrillic-sepx.docx",
+        "Sha256": "3413617e349283e94f9097212645c9df8047cbfdfb48ab0db986529d23f0370c"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-east-asian-sepx.docx",
+        "Sha256": "0f9a92ebeac3027da42e0812f8b58db2d8bf611d39c195a6e99f8376ba3c8d11"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-fallback-sepx.docx",
+        "Sha256": "da5660b033b79dc29a4e42ec6f4a06d31507c2da36f8d4bdaf1dd5a1da1f5f55"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-korean-sepx.docx",
+        "Sha256": "a70761c1d81ab9c3700bfe175d7da5cfb5aad8188aa3e301062491f6552d7aa2"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-none-sepx.docx",
+        "Sha256": "990f59c0139cea44db53d5f14b38bbaa6696a5728217773632be0d0012a55a8b"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-revision.docx",
+        "Sha256": "c3fbe719451a0e41659053c35a726170875c57951ed2d402847b7abd033f006c"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-rtl-dop.docx",
+        "Sha256": "5c07d64832a544aa68d6d1b8f3d5485ad9f27b4294fb57dd683676542e6060a6"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-south-asian-dop.docx",
+        "Sha256": "6299f95a9c043be7b8ce43eb6079e4b56c5088176044b3eb548b533bf3b981c8"
+      },
+      {
+        "Errors": [],
+        "File": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-unknown-sepx.docx",
+        "Sha256": "e706a6af56be37cc317be0bbd08d3a70348b803386adda930958b99de843220f"
+      }
+    ]
+  },
+  "scope": "Nine representative note-format packages; schema validity only, no native glyph or pagination claim",
+  "sourceFiles": {
+    "lib/legacy_doc_parser.dart": "5ef8f92595c74eae08b104a750559fff9dd8b62f39d989ecef74ebd881f2e0a1",
+    "lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
+    "lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
+    "lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
+    "lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
+    "lib/src/conversion.dart": "ef5328cb216590fe8f0d0a93dc13f819673cffd4d8c26813e1ee329983d29dbd",
+    "lib/src/legacy_word_binary_source.dart": "f2e0a0ffba3c61d0ea97c2d4fc5165b4f27cf360ab85e8aa18c58b61f0f1f0c2",
+    "lib/src/legacy_word_compatibility.dart": "c82c73dd557ef7406e914235877f005b4b2760e635ded5e00243e46b0d366c2a",
+    "lib/src/legacy_word_compatibility_parser.dart": "01c11adb30b9af788e42ecb644a37782ab7cab0d3bb15eb07a2cc1abe9e5ddfe",
+    "lib/src/legacy_word_decorations.dart": "fcfee3253857e367c1c586592340c77431f80540bf5d75321611b0882cc0cbed",
+    "lib/src/legacy_word_document.dart": "9c84e371c9f0ded06bf7b413d6811985a91ba9407a273d9ccec66c69b2432e23",
+    "lib/src/legacy_word_fields.dart": "17b8a4e781417772593612b79afd746c2f2b52b508b82313d45dd5b222e589e4",
+    "lib/src/legacy_word_format_tables.dart": "36b62086b56bf7f0c005d819627a99a2450b349792f107cfed84152d1d7254ef",
+    "lib/src/legacy_word_html_media.dart": "00b2e9d3a6f0a77b91d727838f9e53028817596ebc388a523f5bd15d6a06119c",
+    "lib/src/legacy_word_layout_model.dart": "0f3c1ae25ab3f6a2eff97db493ab15144c6dd162969fc96c43e1aee8ace45061",
+    "lib/src/legacy_word_layout_parser.dart": "8bee3ec3f81e147c3919f1054d1e5459cb6fa47fd41b451f28653a0b367a4efd",
+    "lib/src/legacy_word_lists.dart": "1b6b9625981bb81651a58261e1d2824a9731ea2db6f57706fb46b10da6f640b7",
+    "lib/src/legacy_word_media_model.dart": "ad50d3bbd1cb36923784cb111c2421e77bea2a36ff4cffe0553b6353526ca8fd",
+    "lib/src/legacy_word_media_parser.dart": "99fc48a371a6de956c8954def03bc4e6f959a17fc7e6743eac78f584511038e0",
+    "lib/src/legacy_word_metafile.dart": "5298ed995f4fa1f229c263f1e2b9bbd99ae41d040601e8ce9a0aea1559d3c725",
+    "lib/src/legacy_word_metafile_render.dart": "2d0a811b15e465e3f02a5810230126c5d49f7a1c0ec038c2b0ce19548cfba565",
+    "lib/src/legacy_word_number_formats.dart": "3a98b56587fe4f1f72b2bcd6ca3020569d5a8f0f3b7f68fe19867b2fd19d42c8",
+    "lib/src/legacy_word_numbering.dart": "ed851e376cfabb7d2db0588718273b2bf891408fd8eb8a0c70e4d0dc8a94fa77",
+    "lib/src/legacy_word_officeart_model.dart": "04c5e8eb9e18a3e679d8947513c7cbc974b8bcc1a844d3c0ce365083fe6c5ed7",
+    "lib/src/legacy_word_officeart_parser.dart": "c304b5b675369deb0651250549efb09c809f486e6f73f407184af048f365a731",
+    "lib/src/legacy_word_revisions.dart": "52c090b4d1e2b45280c0ee09f5fcf32bed1c9a2d28e096d3beeecbca7f328ec0",
+    "lib/src/legacy_word_sprms.dart": "43480c5403a6ef179024036001cb084ea9612f2e37c628c51808891171176374",
+    "lib/src/legacy_word_stories.dart": "30d5022e3cfe410fccf29250bcff30022e9657feff84a1d657531fa2d8559d08",
+    "lib/src/legacy_word_structured_conversion.dart": "b66f15ae1c00f1fa423d1e25ea6d82718a46b6937ff128c481a23a2f97aa74fe",
+    "lib/src/legacy_word_structured_model.dart": "5e4bd71a6847df44a106735c38119f4c40f346e84c7caaf5713a9ad93a43c21f",
+    "lib/src/legacy_word_structured_parser.dart": "831a9f8ded2c7c4666e196b3d581d2ced7f6018fe95842e5c9d06e023e53878a",
+    "lib/src/legacy_word_structured_render.dart": "0998cb4ad93246fcf256809398295fd7955e06b139322a91abae6c9e77a663d5",
+    "lib/src/legacy_word_table_model.dart": "e710e5eb595ca767389377257ab2d68131ee73c3489a072cd939d8850fe034aa",
+    "lib/src/legacy_word_table_operations.dart": "57d149d4e73b9622fa2969b24236a16d906c5258f465d23691e59faa46e932f0",
+    "lib/src/legacy_word_table_styles.dart": "67ceebd1c969a1af08efab00a1c047107055ca6efb4f8340db186e4fd6870dad",
+    "lib/src/legacy_word_table_text.dart": "21b5cf79dca85b3b52b545e07183a3c3fd1da4956ba03aa6f555c1ddfb481aba",
+    "lib/src/legacy_word_tables.dart": "3e214b32f4c30d948c0f3de25cdcc41dca497cf6b35d767f31dc4b002ad90c4c",
+    "lib/src/opc_package_writer.dart": "6852b0de555c609ace9c7bddb29de27e0a2e46e642c69c853cd49beeb66cf97c",
+    "lib/src/word_comment_writer.dart": "1d6d02c61fd87b75e174760fe08a9c0dcfe31ab604298ee274f027c7a7fc6997",
+    "lib/src/word_compatibility_writer.dart": "0e7d54c6948198165236f561c018243a64c0b89d6d112b553d6b9357f97452d8",
+    "lib/src/word_decoration_writer.dart": "8a6354c2e4970a2c504db2623885f5250765a49d8414ebf0da76e3e1ac3a1281",
+    "lib/src/word_layout_writer.dart": "eb239b04072b12722437ebef803df692b785f41c34ff29fa56215b0fe4da96a5",
+    "lib/src/word_media_writer.dart": "934450b3a481c078aaaede7dbbc7c3f56df9a3246fe14b3c6fc8db2a3564c089",
+    "lib/src/word_numbering_writer.dart": "5b42d1b06158bfc6823cd4ffd0e33a61a090af528caf524234fa5a6540337c09",
+    "lib/src/word_officeart_position_writer.dart": "5004198b86243869f8f781b73ea04f25acdc6dca1b491b4134af7b24f923052c",
+    "lib/src/word_revision_writer.dart": "8f481233ca7591dc33e216db393b1959d4171b96190b3ca1c1c47798feb5ca57",
+    "lib/src/word_shape_writer.dart": "f2123b2e73ad805d4c7849d8b6f3eeeb4e00db3fa58347d11bcae3066552128d",
+    "lib/src/word_story_writer.dart": "b8d3fbdf539bae86b1c89b6d662ba860b68cb27b4d6399e9753a1475d751ef9c",
+    "lib/src/word_table_style_writer.dart": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+    "lib/src/word_table_text_writer.dart": "04b7d64caf9025fa90bbb7a9b2a492490cfbd2ee518609f2bf63cb9867d86f13",
+    "lib/src/word_table_writer.dart": "3ce0e01b5fd09ba670fbeaa9f5b8df747df9669d4fd5ed7f2cecc5cea518a015",
+    "lib/src/word_textbox_writer.dart": "da8a8a466d9e9ead2b4f2cd52097238b5a8ef825d39324329f9162d112cb8e10",
+    "test/support/note_format_fixture.dart": "c8b47b617fcb90181a604094ea21864e05a678e0d254fd69d4343d4fe65f6fb8",
+    "test/support/story_word_fixture.dart": "6e75a78d4b298ae7324d82d68b546b57fc3ee21f70246c77ab67f6fb7d57498f",
+    "test/support/structured_word_fixture.dart": "fe5f214598c04a977b744705724d79f9102df1cee954b6b2b443f8f9a77a584f",
+    "tool/fidelity/note_format_fixture.dart": "81a9976be097a81469857b0d54c082cf77f7e03ab3ba281e1e87b4c0c37d8d7f"
+  },
+  "sourceFilesUnchangedDuringRun": true,
+  "validation": {
+    "command": [
+      "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/dotnet/dotnet",
+      "/workspace/scratch/143959eed1a1/legacy-doc-parser/build/schema-gate-check-2/validator/OfficeValidation.dll",
+      "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt",
+      "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/sdk-validation.json"
+    ],
+    "exitCode": 0,
+    "output": "/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-cyrillic-sepx.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-east-asian-sepx.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-fallback-sepx.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-korean-sepx.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-none-sepx.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-revision.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-rtl-dop.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-south-asian-dop.docx: 0 validation errors\n/workspace/scratch/143959eed1a1/parser-reconcile/build/note-format-schema-receipt/note-formats-unknown-sepx.docx: 0 validation errors"
+  },
+  "validator": {
+    "controls": {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/dotnet/dotnet",
+        "/workspace/scratch/143959eed1a1/legacy-doc-parser/build/schema-gate-check-2/validator/OfficeValidation.dll",
+        "--self-test"
+      ],
+      "exitCode": 0,
+      "output": "Open XML SDK controls passed: 8 valid Word packages, 4 invalid XML, 12 mismatched types, and exact discovery."
+    },
+    "path": "/workspace/scratch/143959eed1a1/legacy-doc-parser/build/schema-gate-check-2/validator/OfficeValidation.dll",
+    "sdk": "DocumentFormat.OpenXml 3.3.0",
+    "sha256": "698a090f1ba04ef8a844eea2614c9378c3713aa74101a4bf5e0c00e0588085c1",
+    "upstreamSourceCommit": "35230d3862fbfc268ac7b5fa2a243e9f6a347057"
+  },
+  "version": 1,
+  "workingTreeStatus": [
+    "M doc/evidence/officeart-position-sources.json",
+    " M doc/layout-fidelity.md",
+    " M doc/media-fidelity.md",
+    " M doc/officeart-positioning.md",
+    " M doc/reconciliation-20261112.md",
+    " M doc/table-and-list-fidelity.md",
+    " M lib/src/conversion.dart",
+    " M lib/src/legacy_word_format_tables.dart",
+    " M lib/src/legacy_word_layout_model.dart",
+    " M lib/src/legacy_word_layout_parser.dart",
+    " M lib/src/legacy_word_lists.dart",
+    " M lib/src/legacy_word_officeart_parser.dart",
+    " M lib/src/legacy_word_sprms.dart",
+    " M lib/src/legacy_word_stories.dart",
+    " M lib/src/legacy_word_structured_conversion.dart",
+    " M lib/src/legacy_word_structured_model.dart",
+    " M lib/src/legacy_word_structured_parser.dart",
+    " M lib/src/legacy_word_structured_render.dart",
+    " M lib/src/legacy_word_table_styles.dart",
+    " M lib/src/legacy_word_table_text.dart",
+    " M lib/src/legacy_word_tables.dart",
+    " M lib/src/word_layout_writer.dart",
+    " M lib/src/word_revision_writer.dart",
+    " M lib/src/word_story_writer.dart",
+    " M test/fixtures/word_native/POSITION-SOURCES.md",
+    " M test/legacy_word_officeart_position_test.dart",
+    " M test/legacy_word_officeart_test.dart",
+    " M tool/fidelity/corpus.json",
+    " M tool/fidelity/schema.py",
+    " M tool/fidelity/schema_corpus.dart",
+    " M tool/fidelity/test_schema.py",
+    "?? doc/evidence/packed-vertices-native.json",
+    "?? doc/evidence/recovered-2d490e5/",
+    "?? doc/evidence/textbox-position-native-49959f9.json",
+    "?? doc/packed-vertices.md",
+    "?? lib/src/legacy_word_number_formats.dart",
+    "?? lib/src/legacy_word_table_operations.dart",
+    "?? lib/src/word_table_writer.dart",
+    "?? test/legacy_word_note_formats_test.dart",
+    "?? test/legacy_word_packed_vertices_test.dart",
+    "?? test/legacy_word_table_operations_test.dart",
+    "?? test/legacy_word_table_preview_test.dart",
+    "?? test/legacy_word_table_properties_test.dart",
+    "?? test/legacy_word_textbox_spare_test.dart",
+    "?? test/support/note_format_fixture.dart",
+    "?? tool/fidelity/list_sequence_fixture.dart",
+    "?? tool/fidelity/note_format_fixture.dart",
+    "?? tool/fidelity/packed_shape_probe.dart",
+    "?? tool/fidelity/packed_shape_render.py",
+    "?? tool/fidelity/table_operations_fixture.dart"
+  ],
+  "workingTreeWasDirty": true
+}

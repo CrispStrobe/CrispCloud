@@ -152,6 +152,24 @@ class _OfficeArtShapeReader {
             autoTextMargin: _used(0x00bf, 3),
           )
         : null;
+    const positionProperties = {0x038f, 0x0390, 0x0391, 0x0392};
+    final position =
+        positionProperties.any(
+          (id) => p.containsKey(id) || properties.complex.containsKey(id),
+        )
+        ? LegacyWordOfficeArtPosition(
+            horizontalMode: p[0x038f],
+            horizontalRelativeTo: p[0x0390],
+            verticalMode: p[0x0391],
+            verticalRelativeTo: p[0x0392],
+          )
+        : null;
+    for (final id in positionProperties) {
+      final maximum = id == 0x038f || id == 0x0391 ? 5 : 3;
+      if (properties.complex.containsKey(id) || (p[id] ?? 0) > maximum) {
+        unsupported.add(id);
+      }
+    }
     final geometry = _geometry();
     if (fill?.type != null && fill!.type != 0) unsupported.add(0x0180);
     if (line?.type != null && line!.type != 0) unsupported.add(0x01c4);
@@ -184,6 +202,13 @@ class _OfficeArtShapeReader {
       0x023f,
     };
     for (final id in {...p.keys, ...properties.complex.keys}) {
+      // Coordinate/flip properties outside the resolved FSP flags and scalar
+      // rotation can change a transform. Retain them as unsupported instead
+      // of emitting a transform that silently overrides those source fields.
+      if ((id <= 0x003f && id != 0x0004) ||
+          (id == 0x0004 && properties.complex.containsKey(id))) {
+        unsupported.add(id);
+      }
       if (id >= 0x0140 && id <= 0x02ff && !mapped.contains(id)) {
         unsupported.add(id);
       }
@@ -191,7 +216,11 @@ class _OfficeArtShapeReader {
       // change appearance or placement. Plain name/description metadata does
       // not. Do not turn such a shape into an apparently complete plain path.
       if ((id >= 0x00c0 && id <= 0x00ff) ||
-          (id >= 0x0300 && id <= 0x07ff && id != 0x0380 && id != 0x0381)) {
+          (id >= 0x0300 &&
+              id <= 0x07ff &&
+              id != 0x0380 &&
+              id != 0x0381 &&
+              !positionProperties.contains(id))) {
         unsupported.add(id);
       }
     }
@@ -214,6 +243,7 @@ class _OfficeArtShapeReader {
       line: line,
       shadow: shadow,
       text: text,
+      position: position,
       ink: ink,
       discussionAnchor: p[0x0307] == 1,
       unsupportedProperties: unsupported.toList()..sort(),
@@ -305,6 +335,18 @@ class _OfficeArtShapeReader {
     final points = <LegacyWordOfficeArtPoint>[];
     pointCount = array.$2;
     for (var i = 0; i < array.$2; i++) {
+      if (array.$3 == 4) {
+        // pVertices' 0xFFF0 form stores two signed 16-bit coordinates. Both
+        // native DOC playback and an independently implemented OfficeArt
+        // producer confirm this POINT-specific interpretation of IMsoArray.
+        points.add(
+          LegacyWordOfficeArtPoint(
+            array.$1.i16(i * 4),
+            array.$1.i16(i * 4 + 2),
+          ),
+        );
+        continue;
+      }
       final x = array.$1.u32(i * 8), y = array.$1.u32(i * 8 + 4);
       if ((x >= 0x80000000 && x <= 0x8000007f) ||
           (y >= 0x80000000 && y <= 0x8000007f)) {
@@ -431,7 +473,7 @@ class _OfficeArtShapeReader {
     return LegacyWordOfficeArtGeometry(bounds: bounds, path: path);
   }
 
-  (_Bytes, int)? _array(Uint8List bytes, int id, int size, int limit) {
+  (_Bytes, int, int)? _array(Uint8List bytes, int id, int size, int limit) {
     final input = _Bytes(bytes);
     final count = input.u16(0), allocated = input.u16(2);
     final storedSize = input.u16(4);
@@ -442,10 +484,14 @@ class _OfficeArtShapeReader {
     if (actualSize == 0 || input.length != 6 + count * actualSize) {
       throw const FormatException('Invalid OfficeArt array extent.');
     }
-    if (storedSize != size) {
-      unsupported.add(id); // Truncated POINT encoding is retained, not guessed.
+    final packedPoints = id == 0x0145 && storedSize == 0xfff0;
+    if ((storedSize != size && !packedPoints) || (packedPoints && type == 19)) {
+      // Arc presets use a different unsigned packed-coordinate convention in
+      // native readers. Keep that unverified case inert instead of applying
+      // the signed custom-path interpretation to it.
+      unsupported.add(id);
       return null;
     }
-    return (_Bytes(input.slice(6, input.length - 6)), count);
+    return (_Bytes(input.slice(6, input.length - 6)), count, actualSize);
   }
 }

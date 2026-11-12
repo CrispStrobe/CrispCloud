@@ -1,0 +1,3 @@
+# Python-only oracle tests; not a Dart runtime dependency.
+# The independent colored-border mask requires Pillow's RGB image primitives.
+Pillow==13.0.0

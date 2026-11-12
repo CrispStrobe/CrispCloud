@@ -63,7 +63,6 @@ extension _WordLists on _StructuredWordParser {
     }
     overrides.require(4, overrideCount * 16);
     var position = 4 + overrideCount * 16;
-    final seenSourceIds = <int>{};
     final firstInstances = <int, int>{};
     final overriddenSources = <int>{};
     for (var instance = 0; instance < overrideCount; instance++) {
@@ -80,14 +79,6 @@ extension _WordLists on _StructuredWordParser {
       if (original == null || overrideLevels > 9) {
         throw const FormatException('Invalid Word list-instance reference.');
       }
-      // MS-DOC 2.4.6.4 counts preceding paragraphs by lsid, not ilfo. With no
-      // level overrides the instances share one sequence and identical levels.
-      // Groups involving start/format overrides need per-first-use semantics;
-      // retain the warning for those until that path is reconstructed.
-      if (!seenSourceIds.add(sourceId) &&
-          overriddenSources.contains(sourceId)) {
-        warnings.add(LegacyWordWarning.numberingNotReconstructed);
-      }
       final firstCp = overrides.u32(position);
       if (firstCp != 0xffffffff && firstCp > source.bodyLength) {
         throw const FormatException(
@@ -96,6 +87,7 @@ extension _WordLists on _StructuredWordParser {
       }
       position += 4;
       final levels = [...original];
+      final startOverrides = <int, int>{};
       final modified = <int>{};
       for (var item = 0; item < overrideLevels; item++) {
         final startAt = overrides.i32(position);
@@ -117,11 +109,13 @@ extension _WordLists on _StructuredWordParser {
             levels[level].styleIndex,
           );
           levels[level] = value;
+          if (replaceStart) startOverrides[level] = value.model.startAt;
           position = next;
         } else if (replaceStart) {
           if (startAt < 0 || startAt > 32767) {
             throw const FormatException('Invalid Word list start value.');
           }
+          startOverrides[level] = startAt;
           final old = levels[level];
           final model = old.model;
           levels[level] = _ListLevelData(
@@ -146,6 +140,7 @@ extension _WordLists on _StructuredWordParser {
       final definition = LegacyWordNumberingDefinition(
         id: id,
         sourceListId: sourceId,
+        startOverrides: Map.unmodifiable(startOverrides),
         continuationOf:
             !overriddenSources.contains(sourceId) &&
                 firstInstances[sourceId] != id
@@ -161,6 +156,11 @@ extension _WordLists on _StructuredWordParser {
     }
     if (position != overrides.length) {
       throw const FormatException('Trailing Word list-instance data.');
+    }
+    if (LegacyWordNumberingResolver(
+      numbering,
+    ).approximateDefinitions.isNotEmpty) {
+      warnings.add(LegacyWordWarning.numberingNotReconstructed);
     }
   }
 
@@ -271,9 +271,7 @@ extension _WordLists on _StructuredWordParser {
                   ? 2
                   : 0],
           paragraphStyle: _paragraphStyle(paragraphProperties, styleIndex ?? 0),
-          // Without a linked list style, absent marker font properties inherit
-          // the paragraph mark. Injecting the STSH default here would override
-          // its authored font even when LVL.grpprlChpx is completely empty.
+          // An absent marker font inherits the paragraph mark, not STSH.
           characterStyle: _characterStyle(
             characterProperties,
             useDocumentDefaultFont: styleIndex != null,
@@ -318,65 +316,4 @@ extension _WordLists on _StructuredWordParser {
   }
 }
 
-const _numberFormats = <String>[
-  'decimal',
-  'upperRoman',
-  'lowerRoman',
-  'upperLetter',
-  'lowerLetter',
-  'ordinal',
-  'cardinalText',
-  'ordinalText',
-  'hex',
-  'chicago',
-  'ideographDigital',
-  'japaneseCounting',
-  'aiueo',
-  'iroha',
-  'decimalFullWidth',
-  'decimalHalfWidth',
-  'japaneseLegal',
-  'japaneseDigitalTenThousand',
-  'decimalEnclosedCircle',
-  'decimalFullWidth2',
-  'aiueoFullWidth',
-  'irohaFullWidth',
-  'decimalZero',
-  'bullet',
-  'ganada',
-  'chosung',
-  'decimalEnclosedFullstop',
-  'decimalEnclosedParen',
-  'decimalEnclosedCircleChinese',
-  'ideographEnclosedCircle',
-  'ideographTraditional',
-  'ideographZodiac',
-  'ideographZodiacTraditional',
-  'taiwaneseCounting',
-  'ideographLegalTraditional',
-  'taiwaneseCountingThousand',
-  'taiwaneseDigital',
-  'chineseCounting',
-  'chineseLegalSimplified',
-  'chineseCountingThousand',
-  'decimal',
-  'koreanDigital',
-  'koreanCounting',
-  'koreanLegal',
-  'koreanDigital2',
-  'hebrew1',
-  'arabicAlpha',
-  'hebrew2',
-  'arabicAbjad',
-  'hindiVowels',
-  'hindiConsonants',
-  'hindiNumbers',
-  'hindiCounting',
-  'thaiLetters',
-  'thaiNumbers',
-  'thaiCounting',
-  'vietnameseCounting',
-  'numberInDash',
-  'russianLower',
-  'russianUpper',
-];
+const _numberFormats = legacyWordMsonfcFormats;

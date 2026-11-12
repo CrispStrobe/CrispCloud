@@ -812,6 +812,16 @@
     "tool/apple_export_preflight.py",
     "tool/crypto_release_evidence.py",
     "tool/testflight_export_guard.rb",
-    "tool/testflight_external.rb"
+    "tool/testflight_external.rb",
+    "packages/legacy_doc_parser/lib/src/legacy_word_html_media.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_number_formats.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_numbering.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_operations.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_revisions.dart",
+    "packages/legacy_doc_parser/lib/src/word_image_appearance_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_officeart_position_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_table_revision_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_table_writer.dart"
   ]
 }

@@ -83,7 +83,7 @@ extension _WordStories on _StructuredWordParser {
         endCp: end,
         blocks: List.unmodifiable(blocks),
         plainText: _plainText(blocks),
-        safeHtml: _renderBlocks(blocks),
+        safeHtml: '', // Filled after media references are resolved.
         sectionIndex: sectionIndex,
         headerFooterType: headerFooterType,
       ),
@@ -395,8 +395,23 @@ extension _WordStories on _StructuredWordParser {
     if (plc == null ||
         plc.count < 1 ||
         plc.cps.first != 0 ||
-        plc.cps.last > length) {
+        plc.cps.last <= plc.cps[plc.count - 1]) {
       throw const FormatException('Missing or invalid Word textbox ranges.');
+    }
+    if (plc.cps.last > length) {
+      // MS-DOC PlcftxbxTxt ignores the final spare range's text. Independent
+      // Word exports can terminate that range with the document-wide final
+      // sentinel (all stories + 1), rather than a textbox-relative endpoint.
+      // Recover only the observed main-story case with exactly one unused
+      // terminal character. _plc has already bounded every real endpoint;
+      // all real ranges, CRs, shape references and chains still validate.
+      if (header ||
+          plc.count < 2 ||
+          plc.cps[plc.count - 1] != length - 1 ||
+          plc.cps.last != source.totalLength + 1) {
+        throw const FormatException('Missing or invalid Word textbox ranges.');
+      }
+      warnings.add(LegacyWordWarning.recoveredGlobalTextboxSentinel);
     }
     final anchorLength = header ? source.storyLengths[1] : source.bodyLength;
     final anchorBase = header ? _storyBase(1) : 0;

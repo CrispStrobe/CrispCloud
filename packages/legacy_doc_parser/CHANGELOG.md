@@ -1,5 +1,22 @@
 ## 0.1.0-dev.1
 
+- Reconcile saved continuation branches and retain complete versioned RGB,
+  structural, schema and repeated-native-import receipts. Build the independent
+  Open XML SDK gate from pinned source/dependencies with exact output coverage.
+- Preserve packed OfficeArt POINT arrays, verified Word position origins,
+  textbox spare-range evidence, and narrowly validated native BLIP-store count
+  recovery without relaxing record/image bounds.
+- Preserve table mutations, indirect table properties, preferred cell-width
+  units and raw/effective no-wrap state; keep grid geometry independent.
+- Extend list counter transitions and 59 fixed note number formats, retaining
+  explicit source codes, version gates, diagnosed fallback and unknown values.
+- Emit supported row formatting history as native trPrChange, with prior height,
+  split and header instructions checked through independent accept/reject
+  controls; retain incomplete broader history and conditional-header formatting
+  interactions as diagnosed evidence.
+- Preserve bounded picture-frame flips, absolute floating quarter turns, direct
+  outlines and simple offset shadows. Retain independent authored controls and
+  the remaining default-PDF image-encoding difference.
 - Add independent structural, accepted/rejected-text and native rendering
   oracles, pinned Office fixtures, textbox resize probes and PDF-vector shape
   checks. Keep producer round-trip losses separate from parser losses.

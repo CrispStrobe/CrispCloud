@@ -45,6 +45,8 @@ class _StructuredWordWriter {
   final _storyParts = <String, String>{};
   final _numberingIds = <int>{};
   final _numberingReferences = <int, int>{};
+  final _resolvedParagraphNumbering = <LegacyWordParagraph, int>{};
+  final _numberingInstances = <int, _WordNumberingInstance>{};
   final _tableStyleDefinitions = <int, LegacyWordTableStyle>{};
   var _tableDepth = 0;
   final _fields = <int, LegacyWordField>{};
@@ -69,6 +71,7 @@ class _StructuredWordWriter {
   Uint8List convert() {
     _prepareTableStyleDefinitions();
     _prepareStories();
+    _prepareNumbering();
     _prepareMedia();
     _prepareSemantics();
     _sortEvents();
@@ -242,153 +245,6 @@ class _StructuredWordWriter {
     _count('paragraphs');
   }
 
-  void _table(LegacyWordTable table) {
-    if (++_tableDepth > 63) {
-      throw const FormatException('Word tables are nested too deeply.');
-    }
-    _count('tables');
-    final origin = table.rows.isEmpty
-        ? 0
-        : table.rows
-              .map((row) => row.originTwips)
-              .reduce((a, b) => a < b ? a : b);
-    _xml.add('<w:tbl><w:tblPr>');
-    final firstRow = table.rows.firstOrNull;
-    final firstMargins = firstRow?.cells.firstOrNull?.formatting.margins;
-    final leadingMargin =
-        firstMargins?.containsKey(LegacyWordBorderSide.left) == true
-        ? firstMargins![LegacyWordBorderSide.left] ?? 0
-        : 108;
-    // Legacy Word/OOXML top-level indentation aligns the first cell's text,
-    // whereas TDefTable retains the outer boundary. Native DOC->DOCX oracles
-    // confirm this conversion for zero, signed, per-cell and default margins.
-    // Nested tables already use their boundary origin and need no adjustment.
-    final nativeIndent = origin + (_tableDepth == 1 ? leadingMargin : 0);
-    if (firstRow?.tableStyleId case final id?) {
-      if (!_tableStyleDefinitions.containsKey(id)) {
-        throw const FormatException('Unknown Word table style.');
-      }
-      _xml.add('<w:tblStyle w:val="LegacyTable$id"/>');
-    }
-    _xml.add(
-      '<w:tblW w:w="0" w:type="auto"/>'
-      '<w:tblInd w:w="$nativeIndent" w:type="dxa"/>',
-    );
-    _tableLook(firstRow?.styleOptions ?? 0x600, _xml);
-    _xml.add('</w:tblPr>');
-    // Every row retains its logical origin. Include all absolute row edges in
-    // the shared grid, including omitted leading/trailing cells.
-    final grid = <int>{origin};
-    var canWriteGrid = table.rows.isNotEmpty;
-    for (final row in table.rows) {
-      var offset = row.originTwips;
-      grid.add(offset);
-      for (final cell in row.cells) {
-        final width = cell.widthTwips;
-        if (width == null || width <= 0) {
-          canWriteGrid = false;
-          break;
-        }
-        offset += width;
-        grid.add(offset);
-      }
-    }
-    final edges = grid.toList()..sort();
-    final edgeIndices = {for (var i = 0; i < edges.length; i++) edges[i]: i};
-    if (canWriteGrid) {
-      _xml.add('<w:tblGrid>');
-      for (var i = 1; i < edges.length; i++) {
-        _xml.add('<w:gridCol w:w="${edges[i] - edges[i - 1]}"/>');
-      }
-      _xml.add('</w:tblGrid>');
-    }
-    for (final row in table.rows) {
-      _countBreak();
-      _xml.add('<w:tr>');
-      final before = canWriteGrid ? edgeIndices[row.originTwips]! : 0;
-      final rowEnd =
-          row.originTwips +
-          row.cells.fold<int>(0, (sum, cell) => sum + (cell.widthTwips ?? 0));
-      final after = canWriteGrid ? edges.length - 1 - edgeIndices[rowEnd]! : 0;
-      if (row.isHeader || before != 0 || after != 0) {
-        _xml.add('<w:trPr>');
-        if (before != 0) {
-          _xml.add(
-            '<w:gridBefore w:val="$before"/>'
-            '<w:wBefore w:w="${row.originTwips - origin}" w:type="dxa"/>',
-          );
-        }
-        if (after != 0) {
-          _xml.add(
-            '<w:gridAfter w:val="$after"/>'
-            '<w:wAfter w:w="${edges.last - rowEnd}" w:type="dxa"/>',
-          );
-        }
-        if (row.isHeader) _xml.add('<w:tblHeader/>');
-        _xml.add('</w:trPr>');
-      }
-      var offset = row.originTwips;
-      for (final cell in row.cells) {
-        _countBreak();
-        _count('cells');
-        _xml.add('<w:tc><w:tcPr>');
-        final width = cell.widthTwips;
-        if (width != null && width > 0) {
-          _xml.add('<w:tcW w:w="$width" w:type="dxa"/>');
-          if (canWriteGrid) {
-            final start = edgeIndices[offset]!;
-            final end = edgeIndices[offset + width]!;
-            if (end - start > 1) {
-              _xml.add('<w:gridSpan w:val="${end - start}"/>');
-            }
-          }
-          offset += width;
-        }
-        if (cell.mergeStart || cell.mergeContinue) {
-          _xml.add(
-            '<w:hMerge w:val="${cell.mergeStart ? 'restart' : 'continue'}"/>',
-          );
-        }
-        if (cell.verticalMergeStart || cell.verticalMergeContinue) {
-          _xml.add(
-            '<w:vMerge w:val="${cell.verticalMergeStart ? 'restart' : 'continue'}"/>',
-          );
-        }
-        _tableBorders(cell.formatting.borders, _xml, 'tcBorders');
-        if (cell.shading != null) {
-          _shading(
-            cell.shading!,
-            _xml,
-            'tableCell',
-            cell.blocks.isEmpty ? null : cell.blocks.first.startCp,
-          );
-        }
-        _tableCellFormat(
-          cell.formatting,
-          _xml,
-          includeShading: false,
-          includeBorders: false,
-        );
-        _xml.add('</w:tcPr>');
-        for (final block in cell.blocks) {
-          switch (block) {
-            case LegacyWordParagraph():
-              _paragraph(block);
-            case LegacyWordTable():
-              _table(block);
-          }
-        }
-        if (cell.blocks.isEmpty || cell.blocks.last is LegacyWordTable) {
-          _xml.add('<w:p/>');
-        }
-        _xml.add('</w:tc>');
-      }
-      _xml.add('</w:tr>');
-    }
-    _xml.add('</w:tbl>');
-    _tableDepth--;
-  }
-
   void _writeRun(LegacyWordRun run) {
     if (run.inserted) _revisionStart('ins', run);
     if (run.deleted) _revisionStart('del', run);
@@ -432,6 +288,7 @@ class _StructuredWordWriter {
     if (style.spacingTwips != null || resetDefaults) {
       _xml.add('<w:spacing w:val="${style.spacingTwips ?? 0}"/>');
     }
+    _xml.add('<w:kern w:val="${_kerningThreshold(style)}"/>');
     if (style.positionHalfPoints != null || resetDefaults) {
       _xml.add('<w:position w:val="${style.positionHalfPoints ?? 0}"/>');
     }
@@ -452,6 +309,14 @@ class _StructuredWordWriter {
       );
     }
     _xml.add('<w:vertAlign w:val="${style.verticalAlign.name}"/>');
+  }
+
+  static int _kerningThreshold(LegacyWordCharacterStyle style) {
+    final value = style.kerningThresholdHalfPoints;
+    if (value < 0 || value > 3276) {
+      throw const FormatException('Invalid Word kerning threshold.');
+    }
+    return value;
   }
 
   void _writeRunText(LegacyWordRun run) {
@@ -507,6 +372,7 @@ class _StructuredWordWriter {
     LegacyWordSection section,
     LegacyWordSectionBreak breakBefore, {
     bool includeReferences = false,
+    bool historical = false,
   }) {
     // CT_SectPrBase (inside sectPrChange) cannot contain header/footer
     // references or a nested change record.
@@ -519,7 +385,7 @@ class _StructuredWordWriter {
         );
       }
     }
-    _sectionNotes(section.layout);
+    _sectionNotes(section, historical: historical);
     _xml.add(
       '<w:type w:val="${switch (breakBefore) {
         LegacyWordSectionBreak.continuous => 'continuous',

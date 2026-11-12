@@ -63,7 +63,8 @@ extension _WordLayout on _StructuredWordWriter {
     }
   }
 
-  void _sectionNotes(LegacyWordSectionLayout layout) {
+  void _sectionNotes(LegacyWordSection section, {required bool historical}) {
+    final layout = section.layout;
     for (final (kind, numbering, position) in [
       ('footnote', layout.footnoteNumbering, layout.footnotePosition.name),
       ('endnote', layout.endnoteNumbering, layout.endnotePosition?.name),
@@ -73,19 +74,28 @@ extension _WordLayout on _StructuredWordWriter {
       }
       final format = numbering.format;
       if (format != null &&
-          !const {
-            'decimal',
-            'upperRoman',
-            'lowerRoman',
-            'upperLetter',
-            'lowerLetter',
-            'chicago',
-            'decimalZero',
-          }.contains(format)) {
+          (format == 'bullet' ||
+              (format != 'none' &&
+                  !legacyWordMsonfcFormats.contains(format)))) {
         throw const FormatException('Invalid Word note numbering format.');
       }
-      if (format == null) {
+      if (numbering.usesDecimalFallback && format != 'decimal') {
+        throw const FormatException('Invalid Word note numbering fallback.');
+      }
+      if (format == null || numbering.usesDecimalFallback) {
         limitations.add(LegacyWordConversionLimitation.partialFormatting);
+        limitations.add(LegacyWordConversionLimitation.notesComments);
+        if (_evidenceRecords.length >= 20000) _tooComplex();
+        _evidenceRecords.add({
+          'kind': 'noteNumberFormat',
+          'noteKind': kind,
+          'sectionStartCp': section.startCp,
+          'sectionEndCp': section.endCp,
+          'historical': historical,
+          'sourceFormatCode': numbering.sourceFormatCode,
+          'format': format,
+          'usesDecimalFallback': numbering.usesDecimalFallback,
+        });
       }
       _xml.add('<w:${kind}Pr>');
       if (position != null) _xml.add('<w:pos w:val="$position"/>');

@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'legacy_word_metafile.dart';
 import 'legacy_word_structured_model.dart';
+import 'legacy_word_numbering.dart';
+
+part 'legacy_word_html_media.dart';
 
 /// Renders only resolved, visible content. All markup and CSS property names
-/// are fixed here; document text cannot introduce links, assets or HTML.
+/// are fixed here; document text cannot introduce links or HTML. Referenced
+/// media may introduce bounded data images; external names are never fetched.
 ///
 /// Merged cells keep the paragraphs from their continuations. The preview is
 /// an approximation of Word layout, not a paginated rendering engine.
@@ -13,10 +19,95 @@ String renderLegacyWordHtml(
   List<LegacyWordBlock> blocks, {
   List<LegacyWordNumberingDefinition> numberingDefinitions = const [],
   int? defaultTabStopTwips,
-}) => _HtmlWriter(numberingDefinitions, defaultTabStopTwips).render(blocks);
+  LegacyWordMediaCatalog media = const LegacyWordMediaCatalog(),
+}) => LegacyWordHtmlRenderer(
+  numberingDefinitions: numberingDefinitions,
+  defaultTabStopTwips: defaultTabStopTwips,
+  media: media,
+).render(blocks);
+
+/// Reuses one bounded image validation/cache across related document stories.
+/// Each rendered story still has its own text/markup output budget.
+class LegacyWordHtmlRenderer {
+  LegacyWordHtmlRenderer({
+    this.numberingDefinitions = const [],
+    this.defaultTabStopTwips,
+    LegacyWordMediaCatalog media = const LegacyWordMediaCatalog(),
+  }) : _media = _HtmlMediaIndex(media);
+  final List<LegacyWordNumberingDefinition> numberingDefinitions;
+  final int? defaultTabStopTwips;
+  final _HtmlMediaIndex _media;
+  var _renderedBytes = 0;
+  static const _maxCombinedBytes = 64 * 1024 * 1024;
+
+  String render(List<LegacyWordBlock> blocks) => renderAll([blocks]).single;
+
+  /// Reserves all text and placeholder markup before enabling image expansion.
+  /// This prevents image previews from exhausting later stories' text budget.
+  List<String> renderAll(List<List<LegacyWordBlock>> stories) {
+    if (stories.length > 20001) {
+      throw const FormatException('Word preview has too many stories.');
+    }
+    if (_media._events.isEmpty) {
+      final result = <String>[];
+      for (final blocks in stories) {
+        final writer = _HtmlWriter(
+          numberingDefinitions,
+          defaultTabStopTwips,
+          _media,
+        );
+        result.add(writer.render(blocks));
+        _renderedBytes += writer._bytes;
+        if (_renderedBytes > _maxCombinedBytes) {
+          throw const FormatException(
+            'Word story previews exceed the output limit.',
+          );
+        }
+      }
+      return List.unmodifiable(result);
+    }
+    final baselineBytes = <int>[];
+    var totalBaseline = 0;
+    for (final blocks in stories) {
+      final measure = _HtmlWriter(
+        numberingDefinitions,
+        defaultTabStopTwips,
+        _media,
+        measureOnly: true,
+      )..render(blocks);
+      baselineBytes.add(measure._bytes);
+      totalBaseline += measure._bytes;
+      if (totalBaseline > _maxCombinedBytes - _renderedBytes) {
+        throw const FormatException(
+          'Word story previews exceed the output limit.',
+        );
+      }
+    }
+    _media.remainingExpansionBytes =
+        _maxCombinedBytes - _renderedBytes - totalBaseline;
+    final result = <String>[];
+    for (var i = 0; i < stories.length; i++) {
+      final writer = _HtmlWriter(
+        numberingDefinitions,
+        defaultTabStopTwips,
+        _media,
+        imageExpansionBytes: _HtmlWriter._maxBytes - baselineBytes[i],
+      );
+      result.add(writer.render(stories[i]));
+      _renderedBytes += writer._bytes;
+    }
+    return List.unmodifiable(result);
+  }
+}
 
 class _HtmlWriter {
-  _HtmlWriter(this.numberingDefinitions, this.defaultTabStopTwips);
+  _HtmlWriter(
+    this.numberingDefinitions,
+    this.defaultTabStopTwips,
+    this._media, {
+    this.measureOnly = false,
+    this.imageExpansionBytes = 0,
+  });
   static const _maxBytes = 24 * 1024 * 1024;
   static const _maxItems = 200000;
   static const _escape = HtmlEscape(HtmlEscapeMode.element);
@@ -24,6 +115,9 @@ class _HtmlWriter {
   final _buffer = StringBuffer();
   final List<LegacyWordNumberingDefinition> numberingDefinitions;
   final int? defaultTabStopTwips;
+  final _HtmlMediaIndex _media;
+  final bool measureOnly;
+  int imageExpansionBytes;
   final _markers = <LegacyWordParagraph, _HtmlListMarker>{};
   var _bytes = 0;
   var _items = 0;
@@ -70,155 +164,34 @@ class _HtmlWriter {
 
   void _prepareNumbering(List<LegacyWordBlock> blocks) {
     if (numberingDefinitions.isEmpty) return;
-    final definitions = <int, Map<int, LegacyWordNumberingLevel>>{};
-    final sourceInstances = <int, List<int>>{};
-    final sequenceIds = <int, int>{};
-    if (numberingDefinitions.length > 4096) {
-      throw const FormatException('Word numbering preview is too complex.');
-    }
-    for (final definition in numberingDefinitions) {
+    final resolved = LegacyWordNumberingResolver(
+      numberingDefinitions,
+    ).resolve(blocks);
+    for (final entry in resolved.entries) {
       _item();
-      if (definition.id <= 0 ||
-          definitions.containsKey(definition.id) ||
-          definition.levels.isEmpty ||
-          definition.levels.length > 9) {
-        throw const FormatException('Invalid Word preview list definition.');
-      }
-      final levels = <int, LegacyWordNumberingLevel>{};
-      for (final level in definition.levels) {
-        _item();
-        if (level.level < 0 ||
-            level.level > 8 ||
-            levels.containsKey(level.level) ||
-            level.startAt < 0 ||
-            level.startAt > 32767 ||
-            level.text.length > 1024 ||
-            (level.restartAfterLevel != null &&
-                (level.restartAfterLevel! < 0 ||
-                    level.restartAfterLevel! > level.level))) {
-          throw const FormatException('Invalid Word preview numbering level.');
-        }
-        levels[level.level] = level;
-      }
-      definitions[definition.id] = levels;
-      final sourceId = definition.sourceListId;
-      if (sourceId != null) {
-        sourceInstances.putIfAbsent(sourceId, () => []).add(definition.id);
-      }
-    }
-    final sourceDefinitions = {
-      for (final definition in numberingDefinitions) definition.id: definition,
-    };
-    for (final definition in numberingDefinitions) {
-      final targetId = definition.continuationOf;
-      if (targetId != null) {
-        final target = sourceDefinitions[targetId];
-        if (target == null ||
-            target.id == definition.id ||
-            target.continuationOf != null ||
-            target.sourceListId == null ||
-            target.sourceListId != definition.sourceListId ||
-            target.levels.length != definition.levels.length ||
-            !List.generate(
-              target.levels.length,
-              (i) => identical(target.levels[i], definition.levels[i]),
-            ).every((v) => v)) {
-          throw const FormatException('Invalid Word numbering continuation.');
-        }
-      }
-      sequenceIds[definition.id] = targetId ?? definition.id;
-    }
-    final ambiguous = <int>{
-      for (final ids in sourceInstances.values)
-        if (ids.map((id) => sequenceIds[id]).toSet().length > 1) ...ids,
-    };
-    final ordered = <(int, LegacyWordParagraph)>[];
-    var scanned = 0;
-    void scanItem() {
-      if (++scanned > _maxItems) {
-        throw const FormatException('Word numbering preview is too complex.');
-      }
-    }
-
-    void add(LegacyWordParagraph paragraph) {
-      scanItem();
-      if (paragraph.style.listId != null && paragraph.style.listId != 0) {
-        ordered.add((ordered.length, paragraph));
-      }
-    }
-
-    void scan(List<LegacyWordBlock> values, int depth) {
-      if (depth > 63) {
-        throw const FormatException('Word tables are nested too deeply.');
-      }
-      for (final block in values) {
-        scanItem();
-        switch (block) {
-          case LegacyWordParagraph():
-            add(block);
-          case LegacyWordTable():
-            for (final row in block.rows) {
-              scanItem();
-              for (final cell in row.cells) {
-                scanItem();
-                scan(cell.blocks, depth + 1);
-              }
-            }
-        }
-      }
-    }
-
-    scan(blocks, 0);
-    // A vertically merged HTML cell can move a continuation's text earlier in
-    // markup order. Number source paragraphs in CP order before merging them.
-    ordered.sort((a, b) {
-      final order = a.$2.startCp.compareTo(b.$2.startCp);
-      return order == 0 ? a.$1.compareTo(b.$1) : order;
-    });
-    final counters = <int, List<int?>>{};
-    for (final (_, paragraph) in ordered) {
-      final id = paragraph.style.listId!.abs();
-      final index = paragraph.style.listLevel ?? 0;
-      final levels = definitions[id];
-      final level = levels?[index];
-      if (level == null) {
-        _markers[paragraph] = const _HtmlListMarker(unsupported: true);
+      final value = entry.value;
+      if (value == null) {
+        _markers[entry.key] = const _HtmlListMarker(unsupported: true);
         continue;
       }
-      final values = counters.putIfAbsent(
-        sequenceIds[id]!,
-        () => List<int?>.filled(9, null),
-      );
-      values[index] = values[index] == null
-          ? level.startAt
-          : values[index]! + 1;
-      for (final lower in levels!.values) {
-        final restart = lower.restartAfterLevel ?? lower.level;
-        if (lower.level > index && restart > 0 && index < restart) {
-          values[lower.level] = null;
-        }
-      }
-      final text = _listText(level, levels, values);
+      final text = _listText(value);
       _markerUnits += text?.length ?? 0;
       if (_markerUnits > 4 * 1024 * 1024) {
         throw const FormatException(
           'Word numbering labels exceed the preview limit.',
         );
       }
-      _markers[paragraph] = _HtmlListMarker(
+      _markers[entry.key] = _HtmlListMarker(
         text: text,
-        level: level,
+        level: value.level,
         unsupported: text == null,
-        ambiguousContinuation: ambiguous.contains(id),
+        ambiguousContinuation: value.approximate,
       );
     }
   }
 
-  String? _listText(
-    LegacyWordNumberingLevel level,
-    Map<int, LegacyWordNumberingLevel> levels,
-    List<int?> values,
-  ) {
+  String? _listText(LegacyWordResolvedNumbering marker) {
+    final level = marker.level;
     if (level.format == 'none') return '';
     if (level.format == 'bullet') return level.text;
     const formats = {
@@ -241,12 +214,19 @@ class _HtmlWriter {
         continue;
       }
       final index = level.text.codeUnitAt(++i) - 49;
-      final source = levels[index];
-      if (source == null || index > level.level) return null;
-      final number = _listNumber(
-        values[index] ?? source.startAt,
-        level.legal ? 'decimal' : source.format,
-      );
+      final sourceFormat = marker.referenceFormats[index];
+      if (sourceFormat == null || index > level.level) return null;
+      final value = marker.referenceNumbers[index];
+      final number = sourceFormat == 'none' || sourceFormat == 'bullet'
+          ? ''
+          : value == null
+          ? null
+          : _listNumber(
+              value,
+              level.legal && sourceFormat != 'decimalZero'
+                  ? 'decimal'
+                  : sourceFormat,
+            );
       if (number == null) return null;
       if (number.length > 4096 - output.length) {
         throw const FormatException(
@@ -548,9 +528,10 @@ class _HtmlWriter {
     }
     _write('<$tag$attributes style="${css.join(';')}">');
     var hasVisibleText = false;
-    final visible = paragraph.runs.any(
-      (run) => !run.style.hidden && run.text.isNotEmpty,
-    );
+    final images = _media.within(paragraph.startCp, paragraph.endCp);
+    final visible =
+        paragraph.runs.any((run) => !run.style.hidden && run.text.isNotEmpty) ||
+        images.isNotEmpty;
     if (visible &&
         marker != null &&
         marker.text != null &&
@@ -583,11 +564,51 @@ class _HtmlWriter {
           break;
       }
     }
+    var imageIndex = 0;
     for (final run in paragraph.runs) {
       _item();
-      if (run.style.hidden || run.text.isEmpty) continue;
+      while (imageIndex < images.length &&
+          images[imageIndex].cp < run.startCp) {
+        _image(images[imageIndex++]);
+        hasVisibleText = true;
+      }
+      if (run.style.hidden) {
+        // Source presentation already includes field privacy. Also respect a
+        // hidden public-model run even if its media metadata is inconsistent.
+        while (imageIndex < images.length &&
+            images[imageIndex].cp < run.endCp) {
+          imageIndex++;
+        }
+        continue;
+      }
+      var textStart = 0;
+      while (imageIndex < images.length && images[imageIndex].cp < run.endCp) {
+        final image = images[imageIndex++];
+        final offset = image.cp - run.startCp;
+        if (offset < textStart ||
+            offset > run.text.length ||
+            run.text.length != run.endCp - run.startCp ||
+            (offset > 0 &&
+                offset < run.text.length &&
+                run.text.codeUnitAt(offset - 1) >= 0xd800 &&
+                run.text.codeUnitAt(offset - 1) <= 0xdbff)) {
+          throw const FormatException('Ambiguous Word preview image anchor.');
+        }
+        if (offset > textStart) {
+          _run(run, text: run.text.substring(textStart, offset));
+        }
+        _image(image);
+        hasVisibleText = true;
+        textStart = offset;
+      }
+      if (textStart < run.text.length) {
+        _run(run, text: run.text.substring(textStart));
+        hasVisibleText = true;
+      }
+    }
+    while (imageIndex < images.length) {
+      _image(images[imageIndex++]);
       hasVisibleText = true;
-      _run(run);
     }
     final mark = paragraph.mark;
     if (mark != null && !mark.style.hidden && (mark.inserted || mark.deleted)) {
@@ -602,9 +623,18 @@ class _HtmlWriter {
     _write('</$tag>');
   }
 
-  void _run(LegacyWordRun run) {
+  void _run(LegacyWordRun run, {String? text}) {
     final style = run.style;
+    final kerning = style.kerningThresholdHalfPoints;
+    if (kerning < 0 || kerning > 3276) {
+      throw const FormatException('Invalid Word preview kerning threshold.');
+    }
+    final unresolvedKerning = kerning > 0 && style.fontSizeHalfPoints == null;
     final css = <String>[
+      if (unresolvedKerning)
+        'font-kerning:auto'
+      else
+        'font-kerning:${kerning == 0 || style.fontSizeHalfPoints! < kerning ? 'none' : 'normal'}',
       if (style.bold) 'font-weight:bold',
       if (style.italic) 'font-style:italic',
       if (style.smallCaps) 'font-variant:small-caps',
@@ -653,7 +683,11 @@ class _HtmlWriter {
         'text-decoration:underline;">',
       );
     }
-    if (css.isNotEmpty) _write('<span style="${css.join(';')}">');
+    if (css.isNotEmpty) {
+      _write(
+        '<span${unresolvedKerning ? ' data-word-kerning="threshold-unresolved" data-word-kerning-threshold-half-points="$kerning"' : ''} style="${css.join(';')}">',
+      );
+    }
     if (style.underline) {
       final kind = style.underlineStyle;
       final line = switch (kind) {
@@ -695,7 +729,7 @@ class _HtmlWriter {
         '${heavy ? 'text-decoration-thickness:0.12em;' : ''}">',
       );
     }
-    _text(run.text);
+    _text(text ?? run.text);
     if (style.underline) _write('</span>');
     if (css.isNotEmpty) _write('</span>');
     if (run.inserted) _write('</ins>');
@@ -753,6 +787,7 @@ class _HtmlWriter {
               ? source.fold<int>(0, (sum, cell) => sum + cell.widthTwips!)
               : null,
           shading: first.shading,
+          source: first,
         );
         cells.add(cell);
         if (source.every(
@@ -764,19 +799,74 @@ class _HtmlWriter {
       rows.add(cells);
       active = nextActive;
     }
-    _write('<table style="border-collapse:collapse;"><tbody>');
-    for (final row in rows) {
-      _write('<tr>');
+    final origin = table.rows.isEmpty
+        ? 0
+        : table.rows
+              .map((row) => row.originTwips)
+              .reduce((a, b) => a < b ? a : b);
+    if (origin < -31680 || origin > 31680) {
+      throw const FormatException('Invalid Word preview table origin.');
+    }
+    final completeWidths =
+        table.rows.isNotEmpty &&
+        table.rows.every(
+          (row) => row.cells.every(
+            (cell) => cell.widthTwips != null && cell.widthTwips! > 0,
+          ),
+        );
+    final width = completeWidths
+        ? table.rows
+                  .map(
+                    (row) =>
+                        row.originTwips +
+                        row.cells.fold<int>(
+                          0,
+                          (sum, cell) => sum + cell.widthTwips!,
+                        ),
+                  )
+                  .reduce((a, b) => a > b ? a : b) -
+              origin
+        : null;
+    final alignment = switch (table.alignment) {
+      LegacyWordAlignment.left => 'margin-inline-start:${_twips(origin)}pt;',
+      LegacyWordAlignment.center =>
+        'margin-inline-start:auto;margin-inline-end:auto;',
+      LegacyWordAlignment.right =>
+        'margin-inline-start:auto;margin-inline-end:0;',
+      _ => throw const FormatException('Invalid Word preview table alignment.'),
+    };
+    final unequalOrigins = table.rows.any((row) => row.originTwips != origin);
+    _write(
+      '<table${table.rightToLeft ? ' dir="rtl"' : ''}'
+      '${unequalOrigins ? ' data-word-table-grid="approximate"' : ''}'
+      ' style="border-collapse:collapse;table-layout:${table.autoFit ? 'auto' : 'fixed'};'
+      '$alignment${width == null ? '' : 'width:${_twips(width)}pt;'}"><tbody>',
+    );
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      final row = rows[rowIndex], sourceRow = table.rows[rowIndex];
+      final height = sourceRow.heightTwips;
+      if (height != null && (height < -31680 || height > 31680)) {
+        throw const FormatException('Invalid Word preview row height.');
+      }
+      _write(
+        '<tr${height != null && height < 0 ? ' data-word-row-height="approximate-exact"' : ''}'
+        ' style="${sourceRow.cantSplit == true ? 'break-inside:avoid;' : ''}'
+        '${height == null || height == 0 ? '' : 'height:${_twips(height.abs())}pt;'}">',
+      );
       for (final cell in row) {
         final tag = cell.isHeader ? 'th' : 'td';
         final width = cell.widthTwips;
         final shading = _shading(cell.shading);
+        final decoration = _tableCellDecoration(
+          cell.source,
+          rightToLeft: table.rightToLeft,
+        );
         _write(
           '<$tag${cell.isHeader ? ' scope="col"' : ''}'
           '${cell.columnSpan > 1 ? ' colspan="${cell.columnSpan}"' : ''}'
           '${cell.rowSpan > 1 ? ' rowspan="${cell.rowSpan}"' : ''}'
-          '${shading.attributes}'
-          ' style="border:1px solid #888;vertical-align:top;padding:4px;'
+          '${shading.attributes}${decoration.attributes}'
+          ' style="${decoration.css.join(';')};'
           '${shading.css.isEmpty ? '' : '${shading.css.join(';')};'}'
           '${width != null && width > 0 ? 'width:${_twips(width)}pt;' : ''}">',
         );
@@ -787,6 +877,85 @@ class _HtmlWriter {
     }
     _write('</tbody></table>');
     _tableDepth--;
+  }
+
+  _HtmlDecoration _tableCellDecoration(
+    LegacyWordTableCell cell, {
+    required bool rightToLeft,
+  }) {
+    final format = cell.formatting;
+    final alignment = format.verticalAlignment ?? LegacyWordCellAlignment.top;
+    final css = <String>[
+      'vertical-align:${alignment == LegacyWordCellAlignment.center ? 'middle' : alignment.name}',
+      if (format.noWrap != null)
+        'white-space:${format.noWrap! ? 'pre' : 'pre-wrap'}',
+      if (format.noWrap == true) 'overflow-wrap:normal',
+    ];
+    var approximate = false;
+    String physical(String side) => !rightToLeft
+        ? side
+        : side == 'left'
+        ? 'right'
+        : side == 'right'
+        ? 'left'
+        : side;
+    for (final entry in format.borders.entries) {
+      final side = entry.key, border = entry.value;
+      if (side.index >= 4) {
+        if (border.style != 'none' && border.style != 'nil') approximate = true;
+        continue;
+      }
+      if (border.widthEighthPoints < 0 || border.widthEighthPoints > 255) {
+        throw const FormatException('Invalid Word cell border width.');
+      }
+      final line = switch (border.style) {
+        'none' || 'nil' => 'none',
+        'single' || 'thick' => 'solid',
+        'double' => 'double',
+        'dotted' => 'dotted',
+        'dashed' || 'dashSmallGap' || 'dotDash' || 'dotDotDash' => 'dashed',
+        _ => null,
+      };
+      if (line == null) {
+        approximate = true;
+      } else {
+        css.add(
+          'border-${physical(side.name)}:${border.widthEighthPoints / 8}pt $line '
+          '${border.colorHex != null && _color.hasMatch(border.colorHex!) ? '#${border.colorHex}' : 'currentColor'}',
+        );
+      }
+      if (border.shadow ||
+          border.frame ||
+          const {
+            'dotDash',
+            'dotDotDash',
+            'dashSmallGap',
+          }.contains(border.style)) {
+        approximate = true;
+      }
+    }
+    for (final entry in format.margins.entries) {
+      if (entry.key.index >= 4) continue;
+      final margin = entry.value ?? 0;
+      if (margin < 0 || margin > 31680) {
+        throw const FormatException('Invalid Word cell margin.');
+      }
+      css.add('padding-${physical(entry.key.name)}:${_twips(margin)}pt');
+    }
+    final direction = format.textDirection;
+    var attributes = approximate ? ' data-word-border="approximate"' : '';
+    if (direction != null && direction != LegacyWordCellTextDirection.lrTb) {
+      // Preserve an explicit marker until the preview has a verified vertical
+      // layout engine. A generic CSS rotation cannot reproduce Word's modes.
+      attributes += ' data-word-cell-text-direction="${direction.name}"';
+    }
+    if (format.fitText == true) {
+      attributes += ' data-word-cell-fit-text="approximate"';
+    }
+    if (format.hideMark == true) {
+      attributes += ' data-word-cell-hide-mark="approximate"';
+    }
+    return _HtmlDecoration(css, attributes);
   }
 
   void _text(String text) {
@@ -826,7 +995,7 @@ class _HtmlWriter {
     if (_bytes > _maxBytes) {
       throw const FormatException('Word HTML preview exceeds its size limit.');
     }
-    _buffer.write(value);
+    if (!measureOnly) _buffer.write(value);
   }
 }
 
@@ -837,7 +1006,9 @@ class _HtmlCell {
     required this.columnSpan,
     required this.widthTwips,
     required this.shading,
+    required this.source,
   });
+  final LegacyWordTableCell source;
   final List<LegacyWordBlock> blocks;
   final bool isHeader;
   final int columnSpan;

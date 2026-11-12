@@ -1,0 +1,485 @@
+{
+  "version": 1,
+  "case": "bookmarks",
+  "sourceCommit": "8060ac13317754819ebec82ec7232ba6304cb038",
+  "identicalRemoteCommit": "504679d841d0ec6a20749cee392c6a4bb9718d8d",
+  "method": "Reuse the sealed native-run input/output. Isolate each of the 61 source compatibility options in a copy of the converted DOCX, alongside the native projection's adjustLineHeightInTable and compatibilityMode=11. Preserve schema child order, copy ZipInfo objects before parallel ZIP writes, verify ZIP integrity, render each in a fresh native profile. No production property or golden is changed.",
+  "sourceHashes": {
+    "bridge/bookmarks.doc": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+    "converted.docx": "0ee939f26b5690d3d9977ad5463643bd6001294345320902a2b7f58f5c96d56e",
+    "native-docx/bookmarks.docx": "d5b3126630f4504d24dd4ccdf2281484670dcfd926f3af927e9257e48cfedefc"
+  },
+  "sourceCompatibility": {
+    "sourceFibVersion": 257,
+    "sourceFibNewVersion": null,
+    "sourceDopOffset": 2405,
+    "sourceDopLength": 610,
+    "flag": true,
+    "blocks": [
+      {
+        "kind": "copts60",
+        "offsetInDop": 8,
+        "hex": "0000",
+        "sourceBit15Set": false
+      },
+      {
+        "kind": "copts80",
+        "offsetInDop": 84,
+        "hex": "00200000",
+        "sourceBit15Set": false
+      },
+      {
+        "kind": "copts",
+        "offsetInDop": 508,
+        "hex": "0020000004000010000000000000000000000000000000000000000000000000",
+        "sourceBit15Set": false
+      }
+    ]
+  },
+  "nativeDocBetaXPoints": 100.25,
+  "convertedBetaXPoints": 103.3,
+  "isolatedCause": "balanceSingleByteDoubleByteWidth=1",
+  "controls": {
+    "copiedNativeCompatMaximumWordDriftPoints": 0.018,
+    "explicitCompatibilityMode11MaximumWordDriftPoints": 3.05,
+    "withoutKerningMaximumWordDriftPoints": 3.05,
+    "copiedNativeFontTableMaximumWordDriftPoints": 3.05
+  },
+  "productionDecision": "Retain the documented inverse mapping. Do not discard an enabled source layout instruction solely to match the native DOC importer. This is an observed route discrepancy on the recorded renderer, not a Microsoft Word execution result.",
+  "primarySources": [
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/8b8c7ac1-c424-40c2-8645-ba719af38bf9",
+    "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.balancesinglebytedoublebytewidth"
+  ],
+  "cases": [
+    {
+      "flag": "useSingleBorderforContiguousCells",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "e9774eb32c326223e8cf40df70d6574d12b51d4b42f6a8301a8d4106ba90bb5a",
+      "pdfSha256": "77717e17c3a9d0eb07d39b295f9d165d9b7ec1446a79ecb75deca6d37439ce9c"
+    },
+    {
+      "flag": "wpJustification",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "316885d654adbd27460f273d823d3524f308172b6c6e4b9fa646229518fc82b2",
+      "pdfSha256": "13e3b6f35dbb1ffc14c07a0e55dab83d0d9f8f7d1217df487110a025c6cf35d8"
+    },
+    {
+      "flag": "noTabHangInd",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "159968c3cbadb62bd9b8459fff300f1e50840989248df693e811e79c7cc85c6c",
+      "pdfSha256": "059dfd40a042fa4f9906edfb78b947fd6fac0f2e91d242c92f1dbebcda23b864"
+    },
+    {
+      "flag": "noLeading",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "6dd1103cc41b2537b27bcb391eb84d36736cd61bddbc23b0fd184b7c2feb17c0",
+      "pdfSha256": "dddd2d1332770fb03fe6bcab517e404e44f80c38dee1f359a4e784d4609559cb"
+    },
+    {
+      "flag": "spaceForUL",
+      "value": "1",
+      "betaX": 100.25,
+      "docxSha256": "265beebb0640a73c26773ea59745d1a802fffacb82e241b4c8eecccf90b28599",
+      "pdfSha256": "c1293e4c1f76dd0286fde2cad4314f5db6bef98e87d932e133313e78652d3d9e"
+    },
+    {
+      "flag": "noColumnBalance",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "fe74562055feb3e0c4588e12a2c35e43d3f513d5ac9922e59ab5aa0592b5419e",
+      "pdfSha256": "963c355734e786345b2dcb873e1b2f9b325229d1865ea88aafd8da459d700c84"
+    },
+    {
+      "flag": "balanceSingleByteDoubleByteWidth",
+      "value": "1",
+      "betaX": 103.3,
+      "docxSha256": "b8c8e0132b03e5eff07be29d194987bf0d864a2f88e977142334b8e0e36f7d24",
+      "pdfSha256": "2cd333694af67df0fa422ed428263f8792c15e4994496f8e1a3b9136faaf1e92"
+    },
+    {
+      "flag": "noExtraLineSpacing",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "72208014eb8c7ee946c5385accd0ede714cb95090b1149407a6a0d724592d6ac",
+      "pdfSha256": "d0897763804b06412e87fa6748b944714a2c94063911d352a945d2a5403b633e"
+    },
+    {
+      "flag": "doNotLeaveBackslashAlone",
+      "value": "1",
+      "betaX": 100.25,
+      "docxSha256": "9e18c0ec32aecf8fa3bab25ccbc2d23a8ba1eec5250b63c69f1f59bb75b9ab11",
+      "pdfSha256": "a3a72407c2a5a90259b29eec053a0e749b05a6959e0ee9f12a727f00159a90d0"
+    },
+    {
+      "flag": "ulTrailSpace",
+      "value": "1",
+      "betaX": 100.25,
+      "docxSha256": "40b5a0da917a6fed2d2b868eb475cc4db16981389c3f3770a995b2896c1d4ea1",
+      "pdfSha256": "a145b20b3de5dc0eb672691defcbc06168f166ddc7f03939811e753ead84875f"
+    },
+    {
+      "flag": "doNotExpandShiftReturn",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "8ec646724f93893e64c8dc3530d01e1ef37cebf981c5b36bab1b94e4726703c5",
+      "pdfSha256": "78567a30367e3daad861a1941dec8d2aa3aecb070819ce23dbcca4a18921af2a"
+    },
+    {
+      "flag": "spacingInWholePoints",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "99841e402bc0c330e72e8abaa460ad6af0093e1bd7d48da9b43908f0d5137b6c",
+      "pdfSha256": "dc6c07f14eed2a280cac36bf51c05b7921970bcaf5ef77cfcfacbc297eba48f6"
+    },
+    {
+      "flag": "lineWrapLikeWord6",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "e40b805844d96ad4321a9d2487e14b0189de91766aa74eb53b70428cc7f1afa9",
+      "pdfSha256": "50e58bb392fa6e5b0d80c9dd8c7eaa5efeebfd16103c928bce3c608d66b91a4b"
+    },
+    {
+      "flag": "printBodyTextBeforeHeader",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "b3826f76052785574227096eee83906fc76ee958d2080f4c5658531e9271c671",
+      "pdfSha256": "f39ab78fbb47cd270dd1055782d84c085fcf47df78d2d8734354e633d20610e6"
+    },
+    {
+      "flag": "wpSpaceWidth",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "cccad8b10eab98bd3cffbd94b4898a660ca03b62cd2cfc85d3f649de3a4d7ead",
+      "pdfSha256": "a161e88a2101f9fef209db0f7b3d1eb7bdd5191951f355b73adce847efc67200"
+    },
+    {
+      "flag": "showBreaksInFrames",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "785119209b9b8849d8c6226a7a62a2364ceda17405e4909da37bef62b73ace0c",
+      "pdfSha256": "a386347f451a17b7511407ea5e003fc9499c15564539f8fbdd17041e880c1fe1"
+    },
+    {
+      "flag": "subFontBySize",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "10dd56f2ae4787a472ed08f9d4984ec21cbc49c68049a2f9d4bc6eff1f48d726",
+      "pdfSha256": "a39b263084ecb09794abd0c34cfab15e4a5b1cc663394345463ac13f7240e1b5"
+    },
+    {
+      "flag": "suppressBottomSpacing",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "120142f3fb7794dd8857d3c5b214b1433457e5a3b93fa815c41e50867b3d6f56",
+      "pdfSha256": "f42aec117f0c62e26dbd76c1d4e8d13dcb276e5cd30f67f3445e310314917091"
+    },
+    {
+      "flag": "suppressTopSpacing",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "ad6e3b6fd1f8bd5b4c5a5b6fa8d2858145d7ba2fd9222c856642dd4dc9a37a57",
+      "pdfSha256": "eb45c1293427b1457bc4318794701f6a443bdd4d77035f696a8948c4fe8653f5"
+    },
+    {
+      "flag": "suppressSpacingAtTopOfPage",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "e19def4590e6529898ad569cf6bdf4a5961a26dda9652611050f1ddfd253bb48",
+      "pdfSha256": "c9a7b21cee553d6e368c6854a55fa7e3435ed9be549572b267ed73db7c9bef32"
+    },
+    {
+      "flag": "suppressTopSpacingWP",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "1425afaa6688ac2db7bf43e3bd5e77db595ea1650a56f6b2a6afe9c863859b69",
+      "pdfSha256": "44a362b82109bcbc506438b368495ede1f16416ebba010ad49ef441f6f30d12a"
+    },
+    {
+      "flag": "suppressSpBfAfterPgBrk",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "48cf1c650058eb887ac3ec00dbb324bf61884657e609c5b98574166cc94c3922",
+      "pdfSha256": "aebca3621746c3138d122da6c4b52c5791ca2c8708a6e37e63082863470a9e64"
+    },
+    {
+      "flag": "swapBordersFacingPages",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "febab83c96e5a40097999cb6e02dc7c18573e8b8de51da8e6de40b5dd62fe387",
+      "pdfSha256": "3d042f9007a388d5baa6159c2b1da44d64980f075529f42b44c024b6c8072a67"
+    },
+    {
+      "flag": "truncateFontHeightsLikeWP6",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "7cac23c1f5df054a435ec64be7c167184fdc8f959aa486fb67d810d2ea64b4b5",
+      "pdfSha256": "340eddde6637bf7cb57e9727d009d28e8981505518051c1962d54bb92fce3f25"
+    },
+    {
+      "flag": "mwSmallCaps",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "8efe34ba67feb50837055b56938504aabfeb2f6ab9628e2949d14b1eb4a46320",
+      "pdfSha256": "10076e8e4077b3640af6112d0802973d3987be78f8c859138f4186c4f9933fe6"
+    },
+    {
+      "flag": "usePrinterMetrics",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "1c3e994939ad9e94aec38b2d453ff65d0b54f5b3143a493e5e589718f251fca8",
+      "pdfSha256": "bb64e57044936bb9ca9cc73550ffedcce268a77bab0a9f8abbbaef452e6ad701"
+    },
+    {
+      "flag": "doNotSuppressParagraphBorders",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "00ae94e13c824486cff64c2639b46d2f874bac81b6933674c52911b778edd952",
+      "pdfSha256": "467df48e687ab598ae015970bbb6c8f804d25608bf4d87e75366aec9bfd963a5"
+    },
+    {
+      "flag": "wrapTrailSpaces",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "c097fabe9bc178132ffc83f5170d53a5667fbd246bbe4a7a183a74f1c52d5af5",
+      "pdfSha256": "4f3530b619350c8acb855ada7e81db30b0abd2c1c5f973350e6f7d9d7085d31d"
+    },
+    {
+      "flag": "footnoteLayoutLikeWW8",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "a6c1f33355e2f374c338f5e1a4409a2c0cf00741d12e2b6d390263a6e825f521",
+      "pdfSha256": "0468963a272f65c74da3cc8b0ce00ad7a50290a82daf61683f2e0cd0c76e817e"
+    },
+    {
+      "flag": "shapeLayoutLikeWW8",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "8308b61808413452e6b1a6846c403083e387c8bd65d4e3de50a67bbecda6a140",
+      "pdfSha256": "25924f60088aaca4ad31fab249b257f77e3eabe97df25b688c4a033424c3eb41"
+    },
+    {
+      "flag": "alignTablesRowByRow",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "b58c79da76646a4609e9a00a643e799e2a5a53a108482afc54dccab290508c48",
+      "pdfSha256": "c8847e7329dece92dc37f30f14feecc543efb3204c80b31401e39c78c563b99a"
+    },
+    {
+      "flag": "forgetLastTabAlignment",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "7f3ba77fdffc3bed6729dab78b080140734cb3cce27328eab883e7d00072066f",
+      "pdfSha256": "a8733087b31c1f97ffce1e64077191f2e37243a900e83fd3390f71a77428e2b7"
+    },
+    {
+      "flag": "adjustLineHeightInTable",
+      "value": "1",
+      "betaX": 100.25,
+      "docxSha256": "fe22e3ea5c65c82dce60436f2af9ae3f386d84200b99db7b1248bf680322b30c",
+      "pdfSha256": "2b402b5669d3aff7ea7871399d7900996184db064aedce994316b839cb781594"
+    },
+    {
+      "flag": "autoSpaceLikeWord95",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "cc409a6a1458ea835bb6de3f5e5092f89cfaf69490b2dc1dfa7171e958b2e7e7",
+      "pdfSha256": "2b688fd778f8f97d8194b7e1dade1ec5cdd2d646d5f6abddc5f50888e84285b5"
+    },
+    {
+      "flag": "noSpaceRaiseLower",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "b919a57044891225ff9aab3e426615ff1439befc611ff67d2c6eae769ca0cabb",
+      "pdfSha256": "8591ffaad27ada50b9836d82e59474236d4c32a67240e8ca559228934c464dc8"
+    },
+    {
+      "flag": "doNotUseHTMLParagraphAutoSpacing",
+      "value": "1",
+      "betaX": 100.25,
+      "docxSha256": "db8ff330bb64813d6d74e55b0b42ed9a5f8d09557139f017d01c2e6ba33f0ac7",
+      "pdfSha256": "a5629cf7c8e2971fb02c1e2bd57e73eb2872bfed7b37a471b024ce5de23a376e"
+    },
+    {
+      "flag": "layoutRawTableWidth",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "5e2afef6b9ee52b86a8ec49021eb91c7a74014118de0471e58fadf47de626966",
+      "pdfSha256": "9eb635d323ccef404bd28a99267fbedd37b0f19fe5a07248bf49945d07d0c1bf"
+    },
+    {
+      "flag": "layoutTableRowsApart",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "4e57f19091968ed594e664ea2b9daf9f44e5a99de6bb368a4295d1c8f4601dfb",
+      "pdfSha256": "1cbbeee2d6108aa533e4b89aeca19d7a8d4481704bdefe231894bf730626721f"
+    },
+    {
+      "flag": "useWord97LineBreakRules",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "ee7d2e13667bede5f8bd698d31d763de84fe8f8aca99f310083c2691afde0a75",
+      "pdfSha256": "7fce954947d9ef30bec369fcc4a1e10d99c72ae1f7210010603b26b35313b2b0"
+    },
+    {
+      "flag": "doNotBreakWrappedTables",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "84c7e2f527aff4a0e8e2164efc4a2accee3c99aa969b407f2156fb657659eba4",
+      "pdfSha256": "89b5f10e94fb1b73d7d16922816c5965bd256d6feae5160be4905aa1d638b38b"
+    },
+    {
+      "flag": "doNotSnapToGridInCell",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "a6cac05350ce917a55aed49a0ee9100df4bda1d70d5feaa0c586c37f5319f7e0",
+      "pdfSha256": "9ef993a02f22b4d9ca238efd9a5b626178467c6021b891bef88cfdd47574a4ea"
+    },
+    {
+      "flag": "applyBreakingRules",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "39f74d09137ff915691d6a55107e69a5911d3f7eb75329a95e149da4a9a25d5c",
+      "pdfSha256": "5f73bee4fad18d7771c0878ce3a57785f635412935bee3add7452f037419d969"
+    },
+    {
+      "flag": "doNotWrapTextWithPunct",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "ae96f44be41da051a55aa69fbaaa5879811aad985533fc0836b472637e69daa5",
+      "pdfSha256": "0319745fd945313eb067196bb3c4c282badc33c1acb93db94f2447cdb5875460"
+    },
+    {
+      "flag": "doNotUseEastAsianBreakRules",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "cb0851194f3eeeec0707d6c0291ecbb1d2fd0d9811e196e48b1baca04c5ca95c",
+      "pdfSha256": "ccd97dd09a0ab6810c4d55187a217a4d49694f1b1b40d5435a7f2126aa9282a9"
+    },
+    {
+      "flag": "useWord2002TableStyleRules",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "b33bdee8030257e00e4510b05b83542a86579c4090b194e25080ae96163282a5",
+      "pdfSha256": "3c4214778bcfbc3b3832ea3c3b95a5e887d0c5986252b3b8cde3afc18ef7e975"
+    },
+    {
+      "flag": "growAutofit",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "783aef6502a0d31358f527400123de1d2d3af337cbdc49cda24c2668cc6b808f",
+      "pdfSha256": "5e6610efb626a70c05794a9522686c90518efd12b65b041f49de908f77ee6a6f"
+    },
+    {
+      "flag": "useNormalStyleForList",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "317a000ab52470b515d158a095a33012c2b548f2896c4cdc86447ef4967cdb87",
+      "pdfSha256": "2c1a0e05d97014505910252b9fc251dc4c2ad53c875bca6dcf4b1c82f1cea394"
+    },
+    {
+      "flag": "doNotUseIndentAsNumberingTabStop",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "cb5650ae2dd2e1166d86b38670df16e7e968e0407f293e8760d63c6189b56763",
+      "pdfSha256": "a3551eef5757a26d3e50534d3aa8c72b54f11ad7a54375cf3f24d90396f014d0"
+    },
+    {
+      "flag": "useAltKinsokuLineBreakRules",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "599fbfe25c3fefb508f9718917189617518d8d275953a954728dd536c70d5766",
+      "pdfSha256": "0608104e75a1f7233a33bf74a6b08e1002311b2e300d8cdaec068ec9731b0189"
+    },
+    {
+      "flag": "allowSpaceOfSameStyleInTable",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "041dba5cb94308bb6b0809bea32e86e8eb6376330f8fed322c47a38bfeaa04f6",
+      "pdfSha256": "53dece1b7fbfcec19fc95ee4c9ec49609fcec7e7c10505fa3c66edf90f0e8794"
+    },
+    {
+      "flag": "doNotSuppressIndentation",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "202f410cf273cc4a81511a058f99f373190c17f4a3cb215af630ee50e495e7c1",
+      "pdfSha256": "d3d916332472564527568e82c575a066630a0d9a776624bcf2c19cfb6d70b440"
+    },
+    {
+      "flag": "doNotAutofitConstrainedTables",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "dd74746bc10d935acda881410be9b6a0f271450fff7a617c71f31b65f218b658",
+      "pdfSha256": "14feac12233451dd300f0577d827006136c0384f0f37143a6cc7215e138df679"
+    },
+    {
+      "flag": "autofitToFirstFixedWidthCell",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "56ecf6ba92eb3d801215584c63c1d9f28d23c3b2f1cdea08b3d9616245c5f087",
+      "pdfSha256": "b527f9d9991e6b3b23ab63c03b954e0133e8e531a38c96fe3df0d7b03598dcb9"
+    },
+    {
+      "flag": "underlineTabInNumList",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "237c0efd5c9beb3928e2ccb4c9f992c88ebb07e5ae703b47184842ad424b69d5",
+      "pdfSha256": "fe09f63b204dba6d9dfa19b3a8db48731ff002b39a2bbcc36d4392d2c05560b1"
+    },
+    {
+      "flag": "displayHangulFixedWidth",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "f54e0d6d1367a01dd4d81050e89dd86950ef582b5704ca052f3f35326a889212",
+      "pdfSha256": "51e8a2bb4afc6450c6f664097058d3baa28bcb96c53364e0ee4f41ab6387a2cd"
+    },
+    {
+      "flag": "splitPgBreakAndParaMark",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "11f972b2ca3a4ae8795141601c752dfaf49a16b3bd1cc33dfe0c6ad93205d41c",
+      "pdfSha256": "50042414ffb5b433483497dc36d522c85a6e02ffc0f4f20653932bcd73bd1239"
+    },
+    {
+      "flag": "doNotVertAlignCellWithSp",
+      "value": "1",
+      "betaX": 100.25,
+      "docxSha256": "15340fc82e4e25eb43eb235e521eacce640cd81eb16b898c44106db4b27e5138",
+      "pdfSha256": "9edd49346db1822c8587015a1884fe3f1ff7663d0f2ec55a7159f679edaa1170"
+    },
+    {
+      "flag": "doNotBreakConstrainedForcedTable",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "3ee74a0a4abc746519fe1304e5e1ea81cae52680dcff726d0a9dd973027ac9a7",
+      "pdfSha256": "3ea5fb5289b44d94ccde8cd6addc2aad6555a4a6827d6f4bb8b6df49770fe9d9"
+    },
+    {
+      "flag": "doNotVertAlignInTxbx",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "34f3c052f0a82b326414b746f3d0195fb93b0cb6deca22991af4fa91a528af75",
+      "pdfSha256": "f68544808fc5835e8996e9fd2af8ee9bd81c52e678ef371a42f28de026ce90e7"
+    },
+    {
+      "flag": "useAnsiKerningPairs",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "827281c2d85eb3d6d0c0a1ec2a0903f83132a515a464b505d249ceeb39c94871",
+      "pdfSha256": "67da61dc9f2648f3269011a8c33a120bc21cf5673545b298cb4054ce1483234d"
+    },
+    {
+      "flag": "cachedColBalance",
+      "value": "0",
+      "betaX": 100.25,
+      "docxSha256": "f8f8ed2879295536bdb0af7bbf32611a87a4105bd7092c5ea3b630948c209623",
+      "pdfSha256": "507a85a96ff57e2dced1eaa821796c4ae15cda1143b7552344a216d22036f7d7"
+    }
+  ],
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+  "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745"
+}

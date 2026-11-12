@@ -1,0 +1,2201 @@
+{
+  "schema": "legacy-doc-parser/table-preferred-width-golden",
+  "version": 1,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "measurement": "Source DOC and converted DOCX word bounds plus separate native OOXML projections. Matching geometry does not validate preferred-width semantics.",
+  "knownNativeLosses": [
+    "LibreOffice maps all nil/auto/pct preferences to dxa grid widths and drops noWrap.",
+    "The two TInsert-only style inputs are flattened by this native importer; their distinct source/output layouts remain explicit."
+  ],
+  "cases": [
+    {
+      "name": "tc80-nil",
+      "sourceSha256": "a326ae026d5784dbf71d1656c17bbb835a309899a9b87e4d01b4df05059a86dc",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "nil"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "nil"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-nil",
+      "sourceSha256": "a9da789415267cfec8caf2beb290ce106216fdf545347e971a77da6dedb0b9a4",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "nil"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "nil"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "tc80-auto",
+      "sourceSha256": "369e7e2df74a1b4eb20a0f8b92190d9c1f6ed5b978fa8c4f4063d3e482672284",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-auto",
+      "sourceSha256": "becbddc06b057b9e679122443827ab8db57688cac14b89b86b4e412e10caa363",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "tc80-percent",
+      "sourceSha256": "9aeb7f1693be47a4546bbb4670463260041a2318f09e2227b004819868c134b5",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2500",
+              "widthType": "pct"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2500",
+              "widthType": "pct"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-percent",
+      "sourceSha256": "76ef9b70f80f8a6d26980204abdeb6ce79c0b7b8c55174bfa8a1ee3ebb1e2b05",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2500",
+              "widthType": "pct"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2500",
+              "widthType": "pct"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "tc80-dxa",
+      "sourceSha256": "779bfdfcf49982b45bfc424823330b3717ce874a8ed4ae08bb5030e46098e00e",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-dxa",
+      "sourceSha256": "1b7ec3476c0aa0b0987d0e515b1d50891ff3c51e2d9f75044ef3e37754d860f6",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "tc80-narrow",
+      "sourceSha256": "fa3a3141f6fd1e2cc79eecdc1133f152f88d7ee3d377252f06c84ade3fdaf024",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-narrow",
+      "sourceSha256": "a46060815eb1e540200eab2686832e045d7625031a346c426f17fbd073a9d126",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "dxa-to-auto",
+      "sourceSha256": "023c89fac39788b2672ed3961c48c55464b5b4a424056752699ef393572c3b46",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": true,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "auto-to-dxa",
+      "sourceSha256": "6253844c03ac5105ec83ca705fad82108e7a82f5535cffb80d11338652f9073f",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-reset",
+      "sourceSha256": "2f496b178abcb0058afe8d357b8ec1eda48f5821a7e65ef3f81d95892203d2a4",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "0",
+              "widthType": "auto"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "style-auto",
+      "sourceSha256": "43e1ed4eb91eabf9bab882b1ca1fc1e5075ec0ce7727e64d67a7ba0eec52c21b",
+      "native": [],
+      "converted": [
+        {
+          "cells": [
+            {
+              "noWrap": true,
+              "width": "0",
+              "widthType": "auto"
+            },
+            {
+              "noWrap": true,
+              "width": "0",
+              "widthType": "auto"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "ALPHA": {
+            "page": 1,
+            "xMax": 112.048,
+            "xMin": 72.1,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 146.368,
+            "xMin": 115.072,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 238.996,
+            "xMin": 199.696,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 291.304,
+            "xMin": 241.984,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 196.708,
+            "xMin": 149.356,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETASECONDAFTER": {
+            "page": 1,
+            "xMax": 410.86,
+            "xMin": 294.292,
+            "yMax": 96.192,
+            "yMin": 82.908
+          }
+        }
+      },
+      "convertedLayout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "style-dxa",
+      "sourceSha256": "dd883dfaa14d8fe5e713ecdc56e8696987196cea42dacec42ce7a352b130457a",
+      "native": [],
+      "converted": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "ALPHA": {
+            "page": 1,
+            "xMax": 112.048,
+            "xMin": 72.1,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 146.368,
+            "xMin": 115.072,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 238.996,
+            "xMin": 199.696,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 291.304,
+            "xMin": 241.984,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 196.708,
+            "xMin": 149.356,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETASECONDAFTER": {
+            "page": 1,
+            "xMax": 410.86,
+            "xMin": 294.292,
+            "yMax": 96.192,
+            "yMin": 82.908
+          }
+        }
+      },
+      "convertedLayout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "tc80-asymmetric",
+      "sourceSha256": "93995890d17d2380b9d393e23a8f4668cd4845f8a4342aa3b3e11e9c904d4d3b",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "3600",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "range-asymmetric",
+      "sourceSha256": "c09f5ffe5ac4073d7c683cd4f1099e68942b13aefca8bafbd7c44a13ffe6ad96",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "2400",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "3600",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            2400,
+            2400
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 151.768,
+            "xMin": 120.472,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 167.092,
+            "xMin": 127.804,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "EPSILON": {
+            "page": 1,
+            "xMax": 126.784,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 245.44,
+            "xMin": 197.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 160.42,
+            "xMin": 129.772,
+            "yMax": 120.192,
+            "yMin": 106.908
+          }
+        }
+      }
+    },
+    {
+      "name": "grid-asymmetric-control",
+      "sourceSha256": "ab1f6cf1c722580ea40010d1ed8f7272ba0f7d33bdc2b8adbd737e3f5be0c3b4",
+      "native": [
+        {
+          "cells": [
+            {
+              "noWrap": false,
+              "width": "1200",
+              "widthType": "dxa"
+            },
+            {
+              "noWrap": false,
+              "width": "3600",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            1200,
+            3600
+          ]
+        }
+      ],
+      "converted": [
+        {
+          "cells": [
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "1200",
+              "widthType": "dxa"
+            },
+            {
+              "hideMark": "off",
+              "noWrap": false,
+              "tcFitText": "off",
+              "textDirection": "lrTb",
+              "width": "3600",
+              "widthType": "dxa"
+            }
+          ],
+          "grid": [
+            1200,
+            3600
+          ]
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "AFTER": {
+            "page": 1,
+            "xMax": 110.08,
+            "xMin": 72.1,
+            "yMax": 168.192,
+            "yMin": 154.908
+          },
+          "ALPHA": {
+            "page": 1,
+            "xMax": 117.448,
+            "xMin": 77.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "BETA": {
+            "page": 1,
+            "xMax": 108.796,
+            "xMin": 77.5,
+            "yMax": 108.192,
+            "yMin": 94.908
+          },
+          "BODY": {
+            "page": 1,
+            "xMax": 106.06,
+            "xMin": 72.1,
+            "yMax": 84.192,
+            "yMin": 70.908
+          },
+          "DELTA": {
+            "page": 1,
+            "xMax": 116.8,
+            "xMin": 77.5,
+            "yMax": 132.192,
+            "yMin": 118.908
+          },
+          "EPSILO": {
+            "page": 1,
+            "xMax": 118.132,
+            "xMin": 77.5,
+            "yMax": 144.192,
+            "yMin": 130.908
+          },
+          "GAMMA": {
+            "page": 1,
+            "xMax": 124.816,
+            "xMin": 77.5,
+            "yMax": 120.192,
+            "yMin": 106.908
+          },
+          "N": {
+            "page": 1,
+            "xMax": 86.164,
+            "xMin": 77.5,
+            "yMax": 156.192,
+            "yMin": 142.908
+          },
+          "SECOND": {
+            "page": 1,
+            "xMax": 185.452,
+            "xMin": 137.5,
+            "yMax": 96.192,
+            "yMin": 82.908
+          },
+          "ZETA": {
+            "page": 1,
+            "xMax": 119.8,
+            "xMin": 89.152,
+            "yMax": 156.192,
+            "yMin": 142.908
+          }
+        }
+      }
+    }
+  ]
+}

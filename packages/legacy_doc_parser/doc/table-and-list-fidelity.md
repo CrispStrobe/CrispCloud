@@ -63,6 +63,66 @@ References: [TDefTableOperand](https://learn.microsoft.com/en-us/openspecs/offic
 and [Table Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b39a6648-501c-4361-8366-4f042f579469).
 Tests: `test/legacy_word_table_origin_test.dart`.
 
+## Incremental row operations and table boundaries
+
+`PTableProps` reads the referenced bounded `Data` record and stops its containing
+property array. Older inline table properties after that pointer are not applied
+or decoded as current properties. The same rule applies when multiple rows reuse
+a cached record. Records shorter than ten bytes, cycles, excessive chains, and
+out-of-range extents fail explicitly.
+
+Rows now apply `TInsert`, `TDelete`, `TDxaCol`, `TMerge`, and `TSplit` in source
+order. Cell widths, TC80 formatting, borders, shading, margins, and alignment move
+with their cell definitions; deleting a cell cannot accidentally move its direct
+formatting onto an unrelated cell. Empty deletion results, invalid cell ranges,
+and excessive widths are rejected. Merge flags remain native editable `hMerge`
+properties. The preview keeps continuation text visible, which is intentionally
+not a claim of exact Word merged-cell layout.
+
+Style application replaces supported row defaults while retaining the existing
+cell definitions and direct cell formatting. It also retains TIstd's documented
+exceptions such as direction, origin-related positioning, half-gap, row height,
+auto-fit, style options, and review metadata. This distinction is independently
+tested with Apache POI's Word-authored `simple-table2.doc`: its modern Data rows
+contain `TInsert → TDxaCol → TIstd`, without another cell definition. Clearing
+the cell structure at TIstd would destroy that valid three-column table. The
+same fixture has an explicit two-byte `istd` prefix in both table-style PAPX
+records; the reconciled implementation retains that framing. See
+`doc/table-upx-native-evidence.md` for the source hashes and raw evidence.
+
+Adjacent rows with different table-style, direction, or retained group/position
+identities form separate tables before conditional text is resolved. Physical
+`TJc90` values and logical `TJc` values remain distinct, including in right-to-left
+tables. DOCX writes native `bidiVisual`, justification, width, and fixed/automatic
+layout properties. Later rows can explicitly restore left alignment and fixed
+layout through `tblPrEx`; defaults on a later row do not silently inherit the
+first row's nondefault setting. PGP hierarchy interpretation and floating table
+placement remain unsupported and diagnosed.
+
+Table style UPXs are decoded without following Data-stream references. Property
+groups, known forbidden structural operators, and nested conditions are checked
+before application. Supported conditional text/cell formatting keeps its existing
+precedence and explicit-reset semantics; other visual style properties continue
+to report partial formatting.
+
+Tests: `test/legacy_word_table_operations_test.dart`,
+`test/legacy_word_table_properties_test.dart`, and the independently assembled
+`tool/fidelity/table_operations_fixture.dart`. All twelve authored outputs are
+registered by exact identity in the independent Open XML SDK schema corpus.
+Schema validity does not establish native pagination or mirrored-table equivalence.
+
+The HTML preview now uses resolved cell borders, margins, vertical alignment,
+no-wrap, table direction, origin, alignment and sizing preferences. It no longer
+invents a gray grid or four-pixel cell margins. Exact row heights, unequal row
+origins, vertical cell text, fit-text, and hide-mark behavior remain explicitly
+marked as approximate when encountered. Tests are in
+`test/legacy_word_table_preview_test.dart`.
+
+References: [Table Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b39a6648-501c-4361-8366-4f042f579469),
+[Paragraph Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58),
+[UpxTapx](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/eed2eef0-2943-4c2f-b348-3f1d1af59fdf),
+and [UpxPapx](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/659f448a-473a-44c6-8b69-a25984af3645).
+
 ## Cell formatting and conditional table styles
 
 The parser now reads `StkTableGRLPUPX` table styles and retains their names,
@@ -84,6 +144,7 @@ Modern `sprmTInsert` rows can inherit cell formatting from the table style.
 Direct `TC80` borders and alignment, ordered `sprmTSetBrc80` / `sprmTSetBrc`
 updates, and `CSSA` default and per-cell margins survive as editable cell
 properties. A nil border explicitly removes a border; it does not inherit.
+A cell border of type none inherits the applicable style or row default.
 Raw nil shading inherits the style, whereas raw automatic shading clears the
 fill. These two nil meanings are deliberately separate.
 
@@ -118,10 +179,11 @@ are retained as conversion evidence and reported as partial formatting because
 overlapping conditional contexts cannot be represented by one context-free
 native toggle rule. This limitation does not apply to the ordinary CHPX toggles
 whose resolved runs remain explicit native text.
-Differently styled rows retain their resolved cell formatting; the first row's
-style supplies the table-wide native style reference. Floating tables,
-cell-spacing geometry, and additional incremental row operators still require
-further work. This is not a claim of complete conditional-style equivalence.
+Differently styled adjacent rows become separate tables, each retaining its own
+native style reference and resolved cell/text formatting. Floating tables,
+cell-spacing geometry, preferred percentage widths, and additional incremental
+row operators still require further work. This is not a claim of complete
+conditional-style equivalence.
 
 Primary references:
 
@@ -168,9 +230,29 @@ the instances to one editable `w:num`; conversion evidence records that mapping.
 Numbering continues across intervening paragraphs and does not depend on which
 instance is encountered first.
 
-Groups that include start or formatting overrides still report
-`numberingNotReconstructed`. The first-use override and per-level restart rules
-require more than grouping by `lsid`; those instances are not silently merged.
+The reconciled shared resolver also retains explicit LFOLVL `startOverrides`,
+shares counters across compatible formatting-only changes, and resolves
+multilevel restarts and ancestor references in source character order. Ancestor
+placeholders use the same source `ilfo`, while compatible counters share `lsid`.
+Each body, header, note, comment, or textbox story starts its own scope. When a
+resumed sequence needs different counters or ancestor values, conversion emits
+a real editable `w:num` with `w:startOverride`, rather than baking a label into
+text. Paragraph numbering-change and insertion revisions reference that actual
+native instance.
+
+The two retained source fixtures `list-continue.doc` and `list-restart.doc` have
+independent single-level render receipts in `doc/list-sequence-native-check.json`
+from recovered branch `b03747396878518d0d623599baf9b376df776e3d`. These are historical
+receipts, not regenerated results for every later converter revision. Their
+source/converted labels are respectively `1, 2, 3, 4, 5` and
+`1, 2, 7, 8, 3, 9`. Authored binary tests additionally exercise Roman formatting
+changes, same-instance ancestors, never-restart lower levels, story isolation,
+hidden markers and numbering revisions on a resumed instance.
+
+Interleaved explicit-start groups and incompatible base policies still report
+`numberingNotReconstructed`; the published fStartAt algorithm is ambiguous for
+some restart/resume combinations. The two native examples do not establish
+identical behavior across all Word versions or all multilevel overrides.
 
 ## Marker font inheritance and the indentation oracle
 
@@ -211,9 +293,99 @@ different formatting.
 Reference: [Determining Level Number of a Paragraph](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/361e48e1-ae56-4b62-a950-01664b2cc006).
 Tests: `test/legacy_word_list_continuation_test.dart`.
 
+## Row height, page splitting and cell text layout
+
+`sprmTDyaRowHeight` retains its signed value: zero selects automatic height,
+positive values establish a minimum, and negative values specify an exact
+height. The native writer emits `w:trHeight` with the corresponding `auto`,
+`atLeast` or `exact` rule. Values outside the MS-DOC YAS range of
+-31680 to 31680 twips are rejected. `sprmTFCantSplit` takes precedence over
+`sprmTFCantSplit90` regardless of record order; a lone legacy flag is retained.
+Explicit false and absent flags remain distinct. These rules come from
+[MS-DOC table properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b39a6648-501c-4361-8366-4f042f579469)
+and [YAS](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/cc683bcd-0c67-4002-9317-53e92a4d793d).
+
+TC80 cell descriptors now preserve the five legal text directions, `fitText`
+and `hideMark`. Invalid text-flow codes are rejected. These are editable native
+`w:textDirection`, `w:tcFitText` and `w:hideMark` properties, with explicit
+`on`/`off` reset values. The mapping follows
+[TCGRF](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/11bf5b1c-943f-421d-bbf3-39088cd1b8dd)
+and [TextFlow](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/91341630-00bb-4b5f-891e-0ea68a069d9a).
+Row properties inside table-style differences and separate range-update
+operators for text flow, fit text and hide mark remain outside this increment.
+
+`tool/fidelity/table_layout_fixture.dart OUTPUT_DIR` independently assembles
+five height fixtures, two page-boundary split fixtures, and a cell-layout
+fixture. Its inputs specify a font, exact line spacing and page dimensions;
+the expected row heights do not depend on the parser's own XML writer.
+`test/fixtures/word_native/table-layout-golden.json` records the reviewed
+source hashes, native row properties and text positions. Run:
+
+```sh
+dart run tool/fidelity/table_layout_fixture.dart build/table-layout-inputs
+python3 tool/fidelity/table_layout_probe.py \
+  --office /path/to/soffice \
+  --fixtures build/table-layout-inputs \
+  --output build/table-layout-measurements \
+  --golden test/fixtures/word_native/table-layout-golden.json
+```
+
+On LibreOfficeDev 26.8.0.0.alpha0
+`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5`, all five measured row extents agreed
+to 0.0 points. An allowed split placed the first three lines of a six-line row
+on page 1 and the remaining three on page 2; `cantSplit` moved all six lines
+to page 2. Source DOC and converted DOCX matched these positions and page
+assignments. The SDK independently validated all eight generated packages.
+This renderer drops fit/hide properties and simplifies the East Asian rotated
+flow variants when exporting native DOCX, so those fields have structural
+preservation assertions rather than an exact-rendering claim. The probe checks
+both the current native source projection and the parser output against the
+reviewed golden and exits unsuccessfully on a mismatch.
+
+Tests: `test/legacy_word_table_layout_test.dart` and
+`tool/fidelity/test_table_layout_probe.py`. These bounded cases do not establish
+exact pagination for arbitrary tables, other fonts or other renderers.
+
+## Direct row-wide borders
+
+Both `sprmTTableBorders80` and `sprmTTableBorders` preserve all six row defaults:
+top, left, bottom, right, horizontal interior and vertical interior. Record
+lengths are checked exactly. Row defaults survive whether they occur before
+or after `TDefTable`; later row-default records replace earlier values.
+Native output retains the defaults in `w:tr/w:tblPrEx/w:tblBorders` and also
+emits the resolved physical borders on each cell.
+
+Explicit non-none TC80 and range-update borders still take precedence. Nil
+suppresses an edge; none requests inheritance. A later range update to none
+can therefore restore a row default that an earlier explicit cell border
+overrode. Conditional cell-style borders are considered before row defaults;
+direct row defaults replace the base table-style defaults. The interpretation
+follows [MS-DOC TableBordersOperand80](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/e334b793-1c10-4fed-8fac-69c3f8fb41b6),
+[TableBordersOperand](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/203adfdf-332c-4f4e-b3d9-3a809d4b275b)
+and [Word's documented border-resolution rules](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/7c791c5d-44c3-4fe8-abdd-8f136761bb93).
+
+The independent producer `tool/fidelity/table_borders_fixture.dart OUTPUT_DIR`
+contains twelve cases: old/current row records, both application orders,
+explicit cell overrides, nil suppression, none inheritance, a whole-row reset,
+and differently colored and weighted outer/interior edges. Run
+`tool/fidelity/table_borders_probe.py` with the same `--office`, `--fixtures`,
+`--output` and `--golden` interface as the layout probe, using
+`test/fixtures/word_native/table-borders-golden.json`.
+
+On the renderer version recorded above, all twelve native source/converted
+border projections agreed and their colored border masks matched exactly at
+144 DPI. Positive fixtures contain 2,748–11,916 colored pixels; nil/reset
+controls contain zero. The comparison excludes grayscale text and is a
+border-rendering check, not a whole-document pixel claim. All twelve generated
+packages pass the independent Open XML SDK schema check, including row
+exceptions. Eight binary/model/XML tests and five probe failure-control tests
+cover the increment in `test/legacy_word_row_borders_test.dart` and
+`tool/fidelity/test_table_borders_probe.py`.
+
 ## Residual scope
 
 Floating-table placement, additional conditional text operators, native relative
-table-style toggle rules, and list-instance
-continuation with overrides need their own property-level interpretation. Retaining nested
+table-style toggle rules, adjacent-row table boundaries that depend on style or
+floating-position changes, and unverified list-instance
+restart combinations need their own property-level interpretation. Retaining nested
 content alone does not establish page-layout equivalence to Microsoft Word.

@@ -18,6 +18,8 @@ extension _WordTables on _StructuredWordParser {
       final start = paragraphs[cursor].paragraph.startCp;
       var end = start;
       final rows = <LegacyWordTableRow>[];
+      _Props? tableProperties;
+      var rowCursor = cursor, lastRowEnd = start;
       final cells = <List<LegacyWordBlock>>[];
       var cell = <LegacyWordBlock>[];
       while (cursor < paragraphs.length) {
@@ -55,8 +57,21 @@ extension _WordTables on _StructuredWordParser {
               'Word table cell count does not match its row.',
             );
           }
+          if (tableProperties != null &&
+              !_sameTableRows(tableProperties, properties)) {
+            cursor = rowCursor;
+            cells.clear();
+            cell = [];
+            end = lastRowEnd;
+            break;
+          }
+          tableProperties ??= properties;
           rows.add(
             LegacyWordTableRow(
+              sourceHeaderRequest: properties['rowHeader'] as bool?,
+              formattingRevision: _tableRowRevision(properties),
+              alignment: _tableAlignment(properties),
+              autoFit: properties['tableAutoFit'] == true,
               originTwips:
                   properties['tableOrigin'] as int? ?? definition.edges.first,
               tableStyleId: _resolvedTableStyleId(
@@ -64,6 +79,14 @@ extension _WordTables on _StructuredWordParser {
               ),
               styleOptions: properties['tableStyleOptions'] as int? ?? 0x600,
               halfGapTwips: properties['tableGapHalf'] as int? ?? 0,
+              heightTwips: properties['tableRowHeight'] as int?,
+              cantSplit:
+                  properties['tableCantSplit'] as bool? ??
+                  properties['tableCantSplit90'] as bool?,
+              borders:
+                  properties['tableBorders']
+                      as Map<LegacyWordTableBorderSide, LegacyWordBorder>? ??
+                  const {},
               // Only leading, contiguous rows are repeating headers.
               isHeader:
                   properties['rowHeader'] == true &&
@@ -81,6 +104,14 @@ extension _WordTables on _StructuredWordParser {
                           ? definition.formats[i]
                           : const LegacyWordTableCellFormat(),
                       LegacyWordTableCellFormat(
+                        verticalAlignment:
+                            (properties['cellAlignment']
+                                    as Map<int, int>?)?[i] ==
+                                null
+                            ? null
+                            : LegacyWordCellAlignment
+                                  .values[(properties['cellAlignment']
+                                  as Map<int, int>)[i]!],
                         margins: Map.unmodifiable({
                           ...?properties['tableMargins']
                               as Map<LegacyWordBorderSide, int?>?,
@@ -111,7 +142,10 @@ extension _WordTables on _StructuredWordParser {
             ),
           );
           cells.clear();
+          rowCursor = cursor;
+          lastRowEnd = end;
         } else {
+          _unplacedTableRowRevision(properties);
           cell.add(paragraph);
           if (cellEnd) {
             cells.add(cell);
@@ -130,6 +164,11 @@ extension _WordTables on _StructuredWordParser {
         startCp: start,
         endCp: end,
         rows: List.unmodifiable(_resolveTableStyleCells(rows)),
+        rightToLeft:
+            tableProperties?['tableRtl'] == true ||
+            tableProperties?['tableRtl90'] == true,
+        autoFit: tableProperties?['tableAutoFit'] == true,
+        alignment: _tableAlignment(tableProperties ?? const {}),
       );
     }
 
@@ -137,6 +176,7 @@ extension _WordTables on _StructuredWordParser {
     while (cursor < paragraphs.length) {
       final item = paragraphs[cursor];
       if (depthOf(item) == 0) {
+        _unplacedTableRowRevision(item.properties);
         if (item.properties['rowEnd'] == true ||
             item.properties['innerRowEnd'] == true ||
             item.properties['innerCellEnd'] == true) {

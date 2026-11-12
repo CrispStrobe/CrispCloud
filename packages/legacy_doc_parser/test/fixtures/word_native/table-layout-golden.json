@@ -1,0 +1,500 @@
+{
+  "schema": "legacy-doc-parser/table-layout-golden",
+  "version": 1,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "review": "Independent binary inputs and native row properties reviewed; source/converted positions agree to 0.0pt. Cell fit/hide and rotated East Asian variants require structural assertions because this renderer drops them.",
+  "cases": [
+    {
+      "name": "auto",
+      "sourceSha256": "76faa48b1f01742b4e6251c1a5d3b21ced180862630ceea927df63427967315f",
+      "rows": [
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "CELL": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 71.452,
+            "yMax": 60.192
+          },
+          "LINE2": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 58.908,
+            "xMax": 74.788,
+            "yMax": 72.192
+          },
+          "LINE3": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 70.908,
+            "xMax": 74.788,
+            "yMax": 84.192
+          },
+          "NEXT": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 82.908,
+            "xMax": 73.456,
+            "yMax": 96.192
+          },
+          "AFTER": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 94.908,
+            "xMax": 74.08,
+            "yMax": 108.192
+          }
+        }
+      }
+    },
+    {
+      "name": "minimum-short",
+      "sourceSha256": "7fd1f438d4c792cd83acb4599f37bcc5005a07a33cc9389aaaf1ace58c1d9a57",
+      "rows": [
+        {
+          "heightTwips": 960,
+          "heightRule": "atLeast",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "CELL": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 71.452,
+            "yMax": 60.192
+          },
+          "NEXT": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 94.908,
+            "xMax": 73.456,
+            "yMax": 108.192
+          },
+          "AFTER": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 106.908,
+            "xMax": 74.08,
+            "yMax": 120.192
+          }
+        }
+      }
+    },
+    {
+      "name": "minimum-content",
+      "sourceSha256": "eadad4286eee5cf49c950c056ee2839b800f2f3acbc4c3e6991dcb04eeb46912",
+      "rows": [
+        {
+          "heightTwips": 240,
+          "heightRule": "atLeast",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "CELL": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 71.452,
+            "yMax": 60.192
+          },
+          "LINE2": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 58.908,
+            "xMax": 74.788,
+            "yMax": 72.192
+          },
+          "LINE3": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 70.908,
+            "xMax": 74.788,
+            "yMax": 84.192
+          },
+          "NEXT": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 82.908,
+            "xMax": 73.456,
+            "yMax": 96.192
+          },
+          "AFTER": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 94.908,
+            "xMax": 74.08,
+            "yMax": 108.192
+          }
+        }
+      }
+    },
+    {
+      "name": "exact-short",
+      "sourceSha256": "362e25a376c0f37c48fabf826475f1413ebd0b8c9709747ce291d36ab78c4d71",
+      "rows": [
+        {
+          "heightTwips": 960,
+          "heightRule": "exact",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "CELL": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 71.452,
+            "yMax": 60.192
+          },
+          "NEXT": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 94.908,
+            "xMax": 73.456,
+            "yMax": 108.192
+          },
+          "AFTER": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 106.908,
+            "xMax": 74.08,
+            "yMax": 120.192
+          }
+        }
+      }
+    },
+    {
+      "name": "exact-content",
+      "sourceSha256": "6d9f516ea47f34d8963956b8c41e822d0a727c8a5a145345ac864ea6ad5b397f",
+      "rows": [
+        {
+          "heightTwips": 240,
+          "heightRule": "exact",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        }
+      ],
+      "layout": {
+        "pages": 1,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "CELL": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 71.452,
+            "yMax": 60.192
+          },
+          "NEXT": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 58.908,
+            "xMax": 73.456,
+            "yMax": 72.192
+          },
+          "AFTER": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 70.908,
+            "xMax": 74.08,
+            "yMax": 84.192
+          }
+        }
+      }
+    },
+    {
+      "name": "split-row",
+      "sourceSha256": "32a3d77b76da2f6fba0f7aaae64a3f472a679c5a763a136e3f978e3d72d149e0",
+      "rows": [
+        {
+          "heightTwips": 1800,
+          "heightRule": "atLeast",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": false
+        }
+      ],
+      "layout": {
+        "pages": 2,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "PREFIX": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 82.792,
+            "yMax": 60.192
+          },
+          "ROW2A": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 136.908,
+            "xMax": 84.112,
+            "yMax": 150.192
+          },
+          "ROW2B": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 148.908,
+            "xMax": 83.44,
+            "yMax": 162.192
+          },
+          "ROW2C": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 160.908,
+            "xMax": 83.44,
+            "yMax": 174.192
+          },
+          "ROW2D": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 34.908,
+            "xMax": 84.112,
+            "yMax": 48.192
+          },
+          "ROW2E": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 82.768,
+            "yMax": 60.192
+          },
+          "ROW2F": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 58.908,
+            "xMax": 82.12,
+            "yMax": 72.192
+          },
+          "AFTER": {
+            "page": 2,
+            "xMin": 36.1,
+            "yMin": 70.908,
+            "xMax": 74.08,
+            "yMax": 84.192
+          }
+        }
+      }
+    },
+    {
+      "name": "keep-row",
+      "sourceSha256": "e42d0b0acd86a877395b2ea900d79d6c2aad612d6be3db7b27f2554d2ad38108",
+      "rows": [
+        {
+          "heightTwips": 1800,
+          "heightRule": "atLeast",
+          "cantSplit": false
+        },
+        {
+          "heightTwips": 0,
+          "heightRule": "auto",
+          "cantSplit": true
+        }
+      ],
+      "layout": {
+        "pages": 2,
+        "words": {
+          "BODY": {
+            "page": 1,
+            "xMin": 36.1,
+            "yMin": 34.908,
+            "xMax": 70.06,
+            "yMax": 48.192
+          },
+          "PREFIX": {
+            "page": 1,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 82.792,
+            "yMax": 60.192
+          },
+          "ROW2A": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 34.908,
+            "xMax": 84.112,
+            "yMax": 48.192
+          },
+          "ROW2B": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 46.908,
+            "xMax": 83.44,
+            "yMax": 60.192
+          },
+          "ROW2C": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 58.908,
+            "xMax": 83.44,
+            "yMax": 72.192
+          },
+          "ROW2D": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 70.908,
+            "xMax": 84.112,
+            "yMax": 84.192
+          },
+          "ROW2E": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 82.908,
+            "xMax": 82.768,
+            "yMax": 96.192
+          },
+          "ROW2F": {
+            "page": 2,
+            "xMin": 41.5,
+            "yMin": 94.908,
+            "xMax": 82.12,
+            "yMax": 108.192
+          },
+          "AFTER": {
+            "page": 2,
+            "xMin": 36.1,
+            "yMin": 106.908,
+            "xMax": 74.08,
+            "yMax": 120.192
+          }
+        }
+      }
+    },
+    {
+      "name": "cell-layout",
+      "sourceSha256": "dd5e9f34081bc9b8d43794aea114872235fd48f9de63486e0a64deb0f6677a86",
+      "rows": [
+        {
+          "heightTwips": 1440,
+          "heightRule": "exact",
+          "cantSplit": false
+        }
+      ],
+      "cellProperties": [
+        {
+          "textDirection": "lrTb",
+          "fitText": false,
+          "hideMark": true
+        },
+        {
+          "textDirection": "tbRl",
+          "fitText": true,
+          "hideMark": false
+        },
+        {
+          "textDirection": "btLr",
+          "fitText": true,
+          "hideMark": false
+        },
+        {
+          "textDirection": "lrTbV",
+          "fitText": false,
+          "hideMark": false
+        },
+        {
+          "textDirection": "tbRlV",
+          "fitText": true,
+          "hideMark": false
+        }
+      ],
+      "nativeCellProjection": [
+        {},
+        {
+          "textDirection": "tbRl"
+        },
+        {
+          "textDirection": "btLr"
+        },
+        {},
+        {
+          "textDirection": "tbRl"
+        }
+      ]
+    }
+  ]
+}

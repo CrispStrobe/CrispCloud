@@ -1063,3 +1063,17 @@ combined tree. Source bindings after restoring the test configuration:
   "reviewed_source_sha256": "9e7a47c431be1c90a31bdb59a41aa3faa6f6d77a01ebe5c441f7ac36b654a00a"
 }
 ```
+
+### Parser 53a7f0d integration source binding
+
+The exact parser mirror now follows `53a7f0df113f0b88967f7fecd492652ad5c730d5` through Quds `09f5ec4b8eba290ff4d65678179854fb6ff6a468`. Ten additional parser implementation files bring the reviewed inventory to 371 paths. They implement bounded media previews, fixed number formats, list/table operations, positioning, image appearance and row history. The runtime dependency remains `archive`; these changes add no cryptographic implementation, native provider or network operation.
+
+The root lockfile is unchanged. The 99 Word workflow tests, 74 Python harness tests, portable JavaScript checks and installed-Office acceptance pass on this integration. Temporary test hooks were removed before the following fingerprints were calculated. Only the three source-binding digests change; all existing non-digest policy fields and distribution decisions remain byte-equivalent in value. No release or filing is performed.
+
+```json
+{
+  "inventory_sha256": "c11e150c15ca1553e3575db74fb398ce0fd7e6892fe0e7c70c07429c185815c6",
+  "pubspec_lock_sha256": "2a8c1f83455844560fb694c51d15f1b875f83a8a15b84ce083482568af4c7139",
+  "reviewed_source_sha256": "532f0d03449787b9805d3b8edc0f7c4f55f94eb5c9ad7049c587341a43f8addb"
+}
+```

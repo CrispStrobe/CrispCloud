@@ -68,10 +68,10 @@ DecodedOfficeArtMetafile decodeOfficeArtMetafile(
   } else {
     decoded = _inflateMetafile(encoded, decodedLength);
   }
-  final info = parseLegacyWordMetafile(
+  final info = _parseLegacyWordMetafile(
     decoded,
     format: format,
-    bounds: bounds,
+    officeArtBounds: bounds,
     widthEmu: width,
     heightEmu: height,
     maxPreviewCharacters: (maxDecodedBytes - decodedLength).clamp(
@@ -181,6 +181,23 @@ LegacyWordMetafileInfo parseLegacyWordMetafile(
   int? widthEmu,
   int? heightEmu,
   int maxPreviewCharacters = 8 * 1024 * 1024,
+}) => _parseLegacyWordMetafile(
+  bytes,
+  format: format,
+  bounds: bounds,
+  widthEmu: widthEmu,
+  heightEmu: heightEmu,
+  maxPreviewCharacters: maxPreviewCharacters,
+);
+
+LegacyWordMetafileInfo _parseLegacyWordMetafile(
+  Uint8List bytes, {
+  required LegacyWordImageFormat format,
+  LegacyWordVectorBounds? bounds,
+  LegacyWordVectorBounds? officeArtBounds,
+  int? widthEmu,
+  int? heightEmu,
+  int maxPreviewCharacters = 8 * 1024 * 1024,
 }) {
   if (bytes.length > legacyWordMetafileByteLimit) {
     throw const FormatException('Metafile exceeds its byte limit.');
@@ -207,6 +224,7 @@ LegacyWordMetafileInfo parseLegacyWordMetafile(
       : const _MetafilePreview(null, []);
   return LegacyWordMetafileInfo(
     bounds: selectedBounds,
+    officeArtBounds: officeArtBounds,
     recordCount: scan.records.length,
     nativeEmbeddingAllowed: scan.nativeEmbeddingAllowed,
     widthEmu: widthEmu,
@@ -368,15 +386,70 @@ _MetafileScan _scanWmf(
   if (!eof || observedMax > maxRecord) {
     throw const FormatException('Inconsistent WMF maximum record or end.');
   }
+  final canvas =
+      suppliedBounds ?? placeableBounds ?? _initialWmfCanvas(input, records);
   return _MetafileScan(
     records,
-    suppliedBounds ??
-        placeableBounds ??
-        const LegacyWordVectorBounds(0, 0, 1, 1),
+    canvas ?? const LegacyWordVectorBounds(0, 0, 1, 1),
     native,
     objects,
-    boundsKnown: suppliedBounds != null || placeableBounds != null,
+    boundsKnown: canvas != null,
   );
+}
+
+/// MS-WMF 3.1.1/3.1.3: an independent WMF supplies its window mapping; its
+/// player supplies the viewport. A nonplaceable WMF has no intrinsic pixel
+/// rectangle. Use a normalized initial anisotropic window only when explicit
+/// setup precedes painting. Never reinterpret OfficeArt rcBounds as pixels:
+/// real producers store their preferred physical-unit size there.
+LegacyWordVectorBounds? _initialWmfCanvas(
+  _MetaBytes input,
+  List<_MetafileRecord> records,
+) {
+  var mode = 1;
+  int? width, height;
+  LegacyWordVectorBounds? canvas() =>
+      mode == 8 && width != null && height != null && width != 0 && height != 0
+      ? LegacyWordVectorBounds(0, 0, width.abs(), height.abs())
+      : null;
+  for (final record in records) {
+    final data = _MetaBytes(
+      Uint8List.sublistView(
+        input.bytes,
+        record.offset,
+        record.offset + record.size,
+      ),
+    );
+    switch (record.type) {
+      case 0x0103:
+        mode = data.i16(6);
+      case 0x020c:
+        height = data.i16(6);
+        width = data.i16(8);
+      case 0x020b:
+      case 0x020f:
+        data.require(6, 4); // Window origin is replayed, not a device origin.
+      case 0x001e:
+      case 0x0127:
+      case 0x020d:
+      case 0x020e:
+      case 0x0211:
+        return null; // Context-dependent viewport/stack setup is ambiguous.
+      case 0x0102:
+      case 0x0104:
+      case 0x0106:
+      case 0x012d:
+      case 0x01f0:
+      case 0x0201:
+      case 0x0209:
+      case 0x02fa:
+      case 0x02fc:
+        break; // Object and color setup do not establish a coordinate canvas.
+      default:
+        return canvas();
+    }
+  }
+  return canvas();
 }
 
 class _MetaBytes {

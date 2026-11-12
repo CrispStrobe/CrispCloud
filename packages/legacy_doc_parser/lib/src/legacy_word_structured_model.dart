@@ -38,6 +38,17 @@ enum LegacyWordWarning {
 
   /// A cb=0 PAPX had one uninterpreted final byte after complete properties.
   recoveredNonconformingProperties,
+
+  /// The final main-story CR is missing from exact CHPX physical/bin bounds.
+  terminalMarkFormattingUnavailable,
+
+  /// A main-textbox spare range ended at the exact whole-document sentinel.
+  /// Every real range remained bounded by the textbox story length.
+  recoveredGlobalTextboxSentinel,
+
+  /// A note format is unknown or requires a disclosed decimal fallback.
+  /// The original MSONFC code remains available on the note numbering model.
+  unsupportedNoteNumberFormat,
 }
 
 enum LegacyWordAlignment { left, center, right, justify, distribute }
@@ -350,6 +361,7 @@ class LegacyWordNumberingDefinition {
     required this.levels,
     this.sourceListId,
     this.continuationOf,
+    this.startOverrides = const {},
   });
 
   /// The absolute, one-based ilfo referenced by paragraph listId.
@@ -362,6 +374,10 @@ class LegacyWordNumberingDefinition {
   /// parser sets this only for a shared lsid with no LFO level overrides.
   /// Both definitions retain their original ids and share the same levels.
   final int? continuationOf;
+
+  /// Explicit LFOLVL start overrides, distinct from each resolved level's
+  /// default. Formatting-only overrides can still share source LSID counters.
+  final Map<int, int> startOverrides;
   final List<LegacyWordNumberingLevel> levels;
 }
 
@@ -430,21 +446,43 @@ class LegacyWordTable extends LegacyWordBlock {
     required super.startCp,
     required super.endCp,
     required this.rows,
+    this.autoFit = false,
+    this.rightToLeft = false,
+    this.alignment = LegacyWordAlignment.left,
   });
   final List<LegacyWordTableRow> rows;
+  final bool autoFit;
+  final bool rightToLeft;
+
+  /// Logical table alignment (left means its leading edge). Physical TJc90
+  /// source values are resolved against the table direction during parsing.
+  final LegacyWordAlignment alignment;
 }
 
 class LegacyWordTableRow {
   const LegacyWordTableRow({
     required this.cells,
     this.isHeader = false,
+    this.sourceHeaderRequest,
+    this.formattingRevision,
     this.originTwips = 0,
     this.tableStyleId,
     this.styleOptions = 0x600,
     this.halfGapTwips = 0,
+    this.heightTwips,
+    this.cantSplit,
+    this.borders = const {},
+    this.alignment,
+    this.autoFit,
   });
   final List<LegacyWordTableCell> cells;
   final bool isHeader;
+
+  /// The source header instruction before applying the contiguous-prefix
+  /// rule. A dormant request can become effective after a preceding row's
+  /// header-property revision is rejected. Null uses [isHeader].
+  final bool? sourceHeaderRequest;
+  final LegacyWordTableRowFormattingRevision? formattingRevision;
 
   /// Logical left outer edge, including cell spacing, relative to the page's
   /// logical left margin. Negative values retain an outdent. Rows can differ.
@@ -457,6 +495,61 @@ class LegacyWordTableRow {
 
   /// Source origin offset; it is not a cell margin.
   final int halfGapTwips;
+
+  /// MS-DOC signed row height: positive is a minimum, negative is exact,
+  /// and zero explicitly selects automatic height. Null means unspecified.
+  final int? heightTwips;
+
+  /// Null leaves the default ability to split a row across pages unchanged.
+  final bool? cantSplit;
+
+  /// Effective source row exceptions; null inherits the public table value.
+  final LegacyWordAlignment? alignment;
+  final bool? autoFit;
+
+  /// Direct row-wide outer and interior border defaults. Cell borders whose
+  /// type is none inherit; an explicit nil cell border suppresses the edge.
+  final Map<LegacyWordTableBorderSide, LegacyWordBorder> borders;
+}
+
+/// The bounded, native row properties represented by a table revision wall.
+/// Header state is the instruction, before the contiguous-prefix rule.
+class LegacyWordTableRowProperties {
+  const LegacyWordTableRowProperties({
+    this.heightTwips,
+    this.cantSplit,
+    this.isHeader = false,
+  });
+  final int? heightTwips;
+  final bool? cantSplit;
+  final bool isHeader;
+}
+
+class LegacyWordTableRowFormattingRevision {
+  LegacyWordTableRowFormattingRevision({
+    required this.previousProperties,
+    this.revision = const LegacyWordRevisionInfo(),
+    this.marked = true,
+    this.previousPropertiesComplete = true,
+    this.conditionalFormattingMayChange = false,
+    List<int> unsupportedPropertyCodes = const [],
+  }) : unsupportedPropertyCodes = List.unmodifiable(unsupportedPropertyCodes);
+
+  final LegacyWordTableRowProperties? previousProperties;
+  final LegacyWordRevisionInfo revision;
+  final bool marked;
+
+  /// False for an incomplete prior row or unknown pre-wall table properties.
+  final bool previousPropertiesComplete;
+
+  /// A header instruction changes in a table with conditional cell or text
+  /// formatting. Rejecting it can also change later header-prefix/banding
+  /// results; the current flattened child properties are not prior history.
+  final bool conditionalFormattingMayChange;
+
+  /// Post-wall table/cell operations outside the supported row-layout subset.
+  /// These remain evidence; no partial native trPrChange is invented.
+  final List<int> unsupportedPropertyCodes;
 }
 
 class LegacyWordTableCell {
@@ -716,6 +809,7 @@ class LegacyWordCharacterStyle {
     this.hidden = false,
     this.fontName,
     this.fontSizeHalfPoints,
+    this.kerningThresholdHalfPoints = 0,
     this.colorHex,
     this.highlightHex,
     this.verticalAlign = LegacyWordVerticalAlignment.baseline,
@@ -736,6 +830,9 @@ class LegacyWordCharacterStyle {
   final bool hidden;
   final String? fontName;
   final int? fontSizeHalfPoints;
+
+  /// MS-DOC sprmCHpsKern threshold in half-points. Zero disables kerning.
+  final int kerningThresholdHalfPoints;
 
   /// Six hexadecimal RGB digits, without '#'; null means automatic/unspecified.
   final String? colorHex;
@@ -758,6 +855,7 @@ class LegacyWordCharacterStyle {
       hidden == other.hidden &&
       fontName == other.fontName &&
       fontSizeHalfPoints == other.fontSizeHalfPoints &&
+      kerningThresholdHalfPoints == other.kerningThresholdHalfPoints &&
       colorHex == other.colorHex &&
       highlightHex == other.highlightHex &&
       verticalAlign == other.verticalAlign &&
@@ -776,6 +874,7 @@ class LegacyWordCharacterStyle {
     hidden,
     fontName,
     fontSizeHalfPoints,
+    kerningThresholdHalfPoints,
     colorHex,
     highlightHex,
     verticalAlign,

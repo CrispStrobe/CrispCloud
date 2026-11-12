@@ -13,8 +13,6 @@ extension _WordTextboxes on _StructuredWordWriter {
     final shape = drawing.shape, text = shape?.text;
     final width = (drawing.rightTwips - drawing.leftTwips) / 20;
     final height = (drawing.bottomTwips - drawing.topTwips) / 20;
-    final horizontal = ['margin', 'page', 'text'][drawing.horizontalOrigin];
-    final vertical = ['margin', 'page', 'text'][drawing.verticalOrigin];
     final prefix = reference.inHeaderFooter ? 'Header' : '';
     final next = nextShape == null
         ? null
@@ -24,7 +22,7 @@ extension _WordTextboxes on _StructuredWordWriter {
       '<w:pict><v:rect id="_legacy${prefix}TextboxShape${drawing.shapeId}" '
       'style="position:absolute;margin-left:${drawing.leftTwips / 20}pt;'
       'margin-top:${drawing.topTwips / 20}pt;width:${width}pt;height:${height}pt;'
-      'mso-position-horizontal-relative:$horizontal;mso-position-vertical-relative:$vertical;'
+      '${_officeArtVmlPosition(drawing)}'
       'z-index:${drawing.behindText ? -1 : drawing.shapeId}',
     );
     if (next != null) _xml.add(';mso-next-textbox:#$next');
@@ -120,7 +118,7 @@ extension _WordTextboxes on _StructuredWordWriter {
     final side = ['both', 'left', 'right', 'largest'][drawing.wrapSide];
     _xml.add(
       '<w10:wrap xmlns:w10="urn:schemas-microsoft-com:office:word" '
-      'type="$wrap" side="$side" anchorx="$horizontal" anchory="$vertical"/>'
+      'type="$wrap" side="$side"${_officeArtVmlWrapOrigins(drawing)}/>'
       '</v:rect></w:pict>',
     );
     _mediaEnd(drawing.presentation);
@@ -136,6 +134,7 @@ extension _WordTextboxes on _StructuredWordWriter {
       'fontDirection': text?.fontDirection,
       'fitShapeToText': fit,
       'autoTextMargin': text?.autoTextMargin,
+      'position': _drawingMetadata(drawing)['officeArtPosition'],
       'reason':
           'Editable source chain and explicit text layout retained; '
           'host reflow, automatic margins and arbitrary shape effects are not certified.',

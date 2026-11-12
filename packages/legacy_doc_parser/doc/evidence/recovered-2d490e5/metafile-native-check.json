@@ -1,0 +1,280 @@
+{
+  "schema": "legacy-doc-parser/metafile-native-check",
+  "version": 1,
+  "observedDate": "2026-11-12",
+  "measurement": {
+    "parserCommit": "b03747396878518d0d623599baf9b376df776e3d",
+    "parserWorktreeDirty": false,
+    "parserSourceSha256": "e6a9e2cd46fc66018b159bee6adbc7d8ac7ade5771a026fb3715225fdd59eb98",
+    "parserExecutableSha256": "456b1b10ed3225151a7f944aec132e6d49b3b9af0b688aa81a12bd27c0066026",
+    "corpusSha256": "3f9dc53a714066c7a17b17ea7c8633bd6ad4c1a243bd16469216fa4f14b46f65",
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+    "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745",
+    "dartVersion": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "rasterizerVersion": "pdftoppm version 26.05.0",
+    "textExtractorVersion": "pdftotext version 25.03.0",
+    "rasterDpi": 72,
+    "rasterColorSpace": "RGB",
+    "report": {
+      "path": "build/fidelity-final-20261112/report.json",
+      "bytes": 15238074,
+      "sha256": "3395ffabd9b90522090c07c4941142cd9c224504ba67d059217a7d4437608e91"
+    },
+    "parserSourceManifest": {
+      "path": "build/fidelity-final-20261112/parser-source.json",
+      "bytes": 5512,
+      "sha256": "bd924ff8e0cd7ae3bedee19c08455044911358f4fe771988beaa5932e24dbc78"
+    },
+    "fontFileManifest": {
+      "path": "build/fidelity-final-20261112/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    "inputSourcesUnchanged": true
+  },
+  "scope": "Authored OfficeArt/metafile fixtures on one pinned LibreOffice renderer. Payload/evidence retention is distinct from raster or layout equality; no signature validity, macro or universal renderer claim.",
+  "cases": [
+    {
+      "id": "emf-vectors",
+      "result": "build/fidelity-final-20261112/emf-vectors/result.json",
+      "containers": {
+        "authoredDocx": {
+          "path": "test/fixtures/fidelity/media/emf-vectors.docx",
+          "bytes": 2112,
+          "sha256": "68c1368568e8a5664e5aa0bc770d14b8da64b6c436747c647d24a1757f7fbe59"
+        },
+        "nativeDoc": {
+          "path": "build/fidelity-final-20261112/emf-vectors/bridge/emf-vectors.doc",
+          "bytes": 9728,
+          "sha256": "f4e274400fefc5428d473aa14132d832fcc80d7e57bbdc60a55eaf1d31a466d8"
+        },
+        "nativeDocx": {
+          "path": "build/fidelity-final-20261112/emf-vectors/native-docx/emf-vectors.docx",
+          "bytes": 5835,
+          "sha256": "08d5fa729b93c5206f43535402a301d2503941a2871b5e2191f15cba0fc4469f"
+        },
+        "convertedDocx": {
+          "path": "build/fidelity-final-20261112/emf-vectors/converted.docx",
+          "bytes": 6261,
+          "sha256": "084ac59bda40ac460d2d38116c064e4d12917bcbbf1428974f32a0126594c162"
+        },
+        "secondImportDocx": {
+          "path": "build/fidelity-final-20261112/emf-vectors/second-import.docx",
+          "bytes": 6282,
+          "sha256": "d4e8f484bb71ecf6ed2e1a8f27dcb91691f9da0d32fbcb06d0ac28fc6a12366b"
+        }
+      },
+      "imagePayloads": {
+        "authoredDocx": {
+          "part": "word/media/control.emf",
+          "bytes": 540,
+          "sha256": "8512de3e5b0a42a06b968ef2744c35a61024a465a05c4c53b41d4f7201898a37"
+        },
+        "nativeDoc": {
+          "assetId": "image-1",
+          "stream": "Data",
+          "bytes": 540,
+          "sha256": "8512de3e5b0a42a06b968ef2744c35a61024a465a05c4c53b41d4f7201898a37"
+        },
+        "nativeDocx": {
+          "part": "word/media/image1.emf",
+          "bytes": 540,
+          "sha256": "8512de3e5b0a42a06b968ef2744c35a61024a465a05c4c53b41d4f7201898a37"
+        },
+        "convertedDocx": {
+          "part": "word/media/image1.emf",
+          "bytes": 540,
+          "sha256": "8512de3e5b0a42a06b968ef2744c35a61024a465a05c4c53b41d4f7201898a37"
+        },
+        "secondImportDocx": {
+          "part": "word/media/image1.emf",
+          "bytes": 540,
+          "sha256": "8512de3e5b0a42a06b968ef2744c35a61024a465a05c4c53b41d4f7201898a37"
+        }
+      },
+      "nativeBridge": {
+        "authoredPrefixBytesRemoved": 0,
+        "removedPrefixMeaning": null,
+        "remainingAuthoredBytesEqualNativePayload": true,
+        "attribution": "No authored image payload change."
+      },
+      "binaryEvidence": [
+        {
+          "nativeDocArtifactId": "artifact-1",
+          "nativeDocBytes": 546,
+          "nativeDocSha256": "c7e387bd6a33491d7eb7d9f52f25653f788037364518c843ba37c68276943d75",
+          "convertedEvidencePart": "word/evidence/artifact1.bin",
+          "convertedEvidenceBytes": 546,
+          "convertedEvidenceSha256": "c7e387bd6a33491d7eb7d9f52f25653f788037364518c843ba37c68276943d75",
+          "byteExact": true
+        }
+      ],
+      "parsedNativeMetadata": {
+        "records": 21,
+        "completePortableSvg": true,
+        "nativeEmbeddingAllowed": true,
+        "pictureExtentTwips": [
+          8641,
+          5185
+        ],
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "renderObservation": {
+        "reference": "Native DOC source, not the authored DOCX.",
+        "referencePages": 1,
+        "convertedPages": 1,
+        "maximumWordDriftPoints": 0.05,
+        "rasterExactlyMatches": false,
+        "nativeDocxRasterExactlyMatches": false,
+        "visuallyRetained": "Authored vector shapes, curves/lines and colors remain visible; no pixel-exact fidelity claim."
+      }
+    },
+    {
+      "id": "wmf-vectors",
+      "result": "build/fidelity-final-20261112/wmf-vectors/result.json",
+      "containers": {
+        "authoredDocx": {
+          "path": "test/fixtures/fidelity/media/wmf-vectors.docx",
+          "bytes": 2011,
+          "sha256": "fcf94d85aa01ce7f30b0c7551535e264a329af2f8e7ab57adc6c098040c0112f"
+        },
+        "nativeDoc": {
+          "path": "build/fidelity-final-20261112/wmf-vectors/bridge/wmf-vectors.doc",
+          "bytes": 9728,
+          "sha256": "da2cc5f74733278364c7d52dc8cf83ac4e6cc4615a3d4a855b3722bd7e2ecc67"
+        },
+        "nativeDocx": {
+          "path": "build/fidelity-final-20261112/wmf-vectors/native-docx/wmf-vectors.docx",
+          "bytes": 5730,
+          "sha256": "aa992ff2e1ae8cddec634a640917374f614cf8605730d8f01029eab8867978c7"
+        },
+        "convertedDocx": {
+          "path": "build/fidelity-final-20261112/wmf-vectors/converted.docx",
+          "bytes": 6019,
+          "sha256": "f99eb7bd15162bf72db90474e64ee34c5051fa653bbd8d25d145df713d73d1b5"
+        },
+        "secondImportDocx": {
+          "path": "build/fidelity-final-20261112/wmf-vectors/second-import.docx",
+          "bytes": 6041,
+          "sha256": "dc8c479b14139a2e177516a95603490f8b01e06085434d67243c4702706b03e2"
+        }
+      },
+      "imagePayloads": {
+        "authoredDocx": {
+          "part": "word/media/control.wmf",
+          "bytes": 230,
+          "sha256": "fd4c4c1772391d6ea66a2aa913bf62cf1a722ec934980cff93e006d700cff082"
+        },
+        "nativeDoc": {
+          "assetId": "image-1",
+          "stream": "Data",
+          "bytes": 208,
+          "sha256": "a1556542fcb3a309e74da53811256190c4d2047976bf45f5bbaee3d64df1f04f"
+        },
+        "nativeDocx": {
+          "part": "word/media/image1.wmf",
+          "bytes": 208,
+          "sha256": "a1556542fcb3a309e74da53811256190c4d2047976bf45f5bbaee3d64df1f04f"
+        },
+        "convertedDocx": {
+          "part": "word/media/image1.wmf",
+          "bytes": 208,
+          "sha256": "a1556542fcb3a309e74da53811256190c4d2047976bf45f5bbaee3d64df1f04f"
+        },
+        "secondImportDocx": {
+          "part": "word/media/image1.wmf",
+          "bytes": 208,
+          "sha256": "a1556542fcb3a309e74da53811256190c4d2047976bf45f5bbaee3d64df1f04f"
+        }
+      },
+      "nativeBridge": {
+        "authoredPrefixBytesRemoved": 22,
+        "removedPrefixMeaning": "WMF placeable header",
+        "remainingAuthoredBytesEqualNativePayload": true,
+        "attribution": "Native DOC bridge, before this parser; converted and second-import payloads remain byte-exact."
+      },
+      "binaryEvidence": [
+        {
+          "nativeDocArtifactId": "artifact-1",
+          "nativeDocBytes": 454,
+          "nativeDocSha256": "eaadb023177f74d42f1aa7308497ce737b9d28f1fa5d85b2fd2b945d7e568fbf",
+          "convertedEvidencePart": "word/evidence/artifact1.bin",
+          "convertedEvidenceBytes": 454,
+          "convertedEvidenceSha256": "eaadb023177f74d42f1aa7308497ce737b9d28f1fa5d85b2fd2b945d7e568fbf",
+          "byteExact": true
+        }
+      ],
+      "parsedNativeMetadata": {
+        "records": 17,
+        "completePortableSvg": true,
+        "nativeEmbeddingAllowed": true,
+        "pictureExtentTwips": [
+          8640,
+          5184
+        ],
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "renderObservation": {
+        "reference": "Native DOC source, not the authored DOCX.",
+        "referencePages": 1,
+        "convertedPages": 1,
+        "maximumWordDriftPoints": 0.0,
+        "rasterExactlyMatches": false,
+        "nativeDocxRasterExactlyMatches": false,
+        "visuallyRetained": "Authored vector shapes, curves/lines and colors remain visible; no pixel-exact fidelity claim."
+      }
+    }
+  ],
+  "officeArtEvidence": {
+    "id": "officeart-shapes",
+    "result": "build/fidelity-final-20261112/officeart-shapes/result.json",
+    "nativeDoc": {
+      "path": "build/fidelity-final-20261112/officeart-shapes/bridge/officeart-shapes.doc",
+      "bytes": 10240,
+      "sha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d"
+    },
+    "convertedDocx": {
+      "path": "build/fidelity-final-20261112/officeart-shapes/converted.docx",
+      "bytes": 6480,
+      "sha256": "a9e2241c5e60a375948151db165260431751ddc8622008e5d8d9d9617f297797"
+    },
+    "artifacts": [
+      {
+        "nativeDocArtifactId": "artifact-1",
+        "nativeDocBytes": 845,
+        "nativeDocSha256": "a1312ecbdcc099dec52d6a84a26d83829c724dd11bca40fc4687beff1ee7e4f4",
+        "convertedEvidencePart": "word/evidence/artifact1.bin",
+        "convertedEvidenceBytes": 845,
+        "convertedEvidenceSha256": "a1312ecbdcc099dec52d6a84a26d83829c724dd11bca40fc4687beff1ee7e4f4",
+        "byteExact": true
+      },
+      {
+        "nativeDocArtifactId": "artifact-2",
+        "nativeDocBytes": 94,
+        "nativeDocSha256": "2d294b772a301aba1db69edd40119bc767ca294c4dd289b4515463090345b7c8",
+        "convertedEvidencePart": "word/evidence/artifact2.bin",
+        "convertedEvidenceBytes": 94,
+        "convertedEvidenceSha256": "2d294b772a301aba1db69edd40119bc767ca294c4dd289b4515463090345b7c8",
+        "byteExact": true
+      }
+    ],
+    "boundary": "This older measured build still emitted camel-case VML dash keywords. The later lowercase interoperability correction is documented separately in vml-dash-fidelity.md."
+  },
+  "laterRerun": {
+    "parserCommit": "c8848d2b7323636d922ed211dfc911534f3acc9f",
+    "report": "build/fidelity-dash-final-20261112/report.json",
+    "relationship": "Separate final 19-case corpus rerun after the VML dash correction. This receipt retains the earlier b037473 observations and does not relabel them as measurements of the later code."
+  },
+  "pathBase": "Repository root; build/ paths identify generated measurement artifacts, not committed goldens."
+}

@@ -1,13 +1,16 @@
 # Fidelity corpus and independent oracles
 
-`tool/fidelity/corpus.json` pins ten authored Office XML fixtures from the MIT
-Quds fork at `ca9853b5b08784beac50df5680176cb4e5b3cb25`, plus the package's
-existing native DOC fixture. Source paths, feature tags, SHA-256 hashes, and
+`tool/fidelity/corpus.json` pins 22 source cases, including ten authored Office
+XML fixtures from the MIT Quds fork at
+`ca9853b5b08784beac50df5680176cb4e5b3cb25`, the package's existing native DOC,
+independent authored controls and public Word/Apache POI binaries.
+Source paths, feature tags, SHA-256 hashes, and
 license provenance travel with the corpus. The Quds expectations are retained
 under `test/fixtures/fidelity/quds-expectations`; they describe original OOXML,
 not a promise that a native DOC bridge can carry every newer OOXML feature.
 
 ```
+python3 -m pip install -r tool/fidelity/requirements-test.txt
 python3 tool/fidelity/oracle.py
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
 python3 tool/fidelity/run.py --office /path/to/installed/soffice \
@@ -21,12 +24,30 @@ require native Office. The opt-in runner uses an isolated profile and creates
 a new output directory. Source fixtures are hashed again after every run.
 Package XML and relationships are inspected without fetching external targets.
 
-For each original DOCX the runner first creates a DOC using installed
-LibreOffice, then records the differences between the authored OOXML and a
-native DOC-to-DOCX conversion. Those **bridge changes** matter: comments,
-controls, modern revisions, and unsupported graphics may be lost before our
-parser sees any bytes. They cannot prove or disprove our DOC parser's support.
-Independently assembled binary unit fixtures cover those ambiguous cases.
+The portable Python suite requires Python 3.11 or newer and the pinned Pillow
+test dependency for independent colored-border masks. CI installs that declared
+dependency in Python 3.12; a preinstalled local imaging library is not assumed.
+Optional image-appearance native probes additionally use NumPy and PyMuPDF.
+
+For each original DOCX the runner retains its structural snapshot and renders
+the original package before creating a DOC using installed LibreOffice. It
+renders that DOC before invoking the parser. `bridgePagination` compares these
+two renders, attributing their page, text, bounding-box, and raster differences
+to the native original-DOCX-to-binary-DOC path. `pagination` separately compares
+that same DOC render with the parser DOCX render. A stable parser conversion
+cannot hide a visual change that already occurred on the native bridge.
+
+The structural `bridgeChanges` comparison uses authored OOXML and the native
+DOC-to-DOCX interpretation. Its path includes both native binary conversion
+and native DOCX export. Either can lose or transform comments, controls,
+revisions, tables, or graphics; it is not direct proof that those structures
+were absent from the binary DOC. Likewise, a structural difference between
+native DOCX and parser DOCX does not establish parser loss: the native DOCX
+exporter can discard data that the parser retains. `comparisonAttribution`
+records the source and destination of each comparison explicitly. Independently
+assembled binary fixtures and targeted oracles resolve those ambiguous cases.
+Original binary DOC cases have no original OOXML render, so their
+`bridgePagination` and `bridgeChanges` are explicitly null.
 
 The generated DOC is then converted by this package. The runner compares all
 reachable stories, table/cell counts, comment threads, revision structures,
@@ -53,7 +74,9 @@ cycles and the native third-cycle snapshot available; a failed render retains
 the earlier semantic and rendering evidence. Build failures also leave a report
 with the compiler/environment information already collected.
 
-The version 2 report records SHA-256 receipts for repository Dart sources,
+The version 3 report adds original-DOCX rendering and original-to-binary visual
+attribution, and requires those comparisons for authored DOCX cases. It records
+SHA-256 receipts for repository Dart sources,
 fidelity tools, corpus manifest, dependency lock and package configuration,
 as well as the actual compiled parser executable. It records compiler, Office,
 PDF extraction and raster tool versions and executable hashes, Python/platform
@@ -66,7 +89,8 @@ that every transitive runtime library or external dependency source was hashed.
 `run.py` exits unsuccessfully for conversion/oracle failures. Ordinary measured
 differences are findings, not an assertion of equality. `--require-exact`
 additionally rejects every semantic, round-trip, or exact-render difference,
-including native bridge changes and native DOCX rendering drift. Missing stages,
+including original-to-binary visual changes, native bridge structural changes,
+and native DOCX rendering drift. Missing stages,
 incomplete cycles, changed inputs and missing comparison results cannot pass.
 It never regenerates or blesses goldens. Reports and rasters stay in the
 requested output directory for inspection. Exact results apply only to the
@@ -116,3 +140,23 @@ Primary references:
 - [CommentEx paragraph join](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.office2013.word.commentex)
 - [VML next-textbox reference](https://learn.microsoft.com/en-us/windows/win32/vml/msdn-online-vml-mso-next-textbox-attribute)
 - [WordprocessingML revision structure](https://learn.microsoft.com/en-us/office/open-xml/word/how-to-accept-all-revisions-in-a-word-processing-document)
+
+## Recovered source goldens and RGB measurements
+
+The reconciled corpus contains 22 pinned source cases. `goldens.py` verifies
+two independent source-DOC page records and reviewable PNGs. It has no update
+mode. The compact and extended linked-textbox documents have separate paths
+and hashes; the extended document owns the recovered linked-box page golden.
+
+Runner report version 4 uses RGB rasters, records hashes of the actual font
+files, and checks both the native source and parser output against a recorded
+source golden when one exists. It retains the original DOCX render, native
+bridge, native DOCX export and all requested binary round trips separately.
+A font, Office build, PDF tool, color-space or DPI mismatch is unverified,
+even when another comparison happens to have equal page counts or text.
+
+The stronger recovered package reader selects one understood
+`mc:AlternateContent` branch by namespace URI, bounds XML depth/node count,
+resolves style/numbering references, and records section-to-story assignments.
+These checks complement the existing structural graph and revision text
+projections. Their mutation tests remain independent of the Dart converter.

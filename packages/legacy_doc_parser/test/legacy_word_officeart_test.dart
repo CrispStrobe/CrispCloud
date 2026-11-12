@@ -235,7 +235,7 @@ void main() {
   });
 
   test(
-    'retains compressed points, guides, escapes and unknown presets as evidence',
+    'retains unknown point sizes, guides, escapes and unknown presets as evidence',
     () {
       final fixtures = [
         officeArtShapeWordFixture(type: 201),
@@ -243,7 +243,7 @@ void main() {
         officeArtShapeWordFixture(
           type: 0,
           complex: {
-            0x0145: shapeArray(0xfff0, [wordU32(1)]),
+            0x0145: shapeArray(12, [List.filled(12, 0)]),
           },
         ),
         officeArtShapeWordFixture(

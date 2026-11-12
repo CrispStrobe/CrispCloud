@@ -1,0 +1,96 @@
+{
+  "generator": "tool/fidelity/image_appearance_cases.py",
+  "nativeOffice": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "cases": {
+    "inline-horizontal": {
+      "authored": {
+        "path": "authored/inline-horizontal.docx",
+        "sha256": "e32b01fa6a1a4dd940719058d7735003e9f5bc487ec0034349a5746b270d993a"
+      },
+      "binary": {
+        "path": "binary/inline-horizontal.doc",
+        "sha256": "d7e50ad0b14d4b7d54e74c2ff86e7f9c449ddf8f1aa432f679b1d2e346ecc084"
+      }
+    },
+    "floating-control": {
+      "authored": {
+        "path": "authored/floating-control.docx",
+        "sha256": "f711de49af61b5cdfb50b067c8c1e322fa7971f442545baf572da50b837db193"
+      },
+      "binary": {
+        "path": "binary/floating-control.doc",
+        "sha256": "7aceb29ba68b38e6865a03e1929e982c80dea008ecc03cf9fe47df56ada8f7e9"
+      }
+    },
+    "floating-horizontal": {
+      "authored": {
+        "path": "authored/floating-horizontal.docx",
+        "sha256": "1980e4738929db6379345e14d929755e131f0a9d93099f0ba31c654dd94dcd6b"
+      },
+      "binary": {
+        "path": "binary/floating-horizontal.doc",
+        "sha256": "1128b0fddba0ad0dc4856cdb7b3fcaad78c5d82bc28edaee4a62c37a033f5996"
+      }
+    },
+    "floating-vertical": {
+      "authored": {
+        "path": "authored/floating-vertical.docx",
+        "sha256": "db000f69cd4543e618cfa5bc227ebcc4c73124325cbc448a85122de6043b568b"
+      },
+      "binary": {
+        "path": "binary/floating-vertical.doc",
+        "sha256": "124a32bd3331a317a695a987df1eb4ec53b099bb97fdf44def845e50bfed082d"
+      }
+    },
+    "floating-both": {
+      "authored": {
+        "path": "authored/floating-both.docx",
+        "sha256": "1fa7409ba0c1f4c36f5e692a6dadb11a9e93615b73300d24706ecebc16405831"
+      },
+      "binary": {
+        "path": "binary/floating-both.doc",
+        "sha256": "e41b88bf5d0397490cad0d4c011b1df9da7f6d8bbd1e3a5ce63053ae84f12495"
+      }
+    },
+    "floating-quarter": {
+      "authored": {
+        "path": "authored/floating-quarter.docx",
+        "sha256": "382b1b9a0392d99d85b2821ac583de103921c9e56b83471ed2d38f4813851c12"
+      },
+      "binary": {
+        "path": "binary/floating-quarter.doc",
+        "sha256": "3d377117b97485ad212b917b44ac43471176ec39ad5502a61459151843104b8d"
+      }
+    },
+    "floating-negative-quarter": {
+      "authored": {
+        "path": "authored/floating-negative-quarter.docx",
+        "sha256": "7774b156d5c1b5d7d3fc4b6abaf97d2a8f4825c72bab9a643b65869da5ea63ae"
+      },
+      "binary": {
+        "path": "binary/floating-negative-quarter.doc",
+        "sha256": "dbb33350affd52a05769a6df47f4ce0f7f1af22ed45a47e18efcda8351d0b087"
+      }
+    },
+    "floating-margin-quarter": {
+      "authored": {
+        "path": "authored/floating-margin-quarter.docx",
+        "sha256": "82cfd9daf1610cde7847ae1ae09f1228718cfcb48a5cbddc7034387bf7cdd53d"
+      },
+      "binary": {
+        "path": "binary/floating-margin-quarter.doc",
+        "sha256": "5d048f733e60d7617a982744e61e52ae6c0ca008bef50bbce146b401de52140a"
+      }
+    },
+    "floating-outline-shadow": {
+      "authored": {
+        "path": "authored/floating-outline-shadow.docx",
+        "sha256": "9d0fe61f2f16625f19b7631a94dd05c4e18c64aedadd07e8b606eead5d38bc2d"
+      },
+      "binary": {
+        "path": "binary/floating-outline-shadow.doc",
+        "sha256": "9ed7726abe4c65e92a304276719ef81aa484d20339e838f1a12e9ab528ddb299"
+      }
+    }
+  }
+}

@@ -1,0 +1,1244 @@
+{
+  "schema": "legacy-doc-parser/table-review-probe",
+  "version": 1,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "sourceReceiptSha256": "3ebb2bddf8dee3ad1eba7ce20654e2790cbd6ae5031057da1eb79f3f29ca4ca6",
+  "sources": {
+    "table-review-header-rejected.doc": "faee492b52a7fad9bd310ca72212a02a6833be0e4a237a5e92131e873089c8f5",
+    "table-review-split-review.doc": "f26978d5467f66e334f59e42ce780e5ecf9047fbda3909efee440bf0629b0f11",
+    "table-review-split-accepted.doc": "381d2803e37ba77812c983931b344353d1c055cb6cf99e1646fe10fa6b64b088",
+    "table-review-header-review.doc": "44f7a5d6a1479b02edb962181c8d8b755425c520a8a3d1e38bfab2ea5a54ee3f",
+    "table-review-height-rejected.doc": "eb3b6c361ca1012ec61bc7982e2dcf43c54fbded0986f2b6f07606f4752df59f",
+    "table-review-split-rejected.doc": "e2ebff77be2ff2e7ba9ab40014764b42efad57310703d6a95886d57d1366eac6",
+    "table-review-height-accepted.doc": "19ef4540be9c4d68afc441dcfea528428cd6ed6032e92a9a99ebca1449980290",
+    "table-review-height-review.doc": "67db4f9ec151e314c098d8c502d57aac195896d3b0c65a17315556a5a9f300ce",
+    "table-review-header-accepted.doc": "93abdd0234f77913c889e73119ad85380ef7b354e576606521d1de81b7fdf2a6"
+  },
+  "method": "Parser row history is projected independently into accepted/rejected DOCX copies; native renders are compared with separately authored accepted/rejected DOC inputs. Source review is never accepted in place.",
+  "cases": [
+    {
+      "kind": "height",
+      "reviewSha256": "0f88938db077d4b205d85242f712eca2dc508c0490ce09de1a006ff5e073e929",
+      "verification": {
+        "passed": true,
+        "row": 0,
+        "current": [
+          720,
+          "atLeast",
+          true,
+          false
+        ],
+        "previous": [
+          240,
+          "atLeast",
+          false,
+          false
+        ],
+        "nativeOutputUsedAsExpected": false
+      },
+      "states": {
+        "accepted": {
+          "controlSourceSha256": "19ef4540be9c4d68afc441dcfea528428cd6ed6032e92a9a99ebca1449980290",
+          "projectedSha256": "a6866b55292e81f0a1f4f652027e52cac6de848b87e63f3bc0bd205623b7a149",
+          "reference": {
+            "pdfSha256": "2730d5cabbea12a6a07fa6cb5a75789a9fe4c34f0d2680b16aa81b4c9f822b60",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "CELL",
+                    "box": [
+                      36.1,
+                      46.908,
+                      66.052,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "NEXT",
+                    "box": [
+                      36.1,
+                      82.908,
+                      68.056,
+                      96.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      94.908,
+                      74.08,
+                      108.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\nCELL\n\n\nNEXT\nAFTER\n\f",
+            "rasterSha256": [
+              "7f0ba9768ebaf6e638d004d8ef8b1e707e37c381b47a079d41e6d129f8f75675"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "actual": {
+            "pdfSha256": "f543f41b13a58126e81b10e9743ff8d565a68cd018bb0c60d52d140e48f65faf",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "CELL",
+                    "box": [
+                      41.5,
+                      46.908,
+                      71.452,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "NEXT",
+                    "box": [
+                      41.5,
+                      82.908,
+                      73.456,
+                      96.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      94.908,
+                      74.08,
+                      108.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\n CELL\n\n\n NEXT\nAFTER\n\f",
+            "rasterSha256": [
+              "c6ddec1976085c4c4b9534c076595a26a2040f3b0cffef991a1579ff4efd46e0"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "comparison": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 5.400000000000006,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "geometryPassed": false
+        },
+        "rejected": {
+          "controlSourceSha256": "eb3b6c361ca1012ec61bc7982e2dcf43c54fbded0986f2b6f07606f4752df59f",
+          "projectedSha256": "5db17453e52b1c113d65aada5358e5d39433ed5317f23c081ec575e3178c2179",
+          "reference": {
+            "pdfSha256": "51895cc152b9f68d8c195a78d07fcd6f6d28e049d8f7c7d29457d68cf980283d",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "CELL",
+                    "box": [
+                      36.1,
+                      46.908,
+                      66.052,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "NEXT",
+                    "box": [
+                      36.1,
+                      58.908,
+                      68.056,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\nCELL\nNEXT\nAFTER\n\f",
+            "rasterSha256": [
+              "1bc3284edbd92dd8b1e8c9aae0dae044d17ec5da1bf239b827dae735a3a68795"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "actual": {
+            "pdfSha256": "b3ee90712f35b00a1fc697092ae729eb231f8690d9a548679187288195e4d3b3",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "CELL",
+                    "box": [
+                      41.5,
+                      46.908,
+                      71.452,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "NEXT",
+                    "box": [
+                      41.5,
+                      58.908,
+                      73.456,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\n CELL\n NEXT\nAFTER\n\f",
+            "rasterSha256": [
+              "3256a91821ed3b1888020b115e32701ab52d8ac33ab04af5c5efd7b1dbe4add7"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "comparison": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 5.400000000000006,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "geometryPassed": false
+        }
+      },
+      "controlsExerciseDifferentLayouts": true,
+      "passed": false
+    },
+    {
+      "kind": "split",
+      "reviewSha256": "74d4eeb3855dfcdf50cd40fedc6815c4290bd969a287ddcb4ca200496796518f",
+      "verification": {
+        "passed": true,
+        "row": 1,
+        "current": [
+          0,
+          "auto",
+          true,
+          false
+        ],
+        "previous": [
+          0,
+          "auto",
+          false,
+          false
+        ],
+        "nativeOutputUsedAsExpected": false
+      },
+      "states": {
+        "accepted": {
+          "controlSourceSha256": "381d2803e37ba77812c983931b344353d1c055cb6cf99e1646fe10fa6b64b088",
+          "projectedSha256": "a3adce6dc8b7f5fb6d3db11d003dfa23b6e4ac6689e2410141720e6aa3c72e3a",
+          "reference": {
+            "pdfSha256": "2adc6bb34fe8fad7b2bf1ab66cc6ed3db668b21cae8845a141191a9e9c6a3daf",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "PREFIX",
+                    "box": [
+                      36.1,
+                      46.908,
+                      77.392,
+                      60.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "ROW2A",
+                    "box": [
+                      36.1,
+                      34.908,
+                      78.712,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2B",
+                    "box": [
+                      36.1,
+                      46.908,
+                      78.04,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2C",
+                    "box": [
+                      36.1,
+                      58.908,
+                      78.04,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2D",
+                    "box": [
+                      36.1,
+                      70.908,
+                      78.712,
+                      84.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2E",
+                    "box": [
+                      36.1,
+                      82.908,
+                      77.368,
+                      96.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2F",
+                    "box": [
+                      36.1,
+                      94.908,
+                      76.72,
+                      108.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      106.908,
+                      74.08,
+                      120.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\nPREFIX\n\fROW2A\nROW2B\nROW2C\nROW2D\nROW2E\nROW2F\nAFTER\n\f",
+            "rasterSha256": [
+              "c5fbc6426581f261e023ef4f2e8b2034a75d540bde92a9b13a44c6cab67164bb",
+              "f3eadf21eccb983a151d4240bb63059575eb1d06fbcc1c8ff03a6edd9fcff0ac"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "actual": {
+            "pdfSha256": "48cb075ebb67ad8f202a23f6582c726acb79173c71556e0b90a2a1d7c4691ecc",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "PREFIX",
+                    "box": [
+                      41.5,
+                      46.908,
+                      82.792,
+                      60.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "ROW2A",
+                    "box": [
+                      41.5,
+                      34.908,
+                      84.112,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2B",
+                    "box": [
+                      41.5,
+                      46.908,
+                      83.44,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2C",
+                    "box": [
+                      41.5,
+                      58.908,
+                      83.44,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2D",
+                    "box": [
+                      41.5,
+                      70.908,
+                      84.112,
+                      84.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2E",
+                    "box": [
+                      41.5,
+                      82.908,
+                      82.768,
+                      96.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2F",
+                    "box": [
+                      41.5,
+                      94.908,
+                      82.12,
+                      108.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      106.908,
+                      74.08,
+                      120.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\n PREFIX\n\f ROW2A\n ROW2B\n ROW2C\n ROW2D\n ROW2E\n ROW2F\nAFTER\n\f",
+            "rasterSha256": [
+              "5b143e47782907993785a5c918fbb9ed366919140052c977d22464349036a017",
+              "854134c0e52ee2a201bd5d76c3a8749bc388680f23cad822cfb43a6c4e2ce98d"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "comparison": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 5.400000000000006,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "geometryPassed": false
+        },
+        "rejected": {
+          "controlSourceSha256": "e2ebff77be2ff2e7ba9ab40014764b42efad57310703d6a95886d57d1366eac6",
+          "projectedSha256": "4ffbe230850be41b4a24c27754de523d8538fd9f5279df5743a76f8645af06f0",
+          "reference": {
+            "pdfSha256": "829ace8fdfb6eeeec1509590c0cb50338a80774f1254df5d5c7366b142d510cc",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "PREFIX",
+                    "box": [
+                      36.1,
+                      46.908,
+                      77.392,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2A",
+                    "box": [
+                      36.1,
+                      136.908,
+                      78.712,
+                      150.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2B",
+                    "box": [
+                      36.1,
+                      148.908,
+                      78.04,
+                      162.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2C",
+                    "box": [
+                      36.1,
+                      160.908,
+                      78.04,
+                      174.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "ROW2D",
+                    "box": [
+                      36.1,
+                      34.908,
+                      78.712,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2E",
+                    "box": [
+                      36.1,
+                      46.908,
+                      77.368,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2F",
+                    "box": [
+                      36.1,
+                      58.908,
+                      76.72,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\nPREFIX\n\n\n\n\nROW2A\nROW2B\nROW2C\n\fROW2D\nROW2E\nROW2F\nAFTER\n\f",
+            "rasterSha256": [
+              "b78b627c5f61f1d2a99ec79a9a61449cc19d64da4aa758bb322bbf1be4969086",
+              "0450ba05cacb14aa1053d35d256ae39d83a3ef0d15c21f070eb379028f072e0c"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "actual": {
+            "pdfSha256": "de203adfaa137924f2fe07808f4804185ab31a3a4e2e2df8ccdb6833e4929b08",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "PREFIX",
+                    "box": [
+                      41.5,
+                      46.908,
+                      82.792,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2A",
+                    "box": [
+                      41.5,
+                      136.908,
+                      84.112,
+                      150.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2B",
+                    "box": [
+                      41.5,
+                      148.908,
+                      83.44,
+                      162.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2C",
+                    "box": [
+                      41.5,
+                      160.908,
+                      83.44,
+                      174.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "ROW2D",
+                    "box": [
+                      41.5,
+                      34.908,
+                      84.112,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2E",
+                    "box": [
+                      41.5,
+                      46.908,
+                      82.768,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "ROW2F",
+                    "box": [
+                      41.5,
+                      58.908,
+                      82.12,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\n PREFIX\n\n\n\n\nROW2A\nROW2B\nROW2C\n\f ROW2D\n ROW2E\n ROW2F\nAFTER\n\f",
+            "rasterSha256": [
+              "dc19053dce29f74dbe0b8c1b85d096bc95fdd4f5bf1217622b791ae05cbdfdd0",
+              "70103df86b150924372a9b8a6d80c6c067cbb1aa69748c404b88819964ac1be5"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "comparison": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 5.400000000000006,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "geometryPassed": false
+        }
+      },
+      "controlsExerciseDifferentLayouts": true,
+      "passed": false
+    },
+    {
+      "kind": "header",
+      "reviewSha256": "5507c2fd0d263a2b190cdf59a70c772546d6bff34e432ab3aabed81a2da70d70",
+      "verification": {
+        "passed": true,
+        "row": 0,
+        "current": [
+          240,
+          "atLeast",
+          false,
+          false
+        ],
+        "previous": [
+          240,
+          "atLeast",
+          false,
+          true
+        ],
+        "nativeOutputUsedAsExpected": false
+      },
+      "states": {
+        "accepted": {
+          "controlSourceSha256": "93abdd0234f77913c889e73119ad85380ef7b354e576606521d1de81b7fdf2a6",
+          "projectedSha256": "2d8f489069717e0e2652d59b9ff991d925e1ddc4e632d0b7b84dc25aa124d7ee",
+          "reference": {
+            "pdfSha256": "dd6e08228d3f4449ed15d96c0747d4a8b3da544b130760e0afb314ad2f486071",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      36.1,
+                      46.908,
+                      115.348,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      36.1,
+                      58.908,
+                      118.024,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "TALL",
+                    "box": [
+                      36.1,
+                      70.908,
+                      66.712,
+                      84.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      36.1,
+                      34.908,
+                      115.348,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      36.1,
+                      46.908,
+                      118.024,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "LAST",
+                    "box": [
+                      36.1,
+                      58.908,
+                      66.052,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\nHEADER_ONE\nHEADER_TWO\nTALL\n\fHEADER_ONE\nHEADER_TWO\nLAST\nAFTER\n\f",
+            "rasterSha256": [
+              "8feffc5b5017ee54f83aa487095de54037ea90e3ae8598dd64f5f93c3017b12b",
+              "af5ef1ebf5d0726c3b0025cd2ba6cf332de5ab264549142711bb1afce122e506"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "actual": {
+            "pdfSha256": "8a0f364ffd29ba84b04160e6bfc37338bc9e8137e498604a3fb475d76b3179d7",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      41.5,
+                      46.908,
+                      120.748,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      41.5,
+                      58.908,
+                      123.424,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "TALL",
+                    "box": [
+                      41.5,
+                      70.908,
+                      72.112,
+                      84.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "LAST",
+                    "box": [
+                      41.5,
+                      34.908,
+                      71.452,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      46.908,
+                      74.08,
+                      60.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\n HEADER_ONE\n HEADER_TWO\n TALL\n\f LAST\nAFTER\n\f",
+            "rasterSha256": [
+              "403bae7752256e5d7311f08f409dcda3448409dfbbcfeb9d7c9498889b3136d6",
+              "054b9632f8437217236c1ba85f540efaa266b529c1c62b3ecfbaa595512fce55"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "comparison": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "geometryPassed": false
+        },
+        "rejected": {
+          "controlSourceSha256": "faee492b52a7fad9bd310ca72212a02a6833be0e4a237a5e92131e873089c8f5",
+          "projectedSha256": "94ab3055c607bdc22c2db1ee09c49803fdd2d9617e37babad3c102845f0ae01b",
+          "reference": {
+            "pdfSha256": "c58651acbe56a8fc9154fe3764798262a5b8aca905fd783add42770d47808ba4",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      36.1,
+                      46.908,
+                      115.348,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      36.1,
+                      58.908,
+                      118.024,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "TALL",
+                    "box": [
+                      36.1,
+                      70.908,
+                      66.712,
+                      84.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      36.1,
+                      34.908,
+                      115.348,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      36.1,
+                      46.908,
+                      118.024,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "LAST",
+                    "box": [
+                      36.1,
+                      58.908,
+                      66.052,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\nHEADER_ONE\nHEADER_TWO\nTALL\n\fHEADER_ONE\nHEADER_TWO\nLAST\nAFTER\n\f",
+            "rasterSha256": [
+              "8feffc5b5017ee54f83aa487095de54037ea90e3ae8598dd64f5f93c3017b12b",
+              "af5ef1ebf5d0726c3b0025cd2ba6cf332de5ab264549142711bb1afce122e506"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "actual": {
+            "pdfSha256": "21693e8755e361700c600349319c2b2506c4a2f7f023eacae4f64e9abdfb9f04",
+            "pages": [
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "BODY",
+                    "box": [
+                      36.1,
+                      34.908,
+                      70.06,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      41.5,
+                      46.908,
+                      120.748,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      41.5,
+                      58.908,
+                      123.424,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "TALL",
+                    "box": [
+                      41.5,
+                      70.908,
+                      72.112,
+                      84.192
+                    ]
+                  }
+                ]
+              },
+              {
+                "size": [
+                  360.0,
+                  216.0
+                ],
+                "words": [
+                  {
+                    "text": "HEADER_ONE",
+                    "box": [
+                      41.5,
+                      34.908,
+                      120.748,
+                      48.192
+                    ]
+                  },
+                  {
+                    "text": "HEADER_TWO",
+                    "box": [
+                      41.5,
+                      46.908,
+                      123.424,
+                      60.192
+                    ]
+                  },
+                  {
+                    "text": "LAST",
+                    "box": [
+                      41.5,
+                      58.908,
+                      71.452,
+                      72.192
+                    ]
+                  },
+                  {
+                    "text": "AFTER",
+                    "box": [
+                      36.1,
+                      70.908,
+                      74.08,
+                      84.192
+                    ]
+                  }
+                ]
+              }
+            ],
+            "text": "BODY\n HEADER_ONE\n HEADER_TWO\n TALL\n\f HEADER_ONE\n HEADER_TWO\n LAST\nAFTER\n\f",
+            "rasterSha256": [
+              "403bae7752256e5d7311f08f409dcda3448409dfbbcfeb9d7c9498889b3136d6",
+              "2bd9052ee05c9b1b0f128312c69795f00f9c5efdbbd100eb0f37477019faccf2"
+            ],
+            "rasterDpi": 96,
+            "rasterColorSpace": "RGB"
+          },
+          "comparison": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 5.400000000000006,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "geometryPassed": false
+        }
+      },
+      "controlsExerciseDifferentLayouts": false,
+      "passed": false
+    }
+  ],
+  "sourcesUnchanged": true,
+  "passed": false,
+  "notice": "Initial authored controls omitted explicit cell margins and deliberately included a dormant second header. Native DOC imports used zero cell margins and activated both header rows despite the first header flag being false. This failed measurement is preserved; the positive native controls will specify108-twip margins and a first-row-only header change. Production origin/header semantics were not reinterpreted."
+}

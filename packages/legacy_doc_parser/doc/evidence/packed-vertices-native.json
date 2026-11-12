@@ -1,0 +1,1224 @@
+{
+  "schema": "legacy-doc-parser/native-packed-points",
+  "version": 1,
+  "method": "Native full-width/packed DOC equivalence plus independent authored PDF coordinates.",
+  "cases": {
+    "full-none": {
+      "sourceDocSha256": "a7d9d1ea5ef059a3ac5acf0be3179f952c8f8b9a7fc6b7ddfb5c1c3a47161afd",
+      "convertedDocxSha256": "2283f1746cd1b0cea9d140f6f14e8e6d42c16c89bc5ab0ba15f87b62e2fb97e8",
+      "sourceRender": {
+        "pdfSha256": "4bc80d9e543d8b5700d75d65685dd372e3083eabd2e60c0f915bed15c9d6f417",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  56.8,
+                  57.140764,
+                  70.66,
+                  68.210764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "4e91e03f7d6f6dae220505329fd86995ada102a9d10bcda33bccb3c71cd684af"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "90ffa74de2c5f6f7a9452b5892785438b68d8c23c1794a24a8973c876ff4aa6c",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  72.1,
+                  74.45,
+                  84.42,
+                  85.45
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "23570338b30661952698e7ac7a75729f82d1d07fc7cdf9a56868972b5286f4ff"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "sourcePdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.00079345703125,
+            78.05000305175781,
+            48.05078125
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                6.0,
+                12.00079345703125
+              ],
+              [
+                78.05000305175781,
+                12.00079345703125
+              ]
+            ],
+            [
+              "c",
+              [
+                78.05000305175781,
+                12.00079345703125
+              ],
+              [
+                78.05000305175781,
+                24.00079345703125
+              ],
+              [
+                42.0,
+                48.05078125
+              ],
+              [
+                6.0,
+                48.05078125
+              ]
+            ],
+            [
+              "l",
+              [
+                6.0,
+                48.05078125
+              ],
+              [
+                6.0,
+                12.00079345703125
+              ]
+            ]
+          ]
+        }
+      ],
+      "convertedPdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.0,
+            78.0,
+            48.0
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                6.0,
+                12.0
+              ],
+              [
+                78.0,
+                12.0
+              ]
+            ],
+            [
+              "c",
+              [
+                78.0,
+                12.0
+              ],
+              [
+                78.0,
+                24.0
+              ],
+              [
+                42.0,
+                48.0
+              ],
+              [
+                6.0,
+                48.0
+              ]
+            ],
+            [
+              "l",
+              [
+                6.0,
+                48.0
+              ],
+              [
+                6.0,
+                12.0
+              ]
+            ]
+          ]
+        }
+      ],
+      "sourceGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.05078125,
+        "tolerancePoints": 0.06,
+        "strokePoints": 2
+      },
+      "convertedGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.0,
+        "tolerancePoints": 0.02,
+        "strokePoints": 2
+      },
+      "nativeEncodingEquivalent": true,
+      "sourcesUnchanged": true
+    },
+    "packed-none": {
+      "sourceDocSha256": "9da83a74558e54120b47be92c8e9f31b8a00682979600ded61a44d512f769f30",
+      "convertedDocxSha256": "2fb0045c190eb23f681aa761fc0cc9641bc4bdd82a5c68bb8182970c68d336ba",
+      "sourceRender": {
+        "pdfSha256": "41903d3a0ea9e1bf33022b5905527d1e08a207cdf083b2c5cfffdbce9991d826",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  56.8,
+                  57.140764,
+                  70.66,
+                  68.210764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "4e91e03f7d6f6dae220505329fd86995ada102a9d10bcda33bccb3c71cd684af"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "60a4e68b9d2c217f2b33ce4ad8d69bf0912df45bca4f8633ac1f9fa1d02432bd",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  72.1,
+                  74.45,
+                  84.42,
+                  85.45
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "23570338b30661952698e7ac7a75729f82d1d07fc7cdf9a56868972b5286f4ff"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "sourcePdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.00079345703125,
+            78.05000305175781,
+            48.05078125
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                6.0,
+                12.00079345703125
+              ],
+              [
+                78.05000305175781,
+                12.00079345703125
+              ]
+            ],
+            [
+              "c",
+              [
+                78.05000305175781,
+                12.00079345703125
+              ],
+              [
+                78.05000305175781,
+                24.00079345703125
+              ],
+              [
+                42.0,
+                48.05078125
+              ],
+              [
+                6.0,
+                48.05078125
+              ]
+            ],
+            [
+              "l",
+              [
+                6.0,
+                48.05078125
+              ],
+              [
+                6.0,
+                12.00079345703125
+              ]
+            ]
+          ]
+        }
+      ],
+      "convertedPdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.0,
+            78.0,
+            48.0
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                6.0,
+                12.0
+              ],
+              [
+                78.0,
+                12.0
+              ]
+            ],
+            [
+              "c",
+              [
+                78.0,
+                12.0
+              ],
+              [
+                78.0,
+                24.0
+              ],
+              [
+                42.0,
+                48.0
+              ],
+              [
+                6.0,
+                48.0
+              ]
+            ],
+            [
+              "l",
+              [
+                6.0,
+                48.0
+              ],
+              [
+                6.0,
+                12.0
+              ]
+            ]
+          ]
+        }
+      ],
+      "sourceGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.05078125,
+        "tolerancePoints": 0.06,
+        "strokePoints": 2
+      },
+      "convertedGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.0,
+        "tolerancePoints": 0.02,
+        "strokePoints": 2
+      },
+      "nativeEncodingEquivalent": true,
+      "sourcesUnchanged": true
+    },
+    "packed-header-excluded-none": {
+      "sourceDocSha256": "b6c92154530bcb485c42cf192a1b67cfd1acad1d39a718848232ba5fce5e3fb8",
+      "convertedDocxSha256": "0ab61a229aeb65e2e199f0d5e0a74b68f3a3bf6d474e2e83df33457416e6a188",
+      "sourceRender": {
+        "pdfSha256": "5ef397d13ce6b2434f72b94f1710b18742d70309748c1318f7d9c67cb0a670b4",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  56.8,
+                  57.140764,
+                  70.66,
+                  68.210764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "4e91e03f7d6f6dae220505329fd86995ada102a9d10bcda33bccb3c71cd684af"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "5b95ce7c55209f385310ba553d11e5aaa52804004aeddfa174dafab9675b7f08",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  72.1,
+                  74.45,
+                  84.42,
+                  85.45
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "23570338b30661952698e7ac7a75729f82d1d07fc7cdf9a56868972b5286f4ff"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "sourcePdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.00079345703125,
+            78.05000305175781,
+            48.05078125
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                6.0,
+                12.00079345703125
+              ],
+              [
+                78.05000305175781,
+                12.00079345703125
+              ]
+            ],
+            [
+              "c",
+              [
+                78.05000305175781,
+                12.00079345703125
+              ],
+              [
+                78.05000305175781,
+                24.00079345703125
+              ],
+              [
+                42.0,
+                48.05078125
+              ],
+              [
+                6.0,
+                48.05078125
+              ]
+            ],
+            [
+              "l",
+              [
+                6.0,
+                48.05078125
+              ],
+              [
+                6.0,
+                12.00079345703125
+              ]
+            ]
+          ]
+        }
+      ],
+      "convertedPdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.0,
+            78.0,
+            48.0
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                6.0,
+                12.0
+              ],
+              [
+                78.0,
+                12.0
+              ]
+            ],
+            [
+              "c",
+              [
+                78.0,
+                12.0
+              ],
+              [
+                78.0,
+                24.0
+              ],
+              [
+                42.0,
+                48.0
+              ],
+              [
+                6.0,
+                48.0
+              ]
+            ],
+            [
+              "l",
+              [
+                6.0,
+                48.0
+              ],
+              [
+                6.0,
+                12.0
+              ]
+            ]
+          ]
+        }
+      ],
+      "sourceGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.05078125,
+        "tolerancePoints": 0.06,
+        "strokePoints": 2
+      },
+      "convertedGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.0,
+        "tolerancePoints": 0.02,
+        "strokePoints": 2
+      },
+      "nativeEncodingEquivalent": true,
+      "sourcesUnchanged": true
+    },
+    "full-xy": {
+      "sourceDocSha256": "a95e9519c627ff02cfd9660827ed5c45afac2616890edd49fb63957471357822",
+      "convertedDocxSha256": "26e9acb702c48a5e62584ae27fad48657bbd50080ba29b24189d3df0cf5c3f6c",
+      "sourceRender": {
+        "pdfSha256": "b79d131f3c79dfb78ee77d3d0974440a605d0f559f28234a3c9c619322308331",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  56.8,
+                  57.140764,
+                  70.66,
+                  68.210764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "442d0fcf2280c8c5574a6321a17b10b93554cc88610545e6b9235e120535076e"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "f4605e4b73953c08d1b36df298b0574cdfcc165b8fcfbd0b5098de2940e589f0",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  72.1,
+                  74.45,
+                  84.42,
+                  85.45
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "b10e031ef22556a451b659a4335a2818393d8dadfdb65a46998dfa5a4e789b87"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "sourcePdfPaths": [
+        {
+          "bounds": [
+            5.949999809265137,
+            11.95074462890625,
+            78.0,
+            48.00079345703125
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                78.0,
+                48.00079345703125
+              ],
+              [
+                5.949999809265137,
+                48.00079345703125
+              ]
+            ],
+            [
+              "c",
+              [
+                5.949999809265137,
+                48.00079345703125
+              ],
+              [
+                5.949999809265137,
+                36.00079345703125
+              ],
+              [
+                42.0,
+                11.95074462890625
+              ],
+              [
+                78.0,
+                11.95074462890625
+              ]
+            ],
+            [
+              "l",
+              [
+                78.0,
+                11.95074462890625
+              ],
+              [
+                78.0,
+                48.00079345703125
+              ]
+            ]
+          ]
+        }
+      ],
+      "convertedPdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.0,
+            78.0,
+            48.0
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                78.0,
+                48.0
+              ],
+              [
+                6.0,
+                48.0
+              ]
+            ],
+            [
+              "c",
+              [
+                6.0,
+                48.0
+              ],
+              [
+                6.0,
+                36.0
+              ],
+              [
+                42.0,
+                12.0
+              ],
+              [
+                78.0,
+                12.0
+              ]
+            ],
+            [
+              "l",
+              [
+                78.0,
+                12.0
+              ],
+              [
+                78.0,
+                48.0
+              ]
+            ]
+          ]
+        }
+      ],
+      "sourceGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.05000019073486328,
+        "tolerancePoints": 0.06,
+        "strokePoints": 2
+      },
+      "convertedGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.0,
+        "tolerancePoints": 0.02,
+        "strokePoints": 2
+      },
+      "nativeEncodingEquivalent": true,
+      "sourcesUnchanged": true
+    },
+    "packed-xy": {
+      "sourceDocSha256": "6e77958b857d2dcfde36247929a88c12df0d446a44a83625779f46df660676ca",
+      "convertedDocxSha256": "5698a40fcf15af2ebd5e0fb5ebc96b2af9a25bbbf92486fdfcd6a9a8c2466309",
+      "sourceRender": {
+        "pdfSha256": "f2b44c30b785196a63ac44aa0c0f28c8eec1d5e6e9451c779b8097ebea52a348",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  56.8,
+                  57.140764,
+                  70.66,
+                  68.210764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "442d0fcf2280c8c5574a6321a17b10b93554cc88610545e6b9235e120535076e"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "39dac41b214e15886a59561f5953e4ea41f58debcb26492fcb550fc88732b7e9",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  72.1,
+                  74.45,
+                  84.42,
+                  85.45
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "b10e031ef22556a451b659a4335a2818393d8dadfdb65a46998dfa5a4e789b87"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "sourcePdfPaths": [
+        {
+          "bounds": [
+            5.949999809265137,
+            11.95074462890625,
+            78.0,
+            48.00079345703125
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                78.0,
+                48.00079345703125
+              ],
+              [
+                5.949999809265137,
+                48.00079345703125
+              ]
+            ],
+            [
+              "c",
+              [
+                5.949999809265137,
+                48.00079345703125
+              ],
+              [
+                5.949999809265137,
+                36.00079345703125
+              ],
+              [
+                42.0,
+                11.95074462890625
+              ],
+              [
+                78.0,
+                11.95074462890625
+              ]
+            ],
+            [
+              "l",
+              [
+                78.0,
+                11.95074462890625
+              ],
+              [
+                78.0,
+                48.00079345703125
+              ]
+            ]
+          ]
+        }
+      ],
+      "convertedPdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.0,
+            78.0,
+            48.0
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                78.0,
+                48.0
+              ],
+              [
+                6.0,
+                48.0
+              ]
+            ],
+            [
+              "c",
+              [
+                6.0,
+                48.0
+              ],
+              [
+                6.0,
+                36.0
+              ],
+              [
+                42.0,
+                12.0
+              ],
+              [
+                78.0,
+                12.0
+              ]
+            ],
+            [
+              "l",
+              [
+                78.0,
+                12.0
+              ],
+              [
+                78.0,
+                48.0
+              ]
+            ]
+          ]
+        }
+      ],
+      "sourceGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.05000019073486328,
+        "tolerancePoints": 0.06,
+        "strokePoints": 2
+      },
+      "convertedGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.0,
+        "tolerancePoints": 0.02,
+        "strokePoints": 2
+      },
+      "nativeEncodingEquivalent": true,
+      "sourcesUnchanged": true
+    },
+    "packed-header-excluded-xy": {
+      "sourceDocSha256": "fbd1520aa0fa230f2686501f505496209826dc75313f61920b8447518ced9c92",
+      "convertedDocxSha256": "76beeba921ac8dfe9c5fa61371446cd80e8b6afd976b61df148bec9c833d5d01",
+      "sourceRender": {
+        "pdfSha256": "5b4c549ec899e7f1c60f6e0cf59ca49cdb758db0dd69546c828d104423ca7720",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  56.8,
+                  57.140764,
+                  70.66,
+                  68.210764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "442d0fcf2280c8c5574a6321a17b10b93554cc88610545e6b9235e120535076e"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "3264b22b00871032d1c9223d22afb506a7850d7fd02a0c326d2baa539d78b743",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "AB",
+                "box": [
+                  72.1,
+                  74.45,
+                  84.42,
+                  85.45
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "AB\n\f",
+        "rasterSha256": [
+          "b10e031ef22556a451b659a4335a2818393d8dadfdb65a46998dfa5a4e789b87"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "sourcePdfPaths": [
+        {
+          "bounds": [
+            5.949999809265137,
+            11.95074462890625,
+            78.0,
+            48.00079345703125
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                78.0,
+                48.00079345703125
+              ],
+              [
+                5.949999809265137,
+                48.00079345703125
+              ]
+            ],
+            [
+              "c",
+              [
+                5.949999809265137,
+                48.00079345703125
+              ],
+              [
+                5.949999809265137,
+                36.00079345703125
+              ],
+              [
+                42.0,
+                11.95074462890625
+              ],
+              [
+                78.0,
+                11.95074462890625
+              ]
+            ],
+            [
+              "l",
+              [
+                78.0,
+                11.95074462890625
+              ],
+              [
+                78.0,
+                48.00079345703125
+              ]
+            ]
+          ]
+        }
+      ],
+      "convertedPdfPaths": [
+        {
+          "bounds": [
+            6.0,
+            12.0,
+            78.0,
+            48.0
+          ],
+          "color": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fill": [
+            0.20000000298023224,
+            0.4000000059604645,
+            0.800000011920929
+          ],
+          "width": 2.0,
+          "items": [
+            [
+              "l",
+              [
+                78.0,
+                48.0
+              ],
+              [
+                6.0,
+                48.0
+              ]
+            ],
+            [
+              "c",
+              [
+                6.0,
+                48.0
+              ],
+              [
+                6.0,
+                36.0
+              ],
+              [
+                42.0,
+                12.0
+              ],
+              [
+                78.0,
+                12.0
+              ]
+            ],
+            [
+              "l",
+              [
+                78.0,
+                12.0
+              ],
+              [
+                78.0,
+                48.0
+              ]
+            ]
+          ]
+        }
+      ],
+      "sourceGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.05000019073486328,
+        "tolerancePoints": 0.06,
+        "strokePoints": 2
+      },
+      "convertedGeometry": {
+        "passes": true,
+        "maxCoordinateDriftPoints": 0.0,
+        "tolerancePoints": 0.02,
+        "strokePoints": 2
+      },
+      "nativeEncodingEquivalent": true,
+      "sourcesUnchanged": true
+    }
+  },
+  "errors": [],
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "pdfInspectorVersion": "1.26.6",
+  "parserCommit": "f0a245e6dd4596cfb75646c06665346c16190b62",
+  "parserWorktreeDirty": true
+}

@@ -7,6 +7,7 @@ import 'structured_word_fixture.dart';
 Uint8List shapePropertyRecord({
   Map<int, int> values = const {},
   Map<int, Uint8List> complex = const {},
+  Map<int, int> complexLengths = const {},
 }) => officeArtRecord(
   0xf00b,
   [
@@ -16,7 +17,7 @@ Uint8List shapePropertyRecord({
     ],
     for (final property in complex.entries) ...[
       ...wordU16(property.key | 0x8000),
-      ...wordU32(property.value.length),
+      ...wordU32(complexLengths[property.key] ?? property.value.length),
     ],
     for (final data in complex.values) ...data,
   ],

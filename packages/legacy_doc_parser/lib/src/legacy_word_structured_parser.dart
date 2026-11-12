@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'bounded_cfb_reader.dart';
 import 'compound/cfbf_writer.dart';
 import 'legacy_word_metafile.dart';
+import 'legacy_word_number_formats.dart';
+import 'legacy_word_numbering.dart';
 import 'legacy_word_structured_model.dart';
 import 'legacy_word_structured_render.dart';
 
@@ -19,6 +21,8 @@ part 'legacy_word_stories.dart';
 part 'legacy_word_fields.dart';
 part 'legacy_word_lists.dart';
 part 'legacy_word_tables.dart';
+part 'legacy_word_table_revisions.dart';
+part 'legacy_word_table_operations.dart';
 part 'legacy_word_table_styles.dart';
 part 'legacy_word_table_text.dart';
 part 'legacy_word_media_parser.dart';
@@ -50,7 +54,6 @@ class _StructuredWordParser {
   int runCount = 0;
   int paragraphCount = 0;
   int fieldTextUnits = 0;
-  int renderedHtmlBytes = 0;
   final _fieldResults = <bool>[];
   final _fieldIndicesByStart = <int, int>{};
   final _activeFieldIndices = <int>[];
@@ -137,13 +140,37 @@ class _StructuredWordParser {
     _resolveReferencePresentations();
     final media = _readMediaCatalog(mediaRuns);
     _linkTextboxDrawings(media);
+    final renderer = LegacyWordHtmlRenderer(
+      numberingDefinitions: numbering,
+      defaultTabStopTwips: source.defaultTabStopTwips,
+      media: media,
+    );
+    final previews = renderer.renderAll([
+      blocks,
+      for (final story in stories) story.blocks,
+    ]);
+    final mainHtml = previews.first;
+    for (var i = 0; i < stories.length; i++) {
+      final story = stories[i];
+      stories[i] = LegacyWordStory(
+        id: story.id,
+        kind: story.kind,
+        startCp: story.startCp,
+        endCp: story.endCp,
+        blocks: story.blocks,
+        plainText: story.plainText,
+        safeHtml: previews[i + 1],
+        sectionIndex: story.sectionIndex,
+        headerFooterType: story.headerFooterType,
+      );
+    }
     final orderedWarnings = warnings.toList()
       ..sort((a, b) => a.index.compareTo(b.index));
     return LegacyWordDocument(
       blocks: List.unmodifiable(blocks),
       sections: List.unmodifiable(sections),
       plainText: _plainText(blocks),
-      safeHtml: _renderBlocks(blocks),
+      safeHtml: mainHtml,
       warnings: List.unmodifiable(orderedWarnings),
       stories: List.unmodifiable(stories),
       noteReferences: List.unmodifiable(noteReferences),
@@ -263,31 +290,6 @@ class _StructuredWordParser {
     return plain.toString();
   }
 
-  String _renderBlocks(List<LegacyWordBlock> blocks) {
-    final html = renderLegacyWordHtml(
-      blocks,
-      numberingDefinitions: numbering,
-      defaultTabStopTwips: source.defaultTabStopTwips,
-    );
-    // The renderer enforces a per-story limit; also cap their combined output
-    // without allocating a second encoded copy of every generated string.
-    for (final rune in html.runes) {
-      renderedHtmlBytes += rune <= 0x7f
-          ? 1
-          : rune <= 0x7ff
-          ? 2
-          : rune <= 0xffff
-          ? 3
-          : 4;
-      if (renderedHtmlBytes > 64 * 1024 * 1024) {
-        throw const FormatException(
-          'Word story previews exceed the output limit.',
-        );
-      }
-    }
-    return html;
-  }
-
   void _storyWarnings() {
     if (source.missingDeclaredExtent) {
       warnings.add(LegacyWordWarning.unsupportedFormatting);
@@ -319,6 +321,7 @@ class _StructuredWordParser {
     final operations = _decodeSprms(
       bytes,
       budget,
+      stopAtTableProperties: true,
       onPapxOrphanByte: recoverPapxOrphanByte
           ? () {
               warnings.add(LegacyWordWarning.recoveredNonconformingProperties);
@@ -338,10 +341,6 @@ class _StructuredWordParser {
     }
 
     for (final operation in operations) {
-      if ((operation.code == 0x3668 && operation.data.u8(0) != 0) ||
-          operation.code == 0xd667) {
-        warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
-      }
       if (operation.code != 0x6646 &&
           operation.code != 0x646b &&
           operation.code != 0x6645) {
@@ -349,20 +348,27 @@ class _StructuredWordParser {
         continue;
       }
       final offset = operation.data.u32(0);
+      final data = source.data;
+      final length = data.u16(offset);
+      if (operation.code == 0x646b && length < 10) {
+        throw const FormatException('Invalid Word indirect table properties.');
+      }
       final cached = _indirectProperties[offset];
       if (cached != null) {
         append(cached);
+        if (operation.code == 0x646b) break;
         continue;
       }
       if (!_indirectActive.add(offset)) {
         throw const FormatException('Cyclic Word indirect properties.');
       }
-      final data = source.data;
-      final length = data.u16(offset);
       final nested = _readProperties(data.slice(offset + 2, length), depth + 1);
       _indirectActive.remove(offset);
       _indirectProperties[offset] = nested;
       append(nested);
+      // PTableProps replaces the remainder of its containing array; older
+      // table properties after it are intended for readers without styles.
+      if (operation.code == 0x646b) break;
     }
     return output;
   }
@@ -748,6 +754,7 @@ class _StructuredWordParser {
       hidden: properties['hidden'] == true,
       fontName: font,
       fontSizeHalfPoints: properties['fontSize'] as int?,
+      kerningThresholdHalfPoints: properties['kerning'] as int? ?? 0,
       colorHex: properties['color'] as String?,
       highlightHex: properties['highlight'] as String?,
       verticalAlign: switch (properties['verticalAlign']) {

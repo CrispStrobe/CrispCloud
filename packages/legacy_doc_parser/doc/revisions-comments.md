@@ -157,9 +157,89 @@ Primary format references:
 - [MS-ODRAW idDiscussAnchor](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/b81344c5-9175-4b0c-a530-49c5c59fcc6b)
 - [Microsoft Ink Serialized Format specification](https://download.microsoft.com/download/0/B/E/0BE8BDD7-E5E8-422A-ABFD-4342ED7AD886/InkSerializedFormat(ISF)Specification.pdf)
 
+## Bounded table-row property revisions
+
+`sprmTWall` captures prior row height, row-splitting policy, and the raw header
+instruction. `sprmTPropRMark` supplies the independent author and DTTM. When a
+complete cell definition exists before the wall and subsequent table operations
+are confined to those three properties, conversion writes native
+`w:trPrChange/w:trPr`. Historical grid-before/after instructions are retained
+alongside the row properties because that grid is unchanged. Invalid previous
+heights and malformed review records fail before a later valid value can hide
+them. A false wall clears the snapshot; a later true wall replaces it.
+
+`LegacyWordTableRow.sourceHeaderRequest` keeps the source instruction separately
+from the currently effective `isHeader`. Both binary Word and WordprocessingML
+require header rows to form a prefix starting at the first row. Keeping a
+dormant later-row instruction is necessary: rejecting a preceding row's header
+change can make that later row a header again. Current preview behavior still
+uses the effective prefix, while native XML retains the instruction.
+
+Header edits require an additional boundary in conditionally styled tables.
+The converter materializes current table-style properties on cells and text.
+Changing the header prefix can change first-row rules and the banding of later
+rows; rejecting only `trPrChange` would leave those current child properties in
+place. When a header instruction changes and any used style or ancestor has
+conditional cell/text rules, `conditionalFormattingMayChange` retains the
+history as inert evidence with `revisionMetadataIncomplete` and an explicit
+reason. The guard considers the entire table, including dormant requests that
+another independent rejection could reactivate. It is deliberately conservative
+and does not invent child revisions. Public-model conversion repeats the check.
+Height/split edits with unchanged header instructions, and header edits with
+nonconditional styles, retain the supported native history.
+
+This is a bounded row-layout history. Cell insertion/deletion, merges, column
+resizing, table positioning, table styles, and other table/cell edits after the
+wall do not become a partial native row revision. Their original operation
+codes and the supported previous row properties remain inert
+`tableRowFormattingRevision` evidence with a revision limitation. Unknown
+pre-wall table properties, incomplete definitions, missing snapshots, and
+unmarked snapshots are also diagnosed. The implementation does not infer row
+insertion/deletion or move identities from these formatting records.
+
+`legacy_word_table_revisions_test.dart` checks independently authored binary
+records and explicit accept/reject XML states, including dormant header
+reactivation, repeated/false walls, unsupported topology changes, style resets,
+unique identifiers and malformed operands. The independent
+`legacy_word_table_review_conditions_test.dart` adds literal old-state controls
+whose conditional bold/shading differs from the current rows, inherited rules,
+downstream header-prefix and banding changes, combinations of dormant edits,
+public-model inputs, and preferred-width/style-reset interactions. The
+independent
+`tool/fidelity/table_review_probe.py` projects only the fixture's row-property
+revisions into new DOCX copies, then compares their native renders with separate
+accepted/rejected DOC controls. The original review document is never accepted
+or rejected in place. A pinned source receipt prevents silently changing the
+control bytes, and adversarial Python tests reject lost history, incorrect old
+or current values, wrong metadata, and revisions outside the supported fixture.
+
+The initial native run remains in `evidence/table-review-initial-native.json`.
+It found a 5.4-point cell-text offset with implicit source margins and a header
+disagreement. A second run with explicit margins isolated the native DOC
+reader's treatment of a present `TTableHeader=0` as enabled; that failed run
+remains in `evidence/table-review-explicit-false-native.json`. The positive
+accepted DOC control uses the documented absent/default false instruction,
+while the review DOC still contains the explicit true-to-false edit. Both
+states declare 108-twip horizontal cell margins. No production Boolean
+interpretation is changed to match that native import behavior. Dormant header
+reactivation remains covered by independent XML tests.
+
+The final native receipt is `evidence/table-review-native.json`. On its recorded
+LibreOffice build, all six accepted/rejected projections match the independently
+authored DOC controls exactly in page geometry, text positions, and RGB pixels.
+Every pair of controls exercises a different layout. This demonstrates the
+projected states; it does not establish that this renderer retains unprojected
+table revision history. `evidence/table-review-schema.json` independently checks
+the nine generated DOCX files and six projected packages with Open XML SDK
+3.3.0 (Office2019), with zero errors and passing positive/negative controls.
+
+Primary references: [MS-DOC table-property revision walls](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/b39a6648-501c-4361-8366-4f042f579469),
+[native prior row properties](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.tablerowpropertieschange),
+and [the contiguous header rule](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.tableheader).
+
 ## Remaining limits
 
-Table/row/cell formatting history, moves, and
+Broader table/cell formatting history, moves, and
 multi-step editing history are not reconstructed as native tracked changes.
 One binary wall contains one prior
 property snapshot, not an arbitrary revision log. Revision reasons are exposed

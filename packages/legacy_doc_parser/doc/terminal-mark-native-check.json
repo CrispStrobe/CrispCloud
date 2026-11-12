@@ -1,0 +1,189 @@
+{
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "sourceRun": "fidelity-native-integrated-20261112",
+  "cases": [
+    {
+      "case": "officeart-shapes",
+      "nativeImport": "bridge/officeart-shapes.doc",
+      "sha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+      "bytes": 10240,
+      "terminalCp": 84,
+      "terminalFc": 2216,
+      "chpxBinAndPageEnd": 2216,
+      "papxBinAndPageEnd": 2218,
+      "allStoryLengths": [
+        85,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedBlocks": 1,
+      "parsedBlocks": 1,
+      "terminalMark": "unknown",
+      "sourceBufferUnchanged": true,
+      "conversionProducedWordPackage": true,
+      "limitations": [
+        "partialFormatting",
+        "embeddedObjects",
+        "revisions"
+      ],
+      "preservedCounts": {
+        "evidenceArtifacts": 5,
+        "drawingReferences": 3,
+        "editableShapes": 3,
+        "paragraphs": 1,
+        "sections": 1,
+        "compatibilityFlags": 60
+      }
+    },
+    {
+      "case": "emf-vectors",
+      "nativeImport": "bridge/emf-vectors.doc",
+      "sha256": "f4e274400fefc5428d473aa14132d832fcc80d7e57bbdc60a55eaf1d31a466d8",
+      "bytes": 9728,
+      "terminalCp": 64,
+      "terminalFc": 2176,
+      "chpxBinAndPageEnd": 2176,
+      "papxBinAndPageEnd": 2178,
+      "allStoryLengths": [
+        65,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedBlocks": 3,
+      "parsedBlocks": 3,
+      "terminalMark": "unknown",
+      "sourceBufferUnchanged": true,
+      "conversionProducedWordPackage": true,
+      "limitations": [
+        "partialFormatting",
+        "embeddedObjects",
+        "revisions"
+      ],
+      "preservedCounts": {
+        "evidenceArtifacts": 4,
+        "paragraphs": 3,
+        "images": 1,
+        "pictureReferences": 1,
+        "sections": 1,
+        "compatibilityFlags": 60
+      }
+    },
+    {
+      "case": "wmf-vectors",
+      "nativeImport": "bridge/wmf-vectors.doc",
+      "sha256": "da2cc5f74733278364c7d52dc8cf83ac4e6cc4615a3d4a855b3722bd7e2ecc67",
+      "bytes": 9728,
+      "terminalCp": 64,
+      "terminalFc": 2176,
+      "chpxBinAndPageEnd": 2176,
+      "papxBinAndPageEnd": 2178,
+      "allStoryLengths": [
+        65,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedBlocks": 3,
+      "parsedBlocks": 3,
+      "terminalMark": "unknown",
+      "sourceBufferUnchanged": true,
+      "conversionProducedWordPackage": true,
+      "limitations": [
+        "partialFormatting",
+        "embeddedObjects",
+        "revisions"
+      ],
+      "preservedCounts": {
+        "evidenceArtifacts": 4,
+        "paragraphs": 3,
+        "images": 1,
+        "pictureReferences": 1,
+        "sections": 1,
+        "compatibilityFlags": 60
+      }
+    },
+    {
+      "case": "list-continue",
+      "nativeImport": "roundtrip-doc/converted.doc",
+      "sha256": "df7fd91d0bff67662fe6d318a447d28e6b453a115337881e05066fdebcd91f72",
+      "bytes": 10240,
+      "terminalCp": 14,
+      "terminalFc": 2076,
+      "chpxBinAndPageEnd": 2076,
+      "papxBinAndPageEnd": 2078,
+      "allStoryLengths": [
+        15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedBlocks": 5,
+      "parsedBlocks": 5,
+      "terminalMark": "unknown",
+      "sourceBufferUnchanged": true,
+      "conversionProducedWordPackage": true,
+      "limitations": [
+        "partialFormatting",
+        "revisions"
+      ],
+      "preservedCounts": {
+        "paragraphs": 5,
+        "sections": 1,
+        "compatibilityFlags": 60,
+        "evidenceArtifacts": 3,
+        "numberingDefinitions": 2,
+        "numberingInstances": 2
+      }
+    },
+    {
+      "case": "list-restart",
+      "nativeImport": "roundtrip-doc/converted.doc",
+      "sha256": "a5fc8182f06b58960f457609fe940e9df11e55329d3e2dcdf936f76f108b96e6",
+      "bytes": 10752,
+      "terminalCp": 17,
+      "terminalFc": 2082,
+      "chpxBinAndPageEnd": 2082,
+      "papxBinAndPageEnd": 2084,
+      "allStoryLengths": [
+        18,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedBlocks": 6,
+      "parsedBlocks": 6,
+      "terminalMark": "unknown",
+      "sourceBufferUnchanged": true,
+      "conversionProducedWordPackage": true,
+      "limitations": [
+        "partialFormatting",
+        "revisions"
+      ],
+      "preservedCounts": {
+        "paragraphs": 6,
+        "sections": 1,
+        "compatibilityFlags": 60,
+        "evidenceArtifacts": 3,
+        "numberingDefinitions": 3,
+        "numberingInstances": 3
+      }
+    }
+  ]
+}
