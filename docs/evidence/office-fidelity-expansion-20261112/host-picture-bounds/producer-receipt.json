@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-12T15:22:49.625118+00:00",
+  "base_commit": "7e8de191ec434382ac10d7cfd17b53cf29d13a77",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "flutter",
+    "test",
+    "--no-pub",
+    "test/widget/office_picture_fidelity_test.dart",
+    "--plain-name",
+    "Slide picture stays within a small imported slide"
+  ],
+  "test_sha256": "690528becbfbc8dc9b129acb99d031782bb65745ea50f9dd82d43fea82f70ed8",
+  "committed_lock_sha256": "f18ecce960b3b22694107cb17d4cef93e1e823b55da8f39374bcf7f081783256",
+  "resolved_lock_sha256": "f18ecce960b3b22694107cb17d4cef93e1e823b55da8f39374bcf7f081783256",
+  "lock_restored": false,
+  "exit_code": 0,
+  "finished_utc": "2026-11-12T15:23:05.127080+00:00",
+  "elapsed_seconds": 15.50200916600079,
+  "git_status_after": " M test/widget/office_picture_fidelity_test.dart\n",
+  "log_sha256": "8c78b92d6674f460c4aae28e39da623456db231e1772ec3d19f070ad5869d393"
+}

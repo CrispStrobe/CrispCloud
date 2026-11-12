@@ -1,0 +1,14 @@
+{
+  "host-gate.log.gz": {
+    "bytes": 15893,
+    "sha256": "8b332655b2bef11f7a385814ba377b79f87216ec6c16393627c9609cd9a93f7b"
+  },
+  "producer-acceptance.json": {
+    "bytes": 2333,
+    "sha256": "c33b0a74098018a1494a080986089217798401ed8b65a8ed2cba4f0626cbc484"
+  },
+  "summary.json": {
+    "bytes": 1524,
+    "sha256": "faecb7e6b850d28b746c588cae46678fd0c7733163a54d6e6a0f1da5f5f407fc"
+  }
+}

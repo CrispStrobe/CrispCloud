@@ -1,0 +1,56 @@
+{
+  "status": "failed",
+  "started_utc": "2026-11-12T15:06:49.608918+00:00",
+  "app_commit": "e719ef0165bf01852a9def093f65adab1c6186e6",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "source_before": {
+    "head": "e719ef0165bf01852a9def093f65adab1c6186e6",
+    "tree": "7b9aa68206b602346ae5c31bc5f27c041af07b68",
+    "dirty": "",
+    "tracked_files": 4854,
+    "sha256": "28e305cc6137bf7d1e1e9b81464d9d11ba9118c475780223d9bcb0e4a80a04d0"
+  },
+  "managed_source_files": 417,
+  "runtime": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8"
+  },
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/with_ci_system_sqlite.py",
+    "bash",
+    "tool/check_office_fidelity.sh"
+  ],
+  "command_environment": {
+    "OFFICE_HOST_COVERAGE_DIR": "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/producer/host-coverage-run"
+  },
+  "cwd": "/workspace/scratch/07eb2580faa9/crisp-expansion-validation",
+  "runner_sha256": "f5edfab39d3361acc83e5311a2c181a3d12c786ae015f7c02b78ffe4e1402c4b",
+  "expected_engine_outputs": 346,
+  "expected_host_outputs": 122,
+  "artifacts": {
+    "host-gate.log": "df90ac4ea22d5be545da2a090528c5cb851362a77b50570559b387c472aee25e"
+  },
+  "exit_code": 1,
+  "source_after": {
+    "head": "e719ef0165bf01852a9def093f65adab1c6186e6",
+    "tree": "7b9aa68206b602346ae5c31bc5f27c041af07b68",
+    "dirty": "",
+    "tracked_files": 4854,
+    "sha256": "28e305cc6137bf7d1e1e9b81464d9d11ba9118c475780223d9bcb0e4a80a04d0"
+  },
+  "error": "ValueError('Complete host gate failed; see preserved log')",
+  "finished_utc": "2026-11-12T15:12:03.127347+00:00",
+  "elapsed_seconds": 313.51812983999844
+}
