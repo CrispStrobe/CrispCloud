@@ -1,12 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:quds_office_engine/quds_office_engine.dart'
-    show CfbfDirectoryEntry, CfbfFile, CfbfObjectType;
+import 'cfbf_reader.dart';
 
-export 'package:quds_office_engine/quds_office_engine.dart'
-    show CfbfDirectoryEntry, CfbfObjectType;
+export 'cfbf_reader.dart' show CfbfDirectoryEntry, CfbfObjectType;
 
-/// Resource-bounded access to the MIT office engine's compound-file reader.
+/// Resource-bounded access to compound-file streams using [CfbfFile].
 ///
 /// Validate allocation tables before the underlying reader materializes them.
 /// In particular, repeated DIFAT references must not expand a tiny file into a
@@ -19,12 +17,16 @@ class BoundedCfbReader {
     this.maxTotalReadBytes = 64 * 1024 * 1024,
   }) {
     if (bytes.length > maxFileBytes) {
-      throw const FormatException('Compound file exceeds the preview size limit');
+      throw const FormatException(
+        'Compound file exceeds the preview size limit',
+      );
     }
     _preflight(bytes);
     _file = CfbfFile.fromBytes(bytes);
     if (_file.entries.length > 65536 ||
-        _file.entries.where((entry) => entry.type == CfbfObjectType.root).length !=
+        _file.entries
+                .where((entry) => entry.type == CfbfObjectType.root)
+                .length !=
             1) {
       throw const FormatException('Invalid compound-file directory');
     }
@@ -76,7 +78,9 @@ class BoundedCfbReader {
     if (!entry.isStream ||
         entry.streamSize > maxStreamBytes ||
         _readBytes + entry.streamSize > maxTotalReadBytes) {
-      throw const FormatException('Compound stream exceeds the preview size limit');
+      throw const FormatException(
+        'Compound stream exceeds the preview size limit',
+      );
     }
     _readBytes += entry.streamSize;
     if (entry.streamSize > 0 && entry.streamSize < 4096) {
@@ -93,7 +97,8 @@ class BoundedCfbReader {
         final offset = sector * 64;
         if (!seen.add(sector) ||
             sector >= _file.miniFat.length ||
-            offset < 0 || offset + count > container.length) {
+            offset < 0 ||
+            offset + count > container.length) {
           throw const FormatException('Invalid compound mini-stream chain');
         }
         result.setRange(written, written + count, container, offset);
@@ -176,7 +181,9 @@ class BoundedCfbReader {
       while (sector != end && sector != free) {
         offsetOf(sector);
         if (sector >= fat.length || !seen.add(sector) || seen.length > limit) {
-          throw const FormatException('Invalid or oversized compound sector chain');
+          throw const FormatException(
+            'Invalid or oversized compound sector chain',
+          );
         }
         sector = fat[sector];
       }

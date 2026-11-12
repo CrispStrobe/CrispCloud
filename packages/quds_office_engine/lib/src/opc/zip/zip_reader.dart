@@ -66,15 +66,28 @@ class ZipReader {
   final Map<String, ZipEntry> _entries;
 
   /// open API.
-  factory ZipReader.open(ByteSource source) {
+  factory ZipReader.open(
+    ByteSource source, {
+    int? maxEntries,
+    bool rejectDuplicateNames = false,
+  }) {
+    if (maxEntries != null && maxEntries < 0) {
+      throw ArgumentError.value(maxEntries, 'maxEntries');
+    }
     if (source.length < 22) {
       throw const ZipException('Buffer is too small to be a ZIP archive');
     }
     final _Eocd eocd = _findEocd(source);
+    if (maxEntries != null && eocd.entryCount > maxEntries) {
+      throw const ZipLimitException('ZIP entry count exceeds its limit');
+    }
     final Map<String, ZipEntry> entries = <String, ZipEntry>{};
     int offset = eocd.centralDirectoryOffset;
     for (int i = 0; i < eocd.entryCount; i++) {
       final ZipEntry entry = _readCentralEntry(source, offset);
+      if (rejectDuplicateNames && entries.containsKey(entry.fileName)) {
+        throw ZipDuplicateEntryException(entry.fileName);
+      }
       entries[entry.fileName] = entry;
       offset += _centralEntrySize(source, offset);
     }
@@ -82,8 +95,15 @@ class ZipReader {
   }
 
   /// fromBytes API.
-  factory ZipReader.fromBytes(Uint8List bytes) =>
-      ZipReader.open(MemoryByteSource(bytes));
+  factory ZipReader.fromBytes(
+    Uint8List bytes, {
+    int? maxEntries,
+    bool rejectDuplicateNames = false,
+  }) => ZipReader.open(
+    MemoryByteSource(bytes),
+    maxEntries: maxEntries,
+    rejectDuplicateNames: rejectDuplicateNames,
+  );
 
   /// tryOpen API.
   static ZipReader? tryOpen(ByteSource source) {
@@ -109,7 +129,13 @@ class ZipReader {
   bool contains(String name) => _entries.containsKey(name);
 
   /// Inflates [name] into a newly allocated buffer.
-  Uint8List read(String name) {
+  ///
+  /// When [maxBytes] is supplied, both the declared and actual output size are
+  /// bounded before allocation. Other callers retain the existing behavior.
+  Uint8List read(String name, {int? maxBytes}) {
+    if (maxBytes != null && maxBytes < 0) {
+      throw ArgumentError.value(maxBytes, 'maxBytes');
+    }
     final ZipEntry? entry = _entries[name];
     if (entry == null) {
       throw ZipException('ZIP entry not found: $name');
@@ -117,14 +143,24 @@ class ZipReader {
     if (entry.isDirectory) {
       return Uint8List(0);
     }
+    if (maxBytes != null && entry.uncompressedSize > maxBytes) {
+      throw ZipLimitException('ZIP entry exceeds its limit: $name');
+    }
     final _LocalLocation loc = _localData(entry);
     final Uint8List payload = _source.view(loc.offset, loc.compressedSize);
     final Uint8List raw;
     switch (entry.compressionMethod) {
       case zipMethodStore:
+        if (maxBytes != null && payload.length > maxBytes) {
+          throw ZipLimitException('ZIP entry exceeds its limit: $name');
+        }
         raw = Uint8List.fromList(payload);
       case zipMethodDeflate:
-        raw = RawDeflate.inflate(payload);
+        try {
+          raw = RawDeflate.inflate(payload, maxOutputBytes: maxBytes);
+        } on ZipDeflateLimitException {
+          throw ZipLimitException('ZIP entry exceeds its limit: $name');
+        }
       default:
         throw ZipException(
           'Unsupported ZIP compression method ${entry.compressionMethod} '
@@ -466,4 +502,15 @@ class ZipException implements Exception {
   @override
   /// toString API.
   String toString() => 'ZipException: $message';
+}
+
+/// A ZIP allocation or expanded payload would exceed a caller's budget.
+class ZipLimitException extends ZipException {
+  const ZipLimitException(super.message);
+}
+
+/// A bounded caller rejected two central-directory entries with the same name.
+class ZipDuplicateEntryException extends ZipException {
+  const ZipDuplicateEntryException(String name)
+    : super('Duplicate ZIP entry: $name');
 }

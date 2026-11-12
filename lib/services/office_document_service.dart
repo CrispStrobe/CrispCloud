@@ -18,10 +18,11 @@ import 'dart:typed_data';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:path/path.dart' as p;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show extractLegacyWordText;
 import 'package:xml/xml.dart';
 
 import 'archive_viewer_service.dart';
-import 'legacy_word_document.dart';
 import 'office_package_parts.dart';
 
 const int _kOfficePartCap = 8 * 1024 * 1024;

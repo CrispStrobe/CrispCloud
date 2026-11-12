@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:crisp_cloud/services/bounded_cfb_reader.dart';
 import 'package:crisp_cloud/services/email_message_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
@@ -399,40 +398,6 @@ Readable body'''),
         () => parseEmailMessage(writer.build(), 'wrong.msg'),
         throwsFormatException,
       );
-    });
-  });
-
-  group('bounded compound reader', () {
-    test('small and regular streams retain exact contents', () {
-      final regular = List<int>.generate(8192, (index) => index % 256);
-      final writer = CfbfWriter()
-        ..addStream('parent/small', [7, 9, 11])
-        ..addStream('parent/large', regular);
-      final reader = BoundedCfbReader(writer.build());
-      expect(reader.readPath('parent/small'), orderedEquals([7, 9, 11]));
-      expect(reader.readPath('parent/large'), orderedEquals(regular));
-      expect(reader.readPath('small'), isNull);
-    });
-
-    test('duplicate FAT references fail before the parser allocates them', () {
-      final bytes = (CfbfWriter()..addStream('small', [1])).build();
-      final view = ByteData.sublistView(bytes);
-      view.setUint32(80, view.getUint32(76, Endian.little), Endian.little);
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
-    });
-
-    test('untrusted stream size and cumulative read budget are bounded', () {
-      final bytes = (CfbfWriter()..addStream('small', [1, 2, 3])).build();
-      final reader = BoundedCfbReader(bytes, maxTotalReadBytes: 4);
-      expect(reader.readPath('small'), orderedEquals([1, 2, 3]));
-      expect(() => reader.readPath('small'), throwsFormatException);
-      final view = ByteData.sublistView(bytes);
-      final directory = (view.getUint32(48, Endian.little) + 1) * 512;
-      view.setUint32(directory + 128 + 120, 0x7fffffff, Endian.little);
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
-      view.setUint32(directory + 128 + 120, 3, Endian.little);
-      view.setUint32(directory + 128 + 124, 1, Endian.little);
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
     });
   });
 }

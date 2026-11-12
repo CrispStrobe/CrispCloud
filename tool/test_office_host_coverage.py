@@ -57,8 +57,8 @@ class HostCoverageControls(unittest.TestCase):
         self.assertEqual(report['covered_lines'], 1)
         self.assertEqual(report['instrumented_lines'], 2)
 
-    def test_new_word_helper_cannot_silently_disappear_from_instrumentation(self):
-        helper = 'lib/services/word_package_preservation.dart'
+    def test_new_office_host_helper_cannot_silently_disappear_from_instrumentation(self):
+        helper = 'lib/services/office_new_feature.dart'
         (self.root / helper).write_text('capture\nvalidate\n')
         original_scope = (
             'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
@@ -66,7 +66,7 @@ class HostCoverageControls(unittest.TestCase):
         incomplete = report_coverage(original_scope, self.root)
         self.assertEqual(incomplete['uninstrumented_files'], [helper])
         self.assertIn(helper, incomplete['source_sha256'])
-        with self.assertRaisesRegex(ValueError, 'word_package_preservation.dart'):
+        with self.assertRaisesRegex(ValueError, 'office_new_feature.dart'):
             require_all_sources(incomplete)
         complete = report_coverage(
             original_scope + f'SF:{helper}\nDA:1,1\nDA:2,0\nend_of_record\n',
@@ -74,6 +74,15 @@ class HostCoverageControls(unittest.TestCase):
         require_all_sources(complete)
         details = next(file for file in complete['files'] if file['path'] == helper)
         self.assertEqual(details['uncovered_lines'], [2])
+
+    def test_report_declares_migrated_engine_scope_without_counting_it_as_host(self):
+        report = report_coverage(
+            'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
+            'SF:lib/services/office_search_text.dart\nDA:1,1\nend_of_record\n', self.root)
+        self.assertEqual(len(report['migrated_engine_sources']), 3)
+        self.assertIn('not directly comparable', report['scope_note'])
+        self.assertEqual(report['scope'], ['lib/services/office_*.dart', 'lib/widgets/office_*.dart'])
+        require_all_sources(report)
 
 
 if __name__ == '__main__':

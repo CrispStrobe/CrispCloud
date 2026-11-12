@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
-
-import 'bounded_cfb_reader.dart';
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show BoundedCfbReader, CfbfDirectoryEntry;
 
 const int kEmailPreviewMaxBytes = 32 * 1024 * 1024;
 const int _maxBodyBytes = 8 * 1024 * 1024;
