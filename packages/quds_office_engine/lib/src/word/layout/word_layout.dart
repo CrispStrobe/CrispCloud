@@ -1268,6 +1268,7 @@ class WordLayoutEngine {
             glyphIdOf: glyphIdOf,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
+            breakLongWords: !allowBreak,
           );
     var cursorY = y + paragraph.properties.spacingBefore;
     var idx = pageIndex;

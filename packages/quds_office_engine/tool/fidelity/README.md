@@ -26,13 +26,44 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
-The authored manifests require **241 engine files** and **22 editor files**.
-The engine has 73 complete three-save series and 22 standalone inputs/exports;
+The authored manifests require **305 engine files** and **22 editor files**.
+The engine has 92 complete three-save series and 29 standalone inputs/exports;
 the editor has seven complete three-save series and one standalone export.
 Exact inventory checks reject missing, extra, empty or invalid packages and
 retain SHA-256 receipts. Authored source/edited baselines also participate in
 external render comparisons; exports without a declared comparison baseline
 still require their own schema and render checks.
+
+### Run selected feature areas
+
+The feature runner groups import, modification, repeated export, independent
+package checks and corruption controls by the area being changed:
+
+```sh
+python3 tool/fidelity/feature_matrix.py list
+python3 tool/fidelity/feature_matrix.py plan footnotes headings tables
+python3 tool/fidelity/feature_matrix.py run styles references
+```
+
+Available names are `footnotes`, `endnotes`, `headings`, `styles`, `paragraphs`,
+`images`, `tables`, `tocs`, `textflow`, `placement`, `drawings`, `references`,
+`comments`, `spreadsheets` and `slides`. The committed matrix connects these
+15 areas to 19 producer/oracle bundles. Selecting every area currently requires
+214 freshly generated Office packages and 38 commands. The full `check.sh`
+gate also covers other regression corpora and requires all 305 engine files.
+
+`plan` prints the exact commands, required exports and separate editor golden
+commands without changing files. `run` validates every reference, removes only
+the selected managed outputs, then executes their producers, independent
+oracles and negative controls. It records input and output hashes under
+`build/fidelity-features/`. A missing output, failed command, input change or
+concurrent feature run fails the run. An interrupted rerun cannot leave an old
+successful receipt in place. Supply a specific runtime with
+`--dart /path/to/flutter/bin/cache/dart-sdk/bin/dart` before `run` or `plan`.
+
+The matrix lists the pinned editor goldens separately. It never updates or
+implicitly executes them, and a successful feature run does not certify all
+parameter combinations, branches or Microsoft Office visual equivalence.
 
 ## Import, inspect, edit and export
 
@@ -98,7 +129,7 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 | `listClear` | `paragraph` | Remove list formatting |
 | `listRestart` | `paragraph`; optional `at` (default 1) | Restart a numbered list without mutating unrelated instances |
 | `hyperlink` | `paragraph`, `run`, `target`, story selector | Set a run hyperlink |
-| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's entire story with one plain paragraph |
+| `tableCellText` | `table`, `row`, exactly one of `column`/`gridColumn`, `text` | Replace the selected cell's entire story with one plain paragraph |
 | `headerFooterText` | `story`, `text`; optional `section`, `paragraph` | Replace/add text in one of the six header/footer variants |
 | `sectionFormat` | optional `section`, `width`, `height`, `top`, `bottom`, `left`, `right`, `header`, `footer`, `columns`, `columnSpace`, `columnSep`, `breakKind`, `differentFirstPage`, `differentOddEven` | Edit page/section geometry and flags |
 
@@ -106,7 +137,7 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 
 These 24 additional commands use body indexes shown by `inspect`. `tableMerge`
 uses logical grid columns; `tableUnmerge`, `tableCellText` and `tableCellFormat`
-use physical cell indexes within the selected row. TOC indexes follow depth-first
+accept either physical cell indexes or explicit logical grid columns. TOC indexes follow depth-first
 body traversal, including controls, tables and frames. Exact required
 fields and accepted optional fields are available from `operations`.
 
@@ -141,6 +172,9 @@ order and retain their actual containing cell.
 Native cell preferred widths retain their original `dxa`, `pct`, `auto` or `nil`
 representation until an explicit point-width change. Changed widths are saved
 as `dxa`; horizontal merge/unmerge derives new widths from the logical grid.
+Percentage, automatic and nil widths are retained native metadata; the canvas
+continues to lay out the table using its logical grid. An incomplete grid does
+not supply enough geometry to infer a merged preferred width.
 The `table-grid-{format,replace,unmerge}.json` scripts run against an independently
 authored rich nested-table source. The 28-file corpus contains that source,
 three independently authored expected documents, and unchanged/format/replace/

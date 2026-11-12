@@ -4,6 +4,14 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Wrap overflowing words inside fixed table cells and text frames at source
+  grapheme boundaries, retaining normal word breaks and original Arabic/bidi
+  shaping. Row measurement grows with the wrapped content. Body paragraphs keep
+  their existing overflow policy. Correct flag pairing, emoji modifier grouping
+  and supplementary UTF-16 line ends; an indivisible cluster wider than its box
+  stays intact. Authored nested-cell references and direct/isolate regressions
+  require complete visible text before pixel comparisons can pass.
+
 - Preserve native table-cell preferred widths, including percent, automatic and
   nil widths, through direct and isolate saves. Explicit point-width edits now
   reach DOCX output, and merge/unmerge updates widths from the logical grid.

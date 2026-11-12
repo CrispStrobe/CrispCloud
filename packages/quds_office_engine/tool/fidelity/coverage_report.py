@@ -104,7 +104,21 @@ def main():
     mode.add_argument('--allow-unverified', action='store_true',
                       help='inspect historical unbound hits with an explicit unverified label')
     args = parser.parse_args()
-    report = report_coverage(args.directory, require_receipt=not args.allow_unverified)
+    if args.output.resolve().is_relative_to(args.directory.resolve()):
+        parser.error('Report output must be outside the raw coverage directory')
+    # Reusing a report destination must not leave an earlier success behind if
+    # validation fails or this process is interrupted before publishing a result.
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    pending = {'status': 'running', 'coverage_directory': str(args.directory),
+               'collection': {'verified': False, 'reason': 'Report validation has not completed'}}
+    args.output.write_text(json.dumps(pending, indent=2) + '\n')
+    try:
+        report = report_coverage(args.directory, require_receipt=not args.allow_unverified)
+    except BaseException as error:
+        pending.update(status='failed', error=f'{type(error).__name__}: {error}')
+        args.output.write_text(json.dumps(pending, indent=2) + '\n')
+        raise
+    report['status'] = 'complete'
     try:
         report['source_git_commit'] = subprocess.run(
             ['git', 'rev-parse', 'HEAD'], cwd=ENGINE, check=True,
@@ -115,7 +129,6 @@ def main():
             cwd=ENGINE, check=True, capture_output=True, text=True).stdout.strip())
     except (OSError, subprocess.CalledProcessError):
         report['source_git_commit'], report['source_git_dirty'] = None, None
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     hit, total = report['covered_lines'], report['instrumented_lines']
     print(f'Engine coverage: {hit}/{total} instrumented lines ({100*hit/total:.1f}%).')

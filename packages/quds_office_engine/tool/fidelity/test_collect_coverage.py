@@ -1,11 +1,15 @@
 """Adversarial controls for successful-run and exact-source coverage receipts."""
 import json
 from pathlib import Path
+import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from collect_coverage import CollectionError, RECEIPT, collect, verify_receipt
+import coverage_report as reporter
 from coverage_report import report_coverage
 
 
@@ -180,6 +184,57 @@ class BoundCollectionControls(unittest.TestCase):
         self.assertFalse(report['collection']['verified'])
         with self.assertRaisesRegex(CollectionError, 'Missing collection receipt'):
             report_coverage(self.directory, self.root, require_receipt=True)
+
+    def test_source_or_hits_changed_after_initial_verification_are_rejected(self):
+        self.run_collection()
+        source = self.root / 'lib/src/word/document.dart'
+        hits = self.directory / 'word.vm.json'
+        for path, replacement in ((source, b'new\ntwo\nthree\n'),
+                                  (hits, hits.read_bytes().replace(b'2, 0', b'2, 1'))):
+            original = path.read_bytes()
+            calls = 0
+            def verified_then_changed(directory, root):
+                nonlocal calls
+                result = verify_receipt(directory, root)
+                calls += 1
+                if calls == 1:
+                    path.write_bytes(replacement)
+                return result
+            with self.subTest(path=path):
+                try:
+                    with patch.object(reporter, 'verify_receipt', side_effect=verified_then_changed):
+                        with self.assertRaises(CollectionError):
+                            report_coverage(self.directory, self.root, require_receipt=True)
+                finally:
+                    path.write_bytes(original)
+
+    def test_failed_cli_rerun_replaces_old_success_at_the_requested_report_path(self):
+        for name in ('coverage_report.py', 'collect_coverage.py'):
+            shutil.copyfile(Path(reporter.__file__).with_name(name), self.root / 'tool/fidelity' / name)
+        self.run_collection()
+        output = self.root / 'build/report.json'
+        command = [sys.executable, str(self.root / 'tool/fidelity/coverage_report.py'),
+                   str(self.directory), '--output', str(output)]
+        first = subprocess.run(command, cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertTrue(json.loads(output.read_text())['collection']['verified'])
+        # Invalidating a requested report must never overwrite raw evidence.
+        for protected in (self.directory / RECEIPT, self.directory / 'word.vm.json'):
+            before = protected.read_bytes()
+            rejected = subprocess.run([*command[:-1], str(protected)], cwd=self.root,
+                                      capture_output=True, text=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn('outside the raw coverage directory', rejected.stderr)
+            self.assertEqual(protected.read_bytes(), before)
+        hits = self.directory / 'word.vm.json'
+        hits.write_bytes(hits.read_bytes().replace(b'2, 0', b'2, 1'))
+        second = subprocess.run(command, cwd=self.root, capture_output=True, text=True)
+        self.assertNotEqual(second.returncode, 0)
+        self.assertIn('no longer match successful collection', second.stderr)
+        failed = json.loads(output.read_text())
+        self.assertEqual(failed.get('status'), 'failed')
+        self.assertFalse(failed['collection']['verified'])
+        self.assertNotIn('covered_lines', failed)
 
     def test_command_or_snapshot_metadata_damage_is_not_accepted(self):
         self.run_collection()
