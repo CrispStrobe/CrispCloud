@@ -6,14 +6,14 @@ Research and implementation review: 2026-11-12.
 
 F4 on a binary `.doc`/`.dot`, or **Convert to DOCX** in F3, opens a conversion
 dialog. It offers supported installed applications when their discovery probe
-succeeds, **Structured DOCX (built in)** and an explicit **Text only (built in)**
+succeeds, **Structured Word (built in)** and an explicit **Text only (built in)**
 choice. It never installs
 an office suite or silently substitutes text-only output after a native failure.
 
 For an installed converter, choose **Convert and review**, inspect the detected
 content and any potential losses, then **Save copy**. If document-level VBA is
-detected, DOCM is the default when supported by the selected engine. DOCX cannot
-contain VBA. A filename such as `report (converted).docm` is proposed; saving
+detected, DOCM is the default when supported by the selected engine. DOCX has
+no active VBA project. A filename such as `report (converted).docm` is proposed; saving
 with reported losses requires explicit acknowledgement.
 
 **Preview pages** renders the prepared DOCX/DOCM with the same installed engine
@@ -42,8 +42,12 @@ document content; an installed engine receives only a temporary input copy.
 
 ## Built-in structured conversion
 
-**Structured DOCX (built in)** reads supported binary Word structure in Dart
-and creates a separate, editable DOCX without an installed office application.
+**Structured Word (built in)** uses the standalone MPL-2.0
+[`legacy_doc_parser`](https://github.com/CrispStrobe/legacy-doc-parser) package
+to read supported binary Word structure in Dart and create a separate,
+editable DOCX or explicitly selected DOCM without an installed office application.
+The app pins an immutable Git revision in `pubspec.yaml` and `pubspec.lock`;
+there is no duplicate parser implementation or vendored package in this app.
 It uses the same captured source and create-only save target as the existing
 conversion flow. The original DOC/DOT is not rewritten.
 
@@ -54,23 +58,31 @@ is present. A save collision permits a new filename and retry with the exact
 same prepared bytes. The copy opens in the F3 viewer before optional editing.
 PDF page preview remains available for installed engines only.
 
-Supported main-story data is emitted as WordprocessingML rather than flattened
-into text:
+Supported document structure is emitted as editable Word elements:
 
 - resolved character formatting: bold, italic, underline, strike/double-strike,
   case effects, hidden state, font name/size, color/highlight, vertical position
   and character spacing;
 - paragraph style names, outline levels, alignment, indents, before/after and
-  line spacing, keep settings and page-break-before;
+  line spacing, keep settings, page-break-before, custom/default tabs, borders
+  and supported shading;
 - basic table rows/cells, widths, horizontal/vertical merge markers and explicit
-  header-row flags;
+  header-row flags and cell shading;
 - page size/orientation, margins, gutter, header/footer distances, columns and
   supported section-break positions;
 - tabs, manual line breaks and page breaks as distinct elements;
 - supported tracked insertions/deletions as `w:ins`/`w:del` with deleted text
   stored in `w:delText`, retaining available author/time metadata. These changes
   are not automatically accepted. DOC timestamps have no timezone; emitted dates
-  retain the recorded wall-clock fields without inventing a UTC offset.
+  retain the recorded wall-clock fields without inventing a UTC offset;
+- header/footer parts, including inherited and first/even/default variants
+  controlled by the original source flags; footnotes, endnotes, comment text
+  and anchors, bookmarks, and numbering definitions with supported overrides;
+- locked reference, TOC and other supported fields with stored results;
+  conversion never recalculates them or retrieves external content;
+- referenced PNG/JPEG/TIFF bytes with supported inline/floating placement,
+  dimensions and crop, validated textboxes and linked textbox chains, and
+  positively identified embedded OLE storages with their stream bytes retained.
 
 The parser follows logical CLX character positions through the selected text
 pieces, then resolves paragraph/character formatting pages, stylesheet
@@ -78,20 +90,40 @@ inheritance and piece properties. It does not assume that physical text order
 is document order. Built-in DOC/DOT previews use generated escaped HTML from
 the same model, hide hidden runs and visibly mark supported insertions/deletions.
 
-This is partial preservation. Images, floating drawings, embedded objects,
-text boxes, headers/footers, notes, comments, VBA and signatures are not imported
-into this DOCX. Numbering definitions, complex/nested tables, borders/shading,
-some script-specific formatting and full revision semantics remain incomplete.
-Fields use stored results without copying executable instructions. The review
-lists the relevant detected categories, and the source inspector independently
-reports missing source features. Neither the absence of a detector warning nor
-an emitted property proves identical pagination or visual appearance.
+DOCX has a macro-free main content type and no active VBA relationship. Explicit
+DOCM can retain one project with the required VBA project streams. Ambiguous
+or incomplete projects remain inert evidence. This is a structural check,
+not verification that a project compiles, executes or is trustworthy. Conversion
+does not run it. Changing the selected format discards the prepared copy and
+its review acknowledgement; filename validation follows the actual format.
 
-The existing 4 Mi UTF-16-code-unit body limit applies. Structured serialization
-bounds XML expansion while writing (16 MiB across document/style XML) and limits
-paragraphs, table structure, tabs and breaks before unbounded allocation.
+Signature payloads and unsupported original artifacts are retained as inert
+evidence where they can be identified. They do not authenticate the converted
+document. Extracted OLE/VBA storages are reconstructed CFB containers with
+preserved stream bytes, paths, CLSIDs, state bits and raw FILETIME metadata;
+their sector allocation and directory layout change. Generated evidence paths
+and internal relationships cannot activate a source signature or external link.
+
+This remains partial preservation. Exact pagination, arbitrary OfficeArt shape
+geometry/effects, metafile rendering, complex/nested tables, linked-textbox
+reflow, threaded/ink comments, some list-continuation rules, script-specific
+formatting and full revision semantics are incomplete. Those cases retain
+typed metadata or opaque evidence where supported and receive limitations.
+The review lists relevant detected categories, and the app's independent
+inspector reports missing source features. An emitted property or an absence
+of warnings does not prove identical appearance. Installed Word/LibreOffice
+remains a useful choice for complex documents.
+
+The 4 Mi UTF-16-code-unit main-story limit remains, with an 8 Mi aggregate
+story limit. Structured serialization bounds XML expansion while writing
+(16 MiB across generated XML), evidence JSON (16 MiB), and both total expanded
+package payload and final ZIP (64 MiB each). It also limits paragraphs, table
+structure, media, field nesting, tabs and breaks before unbounded allocation.
 Malformed supported structures fail explicitly; there is no automatic retry
-through text-only conversion or raw-byte recovery.
+through text-only conversion or raw-byte recovery. The package's
+[conversion contract](https://github.com/CrispStrobe/legacy-doc-parser/blob/feature/structured-doc-preservation-20261112/doc/conversion.md)
+distinguishes editable output, typed metadata, opaque evidence and remaining
+limitations for every supported feature family.
 
 See the [pinned parser-source review](legacy-word-parser-research-2026-11-12.md)
 for `legacy-doc-recover`, `wps2md` and `JSDoc`, their permissive licenses, useful
@@ -202,7 +234,7 @@ proof that a sandbox will permit conversion.
 | --- | --- | --- |
 | Microsoft Word | Windows, after a `Word.Application` registration probe | COM automation of an isolated new Word instance; close existing Word instances before conversion. Windows Word acceptance has not been run in this development environment. |
 | LibreOffice 7 or later | Windows, Linux and macOS, when the executable/version probe succeeds | Discovers PATH/common installation locations and uses headless conversion with a fresh private profile. macOS sandbox restrictions may still prevent launch or conversion. |
-| Structured DOCX | Desktop, web, Android and iOS | Uses the bounded Dart structured parser and OOXML writer with mandatory partial-preservation review. Web/mobile have no installed-engine adapter. |
+| Structured Word | Desktop, web, Android and iOS | Uses the pinned portable Dart package to create DOCX or explicit DOCM, with mandatory partial-preservation review. Web/mobile have no installed-engine adapter. |
 | Text only | Desktop, web, Android and iOS | Uses the bounded Dart parser and OOXML writer with the explicit losses above. Web/mobile have no installed-engine adapter. |
 
 Word for macOS is deliberately not offered: this implementation has no verified
@@ -360,7 +392,7 @@ Hosted CI results are reported separately on the PR.
 the production built-in converter, inspected the emitted package independently,
 and asked installed LibreOffice to open the resulting DOCX and render a PDF.
 All **12 acceptance checks** passed: table/cell structure, bold, font size/color,
-page dimensions, explicit image/header/note omissions, independent `pdfinfo` and
+page dimensions, the then-explicit image/header/note omissions, independent `pdfinfo` and
 `pdftotext` results, and unchanged source/prepared-package hashes. The output
 contained nine paragraphs, one section, one table and four cells. This fixture
 contains no tracked changes, so revision coverage comes from the independent
@@ -371,5 +403,44 @@ The same authored DOC also passed the production parser compiled to JavaScript
 and executed under Node through `tool/verify_portable_office_web.py`, checking
 Unicode, formatting, tables and sections alongside the existing RTF/PPT/MSG
 cases. A full Flutter web/browser run, Windows Word acceptance and full Open XML
-schema validation remain separate checks. The converted DOCX is never described
-as preserving omitted objects, macro code or valid signatures.
+schema validation remain separate checks. Signature validity is never inferred
+from retained payload bytes.
+
+### Standalone MPL package and expanded preservation
+
+The extraction now lives in
+[`CrispStrobe/legacy-doc-parser`](https://github.com/CrispStrobe/legacy-doc-parser),
+with the public Dart name `legacy_doc_parser`. CrispCloud consumes the reviewed
+source commit `72da6223832c3cbc41929064c8f160cec10016f7` through its Git dependency;
+the old private implementation and temporary in-app package copy were removed.
+See [package integration](legacy-doc-parser.md) for API ownership and licensing.
+
+The final app integration run passed **54 tests** across eight suites, including
+structured DOCM selection, exact VBA/evidence bytes, extension validation,
+mandatory review, collision retries, native dialogs, all nine UI languages and
+the existing viewer routes. All 13 changed Dart files passed formatting and
+analysis. The app uses the package's public API rather than private source paths.
+
+The standalone full-suite run passed **153 tests** with clean analysis. The
+last underline writer change then passed its **8 focused decoration conversion
+tests** with clean analysis; that run overlaps the full-suite cases. Together
+these cover the expanded stories, fields, numbering, referenced pictures,
+objects, VBA/signature evidence, exact compound-storage metadata, formatting,
+privacy/revision behavior and resource bounds. The pinned
+[JSDoc coverage comparison](https://github.com/CrispStrobe/legacy-doc-parser/blob/1a19794cb02e4f58c7e2427522ee079efe61e708/docs/jsdoc-parity.md)
+records the inspected feature families and deliberate differences.
+
+The revised native acceptance run passed **13 checks** on the built-in
+converter's output, using installed LibreOffice and independent `pdfinfo`,
+`pdftotext` and `pdfimages`. The real fixture now emits one table/four cells,
+one image, three stored header variants, three stored footer variants and a
+footnote. The rendered PDF includes the header, footer and footnote text and
+an image. Original DOC and prepared DOCX hashes remained unchanged. This
+supersedes the earlier omission checks, while retaining the same limits on
+claims about arbitrary layout, objects, macros, signatures and Windows Word.
+
+Both the standalone package's JavaScript acceptance and CrispCloud's portable
+Office JavaScript regression passed after the package integration. The former
+also checks actual image/story parts plus reconstructed OLE/VBA stream bytes,
+CLSID/state metadata and raw FILETIME values under Node. These checks do not
+replace a full Flutter browser build or platform-specific application testing.

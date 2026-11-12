@@ -11,6 +11,15 @@ import '../services/installed_office_converter.dart';
 import '../services/legacy_word_copy.dart';
 import '../services/word_conversion_inspection.dart';
 
+LegacyWordStructuredConversion _convertStructuredWord(
+  ({Uint8List bytes, bool docm}) request,
+) => convertLegacyWord(
+  request.bytes,
+  format: request.docm
+      ? LegacyWordOutputFormat.docm
+      : LegacyWordOutputFormat.docx,
+);
+
 /// Creates a separate copy. Structured and installed conversions are reviewed
 /// before saving; the explicit text-only choice retains its copy workflow.
 Future<LegacyWordCopy?> showLegacyWordConversionDialog(
@@ -204,7 +213,7 @@ class _LegacyWordConversionDialogState
       return;
     }
     try {
-      final extension = _builtIn ? 'docx' : _output.extension;
+      final extension = _textOnly ? 'docx' : _output.extension;
       final name = validateLegacyWordCopyName(_name.text, extension: extension);
       setState(() {
         _converting = true;
@@ -222,11 +231,16 @@ class _LegacyWordConversionDialogState
       final String converterName;
       List<LegacyWordConversionLimitation> limitations = const [];
       if (_structured) {
-        final result = await compute(
-          convertLegacyWordToStructuredDocx,
-          widget.bytes,
-        );
+        final result = await compute(_convertStructuredWord, (
+          bytes: widget.bytes,
+          docm: _output == InstalledOfficeOutput.docm,
+        ));
         if (!mounted) return;
+        if (result.extension != extension) {
+          throw const WordConversionInspectionException(
+            WordConversionInspectionIssue.invalidOutput,
+          );
+        }
         bytes = Uint8List.fromList(result.bytes).asUnmodifiableView();
         limitations = List.unmodifiable(result.limitations);
         converterName = LegacyWordConversionStrings(
@@ -399,7 +413,7 @@ class _LegacyWordConversionDialogState
         error.issue == LegacyWordConversionIssue.invalidName) {
       return strings.text(
         'filename',
-        arguments: {'extension': _builtIn ? 'docx' : _output.extension},
+        arguments: {'extension': _textOnly ? 'docx' : _output.extension},
       );
     }
     if (error is WordConversionInspectionException) {
@@ -511,6 +525,8 @@ class _LegacyWordConversionDialogState
                   ] else if (_installation != null) ...[
                     const SizedBox(height: 16),
                     Text(strings.text('nativeNotice')),
+                  ],
+                  if (_structured || _installation != null) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<InstalledOfficeOutput>(
                       key: ValueKey('word-conversion-output-${_method ?? ''}'),
@@ -520,9 +536,16 @@ class _LegacyWordConversionDialogState
                       ),
                       items: [
                         for (final output
-                            in _installation!.supportedOutputs.where(
-                              (output) => output != InstalledOfficeOutput.pdf,
-                            ))
+                            in (_structured
+                                    ? const [
+                                        InstalledOfficeOutput.docx,
+                                        InstalledOfficeOutput.docm,
+                                      ]
+                                    : _installation!.supportedOutputs)
+                                .where(
+                                  (output) =>
+                                      output != InstalledOfficeOutput.pdf,
+                                ))
                           DropdownMenuItem(
                             value: output,
                             child: Text(
@@ -540,11 +563,18 @@ class _LegacyWordConversionDialogState
                                 _output = output;
                                 _updateName();
                                 _error = null;
+                                _prepared = null;
+                                _limitations = const [];
+                                _acceptLoss = false;
                               });
                             },
                     ),
                     const SizedBox(height: 12),
-                    Text(strings.text('macroNotice')),
+                    Text(
+                      _structured
+                          ? textStrings.structuredMacroNotice
+                          : strings.text('macroNotice'),
+                    ),
                     const SizedBox(height: 8),
                     Text(strings.text('signatureNotice')),
                   ],
@@ -599,6 +629,8 @@ class _LegacyWordConversionDialogState
                     if (_structured) ...[
                       const SizedBox(height: 6),
                       Text(textStrings.structuredNotice),
+                      const SizedBox(height: 6),
+                      Text(textStrings.structuredMacroNotice),
                       for (final limitation in _limitations)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),

@@ -1048,7 +1048,7 @@ packages:
     source: hosted
     version: "3.0.2"
   legacy_doc_parser:
-    dependency: "direct overridden"
+    dependency: "direct main"
     description:
       path: "packages/legacy_doc_parser"
       relative: true

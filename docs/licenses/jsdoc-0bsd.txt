@@ -8,17 +8,23 @@ Original license:
 https://github.com/Alpaq92/JSDoc/blob/821695a884e0c0bb8592a635d9524bb3e116cd67/LICENSE
 License Git blob: e795d52a6aecd2bd05383c808ba4fc87f5872423
 
-CrispCloud adaptations:
-  lib/services/legacy_word_format_tables.dart
+The adapted readers now live in the standalone MPL-2.0 package used by
+CrispCloud's pinned Git dependency:
+https://github.com/CrispStrobe/legacy-doc-parser
+
+Package adaptations:
+  lib/src/legacy_word_format_tables.dart
     Formatting-page, font-table, style-table and section-property traversal.
-  lib/services/legacy_word_sprms.dart
+  lib/src/legacy_word_sprms.dart
     SPRM operand and property decoding.
 
 The Dart adaptations add strict stream extents and resource budgets, and
 implement property precedence, piece PRMs, style-relative toggles, revision
 retention and cell-merge interpretation against the MS-DOC specification.
 See docs/legacy-word-parser-research-2026-11-12.md for the source evaluation
-and supported-format limitations. JSDoc is not a runtime dependency.
+and supported-format limitations. The package's NOTICE and
+third_party/JSDoc-0BSD.txt retain the same provenance and license.
+JSDoc is not a runtime dependency.
 
 The upstream license text is reproduced verbatim below.
 

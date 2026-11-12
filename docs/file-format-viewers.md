@@ -13,7 +13,7 @@ its original bytes.
 | `.msg` | Outlook compound-message headers, plain text, safe HTML or decoded compressed RTF, ordinary attachments | Existing explicit hex editor; no structured Outlook writer |
 | `.rtf` | Basic formatted runs, paragraph alignment, explicit list markers and flat tables | Existing RTF source editor; no rich RTF writer |
 | `.ppt`, `.pps`, `.pot` | Text from the current slide list and referenced current drawings, in slide order | Existing explicit hex editor; no binary PowerPoint writer |
-| `.doc`, `.dot` | Supported main-story formatting, tables and revision markup from unencrypted Word 97–2007 binary files | Separate reviewed structured DOCX, installed Word/LibreOffice DOCX/DOCM, or an explicitly selected text-only DOCX |
+| `.doc`, `.dot` | Supported main-story formatting, list labels, tables and revision markup from unencrypted Word 97–2007 binary files | Separate reviewed structured DOCX/DOCM, installed Word/LibreOffice DOCX/DOCM, or an explicitly selected text-only DOCX |
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
 | `.kdbx` | Password/key-file unlock, groups, standard/custom fields, entry history and search | Group management, entry moves, protected custom fields, history restoration and encrypted saves preserving other database data |
 | `.kbdx` | XML tree and source for Autodesk keyboard-shortcut profiles | XML source in the text/code editor |
@@ -101,33 +101,43 @@ recorded in [portable Office previews](portable-office-previews.md).
 Binary DOC/DOT extraction follows Microsoft's
 [documented FIB/CLX text-retrieval algorithm](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/01d5d8c4-cf9c-4ef9-80fd-439e763cfe01).
 It reads text in logical piece-table order, including compressed and UTF-16
-pieces, and excludes unreferenced stream bytes. The richer parser resolves
-supported paragraph/run formatting, styles, basic tables and section layout.
-Both previews use generated escaped HTML, hide hidden runs, and visibly mark
-supported insertions/deletions. Images, headers, notes, objects and full revision
+pieces, and excludes unreferenced stream bytes. CrispCloud uses a pinned Git
+revision of the standalone MPL-2.0
+[`legacy_doc_parser`](https://github.com/CrispStrobe/legacy-doc-parser) package.
+The parser resolves supported paragraph/run formatting, styles, numbering,
+tabs, borders/shading, basic tables and section layout. The previews use
+generated escaped text/table HTML, hide hidden runs, and visibly mark supported
+insertions/deletions. Referenced pictures, headers/footers, notes, comments,
+textboxes, objects and VBA/signature evidence are available in the parser model
+and conversion output; they are not all displayed by that main-story HTML
+preview. Exact pagination, arbitrary drawing geometry and full revision
 semantics remain incomplete and are disclosed. Encrypted files,
 older pre-Word-97 variants and malformed structures produce a clear failure.
 The main story is capped at 4 × 1024 × 1024 UTF-16 code units.
 
 F4 on DOC/DOT, or **Convert to DOCX** in F3, offers detected Microsoft Word on
 Windows or LibreOffice 7+ on Windows/Linux/macOS. Availability depends on the
-installation and sandbox. **Structured DOCX (built in)** and **Text only (built
+installation and sandbox. **Structured Word (built in)** and **Text only (built
 in)** are explicit choices on all platforms, including web/mobile. CrispCloud never installs an office
 suite, silently falls back after a native failure, or sends content to a remote
 conversion service.
 
 Native conversion checks the resulting Word package, shows content counts and
 potential losses, and requires acknowledgement of reported losses. DOCM is the
-default when document VBA is detected; DOCX cannot contain it. These checks do
+default when document VBA is detected; DOCX has no active VBA project. These checks do
 not certify formatting, object or signature fidelity. **Save copy** writes the
 exact converter bytes as a new sibling on the captured original account, rejects
 collisions, and opens the copy in F3; F4 editing is a separate action. Text-only
 conversion instead creates `report (text).docx` and opens it in the rich editor,
 omitting formatting, layout, images, objects, headers, notes, tracked-change
-state, macros and signatures. Structured conversion instead emits supported
-formatting, rows/cells, sections and insertion/deletion runs as Word elements,
-always requires partial-preservation acknowledgement, and opens the saved copy
-in F3. All routes preserve the original file and save
+state, macros and signatures. Structured conversion emits supported
+formatting, rows/cells, sections, revisions, referenced images, stories, notes,
+comments, numbering, cached fields and eligible textboxes/OLE as Word elements.
+Its default DOCX has no active VBA; an explicit DOCM choice can retain one
+structurally complete project. Signatures remain inert original-file evidence
+and do not validate the converted copy. Structured conversion always requires
+partial-preservation acknowledgement and opens the saved copy in F3.
+All routes preserve the original file and save
 destination even if the pane navigates elsewhere. See
 [legacy Word conversion](legacy-word-conversion.md) for platform limits, source
 review, preservation warnings and acceptance evidence.
@@ -162,18 +172,25 @@ KeePass uses a pinned, MIT-licensed vendored
 tree and use the existing PointyCastle Argon2 implementation on native and
 JavaScript targets. No native cryptography binaries are bundled.
 
-The email, RTF, binary PowerPoint and Word additions require no new package. Compound-file parsing reuses
+The email, RTF and binary PowerPoint additions require no new package.
+Their compound-file parsing reuses
 `CfbfFile` from the existing MIT-licensed
 [`quds_office_engine`](../packages/quds_office_engine/LICENSE). MIME parsing,
 resource checks and format routing are CrispCloud code. HTML parsing/rendering
 uses existing dependencies. This avoids adding a native-only mail parser or a
 new dependency with a different license merely to recognize these extensions.
+The binary Word parser and converters have moved to the standalone
+[`legacy_doc_parser`](https://github.com/CrispStrobe/legacy-doc-parser) Dart
+package under MPL-2.0. The exact source revision is pinned in the app manifest
+and lockfile until a future pub.dev release is adopted. It uses the already
+resolved `archive` dependency and includes a small MIT CFB implementation;
+there is no Flutter or installed-office dependency in that package.
 The optional installed-application conversion adapters add no Office-engine
 package dependency and bundle no third-party converter. The user's separately
 installed Word/LibreOffice remains subject to its own license; see the
 [conversion guide](legacy-word-conversion.md#installed-application-conversion).
-Selected structured DOC formatting readers adapt 0BSD-licensed JSDoc code in
-Dart; the [license and provenance](licenses/jsdoc-0bsd.txt) and
+Selected structured DOC formatting readers in that package adapt
+0BSD-licensed JSDoc code in Dart; the [license and provenance](licenses/jsdoc-0bsd.txt) and
 [pinned source evaluation](legacy-word-parser-research-2026-11-12.md) record the
 scope. No Python or JavaScript document engine is bundled.
 
@@ -238,3 +255,11 @@ Unicode and resource limits, plus structured DOCX, renderer, dialog and localize
 control coverage. Focused overlapping runs and actual LibreOffice/JavaScript
 acceptance results are recorded in the
 [structured conversion verification](legacy-word-conversion.md#structured-doc-parser-and-docx-follow-up).
+
+The subsequent standalone-package integration passed **54 app tests**, both
+portable JavaScript acceptance checks, and **13 installed-LibreOffice checks**
+on the built-in converter's output. The real DOC now retains an image,
+header/footer parts and a footnote in addition to formatting and table cells;
+independent PDF tools found their rendered content. See
+[package integration](legacy-doc-parser.md) for the exact dependency boundary,
+MPL/third-party notices, VBA evidence behavior and remaining acceptance limits.

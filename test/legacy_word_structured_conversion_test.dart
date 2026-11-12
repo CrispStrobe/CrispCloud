@@ -202,41 +202,56 @@ void main() {
     },
   );
 
-  test('actual authored DOC converts formatting and tables with explicit omissions', () async {
-    final source = File('test/fixtures/word_native/formatting.doc')
-        .readAsBytesSync();
-    final original = Uint8List.fromList(source);
-    final result = convertLegacyWordToStructuredDocx(source);
-    final xml = _main(result.bytes);
-    expect(_elements(xml, 'tbl'), hasLength(1));
-    expect(_elements(xml, 'tc'), hasLength(4));
-    final boldRun = _elements(xml, 'r').singleWhere(
-      (run) =>
-          _elements(run, 't').any((text) => text.innerText == 'Bold red text'),
-    );
-    expect(_attr(_elements(boldRun, 'b').single, 'val'), '1');
-    expect(_attr(_elements(boldRun, 'sz').single, 'val'), '36');
-    expect(_attr(_elements(boldRun, 'color').single, 'val'), 'C02030');
-    expect(_elements(xml, 'pgSz'), isNotEmpty);
-    expect(
-      result.limitations,
-      contains(LegacyWordConversionLimitation.headersFooters),
-    );
-    expect(
-      result.limitations,
-      contains(LegacyWordConversionLimitation.notesComments),
-    );
-    expect(result.limitations, contains(LegacyWordConversionLimitation.images));
-    final report = await inspectConvertedWord(
-      result.bytes,
-      extension: 'docx',
-      source: inspectLegacyWordSource(source),
-    );
-    expect(report.counts['tables'], 1);
-    expect(report.losses, contains(WordConversionLoss.headersMissing));
-    expect(report.losses, contains(WordConversionLoss.footnotesMissing));
-    expect(source, orderedEquals(original));
-  });
+  test(
+    'actual authored DOC retains formatting, images, headers and notes',
+    () async {
+      final source = File('test/fixtures/word_native/formatting.doc')
+          .readAsBytesSync();
+      final original = Uint8List.fromList(source);
+      final result = convertLegacyWordToStructuredDocx(source);
+      final xml = _main(result.bytes);
+      expect(_elements(xml, 'tbl'), hasLength(1));
+      expect(_elements(xml, 'tc'), hasLength(4));
+      final boldRun = _elements(xml, 'r').singleWhere(
+        (run) => _elements(
+          run,
+          't',
+        ).any((text) => text.innerText == 'Bold red text'),
+      );
+      expect(_attr(_elements(boldRun, 'b').single, 'val'), '1');
+      expect(_attr(_elements(boldRun, 'sz').single, 'val'), '36');
+      expect(_attr(_elements(boldRun, 'color').single, 'val'), 'C02030');
+      expect(_elements(xml, 'pgSz'), isNotEmpty);
+      expect(
+        result.limitations,
+        isNot(contains(LegacyWordConversionLimitation.headersFooters)),
+      );
+      expect(
+        result.limitations,
+        isNot(contains(LegacyWordConversionLimitation.notesComments)),
+      );
+      expect(
+        result.limitations,
+        isNot(contains(LegacyWordConversionLimitation.images)),
+      );
+      final report = await inspectConvertedWord(
+        result.bytes,
+        extension: 'docx',
+        source: inspectLegacyWordSource(source),
+      );
+      expect(report.counts['tables'], 1);
+      expect(report.counts['images'], greaterThan(0));
+      expect(report.counts['headers'], greaterThan(0));
+      expect(report.counts['footers'], greaterThan(0));
+      expect(report.counts['footnotes'], greaterThan(0));
+      expect(report.losses, isNot(contains(WordConversionLoss.headersMissing)));
+      expect(
+        report.losses,
+        isNot(contains(WordConversionLoss.footnotesMissing)),
+      );
+      expect(source, orderedEquals(original));
+    },
+  );
 
   test(
     'bounds structural expansion and never silently uses the text converter',

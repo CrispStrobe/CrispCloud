@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 List<String> _structuredLabels(LegacyWordConversionStrings strings) => [
   strings.structuredMethod,
   strings.structuredNotice,
+  strings.structuredMacroNotice,
   strings.builtInName,
   strings.structuredAcceptLoss,
   strings.unavailable,
@@ -48,6 +49,12 @@ void main() {
       expect(fallback.lossNotice, contains('extracted main body text'));
       expect(fallback.structuredNotice, contains('Support is partial'));
       expect(fallback.structuredNotice, contains('original file is kept'));
+      expect(fallback.structuredMacroNotice, contains('no active VBA'));
+      expect(
+        fallback.structuredMacroNotice,
+        contains('original VBA project bytes may remain as inert evidence'),
+      );
+      expect(fallback.structuredMacroNotice, contains('never runs macros'));
     },
   );
 }

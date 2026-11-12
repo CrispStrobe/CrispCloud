@@ -1,5 +1,6 @@
 import 'package:crisp_cloud/services/legacy_word_copy.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
@@ -108,7 +109,7 @@ Future<void> _choose(WidgetTester tester, String label) async {
 }
 
 Future<void> _prepare(WidgetTester tester) async {
-  await _choose(tester, 'Structured DOCX (built in)');
+  await _choose(tester, 'Structured Word (built in)');
   await _tapUntil(
     tester,
     _key('primary'),
@@ -117,6 +118,61 @@ Future<void> _prepare(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'explicit structured DOCM retains a project and enforces the DOCM filename',
+    (tester) async {
+      final base = CfbfFile.fromBytes(legacyWordFixture('VBA container\r'));
+      final writer = CfbfWriter()
+        ..addStream('WordDocument', base.readPath('WordDocument')!)
+        ..addStream('1Table', base.readPath('1Table')!)
+        ..addStream('Macros/PROJECT', [65, 66])
+        ..addStream('Macros/VBA/dir', [1, 2, 3])
+        ..addStream('Macros/VBA/_VBA_PROJECT', [4, 5, 6])
+        ..addStream('Macros/VBA/Module1', [7, 8, 9]);
+      // Synthetic opaque streams exercise preservation, never VBA execution.
+      final source = writer.build();
+      final original = Uint8List.fromList(source);
+      final saves = <LegacyWordCopy>[];
+      final outcome = await _open(
+        tester,
+        source: source,
+        onSave: (copy) async => saves.add(copy),
+      );
+      await _choose(tester, 'Structured Word (built in)');
+      expect(find.text('legacy (converted).docx'), findsOneWidget);
+      await _tap(tester, _key('output-structured'));
+      await _tap(tester, find.text('DOCM (VBA macros)').last);
+      expect(find.text('legacy (converted).docm'), findsOneWidget);
+      await tester.enterText(_key('filename'), 'wrong.docx');
+      await _tap(tester, _key('primary'));
+      expect(
+        find.text('Enter a single filename ending in .docm.'),
+        findsOneWidget,
+      );
+      expect(saves, isEmpty);
+      await tester.enterText(_key('filename'), 'reviewed.docm');
+      await _tapUntil(
+        tester,
+        _key('primary'),
+        () => find.text('Review converted copy').evaluate().isNotEmpty,
+      );
+      expect(tester.widget<FilledButton>(_key('primary')).onPressed, isNull);
+      await _tap(tester, _key('accept-loss'));
+      await _tapUntil(tester, _key('primary'), () => outcome.completed);
+      final copy = saves.single;
+      expect(copy.extension, 'docm');
+      expect(copy.fileName, 'reviewed.docm');
+      expect(copy.inspection!.counts['vba'], 1);
+      final output = OpcPackage.openBytes(copy.bytes);
+      final project = CfbfFile.fromBytes(
+        output.getPart('/word/vbaProject.bin')!.readBytes(),
+      );
+      expect(project.readPath('VBA/Module1'), [7, 8, 9]);
+      expect(source, orderedEquals(original));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     'built-in structured conversion requires review and acknowledgement without an installed app',
     (tester) async {
@@ -129,7 +185,7 @@ void main() {
         onSave: (copy) async => saves.add(copy),
       );
       expect(tester.widget<FilledButton>(_key('primary')).onPressed, isNull);
-      await _choose(tester, 'Structured DOCX (built in)');
+      await _choose(tester, 'Structured Word (built in)');
       expect(find.textContaining('Support is partial'), findsOneWidget);
       expect(find.text('legacy (converted).docx'), findsOneWidget);
       expect(find.text('DOCM (VBA macros)'), findsNothing);
@@ -168,7 +224,7 @@ void main() {
   );
 
   testWidgets(
-    'macro loss is disclosed and a collision retry reuses the reviewed bytes',
+    'inactive macro evidence is disclosed and a collision retry reuses the reviewed bytes',
     (tester) async {
       final attempts = <LegacyWordCopy>[];
       final outcome = await _open(
@@ -180,7 +236,20 @@ void main() {
         },
       );
       await _prepare(tester);
-      expect(find.text('The original VBA project is missing.'), findsOneWidget);
+      expect(
+        find.text('The converted copy has no active VBA project.'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(
+          'original VBA project bytes may remain as inert evidence',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Macros are disabled during conversion.'),
+        findsNothing,
+      );
       expect(tester.widget<FilledButton>(_key('primary')).onPressed, isNull);
       await _tap(tester, _key('accept-loss'));
       await _tapUntil(
@@ -202,6 +271,18 @@ void main() {
       expect(attempts.last.bytes, orderedEquals(bytes));
       expect(attempts.last.inspection, same(attempts.first.inspection));
       expect(attempts.last.inspection!.counts['vba'], 0);
+      final output = OpcPackage.openBytes(attempts.last.bytes);
+      expect(output.getPart('/word/vbaProject.bin'), isNull);
+      final manifest = jsonDecode(
+        output.getPart('/word/evidence/manifest.json')!.readText(),
+      ) as Map<String, dynamic>;
+      final evidence = (manifest['records'] as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .singleWhere((entry) => entry['kind'] == 'vbaProject');
+      final retainedProject = CfbfFile.fromBytes(
+        output.getPart('/${evidence['part']}')!.readBytes(),
+      );
+      expect(retainedProject.readPath('VBA/Module1'), [1, 2, 3, 4]);
       expect(tester.takeException(), isNull);
     },
   );
@@ -217,7 +298,7 @@ void main() {
         ),
         onSave: (copy) async => saves.add(copy),
       );
-      await _choose(tester, 'Structured DOCX (built in)');
+      await _choose(tester, 'Structured Word (built in)');
       await _tapUntil(
         tester,
         _key('primary'),
@@ -225,7 +306,7 @@ void main() {
       );
       expect(saves, isEmpty);
       expect(outcome.completed, isFalse);
-      expect(find.text('Structured DOCX (built in)'), findsOneWidget);
+      expect(find.text('Structured Word (built in)'), findsOneWidget);
       expect(find.text('Review converted copy'), findsNothing);
       expect(find.text('Create text-only DOCX'), findsNothing);
       expect(find.text('legacy (converted).docx'), findsOneWidget);

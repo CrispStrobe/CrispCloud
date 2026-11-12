@@ -75,19 +75,16 @@ Future<void> main(List<String> arguments) async {
     'pageDimensions': document
         .findAllElements('pgSz', namespace: ns)
         .isNotEmpty,
-    'omittedHeadersDisclosed':
-        result.limitations.contains(
-          LegacyWordConversionLimitation.headersFooters,
-        ) &&
-        report.losses.contains(WordConversionLoss.headersMissing),
-    'omittedNotesDisclosed':
-        result.limitations.contains(
-          LegacyWordConversionLimitation.notesComments,
-        ) &&
-        report.losses.contains(WordConversionLoss.footnotesMissing),
-    'omittedImagesDisclosed': result.limitations.contains(
-      LegacyWordConversionLimitation.images,
-    ),
+    'headersAndFootersPreserved':
+        (report.counts['headers'] ?? 0) > 0 &&
+        (report.counts['footers'] ?? 0) > 0 &&
+        !report.losses.contains(WordConversionLoss.headersMissing),
+    'notesPreserved':
+        (report.counts['footnotes'] ?? 0) > 0 &&
+        !report.losses.contains(WordConversionLoss.footnotesMissing),
+    'imagesPreserved':
+        (report.counts['images'] ?? 0) > 0 &&
+        !result.limitations.contains(LegacyWordConversionLimitation.images),
   };
   final pdf = await convertWithInstalledOffice(
     bytes: result.bytes,
@@ -109,6 +106,7 @@ Future<void> main(List<String> arguments) async {
       file.path,
       '-',
     ]);
+    final images = await Process.run('pdfimages', ['-list', file.path]);
     checks['independentPdfInfo'] =
         info.exitCode == 0 &&
         RegExp(r'Pages:\s+[1-9]').hasMatch('${info.stdout}');
@@ -119,7 +117,16 @@ Future<void> main(List<String> arguments) async {
           'Bold red text',
           'Column A',
           'Cell two',
+          'Fixture header',
+          'Fixture footer',
+          'Footnote content survives conversion.',
         ].every('${text.stdout}'.contains);
+    checks['independentPdfImage'] =
+        images.exitCode == 0 &&
+        RegExp(
+          r'^\s*\d+\s+\d+\s+image\s+',
+          multiLine: true,
+        ).hasMatch('${images.stdout}');
     checks['sourceUnchanged'] =
         sha256.convert(await source.readAsBytes()).toString() == sourceHash;
     checks['preparedPackageUnchanged'] =

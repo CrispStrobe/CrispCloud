@@ -85,6 +85,12 @@ dependencies:
   workmanager: ^0.9.0
   flutter_local_notifications: ^17.2.4
 
+  # MPL-2.0 standalone legacy Word parser; pin reviewed source until pub.dev.
+  legacy_doc_parser:
+    git:
+      url: https://github.com/CrispStrobe/legacy-doc-parser.git
+      ref: 72da6223832c3cbc41929064c8f160cec10016f7
+
   # File Handling
   cross_file: ^0.3.3+8
   path: ^1.9.1
