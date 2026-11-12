@@ -47,7 +47,7 @@ location formats differ.
 | Platform | Reader | EPUB editor | Import into EPUB | Kindle export / metadata copy |
 | --- | --- | --- | --- | --- |
 | Android, iOS, macOS, Windows | Enhanced reader using the platform WebView; its runtime must be available. | Yes | Supported enhanced-reader formats | Available when the native converter is bundled and loads successfully. |
-| Web | Enhanced reader in a Flutter asset iframe. | Yes | Supported enhanced-reader formats | Metadata copies use the bundled offline Wasm worker. Full Kindle export and cover replacement require a native build. |
+| Web | Enhanced reader in a Flutter asset iframe. | Yes | Supported enhanced-reader formats | AZW3/MOBI export and metadata copies use the bundled offline Wasm worker. Kindle cover replacement remains native-only. |
 | Linux | The same enhanced engine through the optional embedded WebKitGTK 4.1 host, selected after a runtime probe. A portable Flutter EPUB reader is used when that host is unavailable. | Yes | Supported enhanced-reader formats when the Linux host is available | Available with the native converter, including EPUB-to-Kindle export and metadata copies. |
 
 Linux uses the distribution's complete WebKitGTK runtime rather than bundling
@@ -317,7 +317,9 @@ validation, and retain Source mode for complex or unsupported content.
   [third-party notices](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt).
 - [Shared package CI workflow](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/.github/workflows/ebook-editor.yml): package checks,
   EPUBCheck, native conversion, independent reader parsing, browser probes and
-  focused application tests. The package READMEs contain local commands.
+  reusable API tests. [App integration CI](../.github/workflows/ebook-editor.yml) covers
+  CrispCloud save/routing regressions and the actual app web build. The package
+  READMEs contain local commands.
 
 Earlier editing/conversion verification on **12 November 2026** included **46 core
 tests**, **27 native-converter Dart tests**, **4 Rust bridge tests**, **3 embedded
