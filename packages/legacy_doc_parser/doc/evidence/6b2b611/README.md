@@ -73,6 +73,12 @@ run reported zero warnings; no package was published.
 - `package-checks.log.gz` contains complete portable-gate stdout/stderr.
 - `summary.json` indexes per-input results and verifies the compressed and
   original report bytes with SHA-256 hashes.
+- `native-files.tar.xz` retains all 264 exact `.doc` and `.docx` stage files
+  from this run, including native bridges and all three cycles. Its 2,793,764
+  uncompressed bytes retain their original relative case/stage paths.
+- `native-files.manifest.json` records every relative path, byte count and
+  SHA-256, including how often each file hash occurs in the unchanged sealed
+  report. It also records the archive hash, fixed metadata and source Git tree.
 
 Source fixtures and cycle inputs are unchanged. No reviewed golden was updated.
 Original OOXML → native binary changes remain separate from parser changes.
@@ -87,3 +93,30 @@ import json, lzma
 from pathlib import Path
 report = json.loads(lzma.decompress(Path("native-report.json.xz").read_bytes()))
 ```
+
+### Verify or extract the exact native files
+
+From the repository root, use the dependency-free verifier. Extraction requires
+a new output directory and happens only after every file, path, metadata field,
+report hash and deterministic archive rebuild has passed verification:
+
+```sh
+python3 doc/evidence/6b2b611/verify-native-files.py
+python3 doc/evidence/6b2b611/verify-native-files.py --extract build/native-6b2b611
+```
+
+The archive uses sorted USTAR regular-file entries, mode `0644`, zero timestamps,
+zero owner/group IDs, empty owner/group names, and XZ CRC64 with preset 9. The
+stored document bytes are unchanged; fixed archive metadata does not rewrite
+timestamps or contents inside a DOC/DOCX. The verifier rejects extra files,
+links, unsafe paths, altered bytes and hashes absent from the sealed report.
+It rebuilds the archive byte-for-byte and checks extracted bytes when requested.
+
+For a source reproduction, check out the pushed commit
+`34e14841ef679c6b480673ef5be354286dbd67dc`. Its tree is exactly the local measured
+`6b2b6116eeaf2d416f702081470b1d802952b535` tree recorded above, so the local-only
+commit is not required. Original authored fixtures remain in that source tree;
+this archive additionally preserves the exact native-generated inputs and
+outputs, avoiding a need to regenerate a bridge merely to inspect a recorded
+difference. The archive is evidence from the existing run, not a new run or an
+update to any finding in `native-report.json.xz`.

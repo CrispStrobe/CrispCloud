@@ -140,10 +140,17 @@ connected by straight segments, cubic Beziers, moves and closes. Nonempty segmen
 `shapePath`, as the binary specification requires. Vertex counts and segment
 consumption are checked before constructing paths. The geometry subset does
 not guess unsigned packed arc coordinates, unresolved guide formulas, adjusted
-presets or escape/client-escape segments. These remain retained evidence with
+presets or geometric escape/client-escape segments. These remain retained evidence with
 an unsupported-drawing diagnostic. The [packed vertex contract](packed-vertices.md)
 records the exact array boundary, independent source implementations and native
 full-width/packed DOC comparison.
+
+The bounded zero-count `SymmetricCurve` editing hint is retained separately from
+explicit rendered segments. Inactive solid-paint background colors and explicit
+cell-layout flags no longer suppress otherwise supported shapes. Their strict
+context checks, independent Boolean inheritance, native evidence and remaining
+tangent-editor/pixel limitations are recorded in
+[officeart-context.md](officeart-context.md).
 
 The model also exposes direct RGB fill/line colors and opacity, line width,
 dash/join/cap identifiers, and offset-shadow properties. Palette/system colors,

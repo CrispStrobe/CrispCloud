@@ -10,6 +10,7 @@ extension _WordShapes on _StructuredWordWriter {
         shape.unsupportedProperties.isNotEmpty ||
         shape.ink != null ||
         shape.discussionAnchor ||
+        (((shape.groupShapeBooleanProperties ?? 0) ~/ 65536) & 0x7fff) != 0 ||
         (shape.sourceFlags & 0x37) != 0) {
       return false;
     }
@@ -27,6 +28,39 @@ extension _WordShapes on _StructuredWordWriter {
 
   void _shapeDrawing(LegacyWordDrawing drawing) {
     final shape = drawing.shape!, geometry = shape.geometry!;
+    if (geometry.editingHints.isNotEmpty) {
+      final vertices = geometry.path.fold<int>(
+        0,
+        (count, command) => count + command.points.length,
+      );
+      if (geometry.preset != null ||
+          geometry.editingHints.length > 16384 ||
+          geometry.editingHints.any(
+            (hint) =>
+                hint.escape != 0x13 ||
+                hint.vertexIndex < 0 ||
+                hint.vertexIndex >= vertices,
+          )) {
+        throw const FormatException('Invalid OfficeArt path editing hint.');
+      }
+      _count('shapePathEditingHints', geometry.editingHints.length);
+      if ((counts['shapePathCommands'] ?? 0) +
+              counts['shapePathEditingHints']! >
+          100000) {
+        _tooComplex();
+      }
+      limitations.add(LegacyWordConversionLimitation.partialFormatting);
+      _evidenceRecords.add({
+        'kind': 'pathEditingHints',
+        'shapeId': drawing.shapeId,
+        'hints': [
+          for (final hint in geometry.editingHints)
+            {'vertexIndex': hint.vertexIndex, 'escape': hint.escape},
+        ],
+        'reason':
+            'Source editing-tangent hints retained as evidence; rendered segments are explicit, but native tangent-editor behavior is not mapped.',
+      });
+    }
     final bounds = geometry.bounds;
     if (bounds.width <= 0 ||
         bounds.height <= 0 ||
@@ -105,6 +139,9 @@ extension _WordShapes on _StructuredWordWriter {
       _xml.add('"');
     }
     _shapePaintAttributes(shape, lineGeometry: geometry.preset == 'line');
+    if (shape.layoutInCell case final layout?) {
+      _xml.add(' o:allowincell="${layout ? 't' : 'f'}"');
+    }
     _xml.add('>');
     _shapePaintElements(shape);
     final wrap = switch (drawing.wrapMode) {
@@ -135,7 +172,10 @@ extension _WordShapes on _StructuredWordWriter {
   void _shapePath(List<LegacyWordOfficeArtPathCommand> path) {
     if (path.length > 16384) _tooComplex();
     _count('shapePathCommands', path.length);
-    if (counts['shapePathCommands']! > 100000) _tooComplex();
+    if (counts['shapePathCommands']! + (counts['shapePathEditingHints'] ?? 0) >
+        100000) {
+      _tooComplex();
+    }
     var begun = false;
     for (final command in path) {
       final expected = switch (command.kind) {

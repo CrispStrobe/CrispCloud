@@ -462,9 +462,14 @@
     "lib/screens/screen_dialogs.dart",
     "lib/services/aes_siv.dart",
     "lib/services/app_lock_service.dart",
+    "lib/services/archive_cab_reader.dart",
     "lib/services/archive_container_publisher.dart",
     "lib/services/archive_creation_service.dart",
+    "lib/services/archive_dmg_reader.dart",
+    "lib/services/archive_hfs_reader.dart",
+    "lib/services/archive_iso_reader.dart",
     "lib/services/archive_publication_cleanup_io.dart",
+    "lib/services/archive_rpm_reader.dart",
     "lib/services/archive_service.dart",
     "lib/services/archive_source_cleanup_io.dart",
     "lib/services/archive_viewer_file_io.dart",
@@ -537,6 +542,7 @@
     "lib/services/web_crypto_factory_io.dart",
     "lib/services/web_crypto_provider.dart",
     "lib/services/web_crypto_subtle.dart",
+    "lib/services/word_conversion_inspection.dart",
     "lib/utils/async_lock.dart",
     "lib/utils/system_links.dart",
     "lib/widgets/archive_workspace_dialog.dart",
@@ -701,6 +707,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_numbering.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_revision_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_revisions.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_sprms.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_stories.dart",
@@ -744,13 +751,18 @@
     "pubspec.yaml",
     "tool/apple_export_preflight.py",
     "tool/crypto_release_evidence.py",
+    "tool/office_fidelity_manifest.json",
+    "tool/sync_legacy_doc_parser.py",
+    "tool/sync_office_fidelity.py",
     "tool/testflight_export_guard.rb",
     "tool/testflight_external.rb",
     "tool/update_ebook_sources.py",
-    "tool/verify_ebook_sources.py"
+    "tool/verify_ebook_sources.py",
+    "tool/verify_office_fidelity.py"
   ],
   "technical_review_notes": [
-    "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store."
+    "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
+    "The 1.2.4 refresh adds bounded RPM/CAB/PBZX readers and DOC shape/metafile/schema preservation, and requires attached Word document content before a conversion warning can be cleared. The Internxt trash change only recomposes gateway filenames with their existing extension metadata. No new cipher, credential store, account destination or distribution classification is introduced."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

@@ -304,7 +304,9 @@ class _WordMediaReader {
     _retain(reader.inkByteLength);
     final model = reader.read();
     _geometryPoints += reader.pointCount;
-    _geometryCommands += model.geometry?.path.length ?? 0;
+    _geometryCommands +=
+        (model.geometry?.path.length ?? 0) +
+        (model.geometry?.editingHints.length ?? 0);
     if (_geometryPoints > 100000 || _geometryCommands > 100000) {
       throw const FormatException(
         'OfficeArt geometry exceeds its complexity limit.',

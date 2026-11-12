@@ -2,10 +2,14 @@
 
 Assessment date: **12 November 2026**. This document distinguishes code that is
 implemented, behavior that has been exercised, and work still required for a
-release. See [the user guide](ebooks.md), [reader package](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/README.md),
+release. See [the user guide](ebooks.md), [reader package](https://github.com/CrispStrobe/crisperbooks/blob/5c49682143a44e14bc0eea10c52e769bc4a4c03a/packages/crisp_ebook_reader/README.md),
 and [recovery checkpoints](recovery/ebook-parity-2026-11-12.md) for usage and
-the verification record. Implementation is on draft PR
-[CrispStrobe/CrispCloud#53](https://github.com/CrispStrobe/CrispCloud/pull/53).
+the verification record. The implementation is integrated on main; the original
+feature discussion is [CrispCloud #53](https://github.com/CrispStrobe/CrispCloud/pull/53).
+The current facade and engine packages resolve to one immutable CrisperBooks
+revision, recorded and verified in `docs/ebook-source-manifest.json`.
+The canonical Linux rendering/native-input qualification is retained in
+[CrisperBooks’ qualification record](https://github.com/CrispStrobe/crisperbooks/blob/5c49682143a44e14bc0eea10c52e769bc4a4c03a/docs/recovery/linux-reader-2026-11-12.md); it does not replace the broader device and accessibility work listed below.
 
 ## Why Linux was different
 

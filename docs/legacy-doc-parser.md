@@ -41,8 +41,8 @@ python3 tool/sync_legacy_doc_parser.py --source /path/to/legacy-doc-parser --ref
 
 The default is read-only. After reviewing the plan, repeat with `--apply`, then
 resolve dependencies and run the gates. The tool validates the entire current
-mirror against its original Git commit before writing, bounds the source tree,
-rejects symlinks and unexplained source files, updates the Git pin and mirror
+mirror bytes and Git executable bits against its original commit before writing,
+bounds the source tree, rejects symlinks and unexplained source files, updates the Git pin and mirror
 metadata together, and writes the new Office inventory last. It leaves Quds
 bytes and historical release evidence unchanged. Generated local test outputs
 are not treated as source patches. Verify the exact result with:
@@ -50,6 +50,13 @@ are not treated as source patches. Verify the exact result with:
 ```sh
 python3 tool/verify_office_fidelity.py --legacy-source /path/to/legacy-doc-parser
 ```
+
+The source-mode check uses the committed `100644`/`100755` distinction, including
+new executable tools and changes that only add or remove executable permission.
+Source checkout modifications do not override the pinned Git tree. The
+`--legacy-source` verification also detects mode drift when file bytes still
+match; no dependency pin, inventory schema or release policy changes are needed
+for this check.
 
 ## App behavior
 
@@ -146,3 +153,46 @@ Package test counts, independent JavaScript CFB metadata checks and their
 scope are recorded in the conversion guide and the package pull request.
 These results do not certify arbitrary Word pagination, full OOXML schema
 conformance, Windows Word behavior or a complete Flutter browser build.
+
+
+The final sibling audit also retains the independently authored parser-53a7f0d host receipts under `docs/evidence/legacy-doc-parser-20261112/parser-53a7f0d/`. These preserve their original source attribution. The current consumer remains at canonical parser f689b4c (a descendant with CI-only fixes), and its exact source inventory remains independently verified. No runtime parser file or dependency pin is rolled back by this evidence merge.
+
+
+Historical continuation record (its original source pins and digests are retained; current source attribution remains in the manifests):
+
+### Saved integration checkpoint: parser b295a3c
+
+The first continuation checkpoint pins parser
+`b295a3c1ddb542b0f161ecafdcdaba3762dc7535` through Quds
+`9fb8bf12703f32a487609a673f342a5ae0003de1`. All 169 upstream files match their
+source revision, and the host manifest verifies 559 shared Office files.
+
+- 99 app tests pass across the 16 legacy Word/native-conversion suites,
+  including routing, localized disclosures, separate-copy saves, and both
+  conversion dialogs. The revision timestamp test now checks the inserted
+  text and its independently preserved inserted paragraph mark.
+- The actual production DOC/RTF/PPT/MSG JavaScript build and Node acceptance pass.
+- 67 guarded-sync/native-render harness tests pass. Deliberate native failures
+  in the harness controls are expected and must be rejected.
+- Installed LibreOffice acceptance passes for the built-in DOCX conversion,
+  native DOCX/DOCM conversion, PDF text, note/header/footer content and images.
+  Source and prepared-copy bytes remain unchanged.
+
+These app tests used the documented optional-ebook-disabled hook, the retained
+Clang 19.1.7 compiler and system SQLite 3.46.1. The test wrapper restored the
+release pubspec byte for byte. These results do not validate native ebook
+conversion or certify arbitrary Word pagination.
+
+The follow-up main reconciliation incorporates app main
+`467c4a3deb31e18e33e558d3c08b19f2ddc7231c`, preserving its CrisperBooks and
+audio changes. The same 99 Word workflow tests pass on the combined tree;
+the Office manifest and 246-file CrisperBooks mirror both verify against their
+own exact source pins.
+
+### Saved integration checkpoint: parser 53a7f0d
+
+The next continuation checkpoint pins parser `53a7f0df113f0b88967f7fecd492652ad5c730d5` through Quds `09f5ec4b8eba290ff4d65678179854fb6ff6a468`. All 341 upstream parser files match their bytes and modes; the app verifies 680 shared Office files and the unchanged 246-file CrisperBooks mirror.
+
+The [retained app receipt](evidence/legacy-doc-parser-20261112/parser-53a7f0d/README.md) records 99 Flutter tests across 16 suites, 74 Python harness tests, portable DOC/RTF/PPT/MSG JavaScript checks and installed-Office acceptance. The release pubspec is restored after the documented temporary test hooks.
+
+The upstream runtime checkpoint passed 616 Dart tests, 104 Python tests and 129 independently schema-validated DOCX outputs. Its 22-input native corpus completed all 66 repeat imports and retained every initial page count. Six initial RGB/text/geometry comparisons were exact; every strict structural comparison still reported differences. These measurements are separate from the app workflow checks and do not claim universal fidelity. Complete native/schema/portable reports and exact review-audit inputs are retained in the mirrored package.

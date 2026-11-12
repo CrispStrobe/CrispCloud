@@ -19,6 +19,7 @@ class _OfficeArtProperties {
             0x01bf,
             0x01ff,
             0x023f,
+            0x03bf,
             0x073f,
           }.contains(entry.key)) {
         final used = value ~/ 65536;
@@ -174,6 +175,31 @@ class _OfficeArtShapeReader {
     if (fill?.type != null && fill!.type != 0) unsupported.add(0x0180);
     if (line?.type != null && line!.type != 0) unsupported.add(0x01c4);
     if (shadow?.type != null && shadow!.type != 0) unsupported.add(0x0200);
+    // MS-ODRAW 2.3.7.2 marks the background color unused for a solid fill.
+    // Line background color is inactive for a solid line unless the separate
+    // opaque-background bit enables an extra stroke (2.3.8.38). Complex or
+    // unresolved operands must not receive this exception.
+    if (properties.complex.containsKey(0x0183) ||
+        ((p.containsKey(0x0183)) &&
+            ((p[0x0180] ?? 0) != 0 ||
+                properties.complex.containsKey(0x0180)))) {
+      unsupported.add(0x0183);
+    }
+    if (properties.complex.containsKey(0x01c2) ||
+        (p.containsKey(0x01c2) &&
+            ((p[0x01c4] ?? 0) != 0 ||
+                properties.complex.containsKey(0x01c4) ||
+                properties.complex.containsKey(0x01ff) ||
+                _used(0x01ff, 9) == true))) {
+      unsupported.add(0x01c2);
+    }
+    // Every other explicitly used group Boolean remains unresolved. In
+    // particular, a child layout flag must not erase inherited hidden,
+    // printing, overlap, script, wrapping or behind-document semantics.
+    if (properties.complex.containsKey(0x03bf) ||
+        (((p[0x03bf] ?? 0) ~/ 65536) & 0x7fff) != 0) {
+      unsupported.add(0x03bf);
+    }
     const mapped = {
       0x0140,
       0x0141,
@@ -185,9 +211,11 @@ class _OfficeArtShapeReader {
       0x0180,
       0x0181,
       0x0182,
+      0x0183,
       0x01bf,
       0x01c0,
       0x01c1,
+      0x01c2,
       0x01c4,
       0x01cb,
       0x01ce,
@@ -220,6 +248,7 @@ class _OfficeArtShapeReader {
               id <= 0x07ff &&
               id != 0x0380 &&
               id != 0x0381 &&
+              id != 0x03bf &&
               !positionProperties.contains(id))) {
         unsupported.add(id);
       }
@@ -244,6 +273,7 @@ class _OfficeArtShapeReader {
       shadow: shadow,
       text: text,
       position: position,
+      groupShapeBooleanProperties: p[0x03bf],
       ink: ink,
       discussionAnchor: p[0x0307] == 1,
       unsupportedProperties: unsupported.toList()..sort(),
@@ -357,6 +387,7 @@ class _OfficeArtShapeReader {
     }
     if (points.isEmpty) return null;
     final path = <LegacyWordOfficeArtPathCommand>[];
+    final editingHints = <LegacyWordOfficeArtPathEditingHint>[];
     final segmentArray = segments == null || segments.isEmpty
         ? null
         : _array(segments, 0x0146, 2, 16384);
@@ -413,6 +444,16 @@ class _OfficeArtShapeReader {
       for (var i = 0; i < array.$2; i++) {
         final value = array.$1.u16(i * 2);
         final kind = value >> 13, count = value & 0x1fff;
+        // MS-ODRAW 2.4.31: SymmetricCurve describes editing tangents rather
+        // than a new drawing segment. Accept only the observed zero-count
+        // form after a current point, keeping its association as evidence.
+        // Other escapes, client escapes and paint modifiers remain inert.
+        if (value == 0xb300 && begun && !ended) {
+          editingHints.add(
+            LegacyWordOfficeArtPathEditingHint(cursor - 1, 0x13),
+          );
+          continue;
+        }
         if (kind >= 5) {
           unsupported.add(
             0x0146,
@@ -470,7 +511,11 @@ class _OfficeArtShapeReader {
         throw const FormatException('Incomplete OfficeArt path references.');
       }
     }
-    return LegacyWordOfficeArtGeometry(bounds: bounds, path: path);
+    return LegacyWordOfficeArtGeometry(
+      bounds: bounds,
+      path: path,
+      editingHints: editingHints,
+    );
   }
 
   (_Bytes, int, int)? _array(Uint8List bytes, int id, int size, int limit) {

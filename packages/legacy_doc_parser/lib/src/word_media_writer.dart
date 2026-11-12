@@ -380,7 +380,8 @@ extension _WordMedia on _StructuredWordWriter {
     _xml.add(
       '<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" '
       'simplePos="0" relativeHeight="$id" behindDoc="${drawing.behindText ? 1 : 0}" '
-      'locked="${drawing.anchorLocked ? 1 : 0}" layoutInCell="1" allowOverlap="1">'
+      'locked="${drawing.anchorLocked ? 1 : 0}" '
+      'layoutInCell="${drawing.shape?.layoutInCell == false ? 0 : 1}" allowOverlap="1">'
       '<wp:simplePos x="0" y="0"/>',
     );
     _officeArtDrawingPosition(
@@ -763,6 +764,10 @@ Map<String, Object?> _drawingMetadata(LegacyWordDrawing drawing) => {
   ],
   'horizontalOrigin': drawing.horizontalOrigin,
   'verticalOrigin': drawing.verticalOrigin,
+  if (drawing.shape?.groupShapeBooleanProperties case final group?) ...{
+    'groupShapeBooleanProperties': group,
+    'layoutInCell': drawing.shape!.layoutInCell,
+  },
   if (drawing.shape?.position case final position?)
     'officeArtPosition': {
       'horizontalMode': position.horizontalMode,

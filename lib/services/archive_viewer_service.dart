@@ -21,11 +21,14 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart' as ar;
 import 'package:koni_archive/koni_archive.dart' as koni;
 
+import 'archive_cab_reader.dart';
 import 'archive_dmg_reader.dart';
 import 'archive_format_registry.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_iso_reader.dart';
 import 'archive_package_readers.dart';
+import 'archive_pbzx_source.dart';
+import 'archive_rpm_reader.dart';
 import 'archive_slice_source.dart';
 import 'archive_types.dart';
 
@@ -116,6 +119,68 @@ Future<ViewerArchive> _openSource(
         ])) {
       return await openDmgArchive(source, maxMemberBytes: maxMemberBytes);
     }
+    if (_hasMagic(header, 0, const [0x70, 0x62, 0x7a, 0x78])) {
+      if (depth >= 4) {
+        throw const ArchiveViewException(
+          'Too many nested compression wrappers.',
+        );
+      }
+      final innerName = _innerContainerName(name);
+      final decoded = await ArchivePbzxSource.open(source, name: innerName);
+      try {
+        final innerHeader = await decoded.read(
+          0,
+          decoded.length < 512 ? decoded.length : 512,
+        );
+        if (isArchiveFilename(innerName) || _hasContainerMagic(innerHeader)) {
+          final inner = await _openSource(
+            decoded,
+            name: innerName,
+            password: password,
+            maxMemberBytes: maxMemberBytes,
+            maxBufferedContainerBytes: maxBufferedContainerBytes,
+            depth: depth + 1,
+          );
+          return ViewerArchive.reader(
+            formatName: 'pbzx/${inner.formatName}',
+            members: inner.members,
+            notices: [_pbzxNotice, ...inner.notices],
+            read: (member, limit) => inner.readMember(member, maxBytes: limit),
+            streamReader: (member, chunkSize) => inner.openMember(
+              member,
+              maxBytes: maxMemberBytes,
+              chunkSize: chunkSize,
+            ),
+            close: inner.close,
+          );
+        }
+        final member = ViewerArchiveMember(
+          name: innerName,
+          size: decoded.length,
+          isFile: true,
+          isEncrypted: false,
+          pathEscapedRoot: false,
+          index: 0,
+        );
+        return ViewerArchive.reader(
+          formatName: 'pbzx',
+          members: [member],
+          notices: [_pbzxNotice],
+          read: (member, limit) async {
+            if (member.size > maxMemberBytes) {
+              throw const ArchiveViewException(
+                'PBZX payload exceeds the member read limit.',
+              );
+            }
+            return decoded.read(0, member.size);
+          },
+          close: decoded.close,
+        );
+      } catch (_) {
+        await decoded.close();
+        rethrow;
+      }
+    }
     final compression = _compressionMagic(header);
     if (compression != null) {
       if (depth >= 4) {
@@ -185,6 +250,20 @@ Future<ViewerArchive> _openSource(
     }
     if (_hasMagic(header, 0, const [0x78, 0x61, 0x72, 0x21])) {
       return await openXarArchive(source, maxMemberBytes: maxMemberBytes);
+    }
+    if (_hasMagic(header, 0, const [0xed, 0xab, 0xee, 0xdb])) {
+      return await openRpmArchive(
+        source,
+        maxMemberBytes: maxMemberBytes,
+        maxBufferedContainerBytes: maxBufferedContainerBytes,
+      );
+    }
+    if (_hasMagic(header, 0, const [0x4d, 0x53, 0x43, 0x46])) {
+      return await openCabArchive(
+        source,
+        maxMemberBytes: maxMemberBytes,
+        maxFolderBytes: maxBufferedContainerBytes,
+      );
     }
     if (_hasMagic(header, 0, const [0x43, 0x72, 0x32, 0x34])) {
       if (header.length < 16) {
@@ -302,6 +381,9 @@ String? _compressionMagic(List<int> bytes) {
 
 bool _hasContainerMagic(Uint8List bytes) =>
     _compressionMagic(bytes) != null ||
+    _hasMagic(bytes, 0, const [0x70, 0x62, 0x7a, 0x78]) ||
+    _hasMagic(bytes, 0, const [0xed, 0xab, 0xee, 0xdb]) ||
+    _hasMagic(bytes, 0, const [0x4d, 0x53, 0x43, 0x46]) ||
     looksLikeTar(bytes) ||
     _hasMagic(bytes, 0, const [0x50, 0x4b]) ||
     _hasMagic(bytes, 0, const [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]) ||
@@ -483,6 +565,7 @@ bool isSingleCompressedFile(String name) =>
 String stripCompressionSuffix(String name) {
   final lower = name.toLowerCase();
   for (final suffix in const [
+    '.pbzx',
     '.gzip',
     '.bzip2',
     '.zstd',
@@ -572,3 +655,11 @@ bool looksLikeTar(Uint8List data) {
 }
 
 String _mb(int bytes) => '${(bytes / (1024 * 1024)).round()} MB';
+
+const _pbzxNotice =
+    'PBZX is read-only. Stored/XZ chunks are decoded on demand (16 MiB per '
+    'chunk, 2 GiB logical payload); member reads retain their existing limit. '
+    'Present XZ integrity checks are verified for chunks read; stored chunks '
+    'and XZ CHECK_NONE streams have no data checksum. '
+    'Package signatures are not verified. Unsupported inner formats are '
+    'exposed as one decoded payload.';

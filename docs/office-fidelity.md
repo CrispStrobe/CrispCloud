@@ -5,19 +5,21 @@ CrispCloud uses local path overrides for `quds_office_engine` and
 `tool/office_fidelity_manifest.json` is the authoritative suite commit and
 SHA-256 inventory; changing a suite branch alone does not update the app.
 
-The active follow-up branch in both repositories is
-`feature/office-fidelity-workflows-20261112`. It retains the newer suite work
-already descended from the requested `crispcloud` branch, adds feature-directed
-scripts and independent table baselines, and fixes actual-host font, picture
-and drawing-history regressions. Local execution results belong to their exact
-source hashes. Historical counts and receipts are preserved in
+The active legacy Word continuation uses
+`feature/legacy-doc-fidelity-20261112` in the app and suite. The
+[standalone parser guide](legacy-doc-parser.md) records its exact source pins,
+conversion contracts and app acceptance. It builds on the earlier
+`feature/office-fidelity-workflows-20261112` work, including feature-directed
+scripts, independent table baselines and actual-host font/picture/drawing-history
+fixes. Local execution results belong to their exact source hashes.
+Historical counts and receipts are preserved in
 [the previous guide](office-fidelity-before-workflows-20261112.md) and
 the named evidence documents; they do not measure this branch's changed code.
 
 ## Current vendor revision and follow-up
 
-The [12 November follow-up report](office-fidelity-followup-20261112.md)
-records the current source pin, native spreadsheet font geometry, merged-table
+The [12 November workflow follow-up report](office-fidelity-followup-20261112.md)
+records its source pin, native spreadsheet font geometry, merged-table
 addressing, shared custom-tab controls and continuation acceptance.
 Reusable parsing, preservation, navigation, search and legacy Word conversion
 are maintained in Quds; the app consumes the public APIs and exact source pin.
@@ -260,7 +262,7 @@ explicit rejections where an edit would silently corrupt native structure.
 To sync a reviewed immutable suite checkpoint:
 
 ```sh
-python3 tool/sync_office_fidelity.py --source ../quds_office_suite --ref SOURCE_COMMIT --branch feature/office-fidelity-workflows-20261112 --apply
+python3 tool/sync_office_fidelity.py --source ../quds_office_suite --ref SOURCE_COMMIT --branch feature/legacy-doc-fidelity-20261112 --apply
 python3 tool/verify_office_fidelity.py
 ```
 

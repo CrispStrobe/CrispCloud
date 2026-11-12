@@ -1234,6 +1234,32 @@ class InternalViewerService {
       }
     }
 
+    // Package payloads often have no extension (Apple Payload/Content).
+    if (header.length >= 4 &&
+        ((header[0] == 0x70 &&
+                header[1] == 0x62 &&
+                header[2] == 0x7a &&
+                header[3] == 0x78) ||
+            (header[0] == 0x4d &&
+                header[1] == 0x53 &&
+                header[2] == 0x43 &&
+                header[3] == 0x46) ||
+            (header[0] == 0xed &&
+                header[1] == 0xab &&
+                header[2] == 0xee &&
+                header[3] == 0xdb))) {
+      return ViewerMode.archive;
+    }
+    if (header.length >= 6 &&
+        header[0] == 0x30 &&
+        header[1] == 0x37 &&
+        header[2] == 0x30 &&
+        header[3] == 0x37 &&
+        header[4] == 0x30 &&
+        (header[5] == 0x31 || header[5] == 0x32 || header[5] == 0x37)) {
+      return ViewerMode.archive;
+    }
+
     // 7z: 37 7A BC AF 27 1C
     if (header.length >= 6 &&
         header[0] == 0x37 &&

@@ -138,8 +138,8 @@ newc/CRC, XAR/PKG/XIP container members, CRX2/3 and compatible ZIP aliases.
 Compressed streams now request strict integrity checks. Independent GNU
 ar/libarchive and native HFS+/UDIF fixtures supplement malformed, traversal,
 range, ownership and resource-bound tests. The [capability matrix](../archive-format-coverage.md)
-records per-format limits and signature/metadata boundaries. G18 publication rules are unchanged. UDF/APFS, CAB/RPM,
-ARJ/LZH/ACE/UC2, raw LZMA, PBZX and additional ZIPX methods remain.
+records per-format limits and signature/metadata boundaries. G18 publication rules are unchanged. The package continuation below adds CAB/RPM/PBZX and portable CPIO;
+UDF/APFS, ARJ/LZH/ACE/UC2, raw LZMA and additional ZIPX methods remain.
 
 **Delivered writer increment (2026-11-12):** Comic and eligible unsigned Java
 aliases, KMZ, additional compressed TAR and single-file streams, inspected
@@ -150,6 +150,23 @@ verification and verified destination staging; native disk images can exceed
 packages and static-library indexes remain read-only. The creator does not
 provide durable background job restart or larger existing-container editing,
 so G21 remains scoped. Remote/browser creation UI (G23) remains scoped.
+
+**Delivered package-reader continuation (2026-11-12):** Portable ASCII/odc CPIO;
+classic RPM v3/v4 newc/CRC payloads with gzip/bzip2/XZ/Zstandard/no compression;
+single-cabinet stored/MSZIP with cross-block dictionary history; and positional
+PBZX stored/XZ chunks feeding the normal inner-container readers. Shared
+recognition connects panes, F3, search and extraction; extensionless F3
+`Payload`/`Content` previews open supported Apple package payload trees. New
+families and odc remain read-only. Package signatures are not authenticated and
+no installation scripts run.
+
+Native MakeCAB/rpmbuild/libarchive fixtures and independent PBZX readback
+supplement malformed-input, traversal, limits, checksum, ownership and close-race
+tests. RPM packed/decoded payloads and CAB decoded folders retain 64 MiB default
+bounds. PBZX indexes up to 2 GiB logical data with one bounded 16 MiB chunk cache;
+the existing 64 MiB member and nested XAR preview limits remain. CAB
+Quantum/LZX/spanning, RPM v6/stripped payloads and Apple Archive/YAA are outside
+this profile. Exact boundaries and provenance are in the capability matrix.
 
 **Starting points:** archive_viewer_service.dart; archive_workspace.dart; archive_creation_service.dart; codec capability registry.
 

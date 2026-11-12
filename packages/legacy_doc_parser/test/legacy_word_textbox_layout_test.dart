@@ -15,7 +15,11 @@ LegacyWordParagraph _paragraph(int start, String text) => LegacyWordParagraph(
   runs: [LegacyWordRun(startCp: start, endCp: start + text.length, text: text)],
 );
 
-XmlDocument _convert(LegacyWordOfficeArtText? layout, {int wrap = 3}) {
+XmlDocument _convert(
+  LegacyWordOfficeArtText? layout, {
+  int wrap = 3,
+  int? groupProperties,
+}) {
   final paragraph = _paragraph(10, 'One editable story');
   final result = convertLegacyWordDocument(
     LegacyWordDocument(
@@ -60,7 +64,11 @@ XmlDocument _convert(LegacyWordOfficeArtText? layout, {int wrap = 3}) {
             behindText: false,
             anchorLocked: false,
             textboxId: 0x10000,
-            shape: LegacyWordOfficeArtShape(type: 202, text: layout),
+            shape: LegacyWordOfficeArtShape(
+              type: 202,
+              text: layout,
+              groupShapeBooleanProperties: groupProperties,
+            ),
             source: const LegacyWordSourceReference(
               streamPath: '0Table',
               offset: 0,
@@ -79,6 +87,30 @@ XmlDocument _convert(LegacyWordOfficeArtText? layout, {int wrap = 3}) {
 }
 
 void main() {
+  test(
+    'explicit textbox cell layout is independent of unspecified defaults',
+    () {
+      for (final (properties, expected) in [
+        (null, null),
+        (0x00008000, null),
+        (0x80000000, 'f'),
+        (0x80008000, 't'),
+      ]) {
+        final box = _convert(
+          null,
+          groupProperties: properties,
+        ).findAllElements('rect', namespace: _v).single;
+        expect(
+          box.getAttribute(
+            'allowincell',
+            namespace: 'urn:schemas-microsoft-com:office:office',
+          ),
+          expected,
+        );
+      }
+    },
+  );
+
   test('absence retains native margins while explicit zero remains zero', () {
     final unspecified = _convert(
       null,

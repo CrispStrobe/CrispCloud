@@ -21,6 +21,7 @@ import 'table_operations_fixture.dart' as table_operations;
 import 'table_review_fixture.dart' as table_reviews;
 import 'table_text_fixture.dart' as table_text;
 import 'table_width_fixture.dart' as table_width;
+import 'textbox_boundary_fixture.dart' as textbox_boundary;
 
 void main(List<String> arguments) {
   if (arguments.length != 1) {
@@ -323,18 +324,29 @@ void main(List<String> arguments) {
     'section-review.docx',
     'tool/fidelity/section_review_fixture.dart',
   );
+  textbox_boundary.main(['${root.path}/textbox-boundary']);
+  for (final story in ['main', 'header']) {
+    for (final kind in [
+      'content',
+      'empty',
+      'leading-blank',
+      'interior-blank',
+      'trailing-blank',
+      'two-trailing-blanks',
+      'two-content-paragraphs',
+    ]) {
+      final name = 'textbox-$story-$kind';
+      record(
+        'textbox-boundary/$name',
+        'textbox-boundary/$name.doc',
+        'textbox-boundary/$name.docx',
+        'tool/fidelity/textbox_boundary_fixture.dart',
+      );
+    }
+  }
   Directory('${root.path}/native-inputs').createSync();
-  for (final name in [
-    'formatting',
-    'linked-textboxes',
-    'word14-margin-origin',
-    'word16-page-origin',
-    'word16-page-origin-lo-blip-count',
-    'poi-simple-table2',
-  ]) {
-    final source = File(
-      '${repository.path}/test/fixtures/word_native/$name.doc',
-    );
+  void nativeInput(String name, String relativeSource) {
+    final source = File('${repository.path}/$relativeSource');
     source.copySync('${root.path}/native-inputs/$name.doc');
     File('${root.path}/native-inputs/$name.docx').writeAsBytesSync(
       convertLegacyWordToStructuredDocx(source.readAsBytesSync()).bytes,
@@ -343,9 +355,24 @@ void main(List<String> arguments) {
       'native-inputs/$name',
       'native-inputs/$name.doc',
       'native-inputs/$name.docx',
-      'test/fixtures/word_native/$name.doc',
+      relativeSource,
     );
   }
+
+  for (final name in [
+    'formatting',
+    'linked-textboxes',
+    'word14-margin-origin',
+    'word16-page-origin',
+    'word16-page-origin-lo-blip-count',
+    'poi-simple-table2',
+  ]) {
+    nativeInput(name, 'test/fixtures/word_native/$name.doc');
+  }
+  nativeInput(
+    'officeart-shapes',
+    'test/fixtures/fidelity/officeart-shapes.doc',
+  );
   final outputs = root
       .listSync(recursive: true)
       .whereType<File>()

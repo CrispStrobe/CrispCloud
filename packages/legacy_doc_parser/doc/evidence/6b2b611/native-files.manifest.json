@@ -1,0 +1,1647 @@
+{
+  "schema": "legacy-doc-parser/native-files",
+  "version": 1,
+  "localMeasuredCommit": "6b2b6116eeaf2d416f702081470b1d802952b535",
+  "publicSourceCommit": "34e14841ef679c6b480673ef5be354286dbd67dc",
+  "measuredSourceTree": "1853ed03beb9ca2afb8158f6c46fb0cb1da064d5",
+  "relativePathBase": "fidelity-6b2b611",
+  "archive": {
+    "path": "native-files.tar.xz",
+    "sha256": "0410349114fd68c39ad40b7e6b34b2cc5afb26d054abd7674eb19bd998e2f736",
+    "bytes": 575188,
+    "format": "USTAR + XZ CRC64 preset 9",
+    "ordering": "lexicographic relative path",
+    "memberType": "regular file",
+    "memberMode": "0644",
+    "memberUid": 0,
+    "memberGid": 0,
+    "memberUname": "",
+    "memberGname": "",
+    "memberMtime": 0
+  },
+  "sealedReport": {
+    "path": "native-report.json.xz",
+    "compressedSha256": "248fc978e3cea022b39234c1373dc61429a3946cb45255f4ea4edcdf8c5a377c",
+    "jsonSha256": "ade74ee66495f1bd5187037bdb7f2ebb144cbc5a13796a68f9d6e32eef6dc0e8",
+    "jsonBytes": 161115179
+  },
+  "fileCount": 264,
+  "uncompressedFileBytes": 2793764,
+  "caseFileCounts": {
+    "bookmarks": 12,
+    "comment-threads": 12,
+    "content-controls": 12,
+    "content-controls-legacy": 12,
+    "emf-vectors": 12,
+    "formatting": 12,
+    "linked-textboxes": 12,
+    "linked-textboxes-compact": 12,
+    "linked-textboxes-native": 12,
+    "list-continue": 12,
+    "list-restart": 12,
+    "note-markers": 12,
+    "officeart-shapes": 12,
+    "poi-simple-table2": 12,
+    "story-media": 12,
+    "table-borders": 12,
+    "wmf-vectors": 12,
+    "word": 12,
+    "word-altchunk": 12,
+    "word-compatibility": 12,
+    "word14-margin-origin": 12,
+    "word16-page-origin": 12
+  },
+  "verification": {
+    "everyFileHashOccursInSealedReport": true,
+    "allMembersRoundTripByteExactly": true,
+    "deterministicRebuildMatches": true,
+    "nativeReportUnchanged": true,
+    "nativeSourceFilesUnchanged": true
+  },
+  "files": [
+    {
+      "path": "bookmarks/bridge/bookmarks.doc",
+      "bytes": 11776,
+      "sha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "bookmarks/converted.docx",
+      "bytes": 12324,
+      "sha256": "ac6332b2b941fa0506c868652fe24622942fcbe9d80018dfd923c4e08a89e537",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "bookmarks/native-docx/bookmarks.docx",
+      "bytes": 9354,
+      "sha256": "37642ba6c422a31980ae5bb639c88c4ff6900539a885f2bb2b17caee03544596",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "bookmarks/roundtrip-01/binary/converted.doc",
+      "bytes": 11264,
+      "sha256": "0d32b7ad3b59f41ea3b094655da6912a50338e6f162ae5665f6af643ecd5ab8a",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "bookmarks/roundtrip-01/import.docx",
+      "bytes": 12017,
+      "sha256": "08e922f5deb97c1480474efdac259e040454a80c32cb0901ca0d944d7586dfd0",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "bookmarks/roundtrip-01/native-docx/converted.docx",
+      "bytes": 10797,
+      "sha256": "d3eb12771295de02d64616c3cf895505b6b4a455234f53adf58e5073400dd79f",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "bookmarks/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "5b498fcabb7986275d36a8dbdf3e6d9da1fffb0c3b1000683e499ba667b79133",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "bookmarks/roundtrip-02/import.docx",
+      "bytes": 12018,
+      "sha256": "41c639d152a694b89e7d69c25fb8c3afbbaf1a516a681499c021490d90ed95ce",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "bookmarks/roundtrip-02/native-docx/import.docx",
+      "bytes": 10796,
+      "sha256": "7414dd4821f116275d2c8eee3b90808644fb8aefde5c04968b10b5f2d75c39f5",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "bookmarks/roundtrip-03/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "f8405e939a61ae7d1fa5026ccf92edaf630cd4f88244bd9e254c42867346ba2b",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "bookmarks/roundtrip-03/import.docx",
+      "bytes": 12016,
+      "sha256": "fb8dfb3458126aa472d3ebb062bce3a0811ba63d8d46ae4022469703f1213e15",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "bookmarks/roundtrip-03/native-docx/import.docx",
+      "bytes": 10797,
+      "sha256": "77db56b4b4181be0a09bc2168a910a25a6f219a3fc9dcc72d8646f4800016cbf",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "comment-threads/bridge/comment-threads.doc",
+      "bytes": 9728,
+      "sha256": "705bb49428dc44e09f80ac53748f7597bc3d46f5447d0daca066a4f44c8d6874",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "comment-threads/converted.docx",
+      "bytes": 6092,
+      "sha256": "de08168c45ad1419bbef959d0e99fca021f2d0dedf8e8de9f2cc548fc6891a59",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "comment-threads/native-docx/comment-threads.docx",
+      "bytes": 5846,
+      "sha256": "d217331e6b6027a58152fdc27fdad31ef9541394fc7d162f308f15ca1fabc595",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "comment-threads/roundtrip-01/binary/converted.doc",
+      "bytes": 9728,
+      "sha256": "252d946eaa135bbba11960b308c99fcc9bb84c412adc15da87414477a44999ed",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "comment-threads/roundtrip-01/import.docx",
+      "bytes": 6109,
+      "sha256": "f7a70563af23e59af6202883eab823ce03a300548b8564170205550652161ddf",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "comment-threads/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6048,
+      "sha256": "2835a26c9c349e64d317ee7030cea22d2857b968e8346aa1fcca6784bc68682d",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "comment-threads/roundtrip-02/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "b58742f6dbdbd8bf06e78889e394f2f93b75220fea3263e9c51de9dc89b182e9",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "comment-threads/roundtrip-02/import.docx",
+      "bytes": 6110,
+      "sha256": "91a008f09463f9786b96f7d1a2a8241d0d5d44613a484f4d0000528394ac5379",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "comment-threads/roundtrip-02/native-docx/import.docx",
+      "bytes": 6047,
+      "sha256": "f0d593868978b3a8316eccc353ed3d69a3420d611ff02848cd77fc1cde44f81d",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "comment-threads/roundtrip-03/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "ac4e6ba20bda6a9e82fb9486ea23040d28804c19f50f430809c72ae45a846521",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "comment-threads/roundtrip-03/import.docx",
+      "bytes": 6110,
+      "sha256": "fbf5713c7083dc09c99c1e8106aef6e36d8f87e374f7cf9fccbf8ce4ef1c664d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "comment-threads/roundtrip-03/native-docx/import.docx",
+      "bytes": 6047,
+      "sha256": "af2f23a11f2f4f03eff8f7d67d210c9c103d78af1882fd7587ed889774d4c8e1",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "content-controls-legacy/bridge/content-controls-legacy.doc",
+      "bytes": 9728,
+      "sha256": "69481e76b39ad83411ff018be3b30914723d23d90a728159053608422c30bea3",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls-legacy/converted.docx",
+      "bytes": 8325,
+      "sha256": "6f052f36867cdba491fa3646afad1597fae6a462a5afbc7b7e47efdd5dc574c7",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls-legacy/native-docx/content-controls-legacy.docx",
+      "bytes": 6685,
+      "sha256": "e2cdb13f4a978400b8a110d00d64f8ea44f22426485005bbc1b428762f22518a",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-01/binary/converted.doc",
+      "bytes": 10752,
+      "sha256": "1939308e1aa2ead778138112797b83803d60bdb54f0bc92da2f85642c83ff89d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-01/import.docx",
+      "bytes": 8381,
+      "sha256": "4e68b424b21a4000b3ecafc887d08dffd51782153c7654e3b055751741e3ca0a",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-01/native-docx/converted.docx",
+      "bytes": 7378,
+      "sha256": "903d0ca6ffab83fb88b3737878b4d82840db70e116ec3d7696a4d9a1006336a8",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-02/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "36041dfc7ddeb1f122bc27e8ab92c4b97fd9b5b115ff785fc539291f7d5ce7f0",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-02/import.docx",
+      "bytes": 8382,
+      "sha256": "4046a2a473a7a59dd60a308fcda91698dafb563b3f1aa09aa41b8d9a42b293ab",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-02/native-docx/import.docx",
+      "bytes": 7379,
+      "sha256": "372b671b4b21cd5169b731c019292c9d9de97e97b79ddb0680c46de94292d090",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-03/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "d3d0b2639f3c6594ecb679f7a31ba0fa6c0bd73e356ce6b2ceb9f76793065227",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-03/import.docx",
+      "bytes": 8381,
+      "sha256": "eefcfcede2fa52cd5a0fcfbdc0c75ac2ebec77384b7e40c1bd5dccc20212083d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls-legacy/roundtrip-03/native-docx/import.docx",
+      "bytes": 7378,
+      "sha256": "f65eb1a5477ea188e19568e5ddcf280cd0e0a288a054d33e74f68fa5faff7542",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "content-controls/bridge/content-controls.doc",
+      "bytes": 9728,
+      "sha256": "02ffc92fa910622066deabe1fbc1676ebcbe07034ad8f410484cf83908f78ab8",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls/converted.docx",
+      "bytes": 8330,
+      "sha256": "8335e7e1f02d861a117bd540177392b01a1447d9a59ae1a584ae597e927b2924",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls/native-docx/content-controls.docx",
+      "bytes": 6685,
+      "sha256": "d965d93e3834e50653c431ab7108d3a4dbefeffbf82a46e44aa550a38450634e",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls/roundtrip-01/binary/converted.doc",
+      "bytes": 10752,
+      "sha256": "71b67a1393cd613ceffc2ba322a5b628da2f0aa635ddb429475475845a25d964",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls/roundtrip-01/import.docx",
+      "bytes": 8386,
+      "sha256": "51b5b56ee9d8c9e9183aa6ae1d603161d683715bb487cad3bb27091ee86dba65",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls/roundtrip-01/native-docx/converted.docx",
+      "bytes": 7381,
+      "sha256": "42b35b00b8e6120b2e34288de010ae8710a186ab15875810d27451fc52e45a21",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "content-controls/roundtrip-02/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "6295fac5b75ee0aad223815b966dbb0b20cd9b4bc7af253ef4eab8654560f69b",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls/roundtrip-02/import.docx",
+      "bytes": 8387,
+      "sha256": "97ca3dcc3106ce604e5283945feb765a24c07f93e3d9f9755d6e21936d322ee5",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "content-controls/roundtrip-02/native-docx/import.docx",
+      "bytes": 7381,
+      "sha256": "0f1598885d2baaf31fa160fbafaffab661329e0a83b5877659979f0942729809",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "content-controls/roundtrip-03/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "2aed62ed3a4dec59435586ee08127b05eb3766c77192fbf5fda034ea869bd8be",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls/roundtrip-03/import.docx",
+      "bytes": 8386,
+      "sha256": "9b81cb82a1da336a68cdef541dbf8386ab7654cd44bb5b4b52c447b4c1db43a6",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "content-controls/roundtrip-03/native-docx/import.docx",
+      "bytes": 7381,
+      "sha256": "9f6dae537958ab7706cb42faca36b73378e87465aa46798660775cd0362a4d8a",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "emf-vectors/bridge/emf-vectors.doc",
+      "bytes": 9728,
+      "sha256": "f4e274400fefc5428d473aa14132d832fcc80d7e57bbdc60a55eaf1d31a466d8",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "emf-vectors/converted.docx",
+      "bytes": 6176,
+      "sha256": "e65aab3fcce370f82c2998cbac9799fb5e475f338923ab8341c1523cd93a1c8b",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "emf-vectors/native-docx/emf-vectors.docx",
+      "bytes": 5835,
+      "sha256": "39fe8deb524e8b16d77f9ee4be614837c83a88e2c30809cde194c76108694e2d",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "emf-vectors/roundtrip-01/binary/converted.doc",
+      "bytes": 9728,
+      "sha256": "42e37840497ef78697f7a2a676716e571e4fda7a88567345b43e7d8b6aef1072",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "emf-vectors/roundtrip-01/import.docx",
+      "bytes": 6184,
+      "sha256": "fb92065af5a9930cfa8825289b94c223ad47af09ef297a0b4cb9f01ddd0a789d",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "emf-vectors/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6047,
+      "sha256": "0b2745deda27119707ca8ee9467b9e8cdce52a0104d8b361b68a40cfa1c01476",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "emf-vectors/roundtrip-02/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "f17c6d988d3ab09d65d92a96733bf3030c85cca6175b06fcc618d959f8735778",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "emf-vectors/roundtrip-02/import.docx",
+      "bytes": 6186,
+      "sha256": "e4375aed25942c0bf35479c6f6fcc8b527f46b6f894ded0a6760b349f8361d9c",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "emf-vectors/roundtrip-02/native-docx/import.docx",
+      "bytes": 6047,
+      "sha256": "209a6e7f958f22df2f23fbbc5e7a377440a67758bcc68f3802d8fa2d78edec5d",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "emf-vectors/roundtrip-03/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "78b0dc1c472ea41656afbd27e99a717530567a376b941a60aeedbeebc3f63dac",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "emf-vectors/roundtrip-03/import.docx",
+      "bytes": 6186,
+      "sha256": "44be723f48bee531520b22c6102c6f8d11f1145bbef918e8ee9da90316162ff9",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "emf-vectors/roundtrip-03/native-docx/import.docx",
+      "bytes": 6046,
+      "sha256": "6e7a8ab085ac23fbcb4785d183755189cb406ca23c9300a2a7a80ac712514bb4",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "formatting/converted.docx",
+      "bytes": 14263,
+      "sha256": "81fafb047c27d1fa3897796bfe5dd6c5b9c3ed30caae1a4e3ef0bbac4e41f2b9",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "formatting/native-docx/source.docx",
+      "bytes": 11464,
+      "sha256": "de93b3ca975c1726cd70ec165479a0ee96e4ad569bf9f412fd770496ba43e1ab",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "formatting/roundtrip-01/binary/converted.doc",
+      "bytes": 17408,
+      "sha256": "14bb5029f9bd878e100c9b89ba4c69afece25dc98c692ffc61a21ae21f9b367d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "formatting/roundtrip-01/import.docx",
+      "bytes": 12963,
+      "sha256": "1f199e1536539179637282cb91a720912a4a3893bf03bdbb1269a75a50530a6d",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "formatting/roundtrip-01/native-docx/converted.docx",
+      "bytes": 10191,
+      "sha256": "c8b42d9a5357b871a3f685d9ad2b0325277ff39a7960276efa11ef2e7fb111d0",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "formatting/roundtrip-02/binary/import.doc",
+      "bytes": 13824,
+      "sha256": "b5d87ee2377d76712fcf8941705b05f862c9ba40b16bdf21111cbc743ba15046",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "formatting/roundtrip-02/import.docx",
+      "bytes": 12964,
+      "sha256": "7d5935568d27f2983d522e5162def5aa876ed7c16d0b4598543f65881c630cbd",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "formatting/roundtrip-02/native-docx/import.docx",
+      "bytes": 10191,
+      "sha256": "356a5f929c05112268137a7b662e1b48ac2670968fc81469659d9c128ddca139",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "formatting/roundtrip-03/binary/import.doc",
+      "bytes": 13824,
+      "sha256": "ecaf7e01dc1ff7ee48f2063820ccc3b5b375e856e36880e5b38649e0b29d162b",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "formatting/roundtrip-03/import.docx",
+      "bytes": 12966,
+      "sha256": "2027200f487226f59399f12035aa6eb1747df1108393586a740efce20dcb5e42",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "formatting/roundtrip-03/native-docx/import.docx",
+      "bytes": 10191,
+      "sha256": "caabd0aaca62a90c416bed1c6b7b68eb99e2b2f1a3f46519278a1002e1e00c5f",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "formatting/source.doc",
+      "bytes": 21504,
+      "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-compact/converted.docx",
+      "bytes": 6535,
+      "sha256": "f5cbcf06e95b1322190d6abbe87ca2d114101e1ab45af12845e3ef8db30f5ab9",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-compact/native-docx/source.docx",
+      "bytes": 6308,
+      "sha256": "f4a9ef59e7c733e1080060428d0f38faeb7ac949e6ce6d1f6e93819b1c6015ca",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-01/binary/converted.doc",
+      "bytes": 10240,
+      "sha256": "116c0d5c0d3f5ed391450590084350d79f9a24c61a9b36a29e4af814dd1e97d0",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-01/import.docx",
+      "bytes": 6540,
+      "sha256": "37ca6e3e2508cb8d44077d21655074f8da25562b74b12a7bb172397d212d53eb",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6352,
+      "sha256": "cbed05b38e1a644033d640306b22a832f9cea94f4fbd0c821f3e28eb727c6eb6",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-02/binary/import.doc",
+      "bytes": 10240,
+      "sha256": "6576b2bef70f36c850c4e8499351154a0e92e6ec430dfd18dd0085668d51032d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-02/import.docx",
+      "bytes": 6556,
+      "sha256": "d1d706db46b67f412d2adc5881b7d1cc90158a2efa40936d8e8c662ee3da1abd",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-02/native-docx/import.docx",
+      "bytes": 6403,
+      "sha256": "eb4d75fc7d42c3b77cd70a71374f294aa93f6bbb7ad4a6b610d97d972c7fc7aa",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-03/binary/import.doc",
+      "bytes": 10240,
+      "sha256": "93df804041abbe089557b3734ac7e3cec861dd883b8d90ea93f920b1e7c60744",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-03/import.docx",
+      "bytes": 6575,
+      "sha256": "04a1a491e929701330034b6adc7b5912528eb9d743f437cecfa75616cffe417c",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "linked-textboxes-compact/roundtrip-03/native-docx/import.docx",
+      "bytes": 6428,
+      "sha256": "7429d64db51ab43caa344686372b5f0ab6ad7ed6a4c18d911c9a4f3f87462593",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes-compact/source.doc",
+      "bytes": 10240,
+      "sha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-native/converted.docx",
+      "bytes": 6477,
+      "sha256": "dd97ab01907a49fd3a44d1c2c2ab278844e8397d919f3114d80e28343e3ff155",
+      "sealedReportHashOccurrences": 8
+    },
+    {
+      "path": "linked-textboxes-native/native-docx/source.docx",
+      "bytes": 5953,
+      "sha256": "04fc65ec2c62dbb6db1ff8a1bd20250570e7d1862b02cabaee96f1f862e810f7",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-01/binary/converted.doc",
+      "bytes": 11264,
+      "sha256": "baf71c7608bcbb82fd5f94a1c463e8ee6aea2f6ae9e9b58457ff62871f960a78",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-01/import.docx",
+      "bytes": 6537,
+      "sha256": "d0a203cfe4ce20be30b18de4f900d791ed0e6060bec210d63aebeb4c87b02fc0",
+      "sealedReportHashOccurrences": 8
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6289,
+      "sha256": "4061ee8dca75e9078b544bafd3563d2779af6eb2f76765e293126a1cf6532104",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "63690f1a9d3def403f11f277269a078de898a8f528f7fef048fa7ef196e7dff8",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-02/import.docx",
+      "bytes": 6557,
+      "sha256": "f644d433946b39e42c7ea69e701d9d32e92842e33b8735146bf902cb918c2f86",
+      "sealedReportHashOccurrences": 8
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-02/native-docx/import.docx",
+      "bytes": 6343,
+      "sha256": "979ff178afbf3500ddd830d87b7b24d9967aa8118aa01e54ba31081230ebbd8e",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-03/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "46320318cfeaef68e882610a01950e3cfbe48c8ea592093a37fbab0d69e3befd",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-03/import.docx",
+      "bytes": 6595,
+      "sha256": "62ba5acc1add6c56278e3d82e7378848c6fb61d35a62bf788d1aba80e8ce26ed",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes-native/roundtrip-03/native-docx/import.docx",
+      "bytes": 6394,
+      "sha256": "80f22eef9a17ba62b258aab6c7778342e00f0314a7a60d34dbfd92c8113b0c5b",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes-native/source.doc",
+      "bytes": 11264,
+      "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "sealedReportHashOccurrences": 7
+    },
+    {
+      "path": "linked-textboxes/bridge/linked-textboxes.doc",
+      "bytes": 11264,
+      "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "sealedReportHashOccurrences": 7
+    },
+    {
+      "path": "linked-textboxes/converted.docx",
+      "bytes": 6477,
+      "sha256": "dd97ab01907a49fd3a44d1c2c2ab278844e8397d919f3114d80e28343e3ff155",
+      "sealedReportHashOccurrences": 8
+    },
+    {
+      "path": "linked-textboxes/native-docx/linked-textboxes.docx",
+      "bytes": 5953,
+      "sha256": "4180ffc8d113cf0363d97c3b607f2490907af6a071a5d0dcc25a44ba8565f863",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "linked-textboxes/roundtrip-01/binary/converted.doc",
+      "bytes": 11264,
+      "sha256": "baf71c7608bcbb82fd5f94a1c463e8ee6aea2f6ae9e9b58457ff62871f960a78",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes/roundtrip-01/import.docx",
+      "bytes": 6537,
+      "sha256": "d0a203cfe4ce20be30b18de4f900d791ed0e6060bec210d63aebeb4c87b02fc0",
+      "sealedReportHashOccurrences": 8
+    },
+    {
+      "path": "linked-textboxes/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6289,
+      "sha256": "cdf5a140f50573d35e42fb4e392ba0a4d673703b67ec1fa57d8c91bbadc403d8",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "63690f1a9d3def403f11f277269a078de898a8f528f7fef048fa7ef196e7dff8",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes/roundtrip-02/import.docx",
+      "bytes": 6557,
+      "sha256": "f644d433946b39e42c7ea69e701d9d32e92842e33b8735146bf902cb918c2f86",
+      "sealedReportHashOccurrences": 8
+    },
+    {
+      "path": "linked-textboxes/roundtrip-02/native-docx/import.docx",
+      "bytes": 6343,
+      "sha256": "b1365ddb76219d470684d8268bb202b5a202b2d50ed7293aa79d2cb658a96e86",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "linked-textboxes/roundtrip-03/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "46320318cfeaef68e882610a01950e3cfbe48c8ea592093a37fbab0d69e3befd",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes/roundtrip-03/import.docx",
+      "bytes": 6595,
+      "sha256": "62ba5acc1add6c56278e3d82e7378848c6fb61d35a62bf788d1aba80e8ce26ed",
+      "sealedReportHashOccurrences": 6
+    },
+    {
+      "path": "linked-textboxes/roundtrip-03/native-docx/import.docx",
+      "bytes": 6394,
+      "sha256": "09dc3f2f864078d95319917c46ccf1257a75877ddd6c4d401db795b5ecefe423",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-continue/converted.docx",
+      "bytes": 3666,
+      "sha256": "af9ebe792ed9fc7b61471699b364a1db099ee028acc6de7262cfe4496b711ddb",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-continue/native-docx/source.docx",
+      "bytes": 5587,
+      "sha256": "838402d6ff5b22f7dfed437d24e08e356fe2ee75973a497c53b6e79f1b956cab",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-continue/roundtrip-01/binary/converted.doc",
+      "bytes": 10240,
+      "sha256": "df7fd91d0bff67662fe6d318a447d28e6b453a115337881e05066fdebcd91f72",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-continue/roundtrip-01/import.docx",
+      "bytes": 5689,
+      "sha256": "f0629debcf34e00e00d3b0b2e740f8328280aef9a685dd36003ffc2de3814a1c",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-continue/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6058,
+      "sha256": "3452e5b244126be885dbd39994881618cbc51bf7ef24514e2b5e80225d520559",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-continue/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "5ab79c1326c1aa3ce1d1d026eb82f2ccd32fc719fef0eb09f61324bfe4855874",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-continue/roundtrip-02/import.docx",
+      "bytes": 5678,
+      "sha256": "d3a51e62eddb0c4e9ca632fe8fdbe89b2fd22823d16e132e7ef45794de3d6ed9",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-continue/roundtrip-02/native-docx/import.docx",
+      "bytes": 6144,
+      "sha256": "428b72e175f162bdcf8cdb8362f6f80bd4cc8cc2842c9b5291c0c2413fdef143",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-continue/roundtrip-03/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "bea316a9c61fb754af46d6a14228ef1e944384b23b0a49edfe23e176929cd125",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-continue/roundtrip-03/import.docx",
+      "bytes": 5680,
+      "sha256": "d59daca2f109aaf7e7a84a5f4cf133d0026911bc1a43a9a864b4caea5785862f",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-continue/roundtrip-03/native-docx/import.docx",
+      "bytes": 6144,
+      "sha256": "4da625070bf52c0f063feba86471904977d6d63300cacd40c748b411dbfee4a3",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-continue/source.doc",
+      "bytes": 39424,
+      "sha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-restart/converted.docx",
+      "bytes": 3291,
+      "sha256": "e5a7b8c564de7645129263eb17c2e166fbf97a118df9def4a4261162dc055051",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-restart/native-docx/source.docx",
+      "bytes": 5614,
+      "sha256": "266657eca4c58003ddd9d4b06e6d83a6ec82086a49a6a81598956d90da06828d",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-restart/roundtrip-01/binary/converted.doc",
+      "bytes": 10752,
+      "sha256": "a5fc8182f06b58960f457609fe940e9df11e55329d3e2dcdf936f76f108b96e6",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-restart/roundtrip-01/import.docx",
+      "bytes": 5819,
+      "sha256": "a2b7bea8db5a0bb6a933818d9770db5ffa5c6b37e2c9d211cb9d978c383cf684",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-restart/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6131,
+      "sha256": "70a71db63d8fe60c2f0f4079a276eab6adbe7079c4d43757a59e93ab92d4d2e7",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-restart/roundtrip-02/binary/import.doc",
+      "bytes": 12800,
+      "sha256": "dccece6c835a4e61104b4098940b70a6cffb8339b2867aa18bdaffdc264a15c7",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-restart/roundtrip-02/import.docx",
+      "bytes": 5810,
+      "sha256": "38076ffc17e21c34c4419c0fe303dab41e9acb0bb26645d250f098c4815f014f",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "list-restart/roundtrip-02/native-docx/import.docx",
+      "bytes": 6228,
+      "sha256": "3a53de895730b651698395f9c53a1040fe7fca4bc71aafb7f9cd4bbb4ef3fcd4",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-restart/roundtrip-03/binary/import.doc",
+      "bytes": 12800,
+      "sha256": "f5d2b88c5b1abbc820b1254eaecbe90e7e3d90296916a159c183e58af07d9e55",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-restart/roundtrip-03/import.docx",
+      "bytes": 5812,
+      "sha256": "f99d1389f37534df827cb5a27f450d708b05b4abb36b5727fc7ee0ad1b9e0a1b",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "list-restart/roundtrip-03/native-docx/import.docx",
+      "bytes": 6227,
+      "sha256": "3d927604dabc8c9b85201478d6d19024d62c51db477783ef297fe22b04bc6de0",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "list-restart/source.doc",
+      "bytes": 39424,
+      "sha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "note-markers/bridge/note-markers.doc",
+      "bytes": 11264,
+      "sha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "note-markers/converted.docx",
+      "bytes": 7301,
+      "sha256": "66b515ca5ef2a20c045be59cbe3d8df051771c5c42aa8b05b83bbf8cb2f68313",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "note-markers/native-docx/note-markers.docx",
+      "bytes": 7595,
+      "sha256": "ca63dd4755ca51a1044da389faa8f3d5f007038f3048d5f0f52510edbf1d8e8c",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "note-markers/roundtrip-01/binary/converted.doc",
+      "bytes": 11776,
+      "sha256": "52cf8353c56c5c6a68a1500b62f38c90ed7e0c7ee17a1a50420a828aa535c386",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "note-markers/roundtrip-01/import.docx",
+      "bytes": 7366,
+      "sha256": "05d7228eebed735ae33984a3e73c3d69db7244a3ff1053aaa74145fe3557f8b8",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "note-markers/roundtrip-01/native-docx/converted.docx",
+      "bytes": 8311,
+      "sha256": "ac5b8ebf11bc495796164acd018086f587581bfdde3558989f39fafc732c3a41",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "note-markers/roundtrip-02/binary/import.doc",
+      "bytes": 11776,
+      "sha256": "cb3726370879a8cfc04d635296b3f21a91e34ded6fe3222f2bd29528c339300d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "note-markers/roundtrip-02/import.docx",
+      "bytes": 7375,
+      "sha256": "bbfba1eb0b89a4463487983497c627857970950f0a1c224cc26d01398dea6d21",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "note-markers/roundtrip-02/native-docx/import.docx",
+      "bytes": 8320,
+      "sha256": "d28cc1b02fa3c423f399927663f46aedd76f80824114181f9c8efde063de6c4d",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "note-markers/roundtrip-03/binary/import.doc",
+      "bytes": 11776,
+      "sha256": "497cf99233b4a564b16606c2a38422092322b8cf3a8f79d4ccb3af8be2a3465a",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "note-markers/roundtrip-03/import.docx",
+      "bytes": 7391,
+      "sha256": "26a9c338996400989d89bb7041d2e0739f21ff4687d0d527d1c7cdcbcdd2a4af",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "note-markers/roundtrip-03/native-docx/import.docx",
+      "bytes": 8332,
+      "sha256": "420677fa31d079cc07e28087cc4cd71782d67b18c437a61c4a8125b221d5321b",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "officeart-shapes/bridge/officeart-shapes.doc",
+      "bytes": 10240,
+      "sha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "officeart-shapes/converted.docx",
+      "bytes": 6055,
+      "sha256": "27b6a8431052cdf1973160e8d9c8317d4962490254a830d6686bd6b0dd21666a",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "officeart-shapes/native-docx/officeart-shapes.docx",
+      "bytes": 6286,
+      "sha256": "93e01aacdaf5227bfb808b015fdf21786c75470a821d9f633d7277e6cb56b636",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "officeart-shapes/roundtrip-01/binary/converted.doc",
+      "bytes": 9216,
+      "sha256": "e986689797e5fd75da2a883d3c077744bc48958561e537c976d932ea9d1faed7",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "officeart-shapes/roundtrip-01/import.docx",
+      "bytes": 4688,
+      "sha256": "ad34fca287b042db6590f8a68e29895bb1cd95a20c9f25666db3fbd100170cb7",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "officeart-shapes/roundtrip-01/native-docx/converted.docx",
+      "bytes": 5305,
+      "sha256": "e991d548d2a123b65f45658f2905c3bd3b9ddc73de13cf106abbac52df5d2955",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "officeart-shapes/roundtrip-02/binary/import.doc",
+      "bytes": 9216,
+      "sha256": "40e982a93357cd18078ad19edff6c5e2ba98f7a6f3c710ad72262c4a169c4560",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "officeart-shapes/roundtrip-02/import.docx",
+      "bytes": 4688,
+      "sha256": "3db692d62be445250b3a55cdb6f27c92c1e796704642aad58e4fedc398c1a497",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "officeart-shapes/roundtrip-02/native-docx/import.docx",
+      "bytes": 5302,
+      "sha256": "46ecdf11e4880c43f50d61f5dabcec79675f30b5ffdcfb25372db753679d2913",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "officeart-shapes/roundtrip-03/binary/import.doc",
+      "bytes": 9216,
+      "sha256": "3d6a140fcf7807b9b86bf905a0c688b7aa7d612e86c63b2112330f52fb732ddb",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "officeart-shapes/roundtrip-03/import.docx",
+      "bytes": 4687,
+      "sha256": "fdd7af26a3e0cede8f9837fe7d9f24640f153f206ffbbb320b1c77b9632746e4",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "officeart-shapes/roundtrip-03/native-docx/import.docx",
+      "bytes": 5301,
+      "sha256": "2be696765a26a11b8dbacd27e0e0a3fda6a20e95c1762d5ce7a6b78911a9c541",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "poi-simple-table2/converted.docx",
+      "bytes": 5910,
+      "sha256": "27059f858a21963dcea300be7bd5021c5ac19d2ba25b4dee7b21494e8b8888e5",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "poi-simple-table2/native-docx/source.docx",
+      "bytes": 5469,
+      "sha256": "b26e86b03632623b823b4b4882954dc070aa451d041235090a768e2eb7be1310",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-01/binary/converted.doc",
+      "bytes": 10240,
+      "sha256": "98e554e8ef7cdb37bc0cf878bcb0bc4ea0398a7bdd0c0cf443e0140670c1f29f",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-01/import.docx",
+      "bytes": 5344,
+      "sha256": "c782d46cb620e66dbf39011c5bcf40b5292a1c5a83f299f818ead847c6b03db6",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-01/native-docx/converted.docx",
+      "bytes": 5588,
+      "sha256": "07b4e4b68095674e9273481f5d127aa5b42076f723393ba1cfc73d1b77e6e8c6",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-02/binary/import.doc",
+      "bytes": 10240,
+      "sha256": "52884afe5394ad3a344acfe477a48665b47e469198585273751f59ae357a8d0e",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-02/import.docx",
+      "bytes": 5344,
+      "sha256": "73e2d04ecf51cc2eb83fe819ad92723a1613e6f54c33366405f58ddd297c8ec2",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-02/native-docx/import.docx",
+      "bytes": 5581,
+      "sha256": "80248872562f9c35bcd5ff67ac23942a9441b2e22eb79a3b1495c3a1fb5ca814",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-03/binary/import.doc",
+      "bytes": 10240,
+      "sha256": "5d9b3581d14460b3142398e00574b45ec12852c8bb5ac512b4e2a318d135bc39",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-03/import.docx",
+      "bytes": 5346,
+      "sha256": "20b583bb0c402f78f52be3cf2e394fc2c68148fd743107051ed2937bcb7a955c",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "poi-simple-table2/roundtrip-03/native-docx/import.docx",
+      "bytes": 5582,
+      "sha256": "aff30d66fedb17d0d85c5ccd6e6e7a37b74c93eb55e8538da1c96ffc874e3e30",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "poi-simple-table2/source.doc",
+      "bytes": 27136,
+      "sha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "story-media/bridge/story-media.doc",
+      "bytes": 13312,
+      "sha256": "563e9bd799cf413d6324b86320b2e719ecc23df6f2d172ba594b03dfe121aa0c",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "story-media/converted.docx",
+      "bytes": 19824,
+      "sha256": "7ef803170ee388edad1ab5dac0de9186b033192f14906b31aab621925ef91409",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "story-media/native-docx/story-media.docx",
+      "bytes": 15516,
+      "sha256": "6c4d4cae3175f69f2d068aa862b68af667d49d37896f4a4a736cee0212604a09",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "story-media/roundtrip-01/binary/converted.doc",
+      "bytes": 13312,
+      "sha256": "36f18974b2e72de224e2ee49eca1616d28bd73808b62ffff063148facc001831",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "story-media/roundtrip-01/import.docx",
+      "bytes": 19825,
+      "sha256": "b99d87a549d24046671505761c11fc9d870accf6f06b110ddd5d47c03aec7cd2",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "story-media/roundtrip-01/native-docx/converted.docx",
+      "bytes": 16561,
+      "sha256": "bd39dcbe180d1250db78faaf6fdca5263d00a3048dd2e59a5d7855d2bcdbcf2f",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "story-media/roundtrip-02/binary/import.doc",
+      "bytes": 13312,
+      "sha256": "e9e95c2db2ac480db8ccb0d2fdf2765e815d3ee187105b0626524aadfef32b58",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "story-media/roundtrip-02/import.docx",
+      "bytes": 19826,
+      "sha256": "ae7f46b09866f23ef7f24f776a7c983225ff3200b11a92318316061ca61c262d",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "story-media/roundtrip-02/native-docx/import.docx",
+      "bytes": 16561,
+      "sha256": "bd801ed8d9711deb51fd25c50d9f9b022a289c4c3252cf76ff2f7ebc64f3d715",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "story-media/roundtrip-03/binary/import.doc",
+      "bytes": 13312,
+      "sha256": "aa18d445800873bfbdae0ec6b90894024df887d5e423ca9a53390e1d73b34c30",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "story-media/roundtrip-03/import.docx",
+      "bytes": 19826,
+      "sha256": "dc48e5447c4a2210a836eb301c862ebf5ffe5d7c29072f58659bb63df1b9d04e",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "story-media/roundtrip-03/native-docx/import.docx",
+      "bytes": 16561,
+      "sha256": "1dc00269480aa3067f6d8ffc5e73340a7e54ddbcd1d2491f5880443a2e685de9",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "table-borders/bridge/table-borders.doc",
+      "bytes": 10752,
+      "sha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "table-borders/converted.docx",
+      "bytes": 6426,
+      "sha256": "e0f0ba5ef17218792904948ee06dac96e7f55e052f8e0b650783a4dd07c22343",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "table-borders/native-docx/table-borders.docx",
+      "bytes": 6144,
+      "sha256": "34117ac4842d754e704711276bd7f0ea8322d81070ce224b24cbfa8680b34b44",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "table-borders/roundtrip-01/binary/converted.doc",
+      "bytes": 10752,
+      "sha256": "80c69a14e7216744ea3b103c7beb69adfb3f5bfa2b6ef49afdc9952ddc218199",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "table-borders/roundtrip-01/import.docx",
+      "bytes": 6503,
+      "sha256": "e46f3c6054e4b8065caf67e44dd6b3bb5db96fb21cacc442f4f08bc1a1ce47b9",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "table-borders/roundtrip-01/native-docx/converted.docx",
+      "bytes": 7322,
+      "sha256": "0f3119fea24753dae6cd1beec0ebbbd33f0f69085b7d99f638722909e7162d84",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "table-borders/roundtrip-02/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "9ab5fc40f343a4a1237a8f035e7c1437861b20d886210f2147d9f2ade906a5c6",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "table-borders/roundtrip-02/import.docx",
+      "bytes": 6530,
+      "sha256": "18f48abcadf5d27756c465eff54f102f8dc503142160b16b978f506c7bcfa8db",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "table-borders/roundtrip-02/native-docx/import.docx",
+      "bytes": 7356,
+      "sha256": "76af223206e0ea0b91b323d5f65284f4872a1553965f0dcf63bcabcd1a5d306a",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "table-borders/roundtrip-03/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "d11a70957441748d8e65e077f96dc4dd4e34cbd34e538b19f87a59f5d4e43618",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "table-borders/roundtrip-03/import.docx",
+      "bytes": 6542,
+      "sha256": "0804cf8b64dbb43ec5e32f2fde21257e47fac90c8d77de9dfccbd08d9272d145",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "table-borders/roundtrip-03/native-docx/import.docx",
+      "bytes": 7372,
+      "sha256": "958a0677bb2e044830163773e0c2896d59cdcd675e9263bb55064ed1fd5afd52",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "wmf-vectors/bridge/wmf-vectors.doc",
+      "bytes": 9728,
+      "sha256": "da2cc5f74733278364c7d52dc8cf83ac4e6cc4615a3d4a855b3722bd7e2ecc67",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "wmf-vectors/converted.docx",
+      "bytes": 5935,
+      "sha256": "a8e065c746e21ef5b8476283fbf697a05bda829f5937b7f3a441ad1285424b06",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "wmf-vectors/native-docx/wmf-vectors.docx",
+      "bytes": 5730,
+      "sha256": "40ecfcc29b166ec948aad7c92881fb0462274f2cf41239de7602b6388591e759",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "wmf-vectors/roundtrip-01/binary/converted.doc",
+      "bytes": 9728,
+      "sha256": "3f7cc296d1b4151fc8db52c8c96a18c61df8beedc22a334685517484e5b06d33",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "wmf-vectors/roundtrip-01/import.docx",
+      "bytes": 5943,
+      "sha256": "4540136b2051a948e21733ebbc98f298dd826efaa3cae33c0bd23af4c6e1b572",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "wmf-vectors/roundtrip-01/native-docx/converted.docx",
+      "bytes": 5941,
+      "sha256": "fdf3512b42729d0d6721ddadb3cd1651e672f086451b06043a3eda52cec33084",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "wmf-vectors/roundtrip-02/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "ebbd6c6bea74352e7a00f48638bc6cd6dc0dd54645804ff5bd93f39b8b17d400",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "wmf-vectors/roundtrip-02/import.docx",
+      "bytes": 5944,
+      "sha256": "72bf9c21cfc77ef76fadacddfd1e0a2c0e755be4b2113df3babb9073ab6d2cd1",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "wmf-vectors/roundtrip-02/native-docx/import.docx",
+      "bytes": 5941,
+      "sha256": "efc195e03488f651a60b8f50f9a5610442437ad0a3fac4c1bc328d22e098818b",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "wmf-vectors/roundtrip-03/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "258b403ecf37c7c5140cd2190fa5ba4a0a6fa4b6ea1b847d92a0cd9fff4c88f2",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "wmf-vectors/roundtrip-03/import.docx",
+      "bytes": 5944,
+      "sha256": "dbfbb4e9ee5bec5f3dbeecc3aac9e36c060168fa68d469b04449f834dcb00631",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "wmf-vectors/roundtrip-03/native-docx/import.docx",
+      "bytes": 5940,
+      "sha256": "14365dbb6cf84d3bbf9d80e964d746beee76d4d6603db12566efeb365c193830",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word-altchunk/bridge/word-altchunk.doc",
+      "bytes": 10752,
+      "sha256": "4b5d31bb21b87c311242c6dc17c84515749e37ed8baf9af20541c2504a0ac496",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-altchunk/converted.docx",
+      "bytes": 6382,
+      "sha256": "b27704d2100176bb08951ad9bc049e4dece438dc92b97fa918cbff50f3ded738",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-altchunk/native-docx/word-altchunk.docx",
+      "bytes": 6937,
+      "sha256": "de93c2878afb724407edfced286b06466a5f6103689c29757feff9a7276089dd",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-altchunk/roundtrip-01/binary/converted.doc",
+      "bytes": 11264,
+      "sha256": "3452aa0784217d9ea847963972e88f6f583321166a9e9976cfa9439a2ac81741",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-altchunk/roundtrip-01/import.docx",
+      "bytes": 6429,
+      "sha256": "2286a57194de8d300306a9df48a88353545920a5b03ccba0af3eee3a5a8d5e0a",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-altchunk/roundtrip-01/native-docx/converted.docx",
+      "bytes": 7485,
+      "sha256": "e664cbb81c6757929fd8363e98c53d29791b86f285ee3468162ade3d3e2c2251",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word-altchunk/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "62cefe27d3203bced3cb96fdd3efa0b0c4abab26d47224cd995a1aad0201b230",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-altchunk/roundtrip-02/import.docx",
+      "bytes": 6431,
+      "sha256": "f5fe205b4d4ff55bc9911086b686b538f14d12afe880e2243cd1588e7b6701b2",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-altchunk/roundtrip-02/native-docx/import.docx",
+      "bytes": 7485,
+      "sha256": "2937f83efece4adc9f84a0e1f6843099eaab0286f57d4361f0c0da7d201ad304",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word-altchunk/roundtrip-03/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "373f4302120bd1bbbed18e17fe1ec1991e934b83d91166da2718e943a6489b62",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-altchunk/roundtrip-03/import.docx",
+      "bytes": 6430,
+      "sha256": "b82ce4398908ce0aadb02184e80917f35975c0b555053faa31198de480f35b3a",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-altchunk/roundtrip-03/native-docx/import.docx",
+      "bytes": 7485,
+      "sha256": "313a4755b07823867472e51510662ba7c3177a77187bf731c90afbaffa9e3e1d",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word-compatibility/bridge/word-compatibility.doc",
+      "bytes": 11264,
+      "sha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-compatibility/converted.docx",
+      "bytes": 10851,
+      "sha256": "042a7da248688e907bfbea5f2aa671d82480c3179327bb936d8fea090af338d4",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-compatibility/native-docx/word-compatibility.docx",
+      "bytes": 8053,
+      "sha256": "a7b2ca3df3742f62e83499a9f37ae5825c4a6b92db03fdea5ed518d3d01440dc",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-compatibility/roundtrip-01/binary/converted.doc",
+      "bytes": 11264,
+      "sha256": "1ebd8f5eec735571283ed83a893325fa9380f88989d57f02cc6e8f63b6ae5580",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-compatibility/roundtrip-01/import.docx",
+      "bytes": 11060,
+      "sha256": "29914431a92aab74977103076722e127cf2076d01b6acbe32f8ece34a352b9fb",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-compatibility/roundtrip-01/native-docx/converted.docx",
+      "bytes": 9582,
+      "sha256": "6f32d06c89064d66013c64ffa4f32228d7cbac7ef3ad7cdcc7f1d1e71a6f74b5",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word-compatibility/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "2d3fa997ad6367c51943bf9ac25f041368a13d4a40261fbec8a5db41c864312b",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-compatibility/roundtrip-02/import.docx",
+      "bytes": 11110,
+      "sha256": "19ec20295632f2bc838c1d24708d8a3b6bd302d4afe9d4ee3a694d13ed3c6617",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word-compatibility/roundtrip-02/native-docx/import.docx",
+      "bytes": 8957,
+      "sha256": "43f53f2705ef5eb365470ebd465dc83a5a597d0071a9976392de98a8d5a91249",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word-compatibility/roundtrip-03/binary/import.doc",
+      "bytes": 12288,
+      "sha256": "ad6f4978ce751d0ef2849c05ef589f10ff05aed0fa4ff47d48721299e94cfc02",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-compatibility/roundtrip-03/import.docx",
+      "bytes": 11160,
+      "sha256": "d270a295dc86b07967ce5fe2258bff2b755d4c4acba1e8c41261de09ce4e5a4b",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word-compatibility/roundtrip-03/native-docx/import.docx",
+      "bytes": 8973,
+      "sha256": "66cdc4146b05531ce30f0b8feb23fc6b9f620d87983b0ed11fafd6a4999e0136",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word/bridge/word.doc",
+      "bytes": 13824,
+      "sha256": "2d2943d799d3a48430a90bff0bee68d7ab30fc2e5c26666d793160439e1f483d",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word/converted.docx",
+      "bytes": 14906,
+      "sha256": "5169e651d92489ad9ac8902efc049a67f47f49906fb1a46522f1ec1831fe74e0",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word/native-docx/word.docx",
+      "bytes": 10397,
+      "sha256": "4f277a9dd49364514f33d4b61f4f6dada0b92be1e39a97b30ba483f09977f24f",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word/roundtrip-01/binary/converted.doc",
+      "bytes": 14848,
+      "sha256": "e39c6da767a392c3b1b3d58971067d457257e51898fcf7bd74c8227ac3240ec9",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word/roundtrip-01/import.docx",
+      "bytes": 13748,
+      "sha256": "d3581e15a76b51c5f3d1daf07b785baea4f2c2152c39090f920bec4e44ef320d",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word/roundtrip-01/native-docx/converted.docx",
+      "bytes": 10839,
+      "sha256": "295249c3e1a204512052ebc3ae616bc88fe1629ce32188dcd8e0ba588c5930de",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word/roundtrip-02/binary/import.doc",
+      "bytes": 14848,
+      "sha256": "34a5ed6e2a818a9bab87aeb7bb5d205299cef0f3a2f306f110977c3fc5927343",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word/roundtrip-02/import.docx",
+      "bytes": 13749,
+      "sha256": "3cded021e08205408235d1b85cc27eabae2b936559272c4005f2792216249d40",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word/roundtrip-02/native-docx/import.docx",
+      "bytes": 10839,
+      "sha256": "e3659555c2d8f41e8e5a1c4431c03fa74ef859f97dc498905fb877abf7fa1aad",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word/roundtrip-03/binary/import.doc",
+      "bytes": 14848,
+      "sha256": "b97100f287605c7fc89b73625c0f3bbc88dcdbc6c640a695aeba65e9b5095506",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word/roundtrip-03/import.docx",
+      "bytes": 13749,
+      "sha256": "3a73d7a7ed65e6c849473ece463b9e314a2c9397f2ac26c4b31615dfc985fe77",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word/roundtrip-03/native-docx/import.docx",
+      "bytes": 10839,
+      "sha256": "ac0728b5499674cb8bb966becb8565d31f05faa4d8b708bbd19523f54f3d4a0a",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word14-margin-origin/converted.docx",
+      "bytes": 24077,
+      "sha256": "711b644e36dcb03e9c6207907c35f387246138941a94ebd9cfb6c036ea648286",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word14-margin-origin/native-docx/source.docx",
+      "bytes": 16520,
+      "sha256": "87754d733abfb886c3eced82278b5e7aba5e6d3cdab5de2bd89c74a831c5b962",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-01/binary/converted.doc",
+      "bytes": 12288,
+      "sha256": "3258fe985f8b85f64b9e13ec1607b9cf57db6d0737db1138447bf89b40acf9d4",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-01/import.docx",
+      "bytes": 6969,
+      "sha256": "238ff1fa8539797867dd7027c44aaaa2326420291c0d279ce2d1f2fd38c12527",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6610,
+      "sha256": "87d4e6b6ceafd8aec18b233c29c3a488d07337c7c689a44f6f0c07532a454877",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-02/binary/import.doc",
+      "bytes": 12288,
+      "sha256": "10f1fea687b62dfcab4b4bac2a10ded951b2dc3638b2a209e184cca0abadcbef",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-02/import.docx",
+      "bytes": 7035,
+      "sha256": "e9665e450410d2196b7fb7de5748428b1654ba7a47b471d4ecab1d6f8e56db25",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-02/native-docx/import.docx",
+      "bytes": 6851,
+      "sha256": "7a016b552a28bb12423d9479bbc6221e8469908e5691370aaa17eb81afe68c9b",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-03/binary/import.doc",
+      "bytes": 12288,
+      "sha256": "94ca3f8a9041e55093b7ec6bc3823cc05d097cb82e2aa53fd4abe852e80a1129",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-03/import.docx",
+      "bytes": 7156,
+      "sha256": "baabaf8199869f8e79db9876ff8d4ea0d2a9338819e21336f52cf7ec7a0b5333",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word14-margin-origin/roundtrip-03/native-docx/import.docx",
+      "bytes": 6962,
+      "sha256": "b71e8c8b4e12e326b57e5af3fab0a537ff366a1497e07af3cff1c4d5f56d9724",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word14-margin-origin/source.doc",
+      "bytes": 55296,
+      "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word16-page-origin/converted.docx",
+      "bytes": 52517,
+      "sha256": "280ea69fcb49e005a751010c7df5e0eb9d68fc2bb097d9ef9568bdb6d8168547",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word16-page-origin/native-docx/source.docx",
+      "bytes": 18699,
+      "sha256": "ab127064111c4a923dffac42088d5f81f229aadf24a9d235d749646c6384fdfc",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word16-page-origin/roundtrip-01/binary/converted.doc",
+      "bytes": 24576,
+      "sha256": "0afe11e2355151b75a66d41e0bd1ec64aea5326e0a53c5b757775596f2cc5a30",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word16-page-origin/roundtrip-01/import.docx",
+      "bytes": 32019,
+      "sha256": "6b242f2a74567028abbb2968e0736e8717c7566246ce7d59094feb488727ddbc",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word16-page-origin/roundtrip-01/native-docx/converted.docx",
+      "bytes": 18831,
+      "sha256": "5d17073eb2388ccbbe5893095f25423a256cb723bde874ac6d78193c31488187",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word16-page-origin/roundtrip-02/binary/import.doc",
+      "bytes": 24576,
+      "sha256": "a3bc00aa9238ea9d616341bcd53b392bdf8900a8737031cb6dd63b8f6b2c70ba",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word16-page-origin/roundtrip-02/import.docx",
+      "bytes": 32011,
+      "sha256": "cb80b348dceab045dc06c5f00b3aa6a737ab5e71698f909dc352b8665364bbdd",
+      "sealedReportHashOccurrences": 4
+    },
+    {
+      "path": "word16-page-origin/roundtrip-02/native-docx/import.docx",
+      "bytes": 18851,
+      "sha256": "da3d62ade7ef23b26d8d54bf0efdb1fb0d7844391e78b8beb5d9956f0d0b0876",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word16-page-origin/roundtrip-03/binary/import.doc",
+      "bytes": 24576,
+      "sha256": "77177a62ab8bc870cf07070cd81c9161d7dbc6085ed986ac8fd02adf47cc138e",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word16-page-origin/roundtrip-03/import.docx",
+      "bytes": 32013,
+      "sha256": "7487960d657b7a0bd7a4e3b7ab52d89ddb9d8e55de77f2bc57dd6d369ff86b2e",
+      "sealedReportHashOccurrences": 3
+    },
+    {
+      "path": "word16-page-origin/roundtrip-03/native-docx/import.docx",
+      "bytes": 18856,
+      "sha256": "a50d30d36162e0b861db62307f1f6032358e1d01dd22fde137c414a440ccea69",
+      "sealedReportHashOccurrences": 2
+    },
+    {
+      "path": "word16-page-origin/source.doc",
+      "bytes": 63488,
+      "sha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "sealedReportHashOccurrences": 4
+    }
+  ]
+}

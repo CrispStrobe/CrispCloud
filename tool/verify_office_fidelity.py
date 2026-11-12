@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify Office inventory and independently pinned standalone parser bytes."""
+"""Verify Office inventory and pinned parser bytes and Git executable bits."""
 import argparse
 import json
 from pathlib import Path
@@ -33,10 +33,15 @@ def verify(root, source=None, legacy_source=None):
             failures.append('standalone parser mirror inventory mismatch')
         if legacy_source:
             pin = independent[legacy.PREFIX]['commit']
-            _, files = legacy.source_tree(legacy_source, pin)
+            _, files, modes = legacy.source_snapshot(legacy_source, pin)
             actual = {name: office.digest(data) for name, data in files.items()}
             if actual != pinned:
                 failures.append(f'standalone parser source mismatch at {pin}')
+            for name, mode in modes.items():
+                local = root / legacy.PREFIX / name
+                if (local.is_symlink() or not local.resolve().is_relative_to(root.resolve())
+                        or not local.is_file() or legacy.file_mode(local) != mode):
+                    failures.append(f'standalone parser mode mismatch: {name}')
     elif legacy_source:
         failures.append('standalone parser source entry is missing')
     return manifest, failures

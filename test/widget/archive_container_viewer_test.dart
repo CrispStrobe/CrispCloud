@@ -18,6 +18,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/archive_iso_fixtures.dart';
+import '../support/archive_package_fixtures.dart';
+import '../support/archive_rpm_fixtures.dart';
 import '../support/dmg_fixture.dart';
 import '../support/hfs_fixture.dart';
 import '../support/workflow_fake_client.dart';
@@ -247,6 +249,130 @@ void main() {
     expect(find.byType(InternalViewerDialog), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
+
+  for (final method in ['stored', 'mszip']) {
+    testWidgets(
+      'a $method CAB lists files, explains its limits and previews text',
+      (tester) async {
+        final bytes = File(
+          'test/fixtures/archives/reference-makecab-$method.cab',
+        ).readAsBytesSync();
+        await _memoryViewer(tester, bytes, 'documents.cab');
+        expect(find.text('dir1/file1'), findsOneWidget);
+        expect(find.text('dir2/file2'), findsOneWidget);
+        final details = find.byKey(const ValueKey('archive-format-notices'));
+        expect(details, findsOneWidget);
+        // CAB's unsupported compression methods make these details expanded
+        // on first display, so their boundaries are visible before a read.
+        expect(
+          find.textContaining('Single-cabinet stored and MSZIP files.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Publisher signatures'), findsOneWidget);
+        await tester.tap(find.text('Container details'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('dir1/file1'));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('file 1 contents', findRichText: true),
+          findsOneWidget,
+        );
+        expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+        expect(find.byType(SnackBar), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('an RPM exposes payload files and previews its text member', (
+    tester,
+  ) async {
+    final rpm = RpmFixture(
+      compressor: 'xz',
+      entries: [
+        const PackageFixtureEntry('docs', [], mode: 0x41ed),
+        PackageFixtureEntry(
+          'docs/hello.txt',
+          'RPM payload preview\n'.codeUnits,
+        ),
+      ],
+    );
+    await _memoryViewer(tester, rpm.bytes, 'package.rpm');
+    expect(find.text('docs/hello.txt'), findsOneWidget);
+    final details = find.byKey(const ValueKey('archive-format-notices'));
+    expect(details, findsOneWidget);
+    await tester.tap(find.text('Container details'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('RPM payload files only.'), findsOneWidget);
+    expect(find.textContaining('Package scripts are never'), findsOneWidget);
+    await tester.tap(find.text('Container details'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('docs/hello.txt'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('RPM payload preview', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+    expect(find.byType(SnackBar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'an installer opens extensionless PBZX Payload and its ODC files',
+    (tester) async {
+      final payload = File('test/fixtures/archives/reference-odc.pbzx')
+          .readAsBytesSync();
+      await _memoryViewer(
+        tester,
+        xarMemberFixture(payload, name: 'Payload'),
+        'installer.pkg',
+      );
+      expect(find.text('Payload'), findsOneWidget);
+      final outerDetails = find.byKey(const ValueKey('archive-format-notices'));
+      expect(outerDetails, findsOneWidget);
+      await tester.tap(find.text('Container details'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Publisher signatures are not verified'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Container details'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Payload'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+      expect(find.text('docs/hello.txt'), findsOneWidget);
+      expect(find.text('docs/odd'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('archive-format-notices')),
+        findsNWidgets(2),
+      );
+      final innerDetails = find.text('Container details').last;
+      await tester.tap(innerDetails);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('PBZX is read-only.'), findsOneWidget);
+      expect(
+        find.textContaining('Package signatures are not verified.'),
+        findsOneWidget,
+      );
+      await tester.tap(innerDetails);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('docs/hello.txt'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(
+          'Independent portable CPIO fixture',
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(InternalViewerDialog), findsNWidgets(3));
+      expect(find.byType(SnackBar), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('empty ZIP packages still display their container details', (
     tester,
