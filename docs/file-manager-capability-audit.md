@@ -119,7 +119,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Text comparison, merge and binary comparison | Implemented with limits | `lib/services/file_comparison_service.dart`, diff viewer; text merge capped at 8 MiB, binary comparison streams full contents. |
 | Local/remote recursive folder comparison and one/two-way sync | Implemented | Directory comparison, sync engine, captured sources and reviewed plans. |
 | Folder-to-ZIP sync | Missing | Comparison cannot use an archive as a writable endpoint. |
-| UUE/XXE/MIME file encode/decode | Missing | Needs explicit streaming codecs and captured output publication; MIME scope must be defined. |
+| UUE/XXE/MIME file encode/decode | Implemented for documented formats and capable destinations | **Added in G13.** Streaming UUE/XXE and single-part Base64 MIME, strict input validation, verified exclusive output and explicit new filenames. Multipart/quoted-printable MIME and unsafe destination backends are unavailable. See [file conversion](file-conversion.md). |
 | Split/combine large files | Implemented | `lib/services/file_split_service.dart`; manifests, hashes and reviewed restart recovery. |
 | Duplicate file search | Implemented | Size prefilter followed by full SHA-256 verification in `duplicate_finder_service.dart`. |
 | Name/extension/size/date/content selection and search | Implemented | Shared criteria, wildcard/regex modes, saved searches and selections. |
@@ -181,7 +181,7 @@ explicitly implemented or closed entry claims delivered behavior.
 | Quick Open for saved objects | **Completed in G02.** Direct actions retain source identity, validate original tab restoration and open rename review without mutations. See [Quick Open](quick-open.md). |
 | Configurable main-menu structure | **Implemented in G04.** Validated command identifiers and layouts, inactive preview, reset/import/export and last-valid recovery are covered by the 96-test menu integration gate. Native presentation remains G50/G51. See [main menus](main-menus.md). |
 | Temporary gathering stack | Build a dedicated drop/collect surface on existing source-bound collections; preserve original references until a reviewed transfer succeeds. |
-| UUE/XXE/MIME file conversion | Implement streaming codecs and verified output publication; define MIME attachment/header scope before exposing the command. |
+| UUE/XXE/MIME file conversion | **Completed in G13 for the documented formats.** All 80 codec/service/dialog tests passed, including real native exclusive publication. Single-part Base64 MIME and backend capability limits remain explicit. See [file conversion](file-conversion.md). |
 | Folder-to-archive sync and archive-to-archive transfer | Add writable archive endpoints to comparison/transfer planning, preserve passwords and container identity, and verify/repack the original container before reporting success. |
 | Larger background archive jobs | Move bounded packing to a cancellable worker or streaming spool, add durable queue/recovery behavior, and validate output without whole-container buffering. |
 | Additional archive formats | Review reader/writer capability, limits, licensing and malformed-input handling individually. Read-only support does not imply editable or creatable archives. |

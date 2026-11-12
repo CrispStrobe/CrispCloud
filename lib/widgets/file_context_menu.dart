@@ -1,6 +1,8 @@
 import '../l10n/commander_strings.dart';
 import '../l10n/archive_creation_strings.dart';
 import 'archive_creation_dialog.dart';
+import '../l10n/file_conversion_strings.dart';
+import 'file_conversion_dialog.dart';
 import 'file_delete_dialog.dart';
 // widgets/file_context_menu.dart
 
@@ -1225,6 +1227,35 @@ void showFileContextMenu(
         onTap: () => Future<void>.delayed(Duration.zero, () async {
           if (context.mounted) {
             await showArchiveWorkspaceDialog(context, ref, side, file);
+          }
+        }),
+      ),
+    );
+  }
+
+  if (!isMultiSelect &&
+      !file.isFolder &&
+      file.isSymlink != true &&
+      file.path != null &&
+      (origin.source is LocalPanelSource ||
+          origin.source is RemotePanelSource)) {
+    items.add(
+      PopupMenuItem(
+        child: ListTile(
+          leading: const Icon(Icons.transform),
+          title: Text(
+            FileConversionStrings(context).text('Encode / decode file…'),
+          ),
+        ),
+        onTap: () => Future<void>.delayed(Duration.zero, () async {
+          if (context.mounted) {
+            await showFileConversionDialog(
+              context,
+              ref,
+              side,
+              file,
+              sourceOrigin: origin,
+            );
           }
         }),
       ),
