@@ -393,6 +393,13 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                if (_format.legacyCpio)
+                  Text(
+                    tr(
+                      'Use legacy CPIO for compatibility. These profiles have no content checksum or encryption; names, sizes and metadata must fit their older fields.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (_format == ArchiveCreationFormat.hfsx ||
                     _format == ArchiveCreationFormat.dmg)
                   Text(

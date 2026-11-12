@@ -56,6 +56,37 @@ String archiveCreationError(BuildContext context, Object error) {
 }
 
 const _messages = <String, List<String>>{
+  'CPIO (binary, little-endian)': [
+    'CPIO (binär, Little Endian)',
+    'CPIO (binaire, petit-boutiste)',
+    'CPIO (binario, little-endian)',
+    'CPIO (binário, little-endian)',
+    'CPIO（二进制，小端）',
+    'CPIO（バイナリ、リトルエンディアン）',
+    'CPIO (바이너리, 리틀 엔디언)',
+    'CPIO (ثنائي، الأقل أهمية أولاً)',
+  ],
+  'CPIO (binary, big-endian)': [
+    'CPIO (binär, Big Endian)',
+    'CPIO (binaire, gros-boutiste)',
+    'CPIO (binario, big-endian)',
+    'CPIO (binário, big-endian)',
+    'CPIO（二进制，大端）',
+    'CPIO（バイナリ、ビッグエンディアン）',
+    'CPIO (바이너리, 빅 엔디언)',
+    'CPIO (ثنائي، الأكثر أهمية أولاً)',
+  ],
+  'Use legacy CPIO for compatibility. These profiles have no content checksum or encryption; names, sizes and metadata must fit their older fields.':
+      [
+        'Ältere CPIO-Formate dienen der Kompatibilität. Sie bieten weder Inhaltsprüfsummen noch Verschlüsselung; Namen, Größen und Metadaten müssen in die älteren Felder passen.',
+        'Utilisez les anciens formats CPIO pour la compatibilité. Ils n’offrent ni somme de contrôle du contenu ni chiffrement ; noms, tailles et métadonnées doivent tenir dans leurs anciens champs.',
+        'Usa CPIO clásico por compatibilidad. Estos formatos no tienen suma de comprobación del contenido ni cifrado; nombres, tamaños y metadatos deben caber en sus campos antiguos.',
+        'Use CPIO antigo para compatibilidade. Estes formatos não têm soma de verificação do conteúdo nem encriptação; nomes, tamanhos e metadados devem caber nos campos antigos.',
+        '为兼容性使用旧版 CPIO。这些格式没有内容校验和或加密；名称、大小和元数据必须符合旧字段的范围。',
+        '互換性が必要な場合に旧形式のCPIOを使用します。内容のチェックサムや暗号化はなく、名前、サイズ、メタデータは旧形式のフィールドに収まる必要があります。',
+        '호환성이 필요할 때 기존 CPIO 형식을 사용하세요. 내용 체크섬과 암호화가 없으며 이름, 크기, 메타데이터는 이전 필드의 범위에 맞아야 합니다.',
+        'استخدم صيغ CPIO القديمة للتوافق. لا تحتوي على مجموع تحقق للمحتوى أو تشفير؛ ويجب أن تتوافق الأسماء والأحجام والبيانات الوصفية مع حقولها القديمة.',
+      ],
   'gzip — one file': [
     'gzip — eine Datei',
     'gzip — un fichier',
