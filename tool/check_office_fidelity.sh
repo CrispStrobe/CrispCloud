@@ -13,6 +13,7 @@ flutter test --coverage --coverage-path build/fidelity-host/coverage/lcov.info \
   test/office_section_break_fidelity_test.dart \
   test/office_editor_fixes_test.dart \
   test/office_footnote_test.dart \
+  test/office_ribbon_footnotes_test.dart \
   test/office_document_service_test.dart \
   test/office_preview_fidelity_test.dart \
   test/office_preview_strings_test.dart \
@@ -22,8 +23,9 @@ flutter test --coverage --coverage-path build/fidelity-host/coverage/lcov.info \
   test/widget/office_editor_dialog_test.dart \
   test/widget/office_editor_ribbon_test.dart \
   test/widget/office_paragraph_dialog_test.dart \
+  test/widget/office_paragraph_fidelity_test.dart \
   test/widget/office_save_fidelity_test.dart
 python3 -m unittest discover -s tool -p test_office_host_coverage.py
-python3 tool/office_host_coverage.py
+python3 tool/office_host_coverage.py --require-all-sources
 python3 tool/office_host_evidence.py verify
 python3 packages/quds_office_engine/tool/fidelity/corpus.py verify build/fidelity

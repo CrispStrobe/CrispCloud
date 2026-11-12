@@ -578,26 +578,26 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
 }) {
   WmlJustification align = current.justification;
   final TextEditingController left =
-      TextEditingController(text: current.indent.left.toStringAsFixed(0));
+      TextEditingController(text: current.indent.left.toString());
   final TextEditingController right =
-      TextEditingController(text: current.indent.right.toStringAsFixed(0));
+      TextEditingController(text: current.indent.right.toString());
   final TextEditingController first =
-      TextEditingController(text: current.indent.firstLine.toStringAsFixed(0));
+      TextEditingController(text: current.indent.firstLine.toString());
   final TextEditingController hanging =
-      TextEditingController(text: current.indent.hanging.toStringAsFixed(0));
+      TextEditingController(text: current.indent.hanging.toString());
   final TextEditingController before =
-      TextEditingController(text: current.spacingBefore.toStringAsFixed(0));
+      TextEditingController(text: current.spacingBefore.toString());
   final TextEditingController after =
-      TextEditingController(text: current.spacingAfter.toStringAsFixed(0));
+      TextEditingController(text: current.spacingAfter.toString());
   final TextEditingController line =
-      TextEditingController(text: current.lineSpacing.toStringAsFixed(2));
+      TextEditingController(text: current.lineSpacing.toString());
   WmlLineSpacingRule lineSpacingRule = current.lineSpacingRule;
   final TextEditingController dropCap =
       TextEditingController(text: current.dropCapLines.toString());
   final TextEditingController border =
       TextEditingController(text: current.borderColor ?? '');
   final TextEditingController tabStops = TextEditingController(
-    text: current.tabs.map((WmlTabStop t) => t.position.toStringAsFixed(0)).join(', '),
+    text: current.tabs.map((WmlTabStop t) => t.position.toString()).join(', '),
   );
   bool keepTogether = current.keepTogether;
   bool pageBreakBefore = current.pageBreakBefore;
@@ -758,8 +758,29 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
               ),
               ElevatedButton(
                 onPressed: () {
-                  double parse(TextEditingController c, double fallback) =>
-                      double.tryParse(c.text.trim()) ?? fallback;
+                  double parse(
+                    TextEditingController c,
+                    double fallback, {
+                    bool nonnegative = false,
+                    bool positive = false,
+                  }) {
+                    final value = double.tryParse(c.text.trim());
+                    if (value == null || !value.isFinite ||
+                        (nonnegative && value < 0) ||
+                        (positive && value <= 0)) {
+                      return fallback;
+                    }
+                    return value;
+                  }
+                  final positions = tabStops.text.trim().isEmpty
+                      ? <double?>[]
+                      : tabStops.text.split(',').map(
+                          (value) => double.tryParse(value.trim()),
+                        ).toList();
+                  // An invalid token must not silently delete an imported tab.
+                  final validTabs = positions.every(
+                    (value) => value != null && value.isFinite && value >= 0,
+                  );
                   final String borderColor = border.text
                       .trim()
                       .replaceAll('#', '')
@@ -768,25 +789,22 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     align: align,
                     left: parse(left, current.indent.left),
                     right: parse(right, current.indent.right),
-                    firstLine: parse(first, current.indent.firstLine),
-                    hanging: parse(hanging, current.indent.hanging),
-                    spacingBefore: parse(before, current.spacingBefore),
-                    spacingAfter: parse(after, current.spacingAfter),
-                    lineSpacing: parse(line, current.lineSpacing),
+                    firstLine: parse(first, current.indent.firstLine, nonnegative: true),
+                    hanging: parse(hanging, current.indent.hanging, nonnegative: true),
+                    spacingBefore: parse(before, current.spacingBefore, nonnegative: true),
+                    spacingAfter: parse(after, current.spacingAfter, nonnegative: true),
+                    lineSpacing: parse(line, current.lineSpacing, positive: true),
                     lineSpacingRule: lineSpacingRule,
                     dropCapLines:
                         (int.tryParse(dropCap.text.trim()) ?? current.dropCapLines)
                             .clamp(0, 10),
                     borderColor:
-                        RegExp(r'^[0-9A-F]{6}$').hasMatch(borderColor)
+                        borderColor.isEmpty || RegExp(r'^[0-9A-F]{6}$').hasMatch(borderColor)
                             ? borderColor
-                            : '',
-                    tabStops: tabStops.text
-                        .split(',')
-                        .map((String value) => double.tryParse(value.trim()))
-                        .whereType<double>()
-                        .where((double value) => value >= 0)
-                        .toList(),
+                            : current.borderColor ?? '',
+                    tabStops: validTabs
+                        ? positions.cast<double>()
+                        : current.tabs.map((tab) => tab.position).toList(),
                     keepTogether: keepTogether,
                     pageBreakBefore: pageBreakBefore,
                   ));
