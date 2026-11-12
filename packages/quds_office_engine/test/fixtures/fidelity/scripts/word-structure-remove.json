@@ -1,0 +1,8 @@
+[
+  {"op":"commentDelete","id":0},
+  {"op":"tocRemove","toc":0},
+  {"op":"frameRemove","frame":0},
+  {"op":"tableUnmerge","table":0,"row":0,"column":0},
+  {"op":"imageRemove","image":0},
+  {"op":"paragraphFormat","paragraph":1,"columnBreakBefore":false,"dropCapLines":0,"shading":null,"border":null}
+]

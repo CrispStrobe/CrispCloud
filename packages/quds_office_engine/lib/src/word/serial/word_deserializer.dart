@@ -48,7 +48,22 @@ class WordDeserializer {
 
   /// read API.
   WmlDocument read(OpcPackage package) {
+    // A reader may be reused after a truncated document or a parse failure.
+    // Story state belongs to one document and must not contaminate the next.
+    _pendingEquations.clear();
+    _pendingVisuals.clear();
+    _pendingFrames.clear();
+    _openCommentIds.clear();
+    _tablesWithOwnBorders.clear();
+    _tableLooks.clear();
+    _notBold.clear();
+    _notItalic.clear();
+    _pendingParagraphSectPr = null;
+    _document = null;
+    _package = null;
+    _docUri = null;
     _readingNote = null;
+    _noteMarkCaptured = false;
     final PackageRelationship? office = package.packageRelationships
         .firstByType(RelationshipTypes.officeDocument);
     final String docUri = office == null
@@ -270,6 +285,9 @@ class WordDeserializer {
         paragraph.inlines.addAll(
           _readHyperlinkInlines(reader, package, docUri, paragraph),
         );
+      } else if (reader.localName == 'fldSimple' &&
+          reader.namespaceUri == OfficeNamespaces.w) {
+        paragraph.inlines.addAll(_readSimpleField(reader, package, docUri));
       } else if (reader.localName == 'commentRangeStart') {
         final int? id = int.tryParse(
           reader.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
@@ -323,6 +341,58 @@ class WordDeserializer {
       }
     }
     return paragraph;
+  }
+
+  List<WmlInline> _readSimpleField(
+    XmlPullReader reader,
+    OpcPackage package,
+    String docUri,
+  ) {
+    final XmlElement source = XmlDocument.readElement(reader);
+    final String? instruction = source.getAttribute(
+      'instr',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    final XmlPullReader inner = WordMarkupCompatibilityReader(
+      XmlDocument(root: source).toXmlString(declaration: false),
+    )..next();
+    final WmlParagraph result = _readParagraph(inner, package, docUri);
+    final List<XmlElement> children = source.childElements.toList();
+    final bool singleRun =
+        children.isEmpty ||
+        (children.length == 1 &&
+            children.single.localName == 'r' &&
+            children.single.namespaceUri == OfficeNamespaces.w);
+    // Retain the native one-run field boundary. Arbitrary rich/nested fields
+    // need a span model; do not turn their entire containing paragraph into a
+    // field or duplicate one instruction onto each result run.
+    if (instruction != null &&
+        singleRun &&
+        result.properties.fieldInstruction == null &&
+        result.inlines.length <= 1 &&
+        (result.inlines.isEmpty || result.inlines.single is WmlRun)) {
+      final WmlRun run = result.inlines.isEmpty
+          ? WmlRun()
+          : result.inlines.single as WmlRun;
+      if (!run.isAtomic) {
+        final String? locked = source.getAttribute(
+          'fldLock',
+          namespaceUri: OfficeNamespaces.w,
+        );
+        final String? dirty = source.getAttribute(
+          'dirty',
+          namespaceUri: OfficeNamespaces.w,
+        );
+        bool enabled(String? value) =>
+            value == '1' || value == 'true' || value == 'on';
+        run
+          ..fieldInstruction = instruction
+          ..fieldLocked = enabled(locked)
+          ..fieldDirty = dirty == null ? null : enabled(dirty);
+        return <WmlInline>[run];
+      }
+    }
+    return result.inlines;
   }
 
   List<WmlInline> _readRunInlines(
@@ -726,6 +796,17 @@ class WordDeserializer {
     if (rel == null || rel.target.isEmpty) {
       return null;
     }
+    if (rel.targetMode == RelationshipTargetMode.external) {
+      final String scheme =
+          Uri.tryParse(rel.target)?.scheme.toLowerCase() ?? '';
+      final bool drivePath = RegExp(r'^[A-Za-z]:[\\/]').hasMatch(rel.target);
+      if (scheme.isNotEmpty && scheme != 'file' && !drivePath) {
+        return WmlHyperlink(url: rel.target);
+      }
+      // Relationship targets are file/URI destinations, not bookmark names.
+      // In particular, an extensionless relative file must not become w:anchor.
+      return WmlHyperlink(file: rel.target);
+    }
     return WmlHyperlink.fromTarget(rel.target);
   }
 
@@ -761,6 +842,10 @@ class WordDeserializer {
             block.properties.fieldInstruction,
           );
           open = WmlToc(minLevel: min, maxLevel: max);
+          WordToc.applyPageNumberInstruction(
+            open,
+            block.properties.fieldInstruction,
+          );
           WordToc.absorbResult(open, block);
           if (block.properties.fieldEnd) {
             collapsed.add(open);
@@ -775,6 +860,10 @@ class WordDeserializer {
             );
             open.minLevel = min;
             open.maxLevel = max;
+            WordToc.applyPageNumberInstruction(
+              open,
+              block.properties.fieldInstruction,
+            );
           }
           WordToc.absorbResult(open, block);
           if (block.properties.fieldEnd) {

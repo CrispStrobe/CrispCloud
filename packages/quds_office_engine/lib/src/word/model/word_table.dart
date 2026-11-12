@@ -237,11 +237,11 @@ abstract final class WordTable {
   }
 
   static void _appendCellContent(WmlTableCell dest, WmlTableCell source) {
-    for (final WmlBlock block in source.blocks) {
-      if (block is WmlParagraph && block.text.trim().isNotEmpty) {
-        dest.blocks.add(WmlClone.block(block));
-      }
-    }
+    // Merging moves the complete ordered cell story, including pictures,
+    // nested tables, frames, equations, and apparently empty anchor paragraphs.
+    // Keep node identity so earlier edits can still be undone after unmerging.
+    dest.blocks.addAll(source.blocks);
+    source.blocks.clear();
   }
 
   /// merge API.
@@ -542,16 +542,15 @@ abstract final class WordTable {
 
   /// restore API.
   static void restore(WmlTable table, WmlTable snap) {
+    // Restored objects must not alias the reusable snapshot. Subsequent edits
+    // otherwise mutate the very state a later restore is meant to recover.
+    final WmlTable restored = WmlClone.table(snap);
     table.grid
       ..clear()
-      ..addAll(snap.grid);
-    table.properties
-      ..alignment = snap.properties.alignment
-      ..floating = snap.properties.floating
-      ..cellMargin = snap.properties.cellMargin
-      ..rightToLeft = snap.properties.rightToLeft;
+      ..addAll(restored.grid);
+    table.properties = restored.properties;
     table.rows
       ..clear()
-      ..addAll(snap.rows);
+      ..addAll(restored.rows);
   }
 }

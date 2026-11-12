@@ -14,6 +14,7 @@ FIXTURES = ROOT/'test/fixtures/fidelity/scripts'
 def audit(catalog):
     scenarios = {'docx':[FIXTURES/'word.json',ROOT/'tool/fidelity/example_steps.json'],
                  'xlsx':[FIXTURES/'sheet.json'],'pptx':[FIXTURES/'slide.json']}
+    scenarios['docx'].extend(sorted(FIXTURES.glob('word-structure-*.json')))
     rows=[]
     for extension, operations in catalog.items():
         evidence={name:[] for name in operations}

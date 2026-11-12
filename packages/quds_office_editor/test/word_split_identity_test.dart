@@ -85,6 +85,7 @@ void main() {
       final original =
           controller.document.paragraphs.single.properties.bookmarkName;
       controller.caret.logicalIndex = 5;
+      controller.caret.collapseSelection();
       controller.insertParagraphBreak();
       expect(
         controller.document.paragraphs.map((p) => p.properties.bookmarkName),
@@ -145,6 +146,7 @@ void main() {
       final controller = WordEditorController(document: document);
       addTearDown(controller.dispose);
       controller.caret.logicalIndex = 5;
+      controller.caret.collapseSelection();
       controller.insertParagraphBreak();
       expect(document.paragraphs.map((p) => p.properties.listRestart), [
         4,

@@ -577,27 +577,36 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
   required WmlParagraphProps current,
 }) {
   WmlJustification align = current.justification;
-  final TextEditingController left =
-      TextEditingController(text: current.indent.left.toStringAsFixed(0));
-  final TextEditingController right =
-      TextEditingController(text: current.indent.right.toStringAsFixed(0));
-  final TextEditingController first =
-      TextEditingController(text: current.indent.firstLine.toStringAsFixed(0));
-  final TextEditingController hanging =
-      TextEditingController(text: current.indent.hanging.toStringAsFixed(0));
-  final TextEditingController before =
-      TextEditingController(text: current.spacingBefore.toStringAsFixed(0));
-  final TextEditingController after =
-      TextEditingController(text: current.spacingAfter.toStringAsFixed(0));
-  final TextEditingController line =
-      TextEditingController(text: current.lineSpacing.toStringAsFixed(2));
+  final TextEditingController left = TextEditingController(
+    text: current.indent.left.toString(),
+  );
+  final TextEditingController right = TextEditingController(
+    text: current.indent.right.toString(),
+  );
+  final TextEditingController first = TextEditingController(
+    text: current.indent.firstLine.toString(),
+  );
+  final TextEditingController hanging = TextEditingController(
+    text: current.indent.hanging.toString(),
+  );
+  final TextEditingController before = TextEditingController(
+    text: current.spacingBefore.toString(),
+  );
+  final TextEditingController after = TextEditingController(
+    text: current.spacingAfter.toString(),
+  );
+  final TextEditingController line = TextEditingController(
+    text: current.lineSpacing.toString(),
+  );
   WmlLineSpacingRule lineSpacingRule = current.lineSpacingRule;
-  final TextEditingController dropCap =
-      TextEditingController(text: current.dropCapLines.toString());
-  final TextEditingController border =
-      TextEditingController(text: current.borderColor ?? '');
+  final TextEditingController dropCap = TextEditingController(
+    text: current.dropCapLines.toString(),
+  );
+  final TextEditingController border = TextEditingController(
+    text: current.borderColor ?? '',
+  );
   final TextEditingController tabStops = TextEditingController(
-    text: current.tabs.map((WmlTabStop t) => t.position.toStringAsFixed(0)).join(', '),
+    text: current.tabs.map((WmlTabStop t) => t.position.toString()).join(', '),
   );
   bool keepTogether = current.keepTogether;
   bool pageBreakBefore = current.pageBreakBefore;
@@ -616,7 +625,10 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Text(ctx.tr('Alignment'), style: const TextStyle(fontSize: 11)),
+                    Text(
+                      ctx.tr('Alignment'),
+                      style: const TextStyle(fontSize: 11),
+                    ),
                     const SizedBox(height: 6),
                     SegmentedButton<WmlJustification>(
                       showSelectedIcon: false,
@@ -646,27 +658,50 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     const SizedBox(height: 12),
                     Row(
                       children: <Widget>[
-                        Expanded(child: _numberField(left, ctx.tr('Left indent (pt)'))),
+                        Expanded(
+                          child: _numberField(left, ctx.tr('Left indent (pt)')),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _numberField(right, ctx.tr('Right indent (pt)'))),
+                        Expanded(
+                          child: _numberField(
+                            right,
+                            ctx.tr('Right indent (pt)'),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: <Widget>[
-                        Expanded(child: _numberField(first, ctx.tr('First line (pt)'))),
+                        Expanded(
+                          child: _numberField(first, ctx.tr('First line (pt)')),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _numberField(hanging, ctx.tr('Hanging (pt)'))),
+                        Expanded(
+                          child: _numberField(hanging, ctx.tr('Hanging (pt)')),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: <Widget>[
-                        Expanded(child: _numberField(before, ctx.tr('Space before (pt)'))),
+                        Expanded(
+                          child: _numberField(
+                            before,
+                            ctx.tr('Space before (pt)'),
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _numberField(after, ctx.tr('Space after (pt)'))),
+                        Expanded(
+                          child: _numberField(
+                            after,
+                            ctx.tr('Space after (pt)'),
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _numberField(line, ctx.tr('Line spacing'))),
+                        Expanded(
+                          child: _numberField(line, ctx.tr('Line spacing')),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -758,8 +793,32 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
               ),
               ElevatedButton(
                 onPressed: () {
-                  double parse(TextEditingController c, double fallback) =>
-                      double.tryParse(c.text.trim()) ?? fallback;
+                  double parse(
+                    TextEditingController c,
+                    double fallback, {
+                    bool nonnegative = false,
+                    bool positive = false,
+                  }) {
+                    final value = double.tryParse(c.text.trim());
+                    if (value == null ||
+                        !value.isFinite ||
+                        (nonnegative && value < 0) ||
+                        (positive && value <= 0)) {
+                      return fallback;
+                    }
+                    return value;
+                  }
+
+                  final positions = tabStops.text.trim().isEmpty
+                      ? <double?>[]
+                      : tabStops.text
+                            .split(',')
+                            .map((value) => double.tryParse(value.trim()))
+                            .toList();
+                  // An invalid token must not silently delete an imported tab.
+                  final validTabs = positions.every(
+                    (value) => value != null && value.isFinite && value >= 0,
+                  );
                   final String borderColor = border.text
                       .trim()
                       .replaceAll('#', '')
@@ -768,25 +827,44 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     align: align,
                     left: parse(left, current.indent.left),
                     right: parse(right, current.indent.right),
-                    firstLine: parse(first, current.indent.firstLine),
-                    hanging: parse(hanging, current.indent.hanging),
-                    spacingBefore: parse(before, current.spacingBefore),
-                    spacingAfter: parse(after, current.spacingAfter),
-                    lineSpacing: parse(line, current.lineSpacing),
+                    firstLine: parse(
+                      first,
+                      current.indent.firstLine,
+                      nonnegative: true,
+                    ),
+                    hanging: parse(
+                      hanging,
+                      current.indent.hanging,
+                      nonnegative: true,
+                    ),
+                    spacingBefore: parse(
+                      before,
+                      current.spacingBefore,
+                      nonnegative: true,
+                    ),
+                    spacingAfter: parse(
+                      after,
+                      current.spacingAfter,
+                      nonnegative: true,
+                    ),
+                    lineSpacing: parse(
+                      line,
+                      current.lineSpacing,
+                      positive: true,
+                    ),
                     lineSpacingRule: lineSpacingRule,
                     dropCapLines:
-                        (int.tryParse(dropCap.text.trim()) ?? current.dropCapLines)
+                        (int.tryParse(dropCap.text.trim()) ??
+                                current.dropCapLines)
                             .clamp(0, 10),
                     borderColor:
-                        RegExp(r'^[0-9A-F]{6}$').hasMatch(borderColor)
-                            ? borderColor
-                            : '',
-                    tabStops: tabStops.text
-                        .split(',')
-                        .map((String value) => double.tryParse(value.trim()))
-                        .whereType<double>()
-                        .where((double value) => value >= 0)
-                        .toList(),
+                        borderColor.isEmpty ||
+                            RegExp(r'^[0-9A-F]{6}$').hasMatch(borderColor)
+                        ? borderColor
+                        : current.borderColor ?? '',
+                    tabStops: validTabs
+                        ? positions.cast<double>()
+                        : current.tabs.map((tab) => tab.position).toList(),
                     keepTogether: keepTogether,
                     pageBreakBefore: pageBreakBefore,
                   ));
@@ -929,12 +1007,10 @@ Future<({String text, String url})?> showHyperlinkDialog(
 }
 
 Future<({double top, double bottom, double left, double right})?>
-    showPageMarginsDialog(
-  BuildContext context, {
-  required WmlPageMargins current,
-}) {
+showPageMarginsDialog(BuildContext context, {required WmlPageMargins current}) {
+  String inchesText(double points) => (points / 72).toString();
   TextEditingController inches(double points) =>
-      TextEditingController(text: (points / 72).toStringAsFixed(2));
+      TextEditingController(text: inchesText(points));
   final TextEditingController top = inches(current.top);
   final TextEditingController bottom = inches(current.bottom);
   final TextEditingController left = inches(current.left);
@@ -950,7 +1026,7 @@ Future<({double top, double bottom, double left, double right})?>
           children: <Widget>[
             Row(
               children: <Widget>[
-                Expanded(child: _inchField(top, ctx.tr('Top (in)') )),
+                Expanded(child: _inchField(top, ctx.tr('Top (in)'))),
                 const SizedBox(width: 8),
                 Expanded(child: _inchField(bottom, ctx.tr('Bottom (in)'))),
               ],
@@ -973,19 +1049,24 @@ Future<({double top, double bottom, double left, double right})?>
         ),
         ElevatedButton(
           onPressed: () {
-            double parse(TextEditingController c, double fallback) =>
-                ((double.tryParse(c.text.trim()) ?? (fallback / 72)) * 72)
-                    .clamp(0, 432)
-                    .toDouble();
-            Navigator.pop<({double top, double bottom, double left, double right})>(
-              ctx,
-              (
-                top: parse(top, current.top),
-                bottom: parse(bottom, current.bottom),
-                left: parse(left, current.left),
-                right: parse(right, current.right),
-              ),
-            );
+            double parse(TextEditingController c, double fallback) {
+              final text = c.text.trim();
+              // Keep unchanged imported geometry exact, including values
+              // outside the dialog's range for newly entered margins.
+              if (text == inchesText(fallback)) return fallback;
+              final value = double.tryParse(text);
+              if (value == null || !value.isFinite) return fallback;
+              return (value * 72).clamp(0, 432).toDouble();
+            }
+
+            Navigator.pop<
+              ({double top, double bottom, double left, double right})
+            >(ctx, (
+              top: parse(top, current.top),
+              bottom: parse(bottom, current.bottom),
+              left: parse(left, current.left),
+              right: parse(right, current.right),
+            ));
           },
           child: Text(ctx.tr('Apply')),
         ),

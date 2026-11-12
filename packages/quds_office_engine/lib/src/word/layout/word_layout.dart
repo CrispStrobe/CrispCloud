@@ -1493,10 +1493,10 @@ class WordLayoutEngine {
         para,
         sourceText: item.text,
         tocTargetParagraph: entry?.headingParagraphIndex,
-        overlayText: toc.showPageNumbers && entry != null
+        overlayText: entry != null && toc.showsPageNumberForLevel(entry.level)
             ? '${entry.pageNumber}'
             : null,
-        tocLeader: toc.showPageNumbers && entry != null,
+        tocLeader: entry != null && toc.showsPageNumberForLevel(entry.level),
       );
       cursorY = laid.y;
       idx = laid.pageIndex;

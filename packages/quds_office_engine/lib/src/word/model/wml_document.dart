@@ -74,6 +74,9 @@ class WmlRun extends WmlInline {
     List<int>? commentIds,
     this.noteRefId,
     this.noteRefEndnote = false,
+    this.fieldInstruction,
+    this.fieldLocked = false,
+    this.fieldDirty,
   }) : properties = properties ?? WmlRunProps(),
        commentIds = commentIds ?? <int>[];
 
@@ -94,6 +97,21 @@ class WmlRun extends WmlInline {
 
   /// True when [noteRefId] points at an endnote.
   bool noteRefEndnote;
+
+  /// Instruction for a single-run native inline field (w:fldSimple).
+  ///
+  /// The cached result is [text]. Complex and multi-run field containers are
+  /// not represented here; paragraph-wide fields retain their existing model.
+  String? fieldInstruction;
+
+  /// A locked imported field keeps its cached result during field updates.
+  bool fieldLocked;
+
+  /// The imported dirty marker, or null when the marker was absent.
+  bool? fieldDirty;
+
+  /// Note marks and inline field results cannot be split into ordinary text.
+  bool get isAtomic => noteRefId != null || fieldInstruction != null;
 }
 
 /// Class WmlComment.
@@ -192,7 +210,7 @@ class WmlComment {
     paragraphs: <WmlParagraph>[
       for (final WmlParagraph paragraph in paragraphs)
         WmlParagraph(
-          properties: paragraph.properties,
+          properties: paragraph.properties.copy(),
           inlines: <WmlInline>[
             for (final WmlInline inline in paragraph.inlines)
               if (inline is WmlRun)
@@ -203,6 +221,9 @@ class WmlComment {
                   commentIds: List<int>.from(inline.commentIds),
                   noteRefId: inline.noteRefId,
                   noteRefEndnote: inline.noteRefEndnote,
+                  fieldInstruction: inline.fieldInstruction,
+                  fieldLocked: inline.fieldLocked,
+                  fieldDirty: inline.fieldDirty,
                 )
               else
                 inline,
@@ -495,6 +516,8 @@ class WmlToc extends WmlBlock {
     this.minLevel = 1,
     this.maxLevel = 3,
     this.showPageNumbers = true,
+    this.omitPageNumbersFromLevel,
+    this.omitPageNumbersThroughLevel,
     this.captionLabel,
     String title = 'Table of Contents',
     List<WmlTocEntry>? entries,
@@ -531,6 +554,18 @@ class WmlToc extends WmlBlock {
 
   /// showPageNumbers API.
   bool showPageNumbers;
+
+  /// Native TOC \\n suppression for a bounded range of outline levels.
+  int? omitPageNumbersFromLevel;
+  int? omitPageNumbersThroughLevel;
+
+  /// Whether this entry has a visible page number and dotted leader.
+  bool showsPageNumberForLevel(int level) {
+    if (!showPageNumbers) return false;
+    final int? first = omitPageNumbersFromLevel;
+    final int? last = omitPageNumbersThroughLevel;
+    return first == null || last == null || level < first || level > last;
+  }
 
   /// When set, the TOC is a table of figures for this caption label.
   String? captionLabel;

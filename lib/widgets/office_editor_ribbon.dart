@@ -7,7 +7,7 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb;
+    show defaultTargetPlatform, kIsWeb, listEquals;
 import 'package:flutter/material.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
@@ -606,10 +606,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   WmlRunProps get _runProps => _word.activeRunProps;
 
   WmlParagraphProps? get _paraProps {
-    final List<WmlParagraph> paras = _word.document.paragraphs.toList();
+    final List<WmlParagraph> paras = _word.isEditingComment
+        ? _word.selectedComment!.paragraphs
+        : _word.isEditingHeaderFooter
+        ? _word.headerFooterParagraphs
+        : _word.document.paragraphs.toList();
     if (paras.isEmpty) return null;
-    final int index =
-        _word.documentCaret.paragraphIndex.clamp(0, paras.length - 1);
+    final int index = _word.caret.paragraphIndex.clamp(0, paras.length - 1);
     return paras[index].properties;
   }
 
@@ -1920,7 +1923,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   Widget _wordStyleDropdown() {
     final int heading = _word.activeHeadingLevel;
     final String? styleId = _paraProps?.styleId;
-    const Map<String, String> labels = <String, String>{
+    const Map<String, String> builtins = <String, String>{
       'Normal': 'Normal',
       'Title': 'Title',
       'Subtitle': 'Subtitle',
@@ -1929,40 +1932,34 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       'Heading1': 'Heading 1',
       'Heading2': 'Heading 2',
       'Heading3': 'Heading 3',
+      'Heading4': 'Heading 4',
+      'Heading5': 'Heading 5',
+      'Heading6': 'Heading 6',
+      'Heading7': 'Heading 7',
+      'Heading8': 'Heading 8',
+      'Heading9': 'Heading 9',
     };
-    final String current = heading > 0
-        ? 'Heading $heading'
-        : (styleId != null && labels.containsKey(styleId)
-            ? labels[styleId]!
-            : 'Normal');
-    final List<String> values = <String>[
-      'Normal',
-      'Title',
-      'Subtitle',
-      'Heading 1',
-      'Heading 2',
-      'Heading 3',
-      'Heading 4',
-      'Heading 5',
-      'Heading 6',
-      'Quote',
-    ];
+    final labels = <String, String>{
+      for (final entry in builtins.entries) entry.key: context.tr(entry.value),
+      // Imported names are authored document content, not UI translation keys.
+      for (final style in _word.document.styles)
+        if (!builtins.containsKey(style.id))
+          style.id: style.name.isEmpty ? style.id : style.name,
+    };
+    final String current =
+        styleId ?? (heading > 0 ? 'Heading$heading' : 'Normal');
+    labels.putIfAbsent(current, () => current);
     return _smallDropdown<String>(
-      value: values.contains(current) ? current : 'Normal',
-      items: values,
-      label: (String value) => context.tr(value),
+      value: current,
+      items: labels.keys.toList(),
+      label: (String value) => labels[value]!,
       width: 118,
       onChanged: (String value) {
-        if (value.startsWith('Heading ')) {
-          _word.applyHeading(int.parse(value.substring(8)));
+        final headingMatch = RegExp(r'^Heading([1-9])$').firstMatch(value);
+        if (headingMatch != null) {
+          _word.applyHeading(int.parse(headingMatch.group(1)!));
         } else {
-          const Map<String, String> ids = <String, String>{
-            'Normal': 'Normal',
-            'Title': 'Title',
-            'Subtitle': 'Subtitle',
-            'Quote': 'Quote',
-          };
-          _word.applyStyle(ids[value] ?? value);
+          _word.applyStyle(value);
         }
       },
     );
@@ -2435,14 +2432,14 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   void _spaceBefore(double value) {
     _wordPara((WmlParagraphProps p) {
       p.spacingBefore = value;
-      p.explicitSpacingBefore = value > 0;
+      p.explicitSpacingBefore = true;
     });
   }
 
   void _spaceAfter(double value) {
     _wordPara((WmlParagraphProps p) {
       p.spacingAfter = value;
-      p.explicitSpacingAfter = value > 0;
+      p.explicitSpacingAfter = true;
     });
   }
 
@@ -2467,34 +2464,87 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _wordParagraphDialog() async {
-    final WmlParagraphProps? current = _paraProps;
+    final WmlParagraphProps? current = _paraProps?.copy();
     if (current == null) return;
     final WordParagraphChoice? choice = await showWordParagraphDialog(
       context,
       current: current,
     );
-    if (choice == null) return;
+    if (choice == null || !mounted) return;
+    final bool tabsChanged = !listEquals(
+      choice.tabStops,
+      current.tabs.map((tab) => tab.position).toList(),
+    );
+    final bool indentChanged =
+        choice.left != current.indent.left ||
+        choice.right != current.indent.right ||
+        choice.firstLine != current.indent.firstLine ||
+        choice.hanging != current.indent.hanging;
+    final bool lineChanged =
+        choice.lineSpacing != current.lineSpacing ||
+        choice.lineSpacingRule != current.lineSpacingRule;
+    final String? border = choice.borderColor.isEmpty
+        ? null
+        : choice.borderColor;
+    if (!tabsChanged &&
+        !indentChanged &&
+        !lineChanged &&
+        choice.align == current.justification &&
+        choice.spacingBefore == current.spacingBefore &&
+        choice.spacingAfter == current.spacingAfter &&
+        choice.dropCapLines == current.dropCapLines &&
+        border == current.borderColor &&
+        choice.keepTogether == current.keepTogether &&
+        choice.pageBreakBefore == current.pageBreakBefore) {
+      return;
+    }
     _wordPara((WmlParagraphProps p) {
-      p.justification = choice.align;
-      p.indent = WmlIndent(
-        left: choice.left,
-        right: choice.right,
-        firstLine: choice.firstLine,
-        hanging: choice.hanging,
-      );
-      p.spacingBefore = choice.spacingBefore;
-      p.spacingAfter = choice.spacingAfter;
-      p.lineSpacing = choice.lineSpacing;
-      p.lineSpacingRule = choice.lineSpacingRule;
-      p.dropCapLines = choice.dropCapLines;
-      p.borderColor =
-          choice.borderColor.isEmpty ? null : choice.borderColor;
-      p.tabs = <WmlTabStop>[
-        for (final double position in choice.tabStops)
-          WmlTabStop(position: position),
-      ];
-      p.keepTogether = choice.keepTogether;
-      p.pageBreakBefore = choice.pageBreakBefore;
+      // Apply only edited fields. Other selected paragraphs can have different
+      // imported values and tab leaders which the dialog does not expose.
+      if (choice.align != current.justification) {
+        p.justification = choice.align;
+        p.explicitJustification = true;
+      }
+      if (indentChanged) {
+        p.indent = p.indent.copyWith(
+          left: choice.left != current.indent.left ? choice.left : null,
+          right: choice.right != current.indent.right ? choice.right : null,
+          firstLine: choice.firstLine != current.indent.firstLine
+              ? choice.firstLine
+              : null,
+          hanging: choice.hanging != current.indent.hanging
+              ? choice.hanging
+              : null,
+        );
+        p.explicitIndent = true;
+      }
+      if (choice.spacingBefore != current.spacingBefore) {
+        p.spacingBefore = choice.spacingBefore;
+        p.explicitSpacingBefore = true;
+      }
+      if (choice.spacingAfter != current.spacingAfter) {
+        p.spacingAfter = choice.spacingAfter;
+        p.explicitSpacingAfter = true;
+      }
+      if (lineChanged) {
+        p.lineSpacing = choice.lineSpacing;
+        p.lineSpacingRule = choice.lineSpacingRule;
+        p.explicitLineSpacing = true;
+      }
+      if (choice.dropCapLines != current.dropCapLines)
+        p.dropCapLines = choice.dropCapLines;
+      if (border != current.borderColor) p.borderColor = border;
+      if (tabsChanged) {
+        p.tabs = <WmlTabStop>[
+          for (final double position in choice.tabStops)
+            p.tabs.where((tab) => tab.position == position).firstOrNull ??
+                WmlTabStop(position: position),
+        ];
+      }
+      if (choice.keepTogether != current.keepTogether)
+        p.keepTogether = choice.keepTogether;
+      if (choice.pageBreakBefore != current.pageBreakBefore)
+        p.pageBreakBefore = choice.pageBreakBefore;
     });
   }
 
@@ -2639,15 +2689,20 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final WmlPageMargins current = _word.sectionAtCaret.margins;
     final ({double top, double bottom, double left, double right})? result =
         await showPageMarginsDialog(context, current: current);
-    if (result == null) return;
-    _word.setPageMargins(WmlPageMargins(
-      top: result.top,
-      bottom: result.bottom,
-      left: result.left,
-      right: result.right,
-      header: current.header,
-      footer: current.footer,
-    ));
+    if (result == null || !mounted) return;
+    if (result.top == current.top &&
+        result.bottom == current.bottom &&
+        result.left == current.left &&
+        result.right == current.right)
+      return;
+    _word.setPageMargins(
+      current.copyWith(
+        top: result.top,
+        bottom: result.bottom,
+        left: result.left,
+        right: result.right,
+      ),
+    );
   }
 
   void _pageSetupMenu() {

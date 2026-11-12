@@ -255,12 +255,10 @@ abstract final class WordDrawingIo {
     final int cx = sizeToEmu(visual.width);
     final int cy = sizeToEmu(visual.height);
     final PictureAdjust adj = visual.picture;
-    final String name = adj.altTitle.isNotEmpty
-        ? adj.altTitle
-        : (visual.title.isEmpty ? 'Picture' : visual.title);
+    final String name = visual.title.isEmpty ? 'Picture' : visual.title;
     final String descr = adj.altDescription.isNotEmpty
         ? adj.altDescription
-        : name;
+        : (adj.altTitle.isNotEmpty ? adj.altTitle : name);
     w.writeStartElement('p', prefix: 'w');
     w.writeStartElement('r', prefix: 'w');
     w.writeStartElement('drawing', prefix: 'w');
@@ -284,6 +282,7 @@ abstract final class WordDrawingIo {
     w.writeStartElement('docPr', prefix: 'wp');
     w.writeAttribute('id', '$docPrId');
     w.writeAttribute('name', name);
+    if (adj.altTitle.isNotEmpty) w.writeAttribute('title', adj.altTitle);
     w.writeAttribute('descr', descr);
     w.writeEndElement();
     w.writeStartElement('cNvGraphicFramePr', prefix: 'wp');
@@ -303,6 +302,7 @@ abstract final class WordDrawingIo {
     w.writeStartElement('cNvPr', prefix: 'pic');
     w.writeAttribute('id', '0');
     w.writeAttribute('name', name);
+    if (adj.altTitle.isNotEmpty) w.writeAttribute('title', adj.altTitle);
     w.writeAttribute('descr', descr);
     w.writeEndElement();
     w.writeStartElement('cNvPicPr', prefix: 'pic');
@@ -447,7 +447,15 @@ abstract final class WordDrawingIo {
     w.writeStartElement('docPr', prefix: 'wp');
     w.writeAttribute('id', '$docPrId');
     w.writeAttribute('name', name);
-    w.writeAttribute('descr', name);
+    if (visual.picture.altTitle.isNotEmpty) {
+      w.writeAttribute('title', visual.picture.altTitle);
+    }
+    w.writeAttribute(
+      'descr',
+      visual.picture.altDescription.isNotEmpty
+          ? visual.picture.altDescription
+          : name,
+    );
     w.writeEndElement();
     w.writeStartElement('graphic', prefix: 'a');
     w.writeStartElement('graphicData', prefix: 'a');
@@ -489,6 +497,12 @@ abstract final class WordDrawingIo {
     String? chartId;
     String name = 'Picture';
     String descr = '';
+    String? documentName;
+    String? pictureName;
+    String? documentTitle;
+    String? pictureTitle;
+    String? documentDescription;
+    String? pictureDescription;
     var cx = 0;
     var cy = 0;
     var offsetX = 0.0;
@@ -610,9 +624,14 @@ abstract final class WordDrawingIo {
         } else if (reader.localName == 'extent' || reader.localName == 'ext') {
           cx = int.tryParse(reader.getAttribute('cx') ?? '') ?? cx;
           cy = int.tryParse(reader.getAttribute('cy') ?? '') ?? cy;
-        } else if (reader.localName == 'docPr' || reader.localName == 'cNvPr') {
-          name = reader.getAttribute('name') ?? name;
-          descr = reader.getAttribute('descr') ?? descr;
+        } else if (reader.localName == 'docPr') {
+          documentName = reader.getAttribute('name');
+          documentTitle = reader.getAttribute('title');
+          documentDescription = reader.getAttribute('descr');
+        } else if (reader.localName == 'cNvPr') {
+          pictureName = reader.getAttribute('name');
+          pictureTitle = reader.getAttribute('title');
+          pictureDescription = reader.getAttribute('descr');
         } else if (reader.localName == 'srcRect') {
           DrawingmlVisualIo.applySrcRect(adj, reader);
         } else if (reader.localName == 'xfrm') {
@@ -620,9 +639,11 @@ abstract final class WordDrawingIo {
         }
       }
     }
+    name = documentName ?? pictureName ?? name;
+    descr = documentDescription ?? pictureDescription ?? descr;
     adj
       ..wrap = wrap
-      ..altTitle = name
+      ..altTitle = documentTitle ?? pictureTitle ?? name
       ..altDescription = descr;
     if (chartId != null) {
       final OfficeVisual? chart = _readChart(
@@ -633,7 +654,12 @@ abstract final class WordDrawingIo {
         cx: cx,
         cy: cy,
       );
-      return chart == null ? null : WmlVisual(visual: chart);
+      if (chart == null) return null;
+      chart
+        ..picture = adj
+        ..offsetX = offsetX
+        ..offsetY = offsetY;
+      return WmlVisual(visual: chart);
     }
     if (embed != null) {
       final PackageRelationship? rel = package

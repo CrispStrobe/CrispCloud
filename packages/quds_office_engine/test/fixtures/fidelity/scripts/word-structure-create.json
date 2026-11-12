@@ -1,0 +1,21 @@
+[
+  {"op":"heading","paragraph":0,"level":1},
+  {"op":"heading","paragraph":3,"level":2},
+  {"op":"bookmarkSet","paragraph":1,"name":"Evidence"},
+  {"op":"reference","paragraph":2,"bookmark":"Evidence"},
+  {"op":"paragraphFormat","paragraph":1,"before":0,"after":3.25,"lineSpacing":1.25,"left":12.35,"right":-1.55,"firstLine":0.75,"tabs":[{"position":72.35,"alignment":"decimal","leader":"dot"}],"keepTogether":true,"rtl":false},
+  {"op":"commentAdd","paragraph":1,"start":6,"end":10,"text":"Check beta","author":"Reviewer","initials":"RV","date":"2026-11-12T00:00:00Z"},
+  {"op":"commentReply","id":0,"text":"Reviewed","author":"Author","initials":"AU","date":"2026-11-12T01:00:00Z"},
+  {"op":"imageAdd","file":"replacement.png","width":48,"height":24,"title":"Illustration"},
+  {"op":"imageWrap","image":0,"wrap":"square","top":1,"bottom":0,"left":0,"right":2.5,"rotation":30,"altTitle":"Accessible picture","altDescription":"Two color test picture"},
+  {"op":"frameAdd","text":"Placed text","x":24.5,"y":50.25,"width":180,"height":60,"anchor":"margin","wrap":"square","fill":"EFEFEF","stroke":"123456"},
+  {"op":"tableAdd","rows":2,"columns":2,"width":240},
+  {"op":"tableCellText","table":0,"row":0,"column":0,"text":"A"},
+  {"op":"tableCellText","table":0,"row":0,"column":1,"text":"B"},
+  {"op":"tableCellText","table":0,"row":1,"column":0,"text":"C"},
+  {"op":"tableCellText","table":0,"row":1,"column":1,"text":"D"},
+  {"op":"tableFormat","table":0,"alignment":"center","rtl":true,"borders":true,"borderColor":"224466","borderWidth":1.5},
+  {"op":"tableRowFormat","table":0,"row":0,"height":24,"cantSplit":true},
+  {"op":"tableCellFormat","table":0,"row":1,"column":1,"fill":"FFEEDD","width":120},
+  {"op":"tocAdd","title":"Contents","minLevel":1,"maxLevel":2,"showPageNumbers":true}
+]

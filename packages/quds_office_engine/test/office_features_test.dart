@@ -66,8 +66,9 @@ void main() {
       ..creator = 'Quds';
     expect(OfficeTextStats.ofWord(word).words, 3);
     final OpcPackage package = WordSerializer().write(word);
-    final OfficeDocumentProperties props =
-        OfficeDocumentProperties.fromPackage(package);
+    final OfficeDocumentProperties props = OfficeDocumentProperties.fromPackage(
+      package,
+    );
     expect(props.title, 'Brief');
     expect(props.creator, 'Quds');
   });
@@ -171,11 +172,14 @@ void main() {
       ..firstHeader.add(
         WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'First')]),
       )
-      ..evenHeader.add(
-        WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Even')]),
-      )
+      ..evenHeader.add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Even')]))
       ..header.add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'Default')]));
-    WordNotes.insert(document, document.paragraphs.first, endnote: false, text: 'Foot');
+    WordNotes.insert(
+      document,
+      document.paragraphs.first,
+      endnote: false,
+      text: 'Foot',
+    );
     WordStyles.extras.add(
       const WmlStyle(id: 'Custom', name: 'Custom', nameAr: 'مخصص'),
     );
@@ -223,9 +227,16 @@ void main() {
     );
     expect(letter.citations, hasLength(1));
     expect(
-      WordFields.kindOf(letter.paragraphs.first.properties.fieldInstruction),
+      WordFields.kindOf(
+        letter.paragraphs.first.inlines
+            .whereType<WmlRun>()
+            .singleWhere((run) => run.fieldInstruction != null)
+            .fieldInstruction,
+      ),
       WmlFieldKind.citation,
     );
+    WordFields.update(letter);
+    expect(letter.paragraphs.first.text, 'Hello Ada (Smith 2020)');
     expect(WordCitations.bibliography(letter).text, contains('Smith'));
     WordCitations.markIndex(letter, letter.paragraphs.first, 'Ada');
     final WmlParagraph index = WordCitations.index(letter);
@@ -424,7 +435,11 @@ void main() {
     );
     expect(document.paragraphs.first.text, 'Example');
     expect(
-      document.paragraphs.first.inlines.whereType<WmlRun>().first.hyperlink?.url,
+      document.paragraphs.first.inlines
+          .whereType<WmlRun>()
+          .first
+          .hyperlink
+          ?.url,
       'https://example.com',
     );
 
@@ -462,9 +477,15 @@ void main() {
   test('resolves multilevel list labels and restart', () {
     final WmlDocument document = WmlDocument.empty(text: 'A');
     final WmlParagraph a = document.paragraphs.first;
-    final WmlParagraph b = WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'B')]);
-    final WmlParagraph c = WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'C')]);
-    final WmlParagraph d = WmlParagraph(inlines: <WmlInline>[WmlRun(text: 'D')]);
+    final WmlParagraph b = WmlParagraph(
+      inlines: <WmlInline>[WmlRun(text: 'B')],
+    );
+    final WmlParagraph c = WmlParagraph(
+      inlines: <WmlInline>[WmlRun(text: 'C')],
+    );
+    final WmlParagraph d = WmlParagraph(
+      inlines: <WmlInline>[WmlRun(text: 'D')],
+    );
     document.sections.first.blocks.addAll(<WmlBlock>[b, c, d]);
     WordLists.applyLevel(a, numbered: true, level: 0);
     WordLists.applyLevel(b, numbered: true, level: 1);
@@ -498,7 +519,11 @@ void main() {
         fontSizePoints: 11,
       ),
     ]);
-    WordStyles.apply(document.paragraphs.first, 'ChildBody', document: document);
+    WordStyles.apply(
+      document.paragraphs.first,
+      'ChildBody',
+      document: document,
+    );
     final WmlStyle resolved = WordStyles.resolve(
       'ChildBody',
       document: document,
@@ -512,12 +537,11 @@ void main() {
       WordSerializer().write(document),
     );
     expect(
-      opened.styles.any((WmlStyle s) => s.id == 'ChildBody' && s.basedOn == 'BaseBody'),
+      opened.styles.any(
+        (WmlStyle s) => s.id == 'ChildBody' && s.basedOn == 'BaseBody',
+      ),
       isTrue,
     );
-    expect(
-      WordStyles.resolve('ChildBody', document: opened).font,
-      'Calibri',
-    );
+    expect(WordStyles.resolve('ChildBody', document: opened).font, 'Calibri');
   });
 }

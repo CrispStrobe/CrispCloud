@@ -118,6 +118,10 @@ abstract final class WmlClone {
       vMerge: cell.vMerge,
       width: cell.width,
       fillColor: cell.fillColor,
+      borderTop: cell.borderTop,
+      borderBottom: cell.borderBottom,
+      borderLeft: cell.borderLeft,
+      borderRight: cell.borderRight,
       blocks: <WmlBlock>[
         for (final WmlBlock block in cell.blocks) WmlClone.block(block),
       ],
@@ -155,6 +159,9 @@ abstract final class WmlClone {
       minLevel: source.minLevel,
       maxLevel: source.maxLevel,
       showPageNumbers: source.showPageNumbers,
+      omitPageNumbersFromLevel: source.omitPageNumbersFromLevel,
+      omitPageNumbersThroughLevel: source.omitPageNumbersThroughLevel,
+      captionLabel: source.captionLabel,
       title: source.title,
       entries: <WmlTocEntry>[
         for (final WmlTocEntry entry in source.entries)
@@ -229,6 +236,9 @@ abstract final class WmlClone {
         commentIds: List<int>.from(inline.commentIds),
         noteRefId: inline.noteRefId,
         noteRefEndnote: inline.noteRefEndnote,
+        fieldInstruction: inline.fieldInstruction,
+        fieldLocked: inline.fieldLocked,
+        fieldDirty: inline.fieldDirty,
       );
     }
     if (inline is WmlBreak) {
@@ -267,12 +277,18 @@ abstract final class WmlClone {
       final int localEnd = to < end ? to - offset : inline.text.length;
       out.add(
         WmlRun(
-          text: inline.text.substring(localStart, localEnd),
+          // Note marks and field results are atomic regardless of label length.
+          text: inline.isAtomic
+              ? inline.text
+              : inline.text.substring(localStart, localEnd),
           properties: inline.properties.copy(),
           hyperlink: inline.hyperlink?.copy(),
           commentIds: List<int>.from(inline.commentIds),
           noteRefId: inline.noteRefId,
           noteRefEndnote: inline.noteRefEndnote,
+          fieldInstruction: inline.fieldInstruction,
+          fieldLocked: inline.fieldLocked,
+          fieldDirty: inline.fieldDirty,
         ),
       );
       offset = end;

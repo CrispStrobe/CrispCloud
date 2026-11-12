@@ -64,12 +64,21 @@ def report_coverage(lcov, root=ROOT):
             'uninstrumented_files': sorted(set(sources) - set(merged)), 'files': files}
 
 
+def require_all_sources(report):
+    """A smaller instrumented subset must not make the host gate look greener."""
+    missing = report['uninstrumented_files']
+    if missing:
+        raise ValueError('Office host sources absent from coverage: ' + ', '.join(missing))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('lcov', nargs='?', type=Path,
                         default=ROOT / 'build/fidelity-host/coverage/lcov.info')
     parser.add_argument('--output', type=Path,
                         default=ROOT / 'build/fidelity-host/coverage/gaps.json')
+    parser.add_argument('--require-all-sources', action='store_true',
+                        help='fail when any Office host source has no instrumented lines')
     args = parser.parse_args()
     report = report_coverage(args.lcov.read_text())
     try:
@@ -88,6 +97,8 @@ def main():
     hit, total = report['covered_lines'], report['instrumented_lines']
     print(f'Office host coverage: {hit}/{total} instrumented lines ({100*hit/total:.1f}%); '
           f'{len(report["uninstrumented_files"])} files absent from instrumentation.')
+    if args.require_all_sources:
+        require_all_sources(report)
 
 
 if __name__ == '__main__':
