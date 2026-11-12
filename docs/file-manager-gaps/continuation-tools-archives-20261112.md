@@ -174,3 +174,63 @@ explicit. No dependency was added.
 Remote code checkpoint: `c5ddfffd011dbaf61c3cbd3dc8f7efc1c5f52e2f` on
 `feature/external-remote-editing-20261112`,
 [draft PR 80](https://github.com/CrispStrobe/CrispCloud/pull/80).
+
+### G18 — native writable archive endpoints
+
+The [archive endpoint workflow](../archive-endpoints.md) now connects ordinary
+captured source selections to native local archive destinations. F5, paste and
+context-menu commands retain the exact outer container and current inner
+directory before asynchronous work. Private member copying produces a concrete
+whole-container review; only verified physical publication returns a transfer
+receipt. Existing member editing, renaming, removal and new empty-directory
+creation share the same reviewed publisher. Nested archives retain their
+separate passwords and captured container generations.
+
+Moves publish before attempting revalidated source-file deletion. Source
+directories and files without a valid conditional-removal contract remain with
+an explicit partial result. Source revision maps are copied at capture, and
+empty, malformed or shadowing revision values cannot authorize deletion.
+Cancelled archive pastes preserve cut references, including when another actor
+has removed the original source. A newer clipboard intent or a navigated and
+reopened archive cannot retarget an older pending action.
+
+ZIP metadata handling preserves supported modification times, permissions and
+encrypted payloads, including ZIP64 count boundaries. Signed-negative UTC
+timestamp inputs remain read-only with the pinned reader. Malformed shared or
+overlapping local metadata cannot amplify scanning; inconsistent encryption
+markers refuse writing. All original protected members in a supported writable
+archive must authenticate before replacement or removal is allowed. Existing
+directory metadata remains unchanged when importing children into that directory.
+
+The account-scoped recovery UI is reachable through Tools and overflow even
+from an ordinary folder when an interrupted publication has left the original
+archive name temporarily absent. A recovery attempt refreshes the captured
+destination and requires a fresh import review. Restart recovery carries no
+source-deletion authority.
+
+Observed final gates: **104 passing checks across eight archive suites**, and
+**58 distinct passing checks across six host, clipboard, gathering, browser-menu
+and offline-help suites**. Total: **162 checks across 14 suites**. The final
+archive gate includes seven added audit regressions for malformed policy,
+source revision evidence and authentication of later protected members. The
+two earlier dialog failures were caused by animated fake time expiring a real
+stream deadline; the corrected fixtures execute real I/O within the test
+runner's real asynchronous boundary and retain the original review, source
+preservation and publication-receipt assertions.
+
+Focused feature analysis is clean; the shared menu file retains its existing
+unrelated findings. English, German and French guides validate with 23 aligned
+topics. No dependency was added.
+
+**Status:** native local increment delivered. G18 remains partially implemented
+because no remote adapter supplies the required publication access-policy
+contract, and browser publication still needs an operation-lifetime lease.
+Those are code prerequisites, separately tracked from native release acceptance.
+The two-move publication absence window, bounded in-memory drafts and G19–G24
+follow-on scopes remain explicit.
+
+Remote checkpoints on `feature/writable-archive-endpoints-20261112`:
+core `e32401cebba2d72874f02c111d8715e83959d28c`,
+UI/help `c74986aea4253d97ae2488b3800754941670d162`, and
+reviewed fixes `af79a894f84a1853f6e0b7b4f56c3051ebfb3fd3`.
+Review: [draft PR 81](https://github.com/CrispStrobe/CrispCloud/pull/81).
