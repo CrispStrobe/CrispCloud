@@ -178,7 +178,7 @@ Future<String?> showOfficeColorPicker(
 /// Font settings returned by [showWordFontDialog].
 typedef WordFontChoice = ({
   String family,
-  int sizePt,
+  double sizePt,
   bool bold,
   bool italic,
   WmlUnderline underline,
@@ -193,7 +193,13 @@ Future<WordFontChoice?> showWordFontDialog(
   required WmlRunProps current,
 }) {
   String family = current.asciiFont.isEmpty ? 'Arial' : current.asciiFont;
-  int size = (current.fontSizeHalfPoints / 2).round().clamp(8, 96);
+  // Imported Word sizes use half-points and may be outside the preset list.
+  // Keep that exact value visible and selectable when the dialog is unchanged.
+  double size = current.fontSizeHalfPoints / 2;
+  final List<double> sizes = <double>{
+    size,
+    for (final int preset in kOfficeFontSizes) preset.toDouble(),
+  }.toList()..sort();
   bool bold = current.bold;
   bool italic = current.italic;
   WmlUnderline underline = current.underline;
@@ -273,23 +279,23 @@ Future<WordFontChoice?> showWordFontDialog(
                         ),
                         SizedBox(
                           width: 100,
-                          child: DropdownButtonFormField<int>(
-                            initialValue: kOfficeFontSizes.contains(size)
-                                ? size
-                                : kOfficeFontSizes.first,
+                          child: DropdownButtonFormField<double>(
+                            initialValue: size,
                             isDense: true,
                             decoration: InputDecoration(
                               labelText: ctx.tr('Size'),
                               isDense: true,
                             ),
-                            items: <DropdownMenuItem<int>>[
-                              for (final int s in kOfficeFontSizes)
-                                DropdownMenuItem<int>(
+                            items: <DropdownMenuItem<double>>[
+                              for (final double s in sizes)
+                                DropdownMenuItem<double>(
                                   value: s,
-                                  child: Text('$s'),
+                                  child: Text(s == s.roundToDouble()
+                                      ? s.toInt().toString()
+                                      : s.toString()),
                                 ),
                             ],
-                            onChanged: (int? value) {
+                            onChanged: (double? value) {
                               if (value != null) {
                                 setState(() => size = value);
                               }

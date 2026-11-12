@@ -1743,11 +1743,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   Widget _fontSizeDropdown() {
-    final int current = (_runProps.fontSizeHalfPoints / 2).round();
-    return _smallDropdown<int>(
-      value: current.clamp(8, 96),
-      items: kOfficeFontSizes,
-      label: (int value) => '$value',
+    final double current = _runProps.fontSizeHalfPoints / 2;
+    return _smallDropdown<double>(
+      value: current,
+      items: <double>[for (final int size in kOfficeFontSizes) size.toDouble()],
+      label: (double value) => value == value.roundToDouble()
+          ? value.toInt().toString()
+          : value.toString(),
       width: 58,
       onChanged: _setFontSize,
     );
@@ -2391,8 +2393,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     });
   }
 
-  void _setFontSize(int size) {
-    _wordRun((WmlRunProps p) => p.fontSizeHalfPoints = size * 2);
+  void _setFontSize(double size) {
+    _wordRun((WmlRunProps p) => p.fontSizeHalfPoints = (size * 2).round());
   }
 
   void _setTextColor(String color) {
@@ -2444,22 +2446,52 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _wordFontDialog() async {
+    if (!_canMutate) return;
+    final WordEditorController controller = _word;
+    final WmlRunProps current = _runProps.copy();
     final WordFontChoice? choice = await showWordFontDialog(
       context,
-      current: _runProps,
+      current: current,
     );
-    if (choice == null) return;
-    _wordRun((WmlRunProps p) {
-      p.asciiFont = choice.family;
-      p.csFont = choice.family;
-      p.fontSizeHalfPoints = choice.sizePt * 2;
-      p.bold = choice.bold;
-      p.italic = choice.italic;
-      p.underline = choice.underline;
-      p.strike = choice.strike;
-      p.color = choice.color;
-      p.highlight = choice.highlight;
-      p.vertAlign = choice.vertAlign;
+    if (choice == null ||
+        !mounted ||
+        !_canMutate ||
+        !identical(controller, widget.controller)) {
+      return;
+    }
+    final String initialFamily = current.asciiFont.isEmpty
+        ? 'Arial'
+        : current.asciiFont;
+    final bool familyChanged = choice.family != initialFamily;
+    final int halfPoints = (choice.sizePt * 2).round();
+    if (!familyChanged &&
+        halfPoints == current.fontSizeHalfPoints &&
+        choice.bold == current.bold &&
+        choice.italic == current.italic &&
+        choice.underline == current.underline &&
+        choice.strike == current.strike &&
+        choice.color == current.color &&
+        choice.highlight == current.highlight &&
+        choice.vertAlign == current.vertAlign) {
+      return;
+    }
+    controller.applyRunFormat((WmlRunProps p) {
+      // A selection can contain several fonts and character styles. Apply
+      // only controls the user changed, preserving every other run property.
+      if (familyChanged) {
+        p.asciiFont = choice.family;
+        p.csFont = choice.family;
+      }
+      if (halfPoints != current.fontSizeHalfPoints) {
+        p.fontSizeHalfPoints = halfPoints;
+      }
+      if (choice.bold != current.bold) p.bold = choice.bold;
+      if (choice.italic != current.italic) p.italic = choice.italic;
+      if (choice.underline != current.underline) p.underline = choice.underline;
+      if (choice.strike != current.strike) p.strike = choice.strike;
+      if (choice.color != current.color) p.color = choice.color;
+      if (choice.highlight != current.highlight) p.highlight = choice.highlight;
+      if (choice.vertAlign != current.vertAlign) p.vertAlign = choice.vertAlign;
     });
   }
 
