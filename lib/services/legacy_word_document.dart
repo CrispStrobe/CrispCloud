@@ -1,11 +1,20 @@
 import 'dart:typed_data';
 
 import 'bounded_cfb_reader.dart';
+import 'legacy_word_structured_model.dart';
+import 'legacy_word_structured_parser.dart';
+
+export 'legacy_word_structured_model.dart';
+
+/// Parses referenced body text, resolved formatting and structural metadata.
+/// Unsupported features are explicit in [LegacyWordDocument.warnings].
+LegacyWordDocument parseLegacyWordDocument(Uint8List bytes) =>
+    readStructuredLegacyWord(bytes);
 
 /// Read-only body-text extraction for Word 97–2007 binary DOC/DOT files.
 ///
 /// Uses the documented FIB/CLX piece table, never a scan for printable strings:
-/// deleted text and unrelated embedded-object streams must not appear in a
+/// unreferenced text and unrelated embedded-object streams must not appear in a
 /// preview. Formatting, images, headers, notes and tracked-change semantics are
 /// not reconstructed. The original compound file is never modified.
 ///

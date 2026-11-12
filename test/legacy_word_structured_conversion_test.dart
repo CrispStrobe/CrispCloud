@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/services/word_conversion_inspection.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/quds_office_engine.dart' show OpcPackage;
 import 'package:xml/xml.dart';
 
 import 'support/legacy_word_fixture.dart';
@@ -140,7 +140,7 @@ void main() {
             ...wordSprm(0x3009, [0]), // Continuous break.
             ...wordSprm(0xb01f, wordU16(15840)),
             ...wordSprm(0xb020, wordU16(12240)),
-            ...wordSprm(0x301d, [1]), // Landscape.
+            ...wordSprm(0x301d, [2]), // Landscape (SBOrientation).
             ...wordSprm(0xb021, wordU16(900)),
             ...wordSprm(0xb022, wordU16(1000)),
             ...wordSprm(0x9023, wordU16(1100)),

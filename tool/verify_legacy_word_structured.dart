@@ -8,7 +8,7 @@ import 'package:crypto/crypto.dart';
 import 'package:crisp_cloud/services/installed_office_converter.dart';
 import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/services/word_conversion_inspection.dart';
-import 'package:quds_office_engine/quds_office_engine.dart';
+import 'package:quds_office_engine/quds_office_engine.dart' show OpcPackage;
 import 'package:xml/xml.dart';
 
 Future<void> main(List<String> arguments) async {

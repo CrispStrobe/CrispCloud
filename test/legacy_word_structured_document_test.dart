@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/legacy_word_document.dart';
-import 'package:crisp_cloud/services/legacy_word_structured_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/structured_word_fixture.dart';
@@ -177,7 +176,7 @@ void main() {
   test(
     'keeps inserted and deleted text with its revision authors and dates',
     () {
-      final date = 45 | (8 << 6) | (12 << 11) | (11 << 16) | (126 << 20);
+      const date = 45 | (8 << 6) | (12 << 11) | (11 << 16) | (126 << 20);
       final document = parseLegacyWordDocument(
         StructuredWordFixture(
           pieces: const [WordFixturePiece('oldnew\r')],
@@ -279,7 +278,7 @@ void main() {
           WordFixtureSection(13, [
             ..._property16(0xb01f, 15840),
             ..._property16(0xb020, 12240),
-            ..._property(0x301d, 1),
+            ..._property(0x301d, 2),
           ]),
         ],
       ).build(),
@@ -355,7 +354,7 @@ void main() {
           ],
         ).build(
           mutate: (word, _) {
-            final descriptor = StructuredWordFixture.characterFkpOffset + 8;
+            const descriptor = StructuredWordFixture.characterFkpOffset + 8;
             final payload =
                 StructuredWordFixture.characterFkpOffset +
                 2 * word.getUint8(descriptor);

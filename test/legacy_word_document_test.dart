@@ -166,13 +166,14 @@ void main() {
     },
   );
 
-  test('DOC and DOT previews are readable and explicitly text-only', () async {
+  test('DOC and DOT previews provide a structured, explicitly partial view', () async {
     for (final name in ['report.doc', 'template.DOT']) {
       final preview = await parseOfficeDocument(_document(), name);
       expect(preview.plainText, 'Hello\nWorld');
       expect(preview.fallback, isNull);
       expect(preview.markdown, isEmpty);
-      expect(preview.note, contains('Formatting'));
+      expect(preview.safeHtml, contains('Hello'));
+      expect(preview.notice, OfficePreviewNotice.legacyWordPartial);
       expect(preview.rawXml, isNull);
     }
   });
