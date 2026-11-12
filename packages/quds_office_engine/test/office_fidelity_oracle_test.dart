@@ -16,14 +16,15 @@ void main() {
     final List<String?> lines = layout.pages.single.notes
         .map((LaidOutLine line) => line.text)
         .toList();
+    // The source has a marker followed by a space, with no invented period.
     expect(
       lines,
-      containsAll(<String>[
-        '12. Footnote text',
+      <String>[
+        '12 Footnote text',
         'Note link',
         'Endnotes',
-        '3. Endnote text',
-      ]),
+        '3 Endnote text',
+      ],
     );
   });
 
@@ -36,7 +37,7 @@ void main() {
     final LaidOutDocument layout = WordLayoutEngine(font: null).layout(doc);
     expect(
       layout.pages.single.notes.map((LaidOutLine l) => l.text),
-      containsAll(<String>['1. First', '2. Second', '1. End']),
+      <String>['1 First', '2 Second', 'Endnotes', '1 End'],
     );
   });
 
