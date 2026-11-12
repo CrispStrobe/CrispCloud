@@ -29,7 +29,9 @@ class _WordMediaReader {
   final _shapes = <(bool, int), _DrawingShape>{};
   final _blipStore = <_ArtRecord>[];
   final _blipAssets = <int, String?>{};
-  final _drawingDefaults = <int, int>{};
+  final _drawingDefaults = _OfficeArtProperties();
+  var _geometryPoints = 0;
+  var _geometryCommands = 0;
   final _fieldEligibility = <int, bool>{};
   var _fieldTablesRead = false;
   var _retainedBytes = 0;
@@ -211,23 +213,28 @@ class _WordMediaReader {
     );
   }
 
-  Map<int, int> _properties(_ArtRecord node) {
+  _OfficeArtProperties _properties(_ArtRecord node) {
     if (node.type != 0xf00b && node.type != 0xf121 && node.type != 0xf122) {
-      return const {};
+      return _OfficeArtProperties();
     }
     final count = node.instance;
     final fixed = count * 6;
     final input = node.data;
     input.require(0, fixed);
     var extra = fixed;
-    final result = <int, int>{};
+    final result = _OfficeArtProperties();
+    final ids = <int>{};
     for (var i = 0; i < count; i++) {
       final opid = input.u16(i * 6), value = input.u32(i * 6 + 2);
+      final id = opid & 0x3fff;
+      if (!ids.add(id)) {
+        throw const FormatException('Duplicate OfficeArt property identifier.');
+      }
       if ((opid & 0x8000) != 0) {
-        input.require(extra, value);
+        result.complex[id] = input.slice(extra, value);
         extra += value;
       } else {
-        result[opid & 0x3fff] = value;
+        result.values[id] = value;
       }
     }
     if (extra != input.length) {
@@ -240,10 +247,11 @@ class _WordMediaReader {
     if (node.type != 0xf004 || node.version != 15) {
       throw const FormatException('Expected an OfficeArt shape container.');
     }
-    final props = <int, int>{..._drawingDefaults};
+    final props = _OfficeArtProperties()..addAll(_drawingDefaults);
     int? shapeId;
     int? textbox;
     var flags = 0;
+    var type = 0;
     for (final child in node.children) {
       if (child.type == 0xf00a) {
         if (shapeId != null || child.data.length != 8 || child.version != 2) {
@@ -253,6 +261,7 @@ class _WordMediaReader {
         }
         shapeId = child.data.u32(0);
         flags = child.data.u32(4);
+        type = child.instance;
       } else if (child.type == 0xf00b ||
           child.type == 0xf121 ||
           child.type == 0xf122) {
@@ -267,15 +276,31 @@ class _WordMediaReader {
     if (shapeId == null) {
       throw const FormatException('OfficeArt shape has no identifier.');
     }
-    if ((flags & 0xc8) != 0) {
-      // Deleted/flipped shape state is retained in the exact OfficeArt record;
-      // flips are not currently mapped to a new DrawingML geometry.
+    final reader = _OfficeArtShapeReader(props, type, flags);
+    final model = reader.read();
+    _geometryPoints += reader.pointCount;
+    _geometryCommands += model.geometry?.path.length ?? 0;
+    if (_geometryPoints > 100000 || _geometryCommands > 100000) {
+      throw const FormatException(
+        'OfficeArt geometry exceeds its complexity limit.',
+      );
+    }
+    if ((flags & 8) != 0 ||
+        model.unsupportedProperties.isNotEmpty ||
+        (model.geometry == null && type != 75 && (flags & 1) == 0)) {
       _notice(
         LegacyWordMediaIssue.unsupportedDrawing,
         node.reference('OfficeArtSpContainer'),
       );
     }
-    return _DrawingShape(shapeId, props, textbox, artifactId, flags);
+    return _DrawingShape(
+      shapeId,
+      props.values,
+      textbox,
+      artifactId,
+      flags,
+      model,
+    );
   }
 
   void _readOfficeArt() {
@@ -421,6 +446,7 @@ class _WordMediaReader {
           nextTextboxShapeId: shape?.properties[0x008a],
           presentation: run!.presentation,
           shapeDeleted: shape?.deleted ?? false,
+          shape: shape?.model,
           cropTopFixed16: (shape?.properties[0x0100] ?? 0).toSigned(32),
           cropBottomFixed16: (shape?.properties[0x0101] ?? 0).toSigned(32),
           cropLeftFixed16: (shape?.properties[0x0102] ?? 0).toSigned(32),
@@ -530,6 +556,7 @@ class _WordMediaReader {
         shape.properties,
         externalName,
         shape.deleted,
+        shape.model,
       );
       _pictures[offset] = picture;
     }
@@ -555,6 +582,7 @@ class _WordMediaReader {
         storedExternalName: picture.externalName,
         presentation: presentation,
         shapeDeleted: picture.deleted,
+        shape: picture.shape,
       ),
     );
   }
@@ -704,7 +732,7 @@ class _WordMediaReader {
       reference = node.reference('OfficeArtBlip');
       if (raster) format = LegacyWordImageFormat.unknown;
     }
-    _retain(bytes.length);
+    _retain(bytes.length + (metafile?.previewSvg?.length ?? 0));
     final id = 'image-${assets.length + 1}';
     final asset = LegacyWordImageAsset(
       id: id,
@@ -1135,12 +1163,14 @@ class _DrawingShape {
     this.textboxId,
     this.artifactId,
     this.flags,
+    this.model,
   );
   final int id;
   final Map<int, int> properties;
   final int? textboxId;
   final String artifactId;
   final int flags;
+  final LegacyWordOfficeArtShape model;
   bool get deleted => (flags & 8) != 0;
 }
 
@@ -1154,6 +1184,7 @@ class _PictureData {
     this.properties,
     this.externalName,
     this.deleted,
+    this.shape,
   );
   final LegacyWordSourceReference source;
   final String artifactId;
@@ -1162,4 +1193,5 @@ class _PictureData {
   final Map<int, int> properties;
   final String? externalName;
   final bool deleted;
+  final LegacyWordOfficeArtShape shape;
 }

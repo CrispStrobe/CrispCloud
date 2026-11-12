@@ -159,3 +159,7 @@ MIT license, and adapted JSDoc source retains the accompanying 0BSD notice.
 This Source Code Form is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
 one at https://mozilla.org/MPL/2.0/.
+
+The integrated preservation work includes nested tables, bounded EMF/WMF media, paragraph pagination controls, formatting revisions and comment threads. See [fidelity oracles](doc/fidelity-oracles.md), [layout](doc/layout-fidelity.md), [media](doc/media-fidelity.md) and [revisions/comments](doc/revisions-comments.md) for the supported contracts and remaining losses. The integration passed 252 Dart tests, source/package-graph oracles and the JavaScript acceptance runner on macOS; native Word layout remains a separately measured boundary.
+
+The current preservation increment also retains supported Word compatibility flags and OfficeArt text-box layout and supplies bounded vector previews. Unsupported drawing records remain explicit retained evidence; the parser does not claim exact native layout for every legacy drawing.

@@ -9,6 +9,7 @@ import 'legacy_word_structured_model.dart';
 import 'legacy_word_structured_render.dart';
 
 part 'legacy_word_binary_source.dart';
+part 'legacy_word_compatibility_parser.dart';
 part 'legacy_word_sprms.dart';
 part 'legacy_word_layout_parser.dart';
 part 'legacy_word_revisions.dart';
@@ -19,6 +20,7 @@ part 'legacy_word_fields.dart';
 part 'legacy_word_lists.dart';
 part 'legacy_word_tables.dart';
 part 'legacy_word_media_parser.dart';
+part 'legacy_word_officeart_parser.dart';
 
 typedef _Props = Map<String, Object?>;
 
@@ -55,6 +57,7 @@ class _StructuredWordParser {
   final _commentMarkerCps = <int>{};
   final _referenceAnchors = <int>{};
   final _referencePresentations = <int, LegacyWordMediaPresentation>{};
+  final _referenceCharacterStyles = <int, LegacyWordCharacterStyle>{};
   final stories = <LegacyWordStory>[];
   final noteReferences = <LegacyWordNoteReference>[];
   final commentReferences = <LegacyWordCommentReference>[];
@@ -71,6 +74,9 @@ class _StructuredWordParser {
 
   LegacyWordDocument parse() {
     _storyWarnings();
+    if (source.compatibility.issues.isNotEmpty) {
+      warnings.add(LegacyWordWarning.unsupportedFormatting);
+    }
     if (source.totalLength == 0) {
       final media = _readMediaCatalog(const []);
       final orderedWarnings = warnings.toList()
@@ -84,6 +90,7 @@ class _StructuredWordParser {
         media: media,
         evenAndOddHeaders: source.evenAndOddHeaders,
         defaultTabStopTwips: source.defaultTabStopTwips,
+        compatibility: source.compatibility,
       );
     }
     body = Uint16List(source.totalLength);
@@ -140,6 +147,7 @@ class _StructuredWordParser {
       media: media,
       evenAndOddHeaders: source.evenAndOddHeaders,
       defaultTabStopTwips: source.defaultTabStopTwips,
+      compatibility: source.compatibility,
     );
   }
 
@@ -461,6 +469,7 @@ class _StructuredWordParser {
       while (cp < spanEnd) {
         final unit = body[cp];
         if (_referenceAnchors.contains(cp)) {
+          _referenceCharacterStyles[cp] = runStyle;
           _referencePresentations[cp] = LegacyWordMediaPresentation(
             hidden: runStyle.hidden || _fieldResults.contains(false),
             inserted: inserted,

@@ -5,8 +5,68 @@ import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:test/test.dart';
 import 'package:xml/xml.dart';
 import 'support/structured_word_fixture.dart';
+import 'support/story_word_fixture.dart';
 
 void main() {
+  test(
+    'body references and note markers keep separate source character styles',
+    () {
+      const note = '\x02Note\r';
+      final document = parseLegacyWordDocument(
+        storyWordFixture(
+          main: 'A\x02\r',
+          footnotes: '$note\r',
+          tablePairs: {
+            2: storyPlc([1, 3], wordU16(1)),
+            3: storyPlc([0, note.length, 0xffffffff]),
+          },
+          characterRuns: [
+            WordFixtureFkpRun(
+              8192,
+              8194,
+              properties: wordSprm(0x4a43, wordU16(22)),
+            ),
+            const WordFixtureFkpRun(8194, 16386),
+            WordFixtureFkpRun(
+              16386,
+              16388,
+              properties: [
+                ...wordSprm(0x4a43, wordU16(15)),
+                ...wordSprm(0x2a48, [1]),
+              ],
+            ),
+            const WordFixtureFkpRun(16388, 28672),
+          ],
+        ),
+      );
+      final reference = document.noteReferences.single;
+      expect(reference.referenceStyle!.fontSizeHalfPoints, 15);
+      expect(reference.markerStyle!.fontSizeHalfPoints, 22);
+      final files = ZipDecoder().decodeBytes(
+        convertLegacyWordDocument(document).bytes,
+      );
+      const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+      for (final (part, tag, expected) in [
+        ('word/document.xml', 'footnoteReference', '15'),
+        ('word/footnotes.xml', 'footnoteRef', '22'),
+      ]) {
+        final xml = XmlDocument.parse(
+          utf8.decode(files.findFile(part)!.content),
+        );
+        final run = xml
+            .findAllElements(tag, namespace: w)
+            .single
+            .parentElement!;
+        expect(
+          run
+              .findAllElements('sz', namespace: w)
+              .single
+              .getAttribute('val', namespace: w),
+          expected,
+        );
+      }
+    },
+  );
   test('binary object markers in field code retain stored results inertly', () {
     final document = parseLegacyWordDocument(
       StructuredWordFixture(

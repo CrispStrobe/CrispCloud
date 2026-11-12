@@ -7,9 +7,11 @@ library;
 
 import 'dart:typed_data';
 
+import 'legacy_word_compatibility.dart';
 import 'legacy_word_media_model.dart';
 import 'legacy_word_layout_model.dart';
 
+export 'legacy_word_compatibility.dart';
 export 'legacy_word_media_model.dart';
 export 'legacy_word_layout_model.dart';
 
@@ -62,6 +64,7 @@ class LegacyWordDocument {
     this.media = const LegacyWordMediaCatalog(),
     this.evenAndOddHeaders = false,
     this.defaultTabStopTwips,
+    this.compatibility = const LegacyWordCompatibility.unspecified(),
   });
   final List<LegacyWordBlock> blocks;
   final List<LegacyWordSection> sections;
@@ -87,6 +90,7 @@ class LegacyWordDocument {
   /// DopBase.fFacingPages. Stored even-page stories alone do not enable them.
   final bool evenAndOddHeaders;
   final int? defaultTabStopTwips;
+  final LegacyWordCompatibility compatibility;
 }
 
 enum LegacyWordStoryKind {
@@ -138,6 +142,8 @@ class LegacyWordNoteReference {
     required this.endnote,
     this.autoNumbered = true,
     this.customMark,
+    this.referenceStyle,
+    this.markerStyle,
     this.presentation = const LegacyWordMediaPresentation(),
   });
   final int id;
@@ -146,6 +152,10 @@ class LegacyWordNoteReference {
   final bool endnote;
   final bool autoNumbered;
   final String? customMark;
+
+  /// Independent source formatting at the body reference and note marker.
+  final LegacyWordCharacterStyle? referenceStyle;
+  final LegacyWordCharacterStyle? markerStyle;
   final LegacyWordMediaPresentation presentation;
 }
 

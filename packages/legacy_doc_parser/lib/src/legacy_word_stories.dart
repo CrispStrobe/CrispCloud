@@ -100,6 +100,7 @@ extension _WordStories on _StructuredWordParser {
   }
 
   void _resolveReferencePresentations() {
+    final storyStarts = {for (final story in stories) story.id: story.startCp};
     LegacyWordMediaPresentation at(int cp) {
       final value = _referencePresentations[cp];
       if (value == null) {
@@ -117,6 +118,8 @@ extension _WordStories on _StructuredWordParser {
         endnote: old.endnote,
         autoNumbered: old.autoNumbered,
         customMark: old.customMark,
+        referenceStyle: _referenceCharacterStyles[old.anchorCp],
+        markerStyle: _referenceCharacterStyles[storyStarts[old.storyId]],
         presentation: at(old.anchorCp),
       );
     }
@@ -185,7 +188,10 @@ extension _WordStories on _StructuredWordParser {
       final id = i + 1, storyId = '${endnote ? 'endnote' : 'footnote'}-$id';
       _noteMarkerCps.add(anchor);
       _referenceAnchors.add(anchor);
-      if (body[start] == 2) _noteMarkerCps.add(start);
+      if (body[start] == 2) {
+        _noteMarkerCps.add(start);
+        _referenceAnchors.add(start);
+      }
       noteReferences.add(
         LegacyWordNoteReference(
           id: id,

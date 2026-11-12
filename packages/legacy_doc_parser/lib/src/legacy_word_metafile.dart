@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
 import 'legacy_word_media_model.dart';
+
+part 'legacy_word_metafile_render.dart';
 
 /// Limits apply before inflation or allocation from a stored record count.
 const legacyWordMetafileByteLimit = 16 * 1024 * 1024;
@@ -71,6 +74,10 @@ DecodedOfficeArtMetafile decodeOfficeArtMetafile(
     bounds: bounds,
     widthEmu: width,
     heightEmu: height,
+    maxPreviewCharacters: (maxDecodedBytes - decodedLength).clamp(
+      0,
+      8 * 1024 * 1024,
+    ),
   );
   return DecodedOfficeArtMetafile(
     bytes: decoded,
@@ -173,6 +180,7 @@ LegacyWordMetafileInfo parseLegacyWordMetafile(
   LegacyWordVectorBounds? bounds,
   int? widthEmu,
   int? heightEmu,
+  int maxPreviewCharacters = 8 * 1024 * 1024,
 }) {
   if (bytes.length > legacyWordMetafileByteLimit) {
     throw const FormatException('Metafile exceeds its byte limit.');
@@ -183,12 +191,28 @@ LegacyWordMetafileInfo parseLegacyWordMetafile(
     LegacyWordImageFormat.wmf => _scanWmf(input, bounds),
     _ => throw ArgumentError.value(format, 'format', 'Expected EMF or WMF'),
   };
+  if (maxPreviewCharacters < 0 || maxPreviewCharacters > 8 * 1024 * 1024) {
+    throw ArgumentError.value(maxPreviewCharacters, 'maxPreviewCharacters');
+  }
+  final selectedBounds = bounds ?? scan.bounds;
+  final preview =
+      scan.boundsKnown && selectedBounds.width > 0 && selectedBounds.height > 0
+      ? _MetafileRenderer(
+          input,
+          scan,
+          format,
+          selectedBounds,
+          maxPreviewCharacters,
+        ).render()
+      : const _MetafilePreview(null, []);
   return LegacyWordMetafileInfo(
-    bounds: bounds ?? scan.bounds,
+    bounds: selectedBounds,
     recordCount: scan.records.length,
     nativeEmbeddingAllowed: scan.nativeEmbeddingAllowed,
     widthEmu: widthEmu,
     heightEmu: heightEmu,
+    previewSvg: preview.svg,
+    unsupportedPreviewRecords: preview.unsupported,
   );
 }
 
@@ -202,12 +226,14 @@ class _MetafileScan {
     this.records,
     this.bounds,
     this.nativeEmbeddingAllowed,
-    this.objects,
-  );
+    this.objects, {
+    this.boundsKnown = true,
+  });
   final List<_MetafileRecord> records;
   final LegacyWordVectorBounds bounds;
   final bool nativeEmbeddingAllowed;
   final int objects;
+  final bool boundsKnown;
 }
 
 _MetafileScan _scanEmf(_MetaBytes input) {
@@ -349,6 +375,7 @@ _MetafileScan _scanWmf(
         const LegacyWordVectorBounds(0, 0, 1, 1),
     native,
     objects,
+    boundsKnown: suppliedBounds != null || placeableBounds != null,
   );
 }
 
@@ -386,5 +413,10 @@ class _MetaBytes {
   int i32(int offset) {
     require(offset, 4);
     return data.getInt32(offset, Endian.little);
+  }
+
+  double f32(int offset) {
+    require(offset, 4);
+    return data.getFloat32(offset, Endian.little);
   }
 }

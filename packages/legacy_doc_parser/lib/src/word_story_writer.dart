@@ -327,18 +327,26 @@ extension _WordStories on _StructuredWordWriter {
       final name = reference.endnote ? 'endnote' : 'footnote';
       _event(owner, reference.anchorCp, 30, () {
         _mediaStart(reference.presentation);
+        if (reference.referenceStyle != null) {
+          _xml.add('<w:rPr>');
+          _runStyle(reference.referenceStyle!);
+          _xml.add('</w:rPr>');
+        }
         _xml.add(
           '<w:${name}Reference w:id="${reference.id}"${reference.autoNumbered ? '' : ' w:customMarkFollows="1"'}/>',
         );
         _mediaEnd(reference.presentation);
       });
       if (reference.autoNumbered) {
-        _event(
-          story.id,
-          story.startCp,
-          30,
-          () => _xml.add('<w:r><w:${name}Ref/></w:r>'),
-        );
+        _event(story.id, story.startCp, 30, () {
+          _xml.add('<w:r>');
+          if (reference.markerStyle != null) {
+            _xml.add('<w:rPr>');
+            _runStyle(reference.markerStyle!);
+            _xml.add('</w:rPr>');
+          }
+          _xml.add('<w:${name}Ref/></w:r>');
+        });
       }
     }
     _prepareCommentThreads();
@@ -728,7 +736,9 @@ extension _WordStories on _StructuredWordWriter {
     if (document.evenAndOddHeaders) {
       settings.add('<w:evenAndOddHeaders/>');
     }
-    settings.add('<w:updateFields w:val="false"/></w:settings>');
+    settings.add('<w:updateFields w:val="false"/>');
+    _writeCompatibility(settings);
+    settings.add('</w:settings>');
     _package.addXml(
       'word/settings.xml',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml',

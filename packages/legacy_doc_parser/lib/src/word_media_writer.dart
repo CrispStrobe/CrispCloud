@@ -496,46 +496,6 @@ extension _WordMedia on _StructuredWordWriter {
     }
   }
 
-  void _textbox(
-    LegacyWordTextboxReference reference,
-    LegacyWordStory story,
-    LegacyWordDrawing drawing, {
-    required bool first,
-    int? nextShape,
-  }) {
-    if (first && !_renderedTextboxes.add(story.id)) return;
-    final width = (drawing.rightTwips - drawing.leftTwips) / 20;
-    final height = (drawing.bottomTwips - drawing.topTwips) / 20;
-    final horizontal = ['margin', 'page', 'text'][drawing.horizontalOrigin];
-    final vertical = ['margin', 'page', 'text'][drawing.verticalOrigin];
-    final prefix = reference.inHeaderFooter ? 'Header' : '';
-    _mediaStart(drawing.presentation);
-    _xml.add(
-      '<w:pict><v:rect id="_legacy${prefix}TextboxShape${drawing.shapeId}" '
-      'style="position:absolute;margin-left:${drawing.leftTwips / 20}pt;'
-      'margin-top:${drawing.topTwips / 20}pt;width:${width}pt;height:${height}pt;'
-      'mso-position-horizontal-relative:$horizontal;mso-position-vertical-relative:$vertical;'
-      'z-index:${drawing.behindText ? -1 : drawing.shapeId}',
-    );
-    if (nextShape != null) {
-      _xml.add(';mso-next-textbox:#_legacy${prefix}TextboxShape$nextShape');
-    }
-    _xml.add(
-      '" filled="f" stroked="f"><v:textbox inset="0,0,0,0"><w:txbxContent>',
-    );
-    if (first) {
-      _withStory(story, _part, _xml, () => _blocks(story.blocks));
-    } else {
-      _xml.add('<w:p/>');
-    }
-    _xml.add('</w:txbxContent></v:textbox></v:rect></w:pict>');
-    _mediaEnd(drawing.presentation);
-    _count('textboxes');
-    // Plain rectangular boxes preserve editable story content and chain IDs;
-    // OfficeArt shape styling/wrap polygons remain evidence, not a fidelity claim.
-    limitations.add(LegacyWordConversionLimitation.partialFormatting);
-  }
-
   void _mediaStart(LegacyWordMediaPresentation presentation) {
     final metadata = LegacyWordRun(
       startCp: 0,

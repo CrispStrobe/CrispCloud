@@ -2,6 +2,9 @@
 
 import 'dart:typed_data';
 
+import 'legacy_word_officeart_model.dart';
+export 'legacy_word_officeart_model.dart';
+
 /// Resolved visibility and tracked-change state at a media reference's CP.
 /// Keeping this separate from the binary asset prevents reuse of a picture's
 /// bytes from accepting a deletion or revealing a hidden occurrence.
@@ -60,14 +63,6 @@ class LegacyWordSourceReference {
 }
 
 enum LegacyWordImageFormat { png, jpeg, tiff, dib, emf, wmf, pict, unknown }
-
-/// Metafile/device coordinates, independent of the picture's Word dimensions.
-class LegacyWordVectorBounds {
-  const LegacyWordVectorBounds(this.left, this.top, this.right, this.bottom);
-  final int left, top, right, bottom;
-  int get width => right - left;
-  int get height => bottom - top;
-}
 
 /// Bounded structural inspection, not a claim that every GDI record was drawn.
 class LegacyWordMetafileInfo {
@@ -156,6 +151,7 @@ class LegacyWordPicture {
     this.storedExternalName,
     this.presentation = const LegacyWordMediaPresentation(),
     this.shapeDeleted = false,
+    this.shape,
   });
   final String id;
   final int cp;
@@ -176,6 +172,7 @@ class LegacyWordPicture {
   /// OfficeArt's deleted-shape bit, distinct from a tracked text deletion.
   /// The stored payload remains evidence and must not become an active shape.
   final bool shapeDeleted;
+  final LegacyWordOfficeArtShape? shape;
 }
 
 class LegacyWordDrawing {
@@ -204,6 +201,7 @@ class LegacyWordDrawing {
     this.cropBottomFixed16 = 0,
     this.cropLeftFixed16 = 0,
     this.cropRightFixed16 = 0,
+    this.shape,
   });
   final int shapeId;
   final int anchorCp;
@@ -229,6 +227,7 @@ class LegacyWordDrawing {
   final int cropBottomFixed16;
   final int cropLeftFixed16;
   final int cropRightFixed16;
+  final LegacyWordOfficeArtShape? shape;
 }
 
 class LegacyWordPreservedStream {
