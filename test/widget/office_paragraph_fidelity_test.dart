@@ -361,6 +361,41 @@ Future<void> _apply(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Finder _tabKey(String name) => find.byKey(ValueKey<String>('word-tab-$name'));
+
+Future<void> _setTab(WidgetTester tester, int index, String value) async {
+  final field = _tabKey('position-$index');
+  await tester.ensureVisible(field);
+  await tester.enterText(field, value);
+  await tester.pump();
+}
+
+Future<void> _addTab(WidgetTester tester, String value) async {
+  await tester.ensureVisible(_tabKey('add'));
+  await tester.tap(_tabKey('add'));
+  await tester.pumpAndSettle();
+  final positions = find.byWidgetPredicate(
+    (widget) =>
+        widget is TextField &&
+        widget.key is ValueKey<String> &&
+        (widget.key! as ValueKey<String>).value.startsWith(
+          'word-tab-position-',
+        ),
+  );
+  final field = positions.last;
+  await tester.ensureVisible(field);
+  await tester.enterText(field, value);
+  await tester.pump();
+}
+
+Future<void> _tabChoice(WidgetTester tester, String key, String value) async {
+  await tester.ensureVisible(_tabKey(key));
+  await tester.tap(_tabKey(key));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(value).last);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets(
     'unchanged paragraph dialog preserves fractions, tabs and clean state',
@@ -447,8 +482,18 @@ void main() {
       await _set(tester, 'Space before (pt)', '-10');
       await _set(tester, 'Space after (pt)', 'Infinity');
       await _set(tester, 'Line spacing', '0');
-      await _set(tester, 'Tab stops (pt, comma separated)', '72.35, invalid');
+      await _setTab(tester, 0, 'invalid');
       await _apply(tester);
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(
+        tester.widget<TextField>(_tabKey('position-0')).controller!.text,
+        'invalid',
+      );
+      expect(controller.isDirty, isFalse);
+      expect(controller.canUndo, isFalse);
+      await _setTab(tester, 0, '72.35');
+      await _apply(tester);
+      expect(find.byType(AlertDialog), findsNothing);
       expect(controller.isDirty, isFalse);
       _expectBody(controller.saveBytes());
       await tester.pumpWidget(const SizedBox.shrink());
@@ -460,11 +505,7 @@ void main() {
     (tester) async {
       final (controller, key) = await _host(tester);
       await _dialog(tester, key);
-      await _set(
-        tester,
-        'Tab stops (pt, comma separated)',
-        '72.35, 144.65, 216.25',
-      );
+      await _addTab(tester, '216.25');
       await _apply(tester);
       _expectTabs(_paragraphs(controller.saveBytes()).first, [
         ('1447', 'decimal', 'dot'),
@@ -473,6 +514,80 @@ void main() {
       ]);
       controller.undo();
       _expectBody(controller.saveBytes());
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'shared custom tab controls reach the native host save and history',
+    (tester) async {
+      final (controller, key) = await _host(tester);
+      await _dialog(tester, key);
+      expect(find.byType(WordTabStopsEditor), findsOneWidget);
+      await _tabChoice(tester, 'alignment-0', 'Center');
+      await _tabChoice(tester, 'leader-0', 'Underline');
+      await _tabChoice(tester, 'alignment-1', 'Decimal');
+      await _tabChoice(tester, 'leader-1', 'Dots');
+      await _addTab(tester, '216.25');
+      await _tabChoice(tester, 'alignment-2', 'Right');
+      await _tabChoice(tester, 'leader-2', 'Dashes');
+      await _apply(tester);
+      const expected = [
+        ('1447', 'center', 'underscore'),
+        ('2893', 'decimal', 'dot'),
+        ('4325', 'right', 'hyphen'),
+      ];
+      var bytes = controller.saveBytes();
+      for (var cycle = 1; cycle <= 3; cycle++) {
+        final paragraphs = _paragraphs(bytes);
+        _expectTabs(paragraphs.first, expected);
+        _expectTabs(paragraphs.last, [('1447', 'right', 'underscore')]);
+        expect(_attribute(paragraphs.first, 'ind', 'left'), '247');
+        expect(_attribute(paragraphs.first, 'spacing', 'after'), '145');
+        final output = File('build/fidelity-custom-tabs/host-tabs-$cycle.docx');
+        output.parent.createSync(recursive: true);
+        output.writeAsBytesSync(bytes);
+        final reopened = WordEditorController.fromBytes(bytes);
+        bytes = reopened.saveBytes();
+        reopened.dispose();
+      }
+      controller.undo();
+      _expectBody(controller.saveBytes());
+      controller.redo();
+      _expectTabs(_paragraphs(controller.saveBytes()).first, expected);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'cancelling tab drafts preserves body and unrelated pending note history',
+    (tester) async {
+      final (controller, key) = await _host(tester);
+      controller.insertFootnote(text: 'Original note');
+      final note = controller.document.footnotes.single;
+      controller.setNoteText(note, 'Pending note');
+      final revision = controller.contentRevision;
+      var commands = 0;
+      controller.commands.addListener(() => commands++);
+      await _dialog(tester, key);
+      await _tabChoice(tester, 'leader-0', 'Underline');
+      await _setTab(tester, 0, 'NaN');
+      await _apply(tester);
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(controller.contentRevision, revision);
+      expect(commands, 0);
+      expect(controller.noteEditText(note), 'Pending note');
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(controller.contentRevision, revision);
+      expect(commands, 0);
+      controller.setNoteText(note, 'Continued note');
+      controller.undo();
+      expect(controller.noteEditText(note), 'Original note');
+      _expectTabs(_paragraphs(controller.saveBytes()).first, [
+        ('1447', 'decimal', 'dot'),
+        ('2893', 'right', 'hyphen'),
+      ]);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

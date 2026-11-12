@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_editor",
-  "expected_file_count": 22,
+  "expected_file_count": 25,
   "description": "Authored inventory of actual Flutter controller exports. The engine and editor are checked separately so cleaning one package cannot remove the other's evidence.",
   "series": [
     {
@@ -66,6 +66,15 @@
         3
       ],
       "producer": "test/office_story_golden_test.dart"
+    },
+    {
+      "pattern": "fidelity-custom-tabs/editor-tabs-{cycle}.docx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/word_tab_stops_editor_test.dart"
     }
   ],
   "standalone": [

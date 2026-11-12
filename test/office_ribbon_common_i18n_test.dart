@@ -23,6 +23,17 @@ void main() {
       expect(
         keys,
         containsAll([
+          'Custom tab stops',
+          'Add tab stop',
+          'Remove tab stop',
+          'Tab position (pt)',
+          'Tab alignment',
+          'Tab leader',
+          'Enter a finite, nonnegative position in points.',
+          'Tab positions must be distinct.',
+          'Decimal',
+          'Dots',
+          'Dashes',
           'Heading 2',
           'Footnote',
           'Endnote',

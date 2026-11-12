@@ -1,0 +1,114 @@
+{
+  "generated_utc": "2026-11-12T13:25:17.305588+00:00",
+  "scope": "FID-068 custom tab stop shared UI and host integration; style creation/selection remains open",
+  "source_checkpoint": "51454a72986b6768108d20edecab28a17d3f0c13",
+  "host_source_fingerprints": [
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/lib/l10n/office_ribbon_common_strings.dart",
+      "bytes": 112208,
+      "sha256": "ff232f9435d5231aea204cb47527fb43e4bf9cc7e3a0ca659d937d4dfc7e155d"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/lib/widgets/office_editor_dialogs.dart",
+      "bytes": 44927,
+      "sha256": "27ebb100f3391e9027c8114731c248a0cf199d62486ae777c2e07532df2d86e6"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/lib/widgets/office_editor_ribbon.dart",
+      "bytes": 118585,
+      "sha256": "f6181e458942b37a09612cec897c62d8f01737fda35ba923664685b603c83a40"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/test/office_ribbon_common_i18n_test.dart",
+      "bytes": 2657,
+      "sha256": "c189e56794418cfca21ff04147dfdaa1e5ea06749406805a3d6a73ef715eb61d"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/test/widget/office_paragraph_dialog_test.dart",
+      "bytes": 4676,
+      "sha256": "5a3795c93aebc63c82fadf7c76880c90b4f336f46b03bbec7c0c86b98a856c9f"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/test/widget/office_paragraph_fidelity_test.dart",
+      "bytes": 30134,
+      "sha256": "abb7ab83b44daf9c77ae1c4d40ba847589184c8885cedc41e4b1f85bcec7046a"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/test/widget/office_save_fidelity_test.dart",
+      "bytes": 42118,
+      "sha256": "3851538184840497efea18dbbf5d90d46e0e82d9c73f8f6b9985a64614b00b57"
+    }
+  ],
+  "runs": [
+    {
+      "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub test/widget/office_paragraph_dialog_test.dart test/widget/office_paragraph_fidelity_test.dart test/widget/office_save_fidelity_test.dart test/office_formatting_preservation_test.dart test/office_ribbon_common_i18n_test.dart test/office_ribbon_controls_i18n_test.dart --reporter expanded",
+      "exit_code": 0,
+      "passed": 37,
+      "receipt": {
+        "path": "/workspace/scratch/10b2b87c2738/validation/fid068/host-focused.log",
+        "bytes": 9627,
+        "sha256": "4c3c03da537d7d258d770e59c192b781817d6f90e4d26f706215f6316aaa437f"
+      },
+      "scope_note": "Precedes final upload-test strengthening and behavior-neutral brace-style fixes."
+    },
+    {
+      "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub test/widget/office_save_fidelity_test.dart --reporter expanded",
+      "exit_code": 0,
+      "passed": 11,
+      "receipt": {
+        "path": "/workspace/scratch/10b2b87c2738/validation/fid068/host-upload-final.log",
+        "bytes": 4236,
+        "sha256": "749125ea96f84fff7c61cfddb210ad20f6d25eee2a40115782f923eab48e777e"
+      },
+      "scope_note": "Overlaps the earlier 37 tests. Final version chooses center/dot and decimal/underscore through actual shared controls, checking native values in all three real upload captures."
+    },
+    {
+      "command": "flutter analyze --no-pub lib/l10n/office_ribbon_common_strings.dart lib/widgets/office_editor_dialogs.dart lib/widgets/office_editor_ribbon.dart test/office_ribbon_common_i18n_test.dart test/widget/office_paragraph_dialog_test.dart test/widget/office_paragraph_fidelity_test.dart test/widget/office_save_fidelity_test.dart",
+      "exit_code": 0,
+      "issues": 0,
+      "receipt": {
+        "path": "/workspace/scratch/10b2b87c2738/validation/fid068/host-analysis-final.log",
+        "bytes": 97,
+        "sha256": "360f9b1372da7b38dca21167968ba8696a9dc2ed6e321270c2d3b5263b252c40"
+      }
+    }
+  ],
+  "exports": [
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/build/fidelity-custom-tabs/host-tabs-1.docx",
+      "bytes": 5367,
+      "sha256": "534a5bc4e639d042f7fbed4107fb2012418e335d2924d1fc658221fa84bb608c"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/build/fidelity-custom-tabs/host-tabs-2.docx",
+      "bytes": 5403,
+      "sha256": "a8eef92d5206e2acc208b7e8b74782e87c2799aa281b305f0d1bab79a86281b7"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/build/fidelity-custom-tabs/host-tabs-3.docx",
+      "bytes": 5403,
+      "sha256": "767d703e473dd9bed8ede832035192da75d7b7493e7830d7e3f7dc9c6a11aac0"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/build/fidelity-host/ribbon-edits-1.docx",
+      "bytes": 9291,
+      "sha256": "fc186977624fc13a75bcee10a628b03fd66007eb5fbe51973cb4657c6a6c5e46"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/build/fidelity-host/ribbon-edits-2.docx",
+      "bytes": 9352,
+      "sha256": "29c5d71600936d748a3848ab2e6b08bb4a2f1edef8a088f742eed1dc87c00328"
+    },
+    {
+      "path": "/workspace/scratch/10b2b87c2738/CrispCloud/build/fidelity-host/ribbon-edits-3.docx",
+      "bytes": 9353,
+      "sha256": "28e6fd815f1ae5bd4db842bd764375c25fdb13bd410bd9ab3ed7258cb617e2b8"
+    }
+  ],
+  "limits": [
+    "Four modeled alignments: left, center, right, decimal. Four modeled leaders: none, dot, hyphen, underscore.",
+    "No native bar/clear tab, heavy/middleDot leader or inherited style-tab semantics added.",
+    "Character styles, custom style creation and table style selection are outside this increment.",
+    "Shared UI is Quds-owned; host owns translation and its existing paragraph-dialog/history invocation."
+  ]
+}

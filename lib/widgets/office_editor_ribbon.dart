@@ -2472,8 +2472,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     );
     if (choice == null || !mounted) return;
     final bool tabsChanged = !listEquals(
-      choice.tabStops,
-      current.tabs.map((tab) => tab.position).toList(),
+      choice.tabStops
+          .map((tab) => (tab.position, tab.alignment, tab.leader))
+          .toList(),
+      current.tabs
+          .map((tab) => (tab.position, tab.alignment, tab.leader))
+          .toList(),
     );
     final bool indentChanged =
         choice.left != current.indent.left ||
@@ -2500,7 +2504,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     }
     _wordPara((WmlParagraphProps p) {
       // Apply only edited fields. Other selected paragraphs can have different
-      // imported values and tab leaders which the dialog does not expose.
+      // imported values when the tab controls have not been edited.
       if (choice.align != current.justification) {
         p.justification = choice.align;
         p.explicitJustification = true;
@@ -2531,20 +2535,19 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         p.lineSpacingRule = choice.lineSpacingRule;
         p.explicitLineSpacing = true;
       }
-      if (choice.dropCapLines != current.dropCapLines)
+      if (choice.dropCapLines != current.dropCapLines) {
         p.dropCapLines = choice.dropCapLines;
+      }
       if (border != current.borderColor) p.borderColor = border;
       if (tabsChanged) {
-        p.tabs = <WmlTabStop>[
-          for (final double position in choice.tabStops)
-            p.tabs.where((tab) => tab.position == position).firstOrNull ??
-                WmlTabStop(position: position),
-        ];
+        p.tabs = List<WmlTabStop>.of(choice.tabStops);
       }
-      if (choice.keepTogether != current.keepTogether)
+      if (choice.keepTogether != current.keepTogether) {
         p.keepTogether = choice.keepTogether;
-      if (choice.pageBreakBefore != current.pageBreakBefore)
+      }
+      if (choice.pageBreakBefore != current.pageBreakBefore) {
         p.pageBreakBefore = choice.pageBreakBefore;
+      }
     });
   }
 
@@ -2693,8 +2696,9 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     if (result.top == current.top &&
         result.bottom == current.bottom &&
         result.left == current.left &&
-        result.right == current.right)
+        result.right == current.right) {
       return;
+    }
     _word.setPageMargins(
       current.copyWith(
         top: result.top,
