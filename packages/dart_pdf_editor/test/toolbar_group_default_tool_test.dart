@@ -51,12 +51,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(editing.tool, tool);
 
-      await tester.tap(find.byTooltip(RegExp('^$label', caseSensitive: false))
-          .first);
+      await tester
+          .tap(find.byTooltip(RegExp('^$label', caseSensitive: false)).first);
       await tester.pumpAndSettle();
       expect(editing.tool, tool, reason: 'the tool must stay armed');
-      expect(find.byTooltip(RegExp('^$label', caseSensitive: false)),
-          findsWidgets,
+      expect(
+          find.byTooltip(RegExp('^$label', caseSensitive: false)), findsWidgets,
           reason: 'the strip must stay open');
       await tester.pumpWidget(const SizedBox());
     });
