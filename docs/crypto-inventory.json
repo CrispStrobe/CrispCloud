@@ -23,7 +23,9 @@
     "koni_zip",
     "koni_sevenz",
     "koni_rar",
-    "flutter_secure_storage"
+    "flutter_secure_storage",
+    "kpasslib",
+    "ftpconnect"
   ],
   "features": [
     {
@@ -220,6 +222,52 @@
         "encrypted account backup and profile data"
       ],
       "note": "Bundled source contains additional compatibility crypto. Inventory the dependency graph and native archive/SMB sources; this list is not an assertion that every algorithm is reachable on every platform or fully audited."
+    },
+    {
+      "name": "KeePass database viewer/editor",
+      "algorithms": [
+        "AES-256-CBC, ChaCha20 and Salsa20 (KDBX 3/4 payload and inner stream)",
+        "Argon2d/Argon2id and AES-KDF key derivation",
+        "HMAC-SHA256 block authentication, SHA-256/SHA-512, BLAKE2b"
+      ],
+      "sources": [
+        "packages/kpasslib/UPSTREAM.md",
+        "packages/kpasslib/lib/src/crypto"
+      ],
+      "note": "Vendored MIT kpasslib (pinned source, local preservation/web patches). Opens and saves the user's own KDBX files with the user's master key; standard published algorithms only."
+    },
+    {
+      "name": "FTP over TLS",
+      "algorithms": [
+        "TLS on FTP control and data connections (explicit/implicit FTPS) via Dart SecurityContext with certificate validation"
+      ],
+      "sources": [
+        "packages/ftpconnect/UPSTREAM.md",
+        "lib/services/ftp_security_mode.dart",
+        "lib/services/ftp_client_adapter.dart"
+      ],
+      "note": "Vendored MIT ftpconnect 2.0.10 runtime; platform TLS only."
+    },
+    {
+      "name": "Encrypted archive creation",
+      "algorithms": [
+        "ZIP: WinZip AES-256 with PBKDF2-HMAC-SHA1 (package:archive ZipEncoder)",
+        "7z: AES-256 with iterated SHA-256 key derivation, optional header encryption (koni_sevenz writer)"
+      ],
+      "sources": [
+        "lib/services/archive_creation_service.dart"
+      ],
+      "note": "User-requested password-protected archives."
+    },
+    {
+      "name": "E-book DRM detection",
+      "algorithms": [
+        "none: encryption.xml and Kindle DRM markers are detected and such books are refused"
+      ],
+      "sources": [
+        "packages/crisp_ebook/lib/src/document.dart"
+      ],
+      "note": "No DRM removal or decryption is implemented."
     }
   ],
   "reviewed_files": [
@@ -366,6 +414,16 @@
     "packages/crisp_storage/lib/src/cloud_engine.dart",
     "packages/crisp_storage/lib/src/rust_cloud_native.dart",
     "packages/crisp_storage/lib/src/cloud/internxt_streaming_transfer.dart",
-    "lib/services/rust_cloud_delegate.dart"
+    "lib/services/rust_cloud_delegate.dart",
+    "packages/kpasslib/lib/src/crypto/crypto_engine.dart",
+    "packages/kpasslib/lib/src/crypto/dart/argon2_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/aes256_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/chacha20_dart.dart",
+    "packages/kpasslib/lib/src/crypto/dart/salsa20_dart.dart",
+    "packages/kpasslib/UPSTREAM.md",
+    "packages/ftpconnect/UPSTREAM.md",
+    "lib/services/ftp_security_mode.dart",
+    "lib/services/archive_creation_service.dart",
+    "packages/crisp_ebook/lib/src/document.dart"
   ]
 }
