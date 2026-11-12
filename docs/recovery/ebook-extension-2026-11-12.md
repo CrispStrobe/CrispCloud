@@ -60,6 +60,8 @@ runtime does not count as a rendering pass; use the hosted browser job.
 - `47e83b0`: saved the shared native/browser metadata corrections for
   Windows-1252, EXTH insertion and title clearing, together with the rebuilt
   Wasm asset and refreshed source provenance.
+- `6d9d963`: saved the native/Wasm compatibility regressions, expanded user and
+  package guides, dependency inventory and reviewed source fingerprints.
 
 ## Completed extension behavior
 
@@ -161,7 +163,7 @@ Wasm is 884,408 bytes, SHA-256
 | Core EPUBCheck 5.4.0 | Four fixtures, including formatted-text-edit.epub: zero fatal errors, errors or warnings |
 | Complete Kindle-to-EPUB import chain | Previously verified source plus three imported EPUBs remain part of the regression gate; all four reports were clean |
 | Expanded app/service/widget suite | All 102 tests pass in one final run; exit 0 and root pubspec restored |
-| Current extension web release | Run the final application JavaScript release build after the extension's assets and integration are complete |
+| Current extension web release | Final JavaScript release build passes in 187.8 seconds; bundled Wasm, runtime and worker match their recorded checksums |
 | Actual browser and platform checks | Pending hosted rerun; local Chromium launch is blocked by socket EPERM before test startup |
 | Reviewed source evidence | Source check passes; 41 evidence tests complete with two existing platform skips, and all 37 Apple preflight tests pass |
 | Scope formatting | All 64 changed Dart files pass the formatter without changes |
@@ -171,6 +173,14 @@ workers. They establish runtime/bridge behavior and metadata preservation, not
 successful browser asset loading or browser layout. The authored fixtures are
 integration samples rather than a publisher compatibility corpus. Keep these
 distinctions explicit in PR and release claims.
+
+The final web build used the rebuilt 884,408-byte metadata Wasm, and all three
+worker/runtime/engine asset hashes match `WASM.json` in `build/web`. The earlier
+complete application compile also passed before the metadata edge-case fixes.
+The final 27-test converter run and its analyzer pass cover the corrected native
+engine. The 102-test app run covers the unchanged integrated reader/editor UI.
+Hosted runs remain queued at the time this result is recorded; the draft PR
+retains the real Chromium and desktop platform gates.
 
 The initial prose widget failures were test sequencing/lazy-list lookup issues:
 tests now pump the enabled-state frame before Apply, assert that the button is
