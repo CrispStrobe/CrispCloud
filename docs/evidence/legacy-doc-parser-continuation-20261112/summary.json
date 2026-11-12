@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "appImplementationBase": "8763181c0c43d1d7d5b96d521dcaad8712e07fc9",
+  "parserCommit": "ba5f5b0cdd540bd0c03f62aabc88faadd8660e0b",
+  "suiteCommit": "a9f7c1a3ee8e9ffea7d65f781fb5584540ebb41d",
+  "officeManagedFiles": 781,
+  "parserUpstreamFiles": 360,
+  "inspectionTests": 32,
+  "syncControlTests": 19,
+  "installedOfficeChecks": 13,
+  "portableWebFormats": [
+    "DOC",
+    "RTF",
+    "PPT",
+    "MSG"
+  ],
+  "schemaReference": "https://github.com/CrispStrobe/legacy-doc-parser/tree/c01c90acc194c39b88efa4e393cc79aba1b8edad/doc/evidence/continuation-ba5f5b0",
+  "sourceHashes": {
+    "pubspec.yaml": "8b33a142ccab17c1743c04253e0aa0934c78883bcb5b262599d88899bae67f81",
+    "pubspec.lock": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+    "tool/office_fidelity_manifest.json": "f888e8f3bc3917d74f6b98c1edfc58177b1c8e1d871cb08df8b5c52d7a9d9296",
+    "packages/legacy_doc_parser/UPSTREAM.json": "506fbb504ad4f1f2f69da20392db1d16875d57b87fd43725d0c23de80f084015",
+    "lib/services/word_conversion_inspection.dart": "0e6f318591e35eb9b32ffab23f3f40bad5d45c762fcfd51238a81b88a51147bf",
+    "test/word_conversion_inspection_test.dart": "37e6b741ea6b1b558250aec5e4acd7d419d4e223c350a460dc821c7f05d8bab4"
+  },
+  "files": {
+    "inspection.log.gz": {
+      "sha256": "b78930ff50b330d13ac06b3470415a334078804af3488eda63baed9cb89dd4f7",
+      "uncompressedSha256": "35bcc809b136284329d051b412b2d309cb694279a64c12b0f6998eddc56529e5"
+    },
+    "portable-web.log.gz": {
+      "sha256": "2ae025acd9613488cd68a21153d37b3ce8e95079b8e00f4da773c1badd13743b",
+      "uncompressedSha256": "f2f9076a137b31ab69b347b23459c2722176e517b8ec3f0e1f72538e224012b0"
+    },
+    "native.log.gz": {
+      "sha256": "b9e1b2badb215a2aea8054f3d275e74e6ac69d644204c836c8c94b9e31983eda",
+      "uncompressedSha256": "16023b34aef4bbf77121cdf8cbd7b0d08475da375ce6a1b421916f6a5dccb28f"
+    },
+    "sync-controls.log.gz": {
+      "sha256": "8289bcdffa4c04249b6a9ef24f49aced9bc98b7395b1ea1aef1768443ab31714",
+      "uncompressedSha256": "c0018dfe6458859a21cda6d0b975f4b66d5baa114f98090ee8381fa0c6024487"
+    }
+  }
+}

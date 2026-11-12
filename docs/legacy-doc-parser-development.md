@@ -1,6 +1,14 @@
 # Legacy Word parser development integration
 
-The `1.2.2` integration now consumes canonical standalone parser `34e14841ef679c6b480673ef5be354286dbd67dc`. Its source suite passes 616 tests; its 104 Python controls and independent JavaScript document/media acceptance checks pass. Quds consumes the same parser implementation through its workspace metadata patch. CrispCloud verifies the exact unpatched standalone inventory through `tool/verify_office_fidelity.py` and the guarded standalone sync tool.
+The current development continuation consumes canonical standalone parser
+`ba5f5b0cdd540bd0c03f62aabc88faadd8660e0b` through Quds integration
+`a9f7c1a3ee8e9ffea7d65f781fb5584540ebb41d`. The exact upstream parser passes
+666 Dart tests, 110 Python oracle controls and the independent 153-output Open
+XML SDK gate. The [current app integration receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
+records source verification, 32 inspection tests, 19 sync controls, JavaScript
+acceptance and 13 actual installed-Office checks. Earlier results below retain
+their original source identity; this development update does not requalify a
+frozen release.
 
 Earlier integration evidence below remains attributed to its original commits and does not certify this newer tree. The current source pins and hashes are in `packages/legacy_doc_parser/UPSTREAM.json` and `tool/office_fidelity_manifest.json`.
 
