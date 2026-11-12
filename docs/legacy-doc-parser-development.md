@@ -1,16 +1,34 @@
 # Legacy Word parser development integration
 
-The current development continuation consumes canonical standalone parser
-`ba5f5b0cdd540bd0c03f62aabc88faadd8660e0b` through Quds integration
-`a9f7c1a3ee8e9ffea7d65f781fb5584540ebb41d`. The exact upstream parser passes
-666 Dart tests, 110 Python oracle controls and the independent 153-output Open
-XML SDK gate. The [current app integration receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
-records source verification, 32 inspection tests, 19 sync controls, JavaScript
-acceptance and 13 actual installed-Office checks. Earlier results below retain
-their original source identity; this development update does not requalify a
-frozen release.
+The current continuation uses canonical standalone parser
+`730812534e8dc045d6d97f600218228f05c51b97` through the guarded standalone
+mirror. The existing Quds source remains
+`74960237cea7c560f3db7ee96ca37641c4438567`; its engine/editor bytes are unchanged.
+The Git dependency, path override, upstream metadata and all 823 managed Office
+file hashes agree. The exact pins remain authoritative in
+`packages/legacy_doc_parser/UPSTREAM.json` and
+`tool/office_fidelity_manifest.json`.
 
-Earlier integration evidence below remains attributed to its original commits and does not certify this newer tree. The current source pins and hashes are in `packages/legacy_doc_parser/UPSTREAM.json` and `tool/office_fidelity_manifest.json`.
+This parser checkpoint recovers bounded native header/footer stories ending in
+closed tables, with an explicit warning. It adds lossless per-page native raster
+storage, 24 textbox table-context schema controls and four retained native
+header/footer inputs. The independent Open XML SDK accepts all 196 required
+outputs with zero errors. Native geometry disproved a proposed textbox-depth
+reset, which was retracted before this integration; the counterexample remains
+retained with the source artifacts. These validity and scoped geometry checks
+do not establish universal Word pagination or editing fidelity.
+
+CrispCloud now requires actual header/footer, note/comment and embedded-object
+anchors before clearing the corresponding conversion-loss warnings. Unused
+parts, unused definitions and references inside comment content remain
+inventory evidence rather than proof of preservation. The
+[conversion guide](legacy-word-conversion.md) records these bounds.
+
+The [previous continuation receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
+remains attributed to parser `ba5f5b0` and Quds `a9f7c1a`; it does not certify
+this changed tree. The earlier evidence below likewise retains its original
+source identity. This is a development checkpoint and does not requalify a
+frozen release.
 
 # Earlier development checkpoint
 

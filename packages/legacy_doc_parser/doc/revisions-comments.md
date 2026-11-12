@@ -57,8 +57,8 @@ combinations; its SDK result is a separate validity gate. Shared-image and
 private-field controls retain distinct occurrence metadata without exposing
 private payloads.
 
-Embedded OLE payloads with no recovered preview use an explicit generic icon
-labelled "Embedded object / Preview unavailable". The original storage bytes
+Embedded OLE payloads with no recovered preview use a generic icon whose VML
+markup includes "Embedded object / Preview unavailable". The original storage bytes
 remain the relationship target and `partialFormatting` remains disclosed.
 This is a converter placeholder, not an inferred rendering of the source
 object. Its self-contained [VML shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.shape)
@@ -69,6 +69,13 @@ has an explicit rectangular path, and the OLE `ShapeID` resolves to that
 `ProgID` is retained only when present in the source; no application identity is
 invented. Schema validity does not establish a native application's ability to
 activate every embedded payload or render its unavailable original preview.
+In the [retained native check](evidence/ole-placeholder-d4a19b9/README.md),
+LibreOfficeDev 26.8 renders the generic grey rectangle but suppresses both
+textbox label lines. The same occurs after a controlled insertion-acceptance
+projection, so accepted insertion alone does not restore the label on that
+renderer. This is an explicit remaining visual limitation; the check does not
+establish Word rendering, embedded-handler activation, or original-preview
+fidelity. A more portable visible placeholder remains followup work.
 
 These checks do not reconstruct moved objects, formatting histories of objects,
 comment range editing, automatic cleanup of unreferenced stories, or arbitrary

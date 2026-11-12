@@ -251,7 +251,12 @@ extension _WordStories on _StructuredWordParser {
         _addStory(separators[i].name, separators[i], first, end);
         continue;
       }
-      if (end <= first || body[end - 1] != 13) {
+      // A native DOC export can end this content range at a table-row mark
+      // immediately before its guard CR. Recover only a fully closed table
+      // within this exact header/footer range; never borrow the next story's
+      // paragraph or accept a stray cell mark as ordinary text.
+      final tableBoundary = end > first && body[end - 1] == 7;
+      if (end <= first || (body[end - 1] != 13 && !tableBoundary)) {
         throw const FormatException(
           'Word header content is not a complete paragraph.',
         );
@@ -274,6 +279,17 @@ extension _WordStories on _StructuredWordParser {
         sectionIndex: section,
         headerFooterType: type,
       );
+      if (tableBoundary) {
+        final blocks = stories.last.blocks;
+        if (blocks.isEmpty ||
+            blocks.last is! LegacyWordTable ||
+            blocks.last.endCp != end) {
+          throw const FormatException(
+            'Unclosed Word table at header boundary.',
+          );
+        }
+        warnings.add(LegacyWordWarning.recoveredTableStoryBoundary);
+      }
     }
   }
 

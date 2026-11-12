@@ -40,6 +40,27 @@ missing leading or trailing cells through `w:gridBefore`/`w:gridAfter` and
 grid without inventing content cells. This is property preservation; exact
 placement still needs an independently rendered comparison.
 
+Table context remains active while emitting a textbox inside an outer table.
+The textbox has a separate content story, but its emitted XML still resides in
+that containing table. Resetting table depth at the story boundary incorrectly
+adds the first-cell margin again. A literal OOXML control bridged to DOC retains
+a 720-twip origin and 240-twip margin: the original 720-twip DOCX indent matches
+the binary source's 48-point cell offset from its textbox paragraph. Resetting
+depth emits 960 twips and shifts the cell to 60 points. Native DOC-to-DOCX export
+also makes that shift; matching its XML alone would conceal the regression.
+The attempted reset was therefore retracted, rather than accepted on the basis
+of schema validity or an assumed story-isolation rule.
+The [retained native counterexample](evidence/textbox-table-context-20261112/README.md)
+includes exact inputs, both converter outputs, PDFs and marker coordinates.
+
+`test/legacy_word_textbox_table_test.dart` covers body/header anchors,
+default/zero/explicit margins, nested content and the containing table's later
+content. `tool/fidelity/textbox_table_fixture.dart` produces all 24 independent
+binary controls and converted packages. Those synthetic controls support
+parser/schema checks; their native renderer omits the textbox, so they do not
+establish visual equivalence. The separately authored native control establishes
+the measured containment behavior, not arbitrary textbox pagination.
+
 The authored native-origin probe checks zero and nonzero default margins,
 per-cell overrides, negative and positive origins, an independent half-gap,
 and nested tables. On LibreOfficeDev 26.8.0.0.alpha0

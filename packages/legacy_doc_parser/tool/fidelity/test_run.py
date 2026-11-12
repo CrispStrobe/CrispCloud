@@ -1,16 +1,21 @@
 # SPDX-License-Identifier: MPL-2.0
 """Runner predicates and orchestration, without starting a native Office app."""
 import copy
+import gzip
+import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
+import tarfile
 import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 import run
+from goldens import ENVIRONMENT_KEYS
 
 
 def authored_state():
@@ -30,14 +35,16 @@ def render_state():
 class RunnerTest(unittest.TestCase):
     def measure(self, directory, *, cycles=3, lose_at_bridge=None, lose_at_parser=None,
                 fail_at_parser=None, fail_render=None, source_suffix='.docx',
-                shift_at_bridge=None, shift_at_parser=None, flatten_at_native_docx=None):
+                shift_at_bridge=None, shift_at_parser=None, flatten_at_native_docx=None,
+                raster_storage='ppm'):
         root = Path(directory)
         source = root / ('authored' + source_suffix)
         source.write_text(json.dumps(authored_state()))
         case = {'id': 'authored', 'path': source.name, 'sha256': run.digest(source),
                 'features': ['revisions']}
         args = SimpleNamespace(office=Path('/mock/office'), dpi=72,
-                               no_roundtrip=False, roundtrip_cycles=cycles)
+                               no_roundtrip=False, roundtrip_cycles=cycles,
+                               raster_storage=raster_storage)
         calls = []
 
         def cycle_of(path):
@@ -78,8 +85,9 @@ class RunnerTest(unittest.TestCase):
             destination.write_text(json.dumps(state))
             return {'counts': {'sectionFormattingRevisions': state['counts']['sectPrChange']}}
 
-        def render(_office, current, output, _dpi):
+        def render(_office, current, output, _dpi, *, raster_storage):
             calls.append(('render', current, output))
+            self.assertEqual(args.raster_storage, raster_storage)
             if output.name == fail_render:
                 raise ValueError('Deliberate render failure')
             value = render_state()
@@ -117,6 +125,13 @@ class RunnerTest(unittest.TestCase):
                     self.assertEqual(receipt['sha256'], run.digest(output / receipt['path']))
             self.assertEqual(result['secondConverter'], result['roundtripCycles'][0]['converter'])
             self.assertEqual([], result['roundtripDifferences'])
+
+    def test_requested_storage_reaches_every_render_in_three_cycles(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result, _, calls = self.measure(directory, raster_storage='gzip')
+            self.assertFalse(run.case_has_errors(result))
+            self.assertEqual('gzip', result['rasterStorage'])
+            self.assertEqual(10, sum(call[0] == 'render' for call in calls))
 
     def test_original_and_binary_renders_precede_parser_import_with_separate_receipts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -371,6 +386,7 @@ class RunnerTest(unittest.TestCase):
                 self.assertEqual(tool, report['build']['compiler'])
                 self.assertEqual(before, report['build']['sources'])
                 self.assertEqual([], report['cases'])
+                self.assertEqual('ppm', report['rasterStorage'])
                 if changed_inputs:
                     self.assertFalse(report['build']['sourcesUnchangedDuringCompilation'])
                     self.assertEqual(after, report['build']['sourcesAfterCompilation'])
@@ -378,6 +394,291 @@ class RunnerTest(unittest.TestCase):
                 else:
                     self.assertEqual('compile', report['stages'][-1]['name'])
                     self.assertEqual('error', report['stages'][-1]['status'])
+
+
+class RasterStorageTest(unittest.TestCase):
+    """Independent PPM bytes exercise storage without claiming native rendering."""
+
+    @staticmethod
+    def page_bytes(index):
+        return b'P6\n2 1\n255\n' + bytes((index, 0, 255, 255, 255, 255))
+
+    def render(self, root, storage='ppm', *, page_count=2, fail_page=None,
+               omit_page=None, observations=None, recorder=None, pdf_info=None):
+        output = root / storage
+
+        def native(_office, _source, directory, kind):
+            self.assertEqual('pdf', kind)
+            directory.mkdir()
+            pdf = directory / 'authored.pdf'
+            pdf.write_bytes(b'%PDF-test-double; no native renderer was invoked')
+            return pdf
+
+        def command(argv):
+            if argv[0] == 'pdfinfo':
+                return pdf_info if pdf_info is not None else f'Pages: {page_count}\n'
+            if argv[0] == 'pdftotext':
+                if '-bbox-layout' in argv:
+                    Path(argv[-1]).write_text('<html><doc>' + ''.join(
+                        f'<page width="612" height="792"><word xMin="10" yMin="20" '
+                        f'xMax="30" yMax="40">Page{index}</word></page>'
+                        for index in range(1, page_count + 1)) + '</doc></html>')
+                    return ''
+                return '\n'.join(f'Page{index}' for index in range(1, page_count + 1))
+            self.assertEqual('pdftoppm', argv[0])
+            self.assertEqual(['-r', '72'], argv[1:3])
+            prefix = Path(argv[-1])
+            if '-singlefile' in argv:
+                index = int(argv[argv.index('-f') + 1])
+                self.assertEqual(str(index), argv[argv.index('-l') + 1])
+                if observations is not None:
+                    observations.append((index, sorted(path.name for path in output.glob('*.ppm'))))
+                if index == fail_page:
+                    prefix.with_suffix('.ppm').write_bytes(b'incomplete raster')
+                    raise RuntimeError('Deliberate later-page raster failure')
+                if index != omit_page:
+                    prefix.with_suffix('.ppm').write_bytes(self.page_bytes(index))
+            else:
+                for index in range(1, page_count + 1):
+                    (output / f'page-{index:0{len(str(page_count))}d}.ppm').write_bytes(self.page_bytes(index))
+            return ''
+
+        with patch.object(run, 'office_convert', native), patch.object(run, 'command', command):
+            action = lambda: run.render(Path('/mock/office'), root / 'authored.docx', output, 72,
+                                        raster_storage=storage)
+            return recorder('native-render', action) if recorder else action()
+
+    def verify_receipt(self, directory, receipt):
+        stored = directory / receipt['path']
+        self.assertEqual(receipt['sha256'], run.digest(stored))
+        self.assertEqual(receipt['sizeBytes'], stored.stat().st_size)
+        with gzip.open(stored, 'rb') as source:
+            raw = source.read()
+        self.assertEqual(self.page_bytes(receipt['page']), raw)
+        self.assertEqual(receipt['uncompressedSha256'], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(receipt['uncompressedSizeBytes'], len(raw))
+
+    def test_default_ppm_storage_keeps_existing_render_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = self.render(root)
+            self.assertEqual(['page-1.ppm', 'page-2.ppm'],
+                             sorted(path.name for path in (root / 'ppm').glob('*.ppm')))
+            self.assertFalse(list((root / 'ppm').glob('*.gz')))
+            self.assertFalse((root / 'ppm/raster-manifest.json').exists())
+            self.assertNotIn('rasterArtifacts', result)
+            self.assertEqual([hashlib.sha256(self.page_bytes(index)).hexdigest() for index in (1, 2)],
+                             result['rasterSha256'])
+
+    def test_gzip_keeps_ppm_hashes_comparisons_and_source_goldens_compatible(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = self.render(root)
+            compressed = self.render(root, 'gzip')
+            self.assertTrue(run.render_comparison(original, compressed)['exactOnThisRenderer'])
+            for key in original:
+                self.assertEqual(original[key], compressed[key])
+            environment = {key: 'same pinned environment' for key in ENVIRONMENT_KEYS}
+            catalog = {'environment': environment, 'cases': {
+                'authored': {'source': {'sha256': 'source'}, 'expectedRender': original}}}
+            self.assertEqual('matched', run.compare_golden(
+                'authored', 'source', compressed, environment, catalog)['status'])
+            manifest_path = root / 'gzip' / compressed['rasterManifest']['path']
+            self.assertEqual(compressed['rasterManifest']['sha256'], run.digest(manifest_path))
+            manifest = json.loads(manifest_path.read_text())
+            self.assertEqual('complete', manifest['status'])
+            self.assertEqual(compressed['rasterArtifacts'], manifest['pages'])
+            self.assertEqual(original['pdfSha256'], manifest['pdfSha256'])
+            self.assertEqual(len(original['pages']), manifest['pdfPageCount'])
+            self.assertEqual(manifest['pdfInfo']['sha256'], run.digest(root / 'gzip/pdfinfo.txt'))
+            for receipt in manifest['pages']:
+                self.verify_receipt(root / 'gzip', receipt)
+
+    def test_many_pages_are_numbered_and_stored_with_only_one_raw_page_at_a_time(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            observations = []
+            result = self.render(root, 'gzip', page_count=12, observations=observations)
+            self.assertEqual([(index, []) for index in range(1, 13)], observations)
+            self.assertEqual(list(range(1, 13)), [item['page'] for item in result['rasterArtifacts']])
+            self.assertEqual([hashlib.sha256(self.page_bytes(index)).hexdigest()
+                              for index in range(1, 13)], result['rasterSha256'])
+            self.assertFalse(list((root / 'gzip').glob('*.ppm')))
+            self.assertEqual(12, len(list((root / 'gzip').glob('*.ppm.gz'))))
+            self.assertNotIn('activePage', json.loads((root / 'gzip/raster-manifest.json').read_text()))
+
+    def test_late_raster_failure_keeps_completed_page_receipts_and_parent_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            case = {'priorSemantics': {'path': 'prior-semantic.json', 'sha256': 'retained'}}
+            recorder = run.StageRecorder(case, root / 'result.json')
+            with self.assertRaisesRegex(RuntimeError, 'later-page'):
+                self.render(root, 'gzip', fail_page=2, recorder=recorder)
+            saved = json.loads((root / 'result.json').read_text())
+            self.assertEqual(case, saved)
+            self.assertEqual('retained', saved['priorSemantics']['sha256'])
+            self.assertEqual('error', saved['stages'][-1]['status'])
+            manifest = json.loads((root / 'gzip/raster-manifest.json').read_text())
+            self.assertEqual('error', manifest['status'])
+            self.assertEqual(2, manifest['activePage'])
+            self.assertEqual([1], [item['page'] for item in manifest['pages']])
+            self.verify_receipt(root / 'gzip', manifest['pages'][0])
+            self.assertEqual(b'incomplete raster', (root / 'gzip/page-0002.ppm').read_bytes())
+            self.assertFalse((root / 'gzip/page-0002.ppm.gz').exists())
+            for name in ('authored.pdf', 'pages.xhtml', 'pages.txt'):
+                self.assertTrue((root / 'gzip' / name).is_file())
+
+    def test_missing_page_cannot_claim_complete_compressed_render(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaises(FileNotFoundError):
+                self.render(root, 'gzip', omit_page=2)
+            manifest = json.loads((root / 'gzip/raster-manifest.json').read_text())
+            self.assertEqual('error', manifest['status'])
+            self.assertEqual(2, manifest['expectedPages'])
+            self.assertEqual(1, len(manifest['pages']))
+            self.verify_receipt(root / 'gzip', manifest['pages'][0])
+
+    def test_missing_extra_or_unverifiable_pdf_pages_fail_before_rasterization(self):
+        for info in ('Pages: 1\n', 'Pages: 3\n', 'Pages: 0\n',
+                     'Pages: 2\nPages: 2\n', 'No readable page count\n'):
+            with self.subTest(pdf_info=info), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                observations = []
+                with self.assertRaises(RuntimeError):
+                    self.render(root, 'gzip', pdf_info=info, observations=observations)
+                self.assertEqual([], observations)
+                manifest = json.loads((root / 'gzip/raster-manifest.json').read_text())
+                self.assertEqual('error', manifest['status'])
+                self.assertEqual([], manifest['pages'])
+                self.assertEqual(info, (root / 'gzip/pdfinfo.txt').read_text())
+
+    def test_corrupt_copy_or_changed_raw_page_keeps_original_instead_of_publishing(self):
+        copy_stream = run.shutil.copyfileobj
+        for mutation in ('copied-bytes', 'source-after-copy'):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                source = root / 'page.ppm'
+                original = self.page_bytes(1)
+                source.write_bytes(original)
+
+                def copy(raw, compressed, **kwargs):
+                    if mutation == 'copied-bytes':
+                        compressed.write(b'silent wrong output')
+                    else:
+                        copy_stream(raw, compressed, **kwargs)
+                        source.write_bytes(b'concurrent page change')
+
+                with patch.object(run.shutil, 'copyfileobj', copy), \
+                        self.assertRaisesRegex(ValueError, 'unchanged PPM'):
+                    run.gzip_raster(source)
+                self.assertEqual(original if mutation == 'copied-bytes' else b'concurrent page change',
+                                 source.read_bytes())
+                self.assertFalse((root / 'page.ppm.gz').exists())
+                self.assertFalse((root / 'page.ppm.gz.tmp').exists())
+
+    def test_interrupted_second_compression_retains_first_page_and_current_raw_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            copy_stream = run.shutil.copyfileobj
+            copied = 0
+
+            def copy(raw, compressed, **kwargs):
+                nonlocal copied
+                copied += 1
+                if copied == 2:
+                    compressed.write(raw.read(8))
+                    raise OSError('Deliberate compression write failure')
+                return copy_stream(raw, compressed, **kwargs)
+
+            with patch.object(run.shutil, 'copyfileobj', copy), \
+                    self.assertRaisesRegex(OSError, 'compression write failure'):
+                self.render(root, 'gzip')
+            manifest = json.loads((root / 'gzip/raster-manifest.json').read_text())
+            self.assertEqual('error', manifest['status'])
+            self.assertEqual(1, len(manifest['pages']))
+            self.verify_receipt(root / 'gzip', manifest['pages'][0])
+            self.assertEqual(self.page_bytes(2), (root / 'gzip/page-0002.ppm').read_bytes())
+            self.assertFalse((root / 'gzip/page-0002.ppm.gz').exists())
+            self.assertFalse((root / 'gzip/page-0002.ppm.gz.tmp').exists())
+
+    def test_failed_receipt_write_keeps_raw_and_verified_compressed_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_json = run.write_json
+
+            def fail_receipt(path, value):
+                if value.get('status') == 'running' and len(value.get('pages', [])) == 1:
+                    raise OSError('Deliberate receipt write failure')
+                return write_json(path, value)
+
+            with patch.object(run, 'write_json', fail_receipt), \
+                    self.assertRaisesRegex(OSError, 'receipt write failure'):
+                self.render(root, 'gzip')
+            self.assertEqual(self.page_bytes(1), (root / 'gzip/page-0001.ppm').read_bytes())
+            manifest = json.loads((root / 'gzip/raster-manifest.json').read_text())
+            self.assertEqual('error', manifest['status'])
+            self.verify_receipt(root / 'gzip', manifest['pages'][0])
+
+    def test_existing_gzip_and_temporary_files_are_never_overwritten_or_removed(self):
+        for name in ('page.ppm.gz', 'page.ppm.gz.tmp'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                source = root / 'page.ppm'
+                source.write_bytes(self.page_bytes(1))
+                existing = root / name
+                existing.write_bytes(b'previous recovery artifact')
+                with self.assertRaises(FileExistsError):
+                    run.gzip_raster(source)
+                self.assertEqual(b'previous recovery artifact', existing.read_bytes())
+                self.assertEqual(self.page_bytes(1), source.read_bytes())
+
+    def test_json_checkpoint_publish_failure_preserves_previous_complete_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'raster-manifest.json'
+            prior = {'status': 'running', 'pages': [{'page': 1}]}
+            run.write_json(target, prior)
+            with patch.object(Path, 'replace', side_effect=OSError('Deliberate publish failure')), \
+                    self.assertRaisesRegex(OSError, 'publish failure'):
+                run.write_json(target, {'status': 'complete', 'pages': [{'page': 1}, {'page': 2}]})
+            self.assertEqual(prior, json.loads(target.read_text()))
+
+    def test_standard_gzip_and_tar_consumers_recover_original_bytes_and_receipts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = self.render(root, 'gzip')
+            archive_bytes = io.BytesIO()
+            with tarfile.open(fileobj=archive_bytes, mode='w:xz') as archive:
+                archive.add(root / 'gzip', arcname='render')
+            archive_bytes.seek(0)
+            with tarfile.open(fileobj=archive_bytes, mode='r:xz') as archive:
+                with archive.extractfile('render/raster-manifest.json') as source:
+                    manifest = json.load(source)
+                for index, receipt in enumerate(manifest['pages'], 1):
+                    with archive.extractfile('render/' + receipt['path']) as source:
+                        compressed = source.read()
+                    self.assertEqual(receipt['sha256'], hashlib.sha256(compressed).hexdigest())
+                    raw = gzip.decompress(compressed)
+                    self.assertEqual(self.page_bytes(index), raw)
+                    self.assertEqual(result['rasterSha256'][index - 1], hashlib.sha256(raw).hexdigest())
+
+    def test_compression_headers_do_not_depend_on_filename_or_clock(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ('first.ppm', 'second.ppm'):
+                source = root / name
+                source.write_bytes(self.page_bytes(1))
+                run.gzip_raster(source)
+                self.assertEqual(self.page_bytes(1), source.read_bytes())
+            first = (root / 'first.ppm.gz').read_bytes()
+            self.assertEqual(first, (root / 'second.ppm.gz').read_bytes())
+            self.assertEqual(bytes(4), first[4:8])  # gzip MTIME
+
+    def test_unknown_storage_is_rejected_before_starting_office(self):
+        with patch.object(run, 'office_convert') as office, self.assertRaises(ValueError):
+            run.render(Path('/mock/office'), Path('source.doc'), Path('unused'), 72,
+                       raster_storage='jpeg')
+        office.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -1,0 +1,516 @@
+{
+  "schema": "legacy-doc-parser/header-table-boundary",
+  "version": 1,
+  "beforeCommit": "3d21aafd2dafc74de21861310cafdbd8cc32dfec",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "method": "Four independently authored literal OOXML inputs bridged to DOC; exact retained DOC bytes imported before and after the bounded recovery. Rendering compares each original DOC with its parser DOCX; source layout and relative story geometry are reported separately.",
+  "sourceFiles": {
+    "lib/legacy_doc_parser.dart": "5ef8f92595c74eae08b104a750559fff9dd8b62f39d989ecef74ebd881f2e0a1",
+    "lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
+    "lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
+    "lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
+    "lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
+    "lib/src/conversion.dart": "51ad278dcc091d1623a11956b3403fb1d3c2d9b9d8718da4bcb4c852e7b69fcc",
+    "lib/src/legacy_word_binary_source.dart": "f2e0a0ffba3c61d0ea97c2d4fc5165b4f27cf360ab85e8aa18c58b61f0f1f0c2",
+    "lib/src/legacy_word_compatibility.dart": "c82c73dd557ef7406e914235877f005b4b2760e635ded5e00243e46b0d366c2a",
+    "lib/src/legacy_word_compatibility_parser.dart": "01c11adb30b9af788e42ecb644a37782ab7cab0d3bb15eb07a2cc1abe9e5ddfe",
+    "lib/src/legacy_word_decorations.dart": "fcfee3253857e367c1c586592340c77431f80540bf5d75321611b0882cc0cbed",
+    "lib/src/legacy_word_document.dart": "9c84e371c9f0ded06bf7b413d6811985a91ba9407a273d9ccec66c69b2432e23",
+    "lib/src/legacy_word_fields.dart": "17b8a4e781417772593612b79afd746c2f2b52b508b82313d45dd5b222e589e4",
+    "lib/src/legacy_word_format_tables.dart": "36b62086b56bf7f0c005d819627a99a2450b349792f107cfed84152d1d7254ef",
+    "lib/src/legacy_word_html_media.dart": "00b2e9d3a6f0a77b91d727838f9e53028817596ebc388a523f5bd15d6a06119c",
+    "lib/src/legacy_word_layout_model.dart": "0f3c1ae25ab3f6a2eff97db493ab15144c6dd162969fc96c43e1aee8ace45061",
+    "lib/src/legacy_word_layout_parser.dart": "8bee3ec3f81e147c3919f1054d1e5459cb6fa47fd41b451f28653a0b367a4efd",
+    "lib/src/legacy_word_lists.dart": "1b6b9625981bb81651a58261e1d2824a9731ea2db6f57706fb46b10da6f640b7",
+    "lib/src/legacy_word_media_model.dart": "214856a62eb7e0ecccb50f7bf6d0574f334d8d804eddebe621586e93e891f60b",
+    "lib/src/legacy_word_media_parser.dart": "eb597709fc5044cb5aee8cc751c99c4646a5dca20bd2b8f385173457788e3642",
+    "lib/src/legacy_word_metafile.dart": "65e09d9df12c52e993a2b4714b9620a5be0755bb69706be719af0ddc25991dd0",
+    "lib/src/legacy_word_metafile_render.dart": "56cc831a724e6d61d1bfa78a15895e5129d9615d71e59de0397f77f3911f440c",
+    "lib/src/legacy_word_number_formats.dart": "3a98b56587fe4f1f72b2bcd6ca3020569d5a8f0f3b7f68fe19867b2fd19d42c8",
+    "lib/src/legacy_word_numbering.dart": "ed851e376cfabb7d2db0588718273b2bf891408fd8eb8a0c70e4d0dc8a94fa77",
+    "lib/src/legacy_word_officeart_model.dart": "834a2d6df68d02178a8d73291d719e19e78ee16c29323ad513780eb54ecaee48",
+    "lib/src/legacy_word_officeart_parser.dart": "055ce982cf157f72530f3ad40386595593c30b02645f30d61731a65130633b42",
+    "lib/src/legacy_word_revision_model.dart": "cf39ce7f1c21de1825f340718da077e3a0f74fff4f85871fa4774792778f0fcd",
+    "lib/src/legacy_word_revisions.dart": "52c090b4d1e2b45280c0ee09f5fcf32bed1c9a2d28e096d3beeecbca7f328ec0",
+    "lib/src/legacy_word_sprms.dart": "9d77a52c30842604e29bda177f08024464d5bf271cdb262aae347e97a3657324",
+    "lib/src/legacy_word_stories.dart": "445d0264897395eaec2de39f0607e747bea38fcce009cb4ec15683f64c730e44",
+    "lib/src/legacy_word_structured_conversion.dart": "b66f15ae1c00f1fa423d1e25ea6d82718a46b6937ff128c481a23a2f97aa74fe",
+    "lib/src/legacy_word_structured_model.dart": "1943a1d2ef72ad97b6070a6d7c3549def3a791dcb09d9ea8b5d459780e09c7a2",
+    "lib/src/legacy_word_structured_parser.dart": "0d700814576028228fed299dc391a70e0ddba22d82b0f17fd5a0c95f4f3a97aa",
+    "lib/src/legacy_word_structured_render.dart": "45a039b1872d2ae6e37fc5dd2fafe38f926f8855475d1c004c627ff1ae89e503",
+    "lib/src/legacy_word_table_model.dart": "91a11e4327468ca56bf445cf76df63761b57cf85314dd6eb9ff4499d5d91404b",
+    "lib/src/legacy_word_table_operations.dart": "3c5ee6009319cfc2aebb72d9744f72c754dcbaabaca076dd83cb830c7f67c5ff",
+    "lib/src/legacy_word_table_revisions.dart": "275e1795441c96583d3d6c828bdde0356a382e6cc3447a9d20ed9806f6bc68a3",
+    "lib/src/legacy_word_table_styles.dart": "2a74eb977559d3bcb23df79b2c68045660d93d810ecfc7edaf909dd3f2e92686",
+    "lib/src/legacy_word_table_text.dart": "21b5cf79dca85b3b52b545e07183a3c3fd1da4956ba03aa6f555c1ddfb481aba",
+    "lib/src/legacy_word_tables.dart": "2af3ea36751799d97509e15fdd02e7e92fd0173f7c6eb60d992d7036787ead1d",
+    "lib/src/opc_package_writer.dart": "6852b0de555c609ace9c7bddb29de27e0a2e46e642c69c853cd49beeb66cf97c",
+    "lib/src/word_comment_writer.dart": "1d6d02c61fd87b75e174760fe08a9c0dcfe31ab604298ee274f027c7a7fc6997",
+    "lib/src/word_compatibility_writer.dart": "0e7d54c6948198165236f561c018243a64c0b89d6d112b553d6b9357f97452d8",
+    "lib/src/word_decoration_writer.dart": "8a6354c2e4970a2c504db2623885f5250765a49d8414ebf0da76e3e1ac3a1281",
+    "lib/src/word_image_appearance_writer.dart": "bbab8149662c0ee56f8586ab85e482117cbbad80f13ff78c3a45ae89e4da9cb1",
+    "lib/src/word_layout_writer.dart": "eb239b04072b12722437ebef803df692b785f41c34ff29fa56215b0fe4da96a5",
+    "lib/src/word_media_writer.dart": "a224488c6749eb2b409136e2fa8108321186b6dea4abf678635c7dc9295c1804",
+    "lib/src/word_numbering_writer.dart": "5b42d1b06158bfc6823cd4ffd0e33a61a090af528caf524234fa5a6540337c09",
+    "lib/src/word_officeart_position_writer.dart": "8071ea2373c72ff323593ea7fdf142c2a4dbe5bd4bac08bd7ef2b371a1acb74e",
+    "lib/src/word_revision_writer.dart": "065aaa1b4cea36a318eb7e02b34b4b30ce552e1a1aa10b477aa6cb11caf150d6",
+    "lib/src/word_shape_writer.dart": "94b30ef61cbfe3b3bf65941677aa71f8cd1a6c74b3c4c42aab73d61774d87458",
+    "lib/src/word_story_writer.dart": "b8d3fbdf539bae86b1c89b6d662ba860b68cb27b4d6399e9753a1475d751ef9c",
+    "lib/src/word_table_revision_writer.dart": "2430d40ffe5c694a53ce21f5ec2c813c6f1cb8b579fe6ee402fa32fb9d4b0740",
+    "lib/src/word_table_style_writer.dart": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+    "lib/src/word_table_text_writer.dart": "04b7d64caf9025fa90bbb7a9b2a492490cfbd2ee518609f2bf63cb9867d86f13",
+    "lib/src/word_table_writer.dart": "f53d13e7886d04b7b077a49befce57e8be44ec1301c5060ad13f3d834c8e434f",
+    "lib/src/word_textbox_writer.dart": "e6641e07a5a1fc81bbc998de3ccf0544b6e8a0aa6a025a1938c6e45dc9762eca"
+  },
+  "controls": [
+    {
+      "id": "header-table",
+      "converter": {
+        "counts": {
+          "paragraphs": 6,
+          "sections": 1,
+          "headers": 3,
+          "tables": 2,
+          "cells": 2,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredTableStoryBoundary"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "36.508000",
+          "xMax": "110.500000",
+          "yMax": "49.792000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "50.308000",
+          "xMax": "138.052000",
+          "yMax": "63.592000"
+        },
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "77.908000",
+          "xMax": "106.060000",
+          "yMax": "91.192000"
+        }
+      },
+      "corrected": {
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "36.508000",
+          "xMax": "110.500000",
+          "yMax": "49.792000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "50.308000",
+          "xMax": "138.052000",
+          "yMax": "63.592000"
+        },
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "77.558000",
+          "xMax": "106.060000",
+          "yMax": "90.842000"
+        }
+      },
+      "sourceSha256": "d13a28715802b429263037014e2bc362492c8b73d0ac7ba46c193bc03944ca18",
+      "convertedSha256": "7790832d698c432bf20556b08c70a4872fba5e3af95664044b0f9380b6e4e1ce",
+      "absoluteDeltasPoints": {
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "BODY": {
+          "xMin": 0.0,
+          "yMin": -0.35,
+          "xMax": 0.0,
+          "yMax": -0.35
+        }
+      },
+      "storyRelativeDeltasPoints": {
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        }
+      },
+      "beforeImportFailed": true,
+      "paragraphControlBytesUnchanged": true
+    },
+    {
+      "id": "header-paragraph",
+      "converter": {
+        "counts": {
+          "paragraphs": 8,
+          "sections": 1,
+          "headers": 3,
+          "tables": 2,
+          "cells": 2,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "36.508000",
+          "xMax": "110.500000",
+          "yMax": "49.792000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "50.308000",
+          "xMax": "138.052000",
+          "yMax": "63.592000"
+        },
+        "AFTER": {
+          "xMin": "72.100000",
+          "yMin": "64.108000",
+          "xMax": "110.080000",
+          "yMax": "77.392000"
+        },
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "77.908000",
+          "xMax": "106.060000",
+          "yMax": "91.192000"
+        }
+      },
+      "corrected": {
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "36.508000",
+          "xMax": "110.500000",
+          "yMax": "49.792000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "50.308000",
+          "xMax": "138.052000",
+          "yMax": "63.592000"
+        },
+        "AFTER": {
+          "xMin": "72.100000",
+          "yMin": "64.108000",
+          "xMax": "110.080000",
+          "yMax": "77.392000"
+        },
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "77.908000",
+          "xMax": "106.060000",
+          "yMax": "91.192000"
+        }
+      },
+      "sourceSha256": "4791d370d187eb4acc8e0185f1edb440aa4b36cf6475eea4157ec19c64c18e90",
+      "convertedSha256": "d9f4cae79d1c1954c5aefcf97469816322311245ec8bd7dd2a5ad8c7d23ef931",
+      "absoluteDeltasPoints": {
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "AFTER": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "BODY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        }
+      },
+      "storyRelativeDeltasPoints": {
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "AFTER": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        }
+      },
+      "beforeImportFailed": false,
+      "paragraphControlBytesUnchanged": true
+    },
+    {
+      "id": "footer-table",
+      "converter": {
+        "counts": {
+          "paragraphs": 6,
+          "sections": 1,
+          "footers": 3,
+          "tables": 2,
+          "cells": 2,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredTableStoryBoundary"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "72.508000",
+          "xMax": "106.060000",
+          "yMax": "85.792000"
+        },
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "715.108000",
+          "xMax": "110.500000",
+          "yMax": "728.392000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "728.908000",
+          "xMax": "138.052000",
+          "yMax": "742.192000"
+        }
+      },
+      "corrected": {
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "72.508000",
+          "xMax": "106.060000",
+          "yMax": "85.792000"
+        },
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "715.458000",
+          "xMax": "110.500000",
+          "yMax": "728.742000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "729.258000",
+          "xMax": "138.052000",
+          "yMax": "742.542000"
+        }
+      },
+      "sourceSha256": "2c0ef77a555e295d67ca8496a0ed94fb72f49597a990d888ec31867c9b7806a7",
+      "convertedSha256": "df2274bcd0cd962a2a13ea3dcf5c7725bc0b533e9e9ca1300b8f3c14c1731c66",
+      "absoluteDeltasPoints": {
+        "BODY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.35,
+          "xMax": 0.0,
+          "yMax": 0.35
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.35,
+          "xMax": 0.0,
+          "yMax": 0.35
+        }
+      },
+      "storyRelativeDeltasPoints": {
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": -0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        }
+      },
+      "beforeImportFailed": true,
+      "paragraphControlBytesUnchanged": true
+    },
+    {
+      "id": "footer-paragraph",
+      "converter": {
+        "counts": {
+          "paragraphs": 8,
+          "sections": 1,
+          "footers": 3,
+          "tables": 2,
+          "cells": 2,
+          "compatibilityFlags": 61,
+          "evidenceArtifacts": 3
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "72.508000",
+          "xMax": "106.060000",
+          "yMax": "85.792000"
+        },
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "715.108000",
+          "xMax": "110.500000",
+          "yMax": "728.392000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "728.908000",
+          "xMax": "138.052000",
+          "yMax": "742.192000"
+        },
+        "AFTER": {
+          "xMin": "72.100000",
+          "yMin": "742.708000",
+          "xMax": "110.080000",
+          "yMax": "755.992000"
+        }
+      },
+      "corrected": {
+        "BODY": {
+          "xMin": "72.100000",
+          "yMin": "72.508000",
+          "xMax": "106.060000",
+          "yMax": "85.792000"
+        },
+        "STORY": {
+          "xMin": "72.100000",
+          "yMin": "715.108000",
+          "xMax": "110.500000",
+          "yMax": "728.392000"
+        },
+        "CELL": {
+          "xMin": "108.100000",
+          "yMin": "728.908000",
+          "xMax": "138.052000",
+          "yMax": "742.192000"
+        },
+        "AFTER": {
+          "xMin": "72.100000",
+          "yMin": "742.708000",
+          "xMax": "110.080000",
+          "yMax": "755.992000"
+        }
+      },
+      "sourceSha256": "891b1e6e547d9249f78b009914c71be49614235966d282675823f4b0e9dc80eb",
+      "convertedSha256": "39b1a690a95cdbae5698a3029297c3e92d837b4257627069b6e4eff3f4261a15",
+      "absoluteDeltasPoints": {
+        "BODY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "AFTER": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        }
+      },
+      "storyRelativeDeltasPoints": {
+        "STORY": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "CELL": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        },
+        "AFTER": {
+          "xMin": 0.0,
+          "yMin": 0.0,
+          "xMax": 0.0,
+          "yMax": 0.0
+        }
+      },
+      "beforeImportFailed": false,
+      "paragraphControlBytesUnchanged": true
+    }
+  ],
+  "allFourImportsSucceeded": true,
+  "allStoryRelativeGeometryMatches": true,
+  "maximumAbsoluteMarkerDriftPoints": 0.35
+}

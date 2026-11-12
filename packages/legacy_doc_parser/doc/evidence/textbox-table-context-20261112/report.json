@@ -1,0 +1,289 @@
+{
+  "schema": "legacy-doc-parser/textbox-table-context-counterexample",
+  "version": 1,
+  "baselineCommit": "fdeb82cd9bc6f7dc92d56e0582c301b456b2ad52",
+  "rejectedCandidateCommit": "233a76e42dec27608ee816196a076ba4f85e725c",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "method": "Literal authored OOXML controls share textbox table XML. Compare each exact native DOC source to baseline and rejected-candidate DOCX. Marker geometry is normalized once to BOX; absolute coordinates remain retained. Native DOCX is a separate observation, never the rendering oracle.",
+  "controls": [
+    {
+      "id": "main-paragraph",
+      "binaryModel": {
+        "id": "main-paragraph",
+        "originTwips": 480,
+        "marginTwips": 240,
+        "storyText": "BOX\nCELL\nAFTER_BOX",
+        "shapeId": 1026,
+        "anchorCp": 0
+      },
+      "routes": {
+        "source": {
+          "pdfSha256": "592b3d7282a9d1403e7c1a6d6fa3ad361cd3eccce4cca8605822d6b2c53775e2",
+          "markers": {
+            "BOX": {
+              "xMin": 72.85,
+              "yMin": 73.258,
+              "xMax": 98.158,
+              "yMax": 86.542
+            },
+            "CELL": {
+              "xMin": 108.85,
+              "yMin": 87.058,
+              "xMax": 138.802,
+              "yMax": 100.342
+            },
+            "AFTER_BOX": {
+              "xMin": 72.85,
+              "yMin": 100.858,
+              "xMax": 142.138,
+              "yMax": 114.142
+            }
+          },
+          "cellOffsetPoints": 36.0
+        },
+        "binary": {
+          "pdfSha256": "60fa1bb124e65bede2dff89ce8e7c964eb35d450daf892f3e86f639d8c940400",
+          "markers": {
+            "BOX": {
+              "xMin": 72.85,
+              "yMin": 73.258,
+              "xMax": 98.158,
+              "yMax": 86.542
+            },
+            "CELL": {
+              "xMin": 108.85,
+              "yMin": 87.058,
+              "xMax": 138.802,
+              "yMax": 100.342
+            },
+            "AFTER_BOX": {
+              "xMin": 72.85,
+              "yMin": 100.858,
+              "xMax": 142.138,
+              "yMax": 114.142
+            }
+          },
+          "cellOffsetPoints": 36.0
+        },
+        "native": {
+          "pdfSha256": "237a4896b9b0b89ade6644b89fbb36a1400a34f427e6d5e1a3afadcb98ba5c54",
+          "markers": {
+            "BOX": {
+              "xMin": 72.1,
+              "yMin": 72.508,
+              "xMax": 97.408,
+              "yMax": 85.792
+            },
+            "CELL": {
+              "xMin": 108.1,
+              "yMin": 86.308,
+              "xMax": 138.052,
+              "yMax": 99.592
+            },
+            "AFTER_BOX": {
+              "xMin": 72.1,
+              "yMin": 100.108,
+              "xMax": 141.388,
+              "yMax": 113.392
+            }
+          },
+          "cellOffsetPoints": 36.0
+        },
+        "converted": {
+          "pdfSha256": "56fd1849f3489b8e6d1a1c262abdafee13ce9df01689b17dc2de718233a1828c",
+          "markers": {
+            "BOX": {
+              "xMin": 73.2,
+              "yMin": 73.608,
+              "xMax": 98.508,
+              "yMax": 86.892
+            },
+            "CELL": {
+              "xMin": 109.2,
+              "yMin": 87.408,
+              "xMax": 139.152,
+              "yMax": 100.692
+            },
+            "AFTER_BOX": {
+              "xMin": 73.2,
+              "yMin": 101.208,
+              "xMax": 142.488,
+              "yMax": 114.492
+            }
+          },
+          "cellOffsetPoints": 36.0
+        },
+        "before": {
+          "pdfSha256": "00446d9ef8d90488578ebedee781dbe528aa608c46a2982ca86eaa695776dbce",
+          "markers": {
+            "BOX": {
+              "xMin": 73.2,
+              "yMin": 73.608,
+              "xMax": 98.508,
+              "yMax": 86.892
+            },
+            "CELL": {
+              "xMin": 109.2,
+              "yMin": 87.408,
+              "xMax": 139.152,
+              "yMax": 100.692
+            },
+            "AFTER_BOX": {
+              "xMin": 73.2,
+              "yMin": 101.208,
+              "xMax": 142.488,
+              "yMax": 114.492
+            }
+          },
+          "cellOffsetPoints": 36.0
+        }
+      },
+      "baselineDriftPoints": 0.0,
+      "candidateDriftPoints": 0.0,
+      "nativeDocxDriftPoints": 0.0
+    },
+    {
+      "id": "main-table",
+      "binaryModel": {
+        "id": "main-table",
+        "originTwips": 720,
+        "marginTwips": 240,
+        "storyText": "BOX\nCELL\nAFTER_BOX",
+        "shapeId": 1026,
+        "anchorCp": 0
+      },
+      "routes": {
+        "source": {
+          "pdfSha256": "d7719b2ab268fdca8e03f1b355c9f749bf7fc12bba96ec7edcd8003d85020380",
+          "markers": {
+            "BOX": {
+              "xMin": 72.85,
+              "yMin": 73.258,
+              "xMax": 98.158,
+              "yMax": 86.542
+            },
+            "CELL": {
+              "xMin": 120.85,
+              "yMin": 87.058,
+              "xMax": 150.802,
+              "yMax": 100.342
+            },
+            "AFTER_BOX": {
+              "xMin": 72.85,
+              "yMin": 100.858,
+              "xMax": 142.138,
+              "yMax": 114.142
+            }
+          },
+          "cellOffsetPoints": 48.0
+        },
+        "binary": {
+          "pdfSha256": "142c35ca5eaba9825067116df12076ead21132325a060544bc75bd682c3a1d04",
+          "markers": {
+            "BOX": {
+              "xMin": 72.85,
+              "yMin": 73.258,
+              "xMax": 98.158,
+              "yMax": 86.542
+            },
+            "CELL": {
+              "xMin": 120.85,
+              "yMin": 87.058,
+              "xMax": 150.802,
+              "yMax": 100.342
+            },
+            "AFTER_BOX": {
+              "xMin": 72.85,
+              "yMin": 100.858,
+              "xMax": 142.138,
+              "yMax": 114.142
+            }
+          },
+          "cellOffsetPoints": 48.0
+        },
+        "native": {
+          "pdfSha256": "4c4474b14445a73d39ded5e6d9735ff3c544a984729907aa187782f308c277ac",
+          "markers": {
+            "BOX": {
+              "xMin": 72.1,
+              "yMin": 72.508,
+              "xMax": 97.408,
+              "yMax": 85.792
+            },
+            "CELL": {
+              "xMin": 132.1,
+              "yMin": 86.308,
+              "xMax": 162.052,
+              "yMax": 99.592
+            },
+            "AFTER_BOX": {
+              "xMin": 72.1,
+              "yMin": 100.108,
+              "xMax": 141.388,
+              "yMax": 113.392
+            }
+          },
+          "cellOffsetPoints": 60.0
+        },
+        "converted": {
+          "pdfSha256": "5e92a865664f7bfc0c8f6e532f5015aa312da1c581cb7cce690dddf37973b56f",
+          "markers": {
+            "BOX": {
+              "xMin": 73.2,
+              "yMin": 73.608,
+              "xMax": 98.508,
+              "yMax": 86.892
+            },
+            "CELL": {
+              "xMin": 133.2,
+              "yMin": 87.408,
+              "xMax": 163.152,
+              "yMax": 100.692
+            },
+            "AFTER_BOX": {
+              "xMin": 73.2,
+              "yMin": 101.208,
+              "xMax": 142.488,
+              "yMax": 114.492
+            }
+          },
+          "cellOffsetPoints": 60.0
+        },
+        "before": {
+          "pdfSha256": "de4d673c2c057bb457a9dbc7d7659d0dec51937fbbc6d36cdf114b5d7101ab3f",
+          "markers": {
+            "BOX": {
+              "xMin": 73.2,
+              "yMin": 73.608,
+              "xMax": 98.508,
+              "yMax": 86.892
+            },
+            "CELL": {
+              "xMin": 121.2,
+              "yMin": 87.408,
+              "xMax": 151.152,
+              "yMax": 100.692
+            },
+            "AFTER_BOX": {
+              "xMin": 73.2,
+              "yMin": 101.208,
+              "xMax": 142.488,
+              "yMax": 114.492
+            }
+          },
+          "cellOffsetPoints": 48.0
+        }
+      },
+      "baselineDriftPoints": 0.0,
+      "candidateDriftPoints": 12.0,
+      "nativeDocxDriftPoints": 12.0
+    }
+  ],
+  "headerDiagnostics": {
+    "header-paragraph": "Invalid Word drawing-to-textbox reference.",
+    "header-table": "Word header content is not a complete paragraph."
+  },
+  "syntheticBinaryNativeLimitation": "The independently assembled table-story DOC used for parser/schema controls does not retain its textbox in this native renderer. Its native DOCX has only outer/nested anchor tables; the source PDF lacks BOX/CELL/AFTER_BOX. It is not used to assert native fidelity.",
+  "decision": "Retract table-depth reset: baseline retains both binary relative offsets; candidate and native DOCX export add 12 points only for the table anchor.",
+  "candidateRejected": true
+}

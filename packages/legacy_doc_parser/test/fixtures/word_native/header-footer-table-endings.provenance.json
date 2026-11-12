@@ -1,0 +1,45 @@
+{
+  "license": "MPL-2.0",
+  "nativeCommand": "soffice --headless --convert-to doc:MS Word 97",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "cases": [
+    {
+      "file": "header-ending-table.doc",
+      "sha256": "d13a28715802b429263037014e2bc362492c8b73d0ac7ba46c193bc03944ca18",
+      "sourceDocxSha256": "7b8903ed79f0c8142de4c2d6eda9751c4037376014e9863b9dc5739b4c3d11b0",
+      "source": "Literal authored OOXML from header table boundary probe",
+      "role": "header",
+      "ending": "table",
+      "expectedStoryText": "STORY\nCELL"
+    },
+    {
+      "file": "header-ending-paragraph.doc",
+      "sha256": "4791d370d187eb4acc8e0185f1edb440aa4b36cf6475eea4157ec19c64c18e90",
+      "sourceDocxSha256": "c48b762f21bedd9d0aaa3af2619cc4a644605999f2c313507eebb86003d49f06",
+      "source": "Literal authored OOXML from header table boundary probe",
+      "role": "header",
+      "ending": "paragraph",
+      "expectedStoryText": "STORY\nCELL\nAFTER"
+    },
+    {
+      "file": "footer-ending-table.doc",
+      "sha256": "2c0ef77a555e295d67ca8496a0ed94fb72f49597a990d888ec31867c9b7806a7",
+      "sourceDocxSha256": "6a6c129adec89e758d81a0cce64cf87d0a9a52ddde8bfdfc00acbf97ba7c687d",
+      "source": "Literal authored OOXML from header table boundary probe",
+      "role": "footer",
+      "ending": "table",
+      "expectedStoryText": "STORY\nCELL"
+    },
+    {
+      "file": "footer-ending-paragraph.doc",
+      "sha256": "891b1e6e547d9249f78b009914c71be49614235966d282675823f4b0e9dc80eb",
+      "sourceDocxSha256": "5a33089c971dc4a4651090234610b3b554434843b0acb60d4bcaa65ee44195f6",
+      "source": "Literal authored OOXML from header table boundary probe",
+      "role": "footer",
+      "ending": "paragraph",
+      "expectedStoryText": "STORY\nCELL\nAFTER"
+    }
+  ],
+  "authoringScript": "doc/evidence/header-table-boundary-20261112/artifacts.tar.xz:author.py",
+  "portableGenerator": "tool/fidelity/header_table_fixture.dart"
+}
