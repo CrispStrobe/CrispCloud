@@ -322,6 +322,7 @@ void main() {
       expect(preferencesStore.annotationWrites, writesBeforeClose + 1);
       expect(annotationValues(await preferencesStore.getAll()), saved);
     },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
   );
 
   testWidgets(
