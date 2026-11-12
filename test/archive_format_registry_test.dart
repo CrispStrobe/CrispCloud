@@ -16,6 +16,26 @@ const _panel = PanelSourceService();
 
 void main() {
   group('archive recognition across entry points', () {
+    test(
+      'public extension inventory includes every archive suffix exactly once',
+      () {
+        final inventory = _viewer.getSupportedExtensions();
+        final archiveSuffixes = inventory[ViewerMode.archive];
+        expect(archiveSuffixes, isNotNull);
+        expect(
+          archiveSuffixes,
+          unorderedEquals([
+            for (final format in archiveFormatCapabilities) ...format.suffixes,
+          ]),
+        );
+        expect(archiveSuffixes!.toSet().length, archiveSuffixes.length);
+        for (final document in ['.docx', '.xlsx', '.pptx', '.epub']) {
+          expect(archiveSuffixes, isNot(contains(document)));
+          expect(inventory[ViewerMode.office], contains(document));
+        }
+      },
+    );
+
     for (final format in archiveFormatCapabilities) {
       test('${format.label} suffixes agree across navigation, F3 and MIME', () {
         for (final suffix in format.suffixes) {

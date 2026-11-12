@@ -14,7 +14,7 @@
 //   font     — font specimen
 //   csv      — parsed table (CSV/TSV)
 //   office   — DOCX/XLSX/PPTX/ODT/ODS/ODP/EPUB text extraction
-//   archive  — ZIP/TAR/TGZ/TBZ2 member listing (members open in a nested viewer)
+//   archive  — bounded archive/disk-image listing and nested member previews
 //
 // Hex, ASCII, Binary and Text always work, even for files too large to load
 // fully, thanks to ViewBytesSource streaming on native platforms.
@@ -46,6 +46,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_viewer_service.dart';
+import '../services/archive_viewer_source.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'ebook_editor_dialog.dart';
@@ -390,6 +391,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? _mediaBlobUrl;
   String? _tempMediaPath;
   ViewerArchive? _archive;
+  ArchiveViewerSource? _archiveSource;
+  final _archiveSources = <ArchiveViewerSource>{};
   List<ViewerArchiveMember>? _archiveMembers;
   String? _archivePassword;
 
@@ -908,9 +911,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.archive:
           setState(() => _preparing = true);
-          final data = await _ensureFullData();
-          if (!mounted || token != _prepareToken) return;
-          await _openArchive(data, token);
+          await _openArchive(token);
           return;
       }
     } catch (e, st) {
@@ -924,6 +925,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   void _disposeModeResources({ViewerSpool? spool}) {
+    // Revoke borrowed readers immediately, before disposing the viewer source.
+    // This also cancels readers still opening or waiting for a password.
+    for (final source in _archiveSources) {
+      unawaited(source.close());
+    }
+    _archiveSources.clear();
+    _archiveSource = null;
     _emailMessage = null;
     _emailSearchSource?.dispose();
     _emailSearchSource = null;
@@ -990,13 +998,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           await mediaLocal?.endStreamAccess();
         } catch (_) {}
       }
+      if (archive != null) await archive.close();
       if (spool != null) {
         try {
           await spool.close();
         } catch (_) {}
       }
       if (blobUrl != null && kIsWeb) html.Url.revokeObjectUrl(blobUrl);
-      if (archive != null) unawaited(archive.close());
       officePdf?.dispose();
       if (officePdfDoc != null) {
         unawaited(officePdfDoc.close().catchError((Object _) {}));
@@ -1011,35 +1019,81 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     });
   }
 
-  Future<void> _openArchive(Uint8List data, int token) async {
+  ArchiveViewerSource _borrowArchiveSource(
+    ViewBytesSource source,
+    int prepareToken,
+    int loadToken,
+    String name,
+  ) {
+    final borrowed = ArchiveViewerSource(
+      source,
+      name: name,
+      isCurrent: () =>
+          mounted &&
+          _mode == ViewerMode.archive &&
+          prepareToken == _prepareToken &&
+          loadToken == _loadToken &&
+          identical(_source, source),
+    );
+    _archiveSources.add(borrowed);
+    return borrowed;
+  }
+
+  void _releaseArchiveSource(ArchiveViewerSource? source) {
+    if (source == null) return;
+    _archiveSources.remove(source);
+    unawaited(source.close());
+  }
+
+  Future<void> _openArchive(int token) async {
+    final source = _source;
+    if (source == null) {
+      throw const ArchiveViewException('The archive source is unavailable.');
+    }
+    final loadToken = _loadToken;
+    final name = _expansionName ?? _viewName;
+    bool current() =>
+        mounted &&
+        token == _prepareToken &&
+        loadToken == _loadToken &&
+        identical(_source, source) &&
+        _mode == ViewerMode.archive;
     var password = _archivePassword;
     for (var attempt = 0; attempt < 3; attempt++) {
+      if (!mounted || !current()) return;
+      final borrowed = _borrowArchiveSource(source, token, loadToken, name);
+      var accepted = false;
       try {
-        final handle = await openViewerArchive(
-          data,
-          name: _viewName,
+        final handle = await openViewerArchiveSource(
+          borrowed,
+          name: name,
           password: password,
         );
-        if (!mounted || token != _prepareToken) {
+        if (!mounted || !current()) {
           await handle.close();
           return;
         }
         final previous = _archive;
+        final previousSource = _archiveSource;
         setState(() {
           _archive = handle;
+          _archiveSource = borrowed;
           _archiveMembers = handle.members;
           _archivePassword = password;
           _preparing = false;
         });
+        accepted = true;
+        _releaseArchiveSource(previousSource);
         if (previous != null) unawaited(previous.close());
         return;
       } on ArchivePasswordRequiredException catch (e) {
-        if (!mounted || token != _prepareToken) return;
+        if (!mounted || !current()) return;
         setState(() => _preparing = false);
-        if (e.wrongPassword)
+        if (e.wrongPassword) {
           _showSnack(InternalViewerStrings(context).text('incorrectPassword'));
+        }
         final entered = await _promptArchivePassword(wrong: e.wrongPassword);
-        if (!mounted || token != _prepareToken) return;
+        if (!mounted || !current()) return;
         if (entered == null) {
           setState(
             () => _richError = InternalViewerStrings(context).text('protected'),
@@ -1049,15 +1103,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         password = entered;
         setState(() => _preparing = true);
       } on ArchiveViewException catch (e) {
-        if (!mounted || token != _prepareToken) return;
+        if (!mounted || !current()) return;
         setState(() {
           _preparing = false;
           _richError = localizedArchiveViewerError(context, e);
         });
         return;
+      } finally {
+        if (!accepted) _releaseArchiveSource(borrowed);
       }
     }
-    if (!mounted || token != _prepareToken) return;
+    if (!mounted || !current()) return;
     setState(() {
       _preparing = false;
       _richError = InternalViewerStrings(context).text('tooMany');
@@ -1988,13 +2044,24 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Future<void> _openArchiveMember(ViewerArchiveMember member) async {
     final initial = _archive;
     if (initial == null) return;
+    final source = _source;
+    final prepareToken = _prepareToken, loadToken = _loadToken;
     ViewerArchive handle = initial;
     var target = member;
+    bool sameViewer() =>
+        mounted &&
+        _mode == ViewerMode.archive &&
+        prepareToken == _prepareToken &&
+        loadToken == _loadToken &&
+        identical(_source, source);
+    bool current() =>
+        sameViewer() && identical(_archive, handle) && !handle.isClosed;
 
     for (var attempt = 0; attempt < 3; attempt++) {
+      if (!mounted || !current()) return;
       try {
         final bytes = await handle.readMember(target);
-        if (!mounted) return;
+        if (!mounted || !current()) return;
         await showInternalViewer(
           context,
           file: widget.file,
@@ -2004,77 +2071,125 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         );
         return;
       } on ArchivePasswordRequiredException catch (e) {
-        // Encrypted entry: prompt, reopen the archive with the password, and
-        // retry the read (koni needs the password at open time).
+        if (!mounted || !current()) return;
         final unlocked = await _unlockArchiveEntry(
           target,
           wrong: e.wrongPassword || _archivePassword != null,
         );
+        if (!mounted || !sameViewer()) return;
         final reopened = _archive;
-        if (unlocked == null || reopened == null) return;
+        if (unlocked == null ||
+            reopened == null ||
+            reopened.isClosed ||
+            unlocked.index >= reopened.members.length ||
+            !identical(reopened.members[unlocked.index], unlocked)) {
+          return;
+        }
         handle = reopened;
         target = unlocked;
       } on ArchiveViewException catch (e) {
-        if (!mounted) return;
+        if (!mounted || !current()) return;
         _showSnack(localizedArchiveViewerError(context, e));
         return;
       } catch (e, st) {
+        if (!mounted || !current()) return;
         _log.warn('archive member open failed', e, st);
         _showSnack(InternalViewerStrings(context).withNumber('openError', e));
         return;
       }
     }
-    _showSnack(InternalViewerStrings(context).text('encryptedEntry'));
+    if (mounted && current()) {
+      _showSnack(InternalViewerStrings(context).text('encryptedEntry'));
+    }
   }
 
   Future<ViewerArchiveMember?> _unlockArchiveEntry(
     ViewerArchiveMember member, {
     required bool wrong,
   }) async {
-    final data = _fullData;
-    if (data == null) {
-      _showSnack(InternalViewerStrings(context).text('archiveGone'));
+    final previous = _archive;
+    final source = _source;
+    final prepareToken = _prepareToken, loadToken = _loadToken;
+    final name = _expansionName ?? _viewName;
+    if (previous == null ||
+        source == null ||
+        member.index < 0 ||
+        member.index >= previous.members.length ||
+        !identical(previous.members[member.index], member)) {
       return null;
     }
+    bool current() =>
+        mounted &&
+        _mode == ViewerMode.archive &&
+        prepareToken == _prepareToken &&
+        loadToken == _loadToken &&
+        identical(_source, source) &&
+        identical(_archive, previous) &&
+        !previous.isClosed;
     final entered = await _promptArchivePassword(wrong: wrong);
-    if (entered == null || !mounted) return null;
+    if (!mounted || entered == null || !current()) return null;
+    final borrowed = _borrowArchiveSource(
+      source,
+      prepareToken,
+      loadToken,
+      name,
+    );
+    var accepted = false;
     try {
-      final reopened = await openViewerArchive(
-        data,
-        name: _viewName,
+      final reopened = await openViewerArchiveSource(
+        borrowed,
+        name: name,
         password: entered,
       );
-      if (!mounted) {
+      if (!mounted || !current()) {
         await reopened.close();
         return null;
       }
-      final matches = reopened.members
-          .where((m) => m.isFile && m.name == member.name)
-          .toList();
-      if (matches.isEmpty) {
+      final match = member.index < reopened.members.length
+          ? reopened.members[member.index]
+          : null;
+      if (match == null ||
+          match.name != member.name ||
+          match.size != member.size ||
+          !match.isFile ||
+          match.isSpecial ||
+          match.pathEscapedRoot ||
+          match.isEncrypted != member.isEncrypted) {
         await reopened.close();
-        if (!mounted) return null;
-        _showSnack(InternalViewerStrings(context).text('entryGone'));
+        if (mounted && current()) {
+          _showSnack(InternalViewerStrings(context).text('entryGone'));
+        }
         return null;
       }
-      final previous = _archive;
+      final previousSource = _archiveSource;
       setState(() {
         _archive = reopened;
+        _archiveSource = borrowed;
         _archiveMembers = reopened.members;
         _archivePassword = entered;
       });
-      if (previous != null) unawaited(previous.close());
-      return matches.first;
+      accepted = true;
+      _releaseArchiveSource(previousSource);
+      unawaited(previous.close());
+      return match;
     } on ArchivePasswordRequiredException catch (e) {
-      if (!mounted) return null;
+      if (!mounted || !current()) return null;
       _showSnack(
-        e.wrongPassword ? 'Incorrect password.' : 'Password required.',
+        InternalViewerStrings(context)
+            .text(e.wrongPassword ? 'incorrectPassword' : 'passwordRequired'),
       );
       return null;
     } on ArchiveViewException catch (e) {
-      if (!mounted) return null;
+      if (!mounted || !current()) return null;
       _showSnack(localizedArchiveViewerError(context, e));
       return null;
+    } catch (e, st) {
+      if (!mounted || !current()) return null;
+      _log.warn('archive entry unlock failed', e, st);
+      _showSnack(InternalViewerStrings(context).withNumber('openError', e));
+      return null;
+    } finally {
+      if (!accepted) _releaseArchiveSource(borrowed);
     }
   }
 
@@ -3416,7 +3531,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               : null,
           enabled: isFile && !member.isSpecial && !member.pathEscapedRoot,
           onTap: isFile && !member.isSpecial && !member.pathEscapedRoot
-              ? () => unawaited(_openArchiveMember(member)) : null,
+              ? () => unawaited(_openArchiveMember(member))
+              : null,
         );
       },
     );
@@ -3428,14 +3544,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           key: const ValueKey('archive-format-notices'),
           leading: const Icon(Icons.info_outline),
           title: Text(context.commanderTr('Container details')),
-          initiallyExpanded: notices.any((notice) => notice.contains('unavailable') || notice.contains('No supported filesystem')),
+          initiallyExpanded: notices.any(
+            (notice) =>
+                notice.contains('unavailable') ||
+                notice.contains('No supported filesystem'),
+          ),
           children: [
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 160),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Text(notices.join('\n\n'),
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                child: Text(
+                  notices.join('\n\n'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
           ],

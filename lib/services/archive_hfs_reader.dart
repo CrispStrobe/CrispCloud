@@ -187,6 +187,11 @@ class _HfsReader {
         _blockSize > source.length ~/ _totalBlocks) {
       _bad('The allocation block size or volume length is invalid.');
     }
+    // Dart web represents integer offsets with JavaScript numbers. Validate
+    // before multiplying so an enormous virtual source cannot round a read.
+    if (_blockSize > 0x1fffffffffffff ~/ _totalBlocks) {
+      _unsupported('The volume exceeds the exact integer address range.');
+    }
     _volumeBytes = _totalBlocks * _blockSize;
     if (_volumeBytes < 1536) _bad('The volume cannot contain its header.');
     final catalog = _fork(header, 272);

@@ -59,6 +59,11 @@ F3 can show those records with reading disabled.
 
 - Native pane sessions spool at most 2 GiB; browser pane sessions keep at most
   256 MiB in memory. These are input limits, not promised resident-memory use.
+- Native F3 borrows its existing random-access source for archive metadata
+  and member reads. Large local disk images do not require a full-file buffer;
+  remote files use the existing 2 GiB spool limit. Browser F3 retains its
+  64 MiB full-data input limit. Password retries borrow a fresh reader, and
+  changing modes or closing the viewer immediately invalidates pending reads.
 - Member reads are capped at 64 MiB. Direct whole-archive extraction keeps
   its 256 MiB input/total-output limits. Copying through a pane keeps its own
   operation planning and cancellation rules.

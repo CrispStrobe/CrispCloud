@@ -18,7 +18,7 @@ void main() {
       );
 
   test('reads a native-created HFS+ catalog with multiple leaves and an index root', () async {
-    final bytes = ar.GZipDecoder().decodeBytes(
+    final bytes = const ar.GZipDecoder().decodeBytes(
       File('test/fixtures/archives/native-hfsplus.hfs.gz').readAsBytesSync(),
       verify: true,
       maxOutputSize: 8 * 1024 * 1024,
@@ -114,6 +114,22 @@ void main() {
       throwsA(isA<ArchiveViewException>()),
     );
   });
+
+  test(
+    'rejects volumes beyond exact web offsets before reading catalog extents',
+    () async {
+      final fixture = HfsFixture();
+      fixture.data.setUint32(1024 + 40, 1 << 24);
+      fixture.data.setUint32(1024 + 44, 1 << 30);
+      final source = _TrackingSource(fixture.bytes, reportedLength: 1 << 54);
+      await expectLater(
+        openHfsArchive(source, maxMemberBytes: 1024),
+        throwsA(isA<ArchiveViewException>()),
+      );
+      expect(source.reads, [(1024, 512)]);
+      expect(source.closes, 1);
+    },
+  );
 
   test('empty data fork reads as an empty file', () async {
     final fixture = HfsFixture();
@@ -252,15 +268,16 @@ void main() {
 }
 
 class _TrackingSource implements koni.ByteSource {
-  _TrackingSource(this.bytes, {this.shortRead = false});
+  _TrackingSource(this.bytes, {this.shortRead = false, this.reportedLength});
   final Uint8List bytes;
   final bool shortRead;
+  final int? reportedLength;
   final reads = <(int, int)>[];
   bool closed = false;
   int closes = 0;
 
   @override
-  int get length => bytes.length;
+  int get length => reportedLength ?? bytes.length;
   @override
   String? get name => 'fixture.hfs';
   @override
