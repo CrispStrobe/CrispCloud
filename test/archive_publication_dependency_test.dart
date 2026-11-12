@@ -151,7 +151,7 @@ void main() {
       final json = Map<String, dynamic>.of(record.toJson());
       if (malformed == 'v1 with dependency') json['version'] = 1;
       if (malformed == 'v2 without dependency') json.remove('dependency');
-      if (malformed == 'future version') json['version'] = 3;
+      if (malformed == 'future version') json['version'] = 4;
       expect(
         () => ArchivePublicationRecord.fromJson(json),
         throwsFormatException,

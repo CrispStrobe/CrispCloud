@@ -177,6 +177,87 @@ class ArchivePublicationDependency {
   }
 }
 
+/// Durable source evidence for one-way directory-to-archive synchronization.
+/// The complete bounded namespace, supported metadata and regular-file content
+/// are represented by one deterministic digest. Recovery re-scans the captured
+/// native directory rather than trusting a transient comparison or file count.
+class ArchivePublicationDirectoryDependency {
+  ArchivePublicationDirectoryDependency({
+    required this.storage,
+    required FileItem directory,
+    required this.sha256,
+    required this.entryCount,
+    required this.totalBytes,
+  }) : directory = _capture(directory) {
+    if (!storage.persistent ||
+        directory.path == null ||
+        directory.path!.isEmpty ||
+        directory.path!.contains('\u0000') ||
+        utf8.encode(directory.path!).length > 16 * 1024 ||
+        !directory.isFolder ||
+        directory.isSymlink == true ||
+        !_hash.hasMatch(sha256) ||
+        entryCount < 0 ||
+        entryCount > maximumEntries ||
+        totalBytes < 0 ||
+        totalBytes > maximumSourceBytes ||
+        entryCount == 0 && totalBytes != 0) {
+      throw const FormatException(
+        'Invalid archive source-directory dependency.',
+      );
+    }
+  }
+
+  static const maximumEntries = 200000;
+  static const maximumMemberBytes = 64 * 1024 * 1024;
+  static const maximumSourceBytes = 256 * 1024 * 1024;
+  static final _hash = RegExp(r'^[a-f0-9]{64}$');
+  static FileItem _capture(FileItem directory) {
+    final captured = transferFileFromJson(transferFileJson(directory));
+    return captured.copyWith(
+      metadata: captured.metadata == null
+          ? null
+          : Map<String, dynamic>.unmodifiable(captured.metadata!),
+    );
+  }
+
+  final StorageReference storage;
+  final FileItem directory;
+  final String sha256;
+  final int entryCount;
+  final int totalBytes;
+
+  Map<String, dynamic> toJson() => {
+    'version': 1,
+    'storage': storage.toJson(),
+    'directory': transferFileJson(directory),
+    'sha256': sha256,
+    'entryCount': entryCount,
+    'totalBytes': totalBytes,
+  };
+
+  factory ArchivePublicationDirectoryDependency.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    if (json['version'] != 1) {
+      throw const FormatException(
+        'Unknown archive directory-dependency version.',
+      );
+    }
+    return ArchivePublicationDirectoryDependency(
+      storage: StorageReference.fromJson(
+        Map<String, dynamic>.from(json['storage'] as Map),
+      ),
+      directory: transferFileFromJson(
+        Map<String, dynamic>.from(json['directory'] as Map),
+      ),
+      sha256: json['sha256'] as String,
+      entryCount: json['entryCount'] as int,
+      totalBytes: json['totalBytes'] as int,
+    );
+  }
+}
+
 /// Password-free authority for one bounded publication. Paths are generated
 /// from [id], never accepted as arbitrary cleanup targets from a saved record.
 class ArchivePublicationRecord {
@@ -194,6 +275,7 @@ class ArchivePublicationRecord {
     this.published,
     this.accessPolicySha256,
     this.dependency,
+    this.directoryDependency,
     this.message,
   }) {
     if (!RegExp(
@@ -224,6 +306,14 @@ class ArchivePublicationRecord {
         'Archive source publication needs a distinct destination on the same storage.',
       );
     }
+    if (directoryDependency != null &&
+        (dependency != null ||
+            directoryDependency!.storage != storage ||
+            directoryDependency!.directory.path == original.path)) {
+      throw const FormatException(
+        'Archive synchronization needs one distinct source directory on the same storage.',
+      );
+    }
   }
 
   static const maximumContainerBytes = 256 * 1024 * 1024;
@@ -241,7 +331,10 @@ class ArchivePublicationRecord {
   final FileItem? published;
   final String? accessPolicySha256;
   final ArchivePublicationDependency? dependency;
+  final ArchivePublicationDirectoryDependency? directoryDependency;
   final String? message;
+
+  bool get hasDependency => dependency != null || directoryDependency != null;
 
   bool get isFinished =>
       phase == ArchivePublicationPhase.complete ||
@@ -275,13 +368,18 @@ class ArchivePublicationRecord {
     published: clearPublished ? null : published ?? this.published,
     accessPolicySha256: accessPolicySha256 ?? this.accessPolicySha256,
     dependency: dependency,
+    directoryDependency: directoryDependency,
     message: clearMessage ? null : message ?? this.message,
   );
 
   Map<String, dynamic> toJson() => {
     // Older apps must refuse a guarded source publication rather than silently
     // ignore its dependency and recover it as an independent archive edit.
-    'version': dependency == null ? 1 : 2,
+    'version': directoryDependency != null
+        ? 3
+        : dependency != null
+        ? 2
+        : 1,
     'id': id,
     'storage': storage.toJson(),
     'original': transferFileJson(original),
@@ -295,12 +393,18 @@ class ArchivePublicationRecord {
     if (published != null) 'published': transferFileJson(published!),
     if (accessPolicySha256 != null) 'accessPolicySha256': accessPolicySha256,
     if (dependency != null) 'dependency': dependency!.toJson(),
+    if (directoryDependency != null)
+      'directoryDependency': directoryDependency!.toJson(),
     if (message != null) 'message': message,
   };
 
   factory ArchivePublicationRecord.fromJson(Map<String, dynamic> json) {
-    if (json['version'] != 1 && json['version'] != 2 ||
-        (json['version'] == 2) != (json['dependency'] != null)) {
+    final version = json['version'];
+    final move = json['dependency'] != null;
+    final directory = json['directoryDependency'] != null;
+    if (!(version == 1 && !move && !directory ||
+        version == 2 && move && !directory ||
+        version == 3 && !move && directory)) {
       throw const FormatException('Unknown archive publication version.');
     }
     FileItem file(Object? value) =>
@@ -324,6 +428,11 @@ class ArchivePublicationRecord {
           ? null
           : ArchivePublicationDependency.fromJson(
               Map<String, dynamic>.from(json['dependency'] as Map),
+            ),
+      directoryDependency: json['directoryDependency'] == null
+          ? null
+          : ArchivePublicationDirectoryDependency.fromJson(
+              Map<String, dynamic>.from(json['directoryDependency'] as Map),
             ),
       message: json['message'] as String?,
     );

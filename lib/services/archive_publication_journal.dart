@@ -72,7 +72,7 @@ class ArchivePublicationJournal {
       if (next.values.any(
         (old) =>
             !old.isFinished &&
-            (old.published == null || old.dependency != null) &&
+            (old.published == null || old.hasDependency) &&
             old.id != record.id &&
             old.storage == record.storage &&
             old.original.path == record.original.path,
