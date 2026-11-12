@@ -657,7 +657,11 @@ Future<WordConversionInspection> inspectConvertedWord(
             ? switch (local) {
                 'footnoteReference' => 'footnotes',
                 'endnoteReference' => 'endnotes',
-                'commentReference' => 'comments',
+                // A commentReference in comment content may be ignored; it
+                // cannot attach another comment or that comment's objects.
+                'commentReference'
+                    when storyParts[current.owner]?.kind != 'comments' =>
+                  'comments',
                 _ => null,
               }
             : null;

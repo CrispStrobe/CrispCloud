@@ -51,8 +51,9 @@ reference cannot clear the corresponding warning. Strict and transitional
 namespaces and relocated package parts use the same checks.
 
 Only referenced note/comment definitions and section-attached headers/footers
-contribute further content. For example, an object left in an unreferenced
-footnote does not establish object preservation. Embedded objects require
+contribute further content. A comment reference inside another comment does
+not attach that second comment or its objects. For example, an object left in
+an unreferenced footnote does not establish object preservation. Embedded objects require
 `w:objectEmbed` or `o:OLEObject` markup selecting an internal object/package
 relationship. An unrelated image's relationship ID is insufficient.
 

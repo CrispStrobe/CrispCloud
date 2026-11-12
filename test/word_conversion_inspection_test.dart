@@ -869,6 +869,44 @@ void main() {
       }
     });
 
+    test('comment content cannot attach another comment and its objects', () async {
+      for (final directReference in [false, true]) {
+        final parts = _reachableParts(
+          body:
+              '<w:p><w:r><w:commentReference w:id="1"/>'
+              '${directReference ? '<w:commentReference w:id="2"/>' : ''}'
+              '</w:r></w:p>',
+        );
+        parts['content/shared/comments.xml'] = _bytes(
+          '<w:comments xmlns:w="$_w" xmlns:r="$_office">'
+          '<w:comment w:id="1"><w:p><w:r><w:commentReference w:id="2"/>'
+          '</w:r></w:p></w:comment>'
+          '<w:comment w:id="2"><w:p><w:r><w:object>'
+          '<w:objectEmbed r:id="object"/></w:object></w:r></w:p>'
+          '</w:comment></w:comments>',
+        );
+        parts['content/shared/_rels/comments.xml.rels'] = _bytes(
+          _relationships(
+            '<Relationship Id="object" Type="$_office/oleObject" '
+            'Target="../embeddings/object.bin"/>',
+          ),
+        );
+        final result = await _inspect(
+          parts,
+          source: const LegacyWordSourceInspection(
+            hasComments: true,
+            hasObjects: true,
+          ),
+        );
+        expect(result.counts['comments'], 2);
+        expect(
+          result.losses,
+          directReference ? isEmpty : [WordConversionLoss.objectsMissing],
+          reason: 'direct object-owning comment reference: $directReference',
+        );
+      }
+    });
+
     test('only embedded object markup uses its relationship as evidence', () async {
       for (final markup in [
         '<w:drawing r:id="object"/>',
