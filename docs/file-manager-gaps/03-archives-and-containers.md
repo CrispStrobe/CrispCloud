@@ -102,8 +102,16 @@ for archive targets. Source bytes are never written or deleted. A changed source
 or late failure retains/restores the original destination through the existing
 journal. Bounds remain 64 MiB/member and 256 MiB/container/aggregate.
 
-**Remaining:** A two-container move/recovery transaction, same-container grouped
-changes, backend-specific remote/browser publication, and native release
+**Delivered same-workspace continuation (2026-11-12):** **Move within archive…**
+preflights a selected group, supports recursive/implicit/empty directories and
+stages one metadata-preserving rename group. Stop, keep-both and skip policies
+retain existing destination trees. Captured revisions, self/descendant refusal,
+path bounds and the existing whole-container review/publication protect the
+original. This is one workspace, including an eligible nested route; it does
+not coordinate separately opened aliases or different nested routes.
+
+**Remaining:** A two-container move/recovery transaction, grouped operations
+across separately opened routes, backend-specific remote/browser publication, and native release
 acceptance. This increment does not close the broader G20 scope.
 
 **Starting points:** G18; FileOperationService transfer/recovery planning.
@@ -187,7 +195,8 @@ this profile. Exact boundaries and provenance are in the capability matrix.
 LZMA-alone support reading, verified creation and eligible rewriting, including
 wrapped TAR; the creation picker now has 28 choices. Lzip v1, UNIX compress
 `.Z`/`.tar.Z`/`.taz`, and modern binary CPIO in both byte orders are readable.
-Lzip/UNIX compress/binary CPIO remain read-only. Exact wrapper shape prevents
+At that checkpoint Lzip/UNIX compress/binary CPIO were read-only; the following
+CPIO writer continuation enables eligible CPIO profiles. Exact wrapper shape prevents
 same-codec nested streams being flattened by a single-payload save. F3 adds a
 cancellable integrity/readability report with SHA-256 and explicit failures,
 skips and unchecked members. It does not repair archives or authenticate a
@@ -196,6 +205,15 @@ independent native fixtures/readback establish codec behavior, with Dart2JS/Node
 portability checks. See the [continuation record](../archive-workflows-codecs-continuation.md).
 
 **Starting points:** archive_viewer_service.dart; archive_workspace.dart; archive_creation_service.dart; codec capability registry.
+
+**Delivered CPIO writer continuation (2026-11-12):** Three explicit creation
+choices bring the picker to **31**: portable ASCII/odc and modern binary LE/BE.
+Eligible rewrites retain their original profile, raw device/inode/ownership
+fields, supported root/trailer metadata and padding. Field overflow, mixed
+layouts, inode aliases, hard links and special records are refused. Independent
+libarchive fresh/edited readback and byte-identical unchanged rewrites supplement
+the malformed/preservation tests. No runtime dependency is added. See the
+[continuation record](../archive-rearrange-cpio-continuation.md).
 
 ## G23
 

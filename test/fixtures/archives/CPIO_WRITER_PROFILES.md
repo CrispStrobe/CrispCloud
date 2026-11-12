@@ -82,6 +82,11 @@ fresh cases above and requires byte identities already accepted by native
 libarchive, then reopens and rewrites them. It also checks odc's maximum
 33-bit timestamp and rejects overflowing binary ownership metadata.
 
+```sh
+dart compile js test/support/verify_archive_cpio_profiles_portable.dart -o /tmp/cpio-profiles.js
+node -e 'globalThis.self = globalThis; require("/tmp/cpio-profiles.js");'
+```
+
 | Fresh output | SHA-256 |
 | --- | --- |
 | odc | `61cea07ea722ec14e24dbe5f08e4e9e40613bad20c7c5cafbb881ba57b8ca555` |

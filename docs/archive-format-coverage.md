@@ -25,7 +25,7 @@ metadata, protection or filesystem structures cannot be preserved.
 | JAR / WAR / EAR | Yes | Unsigned archives | Unsigned archives only | Signing records and signature-related manifest digests block rewriting. This is archive editing, not compilation or signing. |
 | KMZ | Yes | Yes | Yes | A KML document must remain at the top level. |
 | AR | Ordinary, GNU and BSD members | Flat regular files | Inspected profiles | Preserves order, ownership, permissions, timestamps and supported long-name style. Symbol indexes and thin archives are refused. |
-| CPIO | Modern binary LE/BE, portable ASCII/odc, SVR4 newc and CRC | Newc | Inspected newc/CRC | Binary and odc are read-only. Preserves known newc/CRC record/root/trailer metadata when rewriting. Links, hard links and device records cannot be extracted; PWB-specific types are not interpreted. |
+| CPIO | Modern binary LE/BE, portable ASCII/odc, SVR4 newc and CRC | Newc, odc, binary LE, binary BE | Inspected profiles in their original layout | Preserves understood record/root/trailer metadata, ownership, device/inode fields, ordering and supported padding. Links, hard links, special records, incompatible mixed profiles and overflowing fields are refused. PWB-specific types are not interpreted. |
 | RPM | Classic v3/v4 newc/CRC payloads | No | No | gzip, bzip2, XZ, Zstandard and uncompressed payloads. Supported present MD5/SHA-256 payload checksums are checked; publisher signatures and separate header/file digests are not authenticated. No installation or script execution. |
 | CAB | Single-cabinet stored and MSZIP folders | No | No | Preserves MSZIP dictionary history across blocks and checks present block checksums when reading a folder. Spanned cabinets, split files, Quantum/LZX and unspecified non-ASCII legacy name encodings are refused. |
 | XAR | XAR v1, stored/zlib/bzip2/XZ members | Unsigned XAR | Inspected unsigned profiles | Preserves known IDs, ownership, permissions, times, checksums and compression policy. Unknown XML/heap data, signatures, ACLs and xattrs block rewriting. |
@@ -47,7 +47,7 @@ The existing source-account, review, verification and recovery requirements in
 
 ## Creating and editing
 
-Use **Create archive…** for the 28-choice format picker. It exposes only implemented
+Use **Create archive…** for the 31-choice format picker. It exposes only implemented
 compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA take one
 regular file; AR takes flat regular files; the other creation formats support
 folders within their format-specific name/depth limits. KMZ needs a top-level
@@ -95,8 +95,29 @@ forks, links and signatures are not imported. Save or discard a source draft
 first. The same physical outer archive, including native hard-link aliases,
 cannot be both endpoints of this transaction. Source bytes are checked before
 staging and again before destination installation. Source archives are retained.
-Archive-to-archive moves and same-container rearrangement require a separate
-transaction and remain unavailable.
+Archive-to-archive moves require a separate two-container transaction and remain
+unavailable. Rearrangement within one workspace uses the grouped move below.
+
+## Moving members within an archive
+
+Open an eligible archive workspace, select files or folders and choose **Move
+within archive…**. Choose an existing destination folder and a collision policy:
+**Stop without changes**, **Keep both (new name)** or **Skip conflicting items**.
+The entire selection is checked before one draft change. Existing destination
+files/folders are retained; colliding folders are not merged. Skipping a folder
+keeps its complete source subtree. A move to the same parent changes nothing.
+
+Recursive and empty folders, implicit directories, overlapping parent/child
+selections and pending draft edits are supported. Moving a folder into itself or
+one of its descendants is refused. The picker captures the selection and
+workspace generations; a changed workspace requires reopening the picker.
+
+**Save archive** builds the normal review and publishes the verified complete
+container. Original member identity retains the format's supported metadata and
+protection. Nested workspaces publish through their captured outer archive.
+Flat AR, single compressed payloads, replacement-only Debian package profiles
+and read-only containers do not expose this action. This workflow does not join
+two independently opened aliases or move between different nested routes.
 
 ## Testing an archive
 
@@ -158,8 +179,9 @@ through this path. A standalone PBZX file can use the larger positional path
 described below. No package action installs software or executes scripts.
 
 RPM, CAB and PBZX remain read-only, including after a misleading filename
-change. Binary and odc CPIO are also read-only; newc/CRC creation and inspected
-rewriting retain their prior profile. Package signature notices distinguish
+change. Standalone eligible odc/binary CPIO can be created and rewritten in its
+original profile, alongside newc/CRC rewriting. This does not make an enclosing
+RPM, PBZX or signed package writable. Package signature notices distinguish
 content checksums from publisher authentication.
 
 ## Bounds and integrity
@@ -348,3 +370,9 @@ independent feature-ideas review of VaultExplorer; none of its GPL implementatio
 tests or assets were inspected or imported.
 The [verification record](archive-workflows-codecs-verification.md) gives the
 observed regression, analysis, independent readback and portable-runtime gates.
+
+The [rearrangement/CPIO continuation](archive-rearrange-cpio-continuation.md)
+adds grouped moves within one workspace and three legacy CPIO creation choices.
+[CPIO writer provenance](../test/fixtures/archives/CPIO_WRITER_PROFILES.md)
+records exact profile preservation, integer/name bounds and native libarchive
+readback. odc and binary CPIO contain no stored content checksum or encryption.

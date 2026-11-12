@@ -77,6 +77,36 @@ atomic two-container move. Source changes after the final observation cannot be
 made atomic across independent storage; copied member bytes remain the captured,
 verified snapshot.
 
+## Grouped moves within one workspace
+
+`ArchiveWorkspace.moveMembers(paths, destinationDirectory, conflict: ...)`
+preflights all captured roots and applies one synchronous draft mutation.
+Duplicate and parent/child selections collapse to their selected ancestor.
+Implicit directories and explicit empty directories are supported. The target
+must already be a directory in the same workspace. Into-self/descendant moves,
+missing sources, invalid paths, excessive path/name budgets and unsupported
+writer profiles are refused without partially adopting a plan.
+
+Collision choices are fail, keep-both or skip. Fail leaves the entire prior
+draft unchanged. Keep-both chooses deterministic names in canonical source-path
+order. Skip retains the complete source subtree. Existing destination trees
+are never replaced or merged. Same-parent moves are no-ops. Retained original
+member references preserve inspected ownership, package IDs, supported times,
+permissions, content and source order during repacking; this is a rename group,
+not an import with a reduced metadata profile.
+
+The workspace action **Move within archive…** captures selection, child revision
+and outer revision before opening its folder picker. Confirmation checks that
+capture immediately before the synchronous mutation. Active review/publication
+on an enclosing workspace blocks draft mutation. The regular Save/review and
+publication journal verify and publish the complete outer container; closing a
+picker changes no draft, and closing a draft does not publish a move.
+
+Flat AR, single compressed payloads, Debian replacement-only profiles and
+read-only containers are excluded. Existing two-endpoint same-physical-archive
+and hard-link refusal remains in place. This API never accepts a second archive
+endpoint and does not introduce cross-route or two-container move recovery.
+
 ## Format and member policy
 
 The filename and detected format must agree. Writer eligibility is narrower
@@ -91,11 +121,22 @@ container or falls back to a direct provider upload.
 | Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard/LZ4/LZMA | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
 | CBZ / CB7 / unsigned JAR/WAR/EAR / KMZ | Corresponding ZIP/7z policy | Corresponding underlying format | Java signatures/digests block editing; KMZ needs a top-level KML; original member order is retained. |
 | gzip / bzip2 / XZ / Zstandard / LZ4 / LZMA | Exactly one immediate ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. Recursive inner-container views cannot be flattened, including same-codec nested streams. |
-| AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. Unknown fields and unsupported structures remain read-only. |
+| AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. CPIO retains newc/CRC, odc or binary byte order; unsupported or overflowing metadata is refused. |
 | DEB / UDEB | Coordinated prebuilt control/data payload replacement | Whole seconds for outer members | Exact three-member wrapper; required control fields and present md5sums checked. In-app nested payload editing is disabled. |
 | ISO | Inspected data-only ISO 9660/Rock Ridge/Joliet | Whole seconds for imports | Known volume/member metadata retained. Boot/hybrid/UDF/unknown structures block rewriting. |
 | Lzip / UNIX compress | Browsing and extraction only | Not applicable | Includes TAR.LZ, TAR.Z and TAZ. Reader support does not grant a writer or authorize conversion to another wrapper. |
 | Existing HFS / DMG and other packages | Browsing and extraction only | Not applicable | Separate fresh HFSX/DMG creation does not grant existing filesystem rewrite access. |
+
+Legacy CPIO rewriting preserves raw device identifiers, inode/ownership fields,
+link counts, member ordering, unchanged stored-name spelling, a supported root
+record, trailer fields and bounded zero padding. Existing source inspection
+selects the layout even when a caller supplies another fresh-creation option.
+New entries allocate distinct unused inode values; duplicate device/inode
+identities, regular-file hard links, special entries and incompatible mixed
+profiles remain unsupported. A renamed member uses its new canonical path.
+odc/binary CPIO do not contain stored payload checksums or encryption. The
+[profile contract](../test/fixtures/archives/CPIO_WRITER_PROFILES.md) records
+their smaller integer fields and independent reference verification.
 
 LZ4 editing requires one complete data frame without skippable extension
 metadata. Accepted linked or independent frames are rewritten as independent
