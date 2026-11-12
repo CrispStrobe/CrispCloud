@@ -39,6 +39,15 @@ ZIP/CBZ, 7z/CB7, TAR/CBT and TGZ/TAR.GZ archives:
 - Create ZIP/CBZ, 7z/CB7 Store/LZMA2 and TGZ/TAR.GZ from native selections with
   the larger bound. Fresh TAR/CBT and data-image creation retain their existing
   separate 2 GiB output contracts. Default 7z creation uses the LZMA2 profile.
+- Native extraction stages each decoded file, requires decoder EOF/checksum
+  completion, independently re-reads its staged SHA-256, and commits only after
+  source/destination checks. Cancellation discards the active stage and retains
+  already completed extractions. Buffered preview APIs retain their limits.
+- Native F3 opens eligible top-level common formats with the streamed reader,
+  allowing its integrity action to use the larger member budget. Source grants
+  and viewer lifetime checks remain captured. Mislabeled or unsupported writable
+  profiles can use the existing bounded read-only fallback with a fresh source;
+  nested previews and buffered member viewing retain their separate bounds.
 
 The explicit native budget is **8,589,934,592 bytes (8 GiB)** for a member,
 container and total expanded content. TGZ's intermediate TAR must also fit,
@@ -62,7 +71,7 @@ sources for the competitor columns.
 | Browse an archive as a directory; copy files in/out | Documented archive workflow; writes depend on packer | Documented archive-as-directory workflow | Existing pane/workspace workflow extended to native streamed common formats |
 | Add, replace, delete, create directories and save edits | Supported according to archive engine; temporary edit/repack workflow | Archive packing/editing operations; current built-in 7z supports directory rename | Draft mutations, review and verified publication for eligible writer policies; large text/hex buffering remains separately bounded |
 | ZIP, 7z and TAR/GZ family writing | Bundled Zip and SevenZip plugins, with platform/backend differences | Built-in ZIP/TAR/GZ and current built-in 7z compression | ZIP/ZIP64, 7z Copy/LZMA2 and TGZ stream natively; TAR already has a writer |
-| Large members and containers | Native/external archive engines rather than a small whole-file buffer contract | ZIP64 and large TAR support documented in change history | 8 GiB configured native bound; measured >2 GiB members in all three requested formats and >4 GiB ZIP64 member; see exact evidence below |
+| Large members and containers | Native/external archive engines rather than a small whole-file buffer contract | ZIP64 and large TAR support documented in change history | 8 GiB configured native bound; measured >2 GiB members in all three requested formats, >2 GiB stored ZIP/7z containers and >4 GiB ZIP64 member; see exact evidence below |
 | Archive-to-archive transfer | Archive file operations depend on plugins | Explicit archive-to-archive copy support | Captured copies and ordered native two-archive moves; destination verified before source removal |
 | Passwords and encryption | Depends on selected engine | Supported archive/packer profiles | Existing supported ZIP AES-256 and 7z encryption retained on the smaller buffered path; large encrypted writes remain open |
 | Background packing | File operations/background queues | Documented background packing | Cancellable foreground streaming; durable queued packing/resume is still open |
@@ -87,17 +96,31 @@ SubStreamsInfo structure that the same-library round trip had accepted.
 The reader checks emitted chunks no larger than 65,536 bytes, with event-loop
 heartbeat activity during each large run. These observations establish the
 direct native codec path; they are not Flutter UI memory or responsiveness
-measurements. The deliberately compressible fixtures have small packed sizes.
-They do not establish a physical multi-gigabyte storage publication or the full
-configured 8 GiB application limit. See the receipts for measured runtime/RSS,
+measurements. The compressed fixtures have small packed sizes. Additional
+production-spool checks wrote and completely read a **2,147,483,815-byte stored
+ZIP** and a **2,147,483,779-byte Copy-method 7z**, each independently verified.
+Those sparse files have real logical lengths and offsets above 2 GiB but used
+few allocated disk blocks. These checks do not establish an application-level
+multi-gigabyte publication or the full configured 8 GiB limit. See the receipts
+for measured runtime/RSS,
 software versions, commands, hashes and limitations:
 
 - [Writer and independent decoder evidence](archive-streaming-codec-verification.md)
 - [Machine-readable writer measurements](evidence/archive-streaming-codec-verification.json)
 - [Streamed reader and workspace status](archive-streaming-reader-verification.md)
 
+The direct offline `test/support/verify_archive_viewer_file.dart` probe also
+passed. It checked the native ZIP 8 GiB streaming allowance; bounded fallback
+for mismatched ZIP/7z/TAR names and gzip-wrapped ZIP; protected ZIP reopening;
+and cancellation after a decoded spool existed, with no scratch files left.
+This is a native reader-wrapper check, not an executed Flutter widget test.
+
 Direct static analysis covers the changed production path and the authored
 publication, endpoint, creation, workspace and extraction regression tests.
+The final combined SDK analysis of **71 changed Dart files**, including the
+preserved archive continuation, completed with **No issues found**. The help
+validator verified all three offline guides with 23 matching topics each, and
+`git diff --check` passed.
 Test registrations include source replacement, changed content with unchanged
 size/time, cancellation, late output collisions, corrupt staging, stale reviews,
 spool disposal, encrypted fallback and opt-in >2 GiB operations. Authored tests
@@ -118,6 +141,30 @@ codec checks, offline Python/libarchive oracles, static analysis and help-guide
 validation are separate checks that could run. Completion of the remaining
 runtime gate requires an approved clean Flutter runner. No release build,
 installation, deployment or merge to `main` is claimed.
+
+For an approved clean development runner, the focused remaining gate is:
+
+```sh
+flutter test --no-pub --concurrency=2 \
+  test/archive_streaming_writer_test.dart \
+  test/archive_streamed_creation_test.dart \
+  test/archive_streamed_workspace_test.dart \
+  test/archive_streamed_endpoint_test.dart \
+  test/archive_streamed_publication_test.dart \
+  test/archive_streamed_extraction_test.dart \
+  test/archive_container_publisher_test.dart \
+  test/archive_workspace_test.dart \
+  test/archive_browser_session_test.dart \
+  test/archive_integrity_service_test.dart \
+  test/widget/archive_creation_dialog_test.dart \
+  test/widget/archive_container_viewer_test.dart
+```
+
+Large workspace acceptance additionally uses
+`CRISP_RUN_LARGE_ARCHIVE_TESTS=1`; large creation cases use
+`--dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=true`. Run those deliberately with
+adequate temporary storage. Neither opt-in substitutes for normal application
+and platform acceptance.
 
 ## Retained limits and follow-up scope
 

@@ -97,6 +97,7 @@ class ArchiveBrowserSession {
           spool.path,
           name: captured.name,
           streaming: true,
+          isCancelled: isCancelled,
         );
       } else {
         final builder = BytesBuilder(copy: false);

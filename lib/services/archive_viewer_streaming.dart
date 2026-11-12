@@ -1,0 +1,53 @@
+import 'archive_streaming_unsupported.dart';
+import 'archive_types.dart';
+
+/// The native viewer can stream these common containers. Other formats keep
+/// their existing bounded readers, including read-only package/disk images.
+bool isStreamedArchiveViewerName(String name) {
+  final lower = name.toLowerCase();
+  return const [
+    '.zip',
+    '.cbz',
+    '.7z',
+    '.cb7',
+    '.tar',
+    '.cbt',
+    '.tgz',
+    '.tar.gz',
+  ].any(lower.endsWith);
+}
+
+/// Filename routing must not remove the viewer's content-sniffing behavior.
+/// This is only a cheap hint; the chosen reader still validates all metadata.
+bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
+  bool startsWith(List<int> signature) {
+    if (prefix.length < signature.length) return false;
+    for (var index = 0; index < signature.length; index++) {
+      if (prefix[index] != signature[index]) return false;
+    }
+    return true;
+  }
+
+  final lower = name.toLowerCase();
+  if (lower.endsWith('.zip') || lower.endsWith('.cbz')) {
+    return prefix.length >= 4 && startsWith(const [0x50, 0x4b]);
+  }
+  if (lower.endsWith('.7z') || lower.endsWith('.cb7')) {
+    return startsWith(const [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]);
+  }
+  if (lower.endsWith('.tgz') || lower.endsWith('.tar.gz')) {
+    return startsWith(const [0x1f, 0x8b]);
+  }
+  // Historic TARs have several valid header variants. Let the reader decide;
+  // an explicit decoded-format mismatch can still use the sniffing fallback.
+  return lower.endsWith('.tar') || lower.endsWith('.cbt');
+}
+
+/// Writable-profile restrictions and explicit format mismatches may still be
+/// browsed. Corruption, size limits, source revocation and cancellation cannot
+/// be turned into a second decode attempt by this fallback.
+bool useBoundedArchiveViewerFallback(Object error) =>
+    error is ArchiveStreamingUnsupported ||
+    error is ArchiveViewException &&
+        (error.message == 'The archive does not match its filename.' ||
+            error.message == 'The gzip payload is not a TAR archive.');

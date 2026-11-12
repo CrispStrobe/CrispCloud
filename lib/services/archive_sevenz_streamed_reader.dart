@@ -285,7 +285,7 @@ Future<ViewerArchive> _open(koni.ByteSource source, int maxBytes) async {
   }
 
   return ViewerArchive.reader(
-      maxStreamingMemberBytes: maxBytes,
+    maxStreamingMemberBytes: maxBytes,
     formatName: '7z',
     members: List.unmodifiable(members),
     read: (member, limit) async {
@@ -415,9 +415,15 @@ Stream<Uint8List> _decodeFolder(
         onOutput: emit,
       );
   }
+  // Copy has no decompression expansion, so larger positional reads remain
+  // bounded while avoiding one filesystem round trip per 4 KiB of a large
+  // stored member. Compressed inputs retain the smaller expansion budget.
+  final inputChunkSize = coder.idHex == '00' ? 64 * 1024 : 4096;
   for (var at = 0; at < packedSize;) {
     check();
-    final count = packedSize - at < 4096 ? packedSize - at : 4096;
+    final count = packedSize - at < inputChunkSize
+        ? packedSize - at
+        : inputChunkSize;
     final input = await source.read(offset + at, count);
     if (deflate != null) {
       final consumed = deflate.addInput(input);

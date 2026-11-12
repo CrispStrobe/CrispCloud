@@ -2,6 +2,7 @@ import 'package:koni_archive/io.dart' as koni;
 
 import 'archive_viewer_service.dart';
 import 'archive_streamed_reader.dart';
+import 'archive_viewer_streaming.dart';
 
 Future<ViewerArchive> openViewerArchiveFile(
   String path, {
@@ -9,35 +10,58 @@ Future<ViewerArchive> openViewerArchiveFile(
   String? password,
   int maxMemberBytes = kArchiveReadLimit,
   bool streaming = false,
+  bool Function()? isCancelled,
 }) async {
-  final lower = name.toLowerCase();
-  if (streaming &&
-      const [
-        '.zip',
-        '.cbz',
-        '.7z',
-        '.cb7',
-        '.tar',
-        '.cbt',
-        '.tgz',
-        '.tar.gz',
-      ].any(lower.endsWith)) {
-    try {
-      final opened = await openStreamedArchiveSource(
-        await koni.FileByteSource.open(path),
-        name: name,
-        password: password,
-      );
-      return opened.archive;
-    } on ArchiveStreamingUnsupported {
-      // The streamed reader has closed its input. Protected/filtered profiles
-      // retain the existing bounded reader and its password retry behavior.
+  void check() {
+    if (isCancelled?.call() ?? false) {
+      throw const ArchiveViewException('Archive opening was cancelled.');
     }
   }
-  return openViewerArchiveSource(
+
+  Future<ViewerArchive> accept(ViewerArchive archive) async {
+    try {
+      check();
+      return archive;
+    } catch (_) {
+      await archive.close();
+      rethrow;
+    }
+  }
+
+  check();
+  if (streaming && isStreamedArchiveViewerName(name)) {
+    final source = await koni.FileByteSource.open(path);
+    var transferred = false;
+    try {
+      final prefix = await source.read(
+        0,
+        source.length < 8 ? source.length : 8,
+      );
+      check();
+      if (matchesStreamedArchiveViewerSignature(name, prefix)) {
+        transferred = true;
+        final opened = await openStreamedArchiveSource(
+          source,
+          name: name,
+          password: password,
+          isCancelled: isCancelled,
+        );
+        return await accept(opened.archive);
+      }
+    } on ArchiveViewException catch (error) {
+      if (!useBoundedArchiveViewerFallback(error)) rethrow;
+      // The streamed reader has closed its input. Protected/filtered profiles
+      // and mislabeled containers retain the bounded sniffing/password reader.
+    } finally {
+      if (!transferred) await source.close();
+    }
+  }
+  check();
+  final archive = await openViewerArchiveSource(
     await koni.FileByteSource.open(path),
     name: name,
     password: password,
     maxMemberBytes: maxMemberBytes,
   );
+  return accept(archive);
 }
