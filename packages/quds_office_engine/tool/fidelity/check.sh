@@ -14,10 +14,13 @@ dart test \
   test/slide_text_fidelity_test.dart test/word_compatibility_fidelity_test.dart \
   test/word_referenced_styles_and_breaks_test.dart \
   test/comment_thread_fidelity_test.dart test/word_altchunk_fidelity_test.dart \
-  test/opaque_word_test.dart \
+  test/opaque_word_test.dart test/note_edit_test.dart test/note_marker_merge_test.dart \
   test/word_section_clone_fidelity_test.dart test/note_separator_fidelity_test.dart \
+  test/note_chrome_fidelity_test.dart \
   test/xml_whitespace_fidelity_test.dart test/styleless_import_fidelity_test.dart \
   test/table_border_fidelity_test.dart test/word_picture_distance_fidelity_test.dart \
+  test/note_marker_legacy_fidelity_test.dart \
+  test/bookmark_fidelity_test.dart test/content_control_fidelity_test.dart \
   test/word_edit_integrity_test.dart test/inline_field_fidelity_test.dart \
   test/word_structure_steps_test.dart test/word_structure_integrity_test.dart \
   test/word_revision_story_test.dart test/word_step_atomicity_test.dart \
@@ -51,6 +54,9 @@ python3 tool/fidelity/comment_threads_oracle.py
 python3 tool/fidelity/altchunk_oracle.py
 python3 tool/fidelity/edge_oracle.py
 python3 tool/fidelity/table_borders_oracle.py
+python3 tool/fidelity/note_markers_legacy_oracle.py
+python3 tool/fidelity/bookmarks_oracle.py
+python3 tool/fidelity/content_controls_oracle.py
 python3 tool/fidelity/inline_fields_oracle.py
 python3 tool/fidelity/word_structure_oracle.py
 python3 tool/fidelity/revision_story_oracle.py

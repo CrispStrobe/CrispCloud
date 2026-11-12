@@ -56,6 +56,32 @@ class FidelityError(ValueError):
     """Missing evidence or a difference detected by the independent renderer."""
 
 
+class MissingPdfError(FidelityError):
+    """A completed Office conversion produced no usable PDF; retain its evidence."""
+
+    def __init__(self, conversion):
+        super().__init__('LibreOffice did not produce a nonempty PDF')
+        self.returncode = conversion.returncode
+        self.stdout = conversion.stdout
+        self.stderr = conversion.stderr
+
+
+def conversion_diagnostics(error):
+    """Keep both output streams, including the zero-exit/no-PDF case."""
+    if not isinstance(error, (MissingPdfError, subprocess.CalledProcessError)):
+        return {}
+
+    def text(value):
+        return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else value or ''
+
+    return {'returncode': error.returncode, 'stdout': text(error.stdout),
+            'stderr': text(error.stderr)}
+
+
+def failure_details(error):
+    return {'error': str(error), **conversion_diagnostics(error)}
+
+
 def discover_inputs(root):
     root = Path(root)
     if not root.is_dir():
@@ -304,11 +330,14 @@ def matching_schema_receipts(paths, report_path):
 
 
 def known_native_import_rejection(error):
-    diagnostic = getattr(error, 'stderr', '') or ''
-    if isinstance(diagnostic, bytes):
-        diagnostic = diagnostic.decode('utf-8', errors='replace')
-    return (isinstance(error, subprocess.CalledProcessError) and error.returncode == 1
-            and 'Error: source file could not be loaded' in diagnostic)
+    expected_exit = (
+        isinstance(error, subprocess.CalledProcessError) and error.returncode == 1
+        or isinstance(error, MissingPdfError) and error.returncode == 0)
+    if not expected_exit:
+        return False
+    diagnostic = conversion_diagnostics(error)
+    return any('Error: source file could not be loaded' in diagnostic[stream]
+               for stream in ('stdout', 'stderr'))
 
 
 def render_document(path, root, output, index):
@@ -317,13 +346,13 @@ def render_document(path, root, output, index):
     environment = dict(os.environ, LC_ALL='C')
     with tempfile.TemporaryDirectory(prefix=f'render-{index:03d}-', dir=output) as temporary:
         work = Path(temporary)
-        subprocess.run(
+        conversion = subprocess.run(
             [office_binary(), f'-env:UserInstallation={(work / "profile").as_uri()}',
              '--headless', '--convert-to', 'pdf', '--outdir', str(work), str(path.resolve())],
             check=True, timeout=60, capture_output=True, env=environment)
         pdf = work / (path.stem + '.pdf')
         if not pdf.is_file() or pdf.stat().st_size == 0:
-            raise FidelityError('LibreOffice did not produce a nonempty PDF')
+            raise MissingPdfError(conversion)
         info = subprocess.check_output(['pdfinfo', str(pdf)], text=True, timeout=30,
                                        env=environment)
         page_match = re.search(r'^Pages:\s+(\d+)\s*$', info, re.MULTILINE)
@@ -396,23 +425,24 @@ def main(argv=None):
                 print(f'{source_name}: rendered {record["pages"]} pages', flush=True)
             except (OSError, subprocess.SubprocessError, FidelityError) as error:
                 if not known_native_import_rejection(error):
-                    failures.append({'file': source_name, 'error': str(error)})
+                    failures.append({'file': source_name, **failure_details(error)})
                     continue
                 try:
                     receipts = matching_schema_receipts(corpus_paths, args.schema_report)
                 except FidelityError as qualification:
-                    failures.append({'file': source_name, 'error': str(error),
+                    failures.append({'file': source_name, **failure_details(error),
                                      'qualification_error': str(qualification)})
                     continue
-                diagnostic = error.stderr
-                if isinstance(diagnostic, bytes):
-                    diagnostic = diagnostic.decode('utf-8', errors='replace')
+                conversion = conversion_diagnostics(error)
+                diagnostic = '\n'.join(conversion[stream] for stream in ('stdout', 'stderr')
+                                       if conversion[stream])
                 for path in corpus_paths:
                     name = path.relative_to(root).as_posix()
                     excluded.add(name)
                     native_only.append({'file': name, 'status': 'native_schema_only',
                                         'reason': NATIVE_AUX_REASON, 'source': source_name,
                                         'source_diagnostic': diagnostic,
+                                        'source_conversion': conversion,
                                         'schema_sha256': receipts[path]})
                     print(f'{name}: native_schema_only; no visual certification', flush=True)
         for index, path in enumerate(paths):
@@ -424,10 +454,10 @@ def main(argv=None):
                 reports[name] = record
                 print(f'{name}: rendered {record["pages"]} pages', flush=True)
             except (OSError, subprocess.SubprocessError, FidelityError) as error:
-                failures.append({'file': name, 'error': str(error)})
+                failures.append({'file': name, **failure_details(error)})
                 print(f'{name}: {error}', flush=True)
     except (OSError, subprocess.SubprocessError, FidelityError) as error:
-        failures.append({'error': str(error)})
+        failures.append(failure_details(error))
     names = [path.relative_to(root).as_posix() for path in paths]
     coverage = cycle_coverage([name for name in names if name not in excluded], reports)
     failures.extend(coverage.pop('failures'))

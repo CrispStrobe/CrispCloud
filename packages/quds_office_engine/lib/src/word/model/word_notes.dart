@@ -249,8 +249,21 @@ abstract final class WordNotes {
   /// bookmark identity. Non-paragraph blocks are kept; removal that would
   /// orphan one bookmark endpoint is rejected before any live edit.
   static void editText(WmlNote note, String text) {
+    final oldEditable = editableText(note);
+    if (oldEditable == text) return;
     final List<String> lines = text.split('\n');
     List<WmlParagraph> paragraphs = editableParagraphs(note);
+    if (lines.length != paragraphs.length && paragraphs.isNotEmpty) {
+      if (_editParagraphBoundary(note, oldEditable, text)) return;
+      if (paragraphs.length == 1 &&
+          paragraphs.single.inlines.any(
+            (inline) => inline is WmlBookmarkBoundary,
+          )) {
+        throw UnsupportedError(
+          'Complex paragraph replacement inside native note ranges requires explicit paragraph editing',
+        );
+      }
+    }
     if (lines.length != paragraphs.length &&
         paragraphs.any(WordContentControls.hasInlineControls)) {
       throw UnsupportedError(
@@ -318,7 +331,8 @@ abstract final class WordNotes {
           WmlParagraph(
             properties: template.properties.copy()
               ..bookmarkName = null
-              ..sourceBookmarkName = null,
+              ..sourceBookmarkName = null
+              ..listRestart = null,
             inlines: <WmlInline>[
               WmlRun(text: lines[i], properties: runProps.copy()),
             ],
@@ -342,6 +356,139 @@ abstract final class WordNotes {
     return blocks;
   }
 
+  /// Enter and backspace move actual inline tokens between adjacent paragraphs
+  /// instead of deleting the tail and recreating it as unformatted text.
+  static bool _editParagraphBoundary(WmlNote note, String old, String target) {
+    final change = _changedRange(old, target);
+    final bool inserting =
+        change.end == change.start && change.inserted.contains('\n');
+    final bool joining =
+        old.substring(change.start, change.end) == '\n' &&
+        change.inserted.isEmpty;
+    final List<WmlParagraph> paragraphs = editableParagraphs(note);
+    final List<String> display = <String>[
+      for (var i = 0; i < paragraphs.length; i++)
+        i == 0 &&
+                _hasLeadingReference(note, paragraphs.first) &&
+                paragraphs[i].text.startsWith(' ')
+            ? paragraphs[i].text.substring(1)
+            : paragraphs[i].text,
+    ];
+    var paragraphIndex = 0;
+    var offset = change.start;
+    while (paragraphIndex < display.length - 1 &&
+        offset > display[paragraphIndex].length) {
+      offset -= display[paragraphIndex].length + 1;
+      paragraphIndex++;
+    }
+    if (paragraphIndex >= paragraphs.length) return false;
+    final WmlParagraph paragraph = paragraphs[paragraphIndex];
+    final int removed = change.end - change.start;
+    final bool withinParagraph =
+        offset + removed <= display[paragraphIndex].length;
+    if (paragraphIndex == 0 &&
+        _hasLeadingReference(note, paragraphs.first) &&
+        paragraph.text.startsWith(' ')) {
+      offset++;
+    }
+    if (!inserting &&
+        withinParagraph &&
+        paragraph.text.contains('\n') &&
+        !change.inserted.contains('\n')) {
+      WmlRunEdit.replaceRange(
+        paragraph,
+        offset,
+        offset + removed,
+        change.inserted,
+      );
+      return true;
+    }
+    if (!inserting && !joining) return false;
+    if (joining) {
+      if (paragraphIndex + 1 >= paragraphs.length ||
+          offset != paragraph.text.length) {
+        return false;
+      }
+      final WmlParagraph next = paragraphs[paragraphIndex + 1];
+      final location = WordTree.locateIn(note.blocks, paragraph)!;
+      final nextLocation = WordTree.locateIn(note.blocks, next)!;
+      if (!identical(location.parent, nextLocation.parent) ||
+          nextLocation.index != location.index + 1 ||
+          WordContentControls.hasStructuralControls(paragraph) ||
+          WordContentControls.hasStructuralControls(next)) {
+        throw UnsupportedError(
+          'Cannot join note paragraphs across preserved blocks',
+        );
+      }
+      paragraph.inlines.addAll(WmlClone.inlines(next.inlines));
+      WmlRunEdit.coalesce(paragraph);
+      location.parent.removeAt(nextLocation.index);
+      return true;
+    }
+    final WmlParagraph head = WmlClone.paragraph(paragraph);
+    final WmlRunProps properties = WmlRunEdit.propsAt(paragraph, offset).copy();
+    final List<WmlInline> tail = WmlRunEdit.splitParagraphInlines(head, offset);
+    final List<String> inserted = change.inserted.split('\n');
+    WmlRunEdit.replaceRange(head, offset, offset, inserted.first);
+    final List<WmlParagraph> additions = <WmlParagraph>[];
+    for (var i = 1; i < inserted.length; i++) {
+      final WmlParagraph added = WmlParagraph(
+        properties: paragraph.properties.copy()
+          ..bookmarkName = null
+          ..sourceBookmarkName = null
+          ..listRestart = null,
+        inlines: i == inserted.length - 1 && tail.isNotEmpty
+            ? tail
+            : <WmlInline>[WmlRun(properties: properties.copy())],
+      );
+      WmlRunEdit.replaceRange(added, 0, 0, inserted[i]);
+      additions.add(added);
+    }
+    paragraph.inlines
+      ..clear()
+      ..addAll(head.inlines);
+    final location = WordTree.locateIn(note.blocks, paragraph)!;
+    location.parent.insertAll(location.index + 1, additions);
+    return true;
+  }
+
+  static ({int start, int end, String inserted}) _changedRange(
+    String old,
+    String target,
+  ) {
+    var start = 0;
+    while (start < old.length &&
+        start < target.length &&
+        old.codeUnitAt(start) == target.codeUnitAt(start)) {
+      start++;
+    }
+    if (start > 0 &&
+        start < old.length &&
+        old.codeUnitAt(start) >= 0xDC00 &&
+        old.codeUnitAt(start) <= 0xDFFF) {
+      start--;
+    }
+    var suffix = 0;
+    while (suffix < old.length - start &&
+        suffix < target.length - start &&
+        old.codeUnitAt(old.length - 1 - suffix) ==
+            target.codeUnitAt(target.length - 1 - suffix)) {
+      suffix++;
+    }
+    final int boundary = old.length - suffix;
+    if (suffix > 0 &&
+        boundary < old.length &&
+        old.codeUnitAt(boundary) >= 0xDC00 &&
+        old.codeUnitAt(boundary) <= 0xDFFF) {
+      suffix--;
+    }
+    return (
+      start: start,
+      end: old.length - suffix,
+      inserted: target.substring(start, target.length - suffix),
+    );
+  }
+
   static void _applyLine(
     WmlParagraph paragraph,
     String line, {
@@ -354,24 +501,12 @@ abstract final class WordNotes {
     if (old == target) {
       return;
     }
-    var start = 0;
-    while (start < old.length &&
-        start < target.length &&
-        old.codeUnitAt(start) == target.codeUnitAt(start)) {
-      start++;
-    }
-    var end = 0;
-    while (end < old.length - start &&
-        end < target.length - start &&
-        old.codeUnitAt(old.length - 1 - end) ==
-            target.codeUnitAt(target.length - 1 - end)) {
-      end++;
-    }
+    final change = _changedRange(old, target);
     WmlRunEdit.replaceRange(
       paragraph,
-      start,
-      old.length - end,
-      target.substring(start, target.length - end),
+      change.start,
+      change.end,
+      change.inserted,
     );
   }
 

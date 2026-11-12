@@ -703,6 +703,12 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
 
   /// VisualImageCache API.
   final VisualImageCache _images = VisualImageCache();
+
+  @override
+  void dispose() {
+    _images.dispose();
+    super.dispose();
+  }
   LaidOutDocument? _fittedLayout;
   final Set<LaidOutPage> _fittedPages = <LaidOutPage>{};
   int? _visualHandle;

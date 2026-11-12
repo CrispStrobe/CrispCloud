@@ -20,6 +20,7 @@ import '../model/word_styles.dart';
 import '../model/word_toc.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
+import 'word_bookmark_io.dart';
 import 'word_comment_io.dart';
 import 'word_content_control_io.dart';
 import 'word_drawing_io.dart';
@@ -825,20 +826,7 @@ class WordSerializer {
   }
 
   void _writeBookmarkBoundary(XmlWriter writer, WmlBookmarkBoundary boundary) {
-    final kind = boundary.isStart ? 'bookmarkStart' : 'bookmarkEnd';
-    if (boundary.sourceXml != null) {
-      final element = XmlDocument.parse(boundary.sourceXml!).root!;
-      element.writeTo(writer);
-      return;
-    }
-    writer.writeEmptyElement(
-      kind,
-      prefix: 'w',
-      attributes: {
-        'w:id': boundary.id,
-        if (boundary.isStart) 'w:name': boundary.name!,
-      },
-    );
+    WordBookmarkIo.write(writer, boundary);
   }
 
   void _writeTrackedRun(
@@ -2077,7 +2065,44 @@ class WordSerializer {
     );
   }
 
-  void _writeNoteChrome(XmlWriter w, String item) {
+  void _writeNoteChrome(XmlWriter w, String item, XmlElement? source) {
+    if (source != null) {
+      // An imported part owns its separator choices, including their absence.
+      // Replacing them with the conventional pair adds a visible rule to
+      // documents that deliberately contain no separator definition.
+      for (final node in source.childElements) {
+        if (node.namespaceUri != OfficeNamespaces.w ||
+            node.localName != item ||
+            !const {
+              'separator',
+              'continuationSeparator',
+              'continuationNotice',
+            }.contains(
+              node.getAttribute('type', namespaceUri: OfficeNamespaces.w),
+            )) {
+          continue;
+        }
+        final retained = node.copy();
+        // Native fragments may depend on aliases or markup-compatibility
+        // context declared on their original root. Keep that context local so
+        // a foreign source `w` binding cannot reinterpret generated notes.
+        for (final attribute in source.attributes) {
+          final inherited =
+              attribute.prefix == 'xmlns' ||
+              attribute.qualifiedName == 'xmlns' ||
+              attribute.namespaceUri == OfficeNamespaces.xml ||
+              attribute.namespaceUri == OfficeNamespaces.mc;
+          if (inherited &&
+              !retained.attributes.any(
+                (existing) => existing.qualifiedName == attribute.qualifiedName,
+              )) {
+            retained.attributes.add(attribute.copy());
+          }
+        }
+        retained.writeTo(w);
+      }
+      return;
+    }
     const chrome = <({int id, String type, String element})>[
       (id: -1, type: 'separator', element: 'separator'),
       (id: 0, type: 'continuationSeparator', element: 'continuationSeparator'),
@@ -2104,6 +2129,10 @@ class WordSerializer {
     String root,
     String item,
   ) {
+    final sourcePart = package.getPart(uri);
+    final source = sourcePart == null
+        ? null
+        : XmlDocument.parse(sourcePart.readText()).root;
     final Map<OfficeVisual, String> imageIds = WordDrawingIo.syncVisuals(
       notes
           .expand((WmlNote note) => note.visuals)
@@ -2122,10 +2151,9 @@ class WordSerializer {
     w.writeNamespace('pic', WordDrawingIo.pictureUri);
     final String previousPart = _activePartUri;
     _activePartUri = uri;
-    // Word treats these two notes as footnote/endnote chrome. They are not
-    // part of the editable model, but Word and LibreOffice expect them in the
-    // package; recreate the standard pair rather than dropping them on save.
-    _writeNoteChrome(w, item);
+    // Separators are not editable note bodies. Preserve their native metadata;
+    // only a newly created note part receives the conventional standard pair.
+    _writeNoteChrome(w, item, source);
     for (final WmlNote note in notes) {
       w.writeStartElement(item, prefix: 'w');
       w.writeAttribute('w:id', '${note.id}');
@@ -2147,11 +2175,11 @@ class WordSerializer {
         }
         _writeBlock(w, block, imageIds);
       }
-      if (!referenceWritten) {
+      if (!referenceWritten || note.blocks.isEmpty) {
         _writeParagraph(
           w,
           WmlParagraph(),
-          noteReference: true,
+          noteReference: !referenceWritten,
           endnote: note.endnote,
           addNoteReferenceSpace: note.addReferenceSpace,
           noteReferencePropertiesXml: note.referencePropertiesXml,

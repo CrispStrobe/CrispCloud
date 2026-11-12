@@ -7,25 +7,47 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 
 import '../editor_word/paint_run_text.dart';
 
-/// Decodes PNG bytes once and paints charts / diagrams on any Office canvas.
-class VisualImageCache {
-  final Map<int, ui.Image> _ready = <int, ui.Image>{};
-  final Set<int> _loading = <int>{};
+typedef VisualImageDecoder =
+    void Function(Uint8List bytes, void Function(ui.Image image) onDecoded);
 
-  ui.Image? get(Uint8List bytes) => _ready[identityHashCode(bytes)];
+/// Owns decoded pictures for one Office canvas, including pending decodes.
+class VisualImageCache {
+  VisualImageCache({VisualImageDecoder? decodeImage})
+    : _decodeImage = decodeImage ?? ui.decodeImageFromList;
+
+  final VisualImageDecoder _decodeImage;
+  final Map<Uint8List, ui.Image> _ready = Map<Uint8List, ui.Image>.identity();
+  final Set<Uint8List> _loading = Set<Uint8List>.identity();
+  bool _disposed = false;
+
+  ui.Image? get(Uint8List bytes) => _ready[bytes];
 
   /// load API.
   void load(Uint8List bytes, VoidCallback onReady) {
-    final int key = identityHashCode(bytes);
-    if (_ready.containsKey(key) || _loading.contains(key)) {
+    if (_disposed || _ready.containsKey(bytes) || _loading.contains(bytes)) {
       return;
     }
-    _loading.add(key);
-    ui.decodeImageFromList(bytes, (ui.Image image) {
-      _ready[key] = image;
-      _loading.remove(key);
+    _loading.add(bytes);
+    _decodeImage(bytes, (ui.Image image) {
+      _loading.remove(bytes);
+      if (_disposed) {
+        image.dispose();
+        return;
+      }
+      _ready[bytes] = image;
       onReady();
     });
+  }
+
+  /// A late decode must release its image without repainting a disposed owner.
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    for (final image in _ready.values) {
+      image.dispose();
+    }
+    _ready.clear();
+    _loading.clear();
   }
 }
 

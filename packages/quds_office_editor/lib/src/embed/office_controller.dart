@@ -80,6 +80,7 @@ abstract class OfficeController extends ChangeNotifier {
   OfficeSurfaceConfig _config;
   var _dirty = false;
   var _disposed = false;
+  var _contentRevision = 0;
 
   /// config API.
   OfficeSurfaceConfig get config => _config;
@@ -92,6 +93,12 @@ abstract class OfficeController extends ChangeNotifier {
 
   /// isDirty API.
   bool get isDirty => _dirty;
+
+  /// Monotonic revision for controller-observed document changes. Hosts can
+  /// capture this after committing pending edits and compare it after an
+  /// asynchronous save. Caret, viewport and layout notifications do not advance
+  /// it; immediate note-pane edits do, before their undo command is committed.
+  int get contentRevision => _contentRevision;
 
   /// canUndo API.
   bool get canUndo => commands.canUndo;
@@ -378,6 +385,7 @@ abstract class OfficeController extends ChangeNotifier {
   }
 
   void _onCommands() {
+    _contentRevision++;
     _dirty = true;
     notifyListeners();
   }
@@ -835,6 +843,7 @@ class WordEditorController extends OfficeController {
   @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
+    commitNoteEdits();
     final Uint8List bytes = WordSerializer().writeBytes(
       document,
       password: password,
@@ -846,6 +855,7 @@ class WordEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
+    commitNoteEdits();
     return OfficeIsolateSave.word(document, password: password);
   }
 
@@ -2899,14 +2909,12 @@ class WordEditorController extends OfficeController {
           (paragraph) =>
               paragraph.contentControlWrappers.isNotEmpty ||
               paragraph.inlines.any(
-                (inline) =>
-                    inline is WmlContentControlBoundary ||
-                    inline is WmlBookmarkBoundary,
+                (inline) => inline is WmlContentControlBoundary,
               ),
         )) {
       throw UnsupportedError(
-        'Pasting native paragraph wrappers or inline ranges into an existing '
-        'paragraph is not supported. Retain them as complete objects.',
+        'Pasting native paragraph wrappers or inline content controls into an '
+        'existing paragraph is not supported. Retain them as complete objects.',
       );
     }
     commands.beginBatch();
@@ -2923,7 +2931,7 @@ class WordEditorController extends OfficeController {
         }
         final WmlBlock block = clones[i];
         if (block is WmlParagraph) {
-          _insertSpansAtCaret(_spansOfParagraph(block));
+          _insertInlinesAtCaret(block.inlines);
         }
       }
     } else if (_wordBodyIsBlank()) {
@@ -2972,17 +2980,6 @@ class WordEditorController extends OfficeController {
         );
       }
     }
-  }
-
-  List<OfficeClipboardSpan> _spansOfParagraph(WmlParagraph para) {
-    return <OfficeClipboardSpan>[
-      for (final WmlInline inline in para.inlines)
-        if (inline is WmlRun)
-          OfficeClipboardSpan(
-            text: inline.text,
-            props: inline.properties.copy(),
-          ),
-    ];
   }
 
   bool _wordBodyIsBlank() {
@@ -3047,7 +3044,7 @@ class WordEditorController extends OfficeController {
     final WmlParagraphProps destProps = dest.properties.copy();
     final WmlBlock first = blocks.first;
     if (first is WmlParagraph) {
-      _insertSpansAtCaret(_spansOfParagraph(first));
+      _insertInlinesAtCaret(first.inlines);
       if (destEmpty) {
         commands.commit(
           _CallbackCommand(
@@ -3116,7 +3113,13 @@ class WordEditorController extends OfficeController {
   }
 
   void _insertSpansAtCaret(List<OfficeClipboardSpan> spans) {
-    if (spans.isEmpty) {
+    _insertInlinesAtCaret(<WmlInline>[
+      for (final OfficeClipboardSpan span in spans) span.toRun(),
+    ]);
+  }
+
+  void _insertInlinesAtCaret(List<WmlInline> inlines) {
+    if (inlines.isEmpty) {
       return;
     }
     final WmlParagraph para = _activeParagraph;
@@ -3125,13 +3128,13 @@ class WordEditorController extends OfficeController {
       caret.logicalIndex,
       caret.logicalIndex,
     ).start;
-    final List<WmlRun> runs = <WmlRun>[
-      for (final OfficeClipboardSpan span in spans) span.toRun(),
-    ];
-    final int added = runs.fold<int>(0, (int n, WmlRun r) => n + r.text.length);
+    final int added = inlines.whereType<WmlRun>().fold<int>(
+      0,
+      (int n, WmlRun run) => n + run.text.length,
+    );
     _commitParagraphInlines(
       para,
-      () => WmlRunEdit.insertRuns(para, start, runs),
+      () => WmlRunEdit.insertInlines(para, start, inlines),
       textEdit: (start: start, end: start, insertedLength: added),
     );
     caret.logicalIndex = start + added;
@@ -7021,12 +7024,15 @@ class WordEditorController extends OfficeController {
   ///
   /// Successive calls for the same note form one edit; [commitNoteEdit]
   /// records it as a single undo step. A pending edit is also committed by an
-  /// edit of another note and by [undo]. The text is applied immediately, so
-  /// saving needs no commit.
+  /// edit of another note, [undo], and saving. The text and content revision
+  /// change immediately, before the undo command is committed.
   void setNoteText(WmlNote note, String text) {
-    if (!config.allowsMutation) {
+    if (!config.allowsMutation || WordNotes.editableText(note) == text) {
       return;
     }
+    final beforeText = WordNotes.editableParagraphs(
+      note,
+    ).map((paragraph) => paragraph.text).toList();
     final paragraphs = note.allParagraphs.toList();
     final hasInlineControls = paragraphs.any(
       WordContentControls.hasInlineControls,
@@ -7073,10 +7079,19 @@ class WordEditorController extends OfficeController {
         paragraph: paragraph.text,
     };
     WordNotes.editText(note, text);
+    if (listEquals(
+      beforeText,
+      WordNotes.editableParagraphs(
+        note,
+      ).map((paragraph) => paragraph.text).toList(),
+    )) {
+      return;
+    }
     for (final entry in previousText.entries) {
       WordRevisions.rebaseTextChange(document, entry.key, entry.value);
     }
     WordRevisions.markDetached(document);
+    _contentRevision++;
     _dirty = true;
     relayout();
     notifyListeners();

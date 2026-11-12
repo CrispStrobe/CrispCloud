@@ -93,7 +93,9 @@ abstract final class WmlClone {
       return paragraph(source);
     }
     return WmlParagraph(
-      properties: source.properties.copy(),
+      properties: source.properties.copy()
+        ..bookmarkName = null
+        ..sourceBookmarkName = null,
       inlines: sliceInlines(source, start, end < start ? start : end),
     );
   }

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 217,
+  "expected_file_count": 241,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
     {"pattern": "fidelity-content-controls/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
@@ -69,7 +69,14 @@
     {"pattern": "fidelity-aux-controls/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
     {"pattern": "fidelity-aux-controls/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
     {"pattern": "fidelity-aux-header-footer/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"pattern": "fidelity-aux-header-footer/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"}
+    {"pattern": "fidelity-aux-header-footer/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_auxiliary_content_control_test.dart"},
+    {"pattern": "fidelity-note-markers-legacy/markers-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_legacy_fidelity_test.dart"},
+    {"pattern": "fidelity-note-markers-legacy/markers-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/note_marker_legacy_fidelity_test.dart"},
+    {"pattern": "fidelity-bookmarks-legacy/bookmarks-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/bookmark_fidelity_test.dart"},
+    {"pattern": "fidelity-bookmarks-legacy/bookmarks-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/bookmark_fidelity_test.dart"},
+    {"pattern": "fidelity-content-controls-legacy/controls-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"},
+    {"pattern": "fidelity-content-controls-legacy/controls-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"},
+    {"pattern": "fidelity-content-controls-legacy/legacy-frame-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"}
   ],
   "standalone": [
     {"path": "fidelity-content-controls/source.docx", "producer": "test/word_content_control_fidelity_test.dart"},
@@ -90,6 +97,9 @@
     {"path": "fidelity-frame-wrap/square-source.docx", "producer": "test/word_frame_wrap_test.dart"},
     {"path": "fidelity-frame-wrap/topBottom-source.docx", "producer": "test/word_frame_wrap_test.dart"},
     {"path": "fidelity-aux-controls/source.docx", "producer": "test/word_auxiliary_content_control_test.dart"},
-    {"path": "fidelity-aux-header-footer/source.docx", "producer": "test/word_auxiliary_content_control_test.dart"}
+    {"path": "fidelity-aux-header-footer/source.docx", "producer": "test/word_auxiliary_content_control_test.dart"},
+    {"path": "fidelity-content-controls-legacy/controls-source.docx", "producer": "test/content_control_fidelity_test.dart"},
+    {"path": "fidelity-note-markers-legacy/markers-source.docx", "producer": "test/note_marker_legacy_fidelity_test.dart"},
+    {"path": "fidelity-bookmarks-legacy/bookmarks-source.docx", "producer": "test/bookmark_fidelity_test.dart"}
   ]
 }

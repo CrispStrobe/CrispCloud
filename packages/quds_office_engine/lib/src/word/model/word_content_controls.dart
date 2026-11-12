@@ -67,7 +67,15 @@ abstract final class WordContentControls {
   }
 
   static void assertCanEdit(WmlParagraph paragraph, int start, int end) {
-    for (final span in spans(paragraph)) {
+    final controls = spans(paragraph);
+    final wholeControl = controls.any(
+      (span) => span.start == start && span.end == end,
+    );
+    for (final span in controls) {
+      // Replacing one complete control can empty a nested control while
+      // retaining both native boundaries. A partial boundary crossing still
+      // has no unambiguous owner and remains guarded.
+      if (wholeControl && start <= span.start && end >= span.end) continue;
       if ((span.start > start && span.start < end) ||
           (span.end > start && span.end < end)) {
         throw UnsupportedError(
@@ -158,9 +166,9 @@ abstract final class WordContentControls {
     for (final control in controls) {
       // Check the native shell, not optional convenience metadata supplied by
       // a model caller. A stale/null cached ID must not bypass the guard.
-      final native = XmlDocument.parse(control.xml).root;
+      final native = template(control);
       final id = native
-          ?.firstChild('sdtPr', namespaceUri: OfficeNamespaces.w)
+          .firstChild('sdtPr', namespaceUri: OfficeNamespaces.w)
           ?.firstChild('id', namespaceUri: OfficeNamespaces.w)
           ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
       if (id == null || id.isEmpty) continue;
@@ -176,12 +184,84 @@ abstract final class WordContentControls {
     }
   }
 
+  /// Validates the preserved shell before any generated package is changed.
+  /// The absence of a content slot is distinct from an empty content slot.
+  static XmlElement template(WmlContentControlData control) {
+    final root = XmlDocument.parse(control.xml).root;
+    if (root == null ||
+        root.localName != 'sdt' ||
+        root.namespaceUri != OfficeNamespaces.w) {
+      throw StateError('Invalid native content-control template.');
+    }
+    final seen = <String>{};
+    var sawContent = false;
+    for (final child in root.childElements) {
+      if (child.namespaceUri != OfficeNamespaces.w ||
+          !const {
+            'sdtPr',
+            'sdtEndPr',
+            'sdtContent',
+          }.contains(child.localName) ||
+          !seen.add(child.localName) ||
+          sawContent) {
+        throw StateError('Unsupported content-control property structure.');
+      }
+      if (child.localName == 'sdtContent') {
+        sawContent = true;
+        if (child.childElements.isNotEmpty || child.text.trim().isNotEmpty) {
+          throw StateError('Content-control template contains hidden content.');
+        }
+        for (final attribute in child.attributes) {
+          if (attribute.prefix == 'w' &&
+              attribute.namespaceUri != OfficeNamespaces.w) {
+            throw UnsupportedError(
+              'A content-slot attribute shadows the generated Word prefix.',
+            );
+          }
+        }
+      }
+    }
+    return root;
+  }
+
+  static bool hasContent(WmlContentControlData control) =>
+      template(
+        control,
+      ).firstChild('sdtContent', namespaceUri: OfficeNamespaces.w) !=
+      null;
+
   static Iterable<WmlContentControlData> _paragraphControls(
     Iterable<WmlParagraph> paragraphs,
   ) sync* {
     for (final paragraph in paragraphs) {
+      if (paragraph.contentControlWrappers.any(
+        (control) => !hasContent(control),
+      )) {
+        throw StateError(
+          'Cannot save a paragraph inside an absent content slot.',
+        );
+      }
       yield* paragraph.contentControlWrappers;
       for (final span in spans(paragraph)) {
+        if (!hasContent(span.control)) {
+          final start = paragraph.inlines.indexWhere(
+            (inline) =>
+                inline is WmlContentControlBoundary &&
+                inline.start &&
+                identical(inline.control, span.control),
+          );
+          final end = paragraph.inlines.indexWhere(
+            (inline) =>
+                inline is WmlContentControlBoundary &&
+                !inline.start &&
+                identical(inline.control, span.control),
+          );
+          if (end != start + 1) {
+            throw StateError(
+              'Cannot save text or markers inside an absent content slot.',
+            );
+          }
+        }
         yield span.control;
       }
     }
@@ -191,7 +271,12 @@ abstract final class WordContentControls {
     Iterable<WmlBlock> blocks,
   ) sync* {
     for (final block in WordTree.descendants(blocks)) {
-      if (block is WmlContentControlBlock) yield block.control;
+      if (block is WmlContentControlBlock) {
+        if (block.blocks.isNotEmpty && !hasContent(block.control)) {
+          throw StateError('Cannot save blocks inside an absent content slot.');
+        }
+        yield block.control;
+      }
       if (block is WmlParagraph) {
         yield* _paragraphControls([block]);
       } else if (block is WmlToc) {

@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
 void main() {
-  testWidgets('Insert > Footnote adds a note and opens the notes pane', (
+  testWidgets('Insert > Footnote… adds a note and opens the notes pane', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1700, 1000);
@@ -45,12 +45,17 @@ void main() {
     );
     await tester.pump();
 
-    // Menu bar: Insert > Footnote.
+    // Menu bar: Insert > Footnote… asks for the text, then opens the pane.
     await tester.tap(find.text('Insert').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Footnote').first);
+    await tester.tap(find.text('Footnote…').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Source');
+    await tester.tap(find.text('Insert').last);
     await tester.pumpAndSettle();
     expect(controller.document.footnotes, hasLength(1));
+    expect(controller.noteEditText(controller.document.footnotes.single),
+        'Source');
     expect(config.showNotesPane, isTrue);
 
     // The Insert ribbon tab (the second "Insert"; the first is the menu bar)
@@ -58,6 +63,9 @@ void main() {
     await tester.tap(find.text('Insert').at(1));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Endnote').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Later');
+    await tester.tap(find.text('Insert').last);
     await tester.pumpAndSettle();
     expect(controller.document.endnotes, hasLength(1));
 

@@ -2,6 +2,7 @@
 from contextlib import nullcontext, redirect_stdout
 import hashlib
 import io
+from itertools import product
 import json
 from pathlib import Path
 import subprocess
@@ -14,9 +15,12 @@ import render
 from test_render import record
 
 
-def rejection():
+def rejection(returncode=1, *, stdout='', stderr='Error: source file could not be loaded\n'):
+    if returncode == 0:
+        return render.MissingPdfError(subprocess.CompletedProcess(
+            ['soffice'], returncode, stdout=stdout, stderr=stderr))
     return subprocess.CalledProcessError(
-        1, ['soffice'], stderr='Error: source file could not be loaded\n')
+        returncode, ['soffice'], output=stdout, stderr=stderr)
 
 
 class NativeRendererLimitationTests(unittest.TestCase):
@@ -65,30 +69,38 @@ class NativeRendererLimitationTests(unittest.TestCase):
         return result, report, conversions
 
     def test_qualified_rejection_is_native_only_without_any_visual_success(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root, paths, receipt = self.fixture(folder)
-            result, report, conversions = self.run_renderer(root, receipt=receipt)
-            self.assertEqual(result, 0)
-            self.assertEqual(report['failures'], [])
-            self.assertEqual(report['files'], 7)
-            self.assertEqual(report['native_schema_only_files'], 7)
-            self.assertEqual(report['visual_input_files'], 0)
-            self.assertEqual(report['rendered_files'], 0)
-            self.assertEqual(report['cycle_groups'], 0)
-            self.assertEqual(report['baseline_comparisons'], 0)
-            self.assertEqual(report['reports'], [])
-            self.assertEqual(conversions.call_count, 1)
-            self.assertEqual(conversions.call_args.args[0], paths['source.docx'])
-            for item in report['native_schema_only']:
-                self.assertEqual(item['status'], 'native_schema_only')
-                self.assertIn('no visual certification', item['reason'])
-                self.assertIn('source file could not be loaded', item['source_diagnostic'])
-                self.assertEqual(item['schema_sha256'], hashlib.sha256((root / item['file']).read_bytes()).hexdigest())
+        for returncode, stream in product((0, 1), ('stdout', 'stderr')):
+            with self.subTest(returncode=returncode, stream=stream), tempfile.TemporaryDirectory() as folder:
+                root, paths, receipt = self.fixture(folder)
+                output = {'stdout': b'Converter output\n', 'stderr': b'Converter diagnostic\n'}
+                output[stream] = b'Error: source file could not be loaded\n'
+                result, report, conversions = self.run_renderer(
+                    root, receipt=receipt, source_error=rejection(returncode, **output))
+                self.assertEqual(result, 0)
+                self.assertEqual(report['failures'], [])
+                self.assertEqual(report['files'], 7)
+                self.assertEqual(report['native_schema_only_files'], 7)
+                self.assertEqual(report['visual_input_files'], 0)
+                self.assertEqual(report['rendered_files'], 0)
+                self.assertEqual(report['cycle_groups'], 0)
+                self.assertEqual(report['baseline_comparisons'], 0)
+                self.assertEqual(report['reports'], [])
+                self.assertEqual(conversions.call_count, 1)
+                self.assertEqual(conversions.call_args.args[0], paths['source.docx'])
+                for item in report['native_schema_only']:
+                    self.assertEqual(item['status'], 'native_schema_only')
+                    self.assertIn('no visual certification', item['reason'])
+                    self.assertIn('source file could not be loaded', item['source_diagnostic'])
+                    self.assertEqual(item['source_conversion'], {
+                        'returncode': returncode,
+                        'stdout': output['stdout'].decode(), 'stderr': output['stderr'].decode()})
+                    self.assertEqual(item['schema_sha256'], hashlib.sha256((root / item['file']).read_bytes()).hexdigest())
 
     def test_every_exact_current_file_needs_one_clean_sdk_receipt(self):
-        for change in ('absent', 'missing-file', 'wrong-path', 'hash', 'changed-bytes',
-                       'errors', 'exception', 'duplicate', 'malformed'):
-            with self.subTest(change=change), tempfile.TemporaryDirectory() as folder:
+        for returncode, change in product((0, 1), (
+                'absent', 'missing-file', 'wrong-path', 'hash', 'changed-bytes',
+                'errors', 'exception', 'duplicate', 'malformed')):
+            with self.subTest(returncode=returncode, change=change), tempfile.TemporaryDirectory() as folder:
                 root, paths, receipt = self.fixture(folder)
                 data = json.loads(receipt.read_text())
                 item = data['Reports'][0]
@@ -107,7 +119,9 @@ class NativeRendererLimitationTests(unittest.TestCase):
                 elif change == 'duplicate':
                     data['Reports'].append(dict(item))
                 receipt.write_text('invalid JSON' if change == 'malformed' else json.dumps(data))
-                result, report, _ = self.run_renderer(root, receipt=None if change == 'absent' else receipt)
+                result, report, _ = self.run_renderer(
+                    root, receipt=None if change == 'absent' else receipt,
+                    source_error=rejection(returncode))
                 self.assertEqual(result, 1)
                 self.assertEqual(report['native_schema_only'], [])
                 self.assertTrue(any('qualification_error' in failure for failure in report['failures']))
@@ -158,7 +172,13 @@ class NativeRendererLimitationTests(unittest.TestCase):
     def test_conversion_timeout_or_other_failure_is_not_a_native_limitation(self):
         for error in (subprocess.TimeoutExpired(['soffice'], 60),
                       subprocess.CalledProcessError(1, ['soffice'], stderr='Permission denied'),
-                      subprocess.CalledProcessError(11, ['soffice'], stderr='Error: source file could not be loaded')):
+                      subprocess.CalledProcessError(11, ['soffice'], stderr='Error: source file could not be loaded'),
+                      subprocess.CalledProcessError(0, ['soffice'], stderr='Error: source file could not be loaded'),
+                      render.MissingPdfError(subprocess.CompletedProcess(
+                          ['soffice'], 1, stderr='Error: source file could not be loaded')),
+                      rejection(0, stderr=''),
+                      rejection(0, stderr='Permission denied'),
+                      render.FidelityError('Error: source file could not be loaded')):
             with self.subTest(error=error), tempfile.TemporaryDirectory() as folder:
                 root, paths, receipt = self.fixture(folder)
                 result, report, _ = self.run_renderer(root, receipt=receipt, source_error=error)

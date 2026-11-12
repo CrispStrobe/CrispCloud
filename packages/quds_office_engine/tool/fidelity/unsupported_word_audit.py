@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Reproduce still-open Word data-loss gaps using the real modification CLI.
+"""Check authored Word structure-loss probes using the real modification CLI.
 
-This is a diagnostic probe, not a passing fidelity regression. It authors OPC
-wrappers around the committed XML, performs an adjacent edit, checks three
-save/reopen cycles using Python's XML parser, and exits nonzero while any source
-structure is lost. It never changes source fixtures or accepted goldens. Office
+It authors OPC wrappers around the committed XML, performs an adjacent edit,
+checks three save/reopen cycles using Python's XML parser, and exits nonzero
+when any source structure is lost. The historical 692a326 report reproduces
+the original data loss; the current gate requires both probes to preserve it. It never changes source fixtures or accepted goldens. Office
 packages exist only in a temporary directory; the retained artifact is JSON.
 """
 import argparse
@@ -87,7 +87,7 @@ def run_cli(dart, arguments):
 
 
 def audit(dart):
-    report = {'scope': 'unresolved Word structure preservation', 'open_gaps': 0, 'probes': {}}
+    report = {'scope': 'authored Word structure preservation through adjacent edits', 'open_gaps': 0, 'probes': {}}
     with tempfile.TemporaryDirectory(prefix='quds-word-loss-') as temporary:
         folder = Path(temporary)
         steps = folder / 'adjacent-edit.json'

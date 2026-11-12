@@ -515,6 +515,12 @@ class RenderSheetGrid extends RenderBox implements MouseTrackerAnnotation {
   /// VisualImageCache API.
   final VisualImageCache _images = VisualImageCache();
 
+  @override
+  void dispose() {
+    _images.dispose();
+    super.dispose();
+  }
+
   /// theme API.
   OfficeTheme get _theme => config.theme;
 

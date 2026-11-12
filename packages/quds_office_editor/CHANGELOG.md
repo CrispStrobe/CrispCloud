@@ -4,6 +4,23 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Expose a content revision that advances immediately for pending note-pane
+  edits as well as commands and history. Saves commit pending note edits before
+  encoding so hosts can guard asynchronous completion against a later edit.
+
+- Preserve native bookmark endpoints through run formatting, paragraph splits,
+  inside-range edits, native clipboard insertion and undo/redo. Invalid partial
+  range copies and duplicated native identities reject on export rather than
+  losing markup; three actual editor exports are checked independently.
+
+- Word, Sheet and Slide canvases dispose decoded images and suppress late
+  callbacks after close. Two deterministic cache lifecycle regressions cover
+  pending and ready image disposal.
+
+- Native block content controls keep their metadata through inside edits,
+  paragraph splitting, undo/redo and repeated saves. Splitting an inline-only
+  control is rejected before changing the document or undo history.
+
 - Toggling off an imported list suppresses style-based numbering through
   undo/redo and save/reopen; toggling it back on restores a list normally.
 

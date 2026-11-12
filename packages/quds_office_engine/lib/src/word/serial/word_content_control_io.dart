@@ -4,6 +4,7 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
+import '../model/word_content_controls.dart';
 import 'word_opaque_io.dart';
 
 /// Preserves native SDT metadata while its content remains editable model data.
@@ -29,7 +30,7 @@ abstract final class WordContentControlIo {
     String? value(String name) => properties
         ?.firstChild(name, namespaceUri: OfficeNamespaces.w)
         ?.getAttribute('val', namespaceUri: OfficeNamespaces.w);
-    return WmlContentControlData(
+    final control = WmlContentControlData(
       xml: metadata.xml,
       sourcePartUri: metadata.sourcePartUri,
       relationships: metadata.relationships,
@@ -37,6 +38,8 @@ abstract final class WordContentControlIo {
       tag: value('tag'),
       id: value('id'),
     );
+    WordContentControls.template(control);
+    return control;
   }
 
   /// Writes the wrapper and metadata up to the start of editable content.
@@ -59,28 +62,38 @@ abstract final class WordContentControlIo {
       owner,
     );
     final shell = XmlDocument.parse(prepared.toXml()).root!;
-    var content = shell.firstChild(
+    final content = shell.firstChild(
       'sdtContent',
       namespaceUri: OfficeNamespaces.w,
     );
-    if (content == null) {
-      content = XmlElement(
-        localName: 'sdtContent',
-        prefix: shell.prefix,
-        namespaceUri: OfficeNamespaces.w,
-      );
-      shell.addChild(content);
-    }
     _open(writer, shell);
     for (final child in shell.children) {
       if (identical(child, content)) break;
       child.writeTo(writer);
     }
-    _open(writer, content);
+    if (content != null) {
+      writer.writeStartElement(
+        content.localName,
+        prefix: content.prefix.isEmpty ? null : content.prefix,
+      );
+      for (final attribute in content.attributes) {
+        if (attribute.qualifiedName != 'xmlns:w') {
+          writer.writeAttribute(attribute.qualifiedName, attribute.value);
+        }
+      }
+      // Generated live children use w even if their native wrapper used an
+      // alias or inherited a foreign binding. Keep the binding local.
+      writer.writeNamespace('w', OfficeNamespaces.w);
+    }
     return shell;
   }
 
   static void end(XmlWriter writer, XmlElement shell) {
+    if (shell.firstChild('sdtContent', namespaceUri: OfficeNamespaces.w) ==
+        null) {
+      writer.writeEndElement();
+      return;
+    }
     writer.writeEndElement();
     var afterContent = false;
     for (final child in shell.children) {

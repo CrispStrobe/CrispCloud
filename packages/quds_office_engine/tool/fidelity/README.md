@@ -26,6 +26,13 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
+The authored manifests require **150 engine files** and **20 editor files**:
+53 complete three-save series and 11 standalone inputs/exports. Exact inventory
+checks reject missing, extra, empty or invalid packages and retain SHA-256
+receipts. Eight authored source/edited baselines also participate in the external
+render comparisons; the other three standalone exports receive render-only
+coverage.
+
 ## Import, inspect, edit and export
 
 ```sh
@@ -171,6 +178,38 @@ explicit defaults, caret notes, rich note text, split hyperlinks, images,
 paragraph insertion/deletion, list restarts, table text and header/footer edits.
 It has a separately authored semantic expectation in `scripts/expected.json`.
 
+### Preserving native Word structure during edits
+
+Native bookmarks retain exact ordered start/end markers, including overlapping
+and cross-paragraph ranges. Native block/inline content controls retain wrapper
+metadata around their ordinary editable blocks/runs. Imported footnote/endnote
+body markers retain their original positions, run properties and absence.
+Independently authored fixtures and Python oracles cover untouched, inside-edit
+and three-save cases; actual editor tests also cover split and undo/redo.
+
+Use story `replaceText`/`runFormat` for rich note edits. `editNote` deliberately
+replaces the whole rich body and retains only the first original automatic marker
+as a leading marker; an originally unmarked note stays unmarked. Unconventional
+source marker placement is preserved in exported XML, while the canvas still
+uses its conventional note-label layout.
+
+Unsupported Word structure fails explicitly: paragraph-external bookmark
+endpoints, invalid/duplicated range identities, unsupported content-control
+containers, and a paragraph split through an inline-only control. The script
+keeps an existing output unchanged on rejection; export preflight checks native
+identities and wrapper nesting before changing package parts. Retention does not
+implement content-control data binding or control-specific UI.
+
+The original adjacent-edit data-loss reproducers are part of the passing gate:
+
+```sh
+python3 tool/fidelity/unsupported_word_audit.py
+```
+
+The historical failing report is retained separately from the current result.
+Legacy private `qudsFrame` conversion has its own cycle checks, so it is not used
+as an unchanged native-layout baseline.
+
 ### XLSX: 10 operations
 
 Every operation accepts `sheet` (default 0). Cell addresses/ranges use A1
@@ -218,7 +257,7 @@ for combined text, geometry, notes, transition, picture and reorder steps.
 
 | Layer | Independent expectation and failure detected |
 | --- | --- |
-| Authored DOCX ZIP/XML | Note IDs/bodies, direct styles, lists, links, tables, media, section and compatibility semantics |
+| Authored DOCX ZIP/XML | Note IDs/bodies/markers, native bookmark ranges, content-control wrappers, direct styles, lists, links, tables, media, section and compatibility semantics |
 | openpyxl / python-pptx inputs | Retained source templates/styles, live charts, pivots, speaker notes, media ownership and reorder behavior |
 | Python semantic oracles | Read output ZIP/XML directly, compare authored values, decode picture pixels, verify relationships and selected child ordering |
 | Mutation controls | Deliberately break content, note marks, style flags, list starts, formulas, media, namespaces or inventories and require rejection |
@@ -253,17 +292,41 @@ dart test --coverage=coverage/vm
 bash tool/fidelity/check.sh
 python3 tool/fidelity/coverage_report.py coverage/vm
 cd ../quds_office_editor
+python3 ../quds_office_engine/tool/fidelity/inventory.py clean \
+  --package quds_office_editor --package-root . \
+  --manifest ../quds_office_engine/tool/fidelity/editor_output_manifest.json
 flutter test --no-pub
 python3 ../quds_office_engine/tool/fidelity/corpus.py verify build/fidelity
+python3 ../quds_office_engine/tool/fidelity/bookmarks_oracle.py --editor-dir build/fidelity-bookmarks
+python3 ../quds_office_engine/tool/fidelity/content_controls_oracle.py --editor-dir build/fidelity-content-controls
+python3 ../quds_office_engine/tool/fidelity/inventory.py verify \
+  --package quds_office_editor --package-root . \
+  --manifest ../quds_office_engine/tool/fidelity/editor_output_manifest.json
 ```
 
 From the repository root, with .NET 8, LibreOffice and Poppler available:
 
 ```sh
+# After both exact inventories pass, collect both packages for external checks.
+# Use a new directory so an earlier corpus cannot supply missing evidence.
+python3 - <<'PYTHON'
+from pathlib import Path
+import shutil
+target_root = Path('build/office-evidence')
+target_root.mkdir(parents=True, exist_ok=False)
+for package in Path('packages').glob('quds_office_*'):
+    for source in package.glob('build/fidelity*'):
+        target = target_root / package.name / source.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source.is_dir():
+            shutil.copytree(source, target)
+        else:
+            shutil.copy2(source, target)
+PYTHON
 dotnet run --project tool/office-validation -- --self-test
-dotnet run --project tool/office-validation -- packages/quds_office_engine/build build/external/schema-report.json
+dotnet run --project tool/office-validation -- build/office-evidence build/external/schema-report.json
 python3 -m unittest discover -s tool/office-validation -p 'test_*.py'
-python3 tool/office-validation/render.py packages/quds_office_engine/build build/external-render
+python3 tool/office-validation/render.py build/office-evidence build/external-render
 ```
 
 CI runs full engine/editor suites, retains the semantic reports, exports,

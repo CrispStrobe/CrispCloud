@@ -20,6 +20,7 @@ import '../model/word_toc.dart';
 import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 import 'word_bibliography_io.dart';
+import 'word_bookmark_io.dart';
 import 'word_comment_io.dart';
 import 'word_content_control_io.dart';
 import 'word_drawing_io.dart';
@@ -96,7 +97,11 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'p' &&
+      if (WordBookmarkIo.isMarker(reader)) {
+        throw UnsupportedError(
+          'Bookmark endpoints outside paragraphs cannot be imported safely',
+        );
+      } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         _addParagraph(section.blocks, _readParagraph(reader, package, docUri));
         section = _flushParagraphSectPr(document, section);
@@ -178,8 +183,12 @@ class WordDeserializer {
         ? <WmlBlock>[]
         : _readBlockContent(content, package, docUri);
     final tag = control.tag ?? '';
-    if (tag.startsWith('qudsFrame:')) {
-      return <WmlBlock>[_frameFromTag(tag, blocks)];
+    if (tag.startsWith('qudsFrame:') &&
+        !(blocks.length == 1 && blocks.single is WmlFrame)) {
+      final frame = _frameFromTag(tag, List<WmlBlock>.of(blocks));
+      blocks
+        ..clear()
+        ..add(frame);
     }
     return <WmlBlock>[WmlContentControlBlock(control: control, blocks: blocks)];
   }
@@ -299,9 +308,18 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'p' &&
+      if (WordBookmarkIo.isMarker(reader)) {
+        throw UnsupportedError(
+          'Bookmark endpoints outside paragraphs cannot be imported safely',
+        );
+      } else if (reader.localName == 'p' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         _addParagraph(blocks, _readParagraph(reader, package, docUri));
+        if (_pendingParagraphSectPr != null) {
+          throw UnsupportedError(
+            'A section break inside a content control cannot yet be imported safely',
+          );
+        }
       } else if (reader.localName == 'tbl' &&
           reader.namespaceUri == OfficeNamespaces.w) {
         blocks.add(_readTable(reader, package, docUri));
@@ -333,7 +351,12 @@ class WordDeserializer {
     bool containsBlockOnlyContent(XmlElement element) {
       if ((element.namespaceUri == OfficeNamespaces.w &&
               (element.localName == 'drawing' ||
-                  element.localName == 'pict')) ||
+                  element.localName == 'pict' ||
+                  element.localName == 'p' ||
+                  element.localName == 'tbl' ||
+                  element.localName == 'tr' ||
+                  element.localName == 'tc' ||
+                  element.localName == 'sectPr')) ||
           (element.namespaceUri == OfficeNamespaces.m &&
               (element.localName == 'oMath' ||
                   element.localName == 'oMathPara'))) {
@@ -628,17 +651,10 @@ class WordDeserializer {
   }
 
   void _readBookmark(XmlPullReader reader, WmlParagraph paragraph) {
-    final element = XmlDocument.readElement(reader);
-    final isStart = element.localName == 'bookmarkStart';
-    final name = element.getAttribute('name', namespaceUri: OfficeNamespaces.w);
-    paragraph.inlines.add(
-      WmlBookmarkBoundary(
-        id: element.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
-        isStart: isStart,
-        name: name,
-        sourceXml: XmlDocument(root: element).toXmlString(declaration: false),
-      ),
-    );
+    final marker = WordBookmarkIo.read(reader);
+    final isStart = marker.isStart;
+    final name = marker.name;
+    paragraph.inlines.add(marker);
     if (isStart && name != null && paragraph.properties.bookmarkName == null) {
       paragraph.properties
         ..bookmarkName = name

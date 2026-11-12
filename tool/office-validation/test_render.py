@@ -2,6 +2,7 @@
 from pathlib import Path
 import json
 import struct
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -246,6 +247,48 @@ class RenderExecutionTests(unittest.TestCase):
             with patch.object(render.subprocess, 'run'):
                 with self.assertRaisesRegex(render.FidelityError, 'did not produce'):
                     render.render_document(source, root, output, 0)
+
+    def test_missing_pdf_retains_both_streams_and_exit_status(self):
+        for empty_pdf in (False, True):
+            with self.subTest(empty_pdf=empty_pdf), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                source = root / 'source.docx'
+                source.write_bytes(b'Office input')
+                output = root / 'out'
+                output.mkdir()
+
+                def conversion(args, **kwargs):
+                    if empty_pdf:
+                        (Path(args[args.index('--outdir') + 1]) / 'source.pdf').touch()
+                    return subprocess.CompletedProcess(
+                        args, 0, stdout=b'Converter stdout\n', stderr=b'Converter stderr\n')
+
+                with patch.object(render.subprocess, 'run', side_effect=conversion), \
+                        self.assertRaises(render.MissingPdfError) as caught:
+                    render.render_document(source, root, output, 0)
+                self.assertEqual(render.conversion_diagnostics(caught.exception), {
+                    'returncode': 0, 'stdout': 'Converter stdout\n', 'stderr': 'Converter stderr\n'})
+                self.assertFalse(render.known_native_import_rejection(caught.exception))
+
+    def test_ordinary_missing_pdf_failure_report_keeps_conversion_diagnostics(self):
+        for diagnostic in (b'Permission denied\n', b'Error: source file could not be loaded\n'):
+            with self.subTest(diagnostic=diagnostic), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                source = root / 'input'
+                source.mkdir()
+                (source / 'ordinary.docx').write_bytes(b'Office input')
+                output = root / 'out'
+                conversion = subprocess.CompletedProcess(
+                    ['soffice'], 0, stdout=b'Converter stdout\n', stderr=diagnostic)
+                with patch.object(render.subprocess, 'run', return_value=conversion), \
+                        patch.object(render.subprocess, 'check_output', return_value='LibreOffice test'):
+                    self.assertEqual(render.main([str(source), str(output)]), 1)
+                report = json.loads((output / 'render-report.json').read_text())
+                self.assertEqual(report['native_schema_only_files'], 0)
+                self.assertEqual(report['rendered_files'], 0)
+                self.assertEqual(report['failures'], [{
+                    'file': 'ordinary.docx', 'error': 'LibreOffice did not produce a nonempty PDF',
+                    'returncode': 0, 'stdout': 'Converter stdout\n', 'stderr': diagnostic.decode()}])
 
     def test_png_pdf_and_text_artifacts_are_retained(self):
         with tempfile.TemporaryDirectory() as folder:

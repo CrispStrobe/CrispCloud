@@ -1,5 +1,7 @@
 import '../properties/wml_properties.dart';
+import 'wml_clone.dart';
 import 'wml_document.dart';
+import 'word_bookmarks.dart';
 import 'word_content_controls.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
@@ -63,6 +65,64 @@ abstract final class WmlRunEdit {
       }
       offset = end;
     }
+  }
+
+  /// Moves the actual tail, including zero-width source markup, to a new
+  /// paragraph. End markers at the boundary stay with the preceding content;
+  /// a start marker and the following boundary packet stay with the tail.
+  ///
+  /// Inline-only wrappers cannot span paragraphs. Rejecting their split before
+  /// changing either list keeps undo history and export structure intact.
+  static List<WmlInline> splitParagraphInlines(
+    WmlParagraph paragraph,
+    int index,
+  ) {
+    RangeError.checkValueInInterval(index, 0, paragraph.text.length, 'index');
+    final range = normalizeRange(paragraph, index, index);
+    if (range.start != index || range.end != index) {
+      throw ArgumentError('A paragraph cannot split an atomic text token.');
+    }
+    WordContentControls.assertCanSplit(paragraph, index);
+    final leftControls = <WmlContentControlData>{
+      for (final span in WordContentControls.spans(paragraph))
+        if (span.end < index || (span.end == index && span.start < span.end))
+          span.control,
+    };
+    final starts = <String, int>{};
+    final emptyBookmarks = <String>{};
+    var position = 0;
+    for (final WmlInline inline in paragraph.inlines) {
+      if (inline is WmlRun) position += inline.text.length;
+      if (inline is WmlBookmarkBoundary) {
+        final id = WordBookmarks.canonicalId(inline.id);
+        if (inline.isStart) {
+          starts[id] = position;
+        } else if (starts[id] == position) {
+          emptyBookmarks.add(id);
+        }
+      }
+    }
+    splitAt(paragraph, index);
+    position = 0;
+    final head = <WmlInline>[];
+    final tail = <WmlInline>[];
+    for (final inline in paragraph.inlines) {
+      final onLeft = inline is WmlRun
+          ? position + inline.text.length <= index
+          : inline is WmlContentControlBoundary
+          ? leftControls.contains(inline.control)
+          : inline is WmlBookmarkBoundary &&
+                !inline.isStart &&
+                !emptyBookmarks.contains(WordBookmarks.canonicalId(inline.id))
+          ? position <= index
+          : position < index;
+      (onLeft ? head : tail).add(inline);
+      if (inline is WmlRun) position += inline.text.length;
+    }
+    paragraph.inlines
+      ..clear()
+      ..addAll(head);
+    return tail;
   }
 
   /// applyRange API.
@@ -280,7 +340,16 @@ abstract final class WmlRunEdit {
 
   /// insertRuns API.
   static void insertRuns(WmlParagraph paragraph, int index, List<WmlRun> runs) {
-    if (runs.isEmpty) {
+    insertInlines(paragraph, index, runs);
+  }
+
+  /// Inserts native inline content without discarding source boundary tokens.
+  static void insertInlines(
+    WmlParagraph paragraph,
+    int index,
+    List<WmlInline> inlines,
+  ) {
+    if (inlines.isEmpty) {
       return;
     }
     index = normalizeRange(paragraph, index, index).start;
@@ -302,20 +371,7 @@ abstract final class WmlRunEdit {
       offset += inline.text.length;
       insertAt = i + 1;
     }
-    paragraph.inlines.insertAll(insertAt, <WmlInline>[
-      for (final WmlRun run in runs)
-        WmlRun(
-          text: run.text,
-          properties: run.properties.copy(),
-          hyperlink: run.hyperlink,
-          commentIds: List<int>.from(run.commentIds),
-          noteRefId: run.noteRefId,
-          noteRefEndnote: run.noteRefEndnote,
-          fieldInstruction: run.fieldInstruction,
-          fieldLocked: run.fieldLocked,
-          fieldDirty: run.fieldDirty,
-        ),
-    ]);
+    paragraph.inlines.insertAll(insertAt, WmlClone.inlines(inlines));
     coalesce(paragraph);
   }
 

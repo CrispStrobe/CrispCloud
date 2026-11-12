@@ -9,7 +9,7 @@ void main() {
   setUpAll(OfficeHostFonts.ensureRegistered);
   for (final entry in layoutCases().entries) {
     testWidgets(
-      '${entry.key} pages match reviewed goldens before and after export',
+      '${entry.key} pages match reviewed goldens before and after three exports',
       (tester) async {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(640, 460);
@@ -22,7 +22,9 @@ void main() {
           'continued_notes': 3,
           'tall_table': 4,
         }[entry.key]!;
-        for (int cycle = 0; cycle < 2; cycle++) {
+        const exportCycles = 3;
+        // Check the original and every reopened export, including the last one.
+        for (int cycle = 0; cycle <= exportCycles; cycle++) {
           final laid = WordLayoutEngine(font: null).layout(doc);
           expect(laid.pages.length, pageCount);
           expect(laid.pages, isNotEmpty);
@@ -58,6 +60,7 @@ void main() {
               matchesGoldenFile('goldens/${entry.key}_${page + 1}.png'),
             );
           }
+          if (cycle == exportCycles) break;
           final bytes = WordSerializer().writeBytes(doc);
           Directory('build/fidelity-layout').createSync(recursive: true);
           File(
