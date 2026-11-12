@@ -88,10 +88,12 @@ class _StructuredWordParser {
         }
       }
     }
-    if (start < body.length)
+    if (start < body.length) {
       paragraphs.add(_paragraph(start, body.length, body.length, 0));
-    if (_fieldResults.isNotEmpty)
+    }
+    if (_fieldResults.isNotEmpty) {
       throw const FormatException('Unclosed Word field.');
+    }
     final blocks = _assembleTables(paragraphs);
     final plain = StringBuffer();
     void paragraphText(LegacyWordParagraph paragraph) {
@@ -134,13 +136,18 @@ class _StructuredWordParser {
   }
 
   void _storyWarnings() {
+    if (source.missingDeclaredExtent) {
+      warnings.add(LegacyWordWarning.unsupportedFormatting);
+    }
     final lengths = source.storyLengths;
-    if (lengths[0] != 0 || lengths[3] != 0)
+    if (lengths[0] != 0 || lengths[3] != 0) {
       warnings.add(LegacyWordWarning.notesOmitted);
+    }
     if (lengths[1] != 0) warnings.add(LegacyWordWarning.headersFootersOmitted);
     if (lengths[2] != 0) warnings.add(LegacyWordWarning.commentsOmitted);
-    if (lengths[4] != 0 || lengths[5] != 0)
+    if (lengths[4] != 0 || lengths[5] != 0) {
       warnings.add(LegacyWordWarning.textboxesOmitted);
+    }
     for (final entry in source.compound.childrenOf(source.compound.root)) {
       if (const {
         'MACROS',
@@ -149,26 +156,36 @@ class _StructuredWordParser {
       }.contains(entry.name.toUpperCase())) {
         warnings.add(LegacyWordWarning.macrosOmitted);
       }
-      if (entry.name == 'ObjectPool')
+      if (entry.name == 'ObjectPool') {
         warnings.add(LegacyWordWarning.floatingObjectsOmitted);
+      }
     }
   }
 
   List<_Sprm> _readProperties(Uint8List bytes, [int depth = 0]) {
-    if (depth > 16)
+    if (depth > 16) {
       throw const FormatException(
         'Word indirect properties are nested too deeply.',
       );
+    }
     final operations = _decodeSprms(bytes, budget);
     final output = <_Sprm>[];
     void append(List<_Sprm> values) {
       if (values.length > 100000 - output.length) {
-        throw const FormatException('Word properties exceed the preview complexity limit.');
+        throw const FormatException(
+          'Word properties exceed the preview complexity limit.',
+        );
       }
       budget.expand(values.length);
       output.addAll(values);
     }
+
     for (final operation in operations) {
+      if ((const {0x2a83, 0x3668}.contains(operation.code) &&
+              operation.data.u8(0) != 0) ||
+          const {0xca89, 0xd667}.contains(operation.code)) {
+        warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
+      }
       if (operation.code != 0x6646 &&
           operation.code != 0x646b &&
           operation.code != 0x6645) {
@@ -181,8 +198,9 @@ class _StructuredWordParser {
         append(cached);
         continue;
       }
-      if (!_indirectActive.add(offset))
+      if (!_indirectActive.add(offset)) {
         throw const FormatException('Cyclic Word indirect properties.');
+      }
       final data = source.data;
       final length = data.u16(offset);
       final nested = _readProperties(data.slice(offset + 2, length), depth + 1);
@@ -224,8 +242,9 @@ class _StructuredWordParser {
     _applyParagraph(papx.operations, properties, budget, warnings);
     _applyParagraph(prm, properties, budget, warnings);
     final listId = properties['listId'] as int?;
-    if (listId != null && listId != 0)
+    if (listId != null && listId != 0) {
       warnings.add(LegacyWordWarning.numberingNotReconstructed);
+    }
     final outline = properties['outline'] as int?;
     final style = LegacyWordParagraphStyle(
       styleIndex: styleIndex,
@@ -257,11 +276,14 @@ class _StructuredWordParser {
       final pending = pendingRun;
       if (pending == null) return;
       if (++runCount > 200000) {
-        throw const FormatException('Word runs exceed the preview complexity limit.');
+        throw const FormatException(
+          'Word runs exceed the preview complexity limit.',
+        );
       }
       runs.add(pending.finish());
       pendingRun = null;
     }
+
     var cp = start;
     while (cp < contentEnd) {
       final piece = source.pieceAt(cp);
@@ -269,21 +291,30 @@ class _StructuredWordParser {
       final chpx = characterFormatting.at(fc);
       final characterPrm = _pieceProperties(piece);
       final base = <String, Object?>{...resolved.character};
-      int? characterStyle;
-      for (final op in [...chpx.operations, ...characterPrm]) {
-        if (op.code == 0x4a30) characterStyle = op.data.u16(0);
-      }
-      if (characterStyle != null && characterStyle != 0xfff) {
-        base.addAll(_resolveStyle(characterStyle).character);
-      }
       final character = <String, Object?>{...base};
-      _applyCharacter(chpx.operations, character, base, budget, warnings);
-      _applyCharacter(characterPrm, character, base, budget, warnings);
+      _applyCharacter(
+        [...chpx.operations, ...characterPrm],
+        character,
+        base,
+        budget,
+        warnings,
+        paragraphStyle: resolved.character,
+        resolveCharacterStyle: (index) {
+          if (index == 10 && !styles.containsKey(index)) return const {};
+          if (styles[index]?.kind != 2) {
+            throw const FormatException(
+              'Invalid Word character-style reference.',
+            );
+          }
+          return _resolveStyle(index).character;
+        },
+      );
       var spanEnd = cp + (chpx.endFc - fc) ~/ (piece.compressed ? 1 : 2);
       if (spanEnd > piece.endCp) spanEnd = piece.endCp;
       if (spanEnd > contentEnd) spanEnd = contentEnd;
-      if (spanEnd <= cp)
+      if (spanEnd <= cp) {
         throw const FormatException('Unaligned Word character formatting.');
+      }
       // A scalar is emitted atomically even when a valid surrogate pair crosses
       // an FKP or piece boundary; it takes the first code unit's properties.
       if (spanEnd < contentEnd && _highSurrogate(body[spanEnd - 1])) {
@@ -298,8 +329,9 @@ class _StructuredWordParser {
       if (inserted || deleted) {
         final authorIndex =
             character[deleted ? 'deletionAuthor' : 'insertionAuthor'] as int?;
-        if (authorIndex != null && authorIndex < authors.length)
+        if (authorIndex != null && authorIndex < authors.length) {
           author = authors[authorIndex];
+        }
         time = _revisionDate(
           character[deleted ? 'deletionDate' : 'insertionDate'] as int?,
         );
@@ -315,16 +347,28 @@ class _StructuredWordParser {
         final value = text.toString();
         text.clear();
         final previous = pendingRun;
-        if (previous != null && previous.endCp == segmentStart &&
-            previous.style == runStyle && previous.inserted == inserted &&
-            previous.deleted == deleted && previous.author == author && previous.time == time) {
+        if (previous != null &&
+            previous.endCp == segmentStart &&
+            previous.style == runStyle &&
+            previous.inserted == inserted &&
+            previous.deleted == deleted &&
+            previous.author == author &&
+            previous.time == time) {
           previous.text.write(value);
           previous.endCp = segmentEnd;
           return;
         }
         finishRun();
-        pendingRun = _PendingRun(segmentStart, segmentEnd, value, runStyle,
-            inserted, deleted, author, time);
+        pendingRun = _PendingRun(
+          segmentStart,
+          segmentEnd,
+          value,
+          runStyle,
+          inserted,
+          deleted,
+          author,
+          time,
+        );
       }
 
       while (cp < spanEnd) {
@@ -333,15 +377,18 @@ class _StructuredWordParser {
           flush();
           warnings.add(LegacyWordWarning.fieldsUseStoredResults);
           if (unit == 0x13) {
-            if (_fieldResults.length >= 64)
+            if (_fieldResults.length >= 64) {
               throw const FormatException('Word fields are nested too deeply.');
+            }
             _fieldResults.add(false);
           } else {
-            if (_fieldResults.isEmpty)
+            if (_fieldResults.isEmpty) {
               throw const FormatException('Unmatched Word field marker.');
+            }
             if (unit == 0x14) {
-              if (_fieldResults.last)
+              if (_fieldResults.last) {
                 throw const FormatException('Duplicate Word field separator.');
+              }
               _fieldResults[_fieldResults.length - 1] = true;
             } else {
               _fieldResults.removeLast();
@@ -456,8 +503,9 @@ class _StructuredWordParser {
         cells.add(cell);
         cell = [];
       }
-      if (cells.isEmpty)
+      if (cells.isEmpty) {
         throw const FormatException('Word table row has no cells.');
+      }
       final definition = properties['tableDefinition'] as _TableDefinition?;
       if (definition != null && definition.flags.length != cells.length) {
         throw const FormatException(
@@ -550,8 +598,18 @@ class _Paragraph {
 }
 
 class _PendingRun {
-  _PendingRun(this.startCp, this.endCp, String value, this.style,
-      this.inserted, this.deleted, this.author, this.time) { text.write(value); }
+  _PendingRun(
+    this.startCp,
+    this.endCp,
+    String value,
+    this.style,
+    this.inserted,
+    this.deleted,
+    this.author,
+    this.time,
+  ) {
+    text.write(value);
+  }
   final int startCp;
   int endCp;
   final LegacyWordCharacterStyle style;
@@ -560,9 +618,16 @@ class _PendingRun {
   final String? author;
   final DateTime? time;
   final text = StringBuffer();
-  LegacyWordRun finish() => LegacyWordRun(startCp: startCp, endCp: endCp,
-    text: text.toString(), style: style, inserted: inserted, deleted: deleted,
-    revisionAuthor: author, revisionTime: time);
+  LegacyWordRun finish() => LegacyWordRun(
+    startCp: startCp,
+    endCp: endCp,
+    text: text.toString(),
+    style: style,
+    inserted: inserted,
+    deleted: deleted,
+    revisionAuthor: author,
+    revisionTime: time,
+  );
 }
 
 bool _highSurrogate(int unit) => unit >= 0xd800 && unit <= 0xdbff;
@@ -589,8 +654,9 @@ DateTime? _revisionDate(int? value) {
       day < 1 ||
       day > 31 ||
       month < 1 ||
-      month > 12)
+      month > 12) {
     return null;
+  }
   // MS-DOC stores a wall-clock timestamp without an offset. UTC is a stable
   // transport representation; the original date/time fields remain intact.
   final date = DateTime.utc(year, month, day, hour, minute);

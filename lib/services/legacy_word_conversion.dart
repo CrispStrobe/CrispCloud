@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'legacy_word_document.dart';
-import 'legacy_word_structured_model.dart';
 import 'word_conversion_inspection.dart';
 
 part 'legacy_word_structured_conversion.dart';

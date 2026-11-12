@@ -72,10 +72,11 @@ extension _WordFormattingTables on _StructuredWordParser {
       throw const FormatException('Invalid Word formatting bin table.');
     }
     final count = (length - 4) ~/ 8;
-    if (count > 8192)
+    if (count > 8192) {
       throw const FormatException(
         'Word formatting exceeds the preview complexity limit.',
       );
+    }
     final bins = _Bytes(source.table.slice(offset, length));
     final pages = (count + 1) * 4;
     final result = <_FkpRun>[];
@@ -86,29 +87,32 @@ extension _WordFormattingTables on _StructuredWordParser {
         throw const FormatException('Word formatting bins are not ordered.');
       }
       previousLimit = upper;
-      final packedPage = bins.u32(pages + i * 4);
-      if ((packedPage & 0xffc00000) != 0)
-        throw const FormatException('Invalid Word formatting page index.');
-      final page = _Bytes(source.word.slice(packedPage * 512, 512));
+      // PnFkp's upper ten bits are unused and MUST be ignored (MS-DOC).
+      final pageNumber = bins.u32(pages + i * 4) & 0x003fffff;
+      final page = _Bytes(source.word.slice(pageNumber * 512, 512));
       final runs = page.u8(511);
       final descriptors = (runs + 1) * 4;
       final headerEnd = descriptors + runs * (paragraph ? 13 : 1);
-      if (runs == 0 || headerEnd > 511)
+      if (runs == 0 || headerEnd > 511) {
         throw const FormatException('Invalid Word formatting page.');
+      }
       var previous = -1;
+      var covered = lower;
       for (var run = 0; run < runs; run++) {
         final first = page.u32(run * 4), last = page.u32((run + 1) * 4);
         if (last <= first || first < previous) {
           throw const FormatException('Word formatting runs are not ordered.');
         }
         previous = last;
-        // A bin points to exactly the FC interval of its FKP, not to arbitrary
-        // physical pages that happen to contain plausible property bytes.
-        if (first < lower || last > upper) {
-          throw const FormatException(
-            'Word formatting page does not match its bin.',
-          );
+        // A bin selects this page for its FC interval. A page can describe a
+        // larger range; only its intersection with the selected bin is used.
+        if (last <= lower || first >= upper) continue;
+        final clippedFirst = first < lower ? lower : first;
+        final clippedLast = last > upper ? upper : last;
+        if (clippedFirst != covered) {
+          throw const FormatException('Incomplete Word formatting bin.');
         }
+        covered = clippedLast;
         final propertyOffset =
             page.u8(descriptors + run * (paragraph ? 13 : 1)) * 2;
         var styleIndex = 0;
@@ -129,26 +133,29 @@ extension _WordFormattingTables on _StructuredWordParser {
             } else {
               end = propertyOffset + 2 * cb;
             }
-            if (end - start < 2)
+            if (end - start < 2) {
               throw const FormatException(
                 'Invalid Word paragraph property size.',
               );
+            }
             styleIndex = page.u16(start);
             start += 2;
           }
-          if (end > 511 || end < start)
+          if (end > 511 || end < start) {
             throw const FormatException(
               'Truncated Word formatting properties.',
             );
+          }
           operations = _readProperties(page.slice(start, end - start));
         }
-        result.add(_FkpRun(first, last, styleIndex, operations));
-        if (result.length > 200000)
+        result.add(_FkpRun(clippedFirst, clippedLast, styleIndex, operations));
+        if (result.length > 200000) {
           throw const FormatException(
             'Word formatting runs exceed the preview complexity limit.',
           );
+        }
       }
-      if (page.u32(0) != lower || page.u32(runs * 4) != upper) {
+      if (covered != upper) {
         throw const FormatException('Incomplete Word formatting bin.');
       }
     }
@@ -163,12 +170,14 @@ extension _WordFormattingTables on _StructuredWordParser {
     if (input.u16(0) == 0xffff) position += 2;
     final count = input.u16(position), extra = input.u16(position + 2);
     position += 4;
-    if (count > 4096 || extra > 1024)
+    if (count > 4096 || extra > 1024) {
       throw const FormatException('Invalid Word font table size.');
+    }
     for (var index = 0; index < count; index++) {
       final size = input.u8(position) + 1;
-      if (size < 42 || size.isOdd)
+      if (size < 42 || size.isOdd) {
         throw const FormatException('Invalid Word font record.');
+      }
       input.require(position, size + extra);
       final units = <int>[];
       var terminated = false;
@@ -180,14 +189,16 @@ extension _WordFormattingTables on _StructuredWordParser {
         }
         units.add(unit);
       }
-      if (!terminated)
+      if (!terminated) {
         throw const FormatException('Unterminated Word font name.');
+      }
       _validateUnicode(units);
       fonts.add(String.fromCharCodes(units));
       position += size + extra;
     }
-    if (position != input.length)
+    if (position != input.length) {
       throw const FormatException('Unexpected Word font table data.');
+    }
   }
 
   void _readStyles() {
@@ -196,8 +207,9 @@ extension _WordFormattingTables on _StructuredWordParser {
     final input = _Bytes(source.table.slice(offset, length));
     final headerLength = input.u16(0);
     input.require(2, headerLength);
-    if (headerLength < 4)
+    if (headerLength < 4) {
       throw const FormatException('Invalid Word stylesheet header.');
+    }
     final count = input.u16(2), baseLength = input.u16(4);
     if (count > 4096 ||
         baseLength < 10 ||
@@ -220,8 +232,9 @@ extension _WordFormattingTables on _StructuredWordParser {
           parent = kindParent >> 4;
       final upxCount = record.u16(4) & 15;
       final nameLength = record.u16(baseLength);
-      if (nameLength > 1024)
+      if (nameLength > 1024) {
         throw const FormatException('Word style name exceeds the size limit.');
+      }
       record.require(baseLength + 2, (nameLength + 1) * 2);
       final nameUnits = [
         for (var j = 0; j < nameLength; j++) record.u16(baseLength + 2 + j * 2),
@@ -238,10 +251,11 @@ extension _WordFormattingTables on _StructuredWordParser {
         upx += 2;
         final data = record.slice(upx, bytes);
         if (kind == 1 && u == 0) {
-          if (bytes < 2)
+          if (bytes < 2) {
             throw const FormatException(
               'Invalid Word style paragraph properties.',
             );
+          }
           paragraph = _readProperties(Uint8List.sublistView(data, 2));
         } else if ((kind == 1 && u == 1) || (kind == 2 && u == 0)) {
           character = _readProperties(data);
@@ -252,8 +266,9 @@ extension _WordFormattingTables on _StructuredWordParser {
         if (upx.isOdd) upx++;
         record.require(0, upx);
       }
-      if (kind != 1 && kind != 2)
+      if (kind != 1 && kind != 2) {
         warnings.add(LegacyWordWarning.unsupportedFormatting);
+      }
       styles[index] = _Style(
         String.fromCharCodes(nameUnits),
         builtin,
@@ -265,22 +280,24 @@ extension _WordFormattingTables on _StructuredWordParser {
     }
     // Newer STSH records can carry documented post-STD structures. They are
     // outside the supported visual subset, never interpreted as more styles.
-    if (position < input.length)
+    if (position < input.length) {
       warnings.add(LegacyWordWarning.unsupportedFormatting);
+    }
   }
 
   _ResolvedStyle _resolveStyle(int index, [int depth = 0]) {
     final cached = _resolvedStyles[index];
     if (cached != null) return cached;
     if (index == 0xfff) return const _ResolvedStyle({}, {});
-    if (depth > 64 || !_styleActive.add(index))
+    if (depth > 64 || !_styleActive.add(index)) {
       throw const FormatException(
         'Cyclic or excessive Word style inheritance.',
       );
+    }
     final style = styles[index];
     if (style == null) {
       _styleActive.remove(index);
-      if (index == 0) return const _ResolvedStyle({}, {});
+      if (index == 0 || index == 10) return const _ResolvedStyle({}, {});
       throw const FormatException('Referenced Word style is missing.');
     }
     final parent = style.parent == 0xfff
@@ -288,8 +305,9 @@ extension _WordFormattingTables on _StructuredWordParser {
         : _resolveStyle(style.parent, depth + 1);
     final paragraph = <String, Object?>{...parent.paragraph};
     final character = <String, Object?>{...parent.character};
-    if (style.builtinId >= 1 && style.builtinId <= 9)
+    if (style.builtinId >= 1 && style.builtinId <= 9) {
       paragraph['outline'] = style.builtinId - 1;
+    }
     _applyParagraph(style.paragraph, paragraph, budget, warnings);
     _applyCharacter(
       style.character,
@@ -311,17 +329,19 @@ extension _WordFormattingTables on _StructuredWordParser {
     if (unicode) position += 2;
     final count = input.u16(position), extra = input.u16(position + 2);
     position += 4;
-    if (count > 32768 || extra > 1024)
+    if (count > 32768 || extra > 1024) {
       throw const FormatException(
         'Word revision metadata exceeds the size limit.',
       );
+    }
     for (var i = 0; i < count; i++) {
       final units = unicode ? input.u16(position) : input.u8(position);
       position += unicode ? 2 : 1;
-      if (units > 4096)
+      if (units > 4096) {
         throw const FormatException(
           'Word revision author exceeds the size limit.',
         );
+      }
       input.require(position, units * (unicode ? 2 : 1) + extra);
       final characters = [
         for (var j = 0; j < units; j++)
@@ -334,23 +354,27 @@ extension _WordFormattingTables on _StructuredWordParser {
       authors.add(String.fromCharCodes(characters));
       position += units * (unicode ? 2 : 1) + extra;
     }
-    if (position != input.length)
+    if (position != input.length) {
       throw const FormatException('Unexpected Word revision-author data.');
+    }
   }
 
   List<LegacyWordSection> _readSections() {
     final (offset, length) = source.pair(6);
     if (length == 0) return [LegacyWordSection(startCp: 0, endCp: body.length)];
-    if (length < 20 || (length - 4) % 16 != 0)
+    if (length < 20 || (length - 4) % 16 != 0) {
       throw const FormatException('Invalid Word section table.');
+    }
     final count = (length - 4) ~/ 16;
-    if (count > 4096)
+    if (count > 4096) {
       throw const FormatException(
         'Word sections exceed the preview complexity limit.',
       );
+    }
     final input = _Bytes(source.table.slice(offset, length));
-    if (input.u32(0) != 0)
+    if (input.u32(0) != 0) {
       throw const FormatException('Invalid Word section start.');
+    }
     final records = (count + 1) * 4;
     final result = <LegacyWordSection>[];
     for (var i = 0; i < count; i++) {
@@ -361,10 +385,11 @@ extension _WordFormattingTables on _StructuredWordParser {
         throw const FormatException('Word section positions are not ordered.');
       }
       final end = declaredEnd > body.length ? body.length : declaredEnd;
-      if (i < count - 1 && body[end - 1] != 12)
+      if (i < count - 1 && body[end - 1] != 12) {
         throw const FormatException(
           'Word section has no terminating section mark.',
         );
+      }
       final sepx = input.u32(records + i * 12 + 2);
       var operations = const <_Sprm>[];
       if (sepx != 0xffffffff) {
@@ -397,10 +422,11 @@ extension _WordFormattingTables on _StructuredWordParser {
         ),
       );
     }
-    if (result.last.endCp != body.length)
+    if (result.last.endCp != body.length) {
       throw const FormatException(
         'Word section table does not cover the body.',
       );
+    }
     return result;
   }
 }

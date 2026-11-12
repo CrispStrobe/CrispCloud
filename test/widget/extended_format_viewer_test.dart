@@ -16,12 +16,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
+import '../support/structured_word_fixture.dart';
+
 Uint8List _bytes(String text) => Uint8List.fromList(utf8.encode(text));
 
-Future<void> _open(WidgetTester tester, String name, Uint8List bytes) async {
+Future<void> _open(
+  WidgetTester tester,
+  String name,
+  Uint8List bytes, {
+  Locale? locale,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: InternalViewerDialog(
@@ -67,7 +75,128 @@ Uint8List _unicode(String text) {
   return bytes.buffer.asUint8List();
 }
 
+Uint8List _formattedWord() {
+  const text = 'Bold Added Removed HIDDEN\r';
+  const offset = 8192;
+  return StructuredWordFixture(
+    pieces: const [WordFixturePiece(text, offset: offset)],
+    characterRuns: [
+      WordFixtureFkpRun(
+        offset,
+        offset + 4,
+        properties: wordSprm(0x0835, [1]), // Bold.
+      ),
+      WordFixtureFkpRun(
+        offset + 5,
+        offset + 10,
+        properties: wordSprm(0x0801, [1]), // Inserted revision.
+      ),
+      WordFixtureFkpRun(
+        offset + 11,
+        offset + 18,
+        properties: wordSprm(0x0800, [1]), // Deleted revision.
+      ),
+      WordFixtureFkpRun(
+        offset + 19,
+        offset + 25,
+        properties: wordSprm(0x083c, [1]), // Hidden text.
+      ),
+      const WordFixtureFkpRun(offset + 25, offset + text.length),
+    ],
+  ).build();
+}
+
+Iterable<(String, TextStyle)> _styledText(
+  InlineSpan span, [
+  TextStyle inherited = const TextStyle(),
+]) sync* {
+  if (span is! TextSpan) return;
+  final style = inherited.merge(span.style);
+  if (span.text case final text?) yield (text, style);
+  for (final child in span.children ?? const <InlineSpan>[]) {
+    yield* _styledText(child, style);
+  }
+}
+
 void main() {
+  for (final scenario in [
+    ('doc', const Locale('en'), 'Partial preview of a binary Word document.'),
+    (
+      'dot',
+      const Locale('de'),
+      'Teilweise Vorschau eines binären Word-Dokuments.',
+    ),
+  ]) {
+    testWidgets(
+      '${scenario.$1.toUpperCase()} F3 shows supported formatting and revisions with a localized notice and explicit text view',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1100, 800));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await _open(
+          tester,
+          'formatted.${scenario.$1}',
+          _formattedWord(),
+          locale: scenario.$2,
+        );
+        final html = tester.widget<HtmlWidget>(find.byType(HtmlWidget)).html;
+        expect(html, contains('<ins'));
+        expect(html, contains('<del'));
+        expect(html, isNot(contains('HIDDEN')));
+        expect(html, isNot(contains('UNREFERENCED PRIVATE BYTES')));
+        expect(find.textContaining('Added', findRichText: true), findsWidgets);
+        expect(
+          find.textContaining('Removed', findRichText: true),
+          findsWidgets,
+        );
+        final rendered = tester
+            .widgetList<RichText>(find.byType(RichText))
+            .expand((widget) => _styledText(widget.text));
+        expect(
+          rendered.any(
+            (span) =>
+                span.$1.contains('Bold') &&
+                span.$2.fontWeight == FontWeight.bold,
+          ),
+          isTrue,
+        );
+        expect(find.textContaining(scenario.$3), findsOneWidget);
+        expect(find.text('Pages'), findsNothing);
+        expect(find.text('Seiten'), findsNothing);
+
+        final textView = find.descendant(
+          of: find.byWidgetPredicate((widget) => widget is SegmentedButton),
+          matching: find.text('Text'),
+        );
+        await tester.ensureVisible(textView);
+        await tester.tap(textView);
+        await tester.pumpAndSettle();
+        expect(find.byType(HtmlWidget), findsNothing);
+        final text = tester.widgetList<SelectableText>(
+          find.byType(SelectableText),
+        );
+        expect(
+          text.any(
+            (widget) => widget.data?.contains('Bold Added Removed') ?? false,
+          ),
+          isTrue,
+        );
+        expect(
+          text.every(
+            (widget) =>
+                !(widget.data?.contains('UNREFERENCED PRIVATE BYTES') ?? false),
+          ),
+          isTrue,
+        );
+        expect(
+          text.every((widget) => !(widget.data?.contains('HIDDEN') ?? false)),
+          isTrue,
+        );
+        expect(find.textContaining(scenario.$3), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'RTF opens a formatted safe preview without unsupported page layout',
     (tester) async {

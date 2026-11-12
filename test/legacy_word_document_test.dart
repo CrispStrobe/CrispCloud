@@ -166,17 +166,20 @@ void main() {
     },
   );
 
-  test('DOC and DOT previews provide a structured, explicitly partial view', () async {
-    for (final name in ['report.doc', 'template.DOT']) {
-      final preview = await parseOfficeDocument(_document(), name);
-      expect(preview.plainText, 'Hello\nWorld');
-      expect(preview.fallback, isNull);
-      expect(preview.markdown, isEmpty);
-      expect(preview.safeHtml, contains('Hello'));
-      expect(preview.notice, OfficePreviewNotice.legacyWordPartial);
-      expect(preview.rawXml, isNull);
-    }
-  });
+  test(
+    'DOC and DOT previews provide a structured, explicitly partial view',
+    () async {
+      for (final name in ['report.doc', 'template.DOT']) {
+        final preview = await parseOfficeDocument(_document(), name);
+        expect(preview.plainText, 'Hello\nWorld');
+        expect(preview.fallback, isNull);
+        expect(preview.markdown, isEmpty);
+        expect(preview.safeHtml, contains('Hello'));
+        expect(preview.notice, OfficePreviewNotice.legacyWordPartial);
+        expect(preview.rawXml, isNull);
+      }
+    },
+  );
 
   test('malformed DOC becomes a safe extraction failure', () async {
     final preview = await parseOfficeDocument(

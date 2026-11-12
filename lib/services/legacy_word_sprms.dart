@@ -13,22 +13,27 @@ class _Budget {
 
   void expand(int count) {
     if (count > 2000000 - expandedProperties) {
-      throw const FormatException('Word properties exceed the preview complexity limit.');
+      throw const FormatException(
+        'Word properties exceed the preview complexity limit.',
+      );
     }
     expandedProperties += count;
   }
+
   void property() {
-    if (++properties > 500000)
+    if (++properties > 500000) {
       throw const FormatException(
         'Word formatting exceeds the preview complexity limit.',
       );
+    }
   }
 
   void apply() {
-    if (++applications > 2000000)
+    if (++applications > 2000000) {
       throw const FormatException(
         'Word formatting exceeds the preview complexity limit.',
       );
+    }
   }
 }
 
@@ -45,8 +50,9 @@ List<_Sprm> _decodeSprms(Uint8List bytes, _Budget budget) {
   var position = 0;
   while (position < input.length) {
     final remaining = input.length - position;
-    if (remaining <= 2 && bytes.skip(position).every((byte) => byte == 0))
+    if (remaining <= 2 && bytes.skip(position).every((byte) => byte == 0)) {
       break;
+    }
     budget.property();
     final code = input.u16(position);
     position += 2;
@@ -62,8 +68,9 @@ List<_Sprm> _decodeSprms(Uint8List bytes, _Budget budget) {
     if (spra == 6) {
       if (code == 0xd608 || code == 0xd606) {
         final declared = input.u16(position);
-        if (declared < 1)
+        if (declared < 1) {
           throw const FormatException('Invalid Word table property length.');
+        }
         size = declared + 1;
         prefix = 2;
       } else {
@@ -71,12 +78,14 @@ List<_Sprm> _decodeSprms(Uint8List bytes, _Budget budget) {
         prefix = 1;
         if (code == 0xc615 && input.u8(position) == 255) {
           final deleted = input.u8(position + 1);
-          if (deleted > 64)
+          if (deleted > 64) {
             throw const FormatException('Invalid Word tab-stop count.');
+          }
           final addedAt = position + 2 + deleted * 4;
           final added = input.u8(addedAt);
-          if (added > 64)
+          if (added > 64) {
             throw const FormatException('Invalid Word tab-stop count.');
+          }
           size = addedAt + 1 + added * 3 - position;
         }
       }
@@ -187,8 +196,9 @@ bool _boolean(_Bytes value) {
 }
 
 String? _colorIndex(int index) {
-  if (index >= _palette.length)
+  if (index >= _palette.length) {
     throw const FormatException('Invalid Word color index.');
+  }
   return _palette[index];
 }
 
@@ -208,15 +218,40 @@ void _applyCharacter(
   _Props output,
   _Props style,
   _Budget budget,
-  Set<LegacyWordWarning> warnings,
-) {
+  Set<LegacyWordWarning> warnings, {
+  _Props? paragraphStyle,
+  _Props Function(int)? resolveCharacterStyle,
+}) {
+  final paragraph = paragraphStyle ?? style;
+  var activeStyle = style;
+  void resetVisualProperties(_Props properties) {
+    for (final key in [
+      'bold',
+      'italic',
+      'underline',
+      'strike',
+      'doubleStrike',
+      'smallCaps',
+      'allCaps',
+      'hidden',
+      'fontSize',
+      'fontIndex',
+      'color',
+      'verticalAlign',
+      'position',
+      'spacing',
+    ]) {
+      output[key] = properties[key];
+    }
+  }
+
   for (final operation in operations) {
     if (operation.group != 2) continue;
     budget.apply();
     final data = operation.data;
     final toggle = _toggleProperties[operation.code];
     if (toggle != null) {
-      output[toggle] = _toggle(data.u8(0), style[toggle]);
+      output[toggle] = _toggle(data.u8(0), activeStyle[toggle]);
       continue;
     }
     switch (operation.code) {
@@ -226,13 +261,21 @@ void _applyCharacter(
         if (kind > 1) warnings.add(LegacyWordWarning.unsupportedFormatting);
       case 0x4a43:
         final size = data.u16(0);
-        if (size == 0 || size > 32766)
+        if (size < 2 || size > 3276) {
           throw const FormatException('Invalid Word font size.');
+        }
         output['fontSize'] = size;
       case 0x4a4f:
         output['fontIndex'] = data.u16(0);
       case 0x4a30:
-        output['characterStyle'] = data.u16(0);
+        final index = data.u16(0);
+        if (resolveCharacterStyle == null) {
+          warnings.add(LegacyWordWarning.unsupportedFormatting);
+        } else {
+          activeStyle = {...paragraph, ...resolveCharacterStyle(index)};
+          resetVisualProperties(activeStyle);
+        }
+        output['characterStyle'] = index;
       case 0x2a42:
         output['color'] = _colorIndex(data.u8(0));
       case 0x6870:
@@ -241,11 +284,16 @@ void _applyCharacter(
         output['highlight'] = _colorIndex(data.u8(0));
       case 0x2a48:
         final value = data.u8(0);
-        if (value > 2)
+        if (value > 2) {
           throw const FormatException('Invalid Word vertical text position.');
+        }
         output['verticalAlign'] = value;
       case 0x4845:
-        output['position'] = data.i16(0);
+        final position = data.i16(0);
+        if (position < -3168 || position > 3168) {
+          throw const FormatException('Invalid Word text position.');
+        }
+        output['position'] = position;
       case 0x8840:
         output['spacing'] = data.i16(0);
       case 0x4804:
@@ -257,24 +305,9 @@ void _applyCharacter(
       case 0x6864:
         output['deletionDate'] = data.u32(0);
       case 0x2a33:
-        for (final key in [
-          'bold',
-          'italic',
-          'underline',
-          'strike',
-          'doubleStrike',
-          'smallCaps',
-          'allCaps',
-          'hidden',
-          'fontSize',
-          'fontIndex',
-          'color',
-          'verticalAlign',
-          'position',
-          'spacing',
-        ]) {
-          output[key] = style[key];
-        }
+        activeStyle = paragraph;
+        resetVisualProperties(paragraph);
+        output['characterStyle'] = 10;
       case 0x6a03:
         output['pictureLocation'] = data.u32(0);
       // Language, proofing and revision-save identifiers do not change the
@@ -319,11 +352,13 @@ void _applyParagraph(
       case 0x2403:
       case 0x2461:
         final alignment = value.u8(0);
-        if (alignment > 9)
+        if (alignment > 9) {
           throw const FormatException('Invalid Word paragraph alignment.');
+        }
         output['alignment'] = alignment;
-        if (alignment > 4)
+        if (alignment > 4) {
           warnings.add(LegacyWordWarning.unsupportedFormatting);
+        }
       case 0x2405:
         output['keepTogether'] = _boolean(value);
       case 0x2406:
@@ -340,8 +375,9 @@ void _applyParagraph(
         output['innerRowEnd'] = _boolean(value);
       case 0x6649:
         final depth = value.u32(0);
-        if (depth > 63)
+        if (depth > 63) {
           throw const FormatException('Invalid Word table nesting.');
+        }
         output['tableDepth'] = depth;
       case 0x3404:
         output['rowHeader'] = _boolean(value);
@@ -361,13 +397,15 @@ void _applyParagraph(
       case 0x6412:
         output['lineSpacing'] = value.i16(0);
         final multiple = value.u16(2);
-        if (multiple > 1)
+        if (multiple > 1) {
           throw const FormatException('Invalid Word line-spacing value.');
+        }
         output['lineMultiple'] = multiple == 1;
       case 0x2640:
         final level = value.u8(0);
-        if (level > 9)
+        if (level > 9) {
           throw const FormatException('Invalid Word outline level.');
+        }
         output['outline'] = level;
       case 0x460b:
         output['listId'] = value.i16(0);
@@ -377,15 +415,17 @@ void _applyParagraph(
         output['listLevel'] = level;
       case 0xd608:
         final count = value.u8(0);
-        if (count > 63)
+        if (count > 63) {
           throw const FormatException('Invalid Word table column count.');
+        }
         value.require(1, (count + 1) * 2);
         final edges = [for (var i = 0; i <= count; i++) value.i16(1 + i * 2)];
         for (var i = 1; i < edges.length; i++) {
-          if (edges[i] < edges[i - 1])
+          if (edges[i] < edges[i - 1]) {
             throw const FormatException(
               'Word table boundaries are not ordered.',
             );
+          }
         }
         final cellStart = 1 + (count + 1) * 2;
         final available = value.length - cellStart;
@@ -421,13 +461,15 @@ Map<String, Object?> _sectionProperties(
     switch (operation.code) {
       case 0x3009:
         final kind = value.u8(0);
-        if (kind > 4)
+        if (kind > 4) {
           throw const FormatException('Invalid Word section break.');
+        }
         output['breakKind'] = kind;
       case 0x301d:
         final orientation = value.u8(0);
-        if (orientation != 1 && orientation != 2)
+        if (orientation != 1 && orientation != 2) {
           throw const FormatException('Invalid Word page orientation.');
+        }
         output['landscape'] = orientation == 2;
       case 0xb01f:
         output['width'] = value.u16(0);
@@ -451,8 +493,9 @@ Map<String, Object?> _sectionProperties(
         output['columnsSpace'] = value.u16(0);
       case 0x500b:
         final columns = value.u16(0) + 1;
-        if (columns > 44)
+        if (columns > 44) {
           throw const FormatException('Invalid Word column count.');
+        }
         output['columns'] = columns;
       case 0x703a:
         break; // revision save ID
@@ -462,8 +505,9 @@ Map<String, Object?> _sectionProperties(
   }
   for (final key in ['width', 'height']) {
     if (output[key] case final int dimension) {
-      if (dimension < 144 || dimension > 31680)
+      if (dimension < 144 || dimension > 31680) {
         throw const FormatException('Invalid Word page dimension.');
+      }
     }
   }
   return output;

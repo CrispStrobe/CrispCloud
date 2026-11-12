@@ -119,6 +119,10 @@ class LegacyWordRun {
   final bool inserted;
   final bool deleted;
   final String? revisionAuthor;
+
+  /// Original DTTM wall-clock fields: the binary format carries no time zone.
+  /// A UTC DateTime is only a stable carrier; consumers must not add a claimed
+  /// UTC offset or convert these source fields to another time zone.
   final DateTime? revisionTime;
 }
 

@@ -84,6 +84,14 @@ class _BinarySource {
     if (word.u16(32) != 14 || word.u16(62) != 22) {
       throw const FormatException('Invalid Word FIB array lengths.');
     }
+    final declaredExtent = word.u32(64);
+    if (declaredExtent != 0) {
+      word = _Bytes(word.slice(0, declaredExtent));
+    } else {
+      // Historical minimal exports sometimes omit cbMac. Retain their text
+      // compatibility, but surface that the full physical extent was needed.
+      missingDeclaredExtent = true;
+    }
     bodyLength = word.u32(76);
     if (bodyLength > 4 * 1024 * 1024) {
       throw const FormatException('Word text exceeds the preview size limit.');
@@ -110,8 +118,9 @@ class _BinarySource {
     var cursor = clx.$1;
     final end = cursor + clx.$2;
     while (cursor < end && table.u8(cursor) == 1) {
-      if (cursor > end - 3)
+      if (cursor > end - 3) {
         throw const FormatException('Truncated Word text properties.');
+      }
       final count = table.u16(cursor + 1);
       if (count > end - cursor - 3 || prcs.length >= 32768) {
         throw const FormatException('Invalid Word piece properties.');
@@ -168,7 +177,7 @@ class _BinarySource {
   }
 
   late final BoundedCfbReader compound;
-  late final _Bytes word;
+  late _Bytes word;
   late final _Bytes table;
   late final int version;
   late final int bodyLength;
@@ -176,6 +185,7 @@ class _BinarySource {
   late final List<int> storyLengths;
   final pieces = <_Piece>[];
   final prcs = <Uint8List>[];
+  bool missingDeclaredExtent = false;
   _Bytes? _data;
 
   (int, int) pair(int index) {
@@ -190,8 +200,9 @@ class _BinarySource {
     final existing = _data;
     if (existing != null) return existing;
     final stream = compound.readPath('Data');
-    if (stream == null)
+    if (stream == null) {
       throw const FormatException('Referenced Word data stream is missing.');
+    }
     return _data = _Bytes(stream);
   }
 

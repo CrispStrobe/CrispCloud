@@ -23,6 +23,13 @@ String? _attr(XmlElement element, String name) =>
     element.getAttribute(name, namespace: _w);
 
 void main() {
+  test('empty body creates a valid blank structured DOCX', () {
+    final result = convertLegacyWordToStructuredDocx(legacyWordFixture(''));
+    final xml = _main(result.bytes);
+    expect(_elements(xml, 'p'), hasLength(1));
+    expect(_elements(xml, 't'), isEmpty);
+  });
+
   test('structured DOCX retains Unicode, XML text and an untouched source', () {
     final source = legacyWordFixture(
       '  世界 😀 <tag> & data\r\rEnd\r',
@@ -129,6 +136,25 @@ void main() {
       expect(_elements(xml, 'br').map((e) => _attr(e, 'type')), [null, 'page']);
     },
   );
+
+  test('keeps revision wall-clock fields without inventing a timezone', () {
+    const date = 45 | (8 << 6) | (12 << 11) | (11 << 16) | (126 << 20);
+    final source = StructuredWordFixture(
+      pieces: const [WordFixturePiece('Changed\r')],
+      characterRuns: [
+        WordFixtureFkpRun(
+          8192,
+          8200,
+          properties: [
+            ...wordSprm(0x0801, [1]),
+            ...wordSprm(0x6805, wordU32(date)),
+          ],
+        ),
+      ],
+    ).build();
+    final xml = _main(convertLegacyWordToStructuredDocx(source).bytes);
+    expect(_attr(_elements(xml, 'ins').single, 'date'), '2026-11-12T08:45:00');
+  });
 
   test(
     'places section layout at its original boundary without extra page breaks',

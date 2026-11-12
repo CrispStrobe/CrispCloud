@@ -313,7 +313,15 @@ class _StructuredWordWriter {
     _xml.text(run.revisionAuthor ?? '', attribute: true);
     _xml.add('"');
     if (run.revisionTime != null) {
-      _xml.add(' w:date="${run.revisionTime!.toIso8601String()}"');
+      // DTTM carries a wall-clock date/time without a timezone. xsd:dateTime
+      // allows an unspecified zone; emitting Z would invent UTC metadata.
+      final time = run.revisionTime!;
+      String two(int value) => value.toString().padLeft(2, '0');
+      _xml.add(
+        ' w:date="${time.year.toString().padLeft(4, '0')}-'
+        '${two(time.month)}-${two(time.day)}T'
+        '${two(time.hour)}:${two(time.minute)}:00"',
+      );
     }
     _xml.add('>');
   }

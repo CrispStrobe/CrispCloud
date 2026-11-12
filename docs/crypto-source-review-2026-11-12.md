@@ -244,3 +244,18 @@ active. Both KeePass widget suites passed **19 tests**, including explicit
 password/custom-field reveal, Close without settling, an inactive event, and
 the first rendered frame. The source fingerprint below the historical entries
 includes this correction; no crypto algorithm or release declaration changed.
+
+## Structured binary Word follow-up
+
+The built-in DOC/DOT parser and structured DOCX conversion add no crypto
+algorithm, KDF, provider, or runtime dependency. The only changed file in the
+existing 207-file bound inventory is `lib/widgets/preview_pane.dart`: DOC/DOT
+now use the same generated-HTML preview route as the other portable formats.
+The source-account/token checks and KeePass branch are unchanged. The JSDoc
+0BSD parsing adaptations and their license are documented separately.
+
+The inventory and lockfile hashes remain unchanged. The updated 207-file
+source fingerprint is `d089a2d5138e8a53f5bcdbc0a2fefc709d886805223aeb2ff9c21560f4fe4237`. This records the current source bytes; Apple
+documentation remains `unreviewed`, and submission still requires the completed
+questionnaire result. No store declaration, territory setting or filing was
+changed by this document-format work.

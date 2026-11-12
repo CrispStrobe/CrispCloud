@@ -172,6 +172,10 @@ The optional installed-application conversion adapters add no Office-engine
 package dependency and bundle no third-party converter. The user's separately
 installed Word/LibreOffice remains subject to its own license; see the
 [conversion guide](legacy-word-conversion.md#installed-application-conversion).
+Selected structured DOC formatting readers adapt 0BSD-licensed JSDoc code in
+Dart; the [license and provenance](licenses/jsdoc-0bsd.txt) and
+[pinned source evaluation](legacy-word-parser-research-2026-11-12.md) record the
+scope. No Python or JavaScript document engine is bundled.
 
 ## Verification
 
@@ -227,3 +231,10 @@ separate focused runs; the PR records the regression results and remaining
 platform acceptance limits.
 The last inner-header resource guard was followed by a passing 18-test KeePass
 backend/crypto rerun, including excessive-attachment rejection.
+
+The structured DOC/DOT follow-up adds independent binary fixtures for style and
+piece-property resolution, table merges, section boundaries, revision state,
+Unicode and resource limits, plus structured DOCX, renderer, dialog and localized
+control coverage. Focused overlapping runs and actual LibreOffice/JavaScript
+acceptance results are recorded in the
+[structured conversion verification](legacy-word-conversion.md#structured-doc-parser-and-docx-follow-up).

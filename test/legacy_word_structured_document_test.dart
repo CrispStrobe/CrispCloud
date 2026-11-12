@@ -345,6 +345,33 @@ void main() {
     expect(document.safeHtml, isNot(contains('<ol')));
   });
 
+  test('ignores the undefined high bits in FKP page references', () {
+    final bytes =
+        StructuredWordFixture(pieces: const [WordFixturePiece('Text\r')]).build(
+          mutate: (word, table) {
+            final data = ByteData.sublistView(table);
+            for (final index in [12, 13]) {
+              final offset = word.getUint32(154 + index * 8, Endian.little);
+              final page = data.getUint32(offset + 8, Endian.little);
+              data.setUint32(offset + 8, page | 0xffc00000, Endian.little);
+            }
+          },
+        );
+    expect(_paragraphs(parseLegacyWordDocument(bytes)).map(_text), ['Text']);
+  });
+
+  test('does not read text beyond a positive declared WordDocument extent', () {
+    final bytes =
+        StructuredWordFixture(pieces: const [WordFixturePiece('Text\r')]).build(
+          mutate: (word, _) {
+            // The physical CFB stream still contains the full text. FibRgLw97
+            // cbMac makes the final character unavailable to Word readers.
+            word.setUint32(64, 8196, Endian.little);
+          },
+        );
+    expect(() => parseLegacyWordDocument(bytes), throwsFormatException);
+  });
+
   test('rejects malformed FKP payloads, PRM references and style cycles', () {
     final truncated =
         StructuredWordFixture(

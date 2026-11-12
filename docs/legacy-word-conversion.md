@@ -69,7 +69,8 @@ into text:
 - tabs, manual line breaks and page breaks as distinct elements;
 - supported tracked insertions/deletions as `w:ins`/`w:del` with deleted text
   stored in `w:delText`, retaining available author/time metadata. These changes
-  are not automatically accepted.
+  are not automatically accepted. DOC timestamps have no timezone; emitted dates
+  retain the recorded wall-clock fields without inventing a UTC offset.
 
 The parser follows logical CLX character positions through the selected text
 pieces, then resolves paragraph/character formatting pages, stylesheet
@@ -336,3 +337,39 @@ fixture, not pixel or pagination equivalence for arbitrary documents.
 The separate [document-viewer evaluation](document-viewer-evaluation.md) retains
 the source/license findings for other suggested packages; those viewers were
 not imported to implement this conversion path.
+
+### Structured DOC parser and DOCX follow-up
+
+The 2026-11-12 structured-parser work passed a focused **56-test** run covering
+independently constructed binary DOC fixtures, property inheritance and ordering,
+resource bounds, escaped preview rendering, structured DOCX serialization and
+the existing text-only converter. The final converter-only run passed **9 tests**
+after adding blank-document and timezone-free revision-date cases; it overlaps
+the earlier run. A mixed UI/localization/regression run passed **38 tests**,
+including mandatory partial-support acknowledgement, immutable-byte save retries,
+nine-language controls and formatted DOC/DOT routing. The final extended-viewer
+suite passed **11 tests**, including hidden-text exclusion from preview search.
+These counts describe focused, overlapping development runs, not one whole-app
+test run.
+
+Final static checks passed for all 26 Dart files touched by this DOC extension;
+all 157 changed Dart files on the feature branch passed the formatting check.
+Hosted CI results are reported separately on the PR.
+
+`tool/verify_legacy_word_structured.dart` converted the authored binary DOC with
+the production built-in converter, inspected the emitted package independently,
+and asked installed LibreOffice to open the resulting DOCX and render a PDF.
+All **12 acceptance checks** passed: table/cell structure, bold, font size/color,
+page dimensions, explicit image/header/note omissions, independent `pdfinfo` and
+`pdftotext` results, and unchanged source/prepared-package hashes. The output
+contained nine paragraphs, one section, one table and four cells. This fixture
+contains no tracked changes, so revision coverage comes from the independent
+binary fixtures and emitted-XML checks; the acceptance run is not a universal
+visual, pagination or Microsoft Word interoperability guarantee.
+
+The same authored DOC also passed the production parser compiled to JavaScript
+and executed under Node through `tool/verify_portable_office_web.py`, checking
+Unicode, formatting, tables and sections alongside the existing RTF/PPT/MSG
+cases. A full Flutter web/browser run, Windows Word acceptance and full Open XML
+schema validation remain separate checks. The converted DOCX is never described
+as preserving omitted objects, macro code or valid signatures.
