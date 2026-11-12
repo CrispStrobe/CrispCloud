@@ -231,8 +231,20 @@ class _WordMediaReader {
         throw const FormatException('Duplicate OfficeArt property identifier.');
       }
       if ((opid & 0x8000) != 0) {
-        result.complex[id] = input.slice(extra, value);
-        extra += value;
+        var size = value;
+        if (id == 0x0145 && value != 0) {
+          // LibreOffice's native DOC writer stores pVertices.op excluding the
+          // six-byte IMsoArray header, unlike its other complex properties.
+          // Recognize only an exact element-size/count match within this FOPT.
+          input.require(extra, 6);
+          final count = input.u16(extra), element = input.u16(extra + 4);
+          final width = element == 0xfff0 ? 4 : element;
+          if ((element == 8 || element == 0xfff0) && count * width == value) {
+            size += 6;
+          }
+        }
+        result.complex[id] = input.slice(extra, size);
+        extra += size;
       } else {
         result.values[id] = value;
       }
@@ -275,6 +287,12 @@ class _WordMediaReader {
     }
     if (shapeId == null) {
       throw const FormatException('OfficeArt shape has no identifier.');
+    }
+    final propertyTextbox = props.values[0x0080];
+    if (textbox != null &&
+        propertyTextbox != null &&
+        textbox != propertyTextbox) {
+      throw const FormatException('Conflicting OfficeArt textbox identifiers.');
     }
     final reader = _OfficeArtShapeReader(props, type, flags);
     final model = reader.read();

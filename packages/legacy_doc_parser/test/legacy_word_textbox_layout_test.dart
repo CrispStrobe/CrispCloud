@@ -120,9 +120,13 @@ void main() {
     expect(textbox.getAttribute('style'), contains('mso-fit-shape-to-text:f'));
     final wrap = xml.findAllElements('wrap', namespace: _w10).single;
     expect(wrap.getAttribute('type'), 'topAndBottom');
-    expect(wrap.getAttribute('side'), 'right');
-    expect(wrap.getAttribute('anchorx'), 'page');
-    expect(wrap.getAttribute('anchory'), 'page');
+    expect(wrap.getAttribute('side'), isNull);
+    final position = xml
+        .findAllElements('rect', namespace: _v)
+        .single
+        .getAttribute('style');
+    expect(position, contains('mso-position-horizontal-relative:page'));
+    expect(position, contains('mso-position-vertical-relative:page'));
   });
 
   test('vertical flow uses supported Office direction properties', () {

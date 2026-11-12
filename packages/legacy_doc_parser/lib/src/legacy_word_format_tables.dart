@@ -17,9 +17,14 @@ class _FkpRun {
 }
 
 class _FkpIndex {
-  const _FkpIndex(this.runs, this.fallback);
+  const _FkpIndex(this.runs, this.fallback, {this.finalPageEndFc});
   final List<_FkpRun> runs;
   final _FkpRun? fallback;
+
+  // Keep the last referenced page's actual boundary as well as the clipped
+  // bin ranges. A shortened BTE must not look like an omitted terminal mark
+  // when the physical page still describes that character.
+  final int? finalPageEndFc;
   _FkpRun at(int fc) {
     if (fallback != null) return fallback!;
     var low = 0, high = runs.length;
@@ -46,6 +51,7 @@ class _Style {
     this.kind,
     this.paragraph,
     this.character,
+    this.table,
   );
   final String name;
   final int builtinId;
@@ -53,6 +59,7 @@ class _Style {
   final int kind;
   final List<_Sprm> paragraph;
   final List<_Sprm> character;
+  final List<_Sprm> table;
 }
 
 class _ResolvedStyle {
@@ -83,6 +90,7 @@ extension _WordFormattingTables on _StructuredWordParser {
     final pages = (count + 1) * 4;
     final result = <_FkpRun>[];
     var previousLimit = -1;
+    int? finalPageEndFc;
     for (var i = 0; i < count; i++) {
       final lower = bins.u32(i * 4), upper = bins.u32((i + 1) * 4);
       if (upper <= lower || lower < previousLimit) {
@@ -98,6 +106,7 @@ extension _WordFormattingTables on _StructuredWordParser {
       if (runs == 0 || headerEnd > 511) {
         throw const FormatException('Invalid Word formatting page.');
       }
+      finalPageEndFc = page.u32(runs * 4);
       var previous = -1;
       var covered = lower;
       for (var run = 0; run < runs; run++) {
@@ -165,7 +174,7 @@ extension _WordFormattingTables on _StructuredWordParser {
         throw const FormatException('Incomplete Word formatting bin.');
       }
     }
-    return _FkpIndex(result, null);
+    return _FkpIndex(result, null, finalPageEndFc: finalPageEndFc);
   }
 
   void _readFonts() {
@@ -237,6 +246,9 @@ extension _WordFormattingTables on _StructuredWordParser {
           kind = kindParent & 15,
           parent = kindParent >> 4;
       final upxCount = record.u16(4) & 15;
+      if (kind == 3 && upxCount != 3) {
+        throw const FormatException('Invalid Word table-style property count.');
+      }
       final nameLength = record.u16(baseLength);
       if (nameLength > 1024) {
         throw const FormatException('Word style name exceeds the size limit.');
@@ -252,6 +264,7 @@ extension _WordFormattingTables on _StructuredWordParser {
       var upx = baseLength + 4 + nameLength * 2;
       var paragraph = const <_Sprm>[];
       var character = const <_Sprm>[];
+      var table = const <_Sprm>[];
       for (var u = 0; u < upxCount; u++) {
         final bytes = record.u16(upx);
         upx += 2;
@@ -263,8 +276,17 @@ extension _WordFormattingTables on _StructuredWordParser {
             );
           }
           paragraph = _readProperties(Uint8List.sublistView(data, 2));
-        } else if ((kind == 1 && u == 1) || (kind == 2 && u == 0)) {
-          character = _readProperties(data);
+        } else if ((kind == 1 && u == 1) ||
+            (kind == 2 && u == 0) ||
+            (kind == 3 && u == 2)) {
+          character = kind == 3
+              ? _decodeSprms(data, budget)
+              : _readProperties(data);
+        } else if (kind == 3 && u == 0) {
+          table = _decodeSprms(data, budget);
+        } else if (kind == 3 && u == 1) {
+          // The optional istd belongs to paragraph-style UpxPapx only.
+          paragraph = _decodeSprms(data, budget);
         } else if (bytes != 0) {
           warnings.add(LegacyWordWarning.unsupportedFormatting);
         }
@@ -272,7 +294,7 @@ extension _WordFormattingTables on _StructuredWordParser {
         if (upx.isOdd) upx++;
         record.require(0, upx);
       }
-      if (kind != 1 && kind != 2) {
+      if (kind != 1 && kind != 2 && kind != 3) {
         warnings.add(LegacyWordWarning.unsupportedFormatting);
       }
       styles[index] = _Style(
@@ -282,6 +304,7 @@ extension _WordFormattingTables on _StructuredWordParser {
         kind,
         paragraph,
         character,
+        table,
       );
     }
     // Newer STSH records can carry documented post-STD structures. They are
@@ -418,28 +441,7 @@ extension _WordFormattingTables on _StructuredWordParser {
         warnings,
       );
       if (emptyInitial) warnings.add(LegacyWordWarning.recoveredEmptySection);
-      result.add(
-        LegacyWordSection(
-          startCp: start,
-          endCp: end,
-          layout: _sectionLayout(properties),
-          pageWidthTwips: properties['width'] as int?,
-          pageHeightTwips: properties['height'] as int?,
-          marginTopTwips: properties['top'] as int?,
-          marginBottomTwips: properties['bottom'] as int?,
-          marginLeftTwips: properties['left'] as int?,
-          marginRightTwips: properties['right'] as int?,
-          gutterTwips: properties['gutter'] as int?,
-          headerDistanceTwips: properties['header'] as int?,
-          footerDistanceTwips: properties['footer'] as int?,
-          columnsSpaceTwips: properties['columnsSpace'] as int?,
-          landscape: properties['landscape'] == true,
-          titlePage: properties['titlePage'] == true,
-          columns: properties['columns'] as int? ?? 1,
-          breakKind: LegacyWordSectionBreak
-              .values[properties['breakKind'] as int? ?? 2],
-        ),
-      );
+      result.add(_sectionFromProperties(properties, start, end));
     }
     if (result.last.endCp != mainLength) {
       throw const FormatException(

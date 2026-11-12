@@ -235,7 +235,7 @@ void main() {
   });
 
   test(
-    'retains compressed points, guides, escapes and unknown presets as evidence',
+    'retains unknown point sizes, guides, escapes and unknown presets as evidence',
     () {
       final fixtures = [
         officeArtShapeWordFixture(type: 201),
@@ -243,7 +243,7 @@ void main() {
         officeArtShapeWordFixture(
           type: 0,
           complex: {
-            0x0145: shapeArray(0xfff0, [wordU32(1)]),
+            0x0145: shapeArray(12, [List.filled(12, 0)]),
           },
         ),
         officeArtShapeWordFixture(
@@ -270,6 +270,135 @@ void main() {
       }
     },
   );
+
+  test(
+    'supports native packed POINTs and the exact header-excluding length convention',
+    () {
+      final vertices = shapeArray(0xfff0, [
+        [...wordU16(-10), ...wordU16(20)],
+        [...wordU16(100), ...wordU16(-200)],
+      ]);
+      for (final excludeHeader in [false, true]) {
+        final shape = _shape(
+          officeArtShapeWordFixture(
+            type: 0,
+            rawPropertyRecord: shapePropertyRecord(
+              values: {0x0144: 4, 0x0181: 0x00332211},
+              complex: {
+                0x0145: vertices,
+                0x0146: shapeSegments([0x4000, 0xb300, 1, 0xb300, 0x8000]),
+                0x0380: Uint8List.fromList([65, 0, 0, 0]),
+              },
+              complexLengths: {
+                0x0145: vertices.length - (excludeHeader ? 6 : 0),
+              },
+            ),
+          ),
+        );
+        expect(
+          shape.geometry!.path.map(
+            (c) => c.points.map((p) => (p.x, p.y)).toList(),
+          ),
+          [
+            [(-10, 20)],
+            [(100, -200)],
+          ],
+        );
+        expect(shape.fill!.color, '112233');
+        expect(shape.unsupportedProperties, contains(0x0146));
+      }
+      final array = shapeArray(0xfff0, [
+        [...wordU16(40000), ...wordU16(50000)],
+      ]);
+      final arc = _shape(
+        officeArtShapeWordFixture(
+          type: 19,
+          values: {0x0144: 0},
+          complex: {0x0145: array},
+        ),
+      );
+      expect(arc.geometry!.path.first.points.single.x, 40000);
+    },
+  );
+
+  test(
+    'keeps path no-fill/no-line escapes separate from enabled shape styles',
+    () {
+      final shape = _shape(
+        officeArtShapeWordFixture(
+          type: 0,
+          values: {0x01bf: 0x00100010, 0x01ff: 0x00080008},
+          complex: {
+            0x0145: shapeVertices([(0, 0), (100, 100)]),
+            0x0146: shapeSegments([0x4000, 0xaa00, 1, 0xab00, 0x8000]),
+          },
+        ),
+      );
+      expect(shape.fill!.enabled, isTrue);
+      expect(shape.line!.enabled, isTrue);
+      expect(shape.geometry!.fill, isFalse);
+      expect(shape.geometry!.stroke, isFalse);
+      expect(shape.unsupportedProperties, isEmpty);
+    },
+  );
+
+  test(
+    'retains explicit native Word positioning independently of SPA origins',
+    () {
+      final drawing = parseLegacyWordDocument(
+        officeArtShapeWordFixture(
+          values: {0x038f: 2, 0x0390: 0, 0x0391: 5, 0x0392: 3},
+        ),
+      ).media.drawings.single;
+      expect(drawing.horizontalOrigin, 1);
+      expect(drawing.verticalOrigin, 2);
+      expect(drawing.shape!.position!.horizontalMode, 2);
+      expect(drawing.shape!.position!.horizontalRelativeTo, 0);
+      expect(drawing.shape!.position!.verticalMode, 5);
+      expect(drawing.shape!.position!.verticalRelativeTo, 3);
+    },
+  );
+
+  test('caps inherited path expansion across referenced shapes', () {
+    final properties = shapePropertyRecord(
+      complex: {
+        0x0145: shapeVertices([(0, 0)]),
+        0x0146: shapeSegments([0x4000, ...List.filled(16382, 0x6001), 0x8000]),
+      },
+    );
+    final records = [
+      for (var i = 0; i < 7; i++)
+        officeArtRecord(
+          0xf004,
+          officeArtRecord(
+            0xf00a,
+            [...wordU32(1025 + i), ...wordU32(0x0a00)],
+            version: 2,
+            instance: 0,
+          ),
+          version: 15,
+        ),
+    ];
+    final drawings = Uint8List.fromList([
+      ...officeArtRecord(0xf000, properties, version: 15),
+      0,
+      ...officeArtRecord(
+        0xf002,
+        officeArtRecord(0xf003, [
+          for (final record in records) ...record,
+        ], version: 15),
+        version: 15,
+      ),
+    ]);
+    final bytes = StructuredWordFixture(
+      pieces: const [WordFixturePiece('A\x08B\r')],
+      extraTablePairs: {40: drawingAnchor(), 50: drawings},
+      characterRuns: [
+        WordFixtureFkpRun(8192, 8196, properties: wordSprm(0x0855, [1])),
+      ],
+    ).build();
+    expect(() => parseLegacyWordDocument(bytes), throwsFormatException);
+  });
 
   test(
     'rejects malformed complex extents, segment references and duplicate properties',

@@ -21,6 +21,7 @@ class CrispEbookReader extends StatefulWidget {
     this.onReady,
     this.onLocationChanged,
     this.onHistoryChanged,
+    this.onSpeechChanged,
     this.onSelection,
     this.onError,
     this.onExternalLink,
@@ -34,6 +35,7 @@ class CrispEbookReader extends StatefulWidget {
   final void Function(EbookBookInfo)? onReady;
   final void Function(EbookLocation)? onLocationChanged;
   final void Function(EbookNavigationHistory)? onHistoryChanged;
+  final void Function(EbookSpeechState)? onSpeechChanged;
   final void Function(EbookSelection)? onSelection;
   final void Function(String)? onError;
   final void Function(String)? onExternalLink;
@@ -41,7 +43,8 @@ class CrispEbookReader extends StatefulWidget {
   State<CrispEbookReader> createState() => _CrispEbookReaderState();
 }
 
-class _CrispEbookReaderState extends State<CrispEbookReader> {
+class _CrispEbookReaderState extends State<CrispEbookReader>
+    with WidgetsBindingObserver {
   String _session = _newSession();
   EbookHostSender? _send;
   int _requestId = 0;
@@ -58,6 +61,7 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _prepare();
   }
 
@@ -223,6 +227,12 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
         );
         widget.controller.updateHistory(history);
         widget.onHistoryChanged?.call(history);
+      case 'speech':
+        final speech = EbookSpeechState.fromJson(
+          Map<String, dynamic>.from(data as Map),
+        );
+        widget.controller.updateSpeech(speech);
+        widget.onSpeechChanged?.call(widget.controller.speech);
       case 'externalLink':
         widget.onExternalLink?.call('$data');
       case 'error':
@@ -238,7 +248,26 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed && widget.controller.isReady) {
+      unawaited(
+          _command('speechPause', const {}).catchError((Object _) => null));
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    final sender = _send;
+    if (sender != null) {
+      unawaited(Future<void>.sync(() => sender({
+            'id': ++_requestId,
+            'channel': 'crisp-ebook-v1',
+            'session': _session,
+            'method': 'speechStop',
+            'args': <String, dynamic>{},
+          })).catchError((Object _) {}));
+    }
     _startupTimer?.cancel();
     _cancelRequests('Ebook reader closed');
     widget.controller.detach(sender: _command);

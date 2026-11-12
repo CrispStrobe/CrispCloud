@@ -7,7 +7,9 @@ part of 'legacy_word_structured_parser.dart';
 // state. A false wall clears the snapshot instead of accepting any edits.
 _Props _revisionSnapshot(_Props properties) => Map.unmodifiable({
   for (final entry in properties.entries)
-    if (entry.key != '_oldCharacter' && entry.key != '_oldParagraph')
+    if (entry.key != '_oldCharacter' &&
+        entry.key != '_oldParagraph' &&
+        entry.key != '_oldSection')
       entry.key: entry.value,
 });
 
@@ -35,6 +37,81 @@ const _paragraphStylePreserved = {
 };
 
 extension _WordRevisions on _StructuredWordParser {
+  LegacyWordSection _sectionFromProperties(
+    _Props properties,
+    int start,
+    int end, {
+    bool includeRevision = true,
+  }) {
+    for (final key in ['width', 'height']) {
+      final value = properties[key] as int?;
+      if (value != null && (value < 144 || value > 31680)) {
+        throw const FormatException('Invalid Word page dimension.');
+      }
+    }
+    return LegacyWordSection(
+      startCp: start,
+      endCp: end,
+      layout: _sectionLayout(properties),
+      formattingRevision: includeRevision
+          ? _sectionRevision(properties, start, end)
+          : null,
+      revisionSaveId: properties['sectionSaveId'] as int?,
+      pageWidthTwips: properties['width'] as int?,
+      pageHeightTwips: properties['height'] as int?,
+      marginTopTwips: properties['top'] as int?,
+      marginBottomTwips: properties['bottom'] as int?,
+      marginLeftTwips: properties['left'] as int?,
+      marginRightTwips: properties['right'] as int?,
+      gutterTwips: properties['gutter'] as int?,
+      headerDistanceTwips: properties['header'] as int?,
+      footerDistanceTwips: properties['footer'] as int?,
+      columnsSpaceTwips: properties['columnsSpace'] as int?,
+      landscape: properties['landscape'] == true,
+      titlePage: properties['titlePage'] == true,
+      footnotes: _sectionFootnoteSettings(properties, source.footnotes),
+      endnotes: _sectionEndnoteSettings(properties, source.endnotes),
+      suppressEndnotes: properties['suppressEndnotes'] == true,
+      columns: properties['columns'] as int? ?? 1,
+      breakKind:
+          LegacyWordSectionBreak.values[properties['breakKind'] as int? ?? 2],
+    );
+  }
+
+  LegacyWordSectionFormattingRevision? _sectionRevision(
+    _Props properties,
+    int start,
+    int end,
+  ) {
+    final previous = properties['_oldSection'] as _Props?;
+    final marked = properties['sectionRevisionMarked'] == true;
+    if (previous == null && !marked) return null;
+    final complete =
+        previous != null && previous['_unsupportedSection'] != true;
+    if (!marked || !complete) {
+      warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
+    }
+    return LegacyWordSectionFormattingRevision(
+      previousSection: previous == null
+          ? null
+          : _sectionFromProperties(
+              previous,
+              start,
+              end,
+              includeRevision: false,
+            ),
+      revision: marked
+          ? _revisionInfo(
+              properties,
+              'sectionRevision',
+              saveIdKey: 'sectionSaveId',
+            )
+          : const LegacyWordRevisionInfo(),
+      marked: marked,
+      previousPropertiesComplete: complete,
+    );
+  }
+
   LegacyWordRevisionInfo _revisionInfo(
     _Props properties,
     String prefix, {
@@ -109,7 +186,11 @@ extension _WordRevisions on _StructuredWordParser {
 
   _Props _characterAt(int cp, _Props characterBase) {
     final piece = source.pieceAt(cp);
-    final chpx = characterFormatting.at(piece.fc(cp));
+    final fc = piece.fc(cp);
+    final chpx = characterFormatting.at(fc);
+    if (chpx.endFc - fc < (piece.compressed ? 1 : 2)) {
+      throw const FormatException('Unaligned Word character formatting.');
+    }
     final character = <String, Object?>{...characterBase};
     _applyCharacter(
       [...chpx.operations, ..._pieceProperties(piece)],
@@ -131,7 +212,12 @@ extension _WordRevisions on _StructuredWordParser {
     return character;
   }
 
-  LegacyWordParagraphMark _paragraphMark(int cp, _Props base) {
+  LegacyWordParagraphMark? _paragraphMark(int cp, _Props base) {
+    if (_terminalMarkFormattingUnavailable(cp)) {
+      warnings.add(LegacyWordWarning.terminalMarkFormattingUnavailable);
+      warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
+      return null;
+    }
     final properties = _characterAt(cp, base);
     final inserted = properties['inserted'] == true;
     final deleted = properties['deleted'] == true;
@@ -146,5 +232,44 @@ extension _WordRevisions on _StructuredWordParser {
       formattingRevision: _characterRevision(properties),
       formattingSaveId: properties['formattingSaveId'] as int?,
     );
+  }
+
+  bool _terminalMarkFormattingUnavailable(int cp) {
+    // Some native exports omit exactly the last main-story CR from both the
+    // CHPX bin table and its final page. MS-DOC 2.4.6.2 makes those endpoints
+    // exclusive: there is no character formatting to inherit or reconstruct.
+    // Retain the paragraph, report the unknown mark, and never borrow the
+    // preceding run (which can be a drawing or a tracked deletion).
+    if (cp <= 0 ||
+        cp != source.bodyLength - 1 ||
+        source.totalLength != source.bodyLength ||
+        body[cp] != 0x0d ||
+        characterFormatting.fallback != null ||
+        characterFormatting.runs.isEmpty ||
+        paragraphFormatting.fallback != null ||
+        paragraphFormatting.runs.isEmpty) {
+      return false;
+    }
+    final piece = source.pieceAt(cp);
+    if (cp <= piece.startCp ||
+        piece.endCp != source.totalLength ||
+        piece.prm != 0) {
+      return false;
+    }
+    final width = piece.compressed ? 1 : 2;
+    final fc = piece.fc(cp);
+    final lastCharacter = characterFormatting.runs.last;
+    if (lastCharacter.endFc != fc ||
+        characterFormatting.finalPageEndFc != fc ||
+        lastCharacter.startFc > fc - width) {
+      return false;
+    }
+    // Require an independently covered complete mark and an exact final
+    // physical paragraph boundary, not a partial UTF-16 unit or an unrelated
+    // larger range. All other missing-format cases still use strict lookup.
+    final lastParagraph = paragraphFormatting.runs.last;
+    return lastParagraph.startFc <= fc &&
+        lastParagraph.endFc == fc + width &&
+        paragraphFormatting.finalPageEndFc == fc + width;
   }
 }

@@ -24,6 +24,7 @@ class StructuredWordFixture {
     this.mainCharacterCount,
     this.languageId = 0x0409,
     this.flags = 0x0200,
+    this.reuseFormattingRecords = false,
   });
 
   static const characterFkpOffset = 4096;
@@ -41,6 +42,7 @@ class StructuredWordFixture {
   final int? mainCharacterCount;
   final int languageId;
   final int flags;
+  final bool reuseFormattingRecords;
 
   Uint8List build({void Function(ByteData, Uint8List)? mutate}) {
     final word = Uint8List(32768);
@@ -123,7 +125,7 @@ class StructuredWordFixture {
       word.setRange(
         characterFkpOffset,
         characterFkpOffset + 512,
-        _fkp(runs, paragraph: false),
+        _fkp(runs, paragraph: false, reuse: reuseFormattingRecords),
       );
       pair(12, [
         ...wordU32(runs.first.startFc),
@@ -152,7 +154,7 @@ class StructuredWordFixture {
       word.setRange(
         paragraphFkpOffset,
         paragraphFkpOffset + 512,
-        _fkp(runs, paragraph: true),
+        _fkp(runs, paragraph: true, reuse: reuseFormattingRecords),
       );
       pair(13, [
         ...wordU32(runs.first.startFc),
@@ -232,6 +234,8 @@ class WordFixtureStyle {
     this.builtinId = 0x0ffe,
     this.parentIndex = 0x0fff,
     this.character = false,
+    this.table = false,
+    this.tableProperties = const [],
     this.paragraphProperties = const [],
     this.characterProperties = const [],
   });
@@ -239,6 +243,8 @@ class WordFixtureStyle {
   final int builtinId;
   final int parentIndex;
   final bool character;
+  final bool table;
+  final List<int> tableProperties;
   final List<int> paragraphProperties;
   final List<int> characterProperties;
 }
@@ -308,12 +314,17 @@ List<WordFixtureFkpRun> _fillGaps(List<WordFixtureFkpRun> source) {
   return result;
 }
 
-Uint8List _fkp(List<WordFixtureFkpRun> runs, {required bool paragraph}) {
+Uint8List _fkp(
+  List<WordFixtureFkpRun> runs, {
+  required bool paragraph,
+  bool reuse = false,
+}) {
   assert(runs.length <= (paragraph ? 29 : 101));
   final bytes = Uint8List(512);
   final data = ByteData.sublistView(bytes);
   final descriptors = (runs.length + 1) * 4;
   var cursor = 510;
+  final reused = <String, int>{};
   for (var i = 0; i < runs.length; i++) {
     final run = runs[i];
     data.setUint32(i * 4, run.startFc, Endian.little);
@@ -327,7 +338,13 @@ Uint8List _fkp(List<WordFixtureFkpRun> runs, {required bool paragraph}) {
               ? [0, payload.length ~/ 2, ...payload]
               : [(payload.length + 1) ~/ 2, ...payload])
         : [payload.length, ...payload];
+    final key = record.join(',');
+    if (reuse && reused.containsKey(key)) {
+      bytes[descriptors + i * (paragraph ? 13 : 1)] = reused[key]! ~/ 2;
+      continue;
+    }
     cursor = (cursor - record.length) & ~1;
+    if (reuse) reused[key] = cursor;
     assert(cursor >= descriptors + runs.length * (paragraph ? 13 : 1));
     bytes.setRange(cursor, cursor + record.length, record);
     bytes[descriptors + i * (paragraph ? 13 : 1)] = cursor ~/ 2;
@@ -358,10 +375,23 @@ Uint8List _stylesheet(Map<int, WordFixtureStyle> styles) {
     fields.setUint16(0, style.builtinId, Endian.little);
     fields.setUint16(
       2,
-      (style.parentIndex << 4) | (style.character ? 2 : 1),
+      (style.parentIndex << 4) |
+          (style.table
+              ? 3
+              : style.character
+              ? 2
+              : 1),
       Endian.little,
     );
-    fields.setUint16(4, style.character ? 1 : 2, Endian.little);
+    fields.setUint16(
+      4,
+      style.table
+          ? 3
+          : style.character
+          ? 1
+          : 2,
+      Endian.little,
+    );
     final record = BytesBuilder(copy: false)
       ..add(base)
       ..add(wordU16(style.name.length));
@@ -374,7 +404,10 @@ Uint8List _stylesheet(Map<int, WordFixtureStyle> styles) {
       if (value.length.isOdd) record.addByte(0);
     }
 
-    if (!style.character) {
+    if (style.table) {
+      upx(style.tableProperties);
+      upx(style.paragraphProperties);
+    } else if (!style.character) {
       upx([...wordU16(index), ...style.paragraphProperties]);
     }
     upx(style.characterProperties);

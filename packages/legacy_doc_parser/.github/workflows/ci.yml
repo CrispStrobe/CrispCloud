@@ -17,6 +17,7 @@ jobs:
       - run: dart analyze --fatal-infos
       - run: dart test
       - run: python3 tool/fidelity/oracle.py
+      - run: python3 tool/fidelity/goldens.py
       - run: python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
       - run: python3 tool/verify_web.py
       - run: dart pub publish --dry-run

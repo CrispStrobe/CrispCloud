@@ -5,7 +5,10 @@ part of 'legacy_word_structured_parser.dart';
 // MS-DOC 2.4.3: each cell ends in a depth-specific cell mark, followed by a
 // separate row mark. Nested tables are cell blocks, not ordinary paragraphs.
 extension _WordTables on _StructuredWordParser {
-  List<LegacyWordBlock> _assembleTables(List<_Paragraph> paragraphs) {
+  List<LegacyWordBlock> _assembleTables(
+    List<_Paragraph> paragraphs, {
+    _TableContexts? contexts,
+  }) {
     var cursor = 0;
     int depthOf(_Paragraph value) =>
         value.properties['tableDepth'] as int? ??
@@ -18,6 +21,8 @@ extension _WordTables on _StructuredWordParser {
       final start = paragraphs[cursor].paragraph.startCp;
       var end = start;
       final rows = <LegacyWordTableRow>[];
+      _Props? tableProperties;
+      var rowCursor = cursor;
       final cells = <List<LegacyWordBlock>>[];
       var cell = <LegacyWordBlock>[];
       while (cursor < paragraphs.length) {
@@ -55,8 +60,28 @@ extension _WordTables on _StructuredWordParser {
               'Word table cell count does not match its row.',
             );
           }
+          if (tableProperties != null &&
+              !_sameTableRows(tableProperties, properties)) {
+            cursor = rowCursor;
+            cells.clear();
+            cell = [];
+            end = rows.last.endCp!;
+            break;
+          }
+          final rowContexts = contexts?.rows[paragraph.endCp];
+          tableProperties ??= {...?rowContexts?.first.table, ...properties};
+          final height = properties['rowHeight'] as int? ?? 0;
           rows.add(
             LegacyWordTableRow(
+              endCp: paragraph.endCp,
+              cantSplit:
+                  (properties['rowCantSplit'] ??
+                      rowContexts?.first.table['rowCantSplit']) ==
+                  true,
+              heightTwips: height == 0 ? null : height.abs(),
+              exactHeight: height < 0,
+              indentTwips:
+                  properties['rowLeft'] as int? ?? definition.edges.first,
               // Only leading, contiguous rows are repeating headers.
               isHeader:
                   properties['rowHeader'] == true &&
@@ -74,14 +99,41 @@ extension _WordTables on _StructuredWordParser {
                     verticalMergeStart: ((definition.flags[i] >> 5) & 3) >= 2,
                     verticalMergeContinue:
                         ((definition.flags[i] >> 5) & 3) == 1,
-                    shading:
-                        (properties['cellShading']
-                            as Map<int, LegacyWordShading>?)?[i],
+                    shading: _resolvedCellShading(
+                      properties,
+                      rowContexts?[i],
+                      i,
+                    ),
+                    verticalAlignment:
+                        LegacyWordCellVerticalAlignment
+                            .values[(properties['cellAlignment']
+                                as Map<int, int>?)?[i] ??
+                            (i < definition.styleDefaults.length &&
+                                    !definition.styleDefaults[i]
+                                ? ((definition.flags[i] >> 7) & 3)
+                                : null) ??
+                            rowContexts?[i].table['styleCellAlignment']
+                                as int? ??
+                            0],
+                    conditionalFlags: rowContexts?[i].flags ?? 0,
+                    marginsTwips: _resolvedCellMargins(
+                      properties,
+                      rowContexts?[i],
+                      i,
+                    ),
+                    borders: _resolvedCellBorders(
+                      properties,
+                      rowContexts?[i],
+                      i,
+                      cells.length,
+                      rows.isEmpty,
+                    ),
                   ),
               ]),
             ),
           );
           cells.clear();
+          rowCursor = cursor;
         } else {
           cell.add(paragraph);
           if (cellEnd) {
@@ -101,6 +153,21 @@ extension _WordTables on _StructuredWordParser {
         startCp: start,
         endCp: end,
         rows: List.unmodifiable(rows),
+        indentTwips: tableProperties?['rowLeft'] as int?,
+        autoFit: tableProperties?['tableAutoFit'] == true,
+        styleId: tableProperties?['tableStyle'] as int?,
+        styleName: styles[tableProperties?['tableStyle']]?.name,
+        look: LegacyWordTableLook(
+          flags: tableProperties?['tableLook'] as int? ?? 0,
+        ),
+        rightToLeft:
+            tableProperties?['tableRtl'] == true ||
+            tableProperties?['tableRtl90'] == true,
+        alignment:
+            LegacyWordAlignment.values[tableProperties?['tableAlignment']
+                    as int? ??
+                tableProperties?['tablePhysicalAlignment'] as int? ??
+                0],
       );
     }
 

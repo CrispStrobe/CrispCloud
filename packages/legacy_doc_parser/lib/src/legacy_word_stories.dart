@@ -83,7 +83,9 @@ extension _WordStories on _StructuredWordParser {
         endCp: end,
         blocks: List.unmodifiable(blocks),
         plainText: _plainText(blocks),
-        safeHtml: _renderBlocks(blocks),
+        // Media references are resolved after every story's character runs.
+        // The final pass renders all stories with one bounded image cache.
+        safeHtml: '',
         sectionIndex: sectionIndex,
         headerFooterType: headerFooterType,
       ),
@@ -438,6 +440,7 @@ extension _WordStories on _StructuredWordParser {
           anchorCp: byShape[shape],
           shapeId: shape,
           chainLength: count,
+          declaredChainLength: count,
         ),
       );
       _addStory(
@@ -466,7 +469,7 @@ extension _WordStories on _StructuredWordParser {
       final key = (drawing.headerStory, id);
       final index = references[key];
       if (index == null ||
-          chainIndex >= textboxReferences[index].chainLength ||
+          chainIndex >= 4096 ||
           !used.add((drawing.headerStory, id, chainIndex))) {
         throw const FormatException(
           'Invalid Word drawing-to-textbox reference.',
@@ -494,8 +497,24 @@ extension _WordStories on _StructuredWordParser {
       final reference = textboxReferences[index];
       final anchors = entry.value
         ..sort((a, b) => a.chainIndex.compareTo(b.chainIndex));
-      if (anchors.length != reference.chainLength ||
-          anchors.first.chainIndex != 0) {
+      if (anchors.first.chainIndex != 0 ||
+          anchors.asMap().entries.any((e) => e.key != e.value.chainIndex)) {
+        throw const FormatException('Incomplete Word textbox shape chain.');
+      }
+      final countMismatch = anchors.length != reference.chainLength;
+      // The authored native LibreOffice DOC declares cTxbx=1 for a longer
+      // chain. Recover only that exact count pattern, after all contiguous
+      // ClientTextbox indexes, first-shape identity and explicit hspNext links
+      // independently establish the same bounded chain. No missing link or
+      // guessed position can enlarge a story or silently split its contents.
+      if (countMismatch &&
+          (reference.chainLength != 1 ||
+              anchors.length < 2 ||
+              anchors.asMap().entries.any(
+                (e) =>
+                    e.key + 1 < anchors.length &&
+                    e.value.nextShapeId != anchors[e.key + 1].shapeId,
+              ))) {
         throw const FormatException('Incomplete Word textbox shape chain.');
       }
       for (var i = 0; i < anchors.length; i++) {
@@ -505,13 +524,19 @@ extension _WordStories on _StructuredWordParser {
           throw const FormatException('Invalid Word textbox next-shape chain.');
         }
       }
+      if (countMismatch) {
+        warnings.add(LegacyWordWarning.recoveredTextboxChainLength);
+        warnings.add(LegacyWordWarning.unsupportedFormatting);
+      }
       textboxReferences[index] = LegacyWordTextboxReference(
         id: reference.id,
         storyId: reference.storyId,
         inHeaderFooter: reference.inHeaderFooter,
         anchorCp: reference.anchorCp,
         shapeId: reference.shapeId,
-        chainLength: reference.chainLength,
+        chainLength: anchors.length,
+        declaredChainLength:
+            reference.declaredChainLength ?? reference.chainLength,
         anchors: List.unmodifiable(anchors),
       );
     }

@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import 'dart:convert';
+import 'dart:math' show atan2, pi, sqrt;
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
 import 'legacy_word_document.dart';
+import 'legacy_word_numbering.dart';
 
 part 'legacy_word_structured_conversion.dart';
 part 'opc_package_writer.dart';
@@ -14,9 +16,13 @@ part 'word_layout_writer.dart';
 part 'word_compatibility_writer.dart';
 part 'word_media_writer.dart';
 part 'word_textbox_writer.dart';
+part 'word_officeart_writer.dart';
 part 'word_decoration_writer.dart';
 part 'word_revision_writer.dart';
 part 'word_comment_writer.dart';
+part 'word_table_writer.dart';
+part 'word_numbering_writer.dart';
+part 'word_note_settings_writer.dart';
 
 /// DOCM is an explicit choice. The DOCX entry point never writes active VBA.
 enum LegacyWordOutputFormat { docx, docm }

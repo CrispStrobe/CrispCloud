@@ -160,6 +160,7 @@ void _applyCellShading(
   final values = <int, LegacyWordShading>{
     ...?output['cellShading'] as Map<int, LegacyWordShading>?,
   };
+  final inherited = <int>{...?output['rawShadingInheritance'] as Set<int>?};
   for (var i = 0; i < value.length ~/ width; i++) {
     budget.apply();
     final shading = _readShading(
@@ -167,10 +168,11 @@ void _applyCellShading(
       warnings,
       old: old,
     );
-    // The parser does not yet apply conditional table styles. A raw Nil asks
-    // for that style, so retain it and explicitly report the unresolved layer.
+    // Raw Nil retains the lower conditional table-style shading layer.
     if (raw && shading.pattern == 'nil') {
-      warnings.add(LegacyWordWarning.unsupportedFormatting);
+      inherited.add(first + i);
+    } else {
+      inherited.remove(first + i);
     }
     values[first + i] = shading;
   }
@@ -178,8 +180,10 @@ void _applyCellShading(
   // cells whose shading is default, rather than inheriting stale entries.
   for (var i = value.length ~/ width; i < limit; i++) {
     values.remove(first + i);
+    inherited.remove(first + i);
   }
   output['cellShading'] = Map<int, LegacyWordShading>.unmodifiable(values);
+  output['rawShadingInheritance'] = inherited;
 }
 
 const _borderStyles = <int, String>{

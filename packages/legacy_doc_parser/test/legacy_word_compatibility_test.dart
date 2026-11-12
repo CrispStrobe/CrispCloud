@@ -168,6 +168,14 @@ Map<String, bool> _resolved(LegacyWordDocument document) => {
   for (final flag in document.compatibility.flags.entries)
     flag.key.name: flag.value,
 };
+// This one documented false default is serialized through omission to avoid
+// the native consumer's presence-only handling. Keep raw XML assertions
+// separate from model assertions: the source's explicit false must survive.
+Map<String, bool> _emitted(Map<String, bool> values) => {
+  for (final entry in values.entries)
+    if (entry.key != 'doNotExpandShiftReturn' || entry.value)
+      entry.key: entry.value,
+};
 Map<String, bool> _baseline(Iterable<String> names) => {
   for (final name in names) name: _inverted.contains(name),
 };
@@ -199,8 +207,47 @@ void main() {
       isNull,
     );
     final files = _parts(convertLegacyWordDocument(present).bytes);
-    expect(_settings(files), _resolved(present));
+    expect(_settings(files), _emitted(_resolved(present)));
     expect(utf8.decode(files['word/settings.xml']!), contains('w:val="0"'));
+  });
+
+  test('false soft-break compatibility uses its documented XML default', () {
+    final dop = _dop(500, options: 0x2000);
+    final parsed = parseLegacyWordDocument(_source(dop: dop));
+    expect(
+      parsed.compatibility[LegacyWordCompatibilityFlag.doNotExpandShiftReturn],
+      isFalse,
+    );
+    final files = _parts(convertLegacyWordDocument(parsed).bytes);
+    final settings = XmlDocument.parse(
+      utf8.decode(files['word/settings.xml']!),
+    );
+    expect(
+      settings.findAllElements('doNotExpandShiftReturn', namespace: _w),
+      isEmpty,
+    );
+    // Other explicitly disabled options keep their original serialization.
+    expect(_settings(files)['wrapTrailSpaces'], isFalse);
+    final records = _evidence(files);
+    expect(records, hasLength(2));
+    for (final record in records) {
+      final offset = record['offsetInDop'] as int;
+      final bytes = files[record['part']]!;
+      expect(bytes, dop.sublist(offset, offset + bytes.length));
+      expect(ByteData.sublistView(bytes).getUint16(0, Endian.little), 0x2000);
+    }
+
+    final enabled = parseLegacyWordDocument(_source(dop: _dop(500)));
+    expect(
+      enabled.compatibility[LegacyWordCompatibilityFlag.doNotExpandShiftReturn],
+      isTrue,
+    );
+    expect(
+      _settings(
+        _parts(convertLegacyWordDocument(enabled).bytes),
+      )['doNotExpandShiftReturn'],
+      isTrue,
+    );
   });
 
   test('Copts60 fixture bit positions and opposite meanings are exact', () {
@@ -213,7 +260,7 @@ void main() {
       expect(_resolved(parsed), expected, reason: 'Copts60 bit ${entry.key}');
       expect(
         _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-        expected,
+        _emitted(expected),
         reason: 'Copts60 native XML bit ${entry.key}',
       );
       expect(parsed.compatibility.issues, [
@@ -232,7 +279,7 @@ void main() {
       expect(_resolved(parsed), expected, reason: 'Copts80 bit ${entry.key}');
       expect(
         _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-        expected,
+        _emitted(expected),
       );
       expect(parsed.compatibility.issues, isEmpty);
     }
@@ -257,7 +304,7 @@ void main() {
       );
       expect(
         _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-        expected,
+        _emitted(expected),
       );
       expect(parsed.compatibility.issues, isEmpty);
     }
@@ -341,7 +388,7 @@ void main() {
         contains(LegacyWordWarning.unsupportedFormatting),
       );
       final files = _parts(convertLegacyWordDocument(parsed).bytes);
-      expect(_settings(files), _resolved(parsed));
+      expect(_settings(files), _emitted(_resolved(parsed)));
       final records = _evidence(files);
       expect(records, hasLength(3));
       for (final record in records) {
@@ -388,7 +435,7 @@ void main() {
     );
     expect(
       _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-      _resolved(parsed),
+      _emitted(_resolved(parsed)),
     );
   });
 
@@ -496,6 +543,8 @@ void main() {
     final xml = XmlDocument.parse(utf8.decode(files['word/settings.xml']!));
     expect(xml.rootElement.childElements.map((node) => node.name.local), [
       'updateFields',
+      'footnotePr',
+      'endnotePr',
       'compat',
     ]);
     expect(
@@ -514,7 +563,7 @@ void main() {
       'noLeading',
     ]);
     expect(names.last, 'noSpaceRaiseLower');
-    expect(_settings(files), _resolved(parsed));
+    expect(_settings(files), _emitted(_resolved(parsed)));
   });
 
   test(

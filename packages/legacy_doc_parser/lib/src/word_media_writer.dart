@@ -83,10 +83,13 @@ extension _WordMedia on _StructuredWordWriter {
             ..['reason'] = 'textbox drawing has no resolved text story',
         );
       }
+      final nativeShape =
+          drawing.imageId == null &&
+          drawing.textboxId == null &&
+          _officeArtDrawable(drawing.shape);
       if (owner == null ||
           !_displayPosition(drawing.anchorCp) ||
-          asset == null ||
-          !asset.isRenderable ||
+          (!nativeShape && (asset == null || !asset.isRenderable)) ||
           drawing.shapeDeleted ||
           !_validDrawing(drawing)) {
         limitations.add(LegacyWordConversionLimitation.embeddedObjects);
@@ -100,7 +103,14 @@ extension _WordMedia on _StructuredWordWriter {
         );
         continue;
       }
-      _event(owner, drawing.anchorCp, 50, () => _drawing(drawing, asset));
+      _event(
+        owner,
+        drawing.anchorCp,
+        50,
+        () => nativeShape
+            ? _officeArtDrawing(drawing)
+            : _drawing(drawing, asset!),
+      );
     }
     for (final object in media.embeddedObjects) {
       final owner = _storyAt(object.cp);
@@ -251,6 +261,7 @@ extension _WordMedia on _StructuredWordWriter {
       id,
       cx,
       cy,
+      shape: picture.shape,
       crop: [
         picture.cropLeftFixed16,
         picture.cropTopFixed16,
@@ -285,18 +296,15 @@ extension _WordMedia on _StructuredWordWriter {
     final width = (drawing.rightTwips - drawing.leftTwips) * 635;
     final height = (drawing.bottomTwips - drawing.topTwips) * 635;
     final id = ++_drawingId;
-    final horizontal = ['margin', 'page', 'column'][drawing.horizontalOrigin];
-    final vertical = ['margin', 'page', 'paragraph'][drawing.verticalOrigin];
     _mediaStart(drawing.presentation);
     _xml.add(
       '<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" '
       'simplePos="0" relativeHeight="$id" behindDoc="${drawing.behindText ? 1 : 0}" '
       'locked="${drawing.anchorLocked ? 1 : 0}" layoutInCell="1" allowOverlap="1">'
-      '<wp:simplePos x="0" y="0"/>'
-      '<wp:positionH relativeFrom="$horizontal"><wp:posOffset>${drawing.leftTwips * 635}</wp:posOffset></wp:positionH>'
-      '<wp:positionV relativeFrom="$vertical"><wp:posOffset>${drawing.topTwips * 635}</wp:posOffset></wp:positionV>'
-      '<wp:extent cx="$width" cy="$height"/>',
+      '<wp:simplePos x="0" y="0"/>',
     );
+    _officeArtDrawingPosition(drawing);
+    _xml.add('<wp:extent cx="$width" cy="$height"/>');
     if (drawing.wrapMode == 3) {
       _xml.add('<wp:wrapNone/>');
     } else if (drawing.wrapMode == 1) {
@@ -319,6 +327,7 @@ extension _WordMedia on _StructuredWordWriter {
       id,
       width,
       height,
+      shape: drawing.shape,
       crop: [
         drawing.cropLeftFixed16,
         drawing.cropTopFixed16,
@@ -337,6 +346,7 @@ extension _WordMedia on _StructuredWordWriter {
     int cx,
     int cy, {
     List<int> crop = const [0, 0, 0, 0],
+    LegacyWordOfficeArtShape? shape,
   }) {
     final relation = _imageRelation(asset);
     _xml.add(
@@ -355,10 +365,11 @@ extension _WordMedia on _StructuredWordWriter {
     }
     _xml.add(
       '<a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
-      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="$cx" cy="$cy"/></a:xfrm>'
-      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
-      '</pic:pic></a:graphicData></a:graphic>',
+      '<pic:spPr><a:xfrm${_officeArtImageTransform(shape)}><a:off x="0" y="0"/><a:ext cx="$cx" cy="$cy"/></a:xfrm>'
+      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>',
     );
+    _officeArtImageAppearance(shape);
+    _xml.add('</pic:spPr></pic:pic></a:graphicData></a:graphic>');
   }
 
   void _embeddedObject(LegacyWordEmbeddedObject object, String path) {
@@ -480,7 +491,9 @@ extension _WordMedia on _StructuredWordWriter {
           'kind': 'textboxChain',
           'id': reference.id,
           'story': reference.storyId,
-          'declaredLength': reference.chainLength,
+          'declaredLength':
+              reference.declaredChainLength ?? reference.chainLength,
+          'resolvedLength': reference.chainLength,
           'anchors': [
             for (final anchor in reference.anchors)
               {

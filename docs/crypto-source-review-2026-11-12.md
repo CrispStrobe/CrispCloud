@@ -1018,3 +1018,5 @@ values remain unchanged:
   "reviewed_source_sha256": "83c558c0ebbaa2d429e53821e8d5022457ff13e2bd95d33a61dd178deaa07e7e"
 }
 ```
+
+The CrisperBooks extraction replaces application-owned reusable ebook code with the pinned facade and matching reader packages. It retains the same storage boundary and cryptographic dependencies. Foreground speech accepts only voices explicitly marked local by the platform; publication text is not sent to an added network service. The audio wrapper recognizes bounded inert ID3 prefixes before FLAC and never rewrites source metadata; it adds no cryptographic function. These consumer inputs are included in the technical source binding; existing distribution decisions are unchanged.

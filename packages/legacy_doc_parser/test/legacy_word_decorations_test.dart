@@ -279,10 +279,10 @@ void main() {
         wordSprm(0xd670, [10, ...wordShading(pattern: 0xffff)]),
       ),
     );
-    expect(
-      document.warnings,
-      contains(LegacyWordWarning.unsupportedFormatting),
-    );
+    cells = (document.blocks.first as LegacyWordTable).rows.single.cells;
+    // Raw Nil inherits the table style; with no style this is unshaded. The
+    // older non-raw Nil remains an explicit stored shading value above.
+    expect(cells.first.shading, isNull);
   });
   test('rejects malformed or excessive table shading arrays', () {
     for (final values in [List.filled(11, 0), List.filled(230, 0)]) {

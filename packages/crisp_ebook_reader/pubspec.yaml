@@ -1,9 +1,11 @@
 name: crisp_ebook_reader
-description: Offline, host-controlled ebook reading and normalized import for CrispCloud.
+description: Offline, host-controlled ebook reading and normalized import for Flutter and Dart applications.
 version: 0.1.0
 publish_to: none
+repository: https://github.com/CrispStrobe/crisperbooks
+issue_tracker: https://github.com/CrispStrobe/crisperbooks/issues
 environment:
-  sdk: '>=3.6.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
   flutter: '>=3.27.0'
 dependencies:
   flutter:
@@ -11,6 +13,11 @@ dependencies:
   flutter_inappwebview: 6.1.5
   web: ^1.1.1
 dev_dependencies:
+  crisp_ebook:
+    path: ../crisp_ebook
+  crisp_ebook_conversion:
+    path: ../crisp_ebook_conversion
+  archive: ^4.6.0
   flutter_test:
     sdk: flutter
   integration_test:

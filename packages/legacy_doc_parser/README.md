@@ -7,7 +7,7 @@ service is required by the package.
 
 Source: [CrispStrobe/legacy-doc-parser](https://github.com/CrispStrobe/legacy-doc-parser).
 The package was extracted from CrispCloud and is under active development at
-version `0.1.0-dev.1`. Supported features and remaining limitations are explicit;
+version `0.1.0-dev.2`. Supported features and remaining limitations are explicit;
 this is not a claim of complete MS-DOC fidelity or identical pagination.
 
 ## Consumers and source ownership
@@ -26,7 +26,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser
-      ref: df59af6181eeaf4e0ae55ddcc318fdc7bb76ada0
+      ref: b03747396878518d0d623599baf9b376df776e3d
 ```
 
 The example pins a tested development checkpoint. When updating, choose a
@@ -93,12 +93,15 @@ dart run example/legacy_doc_parser_example.dart input.doc new-copy.docm
 
 | Feature | Current behavior |
 | --- | --- |
-| Body text and formatting | Referenced Unicode text, resolved character/paragraph styles, underline variants, basic tables, sections, and tracked insertions/deletions |
-| Tabs, borders and shading | Custom/default tab stops, supported paragraph borders and paragraph/cell shading; unsupported exact patterns are disclosed |
-| Headers, footers and notes | Referenced stories and actual Word output parts; source first/even-header activation is retained |
-| Comments, bookmarks and fields | Comment text/ranges/authors, bookmark ranges, safe locked field syntax and cached results; no field evaluation |
-| Lists | Typed numbering definitions and Word numbering output; supported preview labels with explicit approximation metadata |
-| Images and textboxes | Referenced PNG/JPEG/TIFF, supported inline/floating placement and crop, editable textboxes and validated chains |
+| Body text and formatting | Referenced Unicode text, ordered character/paragraph style resolution, exact supported underline variants and paragraph pagination controls |
+| Tables | Nested cell structure, conditional table-style regions, borders/shading/margins, signed origins, cell alignment, row heights and split/repeating-header controls |
+| Page layout | Page/section geometry, columns and their direction, margins, line numbering, document grid and source compatibility flags; exact pagination is measured separately |
+| Headers, footers and notes | Referenced stories and actual Word output parts; source first/even-header activation, note marker/reference formatting and document/section note numbering/placement |
+| Comments and revisions | Comment text/ranges/authors and validated reply relationships (no inferred resolved state); insertion/deletion, paragraph-mark and character/paragraph/section formatting history |
+| Bookmarks and fields | Bookmark ranges, safe locked field syntax and cached results; no field evaluation |
+| Lists | Editable numbering with compatible LSID continuation, explicit restart/resume metadata and story isolation; ambiguous policies remain reported |
+| Images and drawings | Referenced PNG/JPEG/TIFF/EMF/WMF, bounded vector SVG preview, native metafile bytes, supported position/crop, simple OfficeArt paths/paint/effects |
+| Textboxes | Editable text and validated linked chains, source position, insets, alignment, flow and wrapping; host reflow remains renderer-dependent |
 | OLE and VBA | Exact stored stream content with reconstructed CFB metadata; eligibility checks for active embedded objects and explicit DOCM VBA |
 | Signatures and opaque content | Inert source evidence with a manifest; no copied-signature validity claim |
 
@@ -106,9 +109,20 @@ See the detailed contracts:
 
 - [Structured conversion](doc/conversion.md)
 - [HTML preview](doc/html-preview.md)
+- [Kerning and native layout checks](doc/kerning-fidelity.md)
 - [Stories, fields and lists](doc/stories-fields-lists.md)
 - [Media and opaque preservation](doc/media-preservation.md)
 - [JSDoc comparison and attribution](doc/jsdoc-parity.md)
+- [Table styles and list continuation](doc/table-and-list-fidelity.md)
+- [Layout and pagination](doc/layout-fidelity.md)
+- [OfficeArt and metafile fidelity](doc/media-fidelity.md)
+- [Linked textbox fidelity](doc/textbox-fidelity.md)
+- [Revisions and comments](doc/revisions-comments.md)
+- [Footnote and endnote settings](doc/note-settings.md)
+- [Narrow terminal-mark recovery](doc/terminal-mark-formatting.md)
+- [Independent Quds/native oracles and reviewed source goldens](doc/fidelity-oracles.md)
+- [Fidelity status and remaining acceptance gaps](doc/fidelity-status.md)
+- [Measured fidelity results](doc/fidelity-results.md)
 
 ## Preservation contract
 
@@ -133,6 +147,9 @@ dart pub get
 dart analyze
 dart test
 python3 tool/verify_web.py
+python3 tool/fidelity/oracle.py
+python3 tool/fidelity/goldens.py
+python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
 dart format --output=none --set-exit-if-changed .
 dart pub publish --dry-run
 ```
@@ -160,6 +177,3 @@ This Source Code Form is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
 one at https://mozilla.org/MPL/2.0/.
 
-The integrated preservation work includes nested tables, bounded EMF/WMF media, paragraph pagination controls, formatting revisions and comment threads. See [fidelity oracles](doc/fidelity-oracles.md), [layout](doc/layout-fidelity.md), [media](doc/media-fidelity.md) and [revisions/comments](doc/revisions-comments.md) for the supported contracts and remaining losses. The integration passed 252 Dart tests, source/package-graph oracles and the JavaScript acceptance runner on macOS; native Word layout remains a separately measured boundary.
-
-The current preservation increment also retains supported Word compatibility flags and OfficeArt text-box layout and supplies bounded vector previews. Unsupported drawing records remain explicit retained evidence; the parser does not claim exact native layout for every legacy drawing.

@@ -35,6 +35,8 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/widget/office_paragraph_fidelity_test.dart \
   test/widget/office_font_fidelity_test.dart \
   test/widget/office_picture_fidelity_test.dart \
+  test/widget/office_html_widget_factory_test.dart \
+  test/widget/office_metafile_preview_test.dart \
   test/widget/office_save_fidelity_test.dart \
   test/widget/legacy_word_conversion_dialog_test.dart \
   test/widget/legacy_word_routing_test.dart

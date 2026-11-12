@@ -6,10 +6,12 @@ import 'bounded_cfb_reader.dart';
 import 'compound/cfbf_writer.dart';
 import 'legacy_word_metafile.dart';
 import 'legacy_word_structured_model.dart';
+import 'legacy_word_numbering.dart';
 import 'legacy_word_structured_render.dart';
 
 part 'legacy_word_binary_source.dart';
 part 'legacy_word_compatibility_parser.dart';
+part 'legacy_word_note_settings_parser.dart';
 part 'legacy_word_sprms.dart';
 part 'legacy_word_layout_parser.dart';
 part 'legacy_word_revisions.dart';
@@ -19,6 +21,7 @@ part 'legacy_word_stories.dart';
 part 'legacy_word_fields.dart';
 part 'legacy_word_lists.dart';
 part 'legacy_word_tables.dart';
+part 'legacy_word_table_styles.dart';
 part 'legacy_word_media_parser.dart';
 part 'legacy_word_officeart_parser.dart';
 
@@ -42,13 +45,14 @@ class _StructuredWordParser {
   final styles = <int, _Style>{};
   final _resolvedStyles = <int, _ResolvedStyle>{};
   final _styleActive = <int>{};
+  final _tableStyles = <int, _TableStyleDefinition>{};
+  final _tableStyleActive = <int>{};
   final fonts = <String>[];
   final authors = <String>[];
   int? defaultFont;
   int runCount = 0;
   int paragraphCount = 0;
   int fieldTextUnits = 0;
-  int renderedHtmlBytes = 0;
   final _fieldResults = <bool>[];
   final _privateFieldSeparators = <int>{};
   final _fieldFlags = <int, int>{};
@@ -77,6 +81,7 @@ class _StructuredWordParser {
     if (source.compatibility.issues.isNotEmpty) {
       warnings.add(LegacyWordWarning.unsupportedFormatting);
     }
+    warnings.addAll(source.noteSettingsWarnings);
     if (source.totalLength == 0) {
       final media = _readMediaCatalog(const []);
       final orderedWarnings = warnings.toList()
@@ -91,6 +96,8 @@ class _StructuredWordParser {
         evenAndOddHeaders: source.evenAndOddHeaders,
         defaultTabStopTwips: source.defaultTabStopTwips,
         compatibility: source.compatibility,
+        footnotes: source.footnotes,
+        endnotes: source.endnotes,
       );
     }
     body = Uint16List(source.totalLength);
@@ -129,13 +136,37 @@ class _StructuredWordParser {
     _resolveReferencePresentations();
     final media = _readMediaCatalog(mediaRuns);
     _linkTextboxDrawings(media);
+    final renderer = LegacyWordHtmlRenderer(
+      numberingDefinitions: numbering,
+      defaultTabStopTwips: source.defaultTabStopTwips,
+      media: media,
+    );
+    final previews = renderer.renderAll([
+      blocks,
+      for (final story in stories) story.blocks,
+    ]);
+    final mainHtml = previews.first;
+    for (var i = 0; i < stories.length; i++) {
+      final story = stories[i];
+      stories[i] = LegacyWordStory(
+        id: story.id,
+        kind: story.kind,
+        startCp: story.startCp,
+        endCp: story.endCp,
+        blocks: story.blocks,
+        plainText: story.plainText,
+        safeHtml: previews[i + 1],
+        sectionIndex: story.sectionIndex,
+        headerFooterType: story.headerFooterType,
+      );
+    }
     final orderedWarnings = warnings.toList()
       ..sort((a, b) => a.index.compareTo(b.index));
     return LegacyWordDocument(
       blocks: List.unmodifiable(blocks),
       sections: List.unmodifiable(sections),
       plainText: _plainText(blocks),
-      safeHtml: _renderBlocks(blocks),
+      safeHtml: mainHtml,
       warnings: List.unmodifiable(orderedWarnings),
       stories: List.unmodifiable(stories),
       noteReferences: List.unmodifiable(noteReferences),
@@ -148,6 +179,8 @@ class _StructuredWordParser {
       evenAndOddHeaders: source.evenAndOddHeaders,
       defaultTabStopTwips: source.defaultTabStopTwips,
       compatibility: source.compatibility,
+      footnotes: source.footnotes,
+      endnotes: source.endnotes,
     );
   }
 
@@ -157,14 +190,14 @@ class _StructuredWordParser {
     _collectFields(first, limit, storyId);
     _invisibleMediaRanges = _fieldHiddenMediaRanges(priorFields);
     _fieldResults.clear();
-    final paragraphs = <_Paragraph>[];
+    final inputs = <_ParagraphInput>[];
     var start = first;
     for (var cp = first; cp < limit; cp++) {
       final unit = body[cp];
       if (unit == 13 ||
           unit == 7 ||
           (unit == 12 && sectionEnds.contains(cp + 1))) {
-        paragraphs.add(_paragraph(start, cp, cp + 1, unit));
+        inputs.add(_paragraphInput(start, cp, cp + 1, unit));
         start = cp + 1;
         if (++paragraphCount > 50000) {
           throw const FormatException(
@@ -179,12 +212,24 @@ class _StructuredWordParser {
           'Word paragraphs exceed the preview complexity limit.',
         );
       }
-      paragraphs.add(_paragraph(start, limit, limit, 0));
+      inputs.add(_paragraphInput(start, limit, limit, 0));
     }
+    final contexts = _tableContexts(inputs);
+    final paragraphs = [
+      for (final input in inputs)
+        _paragraph(
+          input.start,
+          input.contentEnd,
+          input.end,
+          input.terminator,
+          input: input,
+          context: contexts.paragraphs[input.start],
+        ),
+    ];
     if (_fieldResults.isNotEmpty) {
       throw const FormatException('Unclosed Word field.');
     }
-    return _assembleTables(paragraphs);
+    return _assembleTables(paragraphs, contexts: contexts);
   }
 
   String _plainText(List<LegacyWordBlock> blocks) {
@@ -214,31 +259,6 @@ class _StructuredWordParser {
 
     content(blocks, 0);
     return plain.toString();
-  }
-
-  String _renderBlocks(List<LegacyWordBlock> blocks) {
-    final html = renderLegacyWordHtml(
-      blocks,
-      numberingDefinitions: numbering,
-      defaultTabStopTwips: source.defaultTabStopTwips,
-    );
-    // The renderer enforces a per-story limit; also cap their combined output
-    // without allocating a second encoded copy of every generated string.
-    for (final rune in html.runes) {
-      renderedHtmlBytes += rune <= 0x7f
-          ? 1
-          : rune <= 0x7ff
-          ? 2
-          : rune <= 0xffff
-          ? 3
-          : 4;
-      if (renderedHtmlBytes > 64 * 1024 * 1024) {
-        throw const FormatException(
-          'Word story previews exceed the output limit.',
-        );
-      }
-    }
-    return html;
   }
 
   void _storyWarnings() {
@@ -272,6 +292,7 @@ class _StructuredWordParser {
     final operations = _decodeSprms(
       bytes,
       budget,
+      stopAtTableProperties: true,
       onPapxOrphanByte: recoverPapxOrphanByte
           ? () {
               warnings.add(LegacyWordWarning.recoveredNonconformingProperties);
@@ -291,9 +312,19 @@ class _StructuredWordParser {
     }
 
     for (final operation in operations) {
-      if ((const {0x3668, 0x3239}.contains(operation.code) &&
-              operation.data.u8(0) != 0) ||
-          const {0xd667, 0xd243}.contains(operation.code)) {
+      if (source.version > 0xd9 &&
+          const {
+            0xd609,
+            0xd60c,
+            0xd612,
+            0xd616,
+            0xd62d,
+            0xd62e,
+          }.contains(operation.code)) {
+        continue;
+      }
+      if ((operation.code == 0x3668 && operation.data.u8(0) != 0) ||
+          operation.code == 0xd667) {
         warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
       }
       if (operation.code != 0x6646 &&
@@ -303,20 +334,27 @@ class _StructuredWordParser {
         continue;
       }
       final offset = operation.data.u32(0);
+      final data = source.data;
+      final length = data.u16(offset);
+      if (operation.code == 0x646b && length < 10) {
+        throw const FormatException('Invalid Word indirect table properties.');
+      }
       final cached = _indirectProperties[offset];
       if (cached != null) {
         append(cached);
+        if (operation.code == 0x646b) break;
         continue;
       }
       if (!_indirectActive.add(offset)) {
         throw const FormatException('Cyclic Word indirect properties.');
       }
-      final data = source.data;
-      final length = data.u16(offset);
       final nested = _readProperties(data.slice(offset + 2, length), depth + 1);
       _indirectActive.remove(offset);
       _indirectProperties[offset] = nested;
       append(nested);
+      // PTableProps replaces the remainder of its containing array; those
+      // trailing legacy table properties target readers without table styles.
+      if (operation.code == 0x646b) break;
     }
     return output;
   }
@@ -338,26 +376,41 @@ class _StructuredWordParser {
     },
   );
 
-  _Paragraph _paragraph(int start, int contentEnd, int end, int terminator) {
+  _Paragraph _paragraph(
+    int start,
+    int contentEnd,
+    int end,
+    int terminator, {
+    _ParagraphInput? input,
+    _TableCellContext? context,
+  }) {
+    input ??= _paragraphInput(start, contentEnd, end, terminator);
     final terminalCp = end > start ? end - 1 : start;
-    final terminalPiece = source.pieceAt(terminalCp);
-    final papx = paragraphFormatting.at(terminalPiece.fc(terminalCp));
-    final prm = _pieceProperties(terminalPiece);
-    final initial = _resolveStyle(papx.styleIndex);
-    final properties = <String, Object?>{
-      ...initial.paragraph,
-      'styleIndex': papx.styleIndex,
-    };
-    _applyParagraph(
-      [...papx.operations, ...prm],
-      properties,
-      budget,
-      warnings,
-      resolveParagraphStyle: (index) => _resolveStyle(index).paragraph,
-    );
-    final styleIndex = properties['styleIndex'] as int? ?? papx.styleIndex;
-    final resolved = _resolveStyle(styleIndex);
-    final characterBase = _applyListFormatting(properties, resolved.character);
+    final styleIndex = input.styleIndex;
+    final resolved = input.resolved;
+    final properties = context == null
+        ? Map<String, Object?>.of(input.properties)
+        : <String, Object?>{
+            ...context.paragraph,
+            ..._resolveStyle(input.papx.styleIndex).paragraph,
+            'styleIndex': input.papx.styleIndex,
+          };
+    if (context != null) {
+      _applyParagraph(
+        [...input.papx.operations, ...input.prm],
+        properties,
+        budget,
+        warnings,
+        resolveParagraphStyle: (index) => {
+          ...context.paragraph,
+          ..._resolveStyle(index).paragraph,
+        },
+      );
+    }
+    final characterBase = _applyListFormatting(properties, <String, Object?>{
+      ...?context?.character,
+      ...resolved.character,
+    });
     final style = _paragraphStyle(properties, styleIndex);
     final formattingRevision = _paragraphRevision(properties);
     final mark = terminator == 13 || terminator == 12 || terminator == 7
@@ -685,6 +738,7 @@ class _StructuredWordParser {
       hidden: properties['hidden'] == true,
       fontName: font,
       fontSizeHalfPoints: properties['fontSize'] as int?,
+      kerningThresholdHalfPoints: properties['kerning'] as int? ?? 0,
       colorHex: properties['color'] as String?,
       highlightHex: properties['highlight'] as String?,
       verticalAlign: switch (properties['verticalAlign']) {

@@ -30,12 +30,17 @@ class LegacyWordOfficeArtGeometry {
   LegacyWordOfficeArtGeometry({
     required this.bounds,
     this.preset,
+    this.fill = true,
+    this.stroke = true,
     List<LegacyWordOfficeArtPathCommand> path = const [],
   }) : path = List.unmodifiable(path);
 
   /// A fixed supported identifier: rect, roundRect, ellipse or line.
   /// A custom path has no preset.
   final String? preset;
+
+  /// Per-path NoFill/NoLine escapes, independent of the shape's style flags.
+  final bool fill, stroke;
   final LegacyWordVectorBounds bounds;
   final List<LegacyWordOfficeArtPathCommand> path;
 }
@@ -112,6 +117,19 @@ class LegacyWordOfficeArtText {
   final bool? fitShapeToText, autoTextMargin;
 }
 
+/// Explicit OfficeArt positioning overrides. Original SPA origins and offsets
+/// remain on the drawing; renderers apply valid overrides per axis.
+class LegacyWordOfficeArtPosition {
+  const LegacyWordOfficeArtPosition({
+    this.horizontalMode,
+    this.verticalMode,
+    this.horizontalRelativeTo,
+    this.verticalRelativeTo,
+  });
+  final int? horizontalMode, verticalMode;
+  final int? horizontalRelativeTo, verticalRelativeTo;
+}
+
 /// The resolved, bounded subset of an OfficeArt FSP/FOPT shape. Unknown or
 /// context-dependent data remains in the original OfficeArt artifact.
 class LegacyWordOfficeArtShape {
@@ -125,6 +143,7 @@ class LegacyWordOfficeArtShape {
     this.line,
     this.shadow,
     this.text,
+    this.position,
     List<int> unsupportedProperties = const [],
   }) : unsupportedProperties = List.unmodifiable(unsupportedProperties);
 
@@ -137,5 +156,6 @@ class LegacyWordOfficeArtShape {
   final LegacyWordOfficeArtLine? line;
   final LegacyWordOfficeArtShadow? shadow;
   final LegacyWordOfficeArtText? text;
+  final LegacyWordOfficeArtPosition? position;
   final List<int> unsupportedProperties;
 }

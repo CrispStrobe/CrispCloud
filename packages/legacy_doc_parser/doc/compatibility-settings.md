@@ -5,8 +5,11 @@ layout choices from the referenced DOP's Copts60, Copts80 and Copts blocks, with
 immutable copies of those small source blocks and their provenance. An absent
 option is unspecified; a present `false` remains an explicit disabled option.
 
-Structured conversion writes 61 fixed layout options as native `w:compat`
+Structured conversion maps 61 fixed layout options to native `w:compat`
 children in `word/settings.xml`, including both `w:val="1"` and `w:val="0"`.
+The verified false default for `doNotExpandShiftReturn` is represented by
+omitting that element, as explained below; its explicit source value remains
+in the model and evidence.
 The supported set covers Word 97 object/footnote wrapping, table row alignment,
 table spacing and fitting, East Asian line breaking, tab/numbering interactions,
 printer/font metrics, and legacy line/paragraph spacing. Six binary flags have
@@ -45,6 +48,41 @@ options differently. The HTML preview does not emulate a Word pagination
 engine; native option preservation does not establish equal line breaks,
 table widths or page counts, particularly when fonts or printer metrics differ.
 
+## Observed native-consumer differences
+
+The LibreOffice revision used for the native corpus does not apply every
+documented option consistently across its DOC and DOCX import paths. Its
+[DOC importer](https://github.com/LibreOffice/core/blob/2c87e51eeaa2b413ff4ae097b2705eea1995d8e5/sw/source/filter/ww8/ww8par.cxx#L1993)
+forces space/ideographic-space balancing off, regardless of the source
+`fDntBlnSbDbWid` bit. The MS-DOC mapping still requires the inverse of that bit
+for `balanceSingleByteDoubleByteWidth`. Consequently, a correctly translated
+explicit choice can change this renderer's line widths relative to its own
+DOC import. Its native export of the existing formatting fixture contains a
+generic compatibility mode 11 instead of the source's individual flags.
+
+The same revision's
+[DOCX settings importer](https://github.com/LibreOffice/core/blob/2c87e51eeaa2b413ff4ae097b2705eea1995d8e5/sw/source/writerfilter/dmapper/SettingsTable.cxx#L433)
+sets `doNotExpandShiftReturn`, `balanceSingleByteDoubleByteWidth`, and
+`ulTrailSpace` true when their elements occur, without consulting the explicit
+on/off value in those branches. A native roundtrip of the formatting fixture
+with an explicit `doNotExpandShiftReturn=0` element changes that choice to `1`.
+
+For this single verified option, conversion now omits the element when false.
+Microsoft's [OOXML definition](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.donotexpandshiftreturn?view=openxml-3.0.1)
+specifies that soft-break lines are normally justified and only a true option
+changes that behavior. Omission therefore has the same documented meaning as
+false. The native experiment retains the source's `fExpShRtn` bit (`0x2000`) when
+the false element is omitted, while the presence-false form loses that bit.
+True still emits `w:val="1"`; the parsed explicit false and original Copts bytes
+remain available in the model and evidence. Other options retain their normal
+serialization. Conversion does not infer a blanket compatibility mode or
+discard documented source choices to improve one renderer's score.
+
+The [native experiment receipt](../test/fixtures/word_native/compatibility-default-receipt.json)
+records the renderer revision, source/input/output hashes, exact controlled
+settings difference, and observed Copts words. These identify that observation;
+they are not byte-for-byte golden outputs or a pagination certification.
+
 ## Sources and tests
 
 - Microsoft [Fib](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/9aeaa2e7-4a45-468e-ab13-3f6193eb9394)
@@ -68,6 +106,7 @@ table widths or page counts, particularly when fonts or printer metrics differ.
 `test/legacy_word_compatibility_test.dart` uses independently authored binary
 fixtures for every supported bit, disabled/inverted values, all supported DOP
 versions, duplicate conflicts, malformed bounds, reserved/non-layout bits,
-empty stories, model immutability, native XML ordering, and evidence payloads.
+empty stories, model immutability, native XML ordering, the verified false
+default omission, and evidence payloads.
 It also checks the existing authored `word_native/formatting.doc` fixture's
 observed recovery and source options. These tests do not certify pagination.

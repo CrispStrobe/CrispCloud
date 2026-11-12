@@ -341,34 +341,27 @@ void main() {
     );
   });
 
-  test(
-    'marks independent instances that share an unresolved source sequence',
-    () {
-      final definitions = [
-        for (final id in [1, 2])
-          LegacyWordNumberingDefinition(
-            id: id,
-            sourceListId: 77,
-            levels: const [
-              LegacyWordNumberingLevel(
-                level: 0,
-                format: 'decimal',
-                text: '%1.',
-              ),
-            ],
-          ),
-      ];
-      final html = renderLegacyWordHtml([
-        _item(0),
-        _item(2, id: 2),
-      ], numberingDefinitions: definitions);
-      expect(_labels(html), ['1.', '1.']);
-      expect(
-        RegExp('data-word-numbering="instance-approximation"').allMatches(html),
-        hasLength(2),
-      );
-    },
-  );
+  test('continues compatible instances that share a source sequence', () {
+    final definitions = [
+      for (final id in [1, 2])
+        LegacyWordNumberingDefinition(
+          id: id,
+          sourceListId: 77,
+          levels: const [
+            LegacyWordNumberingLevel(level: 0, format: 'decimal', text: '%1.'),
+          ],
+        ),
+    ];
+    final html = renderLegacyWordHtml([
+      _item(0),
+      _item(2, id: 2),
+    ], numberingDefinitions: definitions);
+    expect(_labels(html), ['1.', '2.']);
+    expect(
+      RegExp('data-word-numbering="instance-approximation"').allMatches(html),
+      isEmpty,
+    );
+  });
 
   test(
     'renders basic paragraph border color width spacing and ignores bar',

@@ -139,6 +139,14 @@ class _OfficeArtShapeReader {
       line: line,
       shadow: shadow,
       text: text,
+      position: p.keys.any((id) => id >= 0x038f && id <= 0x0392)
+          ? LegacyWordOfficeArtPosition(
+              horizontalMode: _enum(0x038f, 5),
+              horizontalRelativeTo: _enum(0x0390, 3),
+              verticalMode: _enum(0x0391, 5),
+              verticalRelativeTo: _enum(0x0392, 3),
+            )
+          : null,
       unsupportedProperties: unsupported.toList()..sort(),
     );
   }
@@ -228,6 +236,18 @@ class _OfficeArtShapeReader {
     final points = <LegacyWordOfficeArtPoint>[];
     pointCount = array.$2;
     for (var i = 0; i < array.$2; i++) {
+      if (array.$3 == 4) {
+        // Native producer/consumer implementations store packed POINT arrays
+        // as two 16-bit coordinates. Arc presets use unsigned coordinates;
+        // other types use signed coordinates (LibreOffice core msdffimp.cxx /
+        // escherex.cxx, verified against an independently authored native DOC).
+        final x = type == 19 ? array.$1.u16(i * 4) : array.$1.i16(i * 4);
+        final y = type == 19
+            ? array.$1.u16(i * 4 + 2)
+            : array.$1.i16(i * 4 + 2);
+        points.add(LegacyWordOfficeArtPoint(x, y));
+        continue;
+      }
       final x = array.$1.u32(i * 8), y = array.$1.u32(i * 8 + 4);
       if ((x >= 0x80000000 && x <= 0x8000007f) ||
           (y >= 0x80000000 && y <= 0x8000007f)) {
@@ -238,6 +258,7 @@ class _OfficeArtShapeReader {
     }
     if (points.isEmpty) return null;
     final path = <LegacyWordOfficeArtPathCommand>[];
+    var fill = true, stroke = true;
     final segmentArray = segments == null || segments.isEmpty
         ? null
         : _array(segments, 0x0146, 2, 16384);
@@ -294,10 +315,24 @@ class _OfficeArtShapeReader {
       for (var i = 0; i < array.$2; i++) {
         final value = array.$1.u16(i * 2);
         final kind = value >> 13, count = value & 0x1fff;
-        if (kind >= 5) {
-          unsupported.add(
-            0x0146,
-          ); // Escape/client-escape semantics are distinct.
+        if (kind == 5) {
+          final escape = (value >> 8) & 31, count = value & 255;
+          if (count == 0 && escape >= 12 && escape <= 20) {
+            // Editing constraints do not change these resolved control points.
+            // Retain their original record and disclose the unmapped preference.
+            unsupported.add(0x0146);
+            continue;
+          }
+          if (count == 0 && (escape == 10 || escape == 11)) {
+            if (escape == 10) fill = false;
+            if (escape == 11) stroke = false;
+            continue;
+          }
+          unsupported.add(0x0146);
+          return null;
+        }
+        if (kind >= 6) {
+          unsupported.add(0x0146); // Client-defined drawing semantics.
           return null;
         }
         if (ended) {
@@ -351,10 +386,15 @@ class _OfficeArtShapeReader {
         throw const FormatException('Incomplete OfficeArt path references.');
       }
     }
-    return LegacyWordOfficeArtGeometry(bounds: bounds, path: path);
+    return LegacyWordOfficeArtGeometry(
+      bounds: bounds,
+      path: path,
+      fill: fill,
+      stroke: stroke,
+    );
   }
 
-  (_Bytes, int)? _array(Uint8List bytes, int id, int size, int limit) {
+  (_Bytes, int, int)? _array(Uint8List bytes, int id, int size, int limit) {
     final input = _Bytes(bytes);
     final count = input.u16(0), allocated = input.u16(2);
     final storedSize = input.u16(4);
@@ -365,10 +405,10 @@ class _OfficeArtShapeReader {
     if (actualSize == 0 || input.length != 6 + count * actualSize) {
       throw const FormatException('Invalid OfficeArt array extent.');
     }
-    if (storedSize != size) {
-      unsupported.add(id); // Truncated POINT encoding is retained, not guessed.
+    if (storedSize != size && !(id == 0x0145 && storedSize == 0xfff0)) {
+      unsupported.add(id);
       return null;
     }
-    return (_Bytes(input.slice(6, input.length - 6)), count);
+    return (_Bytes(input.slice(6, input.length - 6)), count, actualSize);
   }
 }

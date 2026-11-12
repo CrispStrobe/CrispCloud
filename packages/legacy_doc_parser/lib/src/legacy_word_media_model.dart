@@ -72,11 +72,15 @@ class LegacyWordMetafileInfo {
     required this.nativeEmbeddingAllowed,
     this.widthEmu,
     this.heightEmu,
+    this.officeArtBounds,
     this.previewSvg,
     List<int> unsupportedPreviewRecords = const [],
   }) : unsupportedPreviewRecords = List.unmodifiable(unsupportedPreviewRecords);
 
+  /// Device-coordinate canvas used for portable playback. This is distinct
+  /// from OfficeArt's producer-dependent clipping/presentation rectangle.
   final LegacyWordVectorBounds bounds;
+  final LegacyWordVectorBounds? officeArtBounds;
   final int recordCount;
   final int? widthEmu, heightEmu;
 

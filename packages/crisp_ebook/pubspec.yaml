@@ -1,10 +1,12 @@
 name: crisp_ebook
-description: Bounded, package-preserving EPUB reading and editing for CrispCloud.
+description: Bounded, package-preserving EPUB reading and editing for Flutter and Dart applications.
 version: 0.1.0
 publish_to: none
+repository: https://github.com/CrispStrobe/crisperbooks
+issue_tracker: https://github.com/CrispStrobe/crisperbooks/issues
 
 environment:
-  sdk: '>=3.8.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
   archive: ^4.6.0

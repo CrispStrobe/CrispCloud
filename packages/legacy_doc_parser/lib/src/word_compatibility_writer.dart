@@ -10,6 +10,15 @@ extension _WordCompatibilityWriter on _StructuredWordWriter {
       for (final flag in LegacyWordCompatibilityFlag.values) {
         final value = compatibility[flag];
         if (value == null) continue;
+        // ISO/IEC 29500-1 doNotExpandShiftReturn defaults to false when
+        // omitted. LibreOffice's pinned SettingsTable importer enables it
+        // merely on presence, even with val=0. Preserve the default meaning
+        // through omission only for this verified option; the source model
+        // and compatibility evidence still retain the explicit false value.
+        if (flag == LegacyWordCompatibilityFlag.doNotExpandShiftReturn &&
+            !value) {
+          continue;
+        }
         settings.add('<w:${flag.name} w:val="${value ? 1 : 0}"/>');
         _count('compatibilityFlags');
       }

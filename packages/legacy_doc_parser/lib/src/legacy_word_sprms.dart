@@ -50,6 +50,7 @@ List<_Sprm> _decodeSprms(
   Uint8List bytes,
   _Budget budget, {
   void Function()? onPapxOrphanByte,
+  bool stopAtTableProperties = false,
 }) {
   final input = _Bytes(bytes);
   final output = <_Sprm>[];
@@ -107,6 +108,7 @@ List<_Sprm> _decodeSprms(
     input.require(position, size);
     output.add(_Sprm(code, input.slice(position + prefix, size - prefix)));
     position += size;
+    if (stopAtTableProperties && code == 0x646b) break;
   }
   return output;
 }
@@ -251,6 +253,7 @@ void _applyCharacter(
       'allCaps',
       'hidden',
       'fontSize',
+      'kerning',
       'fontIndex',
       'color',
       'verticalAlign',
@@ -314,6 +317,13 @@ void _applyCharacter(
           throw const FormatException('Invalid Word text position.');
         }
         output['position'] = position;
+      case 0x484b:
+        // MS-DOC sprmCHpsKern: signed half-point threshold, 0 disables.
+        final threshold = data.i16(0);
+        if (threshold < 0 || threshold > 3276) {
+          throw const FormatException('Invalid Word kerning threshold.');
+        }
+        output['kerning'] = threshold;
       case 0x8840:
         output['spacing'] = data.i16(0);
       case 0x2a83:
@@ -391,9 +401,16 @@ const _underlineStyles = <int, String>{
 };
 
 class _TableDefinition {
-  const _TableDefinition(this.edges, this.flags);
+  const _TableDefinition(
+    this.edges,
+    this.flags, {
+    this.borders = const [],
+    this.styleDefaults = const [],
+  });
   final List<int> edges;
   final List<int> flags;
+  final List<Map<LegacyWordCellBorderSide, LegacyWordBorder>> borders;
+  final List<bool> styleDefaults;
 }
 
 void _applyParagraph(
@@ -408,6 +425,10 @@ void _applyParagraph(
     budget.apply();
     if (_applyParagraphLayout(operation, output)) continue;
     final value = operation.data;
+    if (operation.group == 5 &&
+        _applyTableProperty(operation, output, budget, warnings)) {
+      continue;
+    }
     switch (operation.code) {
       case 0x4600:
         final index = value.u16(0);
@@ -597,7 +618,43 @@ void _applyParagraph(
         if (flags.any((flag) => ((flag >> 5) & 3) == 2)) {
           throw const FormatException('Invalid Word vertical cell merge.');
         }
-        output['tableDefinition'] = _TableDefinition(edges, flags);
+        if (flags.any((flag) => ((flag >> 7) & 3) == 3)) {
+          throw const FormatException('Invalid Word vertical cell alignment.');
+        }
+        for (var i = 0; i < count && i * 20 < available; i++) {
+          final flag = flags[i], unit = (flag >> 9) & 7;
+          if (unit > 3 || value.i16(cellStart + i * 20 + 2) < 0) {
+            throw const FormatException('Invalid Word preferred cell width.');
+          }
+          // Rotation, fit-text, preferred-width and empty-cell suppression
+          // require a layout engine beyond the resolved cell-box subset.
+          if (flag & 0x501c != 0 ||
+              (flag & 0x2000 != 0 && unit != 3) ||
+              unit == 2) {
+            warnings.add(LegacyWordWarning.unsupportedFormatting);
+          }
+        }
+        final borders = <Map<LegacyWordCellBorderSide, LegacyWordBorder>>[
+          for (var i = 0; i < count; i++)
+            if (i * 20 < available)
+              {
+                for (var side = 0; side < 4; side++)
+                  LegacyWordCellBorderSide.values[side]: _tableBorder(
+                    _Bytes(value.slice(cellStart + i * 20 + 4 + side * 4, 4)),
+                    old: true,
+                  ),
+              }
+            else
+              const {},
+        ];
+        output['tableDefinition'] = _TableDefinition(
+          edges,
+          flags,
+          borders: borders,
+          styleDefaults: List.filled(count, false),
+        );
+        output['rowLeft'] = edges.first;
+        output.remove('rowLeftOperand');
       // Section/table style properties beyond the represented subset are
       // reported rather than being represented as a different formatting.
       default:
@@ -660,9 +717,18 @@ Map<String, Object?> _sectionProperties(
         }
         output['columns'] = columns;
       case 0x703a:
-        break; // revision save ID
+        output['sectionSaveId'] = value.u32(0);
+      case 0x3239:
+        output['_oldSection'] = _boolean(value)
+            ? _revisionSnapshot(output)
+            : null;
+      case 0xd243:
+        _applyPropertyRevision(value, output, 'section');
       default:
-        warnings.add(LegacyWordWarning.unsupportedFormatting);
+        if (!_applySectionNoteProperty(operation, output, warnings)) {
+          output['_unsupportedSection'] = true;
+          warnings.add(LegacyWordWarning.unsupportedFormatting);
+        }
     }
   }
   for (final key in ['width', 'height']) {

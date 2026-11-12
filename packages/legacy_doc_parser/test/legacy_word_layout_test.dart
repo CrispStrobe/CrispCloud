@@ -56,7 +56,7 @@ void main() {
     },
   );
 
-  test('resolves pagination flags through stylesheet and direct overrides', () {
+  test('resolves explicit paragraph pagination flags', () {
     final document = parseLegacyWordDocument(
       _fixture(
         paragraph: [
@@ -88,7 +88,7 @@ void main() {
       'mirrorIndents',
       'autoSpaceDN',
     ]) {
-      expect(_attr(_all(xml, name).single, 'val'), '1');
+      expect(_attr(_all(xml, name).first, 'val'), '1');
     }
     for (final name in [
       'widowControl',
@@ -101,6 +101,22 @@ void main() {
     }
     expect(_attr(_all(xml, 'spacing').first, 'beforeAutospacing'), '1');
     expect(_attr(_all(xml, 'spacing').first, 'afterAutospacing'), '1');
+  });
+
+  test('section column order and gutter direction remain independent', () {
+    final document = parseLegacyWordDocument(
+      _fixture(
+        section: [..._one(0x3228, 1), ..._one(0x322a, 1), ..._two(0x500b, 1)],
+      ),
+    );
+    expect(document.sections.single.layout.rightToLeft, isTrue);
+    expect(document.sections.single.layout.rightToLeftGutter, isTrue);
+    final section = _all(_xml(document), 'sectPr').single;
+    expect(_attr(_all(section, 'bidi').single, 'val'), '1');
+    expect(_attr(_all(section, 'rtlGutter').single, 'val'), '1');
+    expect(_attr(_all(section, 'cols').single, 'num'), '2');
+    final paragraph = _all(_xml(document), 'pPr').first;
+    expect(_attr(_all(paragraph, 'bidi').single, 'val'), '0');
   });
 
   test(

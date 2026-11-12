@@ -66,6 +66,8 @@ class LegacyWordSectionLayout {
     this.grid = LegacyWordDocumentGrid.none,
     this.gridLinePitchTwips,
     this.gridCharacterSpace,
+    this.rightToLeft = false,
+    this.rightToLeftGutter = false,
   });
   final bool equalColumnWidths;
   final List<LegacyWordPageColumn> columns;
@@ -85,4 +87,6 @@ class LegacyWordSectionLayout {
 
   /// Difference in character pitch, in 1/4096 point, including its sign.
   final int? gridCharacterSpace;
+  final bool rightToLeft;
+  final bool rightToLeftGutter;
 }

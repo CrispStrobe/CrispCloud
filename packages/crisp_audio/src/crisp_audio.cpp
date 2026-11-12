@@ -84,8 +84,46 @@ FILE* open_input(const char* path) {
 struct Input {
   FILE* file = nullptr;
   crisp_audio_job* job;
+  ma_int64 stream_start = 0;
   explicit Input(crisp_audio_job* value) : job(value) {}
   ~Input() { if (file != nullptr) fclose(file); }
+
+  // ID3v2 is also found before FLAC streams. dr_flac expects fLaC at its
+  // logical offset zero. Inspect bounded tag headers, without allocating or
+  // rewriting metadata, and expose a virtual start only for a proven FLAC.
+  void locate_flac_stream() {
+    constexpr ma_int64 maximum_prefix = 256 * 1024 * 1024;
+    ma_int64 offset = 0;
+    for (int tag = 0; tag <= 8 && !cancelled(job); ++tag) {
+#if defined(_WIN32)
+      if (_fseeki64(file, offset, SEEK_SET) != 0) break;
+#else
+      if (fseeko(file, static_cast<off_t>(offset), SEEK_SET) != 0) break;
+#endif
+      unsigned char header[10]{};
+      const size_t read = fread(header, 1, sizeof(header), file);
+      if (read >= 4 && memcmp(header, "fLaC", 4) == 0) {
+        stream_start = offset;
+        break;
+      }
+      if (tag == 8 || read != sizeof(header) ||
+          memcmp(header, "ID3", 3) != 0 ||
+          header[3] < 2 || header[3] > 4 || header[4] == 255 ||
+          ((header[6] | header[7] | header[8] | header[9]) & 128) != 0) break;
+      const ma_int64 size = (static_cast<ma_int64>(header[6]) << 21) |
+                            (static_cast<ma_int64>(header[7]) << 14) |
+                            (static_cast<ma_int64>(header[8]) << 7) | header[9];
+      const ma_int64 footer = header[3] == 4 && (header[5] & 16) ? 10 : 0;
+      if (size > maximum_prefix - offset - 10 - footer) break;
+      offset += 10 + size + footer;
+    }
+    clearerr(file);
+#if defined(_WIN32)
+    _fseeki64(file, stream_start, SEEK_SET);
+#else
+    fseeko(file, static_cast<off_t>(stream_start), SEEK_SET);
+#endif
+  }
 
   static ma_result read(ma_decoder* decoder, void* buffer, size_t size,
                         size_t* bytes_read) {
@@ -101,6 +139,11 @@ struct Input {
                         ma_seek_origin origin) {
     auto* input = static_cast<Input*>(decoder->pUserData);
     if (cancelled(input->job)) return MA_CANCELLED;
+    if (origin == ma_seek_origin_start) {
+      if (offset < 0 || offset > std::numeric_limits<ma_int64>::max() - input->stream_start)
+        return MA_BAD_SEEK;
+      offset += input->stream_start;
+    }
     const int whence = origin == ma_seek_origin_start ? SEEK_SET
                      : origin == ma_seek_origin_current ? SEEK_CUR : SEEK_END;
 #if defined(_WIN32)
@@ -124,6 +167,7 @@ struct Decoder {
     if (cancelled(input.job)) return CRISP_AUDIO_CANCELLED;
     input.file = open_input(path);
     if (input.file == nullptr) return CRISP_AUDIO_IO_ERROR;
+    input.locate_flac_stream();
     const auto config = ma_decoder_config_init(ma_format_f32, 0, 0);
     const auto result = ma_decoder_init(Input::read, Input::seek, &input,
                                         &config, &decoder);

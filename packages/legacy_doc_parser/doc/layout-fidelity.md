@@ -5,6 +5,11 @@ The portable parser now retains additional layout instructions in
 emits editable WordprocessingML. It does not freeze a particular printer's
 pagination into artificial paragraph breaks.
 
+Section direction and right-to-left gutters are retained independently from
+paragraph direction. `sprmSFBiDi` controls the order of columns and the side of
+line numbers; discarding it moved the first Quds compatibility fixture's text
+into the opposite column in a native render comparison.
+
 Supported paragraph controls include widow/orphan prevention, line-number
 suppression, automatic-hyphenation suppression, right-to-left layout,
 contextual spacing, mirrored indents, automatic before/after spacing and

@@ -1,0 +1,51 @@
+{
+  "schema": "legacy-doc-parser/source-goldens",
+  "version": 1,
+  "reviewedOn": "2026-11-12",
+  "method": "Independent source binary DOC rendered by the recorded installed Office build; reviewed RGB PNGs and source hashes. No converter output is eligible. PDF hashes are provenance only, not stable equality criteria.",
+  "environment": {
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "rasterizerVersion": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "textExtractorVersion": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+    "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745"
+  },
+  "cases": [
+    {
+      "id": "formatting",
+      "origin": "independent-native-source-doc",
+      "source": {
+        "path": "test/fixtures/word_native/formatting.doc",
+        "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+      },
+      "render": {
+        "path": "test/fixtures/fidelity/goldens/formatting/source-render.json",
+        "sha256": "6bd54badaea7cd8d9ad1dc64982844b3f4aedac3041436443a77c9e277bb0665"
+      },
+      "images": [
+        {
+          "path": "test/fixtures/fidelity/goldens/formatting/page-1.png",
+          "sha256": "65f4190cad4b3058d6d553153d8d0e8cbe1ef24db8b7a2407af5f6bea838e04e"
+        }
+      ]
+    },
+    {
+      "id": "linked-textboxes-native",
+      "origin": "independent-native-source-doc",
+      "source": {
+        "path": "test/fixtures/word_native/linked-textboxes.doc",
+        "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c"
+      },
+      "render": {
+        "path": "test/fixtures/fidelity/goldens/linked-textboxes-native/source-render.json",
+        "sha256": "9b788ebc7c22080c563c3880c2a986f2165e5eb9ce70f0a3247e03830c4f3398"
+      },
+      "images": [
+        {
+          "path": "test/fixtures/fidelity/goldens/linked-textboxes-native/page-1.png",
+          "sha256": "a7cb2d8a3dd4aab38ccee89e4cb1c631238b2f27955c2575467fc2c223e6a914"
+        }
+      ]
+    }
+  ]
+}

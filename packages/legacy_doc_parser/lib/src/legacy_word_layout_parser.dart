@@ -99,6 +99,7 @@ bool _applySectionLayout(
         output['pageNumberFormat'] = formats[index];
       } else {
         output.remove('pageNumberFormat');
+        output['_unsupportedSection'] = true;
         warnings.add(LegacyWordWarning.unsupportedFormatting);
       }
     case 0x5032:
@@ -107,6 +108,10 @@ bool _applySectionLayout(
       output['gridLinePitch'] = bounded(value.i16(0), 1, 31680);
     case 0x7030:
       output['gridCharacterSpace'] = bounded(value.i32(0), -670925, 6488064);
+    case 0x3228:
+      output['sectionRightToLeft'] = _boolean(value);
+    case 0x322a:
+      output['rightToLeftGutter'] = _boolean(value);
     default:
       return false;
   }
@@ -162,5 +167,7 @@ LegacyWordSectionLayout _sectionLayout(_Props properties) {
     grid: grid,
     gridLinePitchTwips: properties['gridLinePitch'] as int?,
     gridCharacterSpace: properties['gridCharacterSpace'] as int?,
+    rightToLeft: properties['sectionRightToLeft'] == true,
+    rightToLeftGutter: properties['rightToLeftGutter'] == true,
   );
 }

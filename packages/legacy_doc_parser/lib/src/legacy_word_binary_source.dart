@@ -127,6 +127,7 @@ class _BinarySource {
       final tabInterval = table.u16(dopOffset + 10);
       if (tabInterval != 0) defaultTabStopTwips = tabInterval;
       compatibility = _readCompatibility(dopOffset, dopLength);
+      _readDocumentNoteSettings(dopOffset, dopLength);
     }
     // An empty main story is valid, including older files whose otherwise
     // unused CLX contains a zero-length CP range. No body data is consulted.
@@ -203,6 +204,9 @@ class _BinarySource {
   int? defaultTabStopTwips;
   LegacyWordCompatibility compatibility =
       const LegacyWordCompatibility.unspecified();
+  LegacyWordFootnoteSettings footnotes = const LegacyWordFootnoteSettings();
+  LegacyWordEndnoteSettings endnotes = const LegacyWordEndnoteSettings();
+  final noteSettingsWarnings = <LegacyWordWarning>{};
   late final int pairCount;
   late final List<int> storyLengths;
   final pieces = <_Piece>[];

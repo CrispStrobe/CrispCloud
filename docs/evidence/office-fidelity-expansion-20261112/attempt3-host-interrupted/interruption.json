@@ -1,0 +1,38 @@
+{
+  "status": "aborted_before_test_completion",
+  "recorded_utc": "2026-11-12T15:27:14.115548+00:00",
+  "app_commit": "a915cdaa61ddf19b868d52488d9018d261a60ebf",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "process_exit_code": 130,
+  "reason": "Parent detected that the managed native picture oracle still encoded the old invalid 100x60 pt slide. Stop and publish the corrected shared source oracle before accepting a final host corpus.",
+  "producer_receipt_state": "Original running receipt retained unchanged; this interruption record supersedes its status.",
+  "completed_stages": [
+    "offline setup without lock changes",
+    "six-file scoped analyzer",
+    "417 managed hashes",
+    "7 sync controls"
+  ],
+  "incomplete_stages": [
+    "engine test/producer gate",
+    "host test/producer gate",
+    "SDK validation",
+    "native validation"
+  ],
+  "temporary_configuration_cleanup": {
+    "runtime_pubspec_sha256": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "committed_pubspec_sha256": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
+    "exact_known_wrapper_hook_confirmed": true,
+    "restored_committed_pubspec": true
+  },
+  "source_after_cleanup": {
+    "dirty": "",
+    "tracked_files": 4874,
+    "sha256": "0a209e4b149a9dc60398c6f5389dd30178c09173d8b49e092ade8aa61fcf65ce",
+    "matches_initial_snapshot": true
+  },
+  "artifacts_sha256": {
+    "producer/producer-acceptance.json": "e31c15f3ef092b39892f4d21e5f5a5e5f4b01e921efe356201fb9f85908c7a9a",
+    "producer/host-gate.log": "f1518ca3f0a6b0ac4c5032383badc664f0d76476dd8291be8c5f1f2a4ea60e0b",
+    "interrupted-runtime-pubspec.yaml": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f"
+  }
+}

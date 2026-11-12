@@ -6,6 +6,7 @@
 library;
 
 import 'dart:typed_data';
+import 'legacy_word_note_settings.dart';
 
 import 'legacy_word_compatibility.dart';
 import 'legacy_word_media_model.dart';
@@ -14,6 +15,7 @@ import 'legacy_word_layout_model.dart';
 export 'legacy_word_compatibility.dart';
 export 'legacy_word_media_model.dart';
 export 'legacy_word_layout_model.dart';
+export 'legacy_word_note_settings.dart';
 
 enum LegacyWordWarning {
   unsupportedFormatting,
@@ -31,8 +33,19 @@ enum LegacyWordWarning {
   recoveredTableStoryBoundary,
   recoveredEmptySection,
 
+  /// A declared-one FTXBXS disagreed with a complete explicit OfficeArt chain.
+  recoveredTextboxChainLength,
+
   /// A cb=0 PAPX had one uninterpreted final byte after complete properties.
   recoveredNonconformingProperties,
+
+  /// Note defaults recovered from the identified 610-byte LibreOffice DOP.
+  recoveredLegacyNoteSettings,
+
+  /// The final main-story CR is present but absent from the last CHPX range.
+  /// Its paragraph mark stays null; its formatting and revision state are
+  /// unknown rather than inherited from a preceding character.
+  terminalMarkFormattingUnavailable,
 }
 
 enum LegacyWordAlignment { left, center, right, justify, distribute }
@@ -65,6 +78,8 @@ class LegacyWordDocument {
     this.evenAndOddHeaders = false,
     this.defaultTabStopTwips,
     this.compatibility = const LegacyWordCompatibility.unspecified(),
+    this.footnotes = const LegacyWordFootnoteSettings(),
+    this.endnotes = const LegacyWordEndnoteSettings(),
   });
   final List<LegacyWordBlock> blocks;
   final List<LegacyWordSection> sections;
@@ -91,6 +106,8 @@ class LegacyWordDocument {
   final bool evenAndOddHeaders;
   final int? defaultTabStopTwips;
   final LegacyWordCompatibility compatibility;
+  final LegacyWordFootnoteSettings footnotes;
+  final LegacyWordEndnoteSettings endnotes;
 }
 
 enum LegacyWordStoryKind {
@@ -222,6 +239,7 @@ class LegacyWordTextboxReference {
     this.shapeId,
     this.nextTextboxId,
     this.chainLength = 1,
+    this.declaredChainLength,
     this.anchors = const [],
   });
   final int id;
@@ -231,6 +249,10 @@ class LegacyWordTextboxReference {
   final int? shapeId;
   final int? nextTextboxId;
   final int chainLength;
+
+  /// Original FTXBXS count when available. This can differ from [chainLength]
+  /// only after a reported, fully linked-chain interoperability recovery.
+  final int? declaredChainLength;
 
   /// Actual OfficeArtClientTextbox chain indices, when available. A story is
   /// not duplicated for each shape and the library does not invent reflow.
@@ -309,6 +331,8 @@ class LegacyWordNumberingDefinition {
     required this.id,
     required this.levels,
     this.sourceListId,
+    this.startOverrides = const {},
+    this.continuationOf,
   });
 
   /// The absolute, one-based ilfo referenced by paragraph listId.
@@ -316,7 +340,16 @@ class LegacyWordNumberingDefinition {
 
   /// Original lsid shared by list instances that can continue one sequence.
   final int? sourceListId;
+
+  /// Another instance whose number sequence this instance continues. The
+  /// parser sets this only for a shared lsid with no LFO level overrides.
+  /// Both definitions retain their original ids and share the same levels.
+  final int? continuationOf;
   final List<LegacyWordNumberingLevel> levels;
+
+  /// Explicit LFOLVL start/restart values, distinct from a level's default.
+  /// A formatting override with fStartAt uses its own LVL start value.
+  final Map<int, int> startOverrides;
 }
 
 class LegacyWordNumberingLevel {
@@ -382,14 +415,70 @@ class LegacyWordTable extends LegacyWordBlock {
     required super.startCp,
     required super.endCp,
     required this.rows,
+    this.styleId,
+    this.styleName,
+    this.look = const LegacyWordTableLook(),
+    this.rightToLeft = false,
+    this.alignment = LegacyWordAlignment.left,
+    this.indentTwips,
+    this.autoFit = false,
   });
   final List<LegacyWordTableRow> rows;
+  final int? styleId;
+  final String? styleName;
+  final LegacyWordTableLook look;
+  final bool rightToLeft;
+  final LegacyWordAlignment alignment;
+  final int? indentTwips;
+  final bool autoFit;
 }
 
 class LegacyWordTableRow {
-  const LegacyWordTableRow({required this.cells, this.isHeader = false});
+  const LegacyWordTableRow({
+    required this.cells,
+    this.isHeader = false,
+    this.endCp,
+    this.cantSplit = false,
+    this.heightTwips,
+    this.exactHeight = false,
+    int? indentTwips,
+    int? originTwips,
+  }) : indentTwips = indentTwips ?? originTwips;
   final List<LegacyWordTableCell> cells;
   final bool isHeader;
+  final int? endCp;
+  final bool cantSplit;
+  final int? heightTwips;
+  final bool exactHeight;
+  final int? indentTwips;
+
+  /// Logical outer edge retained independently of the leading cell margin.
+  /// This is the compatibility name for [indentTwips], defaulting to zero.
+  int get originTwips => indentTwips ?? 0;
+}
+
+/// Active TLP conditional regions; historical autoformat flags are not
+/// confused with the current style. Logical first/last columns follow RTL.
+class LegacyWordTableLook {
+  const LegacyWordTableLook({this.flags = 0});
+  final int flags;
+  bool get firstRow => flags & 0x20 != 0;
+  bool get lastRow => flags & 0x40 != 0;
+  bool get firstColumn => flags & 0x80 != 0;
+  bool get lastColumn => flags & 0x100 != 0;
+  bool get noRowBands => flags & 0x200 != 0;
+  bool get noColumnBands => flags & 0x400 != 0;
+}
+
+enum LegacyWordCellVerticalAlignment { top, center, bottom }
+
+enum LegacyWordCellBorderSide {
+  top,
+  left,
+  bottom,
+  right,
+  diagonalDown,
+  diagonalUp,
 }
 
 class LegacyWordTableCell {
@@ -402,6 +491,10 @@ class LegacyWordTableCell {
     this.verticalMergeStart = false,
     this.verticalMergeContinue = false,
     this.shading,
+    this.borders = const {},
+    this.verticalAlignment = LegacyWordCellVerticalAlignment.top,
+    this.conditionalFlags = 0,
+    this.marginsTwips = const {},
   }) : _blocks = blocks;
 
   /// Direct paragraphs in this cell. [blocks] retains their order relative to
@@ -415,6 +508,14 @@ class LegacyWordTableCell {
   final bool verticalMergeStart;
   final bool verticalMergeContinue;
   final LegacyWordShading? shading;
+  final Map<LegacyWordCellBorderSide, LegacyWordBorder> borders;
+  final LegacyWordCellVerticalAlignment verticalAlignment;
+
+  /// Matched CNFC regions before direct paragraph/character/cell overrides.
+  final int conditionalFlags;
+
+  /// Logical cell margins; only top/left/bottom/right are valid keys.
+  final Map<LegacyWordCellBorderSide, int> marginsTwips;
 }
 
 enum LegacyWordTabAlignment { left, center, right, decimal, bar, list }
@@ -618,6 +719,7 @@ class LegacyWordCharacterStyle {
     this.hidden = false,
     this.fontName,
     this.fontSizeHalfPoints,
+    this.kerningThresholdHalfPoints = 0,
     this.colorHex,
     this.highlightHex,
     this.verticalAlign = LegacyWordVerticalAlignment.baseline,
@@ -638,6 +740,12 @@ class LegacyWordCharacterStyle {
   final bool hidden;
   final String? fontName;
   final int? fontSizeHalfPoints;
+
+  /// Resolved font-size threshold for pair kerning in half-points. Zero
+  /// disables kerning, including the MS-DOC default. Positive source values
+  /// range from 1 to 3276; kerning applies when the font size reaches that
+  /// threshold.
+  final int kerningThresholdHalfPoints;
 
   /// Six hexadecimal RGB digits, without '#'; null means automatic/unspecified.
   final String? colorHex;
@@ -660,6 +768,7 @@ class LegacyWordCharacterStyle {
       hidden == other.hidden &&
       fontName == other.fontName &&
       fontSizeHalfPoints == other.fontSizeHalfPoints &&
+      kerningThresholdHalfPoints == other.kerningThresholdHalfPoints &&
       colorHex == other.colorHex &&
       highlightHex == other.highlightHex &&
       verticalAlign == other.verticalAlign &&
@@ -678,6 +787,7 @@ class LegacyWordCharacterStyle {
     hidden,
     fontName,
     fontSizeHalfPoints,
+    kerningThresholdHalfPoints,
     colorHex,
     highlightHex,
     verticalAlign,
@@ -745,6 +855,8 @@ class LegacyWordParagraphStyle {
 class LegacyWordSection {
   const LegacyWordSection({
     this.layout = const LegacyWordSectionLayout(),
+    this.formattingRevision,
+    this.revisionSaveId,
     required this.startCp,
     required this.endCp,
     this.pageWidthTwips,
@@ -761,8 +873,15 @@ class LegacyWordSection {
     this.columns = 1,
     this.breakKind = LegacyWordSectionBreak.newPage,
     this.titlePage = false,
+    this.footnotes,
+    this.endnotes,
+    this.suppressEndnotes = false,
   });
   final LegacyWordSectionLayout layout;
+
+  /// One previous section-property state captured by sprmSWall.
+  final LegacyWordSectionFormattingRevision? formattingRevision;
+  final int? revisionSaveId;
   final int startCp;
   final int endCp;
   final int? pageWidthTwips;
@@ -781,4 +900,27 @@ class LegacyWordSection {
 
   /// sprmSFTitlePage, independently of stored first-page header/footer text.
   final bool titlePage;
+
+  /// Resolved section overrides. Null inherits the document note settings.
+  final LegacyWordFootnoteSettings? footnotes;
+  final LegacyWordEndnoteSettings? endnotes;
+
+  /// sprmSFEndnote=0. Only applies when endnotes use end-of-section placement.
+  final bool suppressEndnotes;
+}
+
+class LegacyWordSectionFormattingRevision {
+  const LegacyWordSectionFormattingRevision({
+    this.previousSection,
+    this.revision = const LegacyWordRevisionInfo(),
+    this.marked = true,
+    this.previousPropertiesComplete = true,
+  });
+
+  /// Supported section properties immediately before sprmSWall, with the
+  /// original source range. It has no recursively reconstructed history.
+  final LegacyWordSection? previousSection;
+  final LegacyWordRevisionInfo revision;
+  final bool marked;
+  final bool previousPropertiesComplete;
 }

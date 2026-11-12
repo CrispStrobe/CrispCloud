@@ -3,6 +3,97 @@
 part of 'conversion.dart';
 
 extension _WordRevisionWriter on _StructuredWordWriter {
+  void _sectionFormattingRevision(
+    LegacyWordSection section,
+    LegacyWordSectionBreak currentBreakBefore,
+  ) {
+    final change = section.formattingRevision;
+    final previous = change?.previousSection;
+    final ownChange = change != null && change.marked && previous != null;
+    if (change != null && !ownChange) {
+      _incompleteRevision(
+        'sectionFormatting',
+        section.startCp,
+        change.revision,
+        marked: change.marked,
+        snapshot: previous != null,
+      );
+    }
+
+    // A binary SBkc ends the preceding section; OOXML type is owned by this
+    // section. Move its revision with the property rather than attributing the
+    // preceding section's old break to unrelated layout properties here.
+    final index = _sectionIndices[section];
+    final preceding = index != null && index > 0
+        ? document.sections[index - 1]
+        : null;
+    final incoming = preceding?.formattingRevision;
+    final incomingPrevious = incoming?.previousSection;
+    final hasIncomingBreak =
+        incoming != null &&
+        incoming.marked &&
+        incomingPrevious != null &&
+        incomingPrevious.breakKind != preceding!.breakKind;
+    final mergeIncoming =
+        hasIncomingBreak &&
+        (!ownChange || incoming.revision == change.revision);
+    if (hasIncomingBreak && !mergeIncoming) {
+      _sectionBreakRevisionEvidence(
+        preceding,
+        incoming,
+        'the receiving section has a separate property revision; one native '
+        'sectPrChange cannot attribute two independent revisions',
+      );
+    }
+    if (ownChange &&
+        previous.breakKind != section.breakKind &&
+        index == document.sections.length - 1) {
+      _sectionBreakRevisionEvidence(
+        section,
+        change,
+        'terminal binary section break has no following OOXML section',
+      );
+    }
+
+    final revision = ownChange
+        ? change.revision
+        : mergeIncoming
+        ? incoming.revision
+        : null;
+    if (revision == null) return;
+    if (ownChange && !change.previousPropertiesComplete ||
+        mergeIncoming && !incoming.previousPropertiesComplete) {
+      limitations.add(LegacyWordConversionLimitation.revisions);
+    }
+    _revisionElementStart('sectPrChange', revision);
+    _xml.add('<w:sectPr>');
+    _sectionProperties(
+      ownChange ? previous : section,
+      mergeIncoming ? incomingPrevious.breakKind : currentBreakBefore,
+    );
+    _xml.add('</w:sectPr></w:sectPrChange>');
+    _count('sectionFormattingRevisions');
+  }
+
+  void _sectionBreakRevisionEvidence(
+    LegacyWordSection section,
+    LegacyWordSectionFormattingRevision change,
+    String reason,
+  ) {
+    limitations.add(LegacyWordConversionLimitation.revisions);
+    if (_evidenceRecords.length >= 20000) _tooComplex();
+    _evidenceRecords.add({
+      'kind': 'sectionBreakRevision',
+      'cp': section.endCp,
+      'current': section.breakKind.name,
+      'previous': change.previousSection?.breakKind.name,
+      'authorIndex': change.revision.authorIndex,
+      'rawDttm': change.revision.rawDate,
+      'saveId': change.revision.saveId,
+      'reason': reason,
+    });
+  }
+
   void _revisionSaveAttribute(String attribute, int? value) {
     if (value == null) return;
     if (value < 0 || value > 0xffffffff) {
@@ -117,7 +208,7 @@ extension _WordRevisionWriter on _StructuredWordWriter {
     final listId = style.listId?.abs();
     if (listId != null && listId != 0 && _numberingIds.contains(listId)) {
       _xml.add(
-        '<w:numPr><w:ilvl w:val="${style.listLevel ?? 0}"/><w:numId w:val="$listId"/></w:numPr>',
+        '<w:numPr><w:ilvl w:val="${style.listLevel ?? 0}"/><w:numId w:val="${_numberingReferences[listId]}"/></w:numPr>',
       );
     } else if (listId != null && listId != 0) {
       limitations.add(LegacyWordConversionLimitation.revisions);

@@ -133,7 +133,7 @@ void Error(FlMethodCall* call, const std::string& message) {
   X(webkit_web_view_get_uri) X(webkit_web_view_load_uri) X(webkit_web_view_stop_loading) \
   X(webkit_web_view_set_zoom_level) X(webkit_web_view_get_snapshot) \
   X(webkit_web_view_get_snapshot_finish) X(webkit_web_view_evaluate_javascript) \
-  X(webkit_web_view_evaluate_javascript_finish) X(webkit_web_view_execute_editing_command) \
+  X(webkit_web_view_evaluate_javascript_finish) \
   X(webkit_user_content_manager_register_script_message_handler) \
   X(webkit_user_content_manager_unregister_script_message_handler) \
   X(webkit_user_content_manager_add_script) X(webkit_user_content_manager_remove_all_scripts) \
@@ -517,6 +517,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
 
   void Focus(bool focused) {
     focused_ = focused;
+    Trace(focused ? "publication focus entered" : "publication focus left");
     if (focused) gtk_widget_grab_focus(GTK_WIDGET(webview_));
     GdkEvent* event = gdk_event_new(GDK_FOCUS_CHANGE);
     event->focus_change.window = EventWindow();
@@ -531,6 +532,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     const double x = Number(args, "x") * input_scale_;
     const double y = Number(args, "y") * input_scale_;
     if (!std::isfinite(x) || !std::isfinite(y)) return;
+    ++pointer_events_;
     const int buttons = static_cast<int>(Integer(args, "buttons"));
     const guint state = Modifiers(args) | ButtonState(buttons);
     const guint32 time = static_cast<guint32>(g_get_monotonic_time() / 1000);
@@ -598,22 +600,35 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     const std::string name = String(args, "name");
     const guint modifiers = Modifiers(args);
     const bool pressed = Boolean(args, "pressed");
-    if (pressed && (modifiers & (GDK_CONTROL_MASK | GDK_META_MASK)) != 0) {
-      if (name == "c" || name == "a") {
-        api_.webkit_web_view_execute_editing_command(webview_, name == "c" ? "Copy" : "SelectAll");
-        Touch();
-      }
-      return;
-    }
+    const guint keyval = gdk_keyval_from_name(name.c_str());
+    if (keyval == GDK_KEY_VoidSymbol) return;
+    ++key_events_;
+    // Send selection/copy shortcuts through WebKit's keyboard input path too.
+    // A direct editing command bypasses keyboard dispatch and its focused-frame
+    // handling, especially while pointer input is entering a publication frame.
+    // Supplying the actual keymap entry also gives WebKit's GTK binding and
+    // input-method code a usable physical key, instead of keycode zero for all
+    // arrows, Tab, Enter and editing shortcuts.
     GdkEvent* event = gdk_event_new(pressed ? GDK_KEY_PRESS : GDK_KEY_RELEASE);
     event->key.window = EventWindow();
     event->key.send_event = TRUE;
     event->key.time = static_cast<guint32>(g_get_monotonic_time() / 1000);
     event->key.state = modifiers;
-    event->key.keyval = gdk_keyval_from_name(name.c_str());
-    event->key.hardware_keycode = 0;
-    event->key.string = g_strdup("");
+    event->key.keyval = keyval;
+    GdkKeymapKey* entries = nullptr;
+    gint entry_count = 0;
+    auto* keymap = gdk_keymap_get_for_display(gtk_widget_get_display(window_));
+    if (gdk_keymap_get_entries_for_keyval(keymap, keyval, &entries, &entry_count) && entry_count > 0) {
+      event->key.hardware_keycode = entries[0].keycode;
+      event->key.group = entries[0].group;
+    }
+    g_free(entries);
+    gchar text[7] = {};
+    const gunichar character = gdk_keyval_to_unicode(keyval);
+    if (character != 0) event->key.length = g_unichar_to_utf8(character, text);
+    event->key.string = g_strdup(text);
     SetDevice(event, true);
+    if (pressed) Trace("publication key pressed");
     gtk_widget_event(GTK_WIDGET(webview_), event);
     gdk_event_free(event);
     Touch();
@@ -623,6 +638,8 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     auto* result = fl_value_new_map();
     std::lock_guard<std::mutex> lock(texture_->frames->mutex);
     const auto& frame = texture_->frames->pending;
+    fl_value_set_string_take(result, "id", fl_value_new_int(id_));
+    fl_value_set_string_take(result, "textureId", fl_value_new_int(texture_id()));
     fl_value_set_string_take(result, "frames", fl_value_new_int(texture_->frames->produced));
     fl_value_set_string_take(result, "consumed", fl_value_new_int(texture_->frames->consumed));
     fl_value_set_string_take(result, "width", fl_value_new_int(frame->width));
@@ -633,6 +650,8 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     }
     fl_value_set_string_take(result, "nonUniform", fl_value_new_bool(non_uniform));
     fl_value_set_string_take(result, "focused", fl_value_new_bool(focused_));
+    fl_value_set_string_take(result, "pointerEvents", fl_value_new_int(pointer_events_));
+    fl_value_set_string_take(result, "keyEvents", fl_value_new_int(key_events_));
     return result;
   }
 
@@ -849,6 +868,8 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   bool closed_ = false;
   bool loaded_ = false;
   bool focused_ = false;
+  int64_t pointer_events_ = 0;
+  int64_t key_events_ = 0;
   bool snapshot_pending_ = false;
   double input_scale_ = 1;
   gint64 busy_until_ = 0;

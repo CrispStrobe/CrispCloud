@@ -63,7 +63,14 @@ extension _WordLists on _StructuredWordParser {
     }
     overrides.require(4, overrideCount * 16);
     var position = 4 + overrideCount * 16;
-    final seenSourceIds = <int>{};
+    final firstInstances = <int, int>{};
+    final overriddenSources = <int>{};
+    for (var instance = 0; instance < overrideCount; instance++) {
+      final at = 4 + instance * 16;
+      final sourceId = overrides.i32(at);
+      firstInstances.putIfAbsent(sourceId, () => instance + 1);
+      if (overrides.u8(at + 12) != 0) overriddenSources.add(sourceId);
+    }
     for (var instance = 0; instance < overrideCount; instance++) {
       final at = 4 + instance * 16;
       final sourceId = overrides.i32(at);
@@ -71,12 +78,6 @@ extension _WordLists on _StructuredWordParser {
       final overrideLevels = overrides.u8(at + 12);
       if (original == null || overrideLevels > 9) {
         throw const FormatException('Invalid Word list-instance reference.');
-      }
-      // Distinct ilfo values sharing an lsid can continue a sequence across
-      // instances. Retain their identity and report that a consumer must handle
-      // that relationship rather than silently claiming independent restarts.
-      if (!seenSourceIds.add(sourceId)) {
-        warnings.add(LegacyWordWarning.numberingNotReconstructed);
       }
       final firstCp = overrides.u32(position);
       if (firstCp != 0xffffffff && firstCp > source.bodyLength) {
@@ -86,6 +87,7 @@ extension _WordLists on _StructuredWordParser {
       }
       position += 4;
       final levels = [...original];
+      final startOverrides = <int, int>{};
       final modified = <int>{};
       for (var item = 0; item < overrideLevels; item++) {
         final startAt = overrides.i32(position);
@@ -107,11 +109,13 @@ extension _WordLists on _StructuredWordParser {
             levels[level].styleIndex,
           );
           levels[level] = value;
+          if (replaceStart) startOverrides[level] = value.model.startAt;
           position = next;
         } else if (replaceStart) {
           if (startAt < 0 || startAt > 32767) {
             throw const FormatException('Invalid Word list start value.');
           }
+          startOverrides[level] = startAt;
           final old = levels[level];
           final model = old.model;
           levels[level] = _ListLevelData(
@@ -136,6 +140,12 @@ extension _WordLists on _StructuredWordParser {
       final definition = LegacyWordNumberingDefinition(
         id: id,
         sourceListId: sourceId,
+        startOverrides: Map.unmodifiable(startOverrides),
+        continuationOf:
+            !overriddenSources.contains(sourceId) &&
+                firstInstances[sourceId] != id
+            ? firstInstances[sourceId]
+            : null,
         levels: List.unmodifiable(levels.map((value) => value.model)),
       );
       numbering.add(definition);
@@ -146,6 +156,11 @@ extension _WordLists on _StructuredWordParser {
     }
     if (position != overrides.length) {
       throw const FormatException('Trailing Word list-instance data.');
+    }
+    if (LegacyWordNumberingResolver(
+      numbering,
+    ).approximateDefinitions.isNotEmpty) {
+      warnings.add(LegacyWordWarning.numberingNotReconstructed);
     }
   }
 

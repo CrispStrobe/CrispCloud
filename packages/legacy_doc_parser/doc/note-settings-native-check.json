@@ -1,0 +1,50 @@
+{
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "sourceSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+  "nativeDocxSha256": "88ce99c466a2896a7f4f4f88ea3e751b548b4297c7735c801953ee88dbfe25cc",
+  "convertedDocxSha256": "aec7380d37003b66d3ed7d141936846bf90317c52d15b7272d8551194e030765",
+  "convertedPdfSha256": "06fda967d239193fab95144cd737256850506a0ed0a6bad13ab39248ae3bc1bf",
+  "sourceUnchanged": true,
+  "nativeNoteProperties": {
+    "word/document.xml": [
+      {
+        "numFmt": "lowerRoman",
+        "numStart": "4",
+        "numRestart": "eachSect"
+      }
+    ],
+    "word/settings.xml": [
+      {
+        "numFmt": "lowerRoman",
+        "numStart": "4",
+        "numRestart": "eachSect"
+      }
+    ]
+  },
+  "convertedNoteProperties": {
+    "word/document.xml": [
+      {
+        "numFmt": "lowerRoman",
+        "numStart": "4",
+        "numRestart": "eachSect"
+      },
+      {
+        "numFmt": "lowerRoman",
+        "numStart": "4",
+        "numRestart": "eachSect"
+      }
+    ],
+    "word/settings.xml": [
+      {
+        "numFmt": "lowerRoman",
+        "numStart": "4",
+        "numRestart": "eachSect"
+      }
+    ]
+  },
+  "matchingVisibleNoteStrings": [
+    "Second section textiv",
+    "ivUNSELECTED footnote fallback"
+  ],
+  "scope": "Only note metadata and visible note labels checked; not a full layout-fidelity claim."
+}

@@ -32,6 +32,7 @@ def main():
     fixture = repository / "test/fixtures/word_native/formatting.doc"
     encoded = base64.b64encode(fixture.read_bytes()).decode("ascii")
     helper = (repository / "tool/web_acceptance.dart").as_uri()
+    media_helper = (repository / "tool/media_web_acceptance.dart").as_uri()
     environment = dict(os.environ, CI="true")
 
     with tempfile.TemporaryDirectory(prefix="legacy-doc-web-", dir=packages.parent) as directory:
@@ -41,9 +42,11 @@ def main():
         source.write_text(
             "import 'dart:convert';\n"
             f"import {json.dumps(helper)};\n"
+            f"import {json.dumps(media_helper)};\n"
             "void main() {\n"
             f"  final result = verifyWebConversion(base64Decode('{encoded}'));\n"
             "  print('Legacy DOC JavaScript acceptance passed: ${jsonEncode(result)}');\n"
+            "  print('Media JavaScript acceptance passed: ${jsonEncode(verifyMediaWebAcceptance())}');\n"
             "}\n",
             encoding="utf-8",
         )
