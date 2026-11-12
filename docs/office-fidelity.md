@@ -6,12 +6,25 @@ Quds fork; changing the upstream branch alone cannot update the running app.
 The host also has its own save, preview and content-search behavior, which is
 tested separately from the engine.
 
-`tool/office_fidelity_manifest.json` records the source commit and SHA-256 hashes
-for the 87 shared implementation, scenario, fixture and golden files in this
-change. The guard checks only those files, preserving unrelated host changes.
-## Verified vendor revision
+`tool/office_fidelity_manifest.json` records the authoritative source commit and
+SHA-256 hashes for the selected shared implementation, scenario, fixture and
+golden files. The guard checks only those files, preserving unrelated host
+changes. Revision IDs and counts in the historical evidence below identify
+their original snapshots, not the current manifest.
 
-The current [vendor manifest](../tool/office_fidelity_manifest.json) selects
+## Host expansion on 2026-11-12
+
+The [host paragraph/style/reference/layout audit](office-host-fidelity-20261112.md)
+records the new actual-dialog regressions, independent authored XML expectations,
+repeated exports, exact artifact inventory and coverage-completeness controls.
+It closes host precision loss, collateral formatting changes, active-story
+confusion, missing custom styles and hyperlink-history integration gaps. Read
+the current manifest and this branch's execution evidence when evaluating the
+new checkpoint; earlier coverage percentages do not measure changed code.
+
+## Previously verified vendor revision (2026-11-11)
+
+The previously verified vendor manifest selected
 Quds commit
 [`692a326`](https://github.com/CrispStrobe/quds_office_suite/commit/692a326aae2e8133b793570344028a1ceffddbdc)
 and **154 shared files**. The sync compared every existing selected app file

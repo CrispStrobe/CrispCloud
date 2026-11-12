@@ -31,8 +31,8 @@ abstract final class WmlRunEdit {
       }
       final int end = offset + inline.text.length;
       if (index > offset && index < end) {
-        // A note mark is one field even when its displayed id has two digits.
-        if (inline.noteRefId != null) return;
+        // Note marks and cached inline field results are indivisible.
+        if (inline.isAtomic) return;
         final int local = index - offset;
         paragraph.inlines.replaceRange(i, i + 1, <WmlInline>[
           WmlRun(
@@ -42,6 +42,9 @@ abstract final class WmlRunEdit {
             commentIds: List<int>.from(inline.commentIds),
             noteRefId: inline.noteRefId,
             noteRefEndnote: inline.noteRefEndnote,
+            fieldInstruction: inline.fieldInstruction,
+            fieldLocked: inline.fieldLocked,
+            fieldDirty: inline.fieldDirty,
           ),
           WmlRun(
             text: inline.text.substring(local),
@@ -50,6 +53,9 @@ abstract final class WmlRunEdit {
             commentIds: List<int>.from(inline.commentIds),
             noteRefId: inline.noteRefId,
             noteRefEndnote: inline.noteRefEndnote,
+            fieldInstruction: inline.fieldInstruction,
+            fieldLocked: inline.fieldLocked,
+            fieldDirty: inline.fieldDirty,
           ),
         ]);
         return;
@@ -90,7 +96,7 @@ abstract final class WmlRunEdit {
       }
       final int runEnd = offset + inline.text.length;
       if (((offset >= start && runEnd <= end) ||
-              (inline.noteRefId != null && offset < end && runEnd > start)) &&
+              (inline.isAtomic && offset < end && runEnd > start)) &&
           inline.text.isNotEmpty) {
         update(inline.properties);
       }
@@ -106,14 +112,10 @@ abstract final class WmlRunEdit {
     int end,
     String insert,
   ) {
-    if (start > end) {
-      final int swap = start;
-      start = end;
-      end = swap;
-    }
+    final range = normalizeRange(paragraph, start, end);
+    start = range.start;
+    end = range.end;
     final int length = paragraph.text.length;
-    start = start.clamp(0, length);
-    end = end.clamp(0, length);
     final WmlRunProps props = propsAt(
       paragraph,
       start == length ? start - 1 : start,
@@ -182,6 +184,42 @@ abstract final class WmlRunEdit {
     coalesce(paragraph);
   }
 
+  /// Bounds for an edit that cannot split a note mark or inline field result.
+  ///
+  /// A nonempty selection touching an atomic field includes the whole result. A
+  /// collapsed caret inside a result moves after it, just as
+  /// [insertRuns] does. Callers can use these bounds for undo and selection.
+  static ({int start, int end}) normalizeRange(
+    WmlParagraph paragraph,
+    int start,
+    int end,
+  ) {
+    if (start > end) {
+      final int swap = start;
+      start = end;
+      end = swap;
+    }
+    final int length = paragraph.text.length;
+    start = start.clamp(0, length);
+    end = end.clamp(0, length);
+    final bool collapsed = start == end;
+    var offset = 0;
+    for (final WmlRun run in paragraph.inlines.whereType<WmlRun>()) {
+      final int runEnd = offset + run.text.length;
+      if (run.isAtomic) {
+        if (collapsed && start > offset && start < runEnd) {
+          return (start: runEnd, end: runEnd);
+        }
+        if (!collapsed && start < runEnd && end > offset) {
+          if (start > offset) start = offset;
+          if (end < runEnd) end = runEnd;
+        }
+      }
+      offset = runEnd;
+    }
+    return (start: start, end: end);
+  }
+
   /// extractRuns API.
   static List<WmlRun> extractRuns(WmlParagraph paragraph, int start, int end) {
     if (start > end) {
@@ -207,7 +245,7 @@ abstract final class WmlRunEdit {
       if (to > from) {
         out.add(
           WmlRun(
-            text: inline.noteRefId != null
+            text: inline.isAtomic
                 ? inline.text
                 : inline.text.substring(from - offset, to - offset),
             properties: inline.properties.copy(),
@@ -215,6 +253,9 @@ abstract final class WmlRunEdit {
             commentIds: List<int>.from(inline.commentIds),
             noteRefId: inline.noteRefId,
             noteRefEndnote: inline.noteRefEndnote,
+            fieldInstruction: inline.fieldInstruction,
+            fieldLocked: inline.fieldLocked,
+            fieldDirty: inline.fieldDirty,
           ),
         );
       }
@@ -254,6 +295,9 @@ abstract final class WmlRunEdit {
           commentIds: List<int>.from(run.commentIds),
           noteRefId: run.noteRefId,
           noteRefEndnote: run.noteRefEndnote,
+          fieldInstruction: run.fieldInstruction,
+          fieldLocked: run.fieldLocked,
+          fieldDirty: run.fieldDirty,
         ),
     ]);
     coalesce(paragraph);
@@ -298,11 +342,22 @@ abstract final class WmlRunEdit {
   }
 
   static bool _sameRun(WmlRun a, WmlRun b) {
-    return a.noteRefId == null &&
-        b.noteRefId == null &&
+    return !a.isAtomic &&
+        !b.isAtomic &&
         _sameProps(a.properties, b.properties) &&
-        a.hyperlink?.displayTarget == b.hyperlink?.displayTarget &&
+        _sameLink(a.hyperlink, b.hyperlink) &&
         _sameInts(a.commentIds, b.commentIds);
+  }
+
+  static bool _sameLink(WmlHyperlink? a, WmlHyperlink? b) {
+    if (a == null || b == null) return a == b;
+    return a.anchor == b.anchor && a.url == b.url && a.file == b.file;
+  }
+
+  static bool _sameValues(Map<String, String>? a, Map<String, String>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null || a.length != b.length) return false;
+    return a.entries.every((entry) => b[entry.key] == entry.value);
   }
 
   static bool _sameInts(List<int> a, List<int> b) {
@@ -318,7 +373,15 @@ abstract final class WmlRunEdit {
   }
 
   static bool _sameProps(WmlRunProps a, WmlRunProps b) {
-    return a.bold == b.bold &&
+    // Equal visible formatting is insufficient: source XML retains properties
+    // such as language, direction, and proofing that the model cannot edit.
+    // Import baselines and explicit defaults also affect subsequent export.
+    return a.styleId == b.styleId &&
+        a.sourcePropertiesXml == b.sourcePropertiesXml &&
+        _sameValues(a.importedValues, b.importedValues) &&
+        a.explicitProperties.length == b.explicitProperties.length &&
+        a.explicitProperties.containsAll(b.explicitProperties) &&
+        a.bold == b.bold &&
         a.italic == b.italic &&
         a.underline == b.underline &&
         a.strike == b.strike &&

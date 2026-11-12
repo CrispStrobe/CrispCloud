@@ -24,62 +24,33 @@ enum WmlFieldKind {
   unknown,
 }
 
-/// Resolves and refreshes Word fields stored on [WmlParagraphProps].
+/// Resolves paragraph fields and native single-run inline fields.
 abstract final class WordFields {
   /// kindOf API.
   static WmlFieldKind kindOf(String? instruction) {
-    if (instruction == null || instruction.trim().isEmpty) {
-      return WmlFieldKind.unknown;
-    }
-    final String upper = instruction.toUpperCase();
-    if (RegExp(r'(^|[^A-Z])NUMPAGES([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.numPages;
-    }
-    if (RegExp(r'(^|[^A-Z])PAGE([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.page;
-    }
-    if (RegExp(r'(^|[^A-Z])DATE([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.date;
-    }
-    if (RegExp(r'(^|[^A-Z])TIME([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.time;
-    }
-    if (RegExp(r'(^|[^A-Z])HYPERLINK\b').hasMatch(upper)) {
-      return WmlFieldKind.hyperlink;
-    }
-    if (RegExp(r'(^|[^A-Z])MERGEFIELD\b').hasMatch(upper)) {
-      return WmlFieldKind.mergeField;
-    }
-    if (RegExp(r'(^|[^A-Z])FILENAME([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.filename;
-    }
-    if (RegExp(r'(^|[^A-Z])FILESIZE([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.filesize;
-    }
-    if (RegExp(r'(^|[^A-Z])AUTHOR([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.author;
-    }
-    if (RegExp(r'(^|[^A-Z])TITLE([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.title;
-    }
-    if (RegExp(r'(^|[^A-Z])REF\s').hasMatch(upper) ||
-        upper.trimLeft().startsWith('REF')) {
-      return WmlFieldKind.ref;
-    }
-    if (RegExp(r'(^|[^A-Z])SEQ\s').hasMatch(upper) ||
-        upper.trimLeft().startsWith('SEQ')) {
-      return WmlFieldKind.seq;
-    }
-    if (RegExp(r'(^|[^A-Z])TOC([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.toc;
-    }
-    if (RegExp(r'(^|[^A-Z])CITATION([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.citation;
-    }
-    if (RegExp(r'(^|[^A-Z])INDEX([^A-Z]|$)').hasMatch(upper)) {
-      return WmlFieldKind.indexList;
-    }
-    return WmlFieldKind.unknown;
+    // Arguments may contain reserved words (a citation tagged PAGE or a URL
+    // ending in /date). Only the command token identifies the field kind.
+    final String? command = RegExp(
+      r'^\s*([A-Za-z]+)\b',
+    ).firstMatch(instruction ?? '')?.group(1)?.toUpperCase();
+    return switch (command) {
+      'PAGE' => WmlFieldKind.page,
+      'NUMPAGES' => WmlFieldKind.numPages,
+      'DATE' => WmlFieldKind.date,
+      'TIME' => WmlFieldKind.time,
+      'REF' => WmlFieldKind.ref,
+      'SEQ' => WmlFieldKind.seq,
+      'TOC' => WmlFieldKind.toc,
+      'CITATION' => WmlFieldKind.citation,
+      'INDEX' => WmlFieldKind.indexList,
+      'HYPERLINK' => WmlFieldKind.hyperlink,
+      'FILENAME' => WmlFieldKind.filename,
+      'FILESIZE' => WmlFieldKind.filesize,
+      'AUTHOR' => WmlFieldKind.author,
+      'TITLE' => WmlFieldKind.title,
+      'MERGEFIELD' => WmlFieldKind.mergeField,
+      _ => WmlFieldKind.unknown,
+    };
   }
 
   /// instructionOf API.
@@ -271,8 +242,7 @@ abstract final class WordFields {
     String result = '',
     String? instruction,
   }) {
-    final String instr =
-        instruction ?? instructionOf(kind, argument: argument);
+    final String instr = instruction ?? instructionOf(kind, argument: argument);
     paragraph.properties
       ..fieldInstruction = instr
       ..fieldBegin = true
@@ -311,14 +281,37 @@ abstract final class WordFields {
   }
 
   /// Refreshes every field in [document] (body, headers, footers).
-  static void update(
-    WmlDocument document, {
-    int pageCount = 1,
-    DateTime? now,
-  }) {
+  static void update(WmlDocument document, {int pageCount = 1, DateTime? now}) {
     final Map<String, int> seq = <String, int>{};
-    void walk(Iterable<WmlParagraph> story, {int pageNumber = 1}) {
+    void walk(
+      Iterable<WmlParagraph> story, {
+      int pageNumber = 1,
+      bool updateParagraphFields = true,
+    }) {
       for (final WmlParagraph paragraph in story) {
+        for (final WmlRun run in paragraph.inlines.whereType<WmlRun>()) {
+          final String? instruction = run.fieldInstruction;
+          if (instruction == null || run.fieldLocked) continue;
+          final WmlFieldKind kind = kindOf(instruction);
+          if (kind == WmlFieldKind.unknown || kind == WmlFieldKind.toc)
+            continue;
+          var seqIndex = 1;
+          if (kind == WmlFieldKind.seq) {
+            final String name = argumentOf(instruction);
+            seqIndex = (seq[name] ?? 0) + 1;
+            seq[name] = seqIndex;
+          }
+          run.text = evaluate(
+            kind,
+            document: document,
+            pageNumber: pageNumber,
+            pageCount: pageCount,
+            instruction: instruction,
+            now: now,
+            seqIndex: seqIndex,
+          );
+        }
+        if (!updateParagraphFields) continue;
         final WmlFieldKind kind = kindOf(paragraph.properties.fieldInstruction);
         if (kind == WmlFieldKind.unknown &&
             !paragraph.properties.pageNumberField) {
@@ -367,6 +360,12 @@ abstract final class WordFields {
       walk(section.evenHeader);
       walk(section.evenFooter);
     }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      walk(note.allParagraphs, updateParagraphFields: false);
+    }
+    for (final WmlComment comment in document.comments) {
+      walk(comment.paragraphs, updateParagraphFields: false);
+    }
   }
 
   /// chromeText API.
@@ -379,7 +378,22 @@ abstract final class WordFields {
   }) {
     final WmlFieldKind kind = kindOf(paragraph.properties.fieldInstruction);
     if (kind == WmlFieldKind.unknown && !paragraph.properties.pageNumberField) {
-      return paragraph.text;
+      return paragraph.inlines.whereType<WmlRun>().map((WmlRun run) {
+        final WmlFieldKind inlineKind = kindOf(run.fieldInstruction);
+        if (!run.fieldLocked &&
+            (inlineKind == WmlFieldKind.page ||
+                inlineKind == WmlFieldKind.numPages)) {
+          return evaluate(
+            inlineKind,
+            document: document,
+            pageNumber: pageNumber,
+            pageCount: pageCount,
+            instruction: run.fieldInstruction,
+            now: now,
+          );
+        }
+        return run.text;
+      }).join();
     }
     final WmlFieldKind resolved = kind == WmlFieldKind.unknown
         ? WmlFieldKind.page

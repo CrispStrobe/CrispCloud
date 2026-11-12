@@ -613,11 +613,10 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final List<WmlParagraph> paras = _word.isEditingComment
         ? _word.selectedComment!.paragraphs
         : _word.isEditingHeaderFooter
-            ? _word.headerFooterParagraphs
-            : _word.document.paragraphs.toList();
+        ? _word.headerFooterParagraphs
+        : _word.document.paragraphs.toList();
     if (paras.isEmpty) return null;
-    final int index =
-        _word.caret.paragraphIndex.clamp(0, paras.length - 1);
+    final int index = _word.caret.paragraphIndex.clamp(0, paras.length - 1);
     return paras[index].properties;
   }
 
@@ -1953,7 +1952,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         if (!builtins.containsKey(style.id))
           style.id: style.name.isEmpty ? style.id : style.name,
     };
-    final String current = styleId ?? (heading > 0 ? 'Heading$heading' : 'Normal');
+    final String current =
+        styleId ?? (heading > 0 ? 'Heading$heading' : 'Normal');
     labels.putIfAbsent(current, () => current);
     return _smallDropdown<String>(
       value: current,
@@ -2481,14 +2481,20 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       choice.tabStops,
       current.tabs.map((tab) => tab.position).toList(),
     );
-    final bool indentChanged = choice.left != current.indent.left ||
+    final bool indentChanged =
+        choice.left != current.indent.left ||
         choice.right != current.indent.right ||
         choice.firstLine != current.indent.firstLine ||
         choice.hanging != current.indent.hanging;
-    final bool lineChanged = choice.lineSpacing != current.lineSpacing ||
+    final bool lineChanged =
+        choice.lineSpacing != current.lineSpacing ||
         choice.lineSpacingRule != current.lineSpacingRule;
-    final String? border = choice.borderColor.isEmpty ? null : choice.borderColor;
-    if (!tabsChanged && !indentChanged && !lineChanged &&
+    final String? border = choice.borderColor.isEmpty
+        ? null
+        : choice.borderColor;
+    if (!tabsChanged &&
+        !indentChanged &&
+        !lineChanged &&
         choice.align == current.justification &&
         choice.spacingBefore == current.spacingBefore &&
         choice.spacingAfter == current.spacingAfter &&
@@ -2509,8 +2515,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         p.indent = p.indent.copyWith(
           left: choice.left != current.indent.left ? choice.left : null,
           right: choice.right != current.indent.right ? choice.right : null,
-          firstLine: choice.firstLine != current.indent.firstLine ? choice.firstLine : null,
-          hanging: choice.hanging != current.indent.hanging ? choice.hanging : null,
+          firstLine: choice.firstLine != current.indent.firstLine
+              ? choice.firstLine
+              : null,
+          hanging: choice.hanging != current.indent.hanging
+              ? choice.hanging
+              : null,
         );
         p.explicitIndent = true;
       }
@@ -2527,7 +2537,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
         p.lineSpacingRule = choice.lineSpacingRule;
         p.explicitLineSpacing = true;
       }
-      if (choice.dropCapLines != current.dropCapLines) p.dropCapLines = choice.dropCapLines;
+      if (choice.dropCapLines != current.dropCapLines)
+        p.dropCapLines = choice.dropCapLines;
       if (border != current.borderColor) p.borderColor = border;
       if (tabsChanged) {
         p.tabs = <WmlTabStop>[
@@ -2536,8 +2547,10 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
                 WmlTabStop(position: position),
         ];
       }
-      if (choice.keepTogether != current.keepTogether) p.keepTogether = choice.keepTogether;
-      if (choice.pageBreakBefore != current.pageBreakBefore) p.pageBreakBefore = choice.pageBreakBefore;
+      if (choice.keepTogether != current.keepTogether)
+        p.keepTogether = choice.keepTogether;
+      if (choice.pageBreakBefore != current.pageBreakBefore)
+        p.pageBreakBefore = choice.pageBreakBefore;
     });
   }
 
@@ -2669,15 +2682,20 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     final WmlPageMargins current = _word.sectionAtCaret.margins;
     final ({double top, double bottom, double left, double right})? result =
         await showPageMarginsDialog(context, current: current);
-    if (result == null) return;
-    _word.setPageMargins(WmlPageMargins(
-      top: result.top,
-      bottom: result.bottom,
-      left: result.left,
-      right: result.right,
-      header: current.header,
-      footer: current.footer,
-    ));
+    if (result == null || !mounted) return;
+    if (result.top == current.top &&
+        result.bottom == current.bottom &&
+        result.left == current.left &&
+        result.right == current.right)
+      return;
+    _word.setPageMargins(
+      current.copyWith(
+        top: result.top,
+        bottom: result.bottom,
+        left: result.left,
+        right: result.right,
+      ),
+    );
   }
 
   void _pageSetupMenu() {

@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 python3 tool/verify_office_fidelity.py
+python3 -m unittest discover -s tool -p test_sync_office_fidelity.py
 (cd packages/quds_office_engine && dart pub get && bash tool/fidelity/check.sh)
 python3 -m unittest discover -s tool -p test_office_host_evidence.py
 python3 tool/office_host_evidence.py clean
@@ -14,6 +15,7 @@ flutter test --coverage --coverage-path build/fidelity-host/coverage/lcov.info \
   test/office_editor_fixes_test.dart \
   test/office_footnote_test.dart \
   test/office_ribbon_footnotes_test.dart \
+  test/office_ribbon_common_i18n_test.dart \
   test/office_document_service_test.dart \
   test/office_preview_fidelity_test.dart \
   test/office_preview_strings_test.dart \

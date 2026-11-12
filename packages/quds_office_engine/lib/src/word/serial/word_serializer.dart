@@ -316,7 +316,7 @@ class WordSerializer {
 
   WmlParagraph _copyParagraph(WmlParagraph source) {
     return WmlParagraph(
-      properties: source.properties,
+      properties: source.properties.copy(),
       inlines: <WmlInline>[
         for (final WmlInline inline in source.inlines)
           if (inline is WmlRun)
@@ -327,6 +327,9 @@ class WordSerializer {
               commentIds: List<int>.from(inline.commentIds),
               noteRefId: inline.noteRefId,
               noteRefEndnote: inline.noteRefEndnote,
+              fieldInstruction: inline.fieldInstruction,
+              fieldLocked: inline.fieldLocked,
+              fieldDirty: inline.fieldDirty,
             )
           else
             inline,
@@ -643,7 +646,10 @@ class WordSerializer {
         while (end < paragraph.inlines.length) {
           final WmlInline next = paragraph.inlines[end];
           if (next is! WmlRun ||
-              next.hyperlink?.displayTarget != link.displayTarget) {
+              next.hyperlink == null ||
+              next.hyperlink!.anchor != link.anchor ||
+              next.hyperlink!.url != link.url ||
+              next.hyperlink!.file != link.file) {
             break;
           }
           end++;
@@ -774,6 +780,15 @@ class WordSerializer {
   }
 
   void _writeRun(XmlWriter w, WmlRun inline, {bool deleted = false}) {
+    final String? instruction = inline.fieldInstruction;
+    if (instruction != null) {
+      w.writeStartElement('fldSimple', prefix: 'w');
+      w.writeAttribute('w:instr', instruction);
+      if (inline.fieldLocked) w.writeAttribute('w:fldLock', '1');
+      if (inline.fieldDirty != null) {
+        w.writeAttribute('w:dirty', inline.fieldDirty! ? '1' : '0');
+      }
+    }
     w.writeStartElement('r', prefix: 'w');
     _writeRPr(w, inline.properties);
     if (inline.noteRefId != null) {
@@ -782,11 +797,11 @@ class WordSerializer {
         prefix: 'w',
         attributes: <String, String>{'w:id': '${inline.noteRefId}'},
       );
-      w.writeEndElement();
-      return;
+    } else {
+      _writeRunContent(w, inline.text, deleted: deleted);
     }
-    _writeRunContent(w, inline.text, deleted: deleted);
     w.writeEndElement();
+    if (instruction != null) w.writeEndElement();
   }
 
   void _writeRunContent(XmlWriter w, String text, {required bool deleted}) {

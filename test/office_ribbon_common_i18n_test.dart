@@ -15,6 +15,9 @@ void main() {
         keys,
         containsAll([
           'Heading 2',
+          'Heading 7',
+          'Heading 8',
+          'Heading 9',
           'Words',
           'No shading',
           'Spell checking uses the host integration. No spell-check provider is configured in this build.'

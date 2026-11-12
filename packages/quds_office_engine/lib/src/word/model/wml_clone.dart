@@ -229,6 +229,9 @@ abstract final class WmlClone {
         commentIds: List<int>.from(inline.commentIds),
         noteRefId: inline.noteRefId,
         noteRefEndnote: inline.noteRefEndnote,
+        fieldInstruction: inline.fieldInstruction,
+        fieldLocked: inline.fieldLocked,
+        fieldDirty: inline.fieldDirty,
       );
     }
     if (inline is WmlBreak) {
@@ -267,12 +270,18 @@ abstract final class WmlClone {
       final int localEnd = to < end ? to - offset : inline.text.length;
       out.add(
         WmlRun(
-          text: inline.text.substring(localStart, localEnd),
+          // Note marks and field results are atomic regardless of label length.
+          text: inline.isAtomic
+              ? inline.text
+              : inline.text.substring(localStart, localEnd),
           properties: inline.properties.copy(),
           hyperlink: inline.hyperlink?.copy(),
           commentIds: List<int>.from(inline.commentIds),
           noteRefId: inline.noteRefId,
           noteRefEndnote: inline.noteRefEndnote,
+          fieldInstruction: inline.fieldInstruction,
+          fieldLocked: inline.fieldLocked,
+          fieldDirty: inline.fieldDirty,
         ),
       );
       offset = end;
