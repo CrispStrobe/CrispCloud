@@ -61,6 +61,11 @@ def inventory(bridge='smb'):
             evidence_base = ROOT
             evidence_source = 'https://github.com/fzyzcjy/flutter_rust_bridge/blob/v2.11.1/LICENSE'
             files = [ROOT / 'licensing/upstream/flutter_rust_bridge-2.11.1-LICENSE']
+        upstream = UPSTREAM_LICENSES.get((package['name'], package['version']))
+        if not files and upstream:
+            # Crate archive ships no license text; pinned text from the upstream tag.
+            evidence_base = ROOT
+            evidence_source, files = upstream[0], [ROOT / upstream[1]]
         if not files and package['name'] == 'r-efi' and package['version'] == '6.0.0':
             # Upstream publishes SPDX declaration + author list, no full text.
             files = [base / 'README.md', base / 'AUTHORS', base / 'Cargo.toml']
@@ -74,6 +79,19 @@ def inventory(bridge='smb'):
     return {'schema_version': 1, 'scope': 'All packages resolved by the bridge Cargo.lock, including platform/build dependencies; excludes compiler/SDK and final packaged binaries.',
         'cargo_lock_sha256': digest(ROOT / crate_dir / 'Cargo.lock'), 'packages': result}
 
+# (name, version) -> (upstream URL of the license text, repo copy).
+UPSTREAM_LICENSES = {
+    ('jni', '0.22.4'): ('https://github.com/jni-rs/jni-rs/blob/v0.22.4/LICENSE-MIT',
+        'licensing/upstream/jni-rs-0.22.4-LICENSE-MIT'),
+    ('jni-macros', '0.22.4'): ('https://github.com/jni-rs/jni-rs/blob/v0.22.4-macros/LICENSE-MIT',
+        'licensing/upstream/jni-rs-0.22.4-LICENSE-MIT'),
+    ('jni-sys-macros', '0.4.1'): ('https://github.com/jni-rs/jni-sys/blob/v0.4.1-macros/LICENSE-MIT',
+        'licensing/upstream/jni-sys-0.4.1-LICENSE-MIT'),
+    # Crate is the repo's android-release-support/ dir at the commit in .cargo_vcs_info.json.
+    ('rustls-platform-verifier-android', '0.2.0'): (
+        'https://github.com/rustls/rustls-platform-verifier/blob/252e25161a91af476cbea620e29d277592d27ec7/LICENSE-MIT',
+        'licensing/upstream/rustls-platform-verifier-android-0.2.0-LICENSE-MIT'),
+}
 ALLO_LICENSE_HASH = 'c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4'
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('--record', action='store_true')
