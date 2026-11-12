@@ -94,9 +94,11 @@ void main() {
         group: group,
       );
     }
-    await store.move(store.bookmarks.last, -1, withinGroup: true);
+    final beforeRename = store.bookmarks.last;
+    await store.renameGroup('Work', 'Projects');
+    await store.move(beforeRename, -1, withinGroup: true);
     expect(store.bookmarks.map((item) => item.name), ['Two', 'Other', 'One']);
-    expect(store.groups, ['Work', 'Home']);
+    expect(store.groups, ['Projects', 'Home']);
   });
 
   test(
@@ -267,6 +269,13 @@ void main() {
       );
       expect(preview.additions, hasLength(1));
       expect(preview.duplicates, 0);
+      await store.mergeImport(preview);
+      expect(
+        store.bookmarks.map((item) => item.identity).toSet(),
+        hasLength(2),
+      );
+      await store.remove('/folder', PanelSide.remote, storage: _first);
+      expect(store.bookmarks.single.name, 'Root B');
     },
   );
 }

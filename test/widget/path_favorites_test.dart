@@ -146,6 +146,10 @@ void main() {
         find.byKey(const ValueKey('path-favorite-path')),
         '/backup',
       );
+      await tester.enterText(
+        find.byKey(const ValueKey('path-favorite-group')),
+        'Backups',
+      );
       // The form has its own captured source; later navigation must not retarget it.
       await panel.navigateToPath('/other');
       await tester.tap(find.text('Save'));
@@ -153,6 +157,7 @@ void main() {
       expect(bookmarks.bookmarks.single.name, 'Archive copies');
       expect(bookmarks.bookmarks.single.path, '/backup');
       expect(bookmarks.bookmarks.single.storage, original);
+      expect(bookmarks.bookmarks.single.group, 'Backups');
       final restored = BookmarksNotifier();
       addTearDown(restored.dispose);
       await restored.ready;
@@ -221,11 +226,22 @@ void main() {
     await add('Beta', '/two');
     await mount(tester);
     await editor(tester);
+    await tester.scrollUntilVisible(
+      find.text('Beta'),
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('path-favorites-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     final moveUp = find.descendant(
       of: card('Beta'),
       matching: find.byTooltip('Move up'),
     );
     await tester.ensureVisible(moveUp);
+    await tester.pumpAndSettle();
     await tester.tap(moveUp);
     await tester.pumpAndSettle();
     expect(bookmarks.bookmarks.map((item) => item.name), ['Beta', 'Alpha']);
@@ -239,6 +255,8 @@ void main() {
       of: card('Alpha'),
       matching: find.byTooltip('Remove'),
     );
+    await tester.ensureVisible(remove);
+    await tester.pumpAndSettle();
     await tester.tap(remove);
     await tester.pumpAndSettle();
     expect(bookmarks.bookmarks.single.name, 'Beta');
@@ -257,11 +275,8 @@ void main() {
     await bookmarks.add('Legacy', '/one', PanelSide.remote);
     await mount(tester);
     await menu(tester, PanelSide.remote);
-    final item = tester.widget<PopupMenuItem<Object>>(
-      find.ancestor(
-        of: find.text('Legacy'),
-        matching: find.byType(PopupMenuItem<Object>),
-      ),
+    final item = tester.widget<ListTile>(
+      find.ancestor(of: find.text('Legacy'), matching: find.byType(ListTile)),
     );
     expect(item.enabled, isFalse);
     expect(find.text('Original source not set'), findsOneWidget);
@@ -291,13 +306,13 @@ void main() {
       expect(panel.isInArchive, isTrue);
       await mount(tester);
       await menu(tester, PanelSide.remote);
-      final item = tester.widget<PopupMenuItem<Object>>(
+      final item = tester.widget<TextButton>(
         find.ancestor(
           of: find.text('Add current path…'),
-          matching: find.byType(PopupMenuItem<Object>),
+          matching: find.byType(TextButton),
         ),
       );
-      expect(item.enabled, isFalse);
+      expect(item.onPressed, isNull);
       expect(find.text('Edit path favorites…'), findsOneWidget);
       expect(bookmarks.bookmarks, isEmpty);
       await tester.runAsync(panel.navigateUpArchive);

@@ -54,6 +54,7 @@ enum ShortcutAction {
   sortByDate,
   sortBySize,
   bookmark,
+  pathFavorites,
   multiRename,
 }
 
@@ -300,6 +301,11 @@ class KeyboardShortcutService {
     ShortcutAction.sortByDate: const ShortcutBinding(key: 'F5', ctrl: true),
     ShortcutAction.sortBySize: const ShortcutBinding(key: 'F6', ctrl: true),
     ShortcutAction.bookmark: const ShortcutBinding(key: 'B', ctrl: true),
+    ShortcutAction.pathFavorites: const ShortcutBinding(
+      key: 'B',
+      ctrl: true,
+      shift: true,
+    ),
     ShortcutAction.multiRename: const ShortcutBinding(key: 'M', ctrl: true),
   };
 

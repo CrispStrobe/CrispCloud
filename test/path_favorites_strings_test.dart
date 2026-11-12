@@ -6,33 +6,10 @@ void main() {
   test(
     'path favorite controls have translations in every supported language',
     () {
-      const keys = [
-        'title',
-        'manage',
-        'add',
-        'edit',
-        'new',
-        'empty',
-        'filter',
-        'noMatches',
-        'path',
-        'source',
-        'unbound',
-        'bind',
-        'collection',
-        'up',
-        'down',
-        'invalidName',
-        'invalidPath',
-        'duplicate',
-        'folderRequired',
-        'sourceChanged',
-        'sourceFixed',
-      ];
       const english = PathFavoritesStrings.forLanguage('en');
       for (final locale in AppLocalizations.supportedLocales) {
         final strings = PathFavoritesStrings.forLanguage(locale.languageCode);
-        for (final key in keys) {
+        for (final key in PathFavoritesStrings.keys) {
           expect(
             strings.text(key),
             isNotEmpty,
@@ -46,6 +23,17 @@ void main() {
               reason: '${locale.languageCode}/$key',
             );
           }
+        }
+        for (final key in [
+          'additionsCount',
+          'duplicatesCount',
+          'unavailableCount',
+        ]) {
+          expect(strings.text(key, arguments: {'count': 7}), contains('7'));
+          expect(
+            strings.text(key, arguments: {'count': 7}),
+            isNot(contains('{count}')),
+          );
         }
       }
     },

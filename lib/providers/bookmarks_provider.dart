@@ -29,7 +29,11 @@ class Bookmark {
   final String group;
   bool get isBound => storage != null || collectionId != null;
   String get identity =>
-      '${side.name}\u0000${collectionId == null ? storage == null ? 'unbound' : '${storage!.id}\u0000${storage!.root}' : 'collection:$collectionId'}\u0000$path';
+      '${side.name}\u0000${collectionId == null
+          ? storage == null
+                ? 'unbound'
+                : '${storage!.id}\u0000${storage!.root}'
+          : 'collection:$collectionId'}\u0000$path';
 
   /// A favorite can open in either pane. Import deduplication therefore uses
   /// the exact source/root and normalized path, independently of the old pane
@@ -297,11 +301,12 @@ class BookmarksNotifier extends ChangeNotifier {
         (item) => item.identity == bookmark.identity,
       );
       if (index < 0) throw StateError('The bookmark no longer exists.');
+      final currentGroup = items[index].group;
       var target = index + direction;
       while (withinGroup &&
           target >= 0 &&
           target < items.length &&
-          items[target].group != bookmark.group) {
+          items[target].group != currentGroup) {
         target += direction;
       }
       if (target < 0 || target >= items.length) return;
@@ -471,7 +476,10 @@ class BookmarksNotifier extends ChangeNotifier {
     // Another window can add favorites while a preview is open. Recheck the
     // destination identities at commit so those rows are never overwritten.
     final current = _previewEntries(preview._entries);
-    if (current.additions.isEmpty) return 0;
+    if (current.additions.isEmpty) {
+      if (lastError != null) await _save();
+      return 0;
+    }
     await _change((items) => items.addAll(current.additions));
     return current.additions.length;
   }

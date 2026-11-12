@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../services/keyboard_shortcut_service.dart';
 import 'commander_strings.dart';
 import 'shortcut_strings.dart';
+import 'path_favorites_strings.dart';
 
 class WorkspaceUxStrings {
   WorkspaceUxStrings(this.context);
@@ -64,6 +65,9 @@ class WorkspaceUxStrings {
       ShortcutAction.sortByDate => s.description(32),
       ShortcutAction.sortBySize => s.description(33),
       ShortcutAction.bookmark => s.description(35),
+      ShortcutAction.pathFavorites => PathFavoritesStrings(
+        context,
+      ).text('title'),
       ShortcutAction.multiRename => s.extra('multiRename'),
     };
   }
