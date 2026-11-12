@@ -6,6 +6,32 @@ abstract final class EbookStrings {
       ? (_de[english] ?? english)
       : english;
   static const _de = <String, String>{
+    'Read aloud': 'Vorlesen',
+    'Read-aloud unavailable': 'Vorlesen nicht verfügbar',
+    'Ready to read': 'Bereit zum Vorlesen',
+    'Starting read-aloud…': 'Vorlesen wird gestartet…',
+    'Reading aloud': 'Wird vorgelesen',
+    'Read-aloud paused': 'Vorlesen pausiert',
+    'Open a book to use read-aloud.': 'Öffnen Sie ein Buch zum Vorlesen.',
+    'Uses locally installed voices while the reader is in the foreground.': 'Verwendet lokal installierte Stimmen, während der Reader im Vordergrund ist.',
+    'No locally installed speech voice is available in this reader.': 'In diesem Reader ist keine lokal installierte Vorlesestimme verfügbar.',
+    'No locally installed speech voice is available in this reader. Install a local voice or use a supported browser.': 'In diesem Reader ist keine lokal installierte Vorlesestimme verfügbar. Installieren Sie eine lokale Stimme oder verwenden Sie einen unterstützten Browser.',
+    'Use Continue reading inside the book, then reopen these controls.': 'Wählen Sie im Buch „Continue reading“ und öffnen Sie danach diese Steuerung erneut.',
+    'Press Continue reading inside the book to enable the local voice.': 'Wählen Sie im Buch „Continue reading“, um die lokale Stimme zu aktivieren.',
+    'The selected local voice is unavailable.':
+        'Die ausgewählte lokale Stimme ist nicht verfügbar.',
+    'Return to book': 'Zurück zum Buch',
+    'Voice': 'Stimme',
+    'Choose a local voice': 'Lokale Stimme wählen',
+    'Reading speed': 'Vorlesegeschwindigkeit',
+    'Changing voice or speed pauses reading.': 'Wenn Sie Stimme oder Geschwindigkeit ändern, wird das Vorlesen pausiert.',
+    'Start reading': 'Vorlesen starten',
+    'Pause': 'Pausieren',
+    'Resume': 'Fortsetzen',
+    'Stop': 'Beenden',
+    'Refresh voices': 'Stimmen aktualisieren',
+    'Smaller text': 'Kleinere Schrift',
+    'Larger text': 'Größere Schrift',
     'Reading data could not be saved':
         'Lesedaten konnten nicht gespeichert werden',
     'Keep reading': 'Weiterlesen',

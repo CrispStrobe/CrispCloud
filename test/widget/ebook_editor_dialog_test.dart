@@ -18,6 +18,7 @@ import 'package:crisp_cloud/widgets/ebook_chapter_reader.dart';
 import 'package:crisp_cloud/widgets/ebook_prose_editor.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_ebook/crisp_ebook.dart';
+import 'package:crisperbooks/crisperbooks.dart' show EbookSpeechDialog;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +44,56 @@ class _FailingAnnotationStore extends InMemorySharedPreferencesStore {
       }
     }
     return super.setValue(valueType, key, value);
+  }
+}
+
+class _SpeechTransport {
+  CrispEbookController? controller;
+  final calls = <String>[];
+  var _status = 'stopped';
+  var _revision = 0;
+
+  Widget build(
+    BuildContext context,
+    Uint8List bytes,
+    String filename,
+    CrispEbookController reader,
+  ) {
+    if (controller != reader) {
+      controller = reader;
+      reader.attach(_send);
+      reader.updateBookInfo(
+        const EbookBookInfo(
+          title: 'Original',
+          authors: [],
+          toc: [],
+          sectionCount: 1,
+          sourceFormat: 'epub',
+        ),
+      );
+    }
+    return const Text('Reader preview');
+  }
+
+  Future<dynamic> _send(String method, EbookJson args) async {
+    calls.add(method);
+    switch (method) {
+      case 'speechStart':
+      case 'speechResume':
+        _status = 'speaking';
+      case 'speechPause':
+        _status = 'paused';
+      case 'speechStop':
+        _status = 'stopped';
+    }
+    return {
+      'status': _status,
+      'voices': [
+        {'uri': 'local-en', 'name': 'English', 'language': 'en-US'},
+      ],
+      'voiceUri': 'local-en',
+      'revision': ++_revision,
+    };
   }
 }
 
@@ -87,6 +138,7 @@ Future<ProviderContainer> _open(
   _Store store, {
   EbookDeviceExporter? exporter,
   EbookDocumentLoader? documentLoader,
+  EbookReaderBuilder? readerBuilder,
   EbookReadingDataPicker? readingDataPicker,
   EbookReadingDataExporter? readingDataExporter,
   Future<EbookLinuxHostStatus> Function()? linuxHostProbe,
@@ -125,7 +177,8 @@ Future<ProviderContainer> _open(
                         (bytes) async => EpubDocument.open(bytes),
                     readerBuilderOverride: portableReader
                         ? null
-                        : (_, _, _, _) => const Text('Reader preview'),
+                        : readerBuilder ??
+                              (_, _, _, _) => const Text('Reader preview'),
                   ),
                 ),
               ),
@@ -156,6 +209,42 @@ Finder get _close => find.descendant(
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'enhanced reader opens shared speech controls and sends local commands',
+    (tester) async {
+      final store = _Store();
+      final speech = _SpeechTransport();
+      await _open(
+        tester,
+        store,
+        startEditing: false,
+        readerBuilder: speech.build,
+      );
+      await tester.tap(find.byTooltip('Read aloud'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EbookSpeechDialog), findsOneWidget);
+      expect(speech.calls, ['speechStatus']);
+
+      await tester.tap(find.byKey(const ValueKey('ebook-speech-primary')));
+      await tester.pumpAndSettle();
+      expect(speech.calls.last, 'speechStart');
+      expect(find.text('Reading aloud'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('ebook-speech-primary')));
+      await tester.pumpAndSettle();
+      expect(speech.calls.last, 'speechPause');
+      expect(find.text('Read-aloud paused'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('ebook-speech-primary')));
+      await tester.pumpAndSettle();
+      expect(speech.calls.last, 'speechResume');
+
+      await tester.tap(find.byKey(const ValueKey('ebook-speech-close')));
+      await tester.pumpAndSettle();
+      expect(find.byType(EbookSpeechDialog), findsNothing);
+      expect(speech.controller!.speech.isActive, isTrue);
+      expect(store.writes, isEmpty);
+    },
+  );
 
   testWidgets(
     'reading data exports exact publication state without source access',
@@ -520,6 +609,7 @@ void main() {
       await tester.tap(find.text('Read').first);
       await tester.pumpAndSettle();
       expect(find.byType(EbookChapterReader), findsOneWidget);
+      expect(find.byTooltip('Read aloud'), findsNothing);
       final addBookmark = find.byWidgetPredicate(
         (widget) => widget is IconButton && widget.tooltip == 'Add bookmark',
       );
