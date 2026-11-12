@@ -259,7 +259,7 @@ class EpubDocument {
         layout == 'fixed-layout') {
       importedMetadata.children.add(
         XmlElement(
-          XmlName('meta'),
+          _childName(importedMetadata, 'meta'),
           [XmlAttribute(XmlName('property'), 'rendition:layout')],
           [XmlText('pre-paginated')],
         ),
@@ -276,7 +276,7 @@ class EpubDocument {
       final id = 'resource-${++counter}';
       ids[entry.key] = id;
       manifest.children.add(
-        XmlElement(XmlName('item'), [
+        XmlElement(_childName(manifest, 'item'), [
           XmlAttribute(XmlName('id'), id),
           XmlAttribute(XmlName('href'), _encodedPath(entry.key)),
           XmlAttribute(XmlName('media-type'), types[entry.key]!),
@@ -309,7 +309,7 @@ class EpubDocument {
       titles[chapterPath] =
           '${chapter['title'] ?? 'Chapter ${titles.length + 1}'}';
       spine.children.add(
-        XmlElement(XmlName('itemref'), [
+        XmlElement(_childName(spine, 'itemref'), [
           XmlAttribute(XmlName('idref'), ids[chapterPath]!),
           if (chapter['linear'] == false || chapter['linear'] == 'no')
             XmlAttribute(XmlName('linear'), 'no'),
@@ -836,7 +836,7 @@ class EpubDocument {
     final type = mediaType ?? _mediaType(resourcePath);
     _put(resourcePath, bytes);
     _manifestElement!.children.add(
-      XmlElement(XmlName('item'), [
+      XmlElement(_childName(_manifestElement!, 'item'), [
         XmlAttribute(XmlName('id'), _newId('resource')),
         XmlAttribute(XmlName('href'), _relativeHref(packagePath, resourcePath)),
         XmlAttribute(XmlName('media-type'), type),
@@ -892,7 +892,7 @@ class EpubDocument {
           oldMeta.setAttribute('content', item.id);
         } else {
           _metadataElement!.children.add(
-            XmlElement(XmlName('meta'), [
+            XmlElement(_childName(_metadataElement!, 'meta'), [
               XmlAttribute(XmlName('name'), 'cover'),
               XmlAttribute(XmlName('content'), item.id),
             ]),
@@ -932,7 +932,7 @@ class EpubDocument {
     final references = spine.childElements
         .where((e) => e.name.local == 'itemref')
         .toList();
-    final entry = XmlElement(XmlName('itemref'), [
+    final entry = XmlElement(_childName(spine, 'itemref'), [
       XmlAttribute(XmlName('idref'), resource.id!),
     ]);
     if (at == references.length) {
@@ -974,11 +974,7 @@ class EpubDocument {
     if (deleteResource) {
       final refs = _findReferencesTo(
         chapter.path,
-        excluding: {
-          chapter.path,
-          _navigationPath,
-          _ncxPath,
-        }.whereType<String>().toSet(),
+        excluding: {chapter.path},
       );
       if (refs.isNotEmpty)
         throw EpubException(
@@ -1091,7 +1087,7 @@ class EpubDocument {
           path.posix.join(path.posix.dirname(packagePath), 'nav.xhtml'),
         );
         _manifestElement!.children.add(
-          XmlElement(XmlName('item'), [
+          XmlElement(_childName(_manifestElement!, 'item'), [
             XmlAttribute(XmlName('id'), _newId('nav')),
             XmlAttribute(XmlName('href'), _relativeHref(packagePath, navPath)),
             XmlAttribute(XmlName('media-type'), 'application/xhtml+xml'),
@@ -1123,7 +1119,7 @@ class EpubDocument {
           .firstOrNull;
       final tocNode =
           previous ??
-          XmlElement(XmlName('nav'), [
+          XmlElement(_childName(body, 'nav'), [
             XmlAttribute(XmlName('type', 'epub'), 'toc'),
             XmlAttribute(XmlName('id'), 'toc'),
           ]);
@@ -1132,7 +1128,9 @@ class EpubDocument {
           .where((e) => e.name.local == 'ol')
           .toList();
       for (final list in oldLists) tocNode.children.remove(list);
-      tocNode.children.add(_navList(contents, navPath));
+      tocNode.children.add(
+        _navList(contents, navPath, prefix: tocNode.name.prefix),
+      );
       _put(navPath, _utf8(_utf8Declaration(nav.toXmlString())));
     }
     var ncxPath = _ncxPath;
@@ -1142,7 +1140,7 @@ class EpubDocument {
       );
       final id = _newId('ncx');
       _manifestElement!.children.add(
-        XmlElement(XmlName('item'), [
+        XmlElement(_childName(_manifestElement!, 'item'), [
           XmlAttribute(XmlName('id'), id),
           XmlAttribute(XmlName('href'), _relativeHref(packagePath, ncxPath)),
           XmlAttribute(XmlName('media-type'), 'application/x-dtbncx+xml'),
@@ -1175,16 +1173,16 @@ class EpubDocument {
           if (href == null) continue;
           final id = ++order;
           final point = XmlElement(
-            XmlName('navPoint'),
+            _childName(parent, 'navPoint'),
             [
               XmlAttribute(XmlName('id'), 'nav-$id'),
               XmlAttribute(XmlName('playOrder'), '$id'),
             ],
             [
-              XmlElement(XmlName('navLabel'), [], [
-                XmlElement(XmlName('text'), [], [XmlText(entry.label)]),
+              XmlElement(_childName(parent, 'navLabel'), [], [
+                XmlElement(_childName(parent, 'text'), [], [XmlText(entry.label)]),
               ]),
-              XmlElement(XmlName('content'), [
+              XmlElement(_childName(parent, 'content'), [
                 XmlAttribute(XmlName('src'), _tocRelative(ncxPath!, href)),
               ]),
             ],
@@ -1249,7 +1247,7 @@ class EpubDocument {
     block.children.clear();
     final lines = text.split('\n');
     for (var i = 0; i < lines.length; i++) {
-      if (i != 0) block.children.add(XmlElement(XmlName('br')));
+      if (i != 0) block.children.add(XmlElement(_childName(block, 'br')));
       block.children.add(XmlText(lines[i]));
     }
     updateText(resourcePath, doc.toXmlString());
@@ -1698,7 +1696,16 @@ class EpubDocument {
           continue;
         }
         final p = _resolveLocal('root.xml', href);
-        if (p != null) result[p] = algorithm;
+        if (p == null) {
+          // Unsupported cipher references must not disappear just because a
+          // different entry happens to describe an ordinary obfuscated font.
+          result['?'] = 'unknown';
+        } else {
+          final previous = result[p];
+          result[p] = previous == null || previous == algorithm
+              ? algorithm
+              : 'unknown';
+        }
       }
       return result.isEmpty ? {'?': 'unknown'} : result;
     } on EpubException {
@@ -1812,7 +1819,7 @@ class EpubDocument {
         } else {
           metadata.children.add(
             XmlElement(
-              XmlName('meta'),
+              _childName(metadata, 'meta'),
               [XmlAttribute(XmlName('property'), 'dcterms:modified')],
               [XmlText(_modifiedNow())],
             ),
@@ -1879,13 +1886,31 @@ class EpubDocument {
               r.mediaType == 'application/xml'),
     )) {
       final text = readText(resource.path);
-      final values = resource.mediaType == 'text/css'
-          ? _cssReferences(text)
-          : _parseXml(text, resource.path, limits).descendants
-                .whereType<XmlElement>()
-                .expand((e) => e.attributes)
-                .where((a) => {'src', 'href', 'poster'}.contains(a.name.local))
-                .map((a) => a.value);
+      Iterable<String> values;
+      if (resource.mediaType == 'text/css') {
+        values = _cssReferences(text);
+      } else {
+        final document = _parseXml(text, resource.path, limits);
+        // The TOC will be rewritten after deletion, but landmarks, page lists
+        // and other links in the same navigation files must remain valid.
+        final rewritten = resource.path == _navigationPath
+            ? _elements(document, 'nav').where(
+                (element) => _attribute(element, 'type')
+                    .split(RegExp(r'\s+')).contains('toc'),
+              ).firstOrNull
+            : resource.path == _ncxPath
+            ? _elements(document, 'navMap').firstOrNull
+            : null;
+        values = document.descendants
+            .whereType<XmlElement>()
+            .where((element) => rewritten == null ||
+                (element != rewritten &&
+                    !element.ancestors.contains(rewritten)))
+            .expand((element) => element.attributes)
+            .where((attribute) =>
+                {'src', 'href', 'poster'}.contains(attribute.name.local))
+            .map((attribute) => attribute.value);
+      }
       if (values.any((href) => _resolveLocal(resource.path, href) == target))
         refs.add(resource.path);
     }
@@ -1901,6 +1926,10 @@ List<XmlElement> _elements(XmlNode root, String local) => root.descendants
     .whereType<XmlElement>()
     .where((e) => e.name.local == local)
     .toList();
+// Use the surrounding vocabulary's prefix when constructing child nodes.
+// Valid EPUBs may declare OPF/XHTML/NCX with a prefix and no default namespace.
+XmlName _childName(XmlElement parent, String local) =>
+    XmlName(local, parent.name.prefix);
 String _attribute(XmlElement element, String local) =>
     element.attributes.where((a) => a.name.local == local).firstOrNull?.value ??
     '';
@@ -2041,14 +2070,18 @@ String _tocRelative(String base, String href) {
   ).toString();
 }
 
-XmlElement _navList(List<EpubTocEntry> entries, String navPath) => XmlElement(
-  XmlName('ol'),
+XmlElement _navList(
+  List<EpubTocEntry> entries,
+  String navPath, {
+  String? prefix,
+}) => XmlElement(
+  XmlName('ol', prefix),
   [],
   entries
       .map(
-        (entry) => XmlElement(XmlName('li'), [], [
+        (entry) => XmlElement(XmlName('li', prefix), [], [
           XmlElement(
-            XmlName(entry.href.isEmpty ? 'span' : 'a'),
+            XmlName(entry.href.isEmpty ? 'span' : 'a', prefix),
             entry.href.isEmpty
                 ? []
                 : [
@@ -2059,7 +2092,8 @@ XmlElement _navList(List<EpubTocEntry> entries, String navPath) => XmlElement(
                   ],
             [XmlText(entry.label)],
           ),
-          if (entry.children.isNotEmpty) _navList(entry.children, navPath),
+          if (entry.children.isNotEmpty)
+            _navList(entry.children, navPath, prefix: prefix),
         ]),
       )
       .toList(),
@@ -2078,6 +2112,7 @@ List<EpubTocEntry> _withoutTocPath(List<EpubTocEntry> entries, String p) =>
       final children = _withoutTocPath(entry.children, p);
       if (entry.href.isNotEmpty && _resolveLocal('book.opf', entry.href) == p)
         return children;
+      if (entry.href.isEmpty && children.isEmpty) return <EpubTocEntry>[];
       return [
         EpubTocEntry(label: entry.label, href: entry.href, children: children),
       ];
@@ -2106,7 +2141,9 @@ bool _plainProse(XmlElement element) => element.children.every(
       node is XmlText ||
       (node is XmlElement &&
           node.name.local == 'br' &&
-          node.attributes.isEmpty),
+          node.namespaceUri == element.namespaceUri &&
+          node.attributes.isEmpty &&
+          node.children.isEmpty),
 );
 String _proseText(XmlElement element) => element.children
     .map((n) => n is XmlElement && n.name.local == 'br' ? '\n' : n.innerText)

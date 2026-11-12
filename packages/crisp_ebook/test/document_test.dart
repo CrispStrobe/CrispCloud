@@ -70,6 +70,15 @@ Map<String, Uint8List> fixtureFiles({bool epub2 = false, String? encryption}) {
   };
 }
 
+// EPUB namespace prefixes are legal even when no default namespace is set.
+String prefixedVocabulary(String source, String namespace, String prefix) =>
+    source
+        .replaceFirst('xmlns="$namespace"', 'xmlns:$prefix="$namespace"')
+        .replaceAllMapped(
+          RegExp(r'<(/?)([A-Za-z][\w.-]*)(?=[\s/>])'),
+          (match) => '<${match[1]}$prefix:${match[2]}',
+        );
+
 Uint8List zipFiles(Map<String, Uint8List> files) {
   final archive = Archive();
   for (final entry in files.entries) {
@@ -297,6 +306,119 @@ void main() {
       },
     );
 
+    test('prefixed OPF and XHTML namespaces survive editing', () {
+      final files = fixtureFiles();
+      const packagePath = 'Books/Edition/book.opf';
+      const chapterPath = 'Books/Edition/Text/one.xhtml';
+      const navPath = 'Books/Edition/nav.xhtml';
+      const opfNamespace = 'http://www.idpf.org/2007/opf';
+      const xhtmlNamespace = 'http://www.w3.org/1999/xhtml';
+      files[packagePath] = bytes(prefixedVocabulary(
+        utf8.decode(files[packagePath]!).replaceFirst(
+          '<meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>',
+          '',
+        ),
+        opfNamespace,
+        'opf',
+      ));
+      for (final path in [chapterPath, navPath]) {
+        files[path] = bytes(prefixedVocabulary(
+          utf8.decode(files[path]!),
+          xhtmlNamespace,
+          'xhtml',
+        ));
+      }
+      final document = EpubDocument.open(zipFiles(files));
+      document.updateMetadata(title: 'Prefixed book', authors: ['Writer']);
+      document.addResource(
+        'Books/Edition/extra.css',
+        bytes('p { color: inherit; }'),
+        mediaType: 'text/css',
+      );
+      final added = document.addChapter(title: 'New prefixed chapter');
+      document.updateToc([
+        EpubTocEntry(label: 'Part', href: '', children: [
+          EpubTocEntry(label: 'First', href: chapterPath),
+          EpubTocEntry(label: 'Added', href: added.path),
+        ]),
+      ]);
+      final plain = document.readProse(chapterPath).firstWhere(
+        (block) => block.id == 'plain',
+      );
+      document.updateProseBlock(chapterPath, plain.index, 'First line\nSecond line');
+      final reopened = EpubDocument.open(document.toBytes());
+      expect(reopened.title, 'Prefixed book');
+      expect(reopened.chapters, hasLength(3));
+      final package = XmlDocument.parse(reopened.readText(packagePath));
+      for (final node in package.descendants.whereType<XmlElement>().where(
+        (node) => {'item', 'itemref', 'meta'}.contains(node.name.local),
+      )) {
+        expect(node.namespaceUri, opfNamespace, reason: node.toXmlString());
+      }
+      expect(
+        package.descendants.whereType<XmlElement>().singleWhere(
+          (node) => node.name.local == 'extra',
+        ).namespaceUri,
+        'urn:vendor',
+      );
+      for (final path in [chapterPath, navPath]) {
+        final xml = XmlDocument.parse(reopened.readText(path));
+        for (final node in xml.descendants.whereType<XmlElement>()) {
+          expect(node.namespaceUri, xhtmlNamespace, reason: node.toXmlString());
+        }
+      }
+      expect(reopened.toc.single.children, hasLength(2));
+      expect(reopened.validate().where((issue) => issue.isError), isEmpty);
+    });
+
+    test('prefixed EPUB2 NCX retains its namespace during TOC updates', () {
+      final files = fixtureFiles(epub2: true);
+      const ncxPath = 'Books/Edition/toc.ncx';
+      const ncxNamespace = 'http://www.daisy.org/z3986/2005/ncx/';
+      files[ncxPath] = bytes(prefixedVocabulary(
+        utf8.decode(files[ncxPath]!),
+        ncxNamespace,
+        'ncx',
+      ));
+      final document = EpubDocument.open(zipFiles(files));
+      document.addChapter(title: 'New chapter');
+      final reopened = EpubDocument.open(document.toBytes());
+      final ncx = XmlDocument.parse(reopened.readText(ncxPath));
+      for (final node in ncx.descendants.whereType<XmlElement>()) {
+        expect(node.namespaceUri, ncxNamespace, reason: node.toXmlString());
+      }
+      expect(reopened.toc, hasLength(3));
+      expect(reopened.version, '2.0');
+    });
+
+    test('visual prose refuses line breaks with embedded or foreign content', () {
+      final files = fixtureFiles();
+      const chapter = 'Books/Edition/Text/one.xhtml';
+      files[chapter] = bytes(utf8.decode(files[chapter]!)
+          .replaceFirst('<body>', '<body xmlns:vendor="urn:vendor">')
+          .replaceFirst(
+            'Plain text',
+            'Plain<br><span>Do not lose this</span></br> text',
+          )
+          .replaceFirst(
+            'Keep <em>italic</em> text',
+            'Keep <vendor:br/> foreign content',
+          ));
+      final document = EpubDocument.open(zipFiles(files));
+      final blocks = document.readProse(chapter);
+      for (final id in ['plain', 'complex']) {
+        final block = blocks.firstWhere((block) => block.id == id);
+        expect(block.editable, isFalse);
+        expect(
+          () => document.updateProseBlock(chapter, block.index, 'Flattened'),
+          throwsA(isA<EpubException>().having(
+            (error) => error.code, 'code', 'complex_prose',
+          )),
+        );
+      }
+      expect(document.dirty, isFalse);
+    });
+
     test('chapter deletion refuses inbound links', () {
       final files = fixtureFiles();
       files['Books/Edition/Text/one.xhtml'] = bytes(
@@ -319,6 +441,56 @@ void main() {
         ),
       );
       expect(document.chapters.length, 2);
+    });
+
+    test('removing a grouped chapter prunes newly empty contents headings', () {
+      final document = EpubDocument.open(zipFiles(fixtureFiles()));
+      document.updateToc([
+        const EpubTocEntry(
+          label: 'Part one', href: 'Books/Edition/Text/one.xhtml',
+        ),
+        const EpubTocEntry(label: 'Part two', href: '', children: [
+          EpubTocEntry(label: 'Second',
+              href: 'Books/Edition/Text/chapter%20two.xhtml'),
+        ]),
+      ]);
+      document.removeChapter('two');
+      expect(document.chapters, hasLength(1));
+      expect(document.toc.single.label, 'Part one');
+      final reopened = EpubDocument.open(document.toBytes());
+      expect(reopened.toc, hasLength(1));
+      expect(reopened.resources.any(
+        (resource) => resource.path == 'Books/Edition/Text/chapter two.xhtml',
+      ), isTrue);
+    });
+
+    test('chapter deletion protects landmarks and NCX page-list links', () {
+      for (final epub2 in [false, true]) {
+        final files = fixtureFiles(epub2: epub2);
+        final navPath = epub2
+            ? 'Books/Edition/toc.ncx'
+            : 'Books/Edition/nav.xhtml';
+        final original = utf8.decode(files[navPath]!);
+        files[navPath] = bytes(epub2
+            ? original.replaceFirst('</ncx>',
+                '<pageList><pageTarget id="page-1" type="normal" value="1"><navLabel><text>1</text></navLabel><content src="Text/chapter%20two.xhtml"/></pageTarget></pageList></ncx>')
+            : original.replaceFirst(
+                '<a href="Text/one.xhtml">Start</a>',
+                '<a href="Text/chapter%20two.xhtml">Start</a>',
+              ));
+        final originalBytes = zipFiles(files);
+        final document = EpubDocument.open(originalBytes);
+        expect(
+          () => document.removeChapter('two', deleteResource: true),
+          throwsA(isA<EpubException>().having(
+            (error) => error.code, 'code', 'referenced_resource',
+          )),
+          reason: epub2 ? 'NCX page list' : 'EPUB landmarks',
+        );
+        expect(document.dirty, isFalse);
+        expect(document.chapters, hasLength(2));
+        expect(document.toBytes(), originalBytes);
+      }
     });
 
     test('EPUB2 NCX remains supported without upgrading book version', () {
@@ -472,6 +644,32 @@ void main() {
         () => reopened.readDecodedBytes('Books/Edition/Fonts/book.otf'),
         throwsA(isA<EpubException>()),
       );
+    });
+
+    test('mixed or conflicting encryption entries remain read-only', () {
+      const fontPath = 'Books/Edition/Fonts/book.otf';
+      const fontAlgorithm = 'http://www.idpf.org/2008/embedding';
+      String entry(String href, String algorithm) =>
+          '<EncryptedData><EncryptionMethod Algorithm="$algorithm"/><CipherData><CipherReference URI="$href"/></CipherData></EncryptedData>';
+      for (final unsupported in [
+        entry('https://example.invalid/cipher', 'urn:unsupported'),
+        entry(fontPath, 'urn:unsupported'),
+      ]) {
+        // An allowed font entry comes last to catch accidental last-write wins.
+        final files = fixtureFiles(encryption:
+            '<encryption>$unsupported${entry(fontPath, fontAlgorithm)}</encryption>');
+        final original = zipFiles(files);
+        final document = EpubDocument.open(original);
+        expect(document.protection, EpubProtection.drm);
+        expect(document.canEdit, isFalse);
+        expect(document.toBytes(), original);
+        expect(
+          () => document.updateMetadata(title: 'Do not invalidate encryption'),
+          throwsA(isA<EpubException>().having(
+            (error) => error.code, 'code', 'drm',
+          )),
+        );
+      }
     });
 
     test('DRM and signatures allow exact no-op but block modification', () {

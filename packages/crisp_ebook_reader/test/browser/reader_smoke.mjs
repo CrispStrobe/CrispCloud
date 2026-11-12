@@ -92,7 +92,7 @@ try {
     assert.equal(publication.schemaVersion,1)
     assert.equal(publication.readingOrder.length,2)
     assert(publication.resources.some(resource => resource.mediaType === 'image/png'))
-    assert(publication.resources.some(resource => resource.mediaType === 'text/css'))
+    assert.equal(publication.resources.filter(resource => resource.mediaType === 'text/css').length,3,'Nested imported stylesheets are retained')
     for (const resource of publication.resources.filter(resource => resource.mediaType === 'application/xhtml+xml')) {
         const text = Buffer.from(resource.data,'base64').toString()
         assert(!text.includes('blob:'))

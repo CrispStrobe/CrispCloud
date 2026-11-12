@@ -18,7 +18,7 @@ Object.defineProperty(dom.window.HTMLElement.prototype,'innerText',{
 for (const name of ['document','HTMLElement','customElements','DOMParser','XMLSerializer','Node','NodeFilter','Range','EventTarget','Event','CustomEvent','ProcessingInstruction']) globalThis[name] = dom.window[name]
 globalThis.CSS = {escape:value => String(value).replace(/[^a-z0-9_-]/gi, char => `\\${char}`)}
 const {makeBook} = await import('../../assets/foliate/view.js')
-const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument} = await import('../../assets/security.js')
+const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument,sanitizeCss} = await import('../../assets/security.js')
 const {exportPublication} = await import('../../assets/normalize.js')
 const here = dirname(fileURLToPath(import.meta.url))
 const temporary = mkdtempSync(join(here,'.tmp-'))
@@ -33,6 +33,12 @@ try {
     const safe = sanitizeDocument(parseDocument('<html><body><script>alert(1)</script><p onclick="evil()">Hello</p><img src="https://invalid.test/pixel"/><iframe srcdoc="x"/></body></html>','text/html'))
     assert.equal(safe.querySelectorAll('script,iframe,[onclick],img[src]').length,0)
     assert(safe.querySelector('meta[http-equiv="Content-Security-Policy"]').getAttribute('content').includes("script-src 'none'"))
+    for (const source of ["@import 'blob:https://reader.test/style';", '@import url("blob:https://reader.test/style") screen;']) {
+        assert(sanitizeCss(source).includes('blob:https://reader.test/style'),'Packaged CSS imports must survive sanitation')
+    }
+    for (const source of ['@import "https://tracker.test/a.css";', '@import url(https://tracker.test/a.css);', '@import "data:text/css;base64,eA==";']) {
+        assert.equal(sanitizeCss(source),'','Remote and unmaterialized CSS imports must be omitted')
+    }
     for (const ext of ['epub','fb2','cbz']) {
         const path = join(temporary,`fixture.${ext}`)
         const {book,cleanup} = await open(path)
@@ -48,7 +54,12 @@ try {
             if (ext === 'epub') {
                 assert.equal(payload.metadata.title,'Crisp reader fixture')
                 assert.equal(payload.toc[0].children.length,1)
-                assert(payload.resources.some(item => item.mediaType === 'text/css'))
+                const styles = payload.resources.filter(item => item.mediaType === 'text/css')
+                assert.equal(styles.length,3,'Every nested imported stylesheet is retained')
+                const css = styles.map(item => Buffer.from(item.data,'base64').toString()).join('\n')
+                assert.equal((css.match(/@import url\("asset-/g) ?? []).length,2,'Stylesheets keep relative imported resource links')
+                assert(css.includes('#1f5947'))
+                assert(css.includes('letter-spacing:0.1px'))
                 const first = payload.resources.find(item => item.href === 'chapters/0001.xhtml')
                 assert(Buffer.from(first.data,'base64').toString().includes('0002.xhtml#finish'))
             }

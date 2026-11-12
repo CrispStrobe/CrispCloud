@@ -6,7 +6,15 @@ export const isLocalResource = value => /^blob:|^data:(?:image\/|font\/|audio\/|
 
 export function sanitizeCss(css) {
     // CSP remains authoritative, including CSS escapes and malformed syntax.
-    return String(css).replace(/@import\s+(?:url\()?\s*['"]?(?!blob:|data:)[^;]*;/gi, '')
+    // Match the complete import before inspecting its URL. A negative lookahead
+    // after an optional quote can backtrack and discard even a local stylesheet.
+    // Foliate has already materialized packaged stylesheets as blob URLs.
+    return String(css).replace(/@import\b((?:[^;"']|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')*);/gi, (_, body) => {
+        const match = /^\s*(?:url\(\s*(?:"([^"]*)"|'([^']*)'|([^\s)]+))\s*\)|"([^"]*)"|'([^']*)')([\s\S]*)$/i.exec(body)
+        const url = match?.slice(1, 6).find(value => value !== undefined)?.trim()
+        if (!url?.startsWith('blob:') || /[\\"'\r\n]/.test(url)) return ''
+        return `@import url("${url}")${match[6]};`
+    })
         .replace(/url\(\s*(['"]?)(.*?)\1\s*\)/gi,
             (_, q, url) => isLocalResource(url) ? `url("${url.replaceAll('"', '%22')}")` : 'url("data:,")')
 }
