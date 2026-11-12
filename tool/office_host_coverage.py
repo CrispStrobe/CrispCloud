@@ -12,6 +12,8 @@ MIGRATED_ENGINE_SOURCES = [
     'packages/quds_office_engine/lib/src/word/serial/word_package_preservation.dart',
     'packages/quds_office_engine/lib/src/word/legacy/legacy_word_document.dart',
     'packages/quds_office_engine/lib/src/opc/ole/bounded_cfb_reader.dart',
+    'packages/quds_office_engine/lib/src/opc/office_package_parts.dart',
+    'packages/quds_office_engine/lib/src/extract/office_search_text.dart',
 ]
 
 
@@ -65,7 +67,7 @@ def report_coverage(lcov, root=ROOT):
     return {'measurement': 'executed instrumented host lines; not branch coverage',
             'scope': SCOPE,
             'migrated_engine_sources': MIGRATED_ENGINE_SOURCES,
-            'scope_note': 'Generic Word package preservation, legacy Word extraction and bounded CFB reading live in Quds engine and are measured there. Host percentages are not directly comparable to the earlier 12-file combined scope.',
+            'scope_note': 'Generic package navigation, bounded Office search, Word package preservation, legacy Word extraction and bounded CFB reading live in Quds engine and are validated by its mandatory tests. Host percentages are not directly comparable to the earlier 9-file or 12-file host scopes.',
             'source_tree_sha256': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
             'source_sha256': hashes,
             'covered_lines': sum(file['hit'] for file in files),

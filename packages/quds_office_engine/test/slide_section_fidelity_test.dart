@@ -40,6 +40,15 @@ void _expectState(PmlPresentation deck, String scenario) {
     for (int id = 1; id <= 6; id++)
       '{A71D8B00-3E2F-4A20-9F10-${id.toRadixString(16).toUpperCase().padLeft(12, '0')}}',
   ]);
+  for (final slide in deck.slides) {
+    expect(slide.shapes, hasLength(2));
+    expect(slide.shapes[0].placeholder, isTrue);
+    expect(slide.shapes[0].placeholderType, 'title');
+    expect(slide.shapes[0].placeholderIndex, isNull);
+    expect(slide.shapes[1].placeholder, isTrue);
+    expect(slide.shapes[1].placeholderType, isEmpty);
+    expect(slide.shapes[1].placeholderIndex, 1);
+  }
 }
 
 void _edit(PmlPresentation deck, String scenario) {

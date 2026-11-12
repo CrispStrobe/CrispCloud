@@ -8,7 +8,8 @@ CASE-0..2. Unnumbered files are rendered and reported without implying repeated
 save coverage. A roundtrip series also compares against a sibling edited file;
 an unchanged/imported series compares against a sibling input/source file when supplied.
 Explicit corpus mappings additionally require native baselines for unchanged
-scenarios whose names do not express that contract.
+scenarios whose names do not express that contract. Native sectioned presentation
+cases also compare their first save against an explicit source-page permutation.
 Requires LibreOffice and Poppler; PNG creation uses only Python's standard library.
 """
 import argparse
@@ -37,6 +38,16 @@ REQUIRED_SERIES_BASELINES = {
     ('fidelity-frame-wrap', 'none.docx'): 'none-source.docx',
     ('fidelity-frame-wrap', 'square.docx'): 'square-source.docx',
     ('fidelity-frame-wrap', 'topBottom.docx'): 'topBottom-source.docx',
+}
+# This six-slide native fixture changes only slide order and section membership.
+# These are authored page orders, independent of the engine/XML oracle. Scope
+# them to the exact producer directory, direct/isolate mode and PPTX filename.
+SECTION_PAGE_ORDERS = {
+    'unchanged.pptx': (1, 2, 3, 4, 5, 6),
+    'within.pptx': (2, 1, 3, 4, 5, 6),
+    'forward.pptx': (2, 3, 4, 1, 5, 6),
+    'backward.pptx': (1, 6, 2, 3, 4, 5),
+    'emptied.pptx': (3, 1, 2, 4, 5, 6),
 }
 NATIVE_AUX_CORPUS = 'fidelity-aux-controls'
 NATIVE_AUX_FILES = {'source.docx'} | {
@@ -171,25 +182,58 @@ def png_bytes(width, height, pixels):
             + chunk(b'IDAT', zlib.compress(scanlines)) + chunk(b'IEND', b''))
 
 
+def validate_record(record):
+    pages = record.get('pages')
+    text = record.get('text')
+    pixels = record.get('pixel_sha256')
+    if (type(pages) is not int or pages < 1 or not isinstance(text, str)
+            or not text.strip() or not isinstance(pixels, list)
+            or len(pixels) != pages
+            or any(not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest)
+                   for digest in pixels)):
+        raise FidelityError(f'Invalid or empty render evidence: {record.get("file")}')
+
+
 def compare_records(reference, actual):
     """Compare text, page count and decoded RGB fingerprints independently."""
-    for record in (reference, actual):
-        pages = record.get('pages')
-        text = record.get('text')
-        pixels = record.get('pixel_sha256')
-        if (type(pages) is not int or pages < 1 or not isinstance(text, str)
-                or not text.strip() or not isinstance(pixels, list)
-                or len(pixels) != pages
-                or any(not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest)
-                       for digest in pixels)):
-            raise FidelityError(f'Invalid or empty render evidence: {record.get("file")}')
+    validate_record(reference)
+    validate_record(actual)
     for key in ('pages', 'text', 'pixel_sha256'):
         if reference[key] != actual[key]:
             raise FidelityError(
                 f'Render changed ({key}): {reference["file"]} -> {actual["file"]}')
 
 
-def cycle_coverage(files, records):
+def compare_page_order(reference, actual, order):
+    """Require unchanged native page text and RGB pixels in an authored order."""
+    validate_record(reference)
+    if (len(order) != reference['pages']
+            or any(type(page) is not int for page in order)
+            or sorted(order) != list(range(1, reference['pages'] + 1))):
+        raise FidelityError(f'Native page count/permutation mismatch: {reference["file"]}')
+    # pdftotext emits one form feed after each page. Preserve every other
+    # character, including layout whitespace; missing/blank pages cannot pass.
+    text_pages = reference['text'].split('\f')
+    if (len(text_pages) != reference['pages'] + 1 or text_pages[-1] != ''
+            or any(not page.strip() for page in text_pages[:-1])):
+        raise FidelityError(f'Incomplete native page text: {reference["file"]}')
+    expected = dict(reference,
+                    text=''.join(text_pages[page - 1] + '\f' for page in order),
+                    pixel_sha256=[reference['pixel_sha256'][page - 1] for page in order])
+    compare_records(expected, actual)
+
+
+def section_page_order(case, root=None):
+    # root retains the corpus identity even when it is itself the CLI input
+    # directory. Record filenames remain relative to that input directory.
+    context = Path(root) / case if root is not None else case
+    if (context.parent.parent.name == 'fidelity-slide-sections'
+            and context.parent.name in ('direct', 'isolate')):
+        return SECTION_PAGE_ORDERS.get(case.name)
+    return None
+
+
+def cycle_coverage(files, records, *, root=None):
     """Check exact corpus series membership, including failed/missing renders."""
     groups = defaultdict(list)
     singles = []
@@ -205,6 +249,7 @@ def cycle_coverage(files, records):
     comparisons = []
     compared_files = set()
     baseline_comparisons = 0
+    page_order_comparisons = 0
     for key, entries in sorted(groups.items()):
         entries.sort()
         numbers = [number for number, _ in entries]
@@ -212,7 +257,7 @@ def cycle_coverage(files, records):
         expected = list(range(start, start + CYCLE_COUNT))
         info = {'case': key, 'expected_cycles': expected, 'actual_cycles': numbers,
                 'files': [name for _, name in entries], 'baseline': None,
-                'baseline_candidate': None, 'passed': False}
+                'baseline_candidate': None, 'baseline_page_order': None, 'passed': False}
         comparisons.append(info)
         try:
             if numbers != expected:
@@ -228,6 +273,10 @@ def cycle_coverage(files, records):
             candidates = []
             required_baseline = REQUIRED_SERIES_BASELINES.get(
                 (case.parent.name, case.name))
+            page_order = section_page_order(case, root)
+            if page_order is not None:
+                required_baseline = 'source.pptx'
+                info['baseline_page_order'] = list(page_order)
             if required_baseline is not None:
                 candidates = [case.with_name(required_baseline).as_posix()]
             elif case.stem == 'roundtrip':
@@ -247,7 +296,11 @@ def cycle_coverage(files, records):
             if baseline in files:
                 if baseline not in records:
                     raise FidelityError(f'Missing successful baseline render: {baseline}')
-                compare_records(records[baseline], reference)
+                if page_order is None:
+                    compare_records(records[baseline], reference)
+                else:
+                    compare_page_order(records[baseline], reference, page_order)
+                    page_order_comparisons += 1
                 info['baseline'] = baseline
                 compared_files.add(baseline)
                 baseline_comparisons += 1
@@ -259,6 +312,7 @@ def cycle_coverage(files, records):
         'cycle_groups': len(groups),
         'cycle_comparisons': comparisons,
         'baseline_comparisons': baseline_comparisons,
+        'page_order_comparisons': page_order_comparisons,
         'render_only_files': sorted(name for name in singles if name not in compared_files),
         'failures': failures,
     }
@@ -459,7 +513,8 @@ def main(argv=None):
     except (OSError, subprocess.SubprocessError, FidelityError) as error:
         failures.append(failure_details(error))
     names = [path.relative_to(root).as_posix() for path in paths]
-    coverage = cycle_coverage([name for name in names if name not in excluded], reports)
+    coverage = cycle_coverage([name for name in names if name not in excluded], reports,
+                              root=root)
     failures.extend(coverage.pop('failures'))
     report = {'renderer': renderer, 'files': len(paths), 'rendered_files': len(reports),
               'visual_input_files': len(paths) - len(excluded),

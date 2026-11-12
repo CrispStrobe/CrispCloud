@@ -8,11 +8,14 @@ dart test \
   test/legacy_word_document_test.dart test/bounded_cfb_reader_test.dart \
   test/word_package_preservation_test.dart test/zip_bounded_read_test.dart \
   test/drawing_line_style_test.dart \
+  test/office_package_parts_test.dart test/office_search_fidelity_test.dart \
   test/office_fidelity_oracle_test.dart test/office_steps_test.dart \
   test/scripted_workflows_test.dart test/numbering_collision_test.dart \
   test/list_restart_fidelity_test.dart test/rich_note_test.dart \
   test/native_presentation_test.dart test/native_spreadsheet_test.dart \
   test/slide_section_fidelity_test.dart \
+  test/sheet_rename_fidelity_test.dart \
+  test/sheet_rename_adversarial_test.dart \
   test/style_cascade_test.dart test/story_media_fidelity_test.dart \
   test/word_part_routing_test.dart test/sheet_schema_fidelity_test.dart \
   test/slide_text_fidelity_test.dart test/word_compatibility_fidelity_test.dart \
@@ -51,6 +54,7 @@ dart run tool/fidelity/office_steps.dart inspect build/fidelity-script.docx > bu
 python3 tool/fidelity/styles_oracle.py
 python3 tool/fidelity/native_oracle.py
 python3 tool/fidelity/slide_sections_oracle.py
+python3 tool/fidelity/sheet_rename_oracle.py
 python3 tool/fidelity/story_media_oracle.py
 python3 tool/fidelity/lists_oracle.py build/fidelity-lists
 python3 tool/fidelity/scripted_oracle.py

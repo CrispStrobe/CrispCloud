@@ -90,6 +90,31 @@ class SlideSectionOracleControls(unittest.TestCase):
         with self.assertRaises(AssertionError):
             oracle.inspect_parts(parts, 'forward')
 
+    def corrupt_placeholder(self, change):
+        parts = copy.deepcopy(self.parts['forward'])
+        root = E.fromstring(parts['ppt/slides/slide1.xml'])
+        placeholders = [shape.find(oracle.P + 'nvSpPr/' + oracle.P + 'nvPr')
+                        for shape in root.findall('.//' + oracle.P + 'sp')]
+        change(placeholders)
+        parts['ppt/slides/slide1.xml'] = E.tostring(root)
+        with self.assertRaisesRegex(AssertionError, 'native placeholder binding changed'):
+            oracle.inspect_parts(parts, 'forward')
+
+    def test_placeholder_binding_loss_is_rejected(self):
+        self.corrupt_placeholder(lambda nodes: nodes[0].remove(nodes[0].find(oracle.P + 'ph')))
+
+    def test_placeholder_type_drift_is_rejected(self):
+        self.corrupt_placeholder(lambda nodes: nodes[0].find(oracle.P + 'ph').set('type', 'body'))
+
+    def test_placeholder_index_drift_is_rejected(self):
+        self.corrupt_placeholder(lambda nodes: nodes[1].find(oracle.P + 'ph').set('idx', '0'))
+
+    def test_omitted_placeholder_type_is_not_synthesized(self):
+        self.corrupt_placeholder(lambda nodes: nodes[1].find(oracle.P + 'ph').set('type', 'obj'))
+
+    def test_omitted_placeholder_index_is_not_synthesized(self):
+        self.corrupt_placeholder(lambda nodes: nodes[0].find(oracle.P + 'ph').set('idx', '0'))
+
     def test_missing_cycles_cannot_satisfy_inventory(self):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(AssertionError, 'incomplete section corpus'):

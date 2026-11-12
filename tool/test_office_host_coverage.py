@@ -10,7 +10,7 @@ class HostCoverageControls(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        for name in ('lib/widgets/office_editor_dialog.dart', 'lib/services/office_search_text.dart'):
+        for name in ('lib/widgets/office_editor_dialog.dart', 'lib/services/office_document_service.dart'):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text('one\ntwo\nthree\n')
@@ -22,7 +22,7 @@ class HostCoverageControls(unittest.TestCase):
             self.root)
         self.assertEqual((result['covered_lines'], result['instrumented_lines']), (2, 3))
         self.assertEqual(result['files'][0]['uncovered_lines'], [3])
-        self.assertEqual(result['uninstrumented_files'], ['lib/services/office_search_text.dart'])
+        self.assertEqual(result['uninstrumented_files'], ['lib/services/office_document_service.dart'])
         self.assertEqual(len(result['source_sha256']), 2)
 
     def test_empty_or_wrong_scope_cannot_pass(self):
@@ -38,21 +38,21 @@ class HostCoverageControls(unittest.TestCase):
     def test_source_fingerprint_changes_with_uninstrumented_source(self):
         lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\n'
         before = report_coverage(lcov, self.root)
-        (self.root / 'lib/services/office_search_text.dart').write_text('changed\n')
+        (self.root / 'lib/services/office_document_service.dart').write_text('changed\n')
         after = report_coverage(lcov, self.root)
         self.assertNotEqual(before['source_tree_sha256'], after['source_tree_sha256'])
 
     def test_gate_rejects_an_instrumented_subset_but_keeps_the_gap_report(self):
         lcov = 'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\n'
         report = report_coverage(lcov, self.root)
-        with self.assertRaisesRegex(ValueError, 'lib/services/office_search_text.dart'):
+        with self.assertRaisesRegex(ValueError, 'lib/services/office_document_service.dart'):
             require_all_sources(report)
         self.assertEqual(report['covered_lines'], 1)
 
     def test_gate_accepts_every_source_without_claiming_every_line_is_hit(self):
         report = report_coverage(
             'SF:lib/widgets/office_editor_dialog.dart\nDA:1,0\nend_of_record\n'
-            'SF:lib/services/office_search_text.dart\nDA:2,1\nend_of_record\n', self.root)
+            'SF:lib/services/office_document_service.dart\nDA:2,1\nend_of_record\n', self.root)
         require_all_sources(report)
         self.assertEqual(report['covered_lines'], 1)
         self.assertEqual(report['instrumented_lines'], 2)
@@ -62,7 +62,7 @@ class HostCoverageControls(unittest.TestCase):
         (self.root / helper).write_text('capture\nvalidate\n')
         original_scope = (
             'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
-            'SF:lib/services/office_search_text.dart\nDA:1,1\nend_of_record\n')
+            'SF:lib/services/office_document_service.dart\nDA:1,1\nend_of_record\n')
         incomplete = report_coverage(original_scope, self.root)
         self.assertEqual(incomplete['uninstrumented_files'], [helper])
         self.assertIn(helper, incomplete['source_sha256'])
@@ -78,8 +78,10 @@ class HostCoverageControls(unittest.TestCase):
     def test_report_declares_migrated_engine_scope_without_counting_it_as_host(self):
         report = report_coverage(
             'SF:lib/widgets/office_editor_dialog.dart\nDA:1,1\nend_of_record\n'
-            'SF:lib/services/office_search_text.dart\nDA:1,1\nend_of_record\n', self.root)
-        self.assertEqual(len(report['migrated_engine_sources']), 3)
+            'SF:lib/services/office_document_service.dart\nDA:1,1\nend_of_record\n', self.root)
+        self.assertEqual(len(report['migrated_engine_sources']), 5)
+        self.assertIn('packages/quds_office_engine/lib/src/opc/office_package_parts.dart', report['migrated_engine_sources'])
+        self.assertIn('packages/quds_office_engine/lib/src/extract/office_search_text.dart', report['migrated_engine_sources'])
         self.assertIn('not directly comparable', report['scope_note'])
         self.assertEqual(report['scope'], ['lib/services/office_*.dart', 'lib/widgets/office_*.dart'])
         require_all_sources(report)

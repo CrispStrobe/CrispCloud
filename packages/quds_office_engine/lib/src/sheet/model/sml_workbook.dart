@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../office/office_document_properties.dart';
 import '../../opc/opc_archive.dart';
 import '../../visual/office_visual.dart';
@@ -379,6 +381,40 @@ class SmlWorksheet {
 
   /// Original owning part, retained when worksheets are reordered.
   String? sourcePartUri;
+
+  /// Imported native rule groups remain intact while their editable projection
+  /// is unchanged. A reference-only rename rebases these snapshots atomically.
+  String? sourceValidationState;
+  String? sourceConditionalFormatState;
+
+  /// Snapshot of every editable validation property, optionally rewriting refs.
+  String validationState([String Function(String)? rewrite]) => jsonEncode([
+    for (final rule in validations)
+      [
+        rule.range.start.a1,
+        rule.range.end.a1,
+        rule.kind.name,
+        rewrite?.call(rule.formula1) ?? rule.formula1,
+        rewrite?.call(rule.formula2) ?? rule.formula2,
+        rule.allowBlank,
+        rule.errorTitle,
+        rule.error,
+      ],
+  ]);
+
+  /// Snapshot of every editable conditional-format property.
+  String conditionalFormatState([String Function(String)? rewrite]) =>
+      jsonEncode([
+        for (final rule in conditionalFormats)
+          [
+            rule.range.start.a1,
+            rule.range.end.a1,
+            rule.kind.name,
+            rewrite?.call(rule.formula) ?? rule.formula,
+            rule.fillRgb,
+            rule.fontRgb,
+          ],
+      ]);
 
   /// Excel worksheet column count (A … XFD).
   static const int excelColumnCount = 16384;
@@ -1198,6 +1234,33 @@ class SmlWorkbook {
 
   /// package API.
   OpcPackage? package;
+
+  /// Native names may contain expressions, scopes and print references that
+  /// the compact named-range projection cannot represent independently.
+  String? sourceDefinedNameState;
+
+  /// Snapshot used to retain the native name collection without losing names
+  /// outside the editable A1-range projection.
+  String definedNameState({String? from, String? to}) {
+    String sheetName(String value) =>
+        from != null && value.toLowerCase() == from.toLowerCase() ? to! : value;
+    String? range(SmlRange? value) =>
+        value == null ? null : '${value.start.a1}:${value.end.a1}';
+    return jsonEncode([
+      [
+        for (final name in namedRanges)
+          [name.name, sheetName(name.sheetName), range(name.range)],
+      ],
+      [
+        for (final sheet in sheets)
+          [
+            sheetName(sheet.name),
+            range(sheet.printTitleRows),
+            range(sheet.printTitleCols),
+          ],
+      ],
+    ]);
+  }
 
   /// styles API.
   SmlStyleSheet? styles;

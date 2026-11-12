@@ -601,6 +601,8 @@ class SmlDrawing {
     this.sourceSheetName,
     this.labelsFromA1,
     this.labelsToA1,
+    this.sourceChartPartUri,
+    this.sourceChartState,
   });
 
   /// visual API.
@@ -633,4 +635,9 @@ class SmlDrawing {
 
   /// Last cell of the category (label) range.
   String? labelsToA1;
+
+  /// Original native chart owner and editable projection. Unchanged imported
+  /// charts retain all series/title references and native chart metadata.
+  String? sourceChartPartUri;
+  String? sourceChartState;
 }

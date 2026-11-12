@@ -4,6 +4,24 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Expose namespace-aware Office part navigation and bounded OOXML/OpenDocument
+  text search through the pure-Dart engine. Follow declared package graphs and
+  referenced stories, notes, worksheets and slides; reject ambiguous roots,
+  duplicate identities, malformed selected XML/ZIP and exhausted input/output
+  budgets. Hosts retain cloud traversal and presentation rather than format
+  extraction implementations.
+
+- Retain native slide placeholder type/index bindings on save so layout/master
+  inheritance keeps title alignment and bullets. The section corpus now compares
+  each first export's page text and RGB fingerprints with an independently
+  authored source-page permutation, in addition to three-save stability.
+
+- Add reference-aware worksheet renaming across formulas, names, native rules,
+  links, charts and pivot sources. Preserve strings, structured references and
+  external workbook qualifiers/cache data. Reversible edits preflight stale
+  model/native changes and opaque reference owners before mutation; repeated
+  whole-row/column qualifiers and three-dimensional endpoints are handled.
+
 - Preserve native slide section GUIDs, empty sections, membership metadata and
   foreign extension namespaces. Reorder slides through an atomic plan that
   adopts the original destination section while keeping every other membership;

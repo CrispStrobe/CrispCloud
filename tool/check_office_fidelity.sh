@@ -22,7 +22,6 @@ flutter test --coverage --coverage-path build/fidelity-host/coverage/lcov.info \
   test/word_format_strings_test.dart \
   test/office_preview_fidelity_test.dart \
   test/office_preview_strings_test.dart \
-  test/office_search_fidelity_test.dart \
   test/recursive_search_service_test.dart \
   test/office_pdf_service_test.dart \
   test/widget/office_editor_dialog_test.dart \

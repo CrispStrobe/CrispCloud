@@ -129,6 +129,13 @@ def inspect_parts(parts, scenario):
         slide = E.fromstring(parts[owner])
         text = [node.text for node in slide.iter(A + 't')]
         assert 'Section slide ' + label in text and 'Independent body ' + label in text, 'slide ownership changed'
+        for content, identity in [('Section slide ' + label, {'type': 'title'}),
+                                  ('Independent body ' + label, {'idx': '1'})]:
+            shapes = [shape for shape in slide.findall('.//' + P + 'sp')
+                      if content in [node.text for node in shape.iter(A + 't')]]
+            assert len(shapes) == 1, 'native placeholder shape missing or ambiguous'
+            placeholder = shapes[0].find(P + 'nvSpPr/' + P + 'nvPr/' + P + 'ph')
+            assert placeholder is not None and placeholder.attrib == identity, 'native placeholder binding changed'
         notes = [target for typ, target in relationships(parts, owner).values() if typ.endswith('/notesSlide')]
         assert len(notes) == 1 and 'Speaker note ' + label in ''.join(E.fromstring(parts[notes[0]]).itertext()), 'speaker-note ownership changed'
     custom = root.findall(P + 'custShowLst/' + P + 'custShow/' + P + 'sldLst/' + P + 'sld')

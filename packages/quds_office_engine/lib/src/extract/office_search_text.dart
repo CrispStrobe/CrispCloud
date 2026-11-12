@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as path;
-import 'package:xml/xml.dart';
-
-import 'archive_viewer_service.dart';
-import 'office_package_parts.dart';
+import '../opc/office_package_parts.dart';
+import '../opc/package_part.dart';
+import '../opc/zip/deflate_codec.dart';
+import '../opc/zip/zip_reader.dart';
+import '../xml/xml_node.dart';
 
 const _w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const _strictW = 'http://purl.oclc.org/ooxml/wordprocessingml/main';
@@ -15,15 +15,16 @@ const _strictR = 'http://purl.oclc.org/ooxml/officeDocument/relationships';
 
 bool _isWord(XmlElement element) =>
     element.namespaceUri == _w || element.namespaceUri == _strictW;
-Iterable<XmlElement> _wordElements(XmlNode node, String name) =>
-    node.findAllElements(name, namespace: '*').where(_isWord);
+Iterable<XmlElement> _wordElements(XmlElement node, String name) =>
+    _elements(node, name).where(_isWord);
 String? _wordAttribute(XmlElement element, String name) =>
-    element.getAttribute(name, namespace: _w) ??
-    element.getAttribute(name, namespace: _strictW);
+    element.getAttribute(name, namespaceUri: _w) ??
+    element.getAttribute(name, namespaceUri: _strictW);
 String? _relationshipId(XmlElement element) =>
-    element.getAttribute('id', namespace: _r) ??
-    element.getAttribute('id', namespace: _strictR);
+    element.getAttribute('id', namespaceUri: _r) ??
+    element.getAttribute('id', namespaceUri: _strictR);
 
+/// Whether [name] selects a supported OOXML or OpenDocument search reader.
 bool isSearchableOfficeDocument(String name) => const [
   '.docx',
   '.docm',
@@ -36,125 +37,164 @@ bool isSearchableOfficeDocument(String name) => const [
   '.odp',
 ].any((extension) => name.toLowerCase().endsWith(extension));
 
-/// Extract referenced Office text without activating macros or external parts.
-/// XML reads and emitted UTF-8 text each have the cumulative byte limit.
+/// A selected XML or emitted UTF-8 text budget was exceeded.
+class OfficeSearchLimitException extends FormatException {
+  /// Creates a content-budget failure without host UI dependencies.
+  const OfficeSearchLimitException()
+    : super('Office text exceeds the content limit.');
+
+  @override
+  String toString() => message;
+}
+
+/// Extracts referenced Office text without activating macros or external parts.
+///
+/// Selected XML reads and emitted UTF-8 text have independent cumulative
+/// [maxBytes] limits. Repeated reads are cached. ZIP metadata is limited by
+/// [maxEntries], duplicate member names reject, and inflation is bounded by the
+/// remaining XML budget before allocation. Only referenced stories, sheets,
+/// slides and notes are read; unused members do not consume the XML budget.
+///
+/// Malformed selected ZIP/XML input and ambiguous package graphs throw
+/// [FormatException]. Unsupported extensions return empty text.
 Future<String> officeSearchText(
   Uint8List bytes,
   String name,
-  int maxBytes,
-) async {
-  final archive = await openViewerArchive(
-    bytes,
-    name: name,
-    maxMemberBytes: maxBytes,
-  );
+  int maxBytes, {
+  int maxEntries = 200000,
+  int maxXmlDepth = 256,
+}) async {
+  if (maxBytes < 0) throw ArgumentError.value(maxBytes, 'maxBytes');
+  if (maxEntries < 0) throw ArgumentError.value(maxEntries, 'maxEntries');
+  if (maxXmlDepth < 1) throw ArgumentError.value(maxXmlDepth, 'maxXmlDepth');
+  if (!isSearchableOfficeDocument(name)) return '';
   try {
-    final parts = _SearchParts(archive, maxBytes);
-    final extension = path.posix.extension(name).toLowerCase();
+    final zip = ZipReader.fromBytes(
+      bytes,
+      maxEntries: maxEntries,
+      rejectDuplicateNames: true,
+    );
+    final parts = _SearchParts(zip, maxBytes, maxXmlDepth);
+    final extension = name.substring(name.lastIndexOf('.')).toLowerCase();
     final blocks = switch (extension) {
       '.docx' || '.docm' => await _word(parts),
       '.xlsx' || '.xlsm' => await _spreadsheet(parts),
       '.pptx' || '.pptm' => await _presentation(parts),
       '.odt' || '.ods' || '.odp' => [
-        if (await parts.xml('content.xml') case final XmlDocument document)
+        if (await parts.xml('content.xml') case final XmlElement document)
           parts.output(_allText(document)),
       ],
       _ => <String>[],
     };
     return blocks.where((text) => text.isNotEmpty).join('\n');
-  } finally {
-    await archive.close();
+  } on ZipLimitException {
+    throw const OfficeSearchLimitException();
+  } on ZipException catch (error) {
+    throw FormatException('Invalid Office ZIP package: ${error.message}');
+  } on ZipDeflateException catch (error) {
+    throw FormatException('Invalid Office ZIP compression: ${error.message}');
+  } on RangeError {
+    throw const FormatException('Invalid Office ZIP bounds.');
   }
 }
 
 class _SearchParts {
-  _SearchParts(this.archive, this.maxBytes);
-  final ViewerArchive archive;
+  _SearchParts(this.zip, this.maxBytes, int maxXmlDepth) {
+    package = OfficePackageParts(read, maxXmlDepth: maxXmlDepth);
+  }
+  final ZipReader zip;
   final int maxBytes;
   final _cache = <String, String?>{};
   var _used = 0;
   var _outputBytes = 0;
   var _outputParts = 0;
-  late final package = OfficePackageParts(read);
+  late final OfficePackageParts package;
 
   String output(String text) {
     if (text.isEmpty) return text;
     final length = utf8.encode(text).length + (_outputParts > 0 ? 1 : 0);
     if (length > maxBytes - _outputBytes) {
-      throw const ArchiveViewException(
-        'Office text exceeds the content limit.',
-      );
+      throw const OfficeSearchLimitException();
     }
     _outputBytes += length;
     _outputParts++;
     return text;
   }
 
-  Iterable<ViewerArchiveMember> get members => archive.members.where(
-    (member) => member.isFile && !member.isSpecial && !member.pathEscapedRoot,
-  );
+  Iterable<String> get members => zip.entries
+      .where((entry) => !entry.isDirectory && _safeMember(entry.fileName))
+      .map((entry) => entry.fileName);
 
   Future<String?> read(String name) async {
     if (_cache.containsKey(name)) return _cache[name];
-    final member = members.where((entry) => entry.name == name).firstOrNull;
-    if (member == null) return _cache[name] = null;
-    if (_used >= maxBytes) {
-      throw const ArchiveViewException(
-        'Office text exceeds the content limit.',
-      );
+    if (!_safeMember(name) || zip[name] == null || zip[name]!.isDirectory) {
+      return _cache[name] = null;
     }
-    final content = await archive.readMember(
-      member,
-      maxBytes: maxBytes - _used,
-    );
+    if (_used >= maxBytes) throw const OfficeSearchLimitException();
+    final content = zip.read(name, maxBytes: maxBytes - _used);
     _used += content.length;
-    if (_used > maxBytes) {
-      throw const ArchiveViewException(
-        'Office text exceeds the content limit.',
-      );
-    }
     return _cache[name] = utf8.decode(content);
   }
 
-  Future<XmlDocument?> xml(String name) async {
-    final text = await read(name);
-    return text == null ? null : XmlDocument.parse(text);
-  }
+  Future<XmlElement?> xml(String name) async => (await package.xml(name))?.root;
 
-  Future<String?> mainPart(String fallback) async {
-    // A declared package graph is authoritative. Only absent metadata permits
-    // the canonical fallback used by minimal/legacy extraction fixtures.
-    if (await read('_rels/.rels') == null) return fallback;
-    return (await package.relationships(''))
-        .where((relationship) => relationship.isType('officeDocument'))
-        .firstOrNull
-        ?.path;
-  }
+  Future<String?> mainPart(String fallback) =>
+      package.mainPartOrNull(fallback: fallback);
 
   Future<bool> hasRelationships(String owner) async =>
       await read(OfficePackageParts.relationshipPath(owner)) != null;
 
   List<String> numberedParts(String pattern) {
     final expression = RegExp(pattern);
-    return members
-        .map((entry) => entry.name)
-        .where(expression.hasMatch)
-        .toList()
-      ..sort(
-        (a, b) =>
-            int.parse(expression.firstMatch(a)!.group(1)!)
-                .compareTo(int.parse(expression.firstMatch(b)!.group(1)!)),
-      );
+    return members.where(expression.hasMatch).toList()..sort(
+      (a, b) => int.parse(
+        expression.firstMatch(a)!.group(1)!,
+      ).compareTo(int.parse(expression.firstMatch(b)!.group(1)!)),
+    );
   }
 }
 
-String _allText(XmlNode node) => node.descendants
-    .whereType<XmlText>()
-    .map((text) => text.value)
+bool _safeMember(String name) =>
+    name.isNotEmpty &&
+    !name.startsWith('/') &&
+    !name.contains('\\') &&
+    !RegExp(r'[\x00-\x1f\x7f]').hasMatch(name) &&
+    OpcUris.toZipName(name) == name;
+
+Iterable<XmlNode> _descendants(XmlElement node) sync* {
+  for (final child in node.children) {
+    yield child;
+    if (child is XmlElement) yield* _descendants(child);
+  }
+}
+
+Iterable<XmlElement> _elements(XmlElement node, String name) => _descendants(
+  node,
+).whereType<XmlElement>().where((element) => element.localName == name);
+
+Iterable<XmlElement> _ancestors(XmlElement node) sync* {
+  var parent = node.parent;
+  while (parent != null) {
+    yield parent;
+    parent = parent.parent;
+  }
+}
+
+String _sibling(String owner, String name) =>
+    OpcUris.toZipName(OpcUris.resolve('/$owner', name));
+
+String _allText(XmlElement node) => _descendants(node)
+    .where((item) => item is XmlText || item is XmlCdata)
+    .map(
+      (item) => switch (item) {
+        XmlText(:final text) || XmlCdata(:final text) => text,
+        _ => '',
+      },
+    )
     .join(' ')
     .trim();
 
-String _wordText(XmlNode node) {
+String _wordText(XmlElement node) {
   if (_wordElements(node, 't').isEmpty) return _allText(node);
   final buffer = StringBuffer();
   void visit(XmlNode item) {
@@ -162,7 +202,7 @@ String _wordText(XmlNode node) {
     if (_isWord(item)) {
       switch (item.localName) {
         case 't':
-          buffer.write(item.innerText);
+          buffer.write(item.text);
           return;
         case 'tab':
           buffer.write('\t');
@@ -179,13 +219,7 @@ String _wordText(XmlNode node) {
     if (_isWord(item) && item.localName == 'p') buffer.writeln();
   }
 
-  if (node is XmlElement) {
-    visit(node);
-  } else {
-    for (final child in node.children) {
-      visit(child);
-    }
-  }
+  visit(node);
   return buffer.toString().trim();
 }
 
@@ -198,9 +232,9 @@ Future<List<String>> _word(_SearchParts parts) async {
   final byId = {
     for (final relationship in relations) relationship.id: relationship,
   };
-  final stories = <XmlNode>[document];
+  final stories = <XmlElement>[document];
   final seen = <String>{main};
-  for (final reference in document.descendants.whereType<XmlElement>()) {
+  for (final reference in _descendants(document).whereType<XmlElement>()) {
     final kind = switch (reference.localName) {
       'headerReference' => 'header',
       'footerReference' => 'footer',
@@ -208,7 +242,7 @@ Future<List<String>> _word(_SearchParts parts) async {
     };
     if (!_isWord(reference) ||
         kind == null ||
-        reference.ancestors.whereType<XmlElement>().any(
+        _ancestors(reference).any(
           (element) => element.localName == 'sectPrChange' && _isWord(element),
         )) {
       continue;
@@ -235,9 +269,7 @@ Future<List<String>> _word(_SearchParts parts) async {
         .firstOrNull
         ?.path;
     if (notePath == null && !await parts.hasRelationships(main)) {
-      notePath = path.posix.normalize(
-        path.posix.join(path.posix.dirname(main), '${kind}s.xml'),
-      );
+      notePath = _sibling(main, '${kind}s.xml');
     }
     if (notePath == null) continue;
     final notes = await parts.xml(notePath);
@@ -268,7 +300,7 @@ Future<List<String>> _spreadsheet(_SearchParts parts) async {
           .map((part) => (part: part, name: null)),
     );
   } else {
-    for (final sheet in workbook.findAllElements('sheet', namespace: '*')) {
+    for (final sheet in _elements(workbook, 'sheet')) {
       final relation = byId[_relationshipId(sheet)];
       if (relation != null && relation.isType('worksheet')) {
         sheets.add((part: relation.path, name: sheet.getAttribute('name')));
@@ -280,9 +312,7 @@ Future<List<String>> _spreadsheet(_SearchParts parts) async {
       .firstOrNull
       ?.path;
   if (sharedPath == null && !await parts.hasRelationships(main)) {
-    sharedPath = path.posix.normalize(
-      path.posix.join(path.posix.dirname(main), 'sharedStrings.xml'),
-    );
+    sharedPath = _sibling(main, 'sharedStrings.xml');
   }
   List<String>? shared;
   final result = <String>[];
@@ -290,16 +320,13 @@ Future<List<String>> _spreadsheet(_SearchParts parts) async {
     final document = await parts.xml(sheet.part);
     if (document == null) continue;
     if (sheet.name case final String name) result.add(parts.output(name));
-    final cells = document.findAllElements('c', namespace: '*').toList();
+    final cells = _elements(document, 'c').toList();
     if (cells.any((cell) => cell.getAttribute('t') == 's') && shared == null) {
       final strings = sharedPath == null ? null : await parts.xml(sharedPath);
       shared = [
         if (strings != null)
-          for (final item in strings.findAllElements('si', namespace: '*'))
-            item
-                .findAllElements('t', namespace: '*')
-                .map((text) => text.innerText)
-                .join(),
+          for (final item in _elements(strings, 'si'))
+            _elements(item, 't').map((text) => text.text).join(),
       ];
     }
     if (cells.isEmpty) {
@@ -307,8 +334,7 @@ Future<List<String>> _spreadsheet(_SearchParts parts) async {
       continue;
     }
     for (final cell in cells) {
-      final value =
-          cell.findElements('v', namespace: '*').firstOrNull?.innerText ?? '';
+      final value = cell.firstChild('v')?.text ?? '';
       switch (cell.getAttribute('t')) {
         case 's':
           final index = int.tryParse(value);
@@ -317,12 +343,7 @@ Future<List<String>> _spreadsheet(_SearchParts parts) async {
           }
         case 'inlineStr':
           result.add(
-            parts.output(
-              cell
-                  .findAllElements('t', namespace: '*')
-                  .map((text) => text.innerText)
-                  .join(),
-            ),
+            parts.output(_elements(cell, 't').map((text) => text.text).join()),
           );
         default:
           result.add(parts.output(value));
@@ -332,16 +353,14 @@ Future<List<String>> _spreadsheet(_SearchParts parts) async {
   return result;
 }
 
-String _slideText(XmlNode document) {
-  final paragraphs = document.findAllElements('p', namespace: '*').toList();
+String _slideText(XmlElement document) {
+  final paragraphs = _elements(document, 'p').toList();
   return paragraphs.isEmpty
       ? _allText(document)
       : paragraphs
             .map(
-              (paragraph) => paragraph
-                  .findAllElements('t', namespace: '*')
-                  .map((text) => text.innerText)
-                  .join(),
+              (paragraph) =>
+                  _elements(paragraph, 't').map((text) => text.text).join(),
             )
             .where((text) => text.isNotEmpty)
             .join('\n');
@@ -358,7 +377,7 @@ Future<List<String>> _presentation(_SearchParts parts) async {
   } else {
     final relations = await parts.package.relationships(main);
     final byId = {for (final relation in relations) relation.id: relation};
-    for (final slide in presentation.findAllElements('sldId', namespace: '*')) {
+    for (final slide in _elements(presentation, 'sldId')) {
       final relation = byId[_relationshipId(slide)];
       if (relation != null && relation.isType('slide')) {
         slides.add(relation.path);
