@@ -1,4 +1,3 @@
-import 'web_file_failure.dart';
 // lib/services/archive_service.dart
 //
 // Archive operations: extract and create .zip files.
@@ -12,6 +11,9 @@ import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import 'archive_viewer_service.dart';
+import 'archive_viewer_file.dart';
+import 'archive_format_registry.dart';
+import 'archive_member_index.dart';
 import '../utils/system_links.dart';
 
 class ArchiveService {
@@ -38,8 +40,9 @@ class ArchiveService {
     bool Function()? isCancelled,
     void Function(int completed, int total)? onProgress,
   }) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Extract to disk is unavailable on Web.');
+    }
     final file = File(archivePath);
     if (await file.length() > maxArchiveBytes) {
       throw const ArchiveViewException(
@@ -70,8 +73,9 @@ class ArchiveService {
     bool Function()? isCancelled,
     void Function(int completed, int total)? onProgress,
   }) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Extract to disk is unavailable on Web.');
+    }
     if (bytes.length > maxArchiveBytes) {
       throw const ArchiveViewException(
         'Archive exceeds the 256 MiB input limit.',
@@ -287,164 +291,74 @@ class ArchiveService {
     );
   }
 
-  /// Check if a file is a supported archive format.
-  static bool isArchive(String filename) {
-    final lower = filename.toLowerCase();
-    for (final ext in _supportedExtensions) {
-      if (lower.endsWith(ext)) return true;
-    }
-    return false;
-  }
+  /// Whether a file can be offered to an archive reader; bytes are validated
+  /// when it is opened, independently from this filename hint.
+  static bool isArchive(String filename) => isArchiveFilename(filename);
 
-  static const _supportedExtensions = {
-    '.zip',
-    '.tar',
-    '.tar.gz',
-    '.tgz',
-    '.tar.bz2',
-    '.tbz2',
-    '.7z',
-    '.rar',
-    '.tar.xz',
-    '.txz',
-    '.tar.zst',
-    '.tzst',
-  };
-
-  /// List the contents of an archive at [innerPath] without extracting.
-  /// Returns [FileItem] entries one level deep within [innerPath].
+  /// List contents through the same bounded readers as pane navigation/F3.
   static Future<List<FileItem>> listArchiveContents(
     String archivePath,
     String innerPath,
   ) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Use listArchiveContentsFromBytes on Web');
-
-    final bytes = await File(archivePath).readAsBytes();
-    return listArchiveContentsFromBytes(archivePath, bytes, innerPath);
+    }
+    final archive = await openViewerArchiveFile(archivePath, name: archivePath);
+    try {
+      return ArchiveMemberIndex(archive).list(innerPath);
+    } finally {
+      await archive.close();
+    }
   }
 
-  /// List archive contents from bytes (works on web and native).
-  static List<FileItem> listArchiveContentsFromBytes(
+  static Future<List<FileItem>> listArchiveContentsFromBytes(
     String archiveName,
     Uint8List archiveBytes,
     String innerPath,
-  ) {
-    final archive = _decodeArchive(archiveName, archiveBytes);
-    if (archive == null) return [];
-
-    // Normalise innerPath to always end with '/' (or empty for root)
-    final prefix = innerPath.isNotEmpty && !innerPath.endsWith('/')
-        ? '$innerPath/'
-        : innerPath;
-
-    // Collect unique entries at exactly one level below prefix
-    final folders = <String>{};
-    final fileEntries = <String, ArchiveFile>{};
-
-    for (final entry in archive) {
-      var name = entry.name;
-      // Strip leading './' if present
-      if (name.startsWith('./')) name = name.substring(2);
-      // Skip entries that don't start with our prefix
-      if (!name.startsWith(prefix) && prefix.isNotEmpty) continue;
-      // Skip the prefix directory itself
-      if (name == prefix || name == innerPath) continue;
-
-      final relative = name.substring(prefix.length);
-      // Skip empty
-      if (relative.isEmpty) continue;
-
-      final slashIdx = relative.indexOf('/');
-      if (slashIdx == -1) {
-        // File at this level
-        if (entry.isFile) {
-          fileEntries[relative] = entry;
-        }
-      } else {
-        // Subdirectory — extract just the folder name
-        final folderName = relative.substring(0, slashIdx);
-        folders.add(folderName);
-      }
+  ) async {
+    final archive = await openViewerArchive(archiveBytes, name: archiveName);
+    try {
+      return ArchiveMemberIndex(archive).list(innerPath);
+    } finally {
+      await archive.close();
     }
-
-    final items = <FileItem>[];
-
-    // Add folders
-    for (final folder in folders) {
-      items.add(
-        FileItem(name: folder, path: '$prefix$folder/', isFolder: true),
-      );
-    }
-
-    // Add files
-    for (final entry in fileEntries.entries) {
-      items.add(
-        FileItem(
-          name: entry.key,
-          path: '$prefix${entry.key}',
-          isFolder: false,
-          size: entry.value.size,
-          updatedAt: entry.value.lastModTime > 0
-              ? DateTime.fromMillisecondsSinceEpoch(
-                  entry.value.lastModTime * 1000,
-                )
-              : null,
-        ),
-      );
-    }
-
-    return items;
   }
 
-  /// Extract a single entry from an archive by its path within the archive.
-  /// Returns the entry's bytes, or null if not found.
+  /// Read one regular member without extracting an entire disk image.
   static Future<Uint8List?> extractArchiveEntry(
     String archivePath,
     String entryPath,
   ) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       throw UnsupportedError('Use extractArchiveEntryFromBytes on Web');
-
-    final bytes = await File(archivePath).readAsBytes();
-    return extractArchiveEntryFromBytes(archivePath, bytes, entryPath);
+    }
+    final archive = await openViewerArchiveFile(archivePath, name: archivePath);
+    try {
+      return await _readEntry(archive, entryPath);
+    } finally {
+      await archive.close();
+    }
   }
 
-  /// Extract a single entry from archive bytes (works on web and native).
-  static Uint8List? extractArchiveEntryFromBytes(
+  static Future<Uint8List?> extractArchiveEntryFromBytes(
     String archiveName,
     Uint8List archiveBytes,
     String entryPath,
-  ) {
-    final archive = _decodeArchive(archiveName, archiveBytes);
-    if (archive == null) return null;
-
-    for (final entry in archive) {
-      var name = entry.name;
-      if (name.startsWith('./')) name = name.substring(2);
-      if (name == entryPath && entry.isFile) {
-        return Uint8List.fromList(entry.content as List<int>);
-      }
+  ) async {
+    final archive = await openViewerArchive(archiveBytes, name: archiveName);
+    try {
+      return await _readEntry(archive, entryPath);
+    } finally {
+      await archive.close();
     }
-    return null;
   }
 
-  /// Decode an archive based on its file extension.
-  static Archive? _decodeArchive(String path, Uint8List bytes) {
-    final lower = path.toLowerCase();
-    try {
-      if (lower.endsWith('.zip')) {
-        return ZipDecoder().decodeBytes(bytes);
-      } else if (lower.endsWith('.tar.gz') || lower.endsWith('.tgz')) {
-        return TarDecoder().decodeBytes(GZipDecoder().decodeBytes(bytes));
-      } else if (lower.endsWith('.tar.bz2') || lower.endsWith('.tbz2')) {
-        return TarDecoder().decodeBytes(BZip2Decoder().decodeBytes(bytes));
-      } else if (lower.endsWith('.tar')) {
-        return TarDecoder().decodeBytes(bytes);
-      }
-    } catch (_) {
-      return null;
-    }
-    return null;
+  static Future<Uint8List?> _readEntry(
+    ViewerArchive archive,
+    String path,
+  ) async {
+    final index = ArchiveMemberIndex(archive);
+    final member = index.members[safeMemberPath(path)];
+    return member == null || !member.isFile ? null : archive.readMember(member);
   }
 }

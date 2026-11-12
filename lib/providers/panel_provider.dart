@@ -47,6 +47,7 @@ import '../services/rename_batch_service.dart';
 import '../services/rename_batch_storage.dart';
 import '../services/rename_batch_store.dart';
 import '../services/archive_service.dart';
+import '../services/archive_format_registry.dart';
 import '../services/archive_browser_session.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/audit_service.dart';
@@ -6816,10 +6817,7 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  static bool _isArchiveVirtualPath(String path) => RegExp(
-    r'\.(?:zip|7z|rar|tar|tar\.gz|tgz|tar\.bz2|tbz2|tar\.xz|txz):/',
-    caseSensitive: false,
-  ).hasMatch(path);
+  static bool _isArchiveVirtualPath(String path) => isArchiveVirtualPath(path);
 
   // --- Tabs ---
   FileViewConfiguration captureViewConfiguration() {

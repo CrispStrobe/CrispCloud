@@ -117,7 +117,7 @@ continues under G50. The implementation and its observed gates are preserved in
 
 ### Archive format coverage
 
-**Status:** Scoped. **Dependencies:** License and format review per codec.
+**Status:** Partially implemented: read-only disk-image/package readers and shared capability routing delivered; additional codecs/writers remain. **Dependencies:** License and format review per codec.
 
 **Scope:** Add each missing reader/writer/alias independently with a tested capability matrix.
 
@@ -130,6 +130,17 @@ continues under G50. The implementation and its observed gates are preserved in
 - Each enabled format has independent valid, truncated, malformed, traversal and resource-expansion fixtures.
 - Advertised read/extract/create/modify/encryption/compression capabilities match actual codec support on each target.
 - Record exact dependency versions, permissive licenses and provenance before enabling a codec; signed containers retain explicit verification limits.
+
+**Delivered reader increment (2026-11-12):** Shared registry across panes, F3,
+search and extraction; ISO9660/Joliet/Rock Ridge, unencrypted supported UDIF DMG
+partitions with HFS+/HFSX/ISO file views, ordinary/GNU/BSD AR and DEB, CPIO
+newc/CRC, XAR/PKG/XIP container members, CRX2/3 and compatible ZIP aliases.
+Compressed streams now request strict integrity checks. Independent GNU
+ar/libarchive and native HFS+/UDIF fixtures supplement malformed, traversal,
+range, ownership and resource-bound tests. The [capability matrix](../archive-format-coverage.md)
+records per-format limits and signature/metadata boundaries. New readers
+remain read-only; G18 publication rules are unchanged. UDF/APFS, CAB/RPM,
+ARJ/LZH/ACE/UC2, raw LZMA, PBZX and additional ZIPX methods remain.
 
 **Starting points:** archive_viewer_service.dart; archive_workspace.dart; archive_creation_service.dart; codec capability registry.
 
