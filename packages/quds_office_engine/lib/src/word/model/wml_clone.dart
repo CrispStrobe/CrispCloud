@@ -57,6 +57,8 @@ abstract final class WmlClone {
         return equation(source);
       case WmlToc():
         return toc(source);
+      case WmlSdtBlockBoundary():
+        return WmlSdtBlockBoundary(source.control, isStart: source.isStart);
       case WmlOpaqueBlock():
         return WmlOpaqueBlock(
           xml: source.xml,
@@ -83,7 +85,7 @@ abstract final class WmlClone {
       return paragraph(source);
     }
     return WmlParagraph(
-      properties: source.properties.copy(),
+      properties: source.properties.copy()..bookmarkName = null,
       inlines: inlines(_extractRuns(source, start, end < start ? start : end)),
     );
   }
@@ -221,6 +223,7 @@ abstract final class WmlClone {
           _collectParagraphs(block.blocks, out);
         case WmlVisual():
         case WmlEquation():
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }
@@ -228,6 +231,7 @@ abstract final class WmlClone {
   }
 
   static WmlInline _inline(WmlInline inline) {
+    if (inline is WmlZeroWidthInline) return inline.copy();
     if (inline is WmlRun) {
       return WmlRun(
         text: inline.text,
@@ -261,9 +265,21 @@ abstract final class WmlClone {
     }
     final List<WmlInline> out = <WmlInline>[];
     var offset = 0;
+    var startPacket = false;
+    var endPacket = false;
     for (final WmlInline inline in source.inlines) {
       if (inline is! WmlRun) {
-        if (offset >= from && offset < to) {
+        bool include = offset >= from && offset < to;
+        if (inline is WmlZeroWidthInline) {
+          if (offset == from) {
+            if (inline.isStart) startPacket = true;
+            include = startPacket;
+          } else if (offset == to) {
+            if (inline.isStart) endPacket = true;
+            include = !endPacket;
+          }
+        }
+        if (include) {
           out.add(_inline(inline));
         }
         continue;

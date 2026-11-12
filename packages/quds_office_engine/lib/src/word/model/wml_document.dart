@@ -16,6 +16,30 @@ sealed class WmlBlock {
   WmlBlock();
 }
 
+/// Immutable native content-control properties, separate from editable content.
+final class WmlSdtInfo {
+  const WmlSdtInfo({
+    required this.templateXml,
+    required this.hasContent,
+    this.id,
+    this.tag,
+  });
+
+  /// Self-contained `w:sdt` with its original properties and empty content slot.
+  final String templateXml;
+  final bool hasContent;
+  final String? id;
+  final String? tag;
+}
+
+/// Zero-layout boundary around ordinary editable blocks in a native SDT.
+final class WmlSdtBlockBoundary extends WmlBlock {
+  WmlSdtBlockBoundary(this.control, {required this.isStart});
+
+  final WmlSdtInfo control;
+  final bool isStart;
+}
+
 /// An imported block retained for export without claiming layout support.
 ///
 /// Used for `w:altChunk` and for any other unmodeled body-level element, kept
@@ -62,6 +86,19 @@ final class WmlOpaqueRelationship {
 sealed class WmlInline {
   /// WmlInline API.
   WmlInline();
+}
+
+/// Source markup at a text boundary, without a character or layout width.
+/// Start-like markers stay with following content when a paragraph is split;
+/// end-like markers stay with preceding content.
+abstract class WmlZeroWidthInline extends WmlInline {
+  bool get isStart;
+
+  /// Whether a paragraph boundary may occur between this marker and its mate.
+  /// Inline wrappers override this to reject an invalid split before mutation.
+  bool get canCrossParagraph => true;
+
+  WmlZeroWidthInline copy();
 }
 
 /// Class WmlRun.
@@ -1020,6 +1057,7 @@ class WmlDocument {
           break;
         case WmlToc():
           break;
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }
@@ -1046,6 +1084,7 @@ class WmlDocument {
         case WmlToc():
           yield block.titleParagraph;
           yield* block.itemParagraphs;
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }
@@ -1075,6 +1114,7 @@ class WmlDocument {
         case WmlParagraph():
         case WmlVisual():
         case WmlToc():
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
       }

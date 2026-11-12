@@ -4,6 +4,35 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Integrate formatting-aware note updates with native markers: Enter and
+  backspace carry actual inline boundaries and styled text; imported unmarked
+  or later-marked notes retain visible leading whitespace. More complex
+  paragraph-count replacements containing native ranges reject before mutation.
+  Heading ID allocation also reserves bookmarks inside preserved opaque XML.
+
+- Preserve native bookmark IDs, names, optional attributes and exact ordered
+  endpoints across multiple ranges, overlapping ranges, paragraphs, tables,
+  header/footer stories and notes. Zero-width markers survive run edits,
+  paragraph splitting and copies; generated heading anchors avoid collisions.
+  Unpaired/duplicate identities reject before package mutation. Bookmark
+  endpoints outside modeled paragraphs reject explicitly on import.
+
+- Preserve native block and inline content-control properties, IDs, aliases,
+  tags and end formatting around ordinary editable content, including nested
+  and empty controls, table-cell/note blocks and legacy qudsFrame geometry.
+  Invalid or crossing boundaries and duplicate IDs fail before export changes
+  package parts. Inline-control paragraph splits reject before changing history;
+  unsupported row/cell wrappers, block header/comment controls and inline
+  drawing containers and controls inside hyperlink/revision wrappers fail
+  explicitly on import instead of losing their wrappers.
+
+- Preserve the absence, exact positions and individual run properties of native
+  automatic footnote/endnote body markers, including multiple marks and marks
+  inside tables. Whole-body text replacement keeps the first existing mark as a
+  leading mark; unmarked imported notes remain unmarked. New notes retain their
+  conventional leading marker and separator. This is export preservation; the
+  canvas continues to use its conventional note-label layout.
+
 - Explicitly clearing a list suppresses inherited numbering through style
   refresh, clone/history, export and reopen. Applying a list or numbered style
   restores numbering. Script formatting rejects empty ranges with the failing
@@ -36,8 +65,9 @@ All notable changes to `quds_office_engine` are documented here.
   moved or cloned between stories. Their external content remains unrendered.
 - Allocate stable unique section-revision IDs when cloning imported sections,
   preserving their history and settings without duplicate schema identifiers.
-- Add diagnostic probes that explicitly report remaining content-control
-  wrapper loss and multiple/cross-paragraph bookmark-range loss.
+- Add independently authored diagnostic probes for content-control wrappers
+  and multiple/cross-paragraph bookmark ranges, plus passing structural
+  regressions, corruption controls and three-cycle export oracles for both.
 
 - Join native comment replies and resolved state through the final paragraph's
   `w14:paraId`, retain anchors through comment copies/edits, allocate new anchors

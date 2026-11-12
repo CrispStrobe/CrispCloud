@@ -1,4 +1,5 @@
 import '../properties/wml_properties.dart';
+import 'wml_clone.dart';
 import 'wml_document.dart';
 
 /// Split and format [WmlRun] spans inside a paragraph.
@@ -62,6 +63,65 @@ abstract final class WmlRunEdit {
       }
       offset = end;
     }
+  }
+
+  /// Moves the actual tail, including zero-width source markup, to a new
+  /// paragraph. End markers at the boundary stay with the preceding content;
+  /// a start marker and the following boundary packet stay with the tail.
+  ///
+  /// Inline-only wrappers cannot span paragraphs. Rejecting their split before
+  /// changing either list keeps undo history and export structure intact.
+  static List<WmlInline> splitParagraphInlines(
+    WmlParagraph paragraph,
+    int index,
+  ) {
+    RangeError.checkValueInInterval(index, 0, paragraph.text.length, 'index');
+    var offset = 0;
+    var activeInlineWrappers = 0;
+    for (final WmlInline inline in paragraph.inlines) {
+      if (inline is WmlRun) {
+        final int end = offset + inline.text.length;
+        if (index < end) {
+          if (inline.noteRefId != null && index > offset) {
+            throw ArgumentError('A paragraph cannot split a note reference.');
+          }
+          break;
+        }
+        if (offset >= index && inline.text.isNotEmpty) break;
+        offset = end;
+      } else {
+        if (offset >= index &&
+            (inline is! WmlZeroWidthInline || inline.isStart)) {
+          break;
+        }
+        if (inline is WmlZeroWidthInline && !inline.canCrossParagraph) {
+          activeInlineWrappers += inline.isStart ? 1 : -1;
+        }
+      }
+    }
+    if (activeInlineWrappers != 0) {
+      throw ArgumentError(
+        'A paragraph cannot split an inline content control.',
+      );
+    }
+    splitAt(paragraph, index);
+    offset = 0;
+    var cut = paragraph.inlines.length;
+    for (int i = 0; i < paragraph.inlines.length; i++) {
+      final WmlInline inline = paragraph.inlines[i];
+      if (offset >= index) {
+        final bool leadingEnd = inline is WmlZeroWidthInline && !inline.isStart;
+        final bool emptyRun = inline is WmlRun && inline.text.isEmpty;
+        if (!leadingEnd && !emptyRun) {
+          cut = i;
+          break;
+        }
+      }
+      if (inline is WmlRun) offset += inline.text.length;
+    }
+    final List<WmlInline> tail = paragraph.inlines.sublist(cut);
+    paragraph.inlines.removeRange(cut, paragraph.inlines.length);
+    return tail;
   }
 
   /// applyRange API.
@@ -266,7 +326,16 @@ abstract final class WmlRunEdit {
 
   /// insertRuns API.
   static void insertRuns(WmlParagraph paragraph, int index, List<WmlRun> runs) {
-    if (runs.isEmpty) {
+    insertInlines(paragraph, index, runs);
+  }
+
+  /// Inserts native inline content without discarding source boundary tokens.
+  static void insertInlines(
+    WmlParagraph paragraph,
+    int index,
+    List<WmlInline> inlines,
+  ) {
+    if (inlines.isEmpty) {
       return;
     }
     final int length = paragraph.text.length;
@@ -286,20 +355,7 @@ abstract final class WmlRunEdit {
       offset += inline.text.length;
       insertAt = i + 1;
     }
-    paragraph.inlines.insertAll(insertAt, <WmlInline>[
-      for (final WmlRun run in runs)
-        WmlRun(
-          text: run.text,
-          properties: run.properties.copy(),
-          hyperlink: run.hyperlink,
-          commentIds: List<int>.from(run.commentIds),
-          noteRefId: run.noteRefId,
-          noteRefEndnote: run.noteRefEndnote,
-          fieldInstruction: run.fieldInstruction,
-          fieldLocked: run.fieldLocked,
-          fieldDirty: run.fieldDirty,
-        ),
-    ]);
+    paragraph.inlines.insertAll(insertAt, WmlClone.inlines(inlines));
     coalesce(paragraph);
   }
 

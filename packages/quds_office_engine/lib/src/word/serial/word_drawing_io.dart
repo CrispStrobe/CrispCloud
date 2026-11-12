@@ -489,6 +489,7 @@ abstract final class WordDrawingIo {
     OpcPackage package,
     String docUri, {
     WmlParagraph Function(XmlPullReader reader)? readParagraph,
+    List<WmlBlock> Function(XmlPullReader reader)? readSdt,
   }) {
     if (reader.localName != 'drawing') {
       return null;
@@ -606,6 +607,14 @@ abstract final class WordDrawingIo {
               fill = val.toUpperCase();
             }
           }
+        } else if (reader.localName == 'sdt' &&
+            reader.namespaceUri == OfficeNamespaces.w) {
+          if (readSdt == null) {
+            throw UnsupportedError(
+              'Frame content controls require an editable block reader',
+            );
+          }
+          frameBlocks.addAll(readSdt(reader));
         } else if (reader.localName == 'p' &&
             reader.namespaceUri == OfficeNamespaces.w &&
             readParagraph != null) {

@@ -238,7 +238,7 @@ abstract final class WordFields {
     WmlParagraph paragraph,
     WmlFieldKind kind, {
     String argument = '',
-    String result = '',
+    String? result,
     String? instruction,
   }) {
     final String instr = instruction ?? instructionOf(kind, argument: argument);
@@ -250,11 +250,17 @@ abstract final class WordFields {
     if (kind == WmlFieldKind.hyperlink) {
       final String url = argumentOf(instr);
       if (url.isNotEmpty) {
-        _stampHyperlink(paragraph, url, result.isEmpty ? url : result);
+        _stampHyperlink(
+          paragraph,
+          url,
+          result == null || result.isEmpty ? url : result,
+        );
         return;
       }
     }
-    if (result.isEmpty) {
+    // An omitted result keeps a cache until evaluation. An explicitly empty
+    // result is meaningful, for example when a REF target has become empty.
+    if (result == null) {
       return;
     }
     if (paragraph.inlines.isEmpty) {
@@ -339,7 +345,9 @@ abstract final class WordFields {
         if (resolved == WmlFieldKind.page) {
           result = pageResultWithSuffix(paragraph.text, result);
         }
-        if (result.isNotEmpty || resolved == WmlFieldKind.hyperlink) {
+        if (result.isNotEmpty ||
+            resolved == WmlFieldKind.hyperlink ||
+            resolved == WmlFieldKind.ref) {
           stamp(
             paragraph,
             resolved,

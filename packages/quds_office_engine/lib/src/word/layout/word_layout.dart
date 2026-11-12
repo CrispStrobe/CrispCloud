@@ -995,6 +995,7 @@ class WordLayoutEngine {
     }
     for (final WmlBlock block in section.blocks) {
       switch (block) {
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
         case WmlParagraph():
@@ -1109,6 +1110,7 @@ class WordLayoutEngine {
     var n = 0;
     for (final WmlBlock block in blocks) {
       switch (block) {
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
         case WmlParagraph():
@@ -2120,6 +2122,7 @@ class WordLayoutEngine {
     final double innerW = math.max(12, frame.width - pad * 2);
     for (final WmlBlock block in frame.blocks) {
       switch (block) {
+        case WmlSdtBlockBoundary():
         case WmlOpaqueBlock():
           break;
         case WmlParagraph():

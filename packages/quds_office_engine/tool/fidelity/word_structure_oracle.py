@@ -50,17 +50,54 @@ def text(node):
     return ''.join(element.text or '' for element in node.iter('{' + NS['w'] + '}t'))
 
 
+def verify_complex_fields(root):
+    """Validate field boundaries in document order, including a spanning TOC."""
+    stack = []
+    for node in root.iter():
+        if node.tag == '{' + NS['w'] + '}fldChar':
+            kind = attr(node, 'fldCharType')
+            if kind == 'begin':
+                stack.append({'instruction': False, 'separated': False})
+            elif kind == 'separate':
+                if not stack or stack[-1]['separated'] or not stack[-1]['instruction']:
+                    raise AssertionError('Field separator without one complete instruction')
+                stack[-1]['separated'] = True
+            elif kind == 'end':
+                if not stack or not stack[-1]['separated']:
+                    raise AssertionError('Field end without an open result')
+                stack.pop()
+            else:
+                raise AssertionError(f'Unknown field boundary {kind!r}')
+        elif node.tag == '{' + NS['w'] + '}instrText':
+            if not stack or stack[-1]['separated']:
+                raise AssertionError('Field instruction outside its instruction range')
+            stack[-1]['instruction'] = True
+    equal(stack, [], 'closed complex fields')
+
+
 def verify_parts(parts, phase, expected=None):
     expected = expected or json.loads((FIXTURES / 'word_structure_expected.json').read_text())
     want = expected[phase]
     document = ET.fromstring(parts['word/document.xml'])
+    verify_complex_fields(document)
     body = required(document, 'w:body')
     paragraphs = body.findall('w:p', NS)
     equal([text(p) for p in paragraphs[:5]], expected['body'], 'original body and reference result')
     source = paragraphs[1]
     equal(attr(required(source, 'w:bookmarkStart'), 'name'), expected['bookmark'], 'bookmark target')
     equal(len(source.findall('w:bookmarkStart', NS)), 1, 'bookmark start count')
+    equal(len(source.findall('w:bookmarkEnd', NS)), 1, 'bookmark end count')
     equal(attr(required(source, 'w:bookmarkStart'), 'id'), attr(required(source, 'w:bookmarkEnd'), 'id'), 'bookmark endpoints')
+    starts = document.findall('.//w:bookmarkStart', NS)
+    ends = document.findall('.//w:bookmarkEnd', NS)
+    bookmark_names = [attr(node, 'name') for node in starts]
+    bookmark_ids = [attr(node, 'id') for node in starts]
+    equal(len(set(bookmark_names)), len(bookmark_names), 'unique bookmark names')
+    equal(len(set(bookmark_ids)), len(bookmark_ids), 'unique bookmark ids')
+    equal(sorted(bookmark_ids), sorted(attr(node, 'id') for node in ends), 'complete bookmark pairs')
+    bookmarks = {attr(bookmark, 'name'): text(p)
+                 for p in document.findall('.//w:p', NS)
+                 for bookmark in p.findall('w:bookmarkStart', NS)}
     instructions = [''.join(node.itertext()).strip() for node in paragraphs[2].findall('.//w:instrText', NS)]
     instructions += [attr(node, 'instr').strip() for node in paragraphs[2].findall('.//w:fldSimple', NS)]
     equal(instructions, [expected['reference_instruction']], 'reference field instruction')
@@ -87,6 +124,9 @@ def verify_parts(parts, phase, expected=None):
     comments = comment_root.findall('w:comment', NS)
     equal([text(c) for c in comments], want['comments'], 'comment text and thread deletion')
     equal([attr(c, 'id') for c in comments], ['0', '1'] if comments else [], 'stable comment ids')
+    for kind in ('commentRangeStart', 'commentRangeEnd', 'commentReference'):
+        equal([attr(node, 'id') for node in source.findall(f'.//w:{kind}', NS)],
+              ['0'] if comments else [], f'{kind} ownership and count')
     anchored = []
     active = False
     for node in source:
@@ -99,13 +139,16 @@ def verify_parts(parts, phase, expected=None):
         elif active:
             anchored.append(text(node))
     equal(''.join(anchored), expected['comment_anchor'] if comments else '', 'precise comment anchor')
-    equal(len(source.findall('.//w:commentReference', NS)), 1 if comments else 0, 'comment reference count')
+    equal(active, False, 'closed comment anchor')
     if comments:
         equal([attr(c, 'author') for c in comments], ['Reviewer', 'Author'], 'comment authors')
         equal([attr(c, 'initials') for c in comments], ['RV', 'AU'], 'comment initials')
         ids = [attr(c.findall('w:p', NS)[-1], 'paraId', prefix='w14') for c in comments]
+        if any(not re.fullmatch(r'[0-9A-Fa-f]{8}', value or '') for value in ids):
+            raise AssertionError('Comment paragraph ids must be eight hex digits')
         equal(len(set(ids)), 2, 'unique comment paragraph ids')
         extensions = ET.fromstring(parts['word/commentsExtended.xml']).findall('w15:commentEx', NS)
+        equal(len(extensions), 2, 'one metadata entry per comment')
         by_id = {attr(e, 'paraId', prefix='w15'): e for e in extensions}
         equal(set(by_id), set(ids), 'native comment metadata joins')
         equal(attr(by_id[ids[1]], 'paraIdParent', prefix='w15'), ids[0], 'reply parent')
@@ -125,7 +168,8 @@ def verify_parts(parts, phase, expected=None):
     grid_borders = table.findall('w:tblPr/w:tblBorders/*', NS)
     equal([(attr(b, 'color'), attr(b, 'sz')) for b in grid_borders], [('224466', '12')] * 6, 'table borders')
     equal(attr(required(rows[0], 'w:trPr/w:trHeight'), 'val'), '480', 'row height')
-    required(rows[0], 'w:trPr/w:cantSplit')
+    equal(attr(required(rows[0], 'w:trPr/w:cantSplit'), 'val', '1') in ('1', 'true', 'on'),
+          True, 'row cannot split')
     equal(attr(required(rows[1].findall('w:tc', NS)[1], 'w:tcPr/w:shd'), 'fill'), 'FFEEDD', 'retained cell shading')
 
     toc_titles, toc_entries, toc_instructions = [], [], []
@@ -141,6 +185,13 @@ def verify_parts(parts, phase, expected=None):
             if has_page:
                 equal(runs[-1].text, '1', 'authored TOC page result')
                 entry = entry[:-1]
+            links = p.findall('w:hyperlink', NS)
+            equal(len(links), 1, 'one TOC link per entry')
+            anchor = attr(links[0], 'anchor')
+            if anchor not in bookmarks:
+                raise AssertionError(f'TOC link has no bookmark target: {anchor!r}')
+            equal(text(links[0]), entry, 'TOC linked title')
+            equal(bookmarks[anchor], entry, 'TOC link resolves to its heading')
             toc_entries.append(entry)
         for node in p.findall('.//w:instrText', NS):
             instruction = ''.join(node.itertext()).strip()
@@ -187,6 +238,7 @@ def verify_parts(parts, phase, expected=None):
         matches = [r for r in rels if r.get('Id') == rid]
         equal(len(matches), 1, 'picture relationship ownership')
         relationship = matches[0]
+        equal(relationship.get('Type'), NS['r'] + '/image', 'picture relationship type')
         equal(relationship.get('TargetMode', 'Internal'), 'Internal', 'picture internal target')
         media = posixpath.normpath(posixpath.join('word', relationship.get('Target'))).lstrip('/')
         if media not in parts:
@@ -196,6 +248,7 @@ def verify_parts(parts, phase, expected=None):
 
 def verify_file(path, phase):
     with ZipFile(path) as package:
+        equal(len(package.namelist()), len(set(package.namelist())), 'unique package entries')
         parts = {name: package.read(name) for name in package.namelist()}
     verify_parts(parts, phase)
 

@@ -1,0 +1,145 @@
+{
+  "controls": {
+    "101": [
+      "document",
+      null,
+      "Customer details",
+      "customer.info",
+      true,
+      "Customer Alpha tailNested BetaCell Gamma"
+    ],
+    "201": [
+      "document",
+      "101",
+      "Customer value",
+      "customer.value",
+      true,
+      "Alpha"
+    ],
+    "102": [
+      "document",
+      "101",
+      "Nested block",
+      "nested.block",
+      true,
+      "Nested Beta"
+    ],
+    "103": [
+      "document",
+      "101",
+      "Cell block",
+      "cell.block",
+      true,
+      "Cell Gamma"
+    ],
+    "104": [
+      "document",
+      null,
+      "Empty block",
+      "empty.block",
+      true,
+      ""
+    ],
+    "105": [
+      "document",
+      null,
+      "Absent slot",
+      "absent.block",
+      false,
+      ""
+    ],
+    "202": [
+      "document",
+      null,
+      "Inline content",
+      "inline.content",
+      true,
+      "Inside"
+    ],
+    "207": [
+      "document",
+      "202",
+      "Nested inline",
+      "nested.inline",
+      true,
+      "si"
+    ],
+    "203": [
+      "document",
+      null,
+      "Empty inline",
+      "empty.inline",
+      true,
+      ""
+    ],
+    "204": [
+      "document",
+      null,
+      "Absent inline",
+      "absent.inline",
+      false,
+      ""
+    ],
+    "106": [
+      "document",
+      null,
+      "Ordinary block",
+      "ordinary.block",
+      true,
+      "Ordinary block"
+    ],
+    "206": [
+      "header",
+      null,
+      "Header inline",
+      "header.inline",
+      true,
+      "Header value"
+    ],
+    "107": [
+      "footnotes",
+      null,
+      "Note block",
+      "note.block",
+      true,
+      "Note Delta"
+    ]
+  },
+  "legacy_controls": {
+    "106": [
+      "document",
+      null,
+      "Legacy frame",
+      "qudsFrame:72,90,200,120,page,none,FFFFFF,000000",
+      true,
+      "Legacy frame"
+    ]
+  },
+  "legacy_frame_emu": {
+    "x": 914400,
+    "y": 1143000,
+    "cx": 2540000,
+    "cy": 1524000
+  },
+  "end_color": "4488AA",
+  "kind": "richText",
+  "edited_text": {
+    "101": "Customer Omega tailNested editedCell Gamma",
+    "201": "Omega",
+    "102": "Nested edited",
+    "202": "Updated",
+    "207": "",
+    "206": "Header edited",
+    "107": "Note edited"
+  },
+  "editor_text": {
+    "101": "Customer Alpha tailNested Be edited taCell Gamma",
+    "102": "Nested Be edited ta"
+  },
+  "editor_paragraphs": {
+    "102": [
+      "Nested ",
+      "Be edited ta"
+    ]
+  }
+}

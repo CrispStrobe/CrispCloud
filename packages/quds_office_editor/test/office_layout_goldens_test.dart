@@ -22,7 +22,7 @@ void main() {
           'continued_notes': 3,
           'tall_table': 4,
         }[entry.key]!;
-        for (int cycle = 0; cycle < 2; cycle++) {
+        for (int cycle = 0; cycle < 3; cycle++) {
           final laid = WordLayoutEngine(font: null).layout(doc);
           expect(laid.pages.length, pageCount);
           expect(laid.pages, isNotEmpty);

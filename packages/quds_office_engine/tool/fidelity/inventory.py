@@ -3,7 +3,7 @@
 
 Run ``clean`` before *all* producer tests/scripts and ``verify`` afterwards.
 Cleaning removes only manifest-listed Office files and this tool's receipt;
-verification rejects unlisted Office files in engine build/fidelity* scopes.
+verification rejects unlisted Office files in the selected build/fidelity* scope.
 Neither action depends on the current working directory. Hashes are provenance,
 not approval of the content: semantic, schema, and rendering oracles remain
 independent gates.
@@ -23,6 +23,7 @@ import zipfile
 
 
 PACKAGE = "quds_office_engine"
+PACKAGES = (PACKAGE, "quds_office_editor")
 DEFAULT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = Path(__file__).with_name("output_manifest.json")
 OFFICE_SUFFIXES = {".docx", ".xlsx", ".pptx"}
@@ -40,6 +41,13 @@ class Manifest:
     sha256: str
     series_count: int
     standalone_count: int
+    package: str = PACKAGE
+
+
+def _package_name(value: object) -> str:
+    if not isinstance(value, str) or value not in PACKAGES:
+        raise InventoryError(f"Unsupported fidelity package: {value!r}")
+    return value
 
 
 def _artifact_path(value: object) -> str:
@@ -59,13 +67,14 @@ def _artifact_path(value: object) -> str:
     return value
 
 
-def load_manifest(path: Path = DEFAULT_MANIFEST) -> Manifest:
+def load_manifest(path: Path = DEFAULT_MANIFEST, *, package: str = PACKAGE) -> Manifest:
+    package = _package_name(package)
     raw = path.read_bytes()
     data = json.loads(raw)
     if not isinstance(data, dict) or data.get("version") != 1:
         raise InventoryError("Manifest must be a version 1 object")
-    if data.get("package") != PACKAGE:
-        raise InventoryError(f"Manifest package must be {PACKAGE}")
+    if data.get("package") != package:
+        raise InventoryError(f"Manifest package must be {package}")
     series, standalone = data.get("series"), data.get("standalone")
     if not isinstance(series, list) or not isinstance(standalone, list):
         raise InventoryError("Manifest requires series and standalone lists")
@@ -103,17 +112,18 @@ def load_manifest(path: Path = DEFAULT_MANIFEST) -> Manifest:
             f"Manifest count {count!r} disagrees with {len(producers)} authored paths"
         )
     return Manifest(tuple(sorted(producers)), producers, hashlib.sha256(raw).hexdigest(),
-                    len(series), len(standalone))
+                    len(series), len(standalone), package)
 
 
-def package_root(path: Path = DEFAULT_ROOT) -> Path:
+def package_root(path: Path = DEFAULT_ROOT, *, package: str = PACKAGE) -> Path:
+    package = _package_name(package)
     root = path.resolve()
     pubspec = root / "pubspec.yaml"
     if not pubspec.is_file() or not re.search(
-        rf"(?m)^name:\s*['\"]?{PACKAGE}['\"]?\s*(?:#.*)?$",
+        rf"(?m)^name:\s*['\"]?{package}['\"]?\s*(?:#.*)?$",
         pubspec.read_text(encoding="utf-8"),
     ):
-        raise InventoryError(f"Not the {PACKAGE} package root: {root}")
+        raise InventoryError(f"Not the {package} package root: {root}")
     if (root / "build").is_symlink():
         raise InventoryError("The package build directory must not be a symlink")
     return root
@@ -135,7 +145,7 @@ def _safe_file(build: Path, relative: str) -> Path:
 
 
 def clean(manifest: Manifest, root: Path) -> list[str]:
-    build = package_root(root) / "build"
+    build = package_root(root, package=manifest.package) / "build"
     # Validate the complete deletion plan first: an unsafe later path must not
     # leave earlier evidence deleted in a half-completed clean operation.
     targets = [_safe_file(build, name) for name in (*manifest.paths, RECEIPT)]
@@ -172,7 +182,7 @@ def _observed_files(build: Path) -> set[str]:
 
 
 def verify(manifest: Manifest, root: Path) -> dict[str, object]:
-    build = package_root(root) / "build"
+    build = package_root(root, package=manifest.package) / "build"
     expected = set(manifest.paths)
     errors: list[str] = []
     records: list[dict[str, object]] = []
@@ -212,7 +222,7 @@ def verify(manifest: Manifest, root: Path) -> dict[str, object]:
     return {
         "version": 1,
         "ok": not errors,
-        "package": PACKAGE,
+        "package": manifest.package,
         "artifact_root": "build",
         "manifest_sha256": manifest.sha256,
         "expected_files": len(expected),
@@ -226,7 +236,7 @@ def verify(manifest: Manifest, root: Path) -> dict[str, object]:
 
 
 def write_receipt(report: dict[str, object], root: Path) -> Path:
-    build = package_root(root) / "build"
+    build = package_root(root, package=_package_name(report.get("package"))) / "build"
     target = _safe_file(build, RECEIPT)
     build.mkdir(parents=True, exist_ok=True)
     # A failed verification replaces any earlier successful receipt too.
@@ -237,12 +247,16 @@ def write_receipt(report: dict[str, object], root: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("clean", "verify"))
+    parser.add_argument("--package", choices=PACKAGES, default=PACKAGE,
+                        help="expected package name; engine remains the default")
+    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST,
+                        help="authored manifest; defaults to the engine manifest")
     parser.add_argument("--package-root", type=Path, default=DEFAULT_ROOT,
-                        help="engine root containing pubspec.yaml; defaults to this script's package")
+                        help="selected package root containing pubspec.yaml; defaults to the engine")
     args = parser.parse_args(argv)
     try:
-        root = package_root(args.package_root)
-        manifest = load_manifest()
+        root = package_root(args.package_root, package=args.package)
+        manifest = load_manifest(args.manifest, package=args.package)
         if args.action == "clean":
             removed = clean(manifest, root)
             print(f"Removed {len(removed)} manifest artifacts/receipts from {root / 'build'}")

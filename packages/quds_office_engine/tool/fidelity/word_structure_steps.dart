@@ -398,6 +398,13 @@ void _configureToc(WmlToc toc, StepInput s) {
     ..maxLevel = max
     ..showPageNumbers = pages
     ..title = title;
+  if (s.has('showPageNumbers')) {
+    // An explicit toggle applies to all levels. Preserve imported partial
+    // suppression only when the operation did not change page visibility.
+    toc
+      ..omitPageNumbersFromLevel = null
+      ..omitPageNumbersThroughLevel = null;
+  }
   WmlRunEdit.replaceRange(
     toc.titleParagraph,
     0,
@@ -446,8 +453,8 @@ void _boundary(WmlParagraph p, int at) {
   }
   var offset = 0;
   for (final run in p.inlines.whereType<WmlRun>()) {
-    if (run.noteRefId != null && at > offset && at < offset + run.text.length) {
-      throw ArgumentError('Offset splits an atomic note reference');
+    if (run.isAtomic && at > offset && at < offset + run.text.length) {
+      throw ArgumentError('Offset splits an atomic note or field result');
     }
     offset += run.text.length;
   }

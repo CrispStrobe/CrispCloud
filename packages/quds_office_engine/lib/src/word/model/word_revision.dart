@@ -17,7 +17,8 @@ class WmlRevision {
     this.author = 'Quds Office',
     this.dateIso = '',
     this.accepted,
-  });
+    this.targetParagraph,
+  }) : _targetCaptured = targetParagraph != null;
 
   /// id API.
   final int id;
@@ -25,8 +26,15 @@ class WmlRevision {
   /// kind API.
   final WmlRevisionKind kind;
 
-  /// paragraphIndex API.
+  /// Legacy body index retained for callers that create revisions by index.
+  /// Resolution captures the actual paragraph so structural edits cannot
+  /// redirect the change into another paragraph or another document story.
   int paragraphIndex;
+
+  /// Actual paragraph containing this change, including auxiliary stories.
+  WmlParagraph? targetParagraph;
+
+  bool _targetCaptured;
 
   /// start API.
   int start;
@@ -58,6 +66,7 @@ abstract final class WordRevisions {
     required int end,
     required String text,
     String author = 'Quds Office',
+    WmlParagraph? paragraph,
   }) {
     document.trackRevisions = true;
     var id = 1;
@@ -75,24 +84,70 @@ abstract final class WordRevisions {
       text: text,
       author: author,
       dateIso: DateTime.now().toUtc().toIso8601String(),
+      targetParagraph: paragraph ?? _bodyParagraph(document, paragraphIndex),
     );
+    revision._targetCaptured = true;
     document.revisions.add(revision);
     return revision;
+  }
+
+  /// Finds the captured paragraph while it still belongs to the document.
+  ///
+  /// Older callers that construct [WmlRevision] directly bind their body index
+  /// once. A detached captured paragraph never falls back to a body index.
+  static WmlParagraph? resolveParagraph(
+    WmlDocument document,
+    WmlRevision revision,
+  ) {
+    if (!revision._targetCaptured && revision.targetParagraph == null) {
+      revision.targetParagraph = _bodyParagraph(
+        document,
+        revision.paragraphIndex,
+      );
+    }
+    revision._targetCaptured = true;
+    final WmlParagraph? target = revision.targetParagraph;
+    if (target == null) return null;
+    for (final WmlParagraph paragraph in _allParagraphs(document)) {
+      if (identical(paragraph, target)) return target;
+    }
+    return null;
+  }
+
+  static WmlParagraph? _bodyParagraph(WmlDocument document, int index) {
+    if (index < 0) return null;
+    var position = 0;
+    for (final WmlParagraph paragraph in document.paragraphs) {
+      if (position++ == index) return paragraph;
+    }
+    return null;
+  }
+
+  static Iterable<WmlParagraph> _allParagraphs(WmlDocument document) sync* {
+    yield* document.paragraphs;
+    for (final WmlSection section in document.sections) {
+      yield* section.header;
+      yield* section.footer;
+      yield* section.firstHeader;
+      yield* section.firstFooter;
+      yield* section.evenHeader;
+      yield* section.evenFooter;
+    }
+    for (final note in [...document.footnotes, ...document.endnotes]) {
+      yield* note.allParagraphs;
+    }
+    for (final WmlComment comment in document.comments) {
+      yield* comment.paragraphs;
+    }
   }
 
   /// accept API.
   static void accept(WmlDocument document, WmlRevision revision) {
     revision.accepted = true;
     if (revision.kind == WmlRevisionKind.delete) {
-      final List<WmlParagraph> paras = document.paragraphs.toList();
-      if (revision.paragraphIndex >= 0 &&
-          revision.paragraphIndex < paras.length) {
-        WmlRunEdit.replaceRange(
-          paras[revision.paragraphIndex],
-          revision.start,
-          revision.end,
-          '',
-        );
+      final WmlParagraph? paragraph = resolveParagraph(document, revision);
+      if (paragraph != null) {
+        WmlRunEdit.replaceRange(paragraph, revision.start, revision.end, '');
       }
     }
     document.revisions.remove(revision);
@@ -102,15 +157,9 @@ abstract final class WordRevisions {
   static void reject(WmlDocument document, WmlRevision revision) {
     revision.accepted = false;
     if (revision.kind == WmlRevisionKind.insert) {
-      final List<WmlParagraph> paras = document.paragraphs.toList();
-      if (revision.paragraphIndex >= 0 &&
-          revision.paragraphIndex < paras.length) {
-        WmlRunEdit.replaceRange(
-          paras[revision.paragraphIndex],
-          revision.start,
-          revision.end,
-          '',
-        );
+      final WmlParagraph? paragraph = resolveParagraph(document, revision);
+      if (paragraph != null) {
+        WmlRunEdit.replaceRange(paragraph, revision.start, revision.end, '');
       }
     }
     document.revisions.remove(revision);

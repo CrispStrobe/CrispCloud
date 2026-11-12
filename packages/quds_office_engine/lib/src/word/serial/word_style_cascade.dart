@@ -290,6 +290,11 @@ class _StyleCascade {
     final source = p.properties.sourcePropertiesXml;
     final old = p.properties;
     p.properties = WmlParagraphProps(
+      // Native defaults apply when no imported layer declares spacing. The
+      // editor's new-paragraph defaults (8 pt / 1.15 lines) must not appear
+      // merely because an unrelated heading caused a styles part to be added.
+      spacingAfter: 0,
+      lineSpacing: 1,
       styleId: old.styleId,
       fieldInstruction: old.fieldInstruction,
       fieldBegin: old.fieldBegin,
