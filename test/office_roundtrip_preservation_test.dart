@@ -57,6 +57,51 @@ Map<String, Uint8List> _parts(Uint8List bytes) {
   };
 }
 
+List<String> _noteMarkerPositions(Uint8List bytes) {
+  final document = xml.XmlDocument.parse(
+    utf8.decode(_parts(bytes)['word/footnotes.xml']!),
+  );
+  final positions = <String>[];
+  for (final note in document.findAllElements(
+    'footnote',
+    namespace: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+  )) {
+    final id = note.attributes.firstWhere((a) => a.name.local == 'id').value;
+    var paragraphIndex = 0;
+    for (final paragraph in note.findAllElements(
+      'p',
+      namespace: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+    )) {
+      var offset = 0;
+      for (final element in paragraph.descendants.whereType<xml.XmlElement>()) {
+        if (element.name.local == 't') offset += element.innerText.length;
+        if (element.name.local == 'tab' || element.name.local == 'br') offset++;
+        if (element.name.local == 'footnoteRef') {
+          final properties = (element.parent as xml.XmlElement).findElements(
+            'rPr',
+            namespace:
+                'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+          );
+          final alignment = properties.expand(
+            (p) => p.findElements(
+              'vertAlign',
+              namespace: 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+            ),
+          );
+          final value = alignment.isEmpty
+              ? ''
+              : alignment.single.attributes
+                    .firstWhere((a) => a.name.local == 'val')
+                    .value;
+          positions.add('$id:$paragraphIndex:$offset:$value');
+        }
+      }
+      paragraphIndex++;
+    }
+  }
+  return positions;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -79,28 +124,10 @@ void main() {
     expect(_footnoteTexts(original), _footnoteTexts(saved));
     expect(_footnoteIdsByType(saved, 'separator'), contains(-1));
     expect(_footnoteIdsByType(saved, 'continuationSeparator'), contains(0));
-    final footnotesXml = utf8.decode(_parts(saved)['word/footnotes.xml']!);
-    final notes = xml.XmlDocument.parse(footnotesXml)
-        .findAllElements(
-          'footnote',
-          namespace:
-              'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
-        )
-        .where(
-          (note) => !note.attributes.any(
-            (attribute) => attribute.name.local == 'type',
-          ),
-        );
-    for (final note in notes) {
-      expect(
-        note.findAllElements(
-          'footnoteRef',
-          namespace:
-              'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
-        ),
-        hasLength(1),
-      );
-    }
+    // This authored fixture deliberately has no automatic marks inside the
+    // note stories. Preserve that absence instead of inventing one on save.
+    expect(_noteMarkerPositions(original), isEmpty);
+    expect(_noteMarkerPositions(saved), _noteMarkerPositions(original));
     // Compare the untrimmed text above: an imported note must not acquire an
     // invented separator run or lose authored leading/trailing whitespace.
 
@@ -126,5 +153,38 @@ void main() {
     addTearDown(reopened.dispose);
     expect(reopened.document.footnotes.length, 2);
     expect(reopened.document.paragraphs.first.text, startsWith('X'));
+  });
+
+  test('host preserves source note marker position and formatting through three saves', () {
+    final package = OpcPackage.openBytes(
+      File('test/fixtures/footnote.docx').readAsBytesSync(),
+    );
+    final part = package.getPart('/word/footnotes.xml')!;
+    part.writeText(
+      part.readText().replaceFirst(
+        '<w:p><w:r><w:t>First footnote text.</w:t></w:r></w:p>',
+        '<w:p><w:r><w:t xml:space="preserve">Before </w:t></w:r>'
+            '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:footnoteRef/></w:r>'
+            '<w:r><w:t>First footnote text.</w:t></w:r></w:p>',
+      ),
+    );
+    var bytes = package.save();
+    final expected = _noteMarkerPositions(bytes);
+    expect(expected, ['1:0:7:superscript']);
+    for (var cycle = 0; cycle < 3; cycle++) {
+      final controller = WordEditorController.fromBytes(bytes);
+      addTearDown(controller.dispose);
+      controller.insertText('X');
+      bytes = controller.saveBytes();
+      expect(_noteMarkerPositions(bytes), expected);
+      expect(_footnoteTexts(bytes), [
+        'Before First footnote text.',
+        'Second footnote text.',
+      ]);
+      final note = controller.documentLaidOut.pages
+          .expand((page) => page.notes)
+          .first;
+      expect(note.text, 'Before 1First footnote text.');
+    }
   });
 }
