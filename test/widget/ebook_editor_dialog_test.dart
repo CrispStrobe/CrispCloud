@@ -24,7 +24,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:xml/xml.dart';
+
+class _FailingAnnotationStore extends InMemorySharedPreferencesStore {
+  _FailingAnnotationStore() : super.empty();
+
+  int annotationWrites = 0;
+  bool failNextAnnotationWrite = false;
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) {
+    if (key.startsWith('flutter.ebook.annotations.')) {
+      annotationWrites++;
+      if (failNextAnnotationWrite) {
+        failNextAnnotationWrite = false;
+        return Future.value(false);
+      }
+    }
+    return super.setValue(valueType, key, value);
+  }
+}
 
 class _Store implements PdfFileStore {
   _Store()
@@ -249,6 +269,58 @@ void main() {
         (await EbookAnnotations.open(store.documentId, store.input)).bookmarks,
         hasLength(2),
       );
+    },
+  );
+
+  testWidgets(
+    'explicit reading-data discard does not retry a transient write failure',
+    (tester) async {
+      final preferencesStore = _FailingAnnotationStore();
+      SharedPreferencesStorePlatform.instance = preferencesStore;
+      final store = _Store();
+      await _open(
+        tester,
+        store,
+        portableReader: true,
+        startEditing: false,
+        linuxHostProbe: () async => const EbookLinuxHostStatus(
+          available: false,
+          reason: 'Portable test reader',
+        ),
+      );
+      final reader = tester.widget<EbookChapterReader>(
+        find.byType(EbookChapterReader),
+      );
+      Map<String, Object> annotationValues(Map<String, Object> values) =>
+          Map.fromEntries(
+            values.entries.where(
+              (entry) => entry.key.startsWith('flutter.ebook.annotations.'),
+            ),
+          );
+      final saved = annotationValues(await preferencesStore.getAll());
+      final writesBeforeClose = preferencesStore.annotationWrites;
+      preferencesStore.failNextAnnotationWrite = true;
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      expect(find.text('Reading data could not be saved'), findsOneWidget);
+      expect(preferencesStore.annotationWrites, writesBeforeClose + 1);
+
+      // A delayed layout/relocation callback can arrive while the failure
+      // prompt is open. It must not restart autosave before the user decides.
+      reader.onLocationChanged(
+        const EbookLocation(cfi: 'crisp-section:0', fraction: .9),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(preferencesStore.annotationWrites, writesBeforeClose + 1);
+
+      await tester.tap(
+        find.widgetWithText(FilledButton, 'Close without saving reading data'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EbookEditorDialog), findsNothing);
+      expect(preferencesStore.annotationWrites, writesBeforeClose + 1);
+      expect(annotationValues(await preferencesStore.getAll()), saved);
     },
   );
 

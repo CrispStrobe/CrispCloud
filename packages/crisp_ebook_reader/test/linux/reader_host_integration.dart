@@ -14,6 +14,73 @@ const native = MethodChannel('crisp_ebook_reader/linux_host');
 Future<Map<String, dynamic>> stats() async =>
     Map<String, dynamic>.from((await native.invokeMethod('stats')) as Map);
 
+Future<List<EbookLinuxHostStatus>> firstProbeWithDartChild() async {
+  // Dart's Unix exit-code thread waits for any child, including children
+  // launched by native libraries. Exercise that real coexistence while the
+  // first native create and concurrent probes await their shared canary.
+  final child = await Process.start('/bin/cat', const <String>[]);
+  var exited = false;
+  final exit = child.exitCode.then((value) {
+    exited = true;
+    return value;
+  });
+  var closed = false;
+  Future<void> cleanup() async {
+    if (closed) return;
+    closed = true;
+    try {
+      await child.stdin.close().timeout(const Duration(seconds: 2));
+    } finally {
+      final code =
+          await exit.timeout(const Duration(seconds: 3), onTimeout: () async {
+        child.kill(ProcessSignal.sigkill);
+        return exit.timeout(const Duration(seconds: 3));
+      });
+      expect(code, 0, reason: 'The Dart-owned coexistence child did not exit.');
+    }
+  }
+
+  addTearDown(cleanup);
+  try {
+    final echo = child.stdout
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .first;
+    child.stdin.writeln('crisp-reader-coexistence');
+    await child.stdin.flush();
+    expect(await echo.timeout(const Duration(seconds: 3)),
+        'crisp-reader-coexistence');
+    expect(exited, isFalse);
+    final create =
+        native.invokeMapMethod<String, dynamic>('create').then<Object?>(
+              (value) => value,
+              onError: (Object error) => error,
+            );
+    final statuses = await Future.wait([
+      probeEbookLinuxHost(),
+      probeEbookLinuxHost(),
+      probeEbookLinuxHost(),
+    ]);
+    final created = await create;
+    if (statuses.first.available) {
+      expect(created, isA<Map<String, dynamic>>());
+      final view = created! as Map<String, dynamic>;
+      expect(view['id'], isA<int>());
+      expect(view['textureId'], isA<int>());
+      await native.invokeMethod<void>('dispose', {'id': view['id']});
+    } else {
+      expect(created, isA<PlatformException>());
+    }
+    expect(exited, isFalse,
+        reason: 'The Dart child must remain live throughout native startup.');
+    debugPrint(
+        'linux-host test: first probe/create completed with live Dart child');
+    return statuses;
+  } finally {
+    await cleanup();
+  }
+}
+
 Future<void> until(WidgetTester tester, Future<bool> Function() condition,
     String reason) async {
   final deadline = DateTime.now().add(const Duration(seconds: 60));
@@ -36,22 +103,13 @@ void main() {
     if (const bool.fromEnvironment('EXPECT_RUNTIME_UNAVAILABLE')) {
       // Exercise direct create before any cached probe, plus concurrent probes.
       // None may create an in-process WebKit view after the canary fails.
-      final create = native.invokeMethod<dynamic>('create').then<dynamic>(
-            (value) => value,
-            onError: (Object error) => error,
-          );
-      final statuses = await Future.wait([
-        probeEbookLinuxHost(),
-        probeEbookLinuxHost(),
-        probeEbookLinuxHost(),
-      ]);
+      final statuses = await firstProbeWithDartChild();
       for (final status in statuses) {
         expect(status.available, isFalse);
         expect(status.version, isNotEmpty);
         expect(
             status.reason, contains('sandboxed WebKit startup check failed'));
       }
-      expect(await create, isA<PlatformException>());
       final current = await stats();
       expect(current['views'], 0);
       expect(current['surfaceSlots'], 0);
@@ -80,11 +138,9 @@ void main() {
       return;
     }
     debugPrint('linux-host test: probing native host');
-    final statuses = await Future.wait([
-      probeEbookLinuxHost(),
-      probeEbookLinuxHost(),
-      probeEbookLinuxHost(),
-    ]);
+    final statuses = const bool.fromEnvironment('EXPECT_PORTABLE')
+        ? [await probeEbookLinuxHost()]
+        : await firstProbeWithDartChild();
     final status = statuses.first;
     debugPrint('linux-host test: probe completed');
     if (const bool.fromEnvironment('EXPECT_PORTABLE')) {

@@ -533,8 +533,12 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     return ((buttons & 1) ? GDK_BUTTON1_MASK : 0) | ((buttons & 2) ? GDK_BUTTON3_MASK : 0) |
            ((buttons & 4) ? GDK_BUTTON2_MASK : 0);
   }
-  void Evaluate(const std::string& source, FlMethodCall* call = nullptr) {
+  void Evaluate(std::string source, FlMethodCall* call = nullptr) {
     auto* evaluation = new Evaluation{shared_from_this(), call != nullptr ? FL_METHOD_CALL(g_object_ref(call)) : nullptr};
+    // receive() is async; WebKit cannot serialize its Promise as an evaluation
+    // result. Command results/errors already use the authenticated message
+    // bridge. Return a plain null here while preserving synchronous JS errors.
+    source.append("; null");
     api_.webkit_web_view_evaluate_javascript(webview_, source.c_str(), source.size(), nullptr,
                                            url_.c_str(), cancellable_, EvaluationDone, evaluation);
     Touch();

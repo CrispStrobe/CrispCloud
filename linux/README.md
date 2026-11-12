@@ -60,7 +60,8 @@ Before either a probe or a direct native `create` can succeed, a fresh helper
 process starts WebKit with the same ephemeral context, required sandbox,
 application identity, offscreen window and browser settings. It serves only a
 small fixed loopback document, then requires that document's exact JavaScript
-reply from the real WebProcess. The supervisor and fresh worker disable their
+reply from the real WebProcess and its known green color in a bounded offscreen
+snapshot. The supervisor and fresh worker disable their
 own dumpability and set a zero core-size limit inherited by their children.
 The supervisor bounds startup and kills/reaps its children on success,
 failure, timeout or cancellation. Readiness requires the exact bounded proof,
@@ -138,7 +139,12 @@ The matrix also compiles a portable-only host. The installed-runtime recovery
 job must return unavailable after one shared canary attempt, reject direct
 creation, retain zero native views/surfaces, and keep Flutter responsive. Native
 supervisor tests exercise proof validation and child cleanup; the real display
-job also checks that no new canary/WebKit/proxy processes remain. `readelf` must
+jobs keep a Dart-owned child alive during the first native create and probes,
+then check that no new canary/WebKit/proxy processes remain. This exercises
+Dart and GLib child-process coexistence. The supervisor establishes the worker's
+actual exit and complete cleanup before emitting proof; the outer GLib-reported
+exit status is supplementary because Dart can reap that outer process first.
+`readelf` must
 show no WebKit or JavaScriptCore `DT_NEEDED` entry in either plugin or helper.
 Finally each enabled job builds a fresh probe application while headers are
 present, removes the optional runtime on that

@@ -584,7 +584,8 @@ contains the shared dynamic API loading, version check and browser settings.
 Both the production view and the helper keep ephemeral storage, the required
 WebKit sandbox, disabled file-URL access and disabled persistent WebView storage.
 Neither adds a sandbox bypass. The helper loads only a small, fixed loopback
-document and requires its exact JavaScript message from the matching URI.
+document and requires its exact JavaScript message from the matching URI,
+followed by a bounded Cairo image containing the fixed background color.
 The probe takes no publication bytes, account credentials or arbitrary URL.
 
 The worker uses GLib's `g_uuid_string_random()` for the temporary URL path.
@@ -598,8 +599,12 @@ production reader's `Random.secure()` bridge session.
 resolves the helper beside the loaded plugin without a `PATH` search. Native
 `probe` and direct `create` calls share the same asynchronous readiness check;
 neither creates an in-process WebKit view after a failed result. The result
-requires exact proof bytes and a successful helper exit, with at most 64 bytes
-of captured output. Its 12-second deadline is followed by a 2-second termination
+requires exact proof bytes and a reported successful helper exit, with at most
+64 bytes of captured output. Dart's process reaper can collect the outer
+helper's status before GLib; that reported status is only an additional check.
+The separate supervisor establishes the real worker exit and child cleanup
+before emitting the proof. The native probe's 12-second deadline is followed by
+a 2-second termination
 bound, and the Dart probe waits 16 seconds. Forced termination uses GLib's
 serialized subprocess API, without raw PID/group signaling from the GTK
 callback after a possible background reap. Concurrent requests are coalesced;
@@ -640,21 +645,72 @@ separate evidence; the helper source is not a passing platform qualification.
 
 ### Concurrent main and ebook source reconciliation
 
-The saved Linux startup checkpoint contains 213 reviewed paths. A concurrent
+The saved Linux startup checkpoint contained 213 reviewed paths. A concurrent
 main synchronization on the incoming ebook branch retains the earlier 207
 and adds 16 Rust-cloud paths, together with Rust-engine sections under its
 existing Filen and Internxt records. The combined inventory preserves those
 incoming records and its 12 November review date, plus all six startup/helper
-bindings and their feature record, for **229 unique paths**.
+bindings and their feature record, for **229 unique paths** at that checkpoint.
 
 The [reconciliation record](crypto-source-review-2026-11-12.md#concurrent-branch-reconciliation)
 inherits the incoming main review and verifies source identity instead of
 claiming a new audit of its provider implementations. All 229 source files
-match one of the two saved parent revisions byte for byte: 220 match the
-incoming branch, while three changed Linux files and six added bindings match
-the reviewed startup checkpoint. Policy decisions remain exactly those of the
-incoming branch; only inventory and source digests are refreshed. Native
+matched one of the two saved parent revisions byte for byte: 220 matched the
+incoming branch, while three changed Linux files and six added bindings matched
+the reviewed startup checkpoint. Policy decisions remained exactly those of the
+incoming branch; only inventory and source digests were refreshed. Native
 artifact qualification and live distribution evidence remain separate.
+
+### Consolidated reading lifecycle and Linux implementation
+
+The next consolidation retains all 229 paths above and adds
+[`reader_search.js`](../packages/crisp_ebook_reader/assets/reader_search.js),
+for **230 current paths**. It carries forward the incoming shared corrections
+to explicit reading-state discard, sanitized section resource cleanup and
+search cancellation. Those runtime changes and their tests match the incoming
+commit byte for byte. The search adapter limits query length and result count,
+serializes Foliate's mutable iterators, and rejects stale overlays while
+returning cancellation promptly. Section loading shares in-flight work and
+uses immutable sanitized Blob snapshots for search; unload and disposal
+invalidate pending work and release its eventual resources. Explicit discard
+suppresses the final disposal save, and closing suppresses relocation writes.
+These changes add no cryptographic algorithm, network access or credential
+store, and do not edit the pinned Foliate sources.
+
+The incoming branch also contained a separate Linux helper implementation.
+Its `reader_runtime_probe.h`, `reader_webkit_settings.h` and
+`webkit_runtime_probe.cc` are absent from the consolidated tree and are
+retired from the current inventory. Their historical review remains in
+`e2231a963ae3e5bad6e5164a38bd8006f53b8619`. The retained implementation is the
+canary/supervisor described above; the inventory does not describe the two
+alternatives as simultaneously shipped components.
+
+The retained worker additionally verifies the fixed document's known background
+color in an ARGB32/RGB24 Cairo image before it can report readiness. Snapshot
+dimensions and stride are bounded, and cancellation/close prevents late
+callbacks from publishing success. Timeout, load failure and WebProcess
+termination latch a terminal failure, so a paint callback dispatched in the
+same event-loop iteration cannot overwrite it. The native integration regression keeps a
+real Dart-owned child process active across concurrent probes and a guarded
+native create/dispose, covering coexistence with Dart's process reaper. That regression and actual
+WebKit painting still require their hosted execution evidence.
+
+The native evaluation wrapper also returns a plain JavaScript `null` after its
+two existing bridge-call expressions, so WebKit need not serialize an async
+`receive()` Promise. It takes the temporary expression string by value and
+appends `; null` to that owned buffer, avoiding a separate full-message
+statement string. The message-size limit is unchanged. Synchronous evaluation
+errors still use the native error path; command results and failures still use the existing session-checked
+message bridge. This changes result transport, not bridge authority or content
+sanitization.
+
+`shared_preferences_platform_interface` remains at locked version **2.4.2**.
+The lock changes its classification from transitive to direct development
+dependency, and the root manifest uses `^2.4.2` for the persistence-failure
+regression. Both files match the incoming commit byte for byte. This changes
+no package bytes and adds no production dependency. The source review refreshes
+the root-lock digest with the combined source bindings. Existing policy
+decisions and validator rules are retained.
 
 ### Meaning of the existing export-policy status
 

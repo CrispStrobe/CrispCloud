@@ -352,7 +352,7 @@ tracks the larger extension. Its local checks include **8 reader controller/mode
 tests**, **154 application/service/widget tests**, normal and missing-grouping +
 raw-DEFLATE parser variants, and a successful full web release build. The three
 host-owned reader JavaScript modules in the built web bundle match their source
-hashes. The combined source audit covers 229 paths; its existing Python suites and
+hashes. The consolidated source audit covers 230 paths; its existing Python suites and
 source-bound evidence check passed without changing any gate or policy decision.
 
 Hosted run [43225371743](https://github.com/CrispStrobe/CrispCloud/actions/runs/43225371743)
@@ -363,10 +363,16 @@ CFI-preserving appearance, fixed-layout behavior and content isolation. The
 production browser metadata adapter passed 24 assertions. The browser lifecycle
 failure from the earlier revision did not recur.
 
-The first dedicated Linux run compiled the enhanced plugin and passed its
-package checks; the portable-only build and launch passed. The enhanced
-application then exited before completing actual rendering/input validation.
-That is an unresolved native runtime gate while diagnostics are investigated,
-not a successful enhanced-reader result. Consult the recovery record for later
-runs and exact revisions. Mobile, Wayland, hardware input and assistive-
-technology validation remain separate requirements.
+Native run [43232310526](https://github.com/CrispStrobe/CrispCloud/actions/runs/43232310526)
+at `0ba63f3` passed both Ubuntu 24.04 targets: safe recovery from an installed but
+unusable runtime, and a portable-only build. The recovery job also verified
+process cleanup, executable helper installation/reinstallation, and application
+launch after the optional runtime was removed. On Ubuntu 22.04, the isolated
+startup check succeeded and the real reader shell reached its first texture
+upload; a JavaScript Promise return-value error then stopped the enhanced test.
+The consolidated candidate discards that unused return value and strengthens
+the startup proof with a known-color painted snapshot and a live Dart-child
+regression. Complete enhanced rendering/input still requires a successful run
+of that candidate. Its consolidated local web release build passed in 216.4
+seconds. Mobile, Wayland, hardware input and assistive-technology validation
+remain separate requirements.

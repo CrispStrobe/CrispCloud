@@ -168,6 +168,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   bool _editing = false;
   bool _working = false;
   bool _closing = false;
+  bool _discardReadingDataOnClose = false;
   bool _allowPop = false;
   bool _metadataDraft = false;
   bool _sourceDraft = false;
@@ -234,7 +235,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     _annotationTimer?.cancel();
     _conversionToken?.cancel();
     final annotations = _annotations;
-    if (annotations != null) {
+    if (annotations != null && !_discardReadingDataOnClose) {
       unawaited(annotations.save().catchError((Object _) {}));
     }
     final container = _container;
@@ -853,6 +854,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         }
       }
       _annotationTimer?.cancel();
+      var discardReadingData = false;
       try {
         await _annotations?.save();
         if (_annotations case final annotations?) {
@@ -899,8 +901,12 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           return;
         }
         if (choice != 'discard') return;
+        discardReadingData = true;
       }
       if (!mounted || route?.isCurrent == false) return;
+      // Disposal normally makes one final best-effort save. An explicit discard
+      // must not retry a transient failure and silently persist the draft.
+      _discardReadingDataOnClose = discardReadingData;
       if (navigate != null) {
         navigate();
         return;
@@ -1327,6 +1333,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   void _onLocation(EbookLocation location) {
     if (!mounted ||
+        _closing ||
         _readingDataBusy ||
         _annotations?.isApplyingReadingData == true) {
       return;

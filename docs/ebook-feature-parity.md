@@ -26,8 +26,9 @@ browser through a Flutter texture, rather than positioning a separate native
 window above Flutter dialogs. The existing stable plugin and other platform
 dependencies are retained. Linux support is selected only after an isolated
 startup check: a packaged helper must load the same sandboxed WebKit runtime,
-serve a fixed local readiness page, receive its JavaScript reply and clean up
-its subprocesses. Missing libraries, unusable sandbox prerequisites, helper
+serve a fixed local readiness page, receive its JavaScript reply, verify a
+known-color painted snapshot and clean up its subprocesses. Missing libraries,
+unusable sandbox prerequisites, helper
 failure or timeout report an unavailable host before an in-process WebView is
 created. A build without the optional development headers also continues to
 launch and can use the portable EPUB reader. The result is cached for the app

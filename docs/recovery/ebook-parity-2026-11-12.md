@@ -19,9 +19,11 @@ Continuation work isolates the browser readiness check in a bounded child
 process so a failed runtime prerequisite cannot terminate the main app,
 retains the required real rendering/input gate, reviews the shared workflows,
 and reconciles the feature branch with current `main`. No browser sandbox or
-runner security policy is relaxed. Every coherent increment is committed and
-pushed to `feature/ebook-reader-editor`; final qualification is recorded below
-only after its checks complete.
+runner security policy is relaxed. Coherent increments are saved remotely. When
+another continuation advanced `feature/ebook-reader-editor`, this continuation
+preserved both histories and moved its candidate to an isolated branch rather
+than replacing concurrent work. Final qualification is recorded below only
+after its checks complete.
 
 ## Goal and starting point
 
@@ -264,8 +266,9 @@ While this checkpoint was being saved, the feature branch advanced to
 `5e0b6f9`. The expected-SHA guard prevented replacement of that work. Integration
 retains both histories and the incoming main/storage changes, unions their
 source-review records with the new helper inputs, and refreshes the technical
-bindings against the combined tree. The ebook runtime source bytes are unchanged
-from `0ba63f3`; the combined application still has its normal integration gates.
+bindings against the combined tree. The initial combined snapshot at `13667db`
+kept the ebook runtime source bytes unchanged from `0ba63f3`; the combined
+application still has its normal integration gates.
 
 The combined inventory has 229 unique paths and 15 feature records. It retains
 all 223 incoming paths and 14 records, plus the helper's six reviewed inputs
@@ -292,3 +295,62 @@ custom fonts, persistent navigation stacks and robust annotation re-anchoring
 remain distinct increments. The FBReader comparison differentiates stable
 desktop 2.1.5 from 2.5 RC 1, Android editions and iOS rather than claiming that
 one product feature list is universal across platforms.
+
+## Continuation checkpoints after `67ee2af`
+
+- `280f55167f43f227068d8a462a88aabc18e56afb`: recovered the newer remote checkpoint and saved the continuation plan on the feature branch.
+- `5e0b6f94c542a41db232eb62ec19d21a9ddacffb`: merged current main (`977b5037`), preserving both source inventories and reviewing the combined startup changes.
+
+The next shared-reader increment fixes explicit reading-data discard being retried on disposal, concurrent section-load resource leaks, and canceled searches leaving stale overlays. It also blocks late events from replaced reader views and reports search result chapter indices from their CFIs. Focused Dart analysis, both parser compatibility modes and vendor checks passed. The committed browser and one-shot storage-write regressions still require their runtime gates before final qualification. The Linux startup-helper work remains a separate increment.
+
+### Parallel Linux readiness guard checkpoint (historical)
+
+Shared-reader corrections are saved at `ae0ef0bd32c786400bb28aa6f24794948e6ae1f7`. The native continuation now implements the previously unfinished startup guard. It runs a fixed script/painting probe in a separate bundled executable before creating a real view, returns portable availability on failure and cleans child processes on all outcomes. Seven real subprocess scenarios passed; actual-header helper compilation also passed. Full native packaging/rendering still requires the new hosted run.
+
+The Linux workflow has three explicitly different jobs: required complete enhanced rendering on Ubuntu 22.04; safe recovery from the observed blocked sandbox startup on Ubuntu 24.04; and the portable-only build. The official Jammy WebKitGTK 4.1 package is 2.50.4, above the retained 2.48.4 minimum (https://packages.ubuntu.com/jammy-updates/libwebkit2gtk-4.1-dev). Neither runner security policy nor the browser sandbox is relaxed. A recovery pass is not an enhanced-rendering pass.
+
+## Consolidated native candidate
+
+The original feature branch advanced again to `e2231a9` while the combined
+snapshot was being prepared. `13667db` was saved to
+`recovery/ebook-parity-canary-2026-11-12`, and the reviewed startup implementation
+remains available at `0ba63f3` on `checkpoint/ebook-parity-2026-11-12`. The next
+candidate is saved separately to `feature/ebook-parity-canary-20261112`.
+
+This candidate retains the incoming `ae0ef0b` fixes for explicit discard on
+close, stale resource loads and serialized search cancellation. It consolidates
+Linux startup around one supervised worker, retaining post-exec non-dumpability,
+subreaper cleanup and the stronger packaging/process assertions. The unused
+alternate runner is removed from this candidate; its history remains in
+`e2231a9`. The known-color paint check is incorporated into the retained worker,
+with weak callback ownership, cancellation and a terminal failure latch.
+
+The completed native run at `0ba63f3` established:
+
+| Target | Observed result |
+| --- | --- |
+| Ubuntu 22.04 enhanced | Startup helper succeeded, reader shell loaded and first texture upload occurred. The test then failed with `Unsupported result type` from an unused JavaScript Promise return. |
+| Ubuntu 24.04 installed runtime unavailable | Passed: bounded safe rejection, responsive Flutter UI, no remaining helper/WebKit/proxy processes, executable installation and reinstall, and launch after runtime removal. |
+| Ubuntu 24.04 portable-only | Passed: build, real application launch, 600 surface boundary combinations, 16 supervisor scenarios and eight package tests. |
+
+The consolidated native bridge evaluates its two command expressions followed
+by `null`, leaving asynchronous results on the authenticated bridge and avoiding
+WebKit's attempt to serialize their unused Promise results. A live Dart-owned
+child now runs before direct creation and concurrent readiness probes, exercising
+process-reaper coexistence during actual native startup. The next hosted native
+run must establish painting, this process regression, and complete book rendering
+and input; source review and fallback success do not establish those outcomes.
+
+Normal and forced-compatibility parser suites passed with the new resource and
+search regressions and all five Kindle fixtures. The consolidated local web
+release build passed in 216.4 seconds. The source inventory contains 230 paths
+and 15 feature records; the existing evidence suite completed 41 cases with the
+same two skips, all 37 preflight cases passed, and source-bound checking passed.
+The dependency manifest and lock remain byte-for-byte identical to `e2231a9`.
+Policy decisions and validation rules are unchanged.
+
+The incoming focused regression `explicit reading-data discard does not retry a
+transient write failure` reached Flutter locally but failed before its discard
+assertions: its setup could not find `EbookChapterReader`. The test setup is
+being investigated; this checkpoint does not claim that regression passed.
+The temporary local native-hook configuration was restored byte for byte.

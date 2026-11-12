@@ -24,8 +24,10 @@ added **49**, for **177** unique paths. The follow-on review retains all 177
 and adds **30**, for **207** unique paths. The isolated Linux startup review
 below adds **six**, producing a 213-path checkpoint. The concurrent main
 synchronization contributes **16** more reviewed paths; the combined
-[inventory](crypto-inventory.json) now contains **229** unique paths, retaining
-both branches' additions. The initial exact-byte comparison against the main baseline
+[inventory](crypto-inventory.json) at that checkpoint contains **229** unique
+paths. The final consolidation below retains those paths, adds the shared
+search controller and excludes the superseded alternate Linux variant, for
+**230** current paths. The initial exact-byte comparison against the main baseline
 found changes in three of its previously listed files; the other 125 matched.
 
 | Existing input | Reviewed change |
@@ -447,3 +449,145 @@ Validation against the combined tree used the unchanged gates:
 These results establish source-binding consistency for the combined tree.
 The inherited review boundaries, pending native runtime qualification, and
 separate artifact/live distribution requirements remain in effect.
+
+## Reading lifecycle corrections after recovery
+
+Reviewed explicit-discard handling in the editor, the section resource loader, and the host-owned search adapter. Explicit discard now suppresses the final best-effort write and relocation callbacks during closing. The resource loader shares in-flight work, retains only immutable sanitized search snapshots across unload, and releases late resources. The search adapter bounds inputs, serializes mutable Foliate iterators, returns cancellation promptly and suppresses stale overlays/events without modifying pinned vendor code. Search hit section numbers are resolved from their CFIs. No new network, cryptographic or credential capability is introduced. The only root dependency change promotes the already-locked shared_preferences_platform_interface 2.4.2 to a direct development dependency for the one-shot write-failure regression.
+
+The inventory adds reader_search.js (224 total paths). Default and forced missing-grouping/raw-DEFLATE parser regressions, vendor integrity and focused Dart analysis passed. The actual browser regression is committed for CI; local application tests are awaiting the restored native build toolchain. These bindings use staged source and exclude the temporary local SQLite test configuration and still-uncommitted Linux-host work. All non-digest policy values remain unchanged.
+
+```json
+{
+  "inventory_sha256": "51e68885d5401faac89272c84af86753e5627a5bad6ed6ab14e5925a11e3d3f4",
+  "pubspec_lock_sha256": "5df7dcfb50f5ffc6c1649adaad649c8d7c577ece5aac6eb8ba1753c7e75703fe",
+  "reviewed_source_sha256": "62a74997da1d2566bc728dd26d9918a9821d08aa2737268cd92b79531a7407a0"
+}
+```
+
+## Consolidated recovery implementation
+
+The isolated recovery branch consolidates saved checkpoint
+`13667db48cde44435d486d6cf0842a89563190b8` with incoming
+`e2231a963ae3e5bad6e5164a38bd8006f53b8619`. It retains the canary/supervisor
+implementation reviewed above and the shared lifecycle corrections from
+`ae0ef0b`. The incoming source review's alternate Linux implementation remains
+recorded in `e2231a9`; it is not an additional shipped helper in this tree.
+
+The current inventory preserves all 229 paths from the saved checkpoint and
+adds `packages/crisp_ebook_reader/assets/reader_search.js`, for **230 unique
+paths and 15 feature records**. Three alternate runtime bindings are retired
+because the corresponding files are absent:
+
+- `packages/crisp_ebook_reader/linux/reader_runtime_probe.h`
+- `packages/crisp_ebook_reader/linux/reader_webkit_settings.h`
+- `packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc`
+
+The existing shared-reader feature retains the incoming search/discard/resource
+description, while its obsolete helper description and source references are
+removed. The separate canary feature and all six of its reviewed bindings
+remain. All other incoming feature records, provider sections and inventory
+metadata are retained exactly. This makes the inventory describe the current
+implementation while preserving the superseded review in its saved commit.
+
+Both parent source maps reproduce their committed policy fingerprints before
+consolidation: `81272b66` for the saved recovery checkpoint and `97b9a522` for
+the incoming branch. Exact-byte comparison confirms that the incoming editor,
+reader/search/resource changes and their nine runtime/test files are preserved.
+Their earlier verification evidence is inherited with the limits stated above.
+
+The root lock changes only the existing `shared_preferences_platform_interface`
+entry from transitive to direct development classification; its version remains
+**2.4.2**. The root manifest's new development constraint is `^2.4.2`. Both
+manifest and lock match the incoming commit byte for byte. Offline dependency
+resolution completed without changing the lock. This is a test dependency for
+the transient persistence-failure regression, with no production dependency or
+package-version change. The earlier lifecycle review and its historical
+fingerprints are retained.
+
+### Retained helper paint and process-coexistence checks
+
+The canary worker now requires a snapshot of its fixed loopback page containing
+the known background color, in addition to the exact JavaScript reply and load
+completion. It accepts only successful Cairo image surfaces with ARGB32/RGB24
+format, bounded dimensions and stride, then scans their native-endian color
+words. A plain white or merely allocated snapshot cannot establish readiness.
+The snapshot callback uses a weak worker reference; close cancels pending work
+and prevents a late callback from publishing success. A monotonic failure
+latch prevents a paint callback from overwriting a timeout, load failure or
+process termination even within the same event-loop iteration. Pre-loop
+failure is handled without starting a loop that already resolved. The worker's
+existing timeout and the supervisor's proof/exit/cleanup limits remain in force.
+
+The native probe names GLib's result `reported_clean_exit_` to distinguish it
+from the actual worker status checked inside the fresh supervisor. Dart's
+process reaper may collect the outer helper before GLib observes its status.
+The exact supervisor proof is therefore the independent evidence that the
+worker exited successfully and that owned descendants were reaped; the outer
+reported status remains an additional guard. The application creates no view
+without the proof and completed stdout handling.
+
+The integration regression verifies an initial response from a real Dart
+`Process` child, keeps it alive across concurrent probes and a native
+create/dispose, then closes its input and verifies normal exit. This covers
+coexistence rather than inferring it from the standalone supervisor tests.
+The new paint/coexistence checks remain explicit test requirements; their
+actual hosted result remains separate from this
+source review and its fingerprints.
+
+The plugin's two `Evaluate` call sites are bridge expressions. The wrapper now
+evaluates the expression followed by `null`, avoiding WebKit's
+unsupported Promise-result conversion for asynchronous `receive()` calls.
+Synchronous JavaScript errors still reach the native evaluation error path;
+asynchronous command results and errors use the existing session-checked
+message bridge. This targeted fix does not change the bridge's allowed origin,
+session validation or publication sanitization.
+
+The final allocation adjustment changes only the plugin among the 230 bound
+paths. `Evaluate` takes its temporary call-expression string by value and
+appends `; null` to the owned buffer, avoiding a separate statement string
+containing the entire potentially large message. Both current call sites
+remain expressions; the message-size limit and synchronous-error behavior are
+unchanged. The preceding `604c1902` source map differs only in this reviewed
+plugin file, whose updated bytes match the owner's final freeze.
+
+### Consolidated fingerprints and validation
+
+The final source comparison binds the frozen paint/failure-latch, reported
+exit-status and evaluation-result changes above. Of the 230 current paths,
+221 match incoming `e2231a9` byte for byte. Six match the retained recovery
+checkpoint: root Linux CMake, the Dart probe, package Linux CMake, supervisor,
+shared WebKit runtime header and smoke-project preparer. The remaining three
+are the specifically reviewed native delta: `reader_canary.cc`,
+`reader_canary_probe.h` and `crisp_ebook_reader_plugin.cc`. Their bytes match
+the owners' final source freeze. No other bound path has an unreviewed merged
+version.
+
+```json
+{
+  "inventory_sha256": "5a0e614d3da63acc7d2ac2720788aadf20cfa7ef86e3f82fa641496b7091030a",
+  "pubspec_lock_sha256": "5df7dcfb50f5ffc6c1649adaad649c8d7c577ece5aac6eb8ba1753c7e75703fe",
+  "reviewed_source_sha256": "5b7aae2d8a6f0468431847b5eee661945cb09d51e9a072a2fb0a1470d7c4a52c"
+}
+```
+
+The two unchanged validator suites passed against the preceding consolidated
+source. After the final single-file allocation adjustment, the source check
+and whitespace check were repeated:
+
+- `test_crypto_release_evidence.py`: 41 tests completed, with the same two
+  platform-dependent skips.
+- `test_apple_export_preflight.py`: all 37 tests passed.
+- `crypto_release_evidence.py --check`: passed for the 230-path inventory,
+  incoming complete root lock and consolidated source fingerprint.
+- `git diff --check`: passed for all four review/policy files, whose contents
+  contain no merge-conflict markers.
+
+The current inventory retains every saved recovery path and removes only the
+three unused alternate runtime paths from the incoming inventory. Its
+remaining provider records and metadata are preserved. The policy is copied
+from incoming `e2231a9`, changing only inventory and reviewed-source digest
+values; its incoming root-lock digest is already correct. All non-digest
+application, legal and distribution fields remain byte-for-byte unchanged,
+as do the validator sources and acceptance rules. Actual native rendering,
+the new process-coexistence regression, finished artifacts and live submission
+evidence remain separate gates with their own recorded results.

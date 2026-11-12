@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include <cstring>
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,15 +18,21 @@ namespace {
 // private loopback URI; loading a library alone is not a readiness proof.
 constexpr char kDocument[] =
     "<!doctype html><meta charset=utf-8>"
-    "<meta http-equiv=Content-Security-Policy content=\"default-src 'none'; script-src 'unsafe-inline'\">"
-    "<title>Reader startup check</title><p id=ready>Reader startup check</p>"
+    "<meta http-equiv=Content-Security-Policy content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'\">"
+    "<title>Reader startup check</title><body style='margin:0;background:#1f5947;color:white'>"
+    "<p id=ready>Reader startup check</p>"
     "<script>addEventListener('load',()=>{if(document.getElementById('ready').textContent==='Reader startup check')"
     "window.webkit.messageHandlers.CrispEbookCanary.postMessage('CRISP_EBOOK_WEBKIT_READY_V1');});</script>";
 
-class Worker {
+class Worker : public std::enable_shared_from_this<Worker> {
  public:
-  ~Worker() {
+  ~Worker() { Close(); }
+
+  void Close() {
+    if (closed_) return;
+    closed_ = true;
     if (timer_ != 0) g_source_remove(timer_);
+    if (cancel_ != nullptr) g_cancellable_cancel(cancel_);
     if (content_ != nullptr) {
       g_signal_handlers_disconnect_by_data(content_, this);
       api_.webkit_user_content_manager_unregister_script_message_handler(content_, "CrispEbookCanary");
@@ -47,6 +55,7 @@ class Worker {
     }
     g_clear_object(&server_);
     g_clear_object(&context_);
+    g_clear_object(&cancel_);
     if (loop_ != nullptr) g_main_loop_unref(loop_);
   }
 
@@ -88,10 +97,11 @@ class Worker {
     gtk_widget_set_size_request(GTK_WIDGET(view_), 96, 64);
     gtk_widget_show_all(window_);
     loop_ = g_main_loop_new(nullptr, FALSE);
+    cancel_ = g_cancellable_new();
     timer_ = g_timeout_add(7000, TimedOut, this);
     crisp_ebook::Trace("canary loading fixed loopback document");
     api_.webkit_web_view_load_uri(view_, uri_.c_str());
-    g_main_loop_run(loop_);
+    if (!failed_ && !ready_) g_main_loop_run(loop_);
     return ready_;
   }
 
@@ -140,23 +150,68 @@ class Worker {
     if (event == WEBKIT_LOAD_FINISHED) { self->loaded_ = true; self->MaybeReady(); }
   }
   void MaybeReady() {
-    if (message_ && loaded_ && served_) {
-      ready_ = true;
+    if (message_ && loaded_ && served_ && !snapshot_pending_ && !closed_ && !failed_) {
+      snapshot_pending_ = true;
       crisp_ebook::Trace("canary received real WebProcess proof");
-      g_main_loop_quit(loop_);
+      auto* weak = new std::weak_ptr<Worker>(shared_from_this());
+      api_.webkit_web_view_get_snapshot(view_, WEBKIT_SNAPSHOT_REGION_VISIBLE,
+          WEBKIT_SNAPSHOT_OPTIONS_NONE, cancel_, SnapshotDone, weak);
     }
+  }
+  static void SnapshotDone(GObject* source, GAsyncResult* result, gpointer data) {
+    std::unique_ptr<std::weak_ptr<Worker>> weak(static_cast<std::weak_ptr<Worker>*>(data));
+    auto self = weak->lock();
+    g_autoptr(GError) error = nullptr;
+    auto& api = crisp_ebook::WebKitApi::Get();
+    cairo_surface_t* surface = api.webkit_web_view_get_snapshot_finish(
+        reinterpret_cast<WebKitWebView*>(source), result, &error);
+    bool painted = false;
+    if (surface != nullptr && cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS &&
+        cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
+      cairo_surface_flush(surface);
+      const int width = cairo_image_surface_get_width(surface);
+      const int height = cairo_image_surface_get_height(surface);
+      const int stride = cairo_image_surface_get_stride(surface);
+      const auto format = cairo_image_surface_get_format(surface);
+      const auto* bytes = cairo_image_surface_get_data(surface);
+      if (bytes != nullptr && width > 0 && height > 0 && width <= 1024 && height <= 1024 &&
+          stride >= width * 4 && stride <= 4096 &&
+          (format == CAIRO_FORMAT_ARGB32 || format == CAIRO_FORMAT_RGB24)) {
+        // Read Cairo's native-endian ARGB word, avoiding alignment assumptions.
+        // A nonempty/white snapshot is insufficient: the fixed page must paint.
+        for (int y = 0; y < height && !painted; ++y) {
+          for (int x = 0; x < width; ++x) {
+            uint32_t pixel = 0;
+            std::memcpy(&pixel, bytes + y * stride + x * 4, sizeof(pixel));
+            if ((pixel & 0x00ffffff) == 0x001f5947) { painted = true; break; }
+          }
+        }
+      }
+    }
+    if (surface != nullptr) cairo_surface_destroy(surface);
+    if (self == nullptr || self->closed_ || self->failed_) return;
+    self->ready_ = painted;
+    if (painted) crisp_ebook::Trace("canary verified known-color offscreen paint");
+    g_main_loop_quit(self->loop_);
   }
   static gboolean TimedOut(gpointer data) {
     auto* self = static_cast<Worker*>(data);
     self->timer_ = 0;
-    g_main_loop_quit(self->loop_);
+    self->Fail();
     return G_SOURCE_REMOVE;
   }
   static gboolean LoadFailed(WebKitWebView*, WebKitLoadEvent, const gchar*, GError*, gpointer data) {
-    g_main_loop_quit(static_cast<Worker*>(data)->loop_); return TRUE;
+    static_cast<Worker*>(data)->Fail(); return TRUE;
   }
   static void Terminated(WebKitWebView*, WebKitWebProcessTerminationReason, gpointer data) {
-    g_main_loop_quit(static_cast<Worker*>(data)->loop_);
+    static_cast<Worker*>(data)->Fail();
+  }
+  void Fail() {
+    // Quit does not prevent another source from being dispatched in this same
+    // GLib iteration. An observed failure must remain terminal before Close.
+    failed_ = true;
+    ready_ = false;
+    if (loop_ != nullptr) g_main_loop_quit(loop_);
   }
   static gboolean Permission(WebKitWebView*, WebKitPermissionRequest* request, gpointer data) {
     static_cast<Worker*>(data)->api_.webkit_permission_request_deny(request); return TRUE;
@@ -186,7 +241,11 @@ class Worker {
   GtkWidget* window_ = nullptr;
   GSocketService* server_ = nullptr;
   GMainLoop* loop_ = nullptr;
+  GCancellable* cancel_ = nullptr;
   guint timer_ = 0;
+  bool closed_ = false;
+  bool failed_ = false;
+  bool snapshot_pending_ = false;
   bool ready_ = false;
   bool message_ = false;
   bool loaded_ = false;
@@ -212,7 +271,11 @@ int RunWorker(const char* app_id, const char* program, const char* name) {
       g_application_id_is_valid(app_id) ? app_id : nullptr, G_APPLICATION_NON_UNIQUE);
   g_application_set_default(G_APPLICATION(identity));
   bool ready;
-  { Worker worker; ready = worker.Run(); }
+  {
+    auto worker = std::make_shared<Worker>();
+    ready = worker->Run();
+    worker->Close();
+  }
   g_application_set_default(nullptr);
   if (!ready) return 1;
   // The supervisor validates this, waits for exit0 and reaps all descendants

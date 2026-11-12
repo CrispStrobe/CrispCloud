@@ -103,35 +103,79 @@ export function safeResourceTransform(book) {
 
 /// Guard every format, including MOBI6 and CBZ which lack transformTarget.
 export function secureSections(book) {
-    const safeUrls = new Map()
-    for (const [index, section] of book.sections.entries()) {
+    let disposed = false
+    const states = []
+    for (const section of book.sections) {
         const originalLoad = section.load.bind(section)
         const originalUnload = section.unload?.bind(section)
-        section.load = async () => {
-            if (safeUrls.has(index)) return safeUrls.get(index)
-            const url = await originalLoad()
-            if (!String(url).startsWith('blob:')) throw new Error('Book sections must be local blobs')
-            const response = await fetch(url)
-            const doc = sanitizeDocument(parseDocument(await response.text(), response.headers.get('content-type') || 'text/html'))
-            const safe = URL.createObjectURL(new Blob([serializeDocument(doc)], {type:'application/xhtml+xml'}))
-            safeUrls.set(index, safe)
-            return safe
+        const state = {generation:0, loaded:null, pending:null, pendingGeneration:0}
+        const assertActive = generation => {
+            if (disposed || state.generation !== generation)
+                throw new Error('Ebook section load was canceled')
         }
+        const load = async () => {
+            const generation = state.generation
+            assertActive(generation)
+            if (state.loaded) return state.loaded
+            if (state.pending) {
+                if (state.pendingGeneration === generation) return state.pending
+                // Unload invalidates the old request. Wait for its cleanup
+                // before reloading: an old upstream unload must never revoke
+                // the resources belonging to the new request.
+                await state.pending.catch(() => {})
+                assertActive(generation)
+                return load()
+            }
+            state.pendingGeneration = generation
+            const pending = (async () => {
+                try {
+                    const url = await originalLoad()
+                    assertActive(generation)
+                    if (!String(url).startsWith('blob:')) throw new Error('Book sections must be local blobs')
+                    const response = await fetch(url)
+                    const text = await response.text()
+                    assertActive(generation)
+                    const doc = sanitizeDocument(parseDocument(text, response.headers.get('content-type') || 'text/html'))
+                    const blob = new Blob([serializeDocument(doc)], {type:'application/xhtml+xml'})
+                    const safe = URL.createObjectURL(blob)
+                    // No await after the final generation check: disposal
+                    // cannot leave a newly published URL outside this state.
+                    state.loaded = {url:safe, blob}
+                    return state.loaded
+                } catch (error) {
+                    // This also releases resources materialized by an upstream
+                    // load that completed after unload or final disposal.
+                    originalUnload?.()
+                    throw error
+                }
+            })()
+            state.pending = pending
+            try { return await pending }
+            finally { if (state.pending === pending) state.pending = null }
+        }
+        section.load = async () => (await load()).url
         // Search and CFI generation must see the exact sanitized structure
         // rendered on screen, including when removed script elements shifted
-        // sibling indices in a source chapter.
+        // sibling indices in a source chapter. Parse the captured immutable
+        // blob so a concurrent renderer unload cannot revoke its input.
         section.createDocument = async () => {
-            const response = await fetch(await section.load())
-            return parseDocument(await response.text(), 'application/xhtml+xml')
+            const {blob} = await load()
+            return parseDocument(await blob.text(), 'application/xhtml+xml')
         }
         section.unload = () => {
-            if (safeUrls.has(index)) URL.revokeObjectURL(safeUrls.get(index))
-            safeUrls.delete(index)
-            originalUnload?.()
+            ++state.generation
+            if (state.loaded) {
+                URL.revokeObjectURL(state.loaded.url)
+                state.loaded = null
+                originalUnload?.()
+            }
+            // A pending load releases its own upstream resources on settling.
         }
+        states.push(section)
     }
     return () => {
-        for (const url of safeUrls.values()) URL.revokeObjectURL(url)
-        safeUrls.clear()
+        if (disposed) return
+        disposed = true
+        for (const section of states) section.unload()
     }
 }

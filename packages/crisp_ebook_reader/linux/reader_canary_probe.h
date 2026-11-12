@@ -125,7 +125,11 @@ class CanaryProbe : public std::enable_shared_from_this<CanaryProbe> {
     auto self = *held;
     g_autoptr(GError) error = nullptr;
     self->wait_done_ = true;
-    self->clean_exit_ = g_subprocess_wait_finish(G_SUBPROCESS(process), result, &error) &&
+    // Dart's global process reaper can collect this outer child's status.
+    // GLib may then synthesize success for ECHILD. This status is only an
+    // additional check: the exact supervisor proof independently requires the
+    // worker's real exit0 and complete descendant reaping before it is emitted.
+    self->reported_clean_exit_ = g_subprocess_wait_finish(G_SUBPROCESS(process), result, &error) &&
         g_subprocess_get_successful(G_SUBPROCESS(process));
     self->MaybeComplete();
   }
@@ -164,7 +168,7 @@ class CanaryProbe : public std::enable_shared_from_this<CanaryProbe> {
   void MaybeComplete() {
     if (!wait_done_ || !read_done_) return;
     constexpr char proof[] = "CRISP_EBOOK_WEBKIT_READY_V1\n";
-    result_.available = failure_.empty() && clean_exit_ && output_ == proof;
+    result_.available = failure_.empty() && reported_clean_exit_ && output_ == proof;
     Complete(result_.available ? "" : failure_.empty() ?
         "The sandboxed WebKit startup check failed. This Linux environment cannot start the embedded reader; the portable reader is available." : failure_);
   }
@@ -186,7 +190,7 @@ class CanaryProbe : public std::enable_shared_from_this<CanaryProbe> {
   bool finished_ = false;
   bool wait_done_ = false;
   bool read_done_ = false;
-  bool clean_exit_ = false;
+  bool reported_clean_exit_ = false;
   unsigned attempts_ = 0;
   guint deadline_ = 0;
   guint force_deadline_ = 0;
