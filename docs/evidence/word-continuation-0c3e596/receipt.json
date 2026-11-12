@@ -1,0 +1,841 @@
+{
+  "acceptanceCommands": [
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:13.215868+00:00",
+      "name": "app-pub-get",
+      "startedUtc": "2026-11-12T23:13:11.976389+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "docs/evidence/word-continuation-7308125/run_word_cohort.py",
+        "--app",
+        "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+        "--workspace",
+        "/workspace/scratch/b8f8221a5e6e/app-word-cohort-0c3e596",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--pub-cache",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/pub-cache"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:39.790031+00:00",
+      "name": "cohort-console",
+      "startedUtc": "2026-11-12T23:13:23.100351+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--packages=/workspace/scratch/b8f8221a5e6e/CrispCloud/.dart_tool/package_config.json",
+        "tool/verify_legacy_word_structured.dart",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:31.871403+00:00",
+      "name": "native",
+      "startedUtc": "2026-11-12T23:13:23.105349+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_sync_*.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:36.382777+00:00",
+      "name": "sync-controls-exact",
+      "startedUtc": "2026-11-12T23:13:34.285659+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_crypto_release_evidence.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:36.327554+00:00",
+      "name": "crypto-evidence-controls-exact",
+      "startedUtc": "2026-11-12T23:13:34.290667+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_apple_export_preflight.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:34.599328+00:00",
+      "name": "apple-preflight-controls-exact",
+      "startedUtc": "2026-11-12T23:13:34.311908+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "tool/verify_ebook_sources.py"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:34.572348+00:00",
+      "name": "ebook-source-verification-exact",
+      "startedUtc": "2026-11-12T23:13:34.415742+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "tool/verify_office_fidelity.py",
+        "--legacy-source",
+        "../legacy-doc-parser"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:36.333991+00:00",
+      "name": "source-verification-exact",
+      "startedUtc": "2026-11-12T23:13:34.416761+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "tool/crypto_release_evidence.py",
+        "--check"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:34.649079+00:00",
+      "name": "release-input-check-exact",
+      "startedUtc": "2026-11-12T23:13:34.419770+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_verify_ebook_sources.py",
+        "-v"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:13:36.054854+00:00",
+      "name": "ebook-source-controls-exact",
+      "startedUtc": "2026-11-12T23:13:34.425147+00:00"
+    },
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "tool/verify_portable_office_web.py",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-12T23:14:03.331816+00:00",
+      "name": "portable-web",
+      "startedUtc": "2026-11-12T23:13:56.012420+00:00"
+    }
+  ],
+  "artifacts": {
+    "acceptance-commands.json.gz": {
+      "bytes": 5526,
+      "compressedBytes": 923,
+      "compressedSha256": "148b73e447355c3667e826ebdc72ea8e611c4d5e3a4ac2a4de9be24377da0a95",
+      "originalName": "acceptance-commands.json",
+      "sha256": "d0f69727d4bfa22287b005e3b7b3d60c5f4794ac6757a28ec5bba4da7979bd19"
+    },
+    "acceptance-input-capture.py.gz": {
+      "bytes": 2326,
+      "compressedBytes": 1040,
+      "compressedSha256": "f55b094c8dadd484d1e26e8c82332ffa75fc2c26929f04dd42f0bb711b2b3ca3",
+      "originalName": "acceptance-input-capture.py",
+      "sha256": "40e156162023c43f89b3c306919459f907152763bb9fcb8c2e6ffa7ecc400c9a"
+    },
+    "acceptance-inputs-after.json.gz": {
+      "bytes": 8580,
+      "compressedBytes": 3038,
+      "compressedSha256": "4565d55f1caced5c676fa2e523f3da6bb590b83e1424bf14518e1e551ad374c5",
+      "originalName": "acceptance-inputs-after.json",
+      "sha256": "9714b7fdbada9ed6a90bceacee4ec55218d1df1518fc7309b9dfedd66045f22a"
+    },
+    "acceptance-inputs-before.json.gz": {
+      "bytes": 8580,
+      "compressedBytes": 3038,
+      "compressedSha256": "4565d55f1caced5c676fa2e523f3da6bb590b83e1424bf14518e1e551ad374c5",
+      "originalName": "acceptance-inputs-before.json",
+      "sha256": "9714b7fdbada9ed6a90bceacee4ec55218d1df1518fc7309b9dfedd66045f22a"
+    },
+    "acceptance-runner.py.gz": {
+      "bytes": 1703,
+      "compressedBytes": 809,
+      "compressedSha256": "7db3a02b6aae13a47504db2c7bc6865ae93d8dadc3589e2518c24b9a29863e44",
+      "originalName": "acceptance-runner.py",
+      "sha256": "fcd58beb051821bc24fc9b66534f725f7cb2f4bc21517640235db90124dbacdf"
+    },
+    "app-pub-get.log.gz": {
+      "bytes": 2504,
+      "compressedBytes": 882,
+      "compressedSha256": "5e99a375ef1d841c41d79dfd014a0eec7c8bae77d98b8c5900576636e40fc613",
+      "originalName": "app-pub-get.log",
+      "sha256": "00c963c66591ff1445736815f63d369572d4f6b75fd57521adf29b0442cf0225"
+    },
+    "apple-preflight-controls-exact.log.gz": {
+      "bytes": 6856,
+      "compressedBytes": 1355,
+      "compressedSha256": "abc4aef34a077a7ad83734a10b1d6e80dbb184ae4bae4f2b8e6ebcb182f0cfb1",
+      "originalName": "apple-preflight-controls-exact.log",
+      "sha256": "0335ab546ab57f9dcf8b1d6e0b2cb8976b4ae28c9743f63a18e38a5e83edd554"
+    },
+    "cohort-adapters.json.gz": {
+      "bytes": 3021,
+      "compressedBytes": 1147,
+      "compressedSha256": "e5c40371da8fc597128a9fc281ec8669f0748b80340a4b50eef4558831b4ff4c",
+      "originalName": "cohort-adapters.json",
+      "sha256": "4152c36f79c5457e2ec641ddf5755e61c2d29632c26690e30c123db154204d27"
+    },
+    "cohort-console.log.gz": {
+      "bytes": 998,
+      "compressedBytes": 259,
+      "compressedSha256": "6e1f64583152598f738b235379aa1300cab01abe270311d67a9b2b509a66d9a2",
+      "originalName": "cohort-console.log",
+      "sha256": "921d1dc314bd16675228d7ce92fc56a73a5d4319c5276ebd7704f9e26e81387d"
+    },
+    "cohort-events.jsonl.gz": {
+      "bytes": 53432,
+      "compressedBytes": 6435,
+      "compressedSha256": "4b38222b006f80d5b9fc353d99db95b9c7fda58f21cb3a0289e1eb44067e3450",
+      "originalName": "cohort-events.jsonl",
+      "sha256": "4538ab233e4a00429820a5a7fb54dc15fe56526b40b7390d256837bbe7d96770"
+    },
+    "cohort-inputs-after.json.gz": {
+      "bytes": 224457,
+      "compressedBytes": 62437,
+      "compressedSha256": "354d86467c64f8c2f896732ff634d436ae11a56acd0db3cb7b06a865c5d5fa4b",
+      "originalName": "cohort-inputs-after.json",
+      "sha256": "4b86fc6b549d4eec3d40c0d3ccc314aeccf01c455fdf4e3b91716f3a7708ab31"
+    },
+    "cohort-inputs-before.json.gz": {
+      "bytes": 224457,
+      "compressedBytes": 62437,
+      "compressedSha256": "354d86467c64f8c2f896732ff634d436ae11a56acd0db3cb7b06a865c5d5fa4b",
+      "originalName": "cohort-inputs-before.json",
+      "sha256": "4b86fc6b549d4eec3d40c0d3ccc314aeccf01c455fdf4e3b91716f3a7708ab31"
+    },
+    "cohort-package_config.json.gz": {
+      "bytes": 16098,
+      "compressedBytes": 1313,
+      "compressedSha256": "8d14f35f324c84f3a5d91fa75a4a821193bbebe61010560bba3c9cdfd3591474",
+      "originalName": "cohort-package_config.json",
+      "sha256": "998ca9b506c30a89d15b3a2b31408150ece494b2ed5e5a04f34b1c90fd8f1857"
+    },
+    "cohort-pub-get.log.gz": {
+      "bytes": 574,
+      "compressedBytes": 294,
+      "compressedSha256": "6f2a540146aa9781be0177b1298fbf43efb8b26091992133edba9289a7d76883",
+      "originalName": "cohort-pub-get.log",
+      "sha256": "d784f2ec9187f68502fbcf926b094ae3b9631170b20378c81bde306447e1deac"
+    },
+    "cohort-pubspec.lock.gz": {
+      "bytes": 15276,
+      "compressedBytes": 3945,
+      "compressedSha256": "b7785d9733b3126801e2f6c80fe7a5f252bbc77293252123a462aed818b28a68",
+      "originalName": "cohort-pubspec.lock",
+      "sha256": "495d8f2a497ef1e80570128b5aaa09d01377fa9596d63222decc87264757c530"
+    },
+    "cohort-pubspec.yaml.gz": {
+      "bytes": 432,
+      "compressedBytes": 258,
+      "compressedSha256": "598de53c95890adcaafcae17934338347c9e44cb88482dfbf8188d9f42fb5c23",
+      "originalName": "cohort-pubspec.yaml",
+      "sha256": "53ef3b95045a58b627abf6b506d712c4db75984a1b0b1ea61ef7dc037de8eb00"
+    },
+    "cohort-summary.json.gz": {
+      "bytes": 3145,
+      "compressedBytes": 1076,
+      "compressedSha256": "9a4e4306d131dfdeae25438d2f4dbb52984c75aff7426b86b693419c65187a02",
+      "originalName": "cohort-summary.json",
+      "sha256": "a90981ed8ca7cfe76f21da0b1ae97d822b4b9f588687f21c2238187f0d072e29"
+    },
+    "cohort-tests.log.gz": {
+      "bytes": 13667,
+      "compressedBytes": 2921,
+      "compressedSha256": "effdc1a91e2948f24485c9e456820379e93dadf32c9b385098548f106e0e3b0e",
+      "originalName": "cohort-tests.log",
+      "sha256": "d880155fe67258978181f555677ba482d3d7cc5d4644f7830f16c22c1bf39b9c"
+    },
+    "cohort-word_cohort.py.gz": {
+      "bytes": 11816,
+      "compressedBytes": 3913,
+      "compressedSha256": "960418f804882bc8b72daadc1a6139585a71c198f7d6bdfac27a6088643d4a14",
+      "originalName": "cohort-word_cohort.py",
+      "sha256": "0991a5fb2ea48d40aa58fe63c70240a030da4cb5208a91f607d67b55c5dab01b"
+    },
+    "crypto-evidence-controls-exact.log.gz": {
+      "bytes": 7493,
+      "compressedBytes": 1247,
+      "compressedSha256": "7297fc27e8fefd25c106e7d13650eff28fb0cf9ee549893067f3849016823a75",
+      "originalName": "crypto-evidence-controls-exact.log",
+      "sha256": "263512127181432492e031302dcc244f83d0f0dc826b29a3990911b612ffdf97"
+    },
+    "ebook-source-controls-exact.log.gz": {
+      "bytes": 3709,
+      "compressedBytes": 675,
+      "compressedSha256": "01f0e048b16db9060b9547d0433efc08b2126298aacbc2391e3fe21e672a6f96",
+      "originalName": "ebook-source-controls-exact.log",
+      "sha256": "c15689f4a877626b6d7a188494f3c0bd1d6449e29bab1632018624eb3f243873"
+    },
+    "ebook-source-verification-exact.log.gz": {
+      "bytes": 335,
+      "compressedBytes": 254,
+      "compressedSha256": "33155d14ae2c1c33b4f9f6f6ed4b798605181c8bc7a8efa7a98eda9c4cebeca6",
+      "originalName": "ebook-source-verification-exact.log",
+      "sha256": "f1126ef699240e600d3560209943a5c74a2beb621a6958cbe922a18b0718a6fe"
+    },
+    "inventory-after.json.gz": {
+      "bytes": 54591,
+      "compressedBytes": 12471,
+      "compressedSha256": "3c7e24894ab756b132650dd1416fe1600a3e748364f6291fca66d04e87aa5a4e",
+      "originalName": "inventory-after.json",
+      "sha256": "791a9cdc9d97f21d5425a5c3cf790559f953e38653d1195b929cee10ec0ee6cb"
+    },
+    "inventory-before.json.gz": {
+      "bytes": 54517,
+      "compressedBytes": 12461,
+      "compressedSha256": "8ccc123e1629b2f8b935420f51eee7b783243b060aa06e3f60efb25d4bc8de5a",
+      "originalName": "inventory-before.json",
+      "sha256": "38ebdcc8747382ee2afba73985df68e830238b819fa59f59e983a2e25c0065a3"
+    },
+    "native.json.gz": {
+      "bytes": 921,
+      "compressedBytes": 434,
+      "compressedSha256": "199d57e5368f07a107ac83ba2b83901b0c47803d1c7d951483610a94396c938e",
+      "originalName": "native.json",
+      "sha256": "33103e14222eba1a82353ce181005686bac46c4978c5acd643e2a29726254de1"
+    },
+    "native.stderr.log.gz": {
+      "bytes": 0,
+      "compressedBytes": 20,
+      "compressedSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "originalName": "native.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "policy-after.json.gz": {
+      "bytes": 1710,
+      "compressedBytes": 984,
+      "compressedSha256": "6d0aa4739e9d0a1fb658d3d495fa931141bc57cb2f21e570a2ee41cad13d2ec7",
+      "originalName": "policy-after.json",
+      "sha256": "46ebb7327293792125cd8b1f282ac397ecf93940d1b80362dabcf51b7321d395"
+    },
+    "policy-before.json.gz": {
+      "bytes": 1710,
+      "compressedBytes": 985,
+      "compressedSha256": "a65e4d043e329e6e9c886e539ce597f1aeb46e1cb1ff5ecd8a4bdb764d5ddc47",
+      "originalName": "policy-before.json",
+      "sha256": "f96a9329959541e44069d5e55a70083faf545745048911e32e126c646c01fe44"
+    },
+    "portable-web-initial-attempt.json.gz": {
+      "bytes": 509,
+      "compressedBytes": 336,
+      "compressedSha256": "48ecf856ab72fe0187bbe97951e06f4491095c290571c4d4923bae1eb7d8b35a",
+      "originalName": "portable-web-initial-attempt.json",
+      "sha256": "172c6c7c39f6ea14b98c3b1802a108348e169c3dae927b6eafbd7241906da66a"
+    },
+    "portable-web-initial-attempt.log.gz": {
+      "bytes": 1143,
+      "compressedBytes": 549,
+      "compressedSha256": "998bd5c6b1b34ba4e22d5eb84b5156d84374725bcc4c4830b8b6eabf2561ce24",
+      "originalName": "portable-web-initial-attempt.log",
+      "sha256": "05182a6aa5b091d11a100a1225d060c5152cb082a40f7212ef2b44aa3b853b04"
+    },
+    "portable-web.log.gz": {
+      "bytes": 262,
+      "compressedBytes": 212,
+      "compressedSha256": "8909e75eee6dfb67ffb7c01088f77ab982313b0698fa354feec0f8091b7c97a9",
+      "originalName": "portable-web.log",
+      "sha256": "aab00ce07cd4489c3b666582ddb6d911d01d44625f3f1a4ab17e051668434461"
+    },
+    "production-package_config.json.gz": {
+      "bytes": 65730,
+      "compressedBytes": 4347,
+      "compressedSha256": "8e0232240244a5c28b8594535494c37798b738ba0a1aec4405a08aef67430666",
+      "originalName": "production-package_config.json",
+      "sha256": "e14990cf4bb2ba61ccec0cd20616e33d268d047faa28b2f49b926de7814757b9"
+    },
+    "receipt-builder.py.gz": {
+      "bytes": 8079,
+      "compressedBytes": 3103,
+      "compressedSha256": "2fe393256a2f8ce7c2dd8cdb1ba566c95d32fe5993e7d7df4c4bc12647d1092d",
+      "originalName": "receipt-builder.py",
+      "sha256": "cd0a82c8e1b47a70b6449adaa99b38db6d27dd1c5cb7baf965d934a2dc7381d3"
+    },
+    "release-input-check-exact.log.gz": {
+      "bytes": 72,
+      "compressedBytes": 85,
+      "compressedSha256": "cf0e80b24019084c429ecef83bf415ed576ccc0dd678a1356e526d44c26080f3",
+      "originalName": "release-input-check-exact.log",
+      "sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177"
+    },
+    "source-verification-exact.log.gz": {
+      "bytes": 203,
+      "compressedBytes": 177,
+      "compressedSha256": "2c183433b79ee367497162ed09cf832a317102aa983496ea6f36099e588d6ef7",
+      "originalName": "source-verification-exact.log",
+      "sha256": "905edb6985298ff3f9ee9c878051b3220117951d99933611070b577a5414e1c5"
+    },
+    "sync-applied.json.gz": {
+      "bytes": 4257,
+      "compressedBytes": 613,
+      "compressedSha256": "17d63d0c3a3c8f89400019f10d9f0a903cad9c74b258701f2ece11a754765e25",
+      "originalName": "sync-applied.json",
+      "sha256": "f55e22785252344c7fe4687d4dcd545c61c49811fc8c4838f3f1ab8ad9e49fbd"
+    },
+    "sync-controls-exact.log.gz": {
+      "bytes": 4273,
+      "compressedBytes": 870,
+      "compressedSha256": "798ec52fdcba70a191e4427b2de82889e417562037692fd110c9e90cdbe5c4df",
+      "originalName": "sync-controls-exact.log",
+      "sha256": "cfe9ca917563f1862e1065f310e318bd6d0c728da8841c781113bdbb83a47949"
+    },
+    "sync-plan.json.gz": {
+      "bytes": 4258,
+      "compressedBytes": 614,
+      "compressedSha256": "e2ac5208fa70bcd6eea86eda480cca69f7b308c94f28a62d1ee13f0559f9f0cb",
+      "originalName": "sync-plan.json",
+      "sha256": "1449450a0181c2503f950b088d2db2660a0fe267df7dfbbfb8ad660bd5bd52f9"
+    }
+  },
+  "capturedInputCount": 1176,
+  "cohort": {
+    "cohortCompleteWithoutSkips": true,
+    "excludedSuites": {
+      "test/legacy_word_previous_regressions_test.dart": "Imports preview_media.dart, Flutter material/services and video_player; cannot run unchanged using a data-only test import adapter."
+    },
+    "executedSuiteCount": 8,
+    "finishedUtc": "2026-11-12T23:13:39.782548+00:00",
+    "sourceAndDependenciesUnchanged": true,
+    "startedUtc": "2026-11-12T23:13:24.215485+00:00",
+    "success": true,
+    "suites": {
+      "installed_office_converter_test.dart": {
+        "failed": 0,
+        "passed": 13,
+        "skipped": 0
+      },
+      "legacy_word_document_test.dart": {
+        "failed": 0,
+        "passed": 9,
+        "skipped": 0
+      },
+      "legacy_word_sprm_regression_test.dart": {
+        "failed": 0,
+        "passed": 6,
+        "skipped": 0
+      },
+      "legacy_word_structured_bounds_test.dart": {
+        "failed": 0,
+        "passed": 4,
+        "skipped": 0
+      },
+      "legacy_word_structured_conversion_test.dart": {
+        "failed": 0,
+        "passed": 9,
+        "skipped": 0
+      },
+      "legacy_word_structured_document_test.dart": {
+        "failed": 0,
+        "passed": 16,
+        "skipped": 0
+      },
+      "legacy_word_structured_render_test.dart": {
+        "failed": 0,
+        "passed": 7,
+        "skipped": 0
+      },
+      "word_conversion_inspection_test.dart": {
+        "failed": 0,
+        "passed": 43,
+        "skipped": 0
+      }
+    },
+    "testCount": 107
+  },
+  "dartExecutableSha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+  "dartVersion": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "ebookSourceCheck": {
+    "commit": "32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52",
+    "fileCount": 279,
+    "passed": true
+  },
+  "extraInputHashes": {
+    "docs/apple-export-policy.json": {
+      "bytes": 1710,
+      "sha256": "46ebb7327293792125cd8b1f282ac397ecf93940d1b80362dabcf51b7321d395"
+    },
+    "docs/crypto-inventory.json": {
+      "bytes": 54591,
+      "sha256": "791a9cdc9d97f21d5425a5c3cf790559f953e38653d1195b929cee10ec0ee6cb"
+    },
+    "docs/evidence/word-continuation-0c3e596/source-audit.json": {
+      "bytes": 10069,
+      "sha256": "d8babdb1eaeb1f149deda3563d2bc69a4c9614386c34c192a564c2c58c246ed0"
+    },
+    "docs/evidence/word-continuation-7308125/run_word_cohort.py": {
+      "bytes": 11816,
+      "sha256": "0991a5fb2ea48d40aa58fe63c70240a030da4cb5208a91f607d67b55c5dab01b"
+    },
+    "ios/Runner/Info.plist": {
+      "bytes": 4675,
+      "sha256": "876f9cd3666bdc0deaccddd4a7b10e42b997329256e08f32f84f28f1e4cf48e2"
+    },
+    "macos/Runner/Info.plist": {
+      "bytes": 2490,
+      "sha256": "f4d88c62a438789233101cf3bd796686600f8b782238c80889314f02ad4c0609"
+    },
+    "packages/legacy_doc_parser/UPSTREAM.json": {
+      "bytes": 125,
+      "sha256": "5f9831fe65256dc60d119a7c47279b1df6fac3db3aa13b79963c95c0bf7cac67"
+    },
+    "packages/legacy_doc_parser/lib/src/conversion.dart": {
+      "bytes": 7112,
+      "sha256": "07370b5859bc979db85d3b6d948d8f027421c867dac4548bea84cf400d9311e6"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_format_tables.dart": {
+      "bytes": 16575,
+      "sha256": "d453cb51beede2a92d082decb4b6c13ba50b6ea0800dce5ba3e0478143a2f833"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_media_parser.dart": {
+      "bytes": 41621,
+      "sha256": "c7add4966316b24acecd1482375f3f4a9fabee4326a3e75ed1c61ed74a4e266e"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_officeart_model.dart": {
+      "bytes": 9397,
+      "sha256": "06cb308a7ce97dbcec5ac0ec56fe1cfda880ff38b9d35d84863e403d3d82f78b"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart": {
+      "bytes": 19198,
+      "sha256": "f2a70642e389dfb3522203dfef82c2674a0a154b18af960d57b772926ae7cb86"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_sprms.dart": {
+      "bytes": 30554,
+      "sha256": "7ea4d770bf593a233ef2ca0f2478eeaf7257921bf4d058165eb8e2558e659ee7"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_stories.dart": {
+      "bytes": 32489,
+      "sha256": "88146ab5f37d6da2e8cfe43134aee5628d8e2838396e3102028eab312a922d13"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_conversion.dart": {
+      "bytes": 20444,
+      "sha256": "eb3bb9e7b4eecfade607bb696b2c983ad2ec000b5f3300b4c928313840b752c9"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_model.dart": {
+      "bytes": 33240,
+      "sha256": "0ba9b808794aa1fc46fc7d9ad0d08864e68a2caef5d4baeb413845ca9d47ea04"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_parser.dart": {
+      "bytes": 29796,
+      "sha256": "589873f1c54c8281587149c7de54776958b2c02f710b7a381572dcc0ebb83d70"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_model.dart": {
+      "bytes": 6223,
+      "sha256": "a7cf0c0fe01e2f3f43b6ddaff20482e8d00b4a36a94795bbeb3fc43eaf2f09fc"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_styles.dart": {
+      "bytes": 16262,
+      "sha256": "46cd63467319282656f61af0b4c85ac3925839a3276f8ccce9523590c1c5d27d"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_table_text.dart": {
+      "bytes": 10108,
+      "sha256": "83490e718fdd3b641173e67350e5518b2f2232549c4ad155c402e06e5340bdbf"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_tables.dart": {
+      "bytes": 10453,
+      "sha256": "6c1d4ddb93e8f367f3afb70736fd853a27f548103cd2b6d86d54765eedc86a36"
+    },
+    "packages/legacy_doc_parser/lib/src/legacy_word_textbox_alias.dart": {
+      "bytes": 12646,
+      "sha256": "7e6d28d480b70bf883cdaa5ed4d06f90171bd8cd891b17cc0a53828d19d1a24e"
+    },
+    "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart": {
+      "bytes": 3221,
+      "sha256": "0f09c2bc3f81a25a11fc335ad85c17b9aca467a0e7b7e37ffaff4e7d74059769"
+    },
+    "packages/legacy_doc_parser/lib/src/word_media_writer.dart": {
+      "bytes": 35782,
+      "sha256": "c81545dca31cae5991596844d72491dffb4fc30074212d73d79768bd9d0eca0f"
+    },
+    "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart": {
+      "bytes": 10173,
+      "sha256": "e518cf2a1fd6e5ff0c180fbd2d19f0902e9e04f65492a71b7d1cebe635610409"
+    },
+    "packages/legacy_doc_parser/lib/src/word_officeart_position_writer.dart": {
+      "bytes": 4520,
+      "sha256": "e6a4dbd0621c97624dad8da26de63a5c057d96f440509a8a2dcc98e7c3f5a321"
+    },
+    "packages/legacy_doc_parser/lib/src/word_story_writer.dart": {
+      "bytes": 32170,
+      "sha256": "26d00d7a334a6cf9d96188e988c64c268ac55e7aca4d69433561e4ad8aba8862"
+    },
+    "packages/legacy_doc_parser/lib/src/word_table_style_writer.dart": {
+      "bytes": 6241,
+      "sha256": "1e739f7f7179fbf1d3ee1b79825a779f035e7e20eb1406083466ece9d52dca99"
+    },
+    "packages/legacy_doc_parser/lib/src/word_table_text_writer.dart": {
+      "bytes": 7131,
+      "sha256": "2dc0ffd3e896839571586209337424aa18772c7cb1a91e7b0915422196740a86"
+    },
+    "packages/legacy_doc_parser/lib/src/word_table_writer.dart": {
+      "bytes": 14086,
+      "sha256": "e7511b11d0084b7f87e81a69d18aa53221651559b55ed333586c2c3a25e06b9b"
+    },
+    "packages/legacy_doc_parser/lib/src/word_textbox_writer.dart": {
+      "bytes": 6796,
+      "sha256": "772dfc3eaff3a2259cd87495b1b5520ada1593ec50c8f89ac69961b052a6ab6e"
+    },
+    "pubspec.lock": {
+      "bytes": 62941,
+      "sha256": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5"
+    },
+    "pubspec.yaml": {
+      "bytes": 10756,
+      "sha256": "d7ebc24a483d45e8f9e5dfc59fe9251cd296ef1fcad9e9068c18c85238405b96"
+    },
+    "test/fixtures/legacy_powerpoint/current-slides.ppt.gz": {
+      "bytes": 26320,
+      "sha256": "f6cdb049854471226e344d21552c432b620c71e37be25cc1a177b6474be2ef04"
+    },
+    "test/fixtures/word_native/formatting.doc": {
+      "bytes": 21504,
+      "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+    },
+    "tool/apple_export_preflight.py": {
+      "bytes": 35342,
+      "sha256": "fe50c99410fa418edd98fd0a7da4375a05355994e0d8e2c332a3baf9bbd8378b"
+    },
+    "tool/crypto_release_evidence.py": {
+      "bytes": 18681,
+      "sha256": "eea122876ddcb8b42378b38c6dfd404e16d30c2149d4d6a3f653595b0f8c78ab"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "bytes": 159595,
+      "sha256": "77f90ea0926ed225a4ed988893dd9230e3e0f8b7ca5e1291371d76955666cb55"
+    },
+    "tool/sync_legacy_doc_parser.py": {
+      "bytes": 8587,
+      "sha256": "0fac0952344ae88de00a942d343f59b084e9c32fa99db85dd79132ed6d7d81fc"
+    },
+    "tool/sync_office_fidelity.py": {
+      "bytes": 8859,
+      "sha256": "dcf6f70382e7762ddf1e83c95125dcd8b4c900850e0e1aac98e10dbe08f8beaa"
+    },
+    "tool/test_apple_export_preflight.py": {
+      "bytes": 28071,
+      "sha256": "09e2c8c884aa291480cffd8724f7088d76a11a7e45a17d19b546970cd776c2f6"
+    },
+    "tool/test_crypto_release_evidence.py": {
+      "bytes": 31379,
+      "sha256": "f164f6d961272daf969618c0e517a309f4b326fce81303655296b7b4cd25ecfa"
+    },
+    "tool/test_sync_legacy_doc_parser.py": {
+      "bytes": 14014,
+      "sha256": "337b39f6e1c3db1d4e1467f84c19a469b557f9ac55f64dafe114a95fdb9a560c"
+    },
+    "tool/test_sync_office_fidelity.py": {
+      "bytes": 5278,
+      "sha256": "bf13365b5c9f4b4d6d5e0c89623cdefdeaf62b71d3c269114022ae1d5959fcac"
+    },
+    "tool/test_verify_ebook_sources.py": {
+      "bytes": 12225,
+      "sha256": "b1a89529ac043cc1928e3cd0bd5d5ef8b7a5070ffc6d5e9ca37f1df4d8e4ec50"
+    },
+    "tool/verify_ebook_sources.py": {
+      "bytes": 9599,
+      "sha256": "f6d7a05f054c67292c4ca91f6d226f8c0d978196ee76caa2f5e6f5cdc879a289"
+    },
+    "tool/verify_legacy_word_structured.dart": {
+      "bytes": 5222,
+      "sha256": "0ac8e7960d291725650fcca37ab54aa76f82e86e29c1ff576dc9fba012c63369"
+    },
+    "tool/verify_office_fidelity.py": {
+      "bytes": 3202,
+      "sha256": "0daca723935aaac11f156888624231539a9b40715bf476cca41dabfb0539fda5"
+    },
+    "tool/verify_portable_office_web.py": {
+      "bytes": 5000,
+      "sha256": "1c4c6f4de9fca0cac680e98edd4c193f6e61e6251ac16c4ba0608f37e5bac798"
+    }
+  },
+  "initialAttempts": [
+    {
+      "appCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+      "command": [
+        "python3",
+        "tool/verify_portable_office_web.py",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--node",
+        "/usr/bin/node"
+      ],
+      "cwd": "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "exitCode": 1,
+      "finishedUtc": "2026-11-12T23:13:29.775474+00:00",
+      "name": "portable-web",
+      "startedUtc": "2026-11-12T23:13:23.119872+00:00"
+    }
+  ],
+  "limitations": [
+    "Data-only adapter replaces the flutter_test import in copied suites; Flutter widgets, full application builds and native ebook hooks were not executed.",
+    "An earlier routine Flutter version probe was rejected by automatic review because it unexpectedly targeted 169.254.169.254. That launcher was not retried; final checks use the existing direct Dart binary.",
+    "Native acceptance checks one authored fixture with LibreOffice/Poppler, retains partialFormatting, does not establish Microsoft Word or exact pagination, and deletes its temporary PDF by existing tool design.",
+    "The 13 fake-process installed-converter tests in the cohort are separate from the 13 actual native checks.",
+    "The portable Unicode assertion verifies logical text only; the app native check does not assert glyph counts, exact page rasters or arbitrary font fallback.",
+    "The source audit refreshes only reviewed runtime membership and two technical fingerprints. Classification/distribution decisions, dates, references, source plist declarations and lockfile identity remain unchanged.",
+    "These development checkpoints do not qualify release evidence or claim universal editing or layout fidelity."
+  ],
+  "measuredAppTree": "837c1d04233553b9067bdcf31f757c012bccaea5",
+  "measuredRemoteAppCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+  "measuredWorktreeStatus": "",
+  "nativeChecks": {
+    "checks": {
+      "bold": true,
+      "fontColor": true,
+      "fontSize": true,
+      "headersAndFootersPreserved": true,
+      "imagesPreserved": true,
+      "independentPdfImage": true,
+      "independentPdfInfo": true,
+      "independentPdfText": true,
+      "notesPreserved": true,
+      "pageDimensions": true,
+      "preparedPackageUnchanged": true,
+      "sourceUnchanged": true,
+      "tableAndCells": true
+    },
+    "counts": {
+      "cells": 4,
+      "comments": 0,
+      "endnotes": 0,
+      "footers": 3,
+      "footnotes": 1,
+      "headers": 3,
+      "images": 1,
+      "objects": 0,
+      "paragraphs": 18,
+      "revisions": 0,
+      "sections": 1,
+      "signatures": 0,
+      "tables": 1,
+      "vba": 0
+    },
+    "docxSha256": "3f340831501e0221bb0e1713b62922a964199b618f3bd1fc2cd66c6387c9e08b",
+    "engine": "LibreOffice",
+    "limitations": [
+      "partialFormatting"
+    ],
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+  },
+  "officeFileCount": 1074,
+  "parser": {
+    "commit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "tree": "e763288ee642c26854572e1cae212c36bf683918"
+  },
+  "parserFileCount": 653,
+  "portableSmoke": {
+    "environmentCorrection": "An initial command specified an absent /usr/bin/node path. Compilation completed, then process creation failed. The retained retry uses the tool's own discovered Node executable without changing source or assertions.",
+    "formats": [
+      "DOC",
+      "RTF",
+      "PPT",
+      "MSG"
+    ],
+    "note": "Ran the unchanged production command with the genuine app package configuration and real fixtures; generated temporary Dart and JavaScript are deleted by the existing tool. The Unicode assertion covers logical text, not native glyph rendering.",
+    "packageConfiguration": "production-package_config.json.gz",
+    "passed": true,
+    "tool": "tool/verify_portable_office_web.py"
+  },
+  "productionDependencyResolution": {
+    "enforcedLockfile": true,
+    "lockfileSha256": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5",
+    "note": "Existing direct Dart binary with the installed FLUTTER_ROOT; no Flutter shell launcher, native hooks, manifest override or lockfile change.",
+    "offline": true
+  },
+  "productionPackageCount": 273,
+  "qudsCommit": "71bb109e81217ed55c534881304a44ae8fa608d5",
+  "recordedUtc": "2026-11-12T23:15:07.561289+00:00",
+  "releaseInputCheck": {
+    "passed": true,
+    "scope": "Source/input consistency, not a release build or distribution decision."
+  },
+  "sourceAuditSha256": "d8babdb1eaeb1f149deda3563d2bc69a4c9614386c34c192a564c2c58c246ed0",
+  "sourceControls": {
+    "appleExportPreflight": {
+      "passed": 38,
+      "skipped": 0
+    },
+    "cryptoReleaseEvidence": {
+      "passed": 40,
+      "skipReason": "Requires Apple's actual /usr/bin/plutil on macOS.",
+      "skipped": 2
+    },
+    "ebookSources": {
+      "passed": 22,
+      "skipped": 0
+    },
+    "guardedSync": {
+      "passed": 24,
+      "skipped": 0
+    }
+  },
+  "sourcePublication": {
+    "localCommit": "1f8ae72b8a6537d7634cf06d26d363a92c74e828",
+    "note": "Source was published through GitHub Git Data API, then the clean checkout was aligned to the exact remote commit before these acceptance commands.",
+    "remoteCommit": "5348fadec3bdadc40cc1c092da66428716df6225",
+    "tree": "837c1d04233553b9067bdcf31f757c012bccaea5"
+  },
+  "unchangedNonParserFileCount": 421,
+  "verificationHelperSha256": "ae61e5c49a899b096d78e27fa8753e9b4fa6fe4552e99991c8d3f56a30bc7b2d",
+  "version": 2
+}
