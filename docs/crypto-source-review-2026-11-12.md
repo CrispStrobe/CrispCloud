@@ -1115,3 +1115,24 @@ all non-digest policy decisions remain unchanged. No release or filing is perfor
 The 1.2.4 source refresh binds the canonical DOC parser, its executable-mode-aware mirror guard, bounded package readers, attached-content Word inspection and the minimal Internxt trash-name backport. Source tests and local HTTP endpoint controls verify these contracts; no added cryptographic primitive, credential persistence or account destination is introduced. Source fingerprints are refreshed without changing the existing classification or distribution-policy values.
 
 The 1.2.5 archive additions use SHA-256 for user-requested integrity reports and existing archive checksums for format verification. Portable LZ4, LZMA, Lzip and UNIX compress code introduces no encryption or credential transport. Internxt one-shot receipt APIs reuse the existing authenticated HTTP policy, with retries and redirects disabled for those mutations.
+### Parser d28be0a consumer source binding
+
+The parser roll adds bounded normal/first-header textbox occurrences and exact
+source note-table block preservation. The new alias validator is included in
+the reviewed source inventory. These local parsing/OPC changes add no
+cryptographic implementation, native provider, credential store or network
+operation. Current main's package readers and attached-content inspection
+remain present.
+
+The 131 Word conversion/UI tests, 101 harness tests, portable JavaScript and
+installed-Office acceptance pass. Temporary hooks were restored before these
+fingerprints were calculated. The lock and all non-digest policy decisions
+remain unchanged; this is a technical source update.
+
+```json
+{
+  "inventory_sha256": "f4468d7473e861ef3be0d20524bdd711658a48956ed2ef3023c94ddb00d1f15c",
+  "pubspec_lock_sha256": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+  "reviewed_source_sha256": "073469fab02b20c3d950190f93b57539b06b6f490ee775ea4e9610d9b81099cf"
+}
+```
