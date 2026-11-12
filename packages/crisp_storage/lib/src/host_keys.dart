@@ -74,6 +74,17 @@ class SshKnownHosts {
   }
 }
 
+final _passwordPrompt = RegExp(
+  // "Password:", OpenSSH/PAM's "(user@host) Password:" and
+  // "user@host's password:". Anything else (OTP, "New password", ...) is
+  // never answered with the saved password.
+  r"^\s*(?:\([^()\s]+\)\s*|[^\s:']+'s\s+)?password\s*:\s*$",
+  caseSensitive: false,
+);
+
+/// Whether a keyboard-interactive prompt asks for the account password.
+bool isPasswordPrompt(String prompt) => _passwordPrompt.hasMatch(prompt);
+
 /// Authentication starts only after the caller has accepted the server key.
 Future<SSHClient> openVerifiedSsh(
   SSHSocket socket, {
@@ -100,11 +111,7 @@ Future<SSHClient> openVerifiedSsh(
             if (request.prompts.isEmpty) return <String>[];
             if (request.prompts.length != 1) return null;
             final prompt = request.prompts.single;
-            if (prompt.echo ||
-                !RegExp(
-                  r'^\s*password\s*:\s*$',
-                  caseSensitive: false,
-                ).hasMatch(prompt.promptText)) {
+            if (prompt.echo || !isPasswordPrompt(prompt.promptText)) {
               return null;
             }
             return [password];

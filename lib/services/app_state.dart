@@ -786,11 +786,10 @@ class AppState extends ChangeNotifier {
               .readCredentials();
           final Map<String, String>? creds = rawCreds?.cast<String, String>();
 
-          if (creds == null || creds['token'] == null) {
+          if (creds == null || !await adapter.restoreSavedSession(creds)) {
             debugPrint('⚠️ Internxt: No credentials found');
             return;
           }
-          adapter.setAuth(creds);
           _userEmail = creds['email'];
           _isConnected = true;
           await refreshPanel(PanelSide.remote);
@@ -802,8 +801,7 @@ class AppState extends ChangeNotifier {
             debugPrint('⚠️ Filen: No credentials found');
             return;
           }
-          if (creds['apiKey'] != null && creds['apiKey']!.isNotEmpty) {
-            adapter.client.setAuth(creds);
+          if (await adapter.restoreSavedSession(creds)) {
             _userEmail = creds['email'];
             _isConnected = true;
             await refreshPanel(PanelSide.remote);

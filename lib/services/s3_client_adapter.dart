@@ -1258,7 +1258,7 @@ class S3ClientAdapter extends CloudStorageClient
       if (response.statusCode == 200) {
         return {
           'type': key.endsWith('/') ? 'folder' : 'file',
-          'name': p.basename(key),
+          'name': p.posix.basename(key),
           'path': path,
           'size': int.tryParse(response.headers['content-length'] ?? '0') ?? 0,
           'uuid': path,
@@ -1808,7 +1808,7 @@ class S3ClientAdapter extends CloudStorageClient
     // S3 doesn't have native move. Copy + Delete.
     _ensureAuth();
     final sourceKey = _pathToKey(sourcePath);
-    final fileName = p.basename(sourceKey);
+    final fileName = p.posix.basename(sourceKey);
     final targetKey = _pathToKey(p.posix.join(targetPath, fileName));
 
     await _copyObject(sourceKey, targetKey);
@@ -2147,7 +2147,7 @@ class S3ClientAdapter extends CloudStorageClient
 
     // S3 doesn't support partial writes — upload the full file
     final bytes = await file.readAsBytes();
-    await uploadFile(bytes, p.basename(remotePath), p.dirname(remotePath));
+    await uploadFile(bytes, p.posix.basename(remotePath), p.posix.dirname(remotePath));
 
     // Cache new block map
     if (cacheDir != null) {

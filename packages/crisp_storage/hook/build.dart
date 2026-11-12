@@ -1,15 +1,21 @@
-// Build hook: optionally compiles the experimental Rust SMB bridge with Cargo
-// and bundles it as the code asset `package:crisp_storage/crisp_smb_bridge`.
+// Build hook: optionally compiles the Rust bridges with Cargo and bundles
+// them as code assets:
 //
-// Off by default, so libsmb2-only apps need no Rust toolchain. Enable it in
-// the APP's pubspec:
+// - `rust_smb`   -> `package:crisp_storage/crisp_smb_bridge`   (rust/)
+// - `rust_cloud` -> `package:crisp_storage/crisp_cloud_bridge` (rust_cloud/,
+//                   Filen and Internxt)
+//
+// Both are off by default, so apps using only libsmb2 and the Dart cloud
+// clients need no Rust toolchain. Enable them in the APP's pubspec:
 //
 //   hooks:
 //     user_defines:
 //       crisp_storage:
 //         rust_smb: true
-//         # optional: a prebuilt library used for every target instead of Cargo
+//         rust_cloud: true
+//         # optional prebuilt libraries used for every target instead of Cargo
 //         # rust_smb_library: path/to/libcrisp_smb_bridge.dylib
+//         # rust_cloud_library: path/to/libcrisp_cloud_bridge.dylib
 //
 // Supported Cargo targets: iOS (device + simulator), macOS, Linux and Windows.
 // Other targets (Android for now) bundle nothing; `SmbBackend.auto` then falls
@@ -24,11 +30,45 @@ import 'package:hooks/hooks.dart';
 
 import 'package:crisp_storage/src/rust_library.dart';
 
+class _Bridge {
+  const _Bridge(this.define, this.stem, this.manifest, this.sources);
+
+  /// User define that enables the bridge; `<define>_library` names a
+  /// prebuilt library.
+  final String define;
+  final String stem;
+  final String manifest;
+  final List<String> sources;
+}
+
+const _bridges = <_Bridge>[
+  _Bridge('rust_smb', smbBridgeStem, 'rust/Cargo.toml', [
+    'rust/',
+    'native/crisp_smb/',
+  ]),
+  _Bridge('rust_cloud', cloudBridgeStem, 'rust_cloud/Cargo.toml', [
+    'rust_cloud/',
+    'native/crisp_filen/',
+    'native/crisp_internxt/',
+  ]),
+];
+
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (!input.config.buildCodeAssets) return;
-    final enabled = input.userDefines['rust_smb'];
-    if (enabled != true && enabled != 'true') return;
+    for (final bridge in _bridges) {
+      final enabled = input.userDefines[bridge.define];
+      if (enabled != true && enabled != 'true') continue;
+      await _buildBridge(input, output, bridge);
+    }
+  });
+}
+
+Future<void> _buildBridge(
+  BuildInput input,
+  BuildOutputBuilder output,
+  _Bridge bridge,
+) async {
     final code = input.config.code;
     final target = RustTarget.of(
       os: code.targetOS.name,
@@ -36,30 +76,31 @@ void main(List<String> args) async {
       iosSimulator:
           code.targetOS == OS.iOS &&
           code.iOS.targetSdk == IOSSdk.iPhoneSimulator,
+      stem: bridge.stem,
     );
     if (target == null) {
       stderr.writeln(
-        'crisp_storage: Rust SMB is not built for ${code.targetOS} '
-        '${code.targetArchitecture}; SmbBackend.auto will use libsmb2.',
+        'crisp_storage: ${bridge.stem} is not built for ${code.targetOS} '
+        '${code.targetArchitecture}; the Dart/libsmb2 engines remain available.',
       );
       return;
     }
     final out = File.fromUri(input.outputDirectory.resolve(target.fileName));
 
-    final prebuilt = input.userDefines.path('rust_smb_library');
+    final prebuilt = input.userDefines.path('${bridge.define}_library');
     if (prebuilt != null) {
       final file = File.fromUri(prebuilt);
       if (!file.existsSync()) {
         throw StateError(
-          'crisp_storage: rust_smb_library ${file.path} is missing',
+          'crisp_storage: ${bridge.define}_library ${file.path} is missing',
         );
       }
       output.dependencies.add(prebuilt);
       await file.copy(out.path);
     } else {
       final root = input.packageRoot;
-      final manifest = root.resolve('rust/Cargo.toml');
-      for (final dir in ['rust/', 'native/crisp_smb/']) {
+      final manifest = root.resolve(bridge.manifest);
+      for (final dir in bridge.sources) {
         for (final entity in Directory.fromUri(
           root.resolve(dir),
         ).listSync(recursive: true).whereType<File>()) {
@@ -131,10 +172,9 @@ void main(List<String> args) async {
     output.assets.code.add(
       CodeAsset(
         package: input.packageName,
-        name: 'crisp_smb_bridge',
+        name: bridge.stem,
         linkMode: DynamicLoadingBundled(),
         file: out.uri,
       ),
     );
-  });
 }

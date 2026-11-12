@@ -1,0 +1,78 @@
+name: Experimental Rust Filen/Internxt
+on:
+  push:
+    paths: ['packages/crisp_storage/**', 'lib/services/*filen*', 'lib/services/*internxt*', 'lib/services/rust_cloud*', 'lib/widgets/cloud_engine_field.dart', 'lib/widgets/connection_dialog.dart', 'test/*rust_cloud*', 'test/cloud_engine*', '.github/workflows/rust-cloud.yml']
+  pull_request:
+    paths: ['packages/crisp_storage/**', 'lib/services/*filen*', 'lib/services/*internxt*', 'lib/services/rust_cloud*', 'lib/widgets/cloud_engine_field.dart', 'lib/widgets/connection_dialog.dart', 'test/*rust_cloud*', 'test/cloud_engine*', '.github/workflows/rust-cloud.yml']
+  workflow_dispatch:
+jobs:
+  host:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: packages/crisp_storage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/crisp_storage/rust_cloud -> target
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.13.7'
+      # Vendored provider crates share the bridge's target directory.
+      - run: cargo test --manifest-path native/crisp_filen/Cargo.toml --locked --lib
+        env:
+          CARGO_TARGET_DIR: rust_cloud/target
+      - run: cargo test --manifest-path native/crisp_internxt/Cargo.toml --locked --lib --test endpoints --test streaming
+        env:
+          CARGO_TARGET_DIR: rust_cloud/target
+      - run: cargo test --manifest-path rust_cloud/Cargo.toml --locked
+      - run: cargo build --manifest-path rust_cloud/Cargo.toml --locked --release
+      - run: dart pub get
+      - name: Native bridge tests (no network)
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Linux) lib=rust_cloud/target/release/libcrisp_cloud_bridge.so ;;
+            macOS) lib=rust_cloud/target/release/libcrisp_cloud_bridge.dylib ;;
+            Windows) lib=rust_cloud/target/release/crisp_cloud_bridge.dll ;;
+          esac
+          CRISP_CLOUD_LIBRARY="$PWD/$lib" dart test test/rust_cloud_native_test.dart test/cloud_engine_test.dart
+      - if: runner.os == 'Linux'
+        run: python3 tool/check_rust_licenses.py --bridge cloud
+  ios-compile:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/crisp_storage/rust_cloud -> target
+      - run: |
+          cargo build --manifest-path packages/crisp_storage/rust_cloud/Cargo.toml --locked --release --target aarch64-apple-ios
+          cargo build --manifest-path packages/crisp_storage/rust_cloud/Cargo.toml --locked --release --target aarch64-apple-ios-sim
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/crisp_storage/rust_cloud -> target
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          cache: true
+      - name: Authenticate private source dependencies
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - run: flutter pub get
+      - run: flutter test test/rust_cloud_engine_adapter_test.dart test/cloud_engine_field_test.dart test/cloud_engine_profile_dialog_test.dart

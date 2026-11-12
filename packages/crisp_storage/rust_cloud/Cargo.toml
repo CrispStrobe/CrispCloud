@@ -1,0 +1,28 @@
+[package]
+name = "crisp_cloud_bridge"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+publish = false
+description = "flutter_rust_bridge facade over the vendored crisp-filen and crisp-internxt clients"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[workspace]
+
+[dependencies]
+crisp-filen = { path = "../native/crisp_filen" }
+crisp-internxt = { path = "../native/crisp_internxt" }
+flutter_rust_bridge = "=2.11.1"
+futures = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }

@@ -61,6 +61,10 @@ class ConnectCommand extends Command<int> {
         abbr: 'n',
         help: 'Alias for this provider (used in subsequent commands).',
       )
+      ..addOption(
+        'two-factor',
+        help: 'Filen/Internxt: one-time 2FA code for the first sign-in.',
+      )
       ..addFlag(
         'default',
         abbr: 'd',
@@ -155,9 +159,22 @@ class ConnectCommand extends Command<int> {
         final parsed = WebDavCliAdapter.parseIdentity(identity, secret);
         providerMap = {'type': 'webdav', ...parsed};
         break;
+      case 'filen':
+      case 'internxt':
+        // identity = account e-mail; secret = password. The CLI signs in
+        // through the Rust engine on first use.
+        providerMap = {
+          'type': type,
+          'email': identity,
+          'password': secret,
+          if (argResults?['two-factor'] != null)
+            'twoFactorCode': argResults!['two-factor'],
+        };
+        break;
       default:
         stderr.writeln(
-          'Unknown provider type: $type. Supported: s3, sftp, smb, webdav',
+          'Unknown provider type: $type. '
+          'Supported: s3, sftp, smb, webdav, filen, internxt',
         );
         return 2;
     }
