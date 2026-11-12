@@ -15,10 +15,8 @@ class EbookAssetServer {
       "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' blob:; img-src blob: data:; font-src blob: data:; media-src blob: data:; frame-src blob:; connect-src 'self' blob: data:; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
   Future<Uri> start() async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-    final assets = manifest
-        .listAssets()
-        .where((key) => key.startsWith(_prefix))
-        .toSet();
+    final assets =
+        manifest.listAssets().where((key) => key.startsWith(_prefix)).toSet();
     _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     _subscription = _server!.listen((request) async {
       final response = request.response;
@@ -47,8 +45,8 @@ class EbookAssetServer {
           relative.endsWith('.js')
               ? 'application/javascript; charset=utf-8'
               : relative.endsWith('.css')
-              ? 'text/css; charset=utf-8'
-              : 'text/html; charset=utf-8',
+                  ? 'text/css; charset=utf-8'
+                  : 'text/html; charset=utf-8',
         );
         response.headers.set('X-Content-Type-Options', 'nosniff');
         response.headers.set('Content-Security-Policy', _policy);

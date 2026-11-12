@@ -175,6 +175,7 @@ class EpubStructuredProseBlock {
   final String tag;
   final String? id;
   final List<EpubProseSegment> segments;
+  final bool allowsLineBreakEditing;
 
   EpubStructuredProseBlock({
     required this.resourcePath,
@@ -183,9 +184,11 @@ class EpubStructuredProseBlock {
     required this.tag,
     this.id,
     required List<EpubProseSegment> segments,
+    this.allowsLineBreakEditing = false,
   }) : segments = List.unmodifiable(segments);
 
-  bool get editable => segments.any((segment) => segment.editable);
+  bool get editable =>
+      allowsLineBreakEditing || segments.any((segment) => segment.editable);
   String get text => segments.map((segment) => segment.text).join();
 }
 

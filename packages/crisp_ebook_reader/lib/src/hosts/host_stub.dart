@@ -8,6 +8,7 @@ Widget buildEbookHost({
   required void Function(EbookHostSender sender) onConnected,
   required void Function(EbookJson message) onMessage,
   required void Function(String message) onError,
-}) => const Center(
-  child: Text('The ebook browser host is unavailable on this platform.'),
-);
+}) =>
+    const Center(
+      child: Text('The ebook browser host is unavailable on this platform.'),
+    );

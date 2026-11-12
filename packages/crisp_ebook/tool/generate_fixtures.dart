@@ -72,8 +72,63 @@ void main(List<String> arguments) {
     }
   }
   File('${directory.path}/edited-copy.epub').writeAsBytesSync(edited);
+
+  final styledSource = EpubDocument.open(fresh);
+  final chapterPath = styledSource.chapters.first.path;
+  styledSource.updateText(chapterPath, '''<?xml version="1.0" encoding="UTF-8"?>
+<x:html xmlns:x="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
+<x:head><x:title>Formatting-preserving corrections</x:title></x:head>
+<x:body><x:section epub:type="chapter"><x:h1>Formatting-preserving corrections</x:h1>
+<x:p id="formatted" class="publisher-style">A <x:em xml:lang="de"><x:strong>mispelled</x:strong></x:em> word;
+<x:a href="#destination" id="original-link">lable</x:a> and <x:span class="keep-inline">Bucher 🐦</x:span><x:br id="original-break"/>A second line.</x:p>
+<x:p id="destination">The original link destination remains intact.</x:p>
+</x:section></x:body></x:html>''');
+  final formatted = EpubDocument.open(styledSource.toBytes());
+  final formattedResources = {
+    for (final resource in formatted.resources)
+      resource.path: formatted.readBytes(resource.path),
+  };
+  final paragraph = formatted
+      .readStructuredProse(chapterPath)
+      .firstWhere((block) => block.id == 'formatted');
+  final replacements = {
+    'mispelled': 'misspelled',
+    'lable': 'label',
+    'Bucher 🐦': 'Bücher 🐦',
+  };
+  formatted.updateStructuredProseBlock(paragraph, {
+    for (final segment in paragraph.segments)
+      if (replacements.containsKey(segment.text))
+        segment.index: replacements[segment.text]!,
+  });
+  final corrected = EpubDocument.open(formatted.toBytes());
+  for (final entry in formattedResources.entries) {
+    if (entry.key != formatted.packagePath &&
+        entry.key != chapterPath &&
+        !_equal(entry.value, corrected.readBytes(entry.key))) {
+      throw StateError(
+        'Structured correction changed another resource: ${entry.key}',
+      );
+    }
+  }
+  final correctedSource = corrected.readText(chapterPath);
+  for (final expected in [
+    '<x:em xml:lang="de"><x:strong>misspelled</x:strong></x:em>',
+    '<x:a href="#destination" id="original-link">label</x:a>',
+    '<x:span class="keep-inline">Bücher 🐦</x:span>',
+    '<x:br id="original-break"/>',
+  ]) {
+    if (!correctedSource.contains(expected)) {
+      throw StateError(
+        'Structured correction did not preserve expected markup: $expected',
+      );
+    }
+  }
+  File(
+    '${directory.path}/formatted-text-edit.epub',
+  ).writeAsBytesSync(corrected.toBytes());
   stdout.writeln(
-    'Generated three EPUB fixtures; exact no-op and resource preservation verified.',
+    'Generated four EPUB fixtures; exact no-op, resource and inline-markup preservation verified.',
   );
 }
 

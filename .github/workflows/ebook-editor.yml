@@ -125,12 +125,13 @@ jobs:
           dart pub get
           dart analyze
           dart test
-      - name: Verify reviewed native source and license inventory
+      - name: Verify reviewed native and Wasm source and license inventory
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_conversion
         run: |
           python tool/check_vendor.py
           python tool/check_licenses.py
+          python tool/check_wasm.py
           mkdir -p build/web-probe
           dart compile js tool/web_probe.dart -o build/web-probe/capabilities.js
       - uses: actions/setup-node@v4
@@ -139,6 +140,21 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: packages/crisp_ebook_reader/package-lock.json
+      - name: Verify unavailable capability in Node without DOM or Worker
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          EBOOK_NO_WORKER_PROBE_OUTPUT="$(node -e 'globalThis.self = globalThis; require("./build/web-probe/capabilities.js")')"
+          printf '%s\n' "$EBOOK_NO_WORKER_PROBE_OUTPUT"
+          test "$EBOOK_NO_WORKER_PROBE_OUTPUT" = 'Browser converter capability: unavailable, as designed.'
+      - name: Verify metadata Wasm parity and production Dart worker lifecycle
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          node tool/metadata_wasm_smoke.mjs
+          mkdir -p build/web-metadata
+          dart compile js tool/web_metadata_probe.dart -o build/web-metadata/probe.js
+          node tool/run_web_metadata_probe.mjs
       - uses: actions/setup-java@v4
         if: runner.os == 'Linux'
         with:
@@ -155,9 +171,6 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm run test:parser -- ../crisp_ebook_conversion/test/fixtures/generated/*.azw3 ../crisp_ebook_conversion/test/fixtures/generated/*.mobi
           CRISP_TEST_RAW_INFLATE_FALLBACK=1 npm run test:parser
-          EBOOK_WEB_PROBE_OUTPUT="$(node -e 'globalThis.self = globalThis; require("../crisp_ebook_conversion/build/web-probe/capabilities.js")')"
-          printf '%s\n' "$EBOOK_WEB_PROBE_OUTPUT"
-          test "$EBOOK_WEB_PROBE_OUTPUT" = 'Browser converter capability: unavailable, as designed.'
       - name: Validate actual Kindle to EPUB imports independently
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_conversion
@@ -179,7 +192,12 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           EBOOK_CHROMIUM_PATH="$(node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')"
+          printf 'EBOOK_CHROMIUM_PATH=%s\n' "$EBOOK_CHROMIUM_PATH" >> "$GITHUB_ENV"
           CHROMIUM_PATH="$EBOOK_CHROMIUM_PATH" npm run test:browser -- ../crisp_ebook_conversion/test/fixtures/generated/*.azw3 ../crisp_ebook_conversion/test/fixtures/generated/*.mobi
+      - name: Verify production metadata worker in actual Chromium
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: CHROMIUM_PATH="$EBOOK_CHROMIUM_PATH" node tool/run_web_metadata_probe.mjs --browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -211,6 +229,8 @@ jobs:
           test/ebook_edit_session_test.dart
           test/widget/ebook_editor_dialog_test.dart
           test/widget/ebook_chapter_reader_test.dart
+          test/widget/ebook_prose_editor_test.dart
+          test/widget/ebook_kindle_metadata_editor_test.dart
           test/file_editability_test.dart
           test/office_document_service_test.dart
           test/pdf_file_store_test.dart

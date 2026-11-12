@@ -13,15 +13,18 @@ void main() {
     sourceFormat: 'epub',
   );
 
-  test('disposing a keyed old host cannot detach the replacement transport', () async {
+  test('disposing a keyed old host cannot detach the replacement transport',
+      () async {
     final controller = CrispEbookController();
     final calls = <String>[];
     Future<dynamic> oldHost(String method, EbookJson args) async {
       calls.add('old:$method');
     }
+
     Future<dynamic> newHost(String method, EbookJson args) async {
       calls.add('new:$method');
     }
+
     controller.attach(oldHost);
     controller.updateBookInfo(info);
     controller.updateLocation(const EbookLocation(cfi: 'old', fraction: 0.5));
@@ -40,17 +43,24 @@ void main() {
   });
 
   test('normalized import requires a known schema and encoding', () {
-    expect(() => EbookImportPayload.fromJson({'schemaVersion': 2}), throwsFormatException);
+    expect(() => EbookImportPayload.fromJson({'schemaVersion': 2}),
+        throwsFormatException);
     final payload = EbookImportPayload.fromJson({
       'schemaVersion': 1,
       'sourceFormat': 'fb2',
       'resources': [
-        {'href': 'chapters/0001.xhtml', 'mediaType': 'application/xhtml+xml',
-          'encoding': 'base64', 'data': base64Encode(utf8.encode('café 日本語'))},
+        {
+          'href': 'chapters/0001.xhtml',
+          'mediaType': 'application/xhtml+xml',
+          'encoding': 'base64',
+          'data': base64Encode(utf8.encode('café 日本語'))
+        },
       ],
     });
-    expect(utf8.decode(payload.resourceBytes(payload.resources.single)), 'café 日本語');
-    expect(() => payload.resourceBytes({'encoding': 'remote-url'}), throwsFormatException);
+    expect(utf8.decode(payload.resourceBytes(payload.resources.single)),
+        'café 日本語');
+    expect(() => payload.resourceBytes({'encoding': 'remote-url'}),
+        throwsFormatException);
   });
 
   test('platform capabilities do not advertise a bundled Linux renderer', () {

@@ -59,9 +59,11 @@ class EbookAnnotations {
           fontSize: (style['fontSize'] as num?)?.toDouble() ?? 18,
           lineHeight: (style['lineHeight'] as num?)?.toDouble() ?? 1.6,
           theme: const {'light', 'sepia', 'dark'}.contains(style['theme'])
-              ? style['theme'] as String : 'light',
+              ? style['theme'] as String
+              : 'light',
           flow: const {'paginated', 'scrolled'}.contains(style['flow'])
-              ? style['flow'] as String : 'paginated',
+              ? style['flow'] as String
+              : 'paginated',
           fontFamily: style['fontFamily'] as String? ?? 'serif',
         );
       }

@@ -85,6 +85,7 @@ extension EpubStructuredProseEditing on EpubDocument {
           index: entry.key,
           tag: entry.value.name.local,
           id: entry.value.getAttribute('id'),
+          allowsLineBreakEditing: _plainProse(entry.value),
           segments: _structuredProseSegments(
             entry.value,
             resourcePath,
@@ -152,6 +153,69 @@ extension EpubStructuredProseEditing on EpubDocument {
     // This is a private parsed tree. updateText is transactional and checks the
     // serialized size before publishing either the chapter or OPF timestamp.
     updateText(block.resourcePath, source.toXmlString());
+  }
+
+  /// Retains the original plain-paragraph authoring behavior: newlines become
+  /// XHTML line breaks. Inline markup or attributed/structured breaks cannot
+  /// enter this path, and the complete resulting XML is checked before publish.
+  void updateStructuredProseText(EpubStructuredProseBlock block, String text) {
+    _assertStructure();
+    final source = _structuredProseSource(block.resourcePath);
+    final fingerprint = crypto.sha256
+        .convert(readBytes(block.resourcePath))
+        .toString();
+    if (fingerprint != block.resourceFingerprint) {
+      throw EpubException(
+        'stale_edit',
+        'This chapter changed after the text editor was opened. Reopen it before applying these edits.',
+        path: block.resourcePath,
+      );
+    }
+    final elements = _structuredProseElements(source);
+    if (block.index < 0 || block.index >= elements.length) {
+      throw RangeError.index(block.index, elements, 'block.index');
+    }
+    final element = elements[block.index];
+    if (!_plainProse(element)) {
+      throw EpubException(
+        'complex_prose',
+        'This block contains formatting or embedded content; edit its individual text segments.',
+        path: block.resourcePath,
+      );
+    }
+    if (text.length > limits.maxTextBytes) {
+      throw _proseTextLimit(block.resourcePath);
+    }
+    _validateProseText(text, block.resourcePath);
+    if (utf8.encode(text).length > limits.maxTextBytes) {
+      throw _proseTextLimit(block.resourcePath);
+    }
+    final expectedText = _proseText(element);
+    if (text == expectedText) return;
+    var segmentCount = 1;
+    for (var index = 0; index < text.length; index++) {
+      if (text.codeUnitAt(index) == 10 &&
+          (segmentCount += 2) > _maxStructuredProseSegments) {
+        throw EpubException(
+          'prose_limit',
+          'This paragraph has too many text segments. Use source editing.',
+          path: block.resourcePath,
+        );
+      }
+    }
+    // Preserve the existing plain editor's newline-to-br semantics on this
+    // private tree. Count before split/allocation, then validate the resulting
+    // chapter so a bounded UI edit cannot publish an over-budget XML resource.
+    element.children.clear();
+    final lines = text.split('\n');
+    for (var index = 0; index < lines.length; index++) {
+      if (index != 0)
+        element.children.add(XmlElement(_childName(element, 'br')));
+      element.children.add(XmlText(lines[index]));
+    }
+    final serialized = source.toXmlString();
+    _parseXml(serialized, block.resourcePath, limits);
+    updateText(block.resourcePath, serialized);
   }
 
   XmlDocument _structuredProseSource(String resourcePath) {

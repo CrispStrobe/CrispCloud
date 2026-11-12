@@ -34,6 +34,99 @@ Matcher _error(String code) =>
 
 void main() {
   test(
+    'guarded plain text preserves newline authoring and exact no-op bytes',
+    () {
+      final book = _book(
+        '<blockquote><p id="p" class="keep">Before<br/>After</p></blockquote><p id="empty"/>',
+        prefixed: true,
+      );
+      final block = _block(book, 'p');
+      final original = book.toBytes();
+      expect(block.allowsLineBreakEditing, isTrue);
+      expect(block.text, 'Before\nAfter');
+      book.updateStructuredProseText(block, block.text);
+      expect(book.toBytes(), orderedEquals(original));
+      expect(book.dirty, isFalse);
+      book.updateStructuredProseText(block, 'First\nSecond\nThird');
+      expect(
+        book.readText(_chapter),
+        contains(
+          '<x:p id="p" class="keep">First<x:br/>Second<x:br/>Third</x:p>',
+        ),
+      );
+      final empty = _block(book, 'empty');
+      expect(empty.editable, isTrue);
+      book.updateStructuredProseText(empty, 'Inserted');
+      expect(_block(book, 'empty').text, 'Inserted');
+    },
+  );
+
+  test(
+    'plain text updates reject stale markup and preserve the typed target',
+    () {
+      final book = _book('<p id="p">Original</p>');
+      final block = _block(book, 'p');
+      book.updateText(
+        _chapter,
+        book
+            .readText(_chapter)
+            .replaceFirst('id="p"', 'id="p" class="changed"'),
+      );
+      final current = book.readBytes(_chapter);
+      expect(
+        () => book.updateStructuredProseText(block, 'New\nText'),
+        _error('stale_edit'),
+      );
+      expect(book.readBytes(_chapter), orderedEquals(current));
+    },
+  );
+
+  test(
+    'plain line-break authoring rejects excessive segments and XML nodes atomically',
+    () {
+      final book = _book('<p id="p">Original</p>');
+      final original = book.toBytes();
+      expect(
+        () => book.updateStructuredProseText(_block(book, 'p'), 'line\n' * 600),
+        _error('prose_limit'),
+      );
+      expect(book.toBytes(), orderedEquals(original));
+      final bounded = _book(
+        '<p id="p">Original</p>',
+        limits: const EpubLimits(maxXmlNodes: 256),
+      );
+      final boundedOriginal = bounded.toBytes();
+      expect(
+        () => bounded.updateStructuredProseText(
+          _block(bounded, 'p'),
+          'line\n' * 200,
+        ),
+        _error('xml_limit'),
+      );
+      expect(bounded.toBytes(), orderedEquals(boundedOriginal));
+    },
+  );
+
+  test(
+    'plain text updates cannot flatten inline formatting or structured breaks',
+    () {
+      final book = _book(
+        '<p id="formatted">Text <em>formatted</em></p><p id="break">Text<br id="anchor"/>tail</p><p id="comment">Text<!--keep--></p>',
+      );
+      final original = book.toBytes();
+      for (final id in ['formatted', 'break', 'comment']) {
+        final block = _block(book, id);
+        expect(block.allowsLineBreakEditing, isFalse);
+        expect(
+          () => book.updateStructuredProseText(block, 'flatten'),
+          _error('complex_prose'),
+        );
+        expect(book.toBytes(), orderedEquals(original));
+      }
+    },
+  );
+
+  test(
     'corrects nested formatting and links without changing their XML structure',
     () {
       final book = _book(

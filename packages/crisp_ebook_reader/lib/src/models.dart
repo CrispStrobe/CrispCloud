@@ -18,17 +18,17 @@ class EbookLocation {
   final String chapterTitle;
   final int sectionIndex;
   factory EbookLocation.fromJson(EbookJson json) => EbookLocation(
-    cfi: json['cfi'] as String? ?? '',
-    fraction: (json['fraction'] as num?)?.toDouble() ?? 0,
-    chapterTitle: json['chapterTitle'] as String? ?? '',
-    sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 0,
-  );
+        cfi: json['cfi'] as String? ?? '',
+        fraction: (json['fraction'] as num?)?.toDouble() ?? 0,
+        chapterTitle: json['chapterTitle'] as String? ?? '',
+        sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 0,
+      );
   EbookJson toJson() => {
-    'cfi': cfi,
-    'fraction': fraction,
-    'chapterTitle': chapterTitle,
-    'sectionIndex': sectionIndex,
-  };
+        'cfi': cfi,
+        'fraction': fraction,
+        'chapterTitle': chapterTitle,
+        'sectionIndex': sectionIndex,
+      };
 }
 
 class EbookTocItem {
@@ -41,20 +41,20 @@ class EbookTocItem {
   final String href;
   final List<EbookTocItem> children;
   factory EbookTocItem.fromJson(EbookJson json) => EbookTocItem(
-    label: json['label'] as String? ?? '',
-    href: '${json['href'] ?? ''}',
-    children: (json['children'] as List? ?? const [])
-        .map(
-          (item) =>
-              EbookTocItem.fromJson(Map<String, dynamic>.from(item as Map)),
-        )
-        .toList(),
-  );
+        label: json['label'] as String? ?? '',
+        href: '${json['href'] ?? ''}',
+        children: (json['children'] as List? ?? const [])
+            .map(
+              (item) =>
+                  EbookTocItem.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
+            .toList(),
+      );
   EbookJson toJson() => {
-    'label': label,
-    'href': href,
-    'children': children.map((item) => item.toJson()).toList(),
-  };
+        'label': label,
+        'href': href,
+        'children': children.map((item) => item.toJson()).toList(),
+      };
 }
 
 class EbookBookInfo {
@@ -77,20 +77,22 @@ class EbookBookInfo {
   final bool fixedLayout;
   final List<String> warnings;
   factory EbookBookInfo.fromJson(EbookJson json) => EbookBookInfo(
-    title: json['title'] as String? ?? '',
-    authors: (json['authors'] as List? ?? const []).map((e) => '$e').toList(),
-    toc: (json['toc'] as List? ?? const [])
-        .map(
-          (item) =>
-              EbookTocItem.fromJson(Map<String, dynamic>.from(item as Map)),
-        )
-        .toList(),
-    sectionCount: (json['sectionCount'] as num?)?.toInt() ?? 0,
-    sourceFormat: json['sourceFormat'] as String? ?? '',
-    language: json['language'] as String?,
-    fixedLayout: json['fixedLayout'] == true,
-    warnings: (json['warnings'] as List? ?? const []).map((e) => '$e').toList(),
-  );
+        title: json['title'] as String? ?? '',
+        authors:
+            (json['authors'] as List? ?? const []).map((e) => '$e').toList(),
+        toc: (json['toc'] as List? ?? const [])
+            .map(
+              (item) =>
+                  EbookTocItem.fromJson(Map<String, dynamic>.from(item as Map)),
+            )
+            .toList(),
+        sectionCount: (json['sectionCount'] as num?)?.toInt() ?? 0,
+        sourceFormat: json['sourceFormat'] as String? ?? '',
+        language: json['language'] as String?,
+        fixedLayout: json['fixedLayout'] == true,
+        warnings:
+            (json['warnings'] as List? ?? const []).map((e) => '$e').toList(),
+      );
 }
 
 class EbookSelection {
@@ -103,10 +105,10 @@ class EbookSelection {
   final String cfi;
   final int sectionIndex;
   factory EbookSelection.fromJson(EbookJson json) => EbookSelection(
-    text: json['text'] as String? ?? '',
-    cfi: json['cfi'] as String? ?? '',
-    sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 0,
-  );
+        text: json['text'] as String? ?? '',
+        cfi: json['cfi'] as String? ?? '',
+        sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 0,
+      );
 }
 
 class EbookSearchHit {
@@ -119,10 +121,10 @@ class EbookSearchHit {
   final String excerpt;
   final int sectionIndex;
   factory EbookSearchHit.fromJson(EbookJson json) => EbookSearchHit(
-    cfi: json['cfi'] as String? ?? '',
-    excerpt: json['excerpt'] as String? ?? '',
-    sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 0,
-  );
+        cfi: json['cfi'] as String? ?? '',
+        excerpt: json['excerpt'] as String? ?? '',
+        sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? 0,
+      );
 }
 
 class EbookAppearance {
@@ -141,12 +143,12 @@ class EbookAppearance {
   final String flow;
   final String fontFamily;
   EbookJson toJson() => {
-    'fontSize': fontSize.clamp(10, 48),
-    'lineHeight': lineHeight.clamp(1, 2.5),
-    'theme': theme,
-    'flow': flow,
-    'fontFamily': fontFamily,
-  };
+        'fontSize': fontSize.clamp(10, 48),
+        'lineHeight': lineHeight.clamp(1, 2.5),
+        'theme': theme,
+        'flow': flow,
+        'fontFamily': fontFamily,
+      };
 }
 
 class EbookHighlight {
@@ -192,7 +194,8 @@ class EbookImportPayload {
 class EbookReaderCapabilities {
   /// Linux uses the application's Flutter chapter reader. An embedded browser
   /// runtime is deliberately not bundled by this permissively licensed package.
-  static bool get supportsEmbeddedReader => kIsWeb ||
+  static bool get supportsEmbeddedReader =>
+      kIsWeb ||
       {
         TargetPlatform.android,
         TargetPlatform.iOS,

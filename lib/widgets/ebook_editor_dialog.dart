@@ -18,6 +18,7 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/ebook_annotations.dart';
+import '../services/ebook_chapter_reader_controller.dart';
 import '../services/ebook_device_export.dart';
 import '../services/ebook_edit_session.dart';
 import '../services/ebook_editor_menu.dart';
@@ -28,6 +29,8 @@ import '../services/panel_source_service.dart';
 import '../services/pdf_file_store.dart';
 import 'image_editor_surface.dart';
 import 'ebook_chapter_reader.dart';
+import 'ebook_kindle_metadata_editor.dart';
+import 'ebook_prose_editor.dart';
 import 'internal_viewer_dialog.dart'
     show InternalViewerAction, InternalViewerDialog;
 
@@ -107,6 +110,7 @@ class EbookEditorDialog extends ConsumerStatefulWidget {
 
 class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   final _reader = CrispEbookController();
+  final _chapterReader = EbookChapterReaderController();
   final _source = CodeLineEditingController();
   final _search = TextEditingController();
   final _title = TextEditingController();
@@ -125,6 +129,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   String? _readerError;
   String? _notice;
   String? _sourceWarning;
+  String? _searchNotice;
   List<EbookSearchHit> _searchHits = [];
   List<EpubIssue>? _issues;
   EbookBookInfo? _bookInfo;
@@ -168,6 +173,17 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   bool get _canOpenTextFallback =>
       _bytes != null &&
       (_document != null || _name.toLowerCase().endsWith('.epub'));
+  bool get _usesChapterReader =>
+      !EbookReaderCapabilities.supportsEmbeddedReader &&
+      widget.readerBuilderOverride == null;
+  bool get _readerReady =>
+      _usesChapterReader ? _chapterReader.isReady : _reader.isReady;
+  Future<void> _goToReader(String target) =>
+      _usesChapterReader ? _chapterReader.goTo(target) : _reader.goTo(target);
+  Future<void> _previousReaderPage() =>
+      _usesChapterReader ? _chapterReader.previous() : _reader.previous();
+  Future<void> _nextReaderPage() =>
+      _usesChapterReader ? _chapterReader.next() : _reader.next();
 
   @override
   void initState() {
@@ -211,6 +227,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     }
     _container = null;
     _reader.dispose();
+    _chapterReader.dispose();
     _source.dispose();
     _search.dispose();
     _title.dispose();
@@ -329,13 +346,12 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       _annotationIdentity =
           _store?.documentId ??
           '${origin?.storageId ?? 'attachment'}:${widget.file.path ?? _name}';
-      if (!EbookReaderCapabilities.supportsEmbeddedReader) {
+      if (_usesChapterReader) {
         _annotationIdentity += ':chapter-reader';
       }
       _annotations = await EbookAnnotations.open(_annotationIdentity, bytes);
       if (!mounted) return;
-      _conversion = await KindlingConverter().capabilities();
-      if (!mounted) return;
+      unawaited(_loadConversionCapabilities());
       setState(() {
         _loading = false;
         _editing = widget.startEditing && _editable;
@@ -355,6 +371,16 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         });
       }
       _scheduleMenu();
+    }
+  }
+
+  Future<void> _loadConversionCapabilities() async {
+    try {
+      final capabilities = await KindlingConverter().capabilities();
+      if (mounted) setState(() => _conversion = capabilities);
+    } catch (_) {
+      // An optional conversion runtime must not prevent reading or EPUB edits.
+      if (mounted) setState(() => _conversion = null);
     }
   }
 
@@ -846,12 +872,47 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   }
 
   Future<void> _editKindleMetadata() async {
-    if (_busy || _bytes == null) return;
-    final edited = await showDialog<KindleMetadataPatch>(
+    if (_busy ||
+        _bytes == null ||
+        _conversion?.canRewriteKindleMetadata != true) {
+      return;
+    }
+    await showDialog<bool>(
       context: context,
-      builder: (_) => _KindleMetadataDialog(info: _bookInfo),
+      barrierDismissible: false,
+      builder: (_) => EbookKindleMetadataEditor(
+        info: _bookInfo,
+        translate: context.ebookTr,
+        exportLabel: _exportLabel,
+        pickCover: _conversion?.canReplaceKindleCover == true
+            ? _pickKindleCover
+            : null,
+        onApply: _exportKindleMetadataDraft,
+        onCancel: () => _conversionToken?.cancel(),
+        errorMessage: _message,
+      ),
     );
-    if (edited == null || !mounted) return;
+  }
+
+  Future<Uint8List?> _pickKindleCover() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['png', 'jpg', 'jpeg'],
+      withData: true,
+      allowMultiple: false,
+    );
+    if (picked == null || picked.files.isEmpty) return null;
+    final file = picked.files.single;
+    final bytes = file.bytes;
+    if (bytes == null || bytes.length > kImageEditorInputLimitBytes) {
+      throw StateError('Choose a resource up to 32 MiB.');
+    }
+    inspectEditableImage(bytes, fileName: file.name);
+    return bytes;
+  }
+
+  Future<bool> _exportKindleMetadataDraft(KindleMetadataDraft edited) async {
+    if (_busy || _bytes == null || !mounted) return false;
     setState(() => _working = true);
     _conversionToken = EbookCancellationToken();
     _scheduleMenu();
@@ -861,14 +922,15 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           : KindleExportFormat.legacyMobi;
       final result = await KindlingConverter().rewriteMetadata(
         _bytes!,
-        patch: edited,
+        patch: edited.patch,
+        cover: edited.cover,
         format: format,
         cancellation: _conversionToken,
       );
-      if (!mounted) return;
+      if (!mounted) return false;
       if (result.warnings.isNotEmpty &&
           !await _confirmWarnings(result.warnings)) {
-        return;
+        return false;
       }
       // A separate copy is deliberate; the metadata service does not own a
       // source-file baseline, and conversion never changes the original format.
@@ -877,8 +939,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         '${p.basenameWithoutExtension(_name)}-metadata.${result.extension}',
       );
       if (outcome != null) _reportOutcome(outcome);
-    } catch (error) {
-      _snack(_message(error));
+      return outcome != null;
     } finally {
       _conversionToken = null;
       if (mounted) {
@@ -1046,31 +1107,44 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     }
   }
 
-  Future<void> _editProse(EpubProseBlock block) async {
+  Future<void> _editProse(EpubStructuredProseBlock block) async {
     if (_busy || !block.editable || _resource == null || !_applyDrafts()) {
       return;
     }
     final path = _resource!;
-    final text = await _askText(
-      'Edit text',
-      'Text',
-      block.text,
-      multiline: true,
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => EbookProseEditorDialog(
+        block: block,
+        translate: context.ebookTr,
+        errorMessage: _message,
+        onPlainTextApply: block.allowsLineBreakEditing
+            ? (text) {
+                if (_busy || _session == null || !mounted) {
+                  throw StateError(
+                    'The editor is busy. Try applying the text again.',
+                  );
+                }
+                _session!.mutate(
+                  (doc) => doc.updateStructuredProseText(block, text),
+                );
+                _selectResource(path, apply: false);
+              }
+            : null,
+        onApply: (replacements) {
+          if (_busy || _session == null || !mounted) {
+            throw StateError(
+              'The editor is busy. Try applying the text again.',
+            );
+          }
+          _session!.mutate(
+            (doc) => doc.updateStructuredProseBlock(block, replacements),
+          );
+          _selectResource(path, apply: false);
+        },
+      ),
     );
-    if (text == null || !mounted) return;
-    try {
-      _session!.mutate(
-        (doc) => doc.updateProseBlock(
-          path,
-          block.index,
-          text,
-          expectedText: block.text,
-        ),
-      );
-      _selectResource(path, apply: false);
-    } catch (error) {
-      _snack(_message(error));
-    }
   }
 
   Future<String?> _askText(
@@ -1129,6 +1203,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       _bookInfo = info;
       _readerError = null;
     });
+    if (_usesChapterReader) return;
     for (final highlight in _annotations?.highlights ?? <EbookHighlight>[]) {
       unawaited(
         _reader
@@ -1159,13 +1234,36 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   }
 
   Future<void> _searchBook() async {
-    if (!_reader.isReady || _search.text.trim().isEmpty) return;
+    if (!_readerReady) return;
+    if (_search.text.trim().isEmpty) {
+      _chapterReader.clearSearch();
+      setState(() {
+        ++_searchGeneration;
+        _searchHits = [];
+        _searchNotice = null;
+        _searching = false;
+      });
+      return;
+    }
     final generation = ++_searchGeneration;
-    setState(() => _searching = true);
+    setState(() {
+      _searching = true;
+      _searchNotice = null;
+    });
     try {
-      final hits = await _reader.search(_search.text.trim());
+      final hits = _usesChapterReader
+          ? await _chapterReader.search(_search.text.trim())
+          : await _reader.search(_search.text.trim());
       if (mounted && generation == _searchGeneration) {
-        setState(() => _searchHits = hits);
+        setState(() {
+          _searchHits = hits;
+          _searchNotice =
+              _usesChapterReader && _chapterReader.searchWarnings.isNotEmpty
+              ? _chapterReader.searchWarnings.join('\n')
+              : hits.isEmpty
+              ? 'No matches.'
+              : null;
+        });
       }
     } catch (error) {
       _snack(_message(error));
@@ -1238,72 +1336,134 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   Future<void> _appearance() async {
     final annotations = _annotations;
     if (annotations == null) return;
-    var appearance = annotations.appearance;
+    final saved = annotations.appearance;
+    var appearance = EbookAppearance(
+      fontSize: saved.fontSize.isFinite ? saved.fontSize.clamp(10, 48) : 18,
+      lineHeight: saved.lineHeight.isFinite
+          ? saved.lineHeight.clamp(1, 2.5)
+          : 1.6,
+      theme: const {'light', 'sepia', 'dark'}.contains(saved.theme)
+          ? saved.theme
+          : 'light',
+      flow: _usesChapterReader || saved.flow == 'scrolled'
+          ? 'scrolled'
+          : 'paginated',
+      fontFamily:
+          const {'serif', 'sans-serif', 'monospace'}.contains(saved.fontFamily)
+          ? saved.fontFamily
+          : 'serif',
+    );
     final result = await showDialog<EbookAppearance>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(context.ebookTr('Appearance')),
-          content: SizedBox(
-            width: 320,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('${appearance.fontSize.round()} pt'),
-                Slider(
-                  value: appearance.fontSize.clamp(10, 48),
-                  min: 10,
-                  max: 48,
-                  divisions: 38,
-                  onChanged: (size) => setDialogState(
-                    () => appearance = EbookAppearance(
-                      fontSize: size,
-                      theme: appearance.theme,
-                      flow: appearance.flow,
-                      lineHeight: appearance.lineHeight,
-                      fontFamily: appearance.fontFamily,
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 320,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${appearance.fontSize.round()} pt'),
+                  Slider(
+                    value: appearance.fontSize.clamp(10, 48),
+                    min: 10,
+                    max: 48,
+                    divisions: 38,
+                    onChanged: (size) => setDialogState(
+                      () => appearance = EbookAppearance(
+                        fontSize: size,
+                        theme: appearance.theme,
+                        flow: appearance.flow,
+                        lineHeight: appearance.lineHeight,
+                        fontFamily: appearance.fontFamily,
+                      ),
                     ),
                   ),
-                ),
-                DropdownButton<String>(
-                  isExpanded: true,
-                  value: appearance.theme,
-                  items: ['light', 'sepia', 'dark']
-                      .map(
-                        (theme) => DropdownMenuItem(
-                          value: theme,
-                          child: Text(context.ebookTr(theme)),
+                  DropdownButton<String>(
+                    isExpanded: true,
+                    value: appearance.theme,
+                    items: ['light', 'sepia', 'dark']
+                        .map(
+                          (theme) => DropdownMenuItem(
+                            value: theme,
+                            child: Text(context.ebookTr(theme)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (theme) => setDialogState(
+                      () => appearance = EbookAppearance(
+                        fontSize: appearance.fontSize,
+                        theme: theme!,
+                        flow: appearance.flow,
+                        lineHeight: appearance.lineHeight,
+                        fontFamily: appearance.fontFamily,
+                      ),
+                    ),
+                  ),
+                  DropdownButton<String>(
+                    isExpanded: true,
+                    value: appearance.fontFamily,
+                    items: ['serif', 'sans-serif', 'monospace']
+                        .map(
+                          (font) => DropdownMenuItem(
+                            value: font,
+                            child: Text(context.ebookTr(font)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (font) => setDialogState(
+                      () => appearance = EbookAppearance(
+                        fontSize: appearance.fontSize,
+                        theme: appearance.theme,
+                        flow: appearance.flow,
+                        lineHeight: appearance.lineHeight,
+                        fontFamily: font!,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${context.ebookTr('Line spacing')}: ${appearance.lineHeight.toStringAsFixed(1)}',
+                  ),
+                  Slider(
+                    value: appearance.lineHeight,
+                    min: 1,
+                    max: 2.5,
+                    divisions: 15,
+                    onChanged: (height) => setDialogState(
+                      () => appearance = EbookAppearance(
+                        fontSize: appearance.fontSize,
+                        theme: appearance.theme,
+                        flow: appearance.flow,
+                        lineHeight: height,
+                        fontFamily: appearance.fontFamily,
+                      ),
+                    ),
+                  ),
+                  if (!_usesChapterReader)
+                    DropdownButton<String>(
+                      isExpanded: true,
+                      value: appearance.flow,
+                      items: ['paginated', 'scrolled']
+                          .map(
+                            (flow) => DropdownMenuItem(
+                              value: flow,
+                              child: Text(context.ebookTr(flow)),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (flow) => setDialogState(
+                        () => appearance = EbookAppearance(
+                          fontSize: appearance.fontSize,
+                          theme: appearance.theme,
+                          flow: flow!,
+                          lineHeight: appearance.lineHeight,
+                          fontFamily: appearance.fontFamily,
                         ),
-                      )
-                      .toList(),
-                  onChanged: (theme) => setDialogState(
-                    () => appearance = EbookAppearance(
-                      fontSize: appearance.fontSize,
-                      theme: theme!,
-                      flow: appearance.flow,
+                      ),
                     ),
-                  ),
-                ),
-                DropdownButton<String>(
-                  isExpanded: true,
-                  value: appearance.flow,
-                  items: ['paginated', 'scrolled']
-                      .map(
-                        (flow) => DropdownMenuItem(
-                          value: flow,
-                          child: Text(context.ebookTr(flow)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (flow) => setDialogState(
-                    () => appearance = EbookAppearance(
-                      fontSize: appearance.fontSize,
-                      theme: appearance.theme,
-                      flow: flow!,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [
@@ -1320,7 +1480,16 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       ),
     );
     if (result == null || !mounted) return;
-    await _readerCommand(() => _reader.setAppearance(result));
+    try {
+      if (_usesChapterReader) {
+        await _chapterReader.setAppearance(result);
+      } else {
+        await _reader.setAppearance(result);
+      }
+    } catch (error) {
+      _snack(_message(error));
+      return;
+    }
     annotations.appearance = result;
     _persistAnnotations();
   }
@@ -1456,16 +1625,17 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                           child: Text(context.ebookTr('Save a copy')),
                         ),
                       if (_document != null &&
-                          _conversion?.available == true) ...[
+                          _conversion?.canExportAzw3 == true)
                         PopupMenuItem(
                           value: 'azw3',
                           child: Text(context.ebookTr('Export AZW3')),
                         ),
+                      if (_document != null &&
+                          _conversion?.canExportLegacyMobi == true)
                         PopupMenuItem(
                           value: 'mobi',
                           child: Text(context.ebookTr('Export MOBI')),
                         ),
-                      ],
                       if (_document == null &&
                           _conversion?.canRewriteKindleMetadata == true &&
                           {'mobi', 'azw', 'azw3'}.contains(
@@ -1586,17 +1756,8 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   Widget _readBody() {
     if (_bytes == null) return const SizedBox.shrink();
-    if (!EbookReaderCapabilities.supportsEmbeddedReader &&
-        widget.readerBuilderOverride == null) {
-      final document = _document;
-      if (document != null) {
-        return EbookChapterReader(
-          key: ValueKey(_readerVersion),
-          document: document,
-          initialSection: _annotations?.location?.sectionIndex ?? 0,
-          onLocationChanged: _onLocation,
-        );
-      }
+    final document = _document;
+    if (_usesChapterReader && document == null) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
@@ -1609,29 +1770,46 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         ),
       );
     }
-    final reader =
-        widget.readerBuilderOverride?.call(
-          context,
-          _bytes!,
-          _converted ? _epubName : _name,
-          _reader,
-        ) ??
-        CrispEbookReader(
-          key: ValueKey(_readerVersion),
-          bytes: _bytes!,
-          filename: _converted ? _epubName : _name,
-          controller: _reader,
-          initialLocation: _annotations?.location?.cfi,
-          appearance: _annotations?.appearance ?? const EbookAppearance(),
-          onReady: _onReady,
-          onLocationChanged: _onLocation,
-          onSelection: (selection) {
-            if (mounted) setState(() => _selection = selection);
-          },
-          onError: (message) {
-            if (mounted) setState(() => _readerError = message);
-          },
-        );
+    final Widget reader = _usesChapterReader
+        ? EbookChapterReader(
+            key: ValueKey(_readerVersion),
+            document: document!,
+            controller: _chapterReader,
+            initialSection: _annotations?.location?.sectionIndex ?? 0,
+            initialLocation: _annotations?.location?.cfi,
+            appearance:
+                _annotations?.appearance ??
+                const EbookAppearance(flow: 'scrolled'),
+            showControls: false,
+            onReady: _onReady,
+            onLocationChanged: _onLocation,
+            onAppearanceChanged: (appearance) {
+              _annotations?.appearance = appearance;
+              _persistAnnotations();
+            },
+          )
+        : widget.readerBuilderOverride?.call(
+                context,
+                _bytes!,
+                _converted ? _epubName : _name,
+                _reader,
+              ) ??
+              CrispEbookReader(
+                key: ValueKey(_readerVersion),
+                bytes: _bytes!,
+                filename: _converted ? _epubName : _name,
+                controller: _reader,
+                initialLocation: _annotations?.location?.cfi,
+                appearance: _annotations?.appearance ?? const EbookAppearance(),
+                onReady: _onReady,
+                onLocationChanged: _onLocation,
+                onSelection: (selection) {
+                  if (mounted) setState(() => _selection = selection);
+                },
+                onError: (message) {
+                  if (mounted) setState(() => _readerError = message);
+                },
+              );
     return Column(
       children: [
         Padding(
@@ -1641,44 +1819,46 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _icon(
-                'Previous page',
+                _usesChapterReader ? 'Previous chapter' : 'Previous page',
                 Icons.chevron_left,
-                _reader.isReady ? () => _readerCommand(_reader.previous) : null,
+                _readerReady ? () => _readerCommand(_previousReaderPage) : null,
               ),
               _icon(
-                'Next page',
+                _usesChapterReader ? 'Next chapter' : 'Next page',
                 Icons.chevron_right,
-                _reader.isReady ? () => _readerCommand(_reader.next) : null,
+                _readerReady ? () => _readerCommand(_nextReaderPage) : null,
               ),
               _icon(
                 'Contents',
                 Icons.list,
-                _reader.isReady ? () => _showReaderList('Contents') : null,
+                _readerReady ? () => _showReaderList('Contents') : null,
               ),
               _icon(
                 'Bookmarks',
                 Icons.bookmarks_outlined,
                 () => _showReaderList('Bookmarks'),
               ),
-              _icon(
-                'Highlights',
-                Icons.highlight_outlined,
-                () => _showReaderList('Highlights'),
-              ),
+              if (!_usesChapterReader)
+                _icon(
+                  'Highlights',
+                  Icons.highlight_outlined,
+                  () => _showReaderList('Highlights'),
+                ),
               _icon(
                 'Add bookmark',
                 Icons.bookmark_add_outlined,
                 _location != null ? _bookmark : null,
               ),
-              _icon(
-                'Highlight selection',
-                Icons.format_color_fill,
-                _selection?.cfi.isNotEmpty == true ? _highlight : null,
-              ),
+              if (!_usesChapterReader)
+                _icon(
+                  'Highlight selection',
+                  Icons.format_color_fill,
+                  _selection?.cfi.isNotEmpty == true ? _highlight : null,
+                ),
               _icon(
                 'Appearance',
                 Icons.text_fields,
-                _reader.isReady ? _appearance : null,
+                _readerReady ? _appearance : null,
               ),
               SizedBox(
                 width: 220,
@@ -1688,7 +1868,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     isDense: true,
                     hintText: context.ebookTr('Search'),
                     suffixIcon: IconButton(
-                      onPressed: _reader.isReady ? _searchBook : null,
+                      onPressed: _readerReady ? _searchBook : null,
                       icon: const Icon(Icons.search),
                     ),
                   ),
@@ -1697,7 +1877,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
               ),
               if (_document == null)
                 FilledButton.tonalIcon(
-                  onPressed: !_busy && _reader.isReady ? _convert : null,
+                  onPressed: !_busy && _readerReady ? _convert : null,
                   icon: const Icon(Icons.edit_document),
                   label: Text(context.ebookTr('Convert to editable EPUB')),
                 ),
@@ -1709,6 +1889,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           if (_canOpenTextFallback) _textFallbackButton(),
         ],
         if (_searching) const LinearProgressIndicator(),
+        if (_searchNotice != null) _banner(_searchNotice!),
         if (_searchHits.isNotEmpty)
           SizedBox(
             height: 130,
@@ -1723,7 +1904,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: () => _readerCommand(() => _reader.goTo(hit.cfi)),
+                  onTap: () => _readerCommand(() => _goToReader(hit.cfi)),
                 );
               },
             ),
@@ -1769,7 +1950,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                       : () {
                           Navigator.pop(context);
                           unawaited(
-                            _readerCommand(() => _reader.goTo(item.href)),
+                            _readerCommand(() => _goToReader(item.href)),
                           );
                         },
                 ),
@@ -1800,7 +1981,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    unawaited(_readerCommand(() => _reader.goTo(bookmark.cfi)));
+                    unawaited(_readerCommand(() => _goToReader(bookmark.cfi)));
                   },
                 ),
               );
@@ -1832,9 +2013,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    unawaited(
-                      _readerCommand(() => _reader.goTo(highlight.cfi)),
-                    );
+                    unawaited(_readerCommand(() => _goToReader(highlight.cfi)));
                   },
                 ),
               );
@@ -2236,11 +2415,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   Widget _proseBody(String path) {
     try {
-      final blocks = _document!.readProse(path);
+      final blocks = _document!.readStructuredProse(path);
       return Column(
         children: [
           _banner(
-            'Edit plain text blocks here. Use Source for formatting, links, tables and other structured content.',
+            'Correct text while preserving formatting and links. Use Source to change protected content.',
           ),
           Expanded(
             child: ListView.builder(
@@ -2328,75 +2507,6 @@ class _EbookImageEditorState extends State<_EbookImageEditor> {
         callbacks: const ProImageEditorCallbacks(),
       ),
     ),
-  );
-}
-
-class _KindleMetadataDialog extends StatefulWidget {
-  const _KindleMetadataDialog({this.info});
-  final EbookBookInfo? info;
-  @override
-  State<_KindleMetadataDialog> createState() => _KindleMetadataDialogState();
-}
-
-class _KindleMetadataDialogState extends State<_KindleMetadataDialog> {
-  late final _title = TextEditingController(text: widget.info?.title ?? '');
-  late final _authors = TextEditingController(
-    text: widget.info?.authors.join('\n') ?? '',
-  );
-  @override
-  void dispose() {
-    _title.dispose();
-    _authors.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(context.ebookTr('Edit Kindle metadata')),
-    content: SizedBox(
-      width: 520,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _title,
-            decoration: InputDecoration(labelText: context.ebookTr('Title')),
-          ),
-          TextField(
-            controller: _authors,
-            minLines: 2,
-            maxLines: 4,
-            decoration: InputDecoration(
-              labelText: context.ebookTr('Authors (one per line)'),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Exports a new file with updated metadata and the existing Kindle content.',
-          ),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(context.ebookTr('Cancel')),
-      ),
-      FilledButton(
-        onPressed: () => Navigator.pop(
-          context,
-          KindleMetadataPatch(
-            title: _title.text.trim(),
-            authors: _authors.text
-                .split('\n')
-                .map((a) => a.trim())
-                .where((a) => a.isNotEmpty)
-                .toList(),
-          ),
-        ),
-        child: Text(context.ebookTr('Export a copy')),
-      ),
-    ],
   );
 }
 
