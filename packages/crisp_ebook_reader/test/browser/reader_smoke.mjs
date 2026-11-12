@@ -33,6 +33,9 @@ await new Promise(resolve => server.listen(0,'127.0.0.1',resolve))
 try {
     browser = await chromium.launch({headless:true, executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium'})
     const page = await browser.newPage({viewport:{width:1100,height:760}})
+    // Exercise the production compatibility import in a real document before
+    // any EPUB is parsed, as on WebKit versions without standard grouping.
+    await page.addInitScript(() => { delete Object.groupBy; delete Map.groupBy })
     const unexpectedRequests = []
     const errors = []
     let currentCommand = 'startup'
@@ -46,6 +49,8 @@ try {
     })
     await page.goto(`http://127.0.0.1:${server.address().port}/index.html#browser-test`)
     await page.waitForFunction(() => !!window.crispEbookHost)
+    assert.deepEqual(await page.evaluate(() => [typeof Object.groupBy, typeof Map.groupBy]),
+        ['function', 'function'], 'The host installs missing grouping APIs before book loading')
     await page.evaluate(() => {
         window.__messages = []
         window.addEventListener('crisp-ebook-message', event => window.__messages.push(event.detail))

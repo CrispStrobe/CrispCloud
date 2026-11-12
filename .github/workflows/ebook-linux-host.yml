@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ebook-linux-host-${{ github.event.pull_request.number || github.ref }}
+  group: ebook-linux-host-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -44,7 +44,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev \
             libwebkit2gtk-4.1-dev xvfb xauth dbus-x11 libgl1-mesa-dri \
-            fonts-dejavu-core python3-pil python3-xlib
+            fonts-dejavu-core python3-pil python3-xlib gdb
           pkg-config --modversion gtk+-3.0 webkit2gtk-4.1
       - name: Check native surface allocation bounds
         run: |
@@ -70,14 +70,40 @@ jobs:
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
           GDK_BACKEND: x11
+          CRISP_EBOOK_HOST_TRACE: '1'
+          CRISP_EBOOK_HOST_TRACE_PATH: ${{ runner.temp }}/ebook-linux-host/native-milestones.log
         run: |
           cd "$RUNNER_TEMP/ebook-linux-host"
+          mkdir -p build/native-cores
+          sudo sysctl -w "kernel.core_pattern=$RUNNER_TEMP/ebook-linux-host/build/native-cores/core-%e-%p"
+          ulimit -c 1048576
           extra=()
           if [[ '${{ matrix.host }}' == 'portable-only' ]]; then extra+=(--dart-define=EXPECT_PORTABLE=true); fi
           set -o pipefail
           xvfb-run -a -s '-screen 0 1280x900x24' dbus-run-session -- \
             flutter test integration_test/reader_host_test.dart -d linux \
               --reporter expanded "${extra[@]}" 2>&1 | tee linux-host-test.log
+      - name: Extract native stacks and discard process memory
+        if: always()
+        run: |
+          cd "$RUNNER_TEMP/ebook-linux-host"
+          # Raw dumps can contain inherited credentials. Never upload them or
+          # inspect locals/environment; preserve only function-level backtraces.
+          for core in build/native-cores/core-*; do
+            [[ -f "$core" ]] || continue
+            case "$(basename "$core")" in
+              core-crisp_linux*)
+                timeout 30s gdb --batch --quiet --nx -iex 'set auto-load off' \
+                  -ex 'set pagination off' -ex 'set print frame-arguments none' \
+                  -ex 'set print entry-values no' -ex 'bt' -ex 'thread apply all bt' \
+                  build/linux/x64/debug/bundle/crisp_linux_host_smoke "$core" \
+                  >> native-backtrace.log 2>&1 || true
+                ;;
+            esac
+            rm -f -- "$core"
+          done
+          if [[ -f native-milestones.log ]]; then tail -n 200 native-milestones.log; fi
+          if [[ -f native-backtrace.log ]]; then head -n 400 native-backtrace.log; fi
       - name: Verify the app has no hard browser-library dependency
         run: |
           library=$(find "$RUNNER_TEMP/ebook-linux-host/build/linux" -name libcrisp_ebook_reader_plugin.so -print -quit)
@@ -110,5 +136,7 @@ jobs:
           path: |
             ${{ runner.temp }}/ebook-linux-host/linux-host-test.log
             ${{ runner.temp }}/ebook-linux-host/native-dependencies.log
+            ${{ runner.temp }}/ebook-linux-host/native-backtrace.log
+            ${{ runner.temp }}/ebook-linux-host/native-milestones.log
             ${{ runner.temp }}/ebook-linux-host/runtime-missing-launch.log
             ${{ runner.temp }}/ebook-linux-host/build/linux-host-evidence/**

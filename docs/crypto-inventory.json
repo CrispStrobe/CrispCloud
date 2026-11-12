@@ -269,6 +269,34 @@
         "packages/crisp_ebook_conversion/WASM.json"
       ],
       "note": "Kindling 0.46.2 contains full MD5 implementations; changing a title reaches md5_first4 in the native and browser metadata byte API. These hashes are format fields, not authentication or encryption. Metadata rewriting rejects nonzero PalmDOC encryption and DRM EXTH 401/402/403 in either primary or KF8 sections before output. The browser bridge sets doc_type and cover_image to None, so it does not invoke font conversion or embedded source-ZIP extraction. The Wasm lock retains ahash 0.8.12, getrandom 0.3.4/0.4.3, rand 0.8.8, rand_core 0.6.4 and wasm-bindgen 0.2.121; getrandom's wasm_js feature permits compilation of the broader dependency graph. The inspected bundled Wasm has zero host imports, and metadata_runtime.js rejects modules with imports. This establishes no browser RNG/crypto imports for that artifact, not absence of internal MD5 or an audit of every dependency. External/prebuilt native-library or custom worker overrides require separate artifact provenance; a version/ABI string alone is not a content hash. No export-policy classification or Apple approval is established by this source inventory."
+    },
+    {
+      "name": "Ebook reading-data exchange, library identities, and shared reader hosts",
+      "source_reviewed_on": "2026-11-12",
+      "algorithms": [
+        "SHA-256 of exact publication bytes, canonical reading-data snapshots and source/attachment catalog identities",
+        "Existing Dart Random.secure 24-byte reader session identifiers"
+      ],
+      "implementations": [
+        "Existing Dart crypto SHA-256",
+        "Dart Random.secure",
+        "Optional system WebKitGTK 4.1 on Linux; existing platform WebViews or the browser elsewhere"
+      ],
+      "sources": [
+        "lib/services/ebook_reading_data.dart",
+        "lib/services/ebook_annotations.dart",
+        "lib/services/ebook_library.dart",
+        "lib/services/ebook_reading_data_files.dart",
+        "lib/widgets/ebook_library_actions.dart",
+        "packages/crisp_ebook_reader/assets/reader_controls.js",
+        "packages/crisp_ebook_reader/assets/reader_compat.js",
+        "packages/crisp_ebook_reader/lib/src/models.dart",
+        "packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart",
+        "packages/crisp_ebook_reader/linux/CMakeLists.txt",
+        "packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc",
+        "linux/packaging/build_deb.sh"
+      ],
+      "note": "The added SHA-256 uses bind data to exact content and renderer versions, detect stale import previews, and derive catalog IDs; they are not signatures, MACs, encryption or access grants. Reading-data exports are plain UTF-8 JSON without source paths, account metadata or credentials. Local sidecars and the library index use SharedPreferences; the index can retain exact persistent account/root/file references but resolves authentication separately. In-process locks and stale-instance checks do not establish cross-process or browser-tab transactions. Shared appearance controls accept bounded numbers and allowlisted choices, not arbitrary CSS or scripts. The Linux CMake target links system GTK3/gmodule and optional epoxy, dynamically loads libwebkit2gtk-4.1.so.0 at version 2.48.4 or newer, and copies no WebKit runtime into the bundle. Its ephemeral host requires the WebKit process sandbox and uses the existing session loopback assets, CSP and sanitized book frames. No new production Dart dependency, cipher implementation, KDF or credential store is added by this increment. Installed system WebKit and transitive TLS/crypto implementations, finished binaries and distribution decisions remain outside this bounded technical source review."
     }
   ],
   "reviewed_files": [
@@ -448,6 +476,36 @@
     "packages/crisp_ebook_conversion/assets/metadata_runtime.js",
     "packages/crisp_ebook_conversion/assets/metadata_worker.js",
     "packages/crisp_ebook_conversion/tool/build_metadata_wasm.py",
-    "packages/crisp_ebook_conversion/tool/check_wasm.py"
+    "packages/crisp_ebook_conversion/tool/check_wasm.py",
+    "lib/models/storage_reference.dart",
+    "lib/services/ebook_chapter_reader_controller.dart",
+    "lib/services/ebook_reading_data.dart",
+    "lib/services/ebook_library.dart",
+    "lib/services/ebook_reading_data_files.dart",
+    "lib/services/ebook_reading_data_files_native.dart",
+    "lib/services/ebook_reading_data_files_web.dart",
+    "lib/utils/async_lock.dart",
+    "lib/widgets/ebook_appearance_dialog.dart",
+    "lib/widgets/ebook_chapter_reader.dart",
+    "lib/widgets/ebook_library_actions.dart",
+    "lib/widgets/ebook_library_dialog.dart",
+    "lib/widgets/ebook_reading_data_dialog.dart",
+    "lib/screens/file_browser_screen.dart",
+    "packages/crisp_ebook_reader/assets/reader_controls.js",
+    "packages/crisp_ebook_reader/assets/reader_compat.js",
+    "packages/crisp_ebook_reader/lib/crisp_ebook_reader.dart",
+    "packages/crisp_ebook_reader/lib/src/controller.dart",
+    "packages/crisp_ebook_reader/lib/src/models.dart",
+    "packages/crisp_ebook_reader/lib/src/hosts/host.dart",
+    "packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart",
+    "packages/crisp_ebook_reader/lib/src/hosts/linux_host_probe.dart",
+    "packages/crisp_ebook_reader/lib/src/hosts/linux_host_status.dart",
+    "packages/crisp_ebook_reader/linux/CMakeLists.txt",
+    "packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc",
+    "packages/crisp_ebook_reader/linux/reader_surface_size.h",
+    "packages/crisp_ebook_reader/linux/include/crisp_ebook_reader/crisp_ebook_reader_plugin.h",
+    "linux/flutter/generated_plugin_registrant.cc",
+    "linux/flutter/generated_plugins.cmake",
+    "linux/packaging/build_deb.sh"
   ]
 }

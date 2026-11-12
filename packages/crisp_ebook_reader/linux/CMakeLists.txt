@@ -10,7 +10,7 @@ pkg_check_modules(GMODULE REQUIRED IMPORTED_TARGET gmodule-2.0)
 # without it can still launch the application and use the portable reader.
 option(CRISP_EBOOK_WEBKITGTK "Compile the embedded WebKitGTK ebook host" ON)
 if(CRISP_EBOOK_WEBKITGTK)
-  pkg_check_modules(WEBKITGTK QUIET webkit2gtk-4.1>=2.40)
+  pkg_check_modules(WEBKITGTK QUIET webkit2gtk-4.1>=2.48.4)
 endif()
 
 add_library(${PLUGIN_NAME} SHARED crisp_ebook_reader_plugin.cc)
@@ -30,7 +30,7 @@ if(CRISP_EBOOK_WEBKITGTK AND WEBKITGTK_FOUND)
   target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::EPOXY)
   message(STATUS "crisp_ebook_reader: WebKitGTK4.1 host enabled; system runtime is loaded on demand")
 else()
-  message(STATUS "crisp_ebook_reader: portable-only build (WebKitGTK4.1 >=2.40 headers not found)")
+  message(STATUS "crisp_ebook_reader: portable-only build (WebKitGTK4.1 >=2.48.4 headers not found)")
 endif()
 
 # Never copy a partial browser runtime into Flutter's bundle. Distribution

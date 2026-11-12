@@ -1,3 +1,4 @@
+import './reader_compat.js'
 import {makeBook} from './foliate/view.js'
 import {Overlayer} from './foliate/overlayer.js'
 import {safeResourceTransform, secureSections} from './security.js'

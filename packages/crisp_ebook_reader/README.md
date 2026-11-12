@@ -13,7 +13,7 @@ The reader receives book bytes and exposes a small command/event bridge.
 | FB2, FBZ, CBZ | Reading and normalized export; comic pages retain fixed-layout viewport dimensions. |
 | Android, iOS, macOS, Windows | `flutter_inappwebview` renders bundled assets served from an instance-scoped loopback server. The platform's WebView runtime must be available. |
 | Browser | A same-origin Flutter asset iframe, with a session-scoped message bridge. |
-| Linux | `supportsEmbeddedReader` returns false. CrispCloud supplies its Flutter chapter reader, EPUB editor, and legacy text fallback. This package does not bundle CEF. |
+| Linux | Optional inline WebKitGTK 4.1 texture host, selected after `probeEbookLinuxHost()`. Missing build/runtime support leaves the portable Flutter EPUB reader available. See [Linux packaging and verification](../../linux/README.md). |
 
 DRM and KFX are outside this package's support. EPUB font obfuscation recognized
 by foliate-js is distinct from unsupported encryption. PDFs remain handled by
@@ -22,7 +22,12 @@ require their own smoke checks; a passing JavaScript suite is not a six-platform
 certification.
 
 Use `CrispEbookReader` with `CrispEbookController`. Controller commands cover
-navigation, appearance, search, highlighting, and `exportPublication()`.
+navigation, percentage seeking, real Back/Forward history, appearance, search,
+highlighting, and `exportPublication()`. `EbookBookInfo` reports meaningful
+per-publication capabilities. Appearance includes publisher styles, maximum
+columns, margins and column width; fixed-layout content keeps its geometry.
+`EbookNavigationHistory` exposes the current session's Back/Forward availability,
+not a serializable history stack.
 Persist `EbookLocation` and highlights in the host, bound to the precise file
 version. An edited book can invalidate CFIs; the reader never rewrites the source
 archive to store appearance or personal notes.
@@ -133,7 +138,7 @@ created because the execution environment denied `socket()` with
 environment limitation, not a passing renderer check. Run the browser suite in
 CI or an ordinary development environment before claiming browser verification.
 
-The forced fflate decompression variant, reader controller tests (3 tests),
+The forced fflate decompression variant, reader controller tests (8 tests),
 `flutter analyze`, and the vendor integrity check also passed locally. Independent
 foliate parsing of Kindling-generated AZW3, dual MOBI, legacy MOBI6 and
 metadata-rewritten AZW3/MOBI verified Unicode, authors/title, images, cross-chapter
@@ -149,3 +154,25 @@ payload hashes of unchanged non-XHTML resources, plus metadata, Unicode, nested
 navigation and cross-chapter links. Its reproducible output is under
 `packages/crisp_ebook_conversion/build/import-chain/`, including
 `verification.json`, the imported EPUBs and separate EPUBCheck JSON reports.
+
+
+### Shared controls and older browser features
+
+The adapter preserves content nodes when applying appearance settings and
+serializes host navigation commands. A lifecycle guard avoids calling the
+paginator's public render method before its new iframe has a document/body or
+after detachment. The browser harness retains uncaught errors with their stack
+and last bridge command; it does not suppress the error gate.
+
+`reader_compat.js` supplies the two grouping APIs required by the pinned EPUB
+parser only when the host lacks them. Existing browser implementations are
+preserved. The parser gate deliberately removes both APIs and also forces raw
+DEFLATE fallback to exercise the actual publication load/export path on that
+feature combination. This is targeted compatibility support, not a claim that
+arbitrary old browser versions meet the full runtime requirement.
+
+Run the combination with:
+
+```sh
+CRISP_TEST_GROUPING_FALLBACK=1 CRISP_TEST_RAW_INFLATE_FALLBACK=1 npm run test:parser
+```

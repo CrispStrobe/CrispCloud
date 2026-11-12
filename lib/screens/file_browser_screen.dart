@@ -652,8 +652,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       ),
       PlatformMenuItem(
         label: context.ebookTr('Ebook library'),
-        onSelected: () =>
-            showEbookLibrary(context, ref, ref.read(activePanelProvider)),
+        onSelected: ref.watch(ebookEditorMenuProvider) != null
+            ? null
+            : () =>
+                  showEbookLibrary(context, ref, ref.read(activePanelProvider)),
       ),
       PlatformMenuItem(
         label: context.commanderTr("Remember Selection"),

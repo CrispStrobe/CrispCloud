@@ -856,7 +856,13 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       try {
         await _annotations?.save();
         if (_annotations case final annotations?) {
-          await _recordLibraryProgress(annotations);
+          try {
+            await _recordLibraryProgress(annotations);
+          } catch (error) {
+            // The sidecar is durable. A catalog refresh failure must not turn
+            // a successfully saved reading state into a discard prompt.
+            _snack(_message(error));
+          }
         }
       } catch (error) {
         if (!mounted) return;
@@ -1562,11 +1568,12 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     } catch (error) {
       _snack(_message(error));
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _readingDataBusy = false;
           _readingDataPreviewing = false;
         });
+      }
     }
   }
 
@@ -1655,11 +1662,12 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     } catch (error) {
       _snack(_message(error));
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _readingDataBusy = false;
           _readingDataPreviewing = false;
         });
+      }
     }
   }
 

@@ -62,7 +62,7 @@ To make a release-level parity claim, all of the following must hold:
 | Reading data | Exact publication identity, renderer version, stable anchors, bounded schema and conflict rules | Versioned sidecars bound to SHA-256 and byte length; Foliate and portable locators remain separate |
 | Library | Persistent metadata and exact source identity, with access resolved afresh | Local indexed entries over existing account/root/file references; no credentials in rows |
 | Sync | Atomic updates, revisions, conflict resolution, offline queue and deletion semantics | Explicit JSON transfer is implemented; automatic synchronization remains work |
-| Accessibility | Labeled controls plus actual text selection, reading order and assistive-technology exposure | Flutter controls are shared; native texture accessibility and device reader audits remain a release gate |
+| Accessibility | Labeled controls plus actual text selection, reading order and assistive-technology exposure | Shared Flutter controls; Linux publication semantics and in-book Tab navigation are not implemented. Assistive-technology/device audits remain required |
 | Distribution | Browser runtime, subprocess/sandbox dependencies, updates, signing and notices | Use complete maintained system WebKit packages on Linux; do not copy a partial browser library into the app |
 | Validation | The same publication corpus and operation tests on every shipping host | Parser, controller, widget and browser gates plus dedicated Linux tests; mobile/desktop hardware validation still required |
 
@@ -136,7 +136,9 @@ the imported position are applied together. The picker checks both declared
 and actual streamed size; the JSON limit is 2 MiB, with at most 500 bookmarks
 and 500 highlights and bounded note/locator strings.
 
-Automatic synchronization is not implied. Users can transfer this file through
+The preference write locks and stale-instance guards coordinate readers within
+one running app. They are not a cross-process or remote conditional-write
+protocol. Automatic synchronization is not implied. Users can transfer this file through
 their existing storage tools, then import it explicitly on another device with
 the exact same book and compatible renderer. A portable-reader sidecar cannot
 be applied as Foliate CFIs, and edited book bytes deliberately need a new
@@ -154,20 +156,27 @@ and Premium functionality. The [iOS page](https://fbreader.org/en/ios) lists a
 different format and catalogue set. Compare the desired shipping platforms
 and editions explicitly.
 
+Android Free relies on plugins for PDF/comics; Premium includes those readers
+and adds speech and Google/DeepL translation. DjVu still uses a plugin. The
+current iOS page excludes PDF, DjVu, comics and OPDS, while its free edition
+limits the library to ten books and lacks online translation. Android's stable
+3.8 and 4.0 beta tracks are separate from the desktop stable/RC comparison.
+These are platform/edition distinctions, not a universal FBReader feature list.
+
 | Product area | FBReader reference | CrispCloud after this expansion | Remaining work for comparable coverage |
 | --- | --- | --- | --- |
 | EPUB, MOBI/KF8 and FictionBook | Core desktop/mobile reading; exact supported extensions vary | Enhanced engine reads EPUB, unencrypted MOBI/AZW/AZW3, FB2/FBZ; Linux uses the shared path when its host works | Broader real-book corpus, old encoding/layout cases and device validation |
 | Comic archives | Desktop stable CBZ; CBR/CB7 called out in 2.5 RC | CBZ through the enhanced engine | CBR/CB7 extraction with reviewed libraries, limits and packaging; comic zoom/pan/reading direction |
 | RTF, old DOC and plain text | Listed on desktop and iOS pages | Existing separate text/document viewers; no unified ebook-library import path for those formats | Deliberate normalization and styling rules; avoid treating a separate viewer as equivalent reader support |
 | Pagination and styling | CSS/style controls, two-column reading, fonts and layout preferences | Shared pagination, maximum columns, width/margins, themes, font family/size/spacing and publisher preference | Custom-font discovery/import, typography breadth, hyphenation controls and broad RTL/vertical-writing QA |
-| Bookmarks and annotations | Styled/editable bookmarks; desktop navigation back stack; experimental transfer in RC | Bookmarks, highlights/notes, local position, shared selection, conflict-aware sidecar transfer | Rich annotation editing/search, persistent back-stack contract, interoperable formats and robust re-anchoring after edits |
+| Bookmarks and annotations | Styled/editable bookmarks; persisted desktop reading-position back stack; experimental transfer in RC | Bookmarks, highlights/notes, local position, shared selection, conflict-aware sidecar transfer | Rich annotation editing/search, persistent back-stack contract, interoperable formats and robust re-anchoring after edits |
 | Library | Stable title/author/recent/series views; RC redesigned library, favorites/custom shelves and bulk actions | Local title/author/format/recent/progress index, favorites, shelves, tags, status, filtering and sorting | Covers, series, batch operations, scanning, managed downloads and synchronized shelves |
-| Cross-device synchronization | Book Network synchronizes collection, positions, bookmarks and shelves | Explicit portable reading-data files; existing cloud file access | Versioned remote sidecars, conditional writes, conflict review, offline retry, deletion tombstones and account/device management |
+| Cross-device synchronization | Book Network synchronizes collection, positions and bookmarks; synchronized desktop favorites/custom shelves are a 2.5 RC addition | Explicit portable reading-data files; existing cloud file access | Versioned remote sidecars, conditional writes, conflict review, offline retry, deletion tombstones and account/device management |
 | Online catalogues | OPDS on desktop; RC OPDS 2.0 groups/filters/profiles and browser/QR authentication | General file providers can supply books, but no OPDS client | OPDS 1/2 parsing, discovery, authenticated acquisition, pagination, download queue and safe credential scoping |
 | Speech | Android Premium; desktop system TTS in 2.5 RC | Not integrated into the ebook reader | Shared speech queue, text/CFI mapping, platform voices, controls, background playback/audio focus and accessibility testing |
 | Dictionary and translation | Android Premium translation and platform-dependent integrations | Text selection/copy only | Dictionary adapter, optional selected-text translation, language handling, clear network consent and privacy behavior |
 | EPUB audio/video and read-aloud | Desktop 2.5 RC adds media playback | Offline reading sanitizer has a deliberately narrower content model | Reviewed local media support, codecs, controls, playback lifecycle and separate SMIL/media-overlay synchronization |
-| Protected loans | Desktop/iOS pages list Readium LCP support | Unsupported encrypted purchases/loans are refused | Licensed/certified LCP integration, key handling, loan/expiry UX and distribution requirements; never promise generic DRM removal |
+| Protected loans | LCP-protected EPUBs on desktop 2.1+, Android 3.7+ and iOS | Unsupported encrypted purchases/loans are refused | Licensed/certified LCP integration, key handling, loan/expiry UX and distribution requirements; never promise generic DRM removal |
 | Store/library acquisition | Book Network and RC store/borrowing integration | Existing storage providers and explicit imports | Product-specific discovery, account flows, acquisition metadata and rights-aware download lifecycle |
 | Reader ergonomics | Mature platform-specific UI and keyboard/touch behavior | Shared Flutter controls and engine bridge, optional portable recovery | Gesture/tap zones, orientation/full-screen preferences, mobile safe areas, e-ink and assistive technology audits |
 | EPUB content editing | Reader-focused comparison | Original-package editing, formatted text corrections, metadata/cover/resources/TOC, undo/redo and conflict-aware saves | Expand editing separately; these strengths do not fill missing reader/sync/catalogue features |

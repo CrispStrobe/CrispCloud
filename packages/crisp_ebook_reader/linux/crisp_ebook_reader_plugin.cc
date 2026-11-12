@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdint>
 #include <cstring>
 #include <map>
@@ -27,6 +28,24 @@ constexpr char kRuntime[] = "webkitgtk-4.1";
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
 constexpr size_t kMaximumMessage = 192 * 1024 * 1024;
 constexpr int64_t kMaximumPixels = crisp_ebook::kMaximumPixels;
+
+void Trace(const char* stage) {
+  if (g_strcmp0(g_getenv("CRISP_EBOOK_HOST_TRACE"), "1") == 0) {
+    // Fixed lifecycle labels only: never book content, URLs or environment.
+    g_message("crisp ebook linux: %s", stage);
+    // Flutter's Linux integration-test driver does not forward native device
+    // logs. An explicitly selected trace file preserves the same fixed labels.
+    const char* path = g_getenv("CRISP_EBOOK_HOST_TRACE_PATH");
+    if (path != nullptr && *path != '\0') {
+      static std::mutex trace_mutex;
+      std::lock_guard<std::mutex> lock(trace_mutex);
+      if (FILE* file = std::fopen(path, "a")) {
+        std::fprintf(file, "crisp ebook linux: %s\n", stage);
+        std::fclose(file);
+      }
+    }
+  }
+}
 
 FlValue* Field(FlValue* map, const char* key) {
   return map != nullptr && fl_value_get_type(map) == FL_VALUE_TYPE_MAP
@@ -118,6 +137,7 @@ struct WebKitApi {
   std::string reason;
 
   WebKitApi() {
+    Trace("loading system WebKit module");
     GModule* module = g_module_open("libwebkit2gtk-4.1.so.0",
                                    static_cast<GModuleFlags>(G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL));
     if (module == nullptr) {
@@ -126,19 +146,24 @@ struct WebKitApi {
     }
     // GTypes and pending native callbacks outlive individual reader instances.
     g_module_make_resident(module);
+    Trace("system WebKit module loaded");
 #define LOAD_SYMBOL(name) \
     if (!g_module_symbol(module, #name, reinterpret_cast<gpointer*>(&name))) { \
-      reason = "The WebKitGTK runtime is missing " #name ". Update WebKitGTK to 2.40 or newer."; \
+      reason = "The WebKitGTK runtime is missing " #name ". Update WebKitGTK to 2.48.4 or newer."; \
       return; \
     }
     WEBKIT_SYMBOLS(LOAD_SYMBOL)
 #undef LOAD_SYMBOL
+    Trace("WebKit symbols resolved");
     const guint major = webkit_get_major_version();
     const guint minor = webkit_get_minor_version();
+    const guint micro = webkit_get_micro_version();
     version = std::to_string(major) + "." + std::to_string(minor) + "." +
-              std::to_string(webkit_get_micro_version());
-    available = major > 2 || (major == 2 && minor >= 40);
-    if (!available) reason = "WebKitGTK 2.40 or newer is required; installed version is " + version + ".";
+              std::to_string(micro);
+    // 2.48.0–2.48.3 have a documented GtkOffscreenWindow initialization crash.
+    // Require the upstream fix rather than advertising the older API floor.
+    available = major > 2 || (major == 2 && (minor > 48 || (minor == 48 && micro >= 4)));
+    if (!available) reason = "WebKitGTK 2.48.4 or newer is required; installed version is " + version + ".";
   }
 
   static WebKitApi& Get() {
@@ -185,6 +210,7 @@ gboolean PopulateTexture(FlTextureGL* texture, uint32_t* target, uint32_t* name,
   // Flutter invokes this callback on its raster thread with the GL context
   // current. Keep immutable CPU pixels alive through the entire GL upload.
   if (self->gl_name == 0) {
+    Trace("first raster-thread GL upload");
     glGenTextures(1, &self->gl_name);
     glBindTexture(GL_TEXTURE_2D, self->gl_name);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -290,14 +316,17 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   ~ReaderView() { Close(); }
 
   bool Initialize(std::string* error) {
+    Trace("creating ephemeral context");
     context_ = api_.webkit_web_context_new_ephemeral();
     api_.webkit_web_context_set_sandbox_enabled(context_, TRUE);
     if (!api_.webkit_web_context_get_sandbox_enabled(context_)) {
       *error = "The installed WebKitGTK runtime does not provide the required process sandbox.";
       return false;
     }
+    Trace("creating WebKit view");
     webview_ = reinterpret_cast<WebKitWebView*>(
         g_object_new(api_.webkit_web_view_get_type(), "web-context", context_, nullptr));
+    Trace("configuring WebKit view");
     auto* settings = api_.webkit_web_view_get_settings(webview_);
     api_.webkit_settings_set_enable_javascript(settings, TRUE);
     api_.webkit_settings_set_javascript_can_open_windows_automatically(settings, FALSE);
@@ -337,12 +366,14 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     gtk_container_add(GTK_CONTAINER(window_), GTK_WIDGET(webview_));
     gtk_widget_set_size_request(GTK_WIDGET(webview_), 1, 1);
     gtk_widget_show_all(window_);
+    Trace("offscreen GTK view shown");
     cancellable_ = g_cancellable_new();
     texture_ = textures_.Acquire();
     if (texture_ == nullptr) {
       *error = "Flutter could not register the Linux reader texture.";
       return false;
     }
+    Trace("Flutter surface acquired");
     auto* weak = new std::weak_ptr<ReaderView>(shared_from_this());
     timer_ = g_timeout_add_full(G_PRIORITY_DEFAULT, 50, Tick, weak,
         [](gpointer data) { delete static_cast<std::weak_ptr<ReaderView>*>(data); });
@@ -353,6 +384,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
 
   void Close() {
     if (closed_) return;
+    Trace("closing native view");
     closed_ = true;
     if (timer_ != 0) { g_source_remove(timer_); timer_ = 0; }
     if (cancellable_ != nullptr) g_cancellable_cancel(cancellable_);
@@ -413,7 +445,9 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
                                                WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START, nullptr, nullptr);
     api_.webkit_user_content_manager_add_script(content_, script);
     api_.webkit_user_script_unref(script);
+    Trace("loading trusted reader document");
     api_.webkit_web_view_load_uri(webview_, url_.c_str());
+    Trace("trusted reader load requested");
     return true;
   }
 
@@ -719,6 +753,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     if (self->closed_) return;
     if (event == WEBKIT_LOAD_STARTED) self->loaded_ = false;
     if (event == WEBKIT_LOAD_FINISHED && self->IsDocument(self->api_.webkit_web_view_get_uri(self->webview_))) {
+      Trace("trusted reader document loaded");
       self->loaded_ = true;
       self->Evaluate("window.crispEbookHost?.ready()");
       self->Touch();
@@ -814,7 +849,7 @@ class Plugin {
           api.reason.empty() ? "A graphical Linux session is required." : api.reason);
 #else
       fl_value_set_string_take(status, "available", fl_value_new_bool(false));
-      Put(status, "reason", "This build has no WebKitGTK4.1 host. Rebuild with libwebkit2gtk-4.1-dev (2.40 or newer).");
+      Put(status, "reason", "This build has no WebKitGTK4.1 host. Rebuild with libwebkit2gtk-4.1-dev (2.48.4 or newer).");
 #endif
       fl_method_call_respond_success(call, status, nullptr); return;
     }

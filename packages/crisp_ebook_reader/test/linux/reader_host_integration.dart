@@ -29,7 +29,9 @@ void main() {
 
   testWidgets('real inline Linux rendering, input, isolation and teardown',
       (tester) async {
+    debugPrint('linux-host test: probing native host');
     final status = await probeEbookLinuxHost();
+    debugPrint('linux-host test: probe completed');
     if (const bool.fromEnvironment('EXPECT_PORTABLE')) {
       expect(status.available, isFalse);
       expect(status.reason, contains('build'));
@@ -45,6 +47,7 @@ void main() {
     final blockedRequests = <String>[];
     final resourceProbe =
         await HttpServer.bind(InternetAddress.loopbackIPv4, 18189);
+    debugPrint('linux-host test: resource probe listening');
     resourceProbe.listen((request) {
       blockedRequests.add(request.uri.toString());
       request.response.statusCode = HttpStatus.forbidden;
@@ -102,6 +105,7 @@ void main() {
         );
 
     await tester.pumpWidget(reader());
+    debugPrint('linux-host test: reader widget mounted');
     await until(tester, () async {
       if (errors.isNotEmpty) fail(errors.join('\n'));
       if (!controller.isReady) return false;
@@ -113,6 +117,7 @@ void main() {
           items.single['nonUniform'] == true;
     }, 'The real WebKit page did not reach Flutter’s texture renderer.');
     expect(book!.title, 'Linux inline library');
+    debugPrint('linux-host test: real texture populated');
     expect(book!.sectionCount, 2);
     expect(errors, isEmpty);
 
@@ -131,7 +136,8 @@ void main() {
     expect(overlayClicks, 1);
 
     final content = tester.getRect(find.byType(Texture));
-    await tester.tapAt(content.topLeft + const Offset(200, 100));
+    await tester.tapAt(content.topLeft + const Offset(200, 100),
+        kind: PointerDeviceKind.mouse);
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
@@ -246,8 +252,8 @@ void main() {
       final texture = find.descendant(
           of: find.byKey(ValueKey('reader-$focused')),
           matching: find.byType(Texture));
-      await tester
-          .tapAt(tester.getRect(texture).topLeft + const Offset(80, 80));
+      await tester.tapAt(tester.getRect(texture).topLeft + const Offset(80, 80),
+          kind: PointerDeviceKind.mouse);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await until(
           tester,
