@@ -60,3 +60,8 @@ failed TLS negotiation, directory listings, bounded transfer bytes, legacy
 mode/port preservation, malformed identity rejection and the localized mode
 selector. Live interoperability with a user's server remains dependent on that
 server's TLS and passive-port configuration.
+
+TLS-upgrade calls have a caller-side timeout. The FTP tests establish certificate
+and data-protection behavior and cancellation of an established transfer;
+cleanup of a transport stalled inside a TLS upgrade remains outside this
+verification coverage.

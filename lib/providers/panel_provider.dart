@@ -1027,7 +1027,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// Quick-select: make every match the selection and put the cursor on the
-  /// first one. This is the Total Commander "select" flavor of type-ahead.
+  /// first matching entry as the user types.
   void _selectTypeaheadMatches() {
     final matches = _typeaheadMatches();
     if (matches.isEmpty) return;
