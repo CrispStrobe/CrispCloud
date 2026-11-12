@@ -1,12 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:quds_office_engine/quds_office_engine.dart'
-    show CfbfDirectoryEntry, CfbfFile, CfbfObjectType;
+import 'cfbf_reader.dart';
 
-export 'package:quds_office_engine/quds_office_engine.dart'
-    show CfbfDirectoryEntry, CfbfObjectType;
+export 'cfbf_reader.dart' show CfbfDirectoryEntry, CfbfObjectType;
 
-/// Resource-bounded access to the MIT office engine's compound-file reader.
+/// Resource-bounded access to compound-file streams using [CfbfFile].
 ///
 /// Validate allocation tables before the underlying reader materializes them.
 /// In particular, repeated DIFAT references must not expand a tiny file into a

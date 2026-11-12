@@ -693,8 +693,22 @@ void _writeSlideShape(XmlWriter w, PmlShape shape) {
   /// writeEmptyElement API.
   w.writeEmptyElement('cNvSpPr', prefix: 'p');
 
-  /// writeEmptyElement API.
-  w.writeEmptyElement('nvPr', prefix: 'p');
+  // Keep the native layout/master binding. Empty type and null index retain
+  // omitted attributes, whose defaults Office resolves through that binding.
+  if (shape.placeholder) {
+    w.writeStartElement('nvPr', prefix: 'p');
+    w.writeEmptyElement(
+      'ph',
+      prefix: 'p',
+      attributes: {
+        if (shape.placeholderType.isNotEmpty) 'type': shape.placeholderType,
+        if (shape.placeholderIndex != null) 'idx': '${shape.placeholderIndex}',
+      },
+    );
+    w.writeEndElement();
+  } else {
+    w.writeEmptyElement('nvPr', prefix: 'p');
+  }
 
   /// writeEndElement API.
   w.writeEndElement();

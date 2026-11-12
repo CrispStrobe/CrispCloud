@@ -99,25 +99,7 @@ void applySheetStep(SmlWorkbook book, Map<String, Object?> values) {
         );
       }
     case 'renameSheet':
-      final name = s.string('name');
-      if (name.isEmpty ||
-          name.length > 31 ||
-          RegExp(r'[\[\]:*?/\\]').hasMatch(name) ||
-          name.startsWith("'") ||
-          name.endsWith("'") ||
-          book.sheets.any(
-            (other) =>
-                !identical(other, sheet) &&
-                other.name.toLowerCase() == name.toLowerCase(),
-          )) {
-        throw ArgumentError('Invalid or duplicate worksheet name');
-      }
-      if (name != sheet.name && _referencesSheet(book, sheet.name)) {
-        throw ArgumentError(
-          'Cannot rename a sheet referenced by formulas, names, charts, or pivots',
-        );
-      }
-      sheet.name = name;
+      SheetRename.rename(book, sheet, s.string('name'));
     case 'sheetOrder':
       final at = s.integer('to', max: book.sheets.length - 1);
       book.sheets.remove(sheet);
@@ -164,52 +146,3 @@ Map<String, Object?> inspectSheet(SmlWorkbook book) => <String, Object?>{
       },
   ],
 };
-
-// Retained package XML can contain live references absent from the editable model.
-// Refuse renaming those sheets until the entire reference graph can be rewritten.
-bool _referencesSheet(SmlWorkbook book, String name) {
-  bool formula(String text) =>
-      text.toLowerCase().contains(
-        "'${name.replaceAll("'", "''")}'!".toLowerCase(),
-      ) ||
-      RegExp(
-        '(^|[^A-Za-z0-9_.])${RegExp.escape(name)}!',
-        caseSensitive: false,
-      ).hasMatch(text);
-  if (book.namedRanges.any(
-    (n) => n.sheetName.toLowerCase() == name.toLowerCase(),
-  )) {
-    return true;
-  }
-  for (final sheet in book.sheets) {
-    if (sheet.allCells.any((c) => formula(c.formula ?? ''))) return true;
-    if (sheet.pivots.any(
-      (p) => p.sourceSheetName?.toLowerCase() == name.toLowerCase(),
-    )) {
-      return true;
-    }
-  }
-  for (final part in book.package?.parts ?? <PackagePart>[]) {
-    if (!part.uri.endsWith('.xml')) continue;
-    final root = XmlDocument.parse(part.readText()).root;
-    if (root == null) continue;
-    bool visit(XmlElement e) {
-      if (e.getAttribute('sheet')?.toLowerCase() == name.toLowerCase()) {
-        return true;
-      }
-      if (<String>{
-            'f',
-            'definedName',
-            'formula1',
-            'formula2',
-          }.contains(e.localName) &&
-          formula(e.text)) {
-        return true;
-      }
-      return e.childElements.any(visit);
-    }
-
-    if (visit(root)) return true;
-  }
-  return false;
-}

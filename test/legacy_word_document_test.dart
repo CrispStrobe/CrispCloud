@@ -1,62 +1,26 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:crisp_cloud/services/legacy_word_document.dart';
 import 'package:crisp_cloud/services/office_document_service.dart';
+import 'package:crisp_cloud/widgets/preview_media.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
-// Hand-built [MS-DOC] FIB and piece tables. Text deliberately occupies a
-// different physical order from its CP order and includes unreferenced bytes.
-Uint8List _document({
-  List<(String, bool)> pieces = const [('Hello\rWorld\r', true)],
-  int flags = 0x0200,
-  int? characterCount,
-  int? firstOffset,
-  int? lastPosition,
-  bool includeTable = true,
-  bool includePropertyRecord = true,
-  bool nestedOnly = false,
-}) {
-  final word = Uint8List(16384);
+// One authored binary Word body for host routing. Detailed piece-table,
+// encryption, ordering and resource controls live in quds_office_engine tests.
+Uint8List _document() {
+  const text = 'Hello\rWorld\r';
+  final word = Uint8List(4096);
   final fib = ByteData.sublistView(word);
-  void u16(int offset, int value) =>
-      fib.setUint16(offset, value, Endian.little);
-  void u32(int offset, int value) =>
-      fib.setUint32(offset, value, Endian.little);
-  u16(0, 0xa5ec);
-  u16(2, 0x00c1);
-  u16(10, flags);
-  u16(32, 14);
-  u16(62, 22);
-  u16(152, 93);
-  final count = pieces.fold<int>(0, (sum, piece) => sum + piece.$1.length);
-  u32(76, characterCount ?? count);
-  final plc = Uint8List(pieces.length * 12 + 4);
-  final tableData = ByteData.sublistView(plc);
-  var cp = 0;
-  final pcdStart = (pieces.length + 1) * 4;
-  for (var index = 0; index < pieces.length; index++) {
-    final (text, compressed) = pieces[index];
-    final offset = index == 0 && firstOffset != null
-        ? firstOffset
-        : 8192 - index * 1024;
-    tableData.setUint32(index * 4, cp, Endian.little);
-    tableData.setUint32(
-      pcdStart + index * 8 + 2,
-      compressed ? 0x40000000 | (offset * 2) : offset,
-      Endian.little,
-    );
-    if (offset + text.length * 2 <= word.length) {
-      for (var character = 0; character < text.length; character++) {
-        if (compressed) {
-          word[offset + character] = text.codeUnitAt(character);
-        } else {
-          u16(offset + character * 2, text.codeUnitAt(character));
-        }
-      }
-    }
-    cp += text.length;
+  for (final (offset, value) in [
+    (0, 0xa5ec),
+    (2, 0x00c1),
+    (10, 0x0200),
+    (32, 14),
+    (62, 22),
+    (152, 93),
+  ]) {
+    fib.setUint16(offset, value, Endian.little);
   }
   tableData.setUint32(pieces.length * 4, lastPosition ?? cp, Endian.little);
   final clx = BytesBuilder();
@@ -90,82 +54,6 @@ Uint8List _document({
 }
 
 void main() {
-  test(
-    'reads body CPs from compressed and Unicode pieces in logical order',
-    () {
-      final bytes = _document(
-        pieces: [('Hello\r', true), ('世界 😀\r', false), ('End\r', true)],
-      );
-      expect(extractLegacyWordText(bytes), 'Hello\n世界 😀\nEnd');
-      expect(extractLegacyWordText(bytes), isNot(contains('DELETED SECRET')));
-    },
-  );
-
-  test('uses the selected 0Table and excludes trailing non-body stories', () {
-    final bytes = _document(
-      flags: 0,
-      pieces: [('Main\r', true), ('Footnote\r', true)],
-      characterCount: 5,
-    );
-    expect(extractLegacyWordText(bytes), 'Main');
-  });
-
-  test('decodes documented compressed punctuation and table cells', () {
-    final bytes = _document(pieces: [('\x93Quoted\x94\x07Next\r', true)]);
-    expect(extractLegacyWordText(bytes), '“Quoted”\tNext');
-  });
-
-  test(
-    'shows field results without instruction text, including nested fields',
-    () {
-      final bytes = _document(
-        pieces: [
-          (
-            'Before \x13HYPERLINK "secret"\x14Link\x15 '
-                '\x13IF \x13X\x14Y\x15\x14Shown\x15 after\r',
-            true,
-          ),
-        ],
-      );
-      expect(extractLegacyWordText(bytes), 'Before Link Shown after');
-    },
-  );
-
-  test('does not fall back to a same-named embedded Word stream', () {
-    expect(
-      () => extractLegacyWordText(_document(nestedOnly: true)),
-      throwsFormatException,
-    );
-  });
-
-  test('rejects encrypted Word input before decoding tables', () {
-    expect(
-      () => extractLegacyWordText(_document(flags: 0x0300)),
-      throwsA(
-        isA<FormatException>().having(
-          (e) => e.message,
-          'message',
-          contains('encrypted'),
-        ),
-      ),
-    );
-  });
-
-  test(
-    'rejects missing, truncated, nonmonotonic and oversized text tables',
-    () {
-      for (final bytes in [
-        _document(includeTable: false),
-        _document(firstOffset: 16380),
-        _document(lastPosition: 0),
-        _document(characterCount: 4 * 1024 * 1024 + 1),
-        _document(characterCount: 100),
-      ]) {
-        expect(() => extractLegacyWordText(bytes), throwsFormatException);
-      }
-    },
-  );
-
   test('DOC and DOT previews are readable and explicitly text-only', () async {
     for (final name in ['report.doc', 'template.DOT']) {
       final preview = await parseOfficeDocument(_document(), name);
@@ -174,6 +62,7 @@ void main() {
       expect(preview.markdown, isEmpty);
       expect(preview.note, contains('Formatting'));
       expect(preview.rawXml, isNull);
+      expect(await extractOfficeText(_document(), name), 'Hello\nWorld');
     }
   });
 

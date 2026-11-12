@@ -7,18 +7,19 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-OFFICE_HELPERS = (
-    'lib/services/word_package_preservation.dart',
-    'lib/services/legacy_word_document.dart',
-    'lib/services/bounded_cfb_reader.dart',
-)
-SCOPE = ['lib/services/office_*.dart', 'lib/widgets/office_*.dart', *OFFICE_HELPERS]
+SCOPE = ['lib/services/office_*.dart', 'lib/widgets/office_*.dart']
+MIGRATED_ENGINE_SOURCES = [
+    'packages/quds_office_engine/lib/src/word/serial/word_package_preservation.dart',
+    'packages/quds_office_engine/lib/src/word/legacy/legacy_word_document.dart',
+    'packages/quds_office_engine/lib/src/opc/ole/bounded_cfb_reader.dart',
+    'packages/quds_office_engine/lib/src/opc/office_package_parts.dart',
+    'packages/quds_office_engine/lib/src/extract/office_search_text.dart',
+]
 
 
 def office_sources(root):
     sources = {path for directory in ('lib/services', 'lib/widgets')
                for path in (root / directory).glob('office_*.dart')}
-    sources.update(root / name for name in OFFICE_HELPERS if (root / name).is_file())
     return sorted(sources)
 
 
@@ -65,6 +66,8 @@ def report_coverage(lcov, root=ROOT):
                       'uncovered_lines': sorted(line for line, count in hits.items() if count == 0)})
     return {'measurement': 'executed instrumented host lines; not branch coverage',
             'scope': SCOPE,
+            'migrated_engine_sources': MIGRATED_ENGINE_SOURCES,
+            'scope_note': 'Generic package navigation, bounded Office search, Word package preservation, legacy Word extraction and bounded CFB reading live in Quds engine and are validated by its mandatory tests. Host percentages are not directly comparable to the earlier 9-file or 12-file host scopes.',
             'source_tree_sha256': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest(),
             'source_sha256': hashes,
             'covered_lines': sum(file['hit'] for file in files),

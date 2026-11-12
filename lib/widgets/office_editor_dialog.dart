@@ -18,7 +18,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:quds_office_editor/quds_office_editor.dart' hide WordPackagePreservation;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show WordPackagePreservation;
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -31,7 +33,6 @@ import '../l10n/office_editor_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
-import '../services/word_package_preservation.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
 

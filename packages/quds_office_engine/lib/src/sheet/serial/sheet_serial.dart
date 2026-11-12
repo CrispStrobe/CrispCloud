@@ -88,7 +88,15 @@ class SheetDeserializer {
       book.sheets.add(SmlWorksheet(name: 'Sheet1', sheetId: 1));
     }
     _readDefinedNames(wb.readText(), book);
+    book.sourceDefinedNameState = book.definedNameState();
     SheetChartData.refreshWorkbook(book);
+    for (final sheet in book.sheets) {
+      for (final drawing in sheet.drawings) {
+        if (drawing.sourceChartPartUri != null) {
+          drawing.sourceChartState = SheetDrawingIo.chartState(drawing, sheet);
+        }
+      }
+    }
     return book;
   }
 
@@ -117,7 +125,9 @@ class SheetDeserializer {
         if (bang > 0) {
           var sheetName = raw.substring(0, bang);
           if (sheetName.startsWith("'") && sheetName.endsWith("'")) {
-            sheetName = sheetName.substring(1, sheetName.length - 1);
+            sheetName = sheetName
+                .substring(1, sheetName.length - 1)
+                .replaceAll("''", "'");
           }
           try {
             book.namedRanges.add(
@@ -326,6 +336,11 @@ class SheetDeserializer {
         sheet.validations.last.formula1 = _readText(reader);
       }
       if (reader.eventType == XmlEventType.startElement &&
+          reader.localName == 'formula2' &&
+          sheet.validations.isNotEmpty) {
+        sheet.validations.last.formula2 = _readText(reader);
+      }
+      if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'formula' &&
           sheet.conditionalFormats.isNotEmpty) {
         sheet.conditionalFormats.last.formula = _readText(reader);
@@ -473,6 +488,8 @@ class SheetDeserializer {
     }
     SheetDrawingIo.readSheet(sheet, package, sheetUri);
     _readSheetExtras(sheet, package, sheetUri);
+    sheet.sourceValidationState = sheet.validationState();
+    sheet.sourceConditionalFormatState = sheet.conditionalFormatState();
   }
 
   static void _readSheetExtras(
@@ -669,7 +686,13 @@ class SheetSerializer {
           utf8.encode(''),
         );
       }
-      SheetDrawingIo.syncSheet(book.sheets[i], package, uri, i + 1);
+      SheetDrawingIo.syncSheet(
+        book.sheets[i],
+        package,
+        uri,
+        i + 1,
+        workbook: book,
+      );
       package
           .getPart(uri)!
           .writeText(_sheetXml(book.sheets[i], sst, package, uri));
@@ -845,6 +868,9 @@ class SheetSerializer {
     OpcPackage package,
     List<String> sheetIds,
   ) {
+    final preserveNames =
+        book.sourceDefinedNameState != null &&
+        book.sourceDefinedNameState == book.definedNameState();
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('workbook');
@@ -860,16 +886,17 @@ class SheetSerializer {
       w.writeEndElement();
     }
     w.writeEndElement();
-    if (book.namedRanges.isNotEmpty ||
-        book.sheets.any(
-          (SmlWorksheet s) =>
-              s.printTitleRows != null || s.printTitleCols != null,
-        )) {
+    if (!preserveNames &&
+        (book.namedRanges.isNotEmpty ||
+            book.sheets.any(
+              (SmlWorksheet s) =>
+                  s.printTitleRows != null || s.printTitleCols != null,
+            ))) {
       w.writeStartElement('definedNames');
       for (final SmlNamedRange name in book.namedRanges) {
         w.writeStartElement('definedName');
         w.writeAttribute('name', name.name);
-        w.writeText("'${name.sheetName}'!${name.a1}");
+        w.writeText("'${name.sheetName.replaceAll("'", "''")}'!${name.a1}");
         w.writeEndElement();
       }
       for (int i = 0; i < book.sheets.length; i++) {
@@ -877,7 +904,9 @@ class SheetSerializer {
         final List<String> parts = <String>[];
         if (sheet.printTitleRows != null) {
           final SmlRange r = sheet.printTitleRows!;
-          parts.add("'${sheet.name}'!\$${r.minRow + 1}:\$${r.maxRow + 1}");
+          parts.add(
+            "'${sheet.name.replaceAll("'", "''")}'!\$${r.minRow + 1}:\$${r.maxRow + 1}",
+          );
         }
         if (sheet.printTitleCols != null) {
           final SmlRange c = sheet.printTitleCols!;
@@ -889,7 +918,7 @@ class SheetSerializer {
             c.maxCol,
             0,
           ).a1.replaceAll(RegExp(r'\d+'), '');
-          parts.add("'${sheet.name}'!\$$a:\$$b");
+          parts.add("'${sheet.name.replaceAll("'", "''")}'!\$$a:\$$b");
         }
         if (parts.isEmpty) {
           continue;
@@ -906,7 +935,7 @@ class SheetSerializer {
     return _preserveSheetParts(
       package.getPart('/xl/workbook.xml')?.readText(),
       w.toXml(),
-      {'sheets', 'definedNames'},
+      {'sheets', if (!preserveNames) 'definedNames'},
       _workbookOrder,
     );
   }
@@ -917,6 +946,12 @@ class SheetSerializer {
     OpcPackage package,
     String sheetUri,
   ) {
+    final preserveValidations =
+        sheet.sourceValidationState != null &&
+        sheet.sourceValidationState == sheet.validationState();
+    final preserveConditional =
+        sheet.sourceConditionalFormatState != null &&
+        sheet.sourceConditionalFormatState == sheet.conditionalFormatState();
     final XmlWriter w = XmlWriter();
     w.writeStartDocument();
     w.writeStartElement('worksheet');
@@ -995,7 +1030,7 @@ class SheetSerializer {
         attributes: <String, String>{'sheet': '1'},
       );
     }
-    if (sheet.validations.isNotEmpty) {
+    if (!preserveValidations && sheet.validations.isNotEmpty) {
       w.writeStartElement('dataValidations');
       w.writeAttribute('count', '${sheet.validations.length}');
       for (final SmlDataValidation rule in sheet.validations) {
@@ -1018,11 +1053,16 @@ class SheetSerializer {
           w.writeText(rule.formula1);
           w.writeEndElement();
         }
+        if (rule.formula2.isNotEmpty) {
+          w.writeStartElement('formula2');
+          w.writeText(rule.formula2);
+          w.writeEndElement();
+        }
         w.writeEndElement();
       }
       w.writeEndElement();
     }
-    if (sheet.conditionalFormats.isNotEmpty) {
+    if (!preserveConditional && sheet.conditionalFormats.isNotEmpty) {
       for (final SmlConditionalRule rule in sheet.conditionalFormats) {
         w.writeStartElement('conditionalFormatting');
         w.writeAttribute(
@@ -1105,8 +1145,8 @@ class SheetSerializer {
         'sheetData',
         'sheetProtection',
         'autoFilter',
-        'conditionalFormatting',
-        'dataValidations',
+        if (!preserveConditional) 'conditionalFormatting',
+        if (!preserveValidations) 'dataValidations',
         'mergeCells',
         'headerFooter',
         'drawing',

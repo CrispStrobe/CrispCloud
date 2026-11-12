@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'bounded_cfb_reader.dart';
+import '../../opc/ole/bounded_cfb_reader.dart';
 
 /// Read-only body-text extraction for Word 97–2007 binary DOC/DOT files.
 ///

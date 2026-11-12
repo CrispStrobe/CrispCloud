@@ -4,6 +4,16 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Route slide reordering through the shared section-aware plan. Undo/redo keep
+  native section identities, empty sections and active-slide identity; invalid
+  memberships reject before history or dirty-state changes.
+
+- Paint explicit native Word frame outline widths, preset/custom dashes, caps,
+  joins and inset alignment. Keep selection chrome separate from the document
+  stroke. New frames preview their serialized one-point outline; imported
+  omitted widths retain the existing approximation. Native pixel regressions
+  and three reviewed outline-only golden corrections cover repeated saves.
+
 - Commit active Word, Sheet and Slide drafts through `commitPendingEdits()`
   and both save APIs. Cell and slide text changes advance the content revision
   immediately, including edits during an asynchronous save; focus, caret and

@@ -3,6 +3,7 @@ import '../../office/office_document_properties.dart';
 import '../../opc/ole/embedded_part.dart';
 import '../../opc/opc_archive.dart';
 import '../../opc/relationships.dart';
+import '../../visual/drawing_line_style.dart';
 import '../../visual/office_visual.dart';
 import '../math/omml_document.dart';
 import '../properties/wml_properties.dart';
@@ -578,6 +579,22 @@ class WmlFrame extends WmlBlock {
   /// null denotes a newly authored frame using the conventional one-point line.
   String? sourceLinePropertiesXml;
   String? importedStrokeColor;
+
+  String? _cachedLineXml;
+  DrawingLineStyle? _cachedLineStyle;
+
+  /// Native outline geometry for preview. An omitted imported width retains
+  /// the established hairline approximation; newly authored lines are 1 pt.
+  DrawingLineStyle get lineStyle {
+    if (_cachedLineStyle == null || _cachedLineXml != sourceLinePropertiesXml) {
+      _cachedLineXml = sourceLinePropertiesXml;
+      _cachedLineStyle = DrawingLineStyle.fromXml(
+        sourceLinePropertiesXml,
+        fallbackWidth: sourceLinePropertiesXml == null ? 1 : 0.8,
+      );
+    }
+    return _cachedLineStyle!;
+  }
 
   /// Original anchor host paragraph properties, including an omitted pPr.
   WmlParagraphProps? anchorParagraphProperties;

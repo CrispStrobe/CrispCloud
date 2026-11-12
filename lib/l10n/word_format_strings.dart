@@ -15,6 +15,11 @@ class WordFormatStrings {
     final index = english.indexOf(message);
     if (index >= 0) return _values[index];
     if (_malformed.contains(message)) return _values[10];
+    if (message.startsWith('Invalid Word package ZIP: ') ||
+        message.startsWith('Invalid Word package compression: ') ||
+        message.startsWith('Invalid Word package XML: ')) {
+      return _values[10];
+    }
     return null;
   }
 
@@ -51,6 +56,11 @@ class WordFormatStrings {
     'Duplicate Word package part.',
     'Word package content types are missing.',
     'The Word main document part is missing.',
+    'Invalid Word package part path.',
+    'Invalid Word package ZIP bounds.',
+    'Invalid Word package metadata XML.',
+    'Invalid Word main document relationship.',
+    'Ambiguous Word main document relationship.',
   };
 
   static const _translations = <String, List<String>>{

@@ -1,9 +1,20 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 241,
+  "expected_file_count": 277,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
+    {"pattern": "fidelity-slide-sections/direct/unchanged-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/direct/within-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/direct/forward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/direct/backward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/direct/emptied-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/isolate/unchanged-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/isolate/within-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/isolate/forward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/isolate/backward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-slide-sections/isolate/emptied-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
+    {"pattern": "fidelity-sheet-rename/renamed-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_rename_fidelity_test.dart"},
     {"pattern": "fidelity-content-controls/imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
     {"pattern": "fidelity-content-controls/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
     {"pattern": "fidelity-content-controls/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_content_control_fidelity_test.dart"},
@@ -79,6 +90,9 @@
     {"pattern": "fidelity-content-controls-legacy/legacy-frame-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"}
   ],
   "standalone": [
+    {"path": "fidelity-slide-sections/direct/source.pptx", "producer": "test/slide_section_fidelity_test.dart"},
+    {"path": "fidelity-slide-sections/isolate/source.pptx", "producer": "test/slide_section_fidelity_test.dart"},
+    {"path": "fidelity-sheet-rename/source.xlsx", "producer": "test/sheet_rename_fidelity_test.dart"},
     {"path": "fidelity-content-controls/source.docx", "producer": "test/word_content_control_fidelity_test.dart"},
     {"path": "fidelity-bookmarks/source.docx", "producer": "test/word_bookmark_fidelity_test.dart"},
     {"path": "fidelity-bookmarks/frame-source.docx", "producer": "test/word_bookmark_fidelity_test.dart"},

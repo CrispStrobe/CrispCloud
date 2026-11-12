@@ -159,7 +159,7 @@ class FormulaDepGraph {
       '${sheet.name}!${ref.a1}';
 
   (SmlWorksheet, SmlCellRef) _parse(String key) {
-    final int bang = key.indexOf('!');
+    final int bang = key.lastIndexOf('!');
     final SmlWorksheet sheet =
         workbook.sheetByName(key.substring(0, bang)) ?? workbook.firstSheet;
     return (sheet, SmlCellRef.parse(key.substring(bang + 1)));

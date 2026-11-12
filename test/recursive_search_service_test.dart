@@ -233,6 +233,93 @@ void main() {
     expect(result.matches.single.file.path, '/report.docx');
   });
 
+  test('Office search routes cloud files through referenced native note parts', () async {
+    const word = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    const office =
+        'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    const package =
+        'http://schemas.openxmlformats.org/package/2006/relationships';
+    final archive = Archive();
+    for (final part in {
+      '_rels/.rels':
+          '<Relationships xmlns="$package">'
+          '<Relationship Id="main" Type="$office/officeDocument" Target="content/body.xml"/>'
+          '</Relationships>',
+      'content/body.xml':
+          '<w:document xmlns:w="$word"><w:body><w:p><w:r>'
+          '<w:t>Body</w:t><w:footnoteReference w:id="7"/>'
+          '</w:r></w:p></w:body></w:document>',
+      'content/_rels/body.xml.rels':
+          '<Relationships xmlns="$package">'
+          '<Relationship Id="notes" Type="$office/footnotes" Target="../notes/native.xml"/>'
+          '</Relationships>',
+      'notes/native.xml':
+          '<w:footnotes xmlns:w="$word"><w:footnote w:id="7">'
+          '<w:p><w:r><w:t>Relocated searchable note</w:t></w:r></w:p>'
+          '</w:footnote></w:footnotes>',
+      'word/document.xml':
+          '<document><text>Unrelated canonical text</text></document>',
+    }.entries) {
+      archive.addFile(ArchiveFile.bytes(part.key, utf8.encode(part.value)));
+    }
+    final cloud = WorkflowFakeClient()
+      ..put('/native.docm', ZipEncoder().encode(archive));
+    final result = await RecursiveSearchService().search(
+      CloudOperationBackend(cloud, isCurrent: () => true),
+      const FileSearchQuery(contentPattern: 'Relocated searchable note'),
+      currentDirectory: '/',
+    );
+    expect(result.errors, isEmpty);
+    expect(result.matches.single.file.path, '/native.docm');
+    expect(
+      result.matches.single.snippet,
+      contains('Relocated searchable note'),
+    );
+  });
+
+  test('Office extraction failures retain source paths and do not hide later matches', () async {
+    List<int> document(String text) => ZipEncoder().encode(
+      Archive()
+        ..addFile(ArchiveFile.bytes('word/document.xml', utf8.encode(text))),
+    );
+    final oversized = document(
+      '<document><text>${'needle ' * 2000}</text></document>',
+    );
+    expect(oversized.length, lessThan(1024));
+    final cloud = WorkflowFakeClient()
+      ..put('/oversized.docx', oversized)
+      ..put('/malformed.docx', document('<document>'))
+      ..put(
+        '/valid.docx',
+        document('<document><text>needle survives</text></document>'),
+      );
+    final result = await RecursiveSearchService().search(
+      CloudOperationBackend(cloud, isCurrent: () => true),
+      const FileSearchQuery(contentPattern: 'needle', maxContentBytes: 1024),
+      currentDirectory: '/',
+    );
+    expect(result.matches.single.file.path, '/valid.docx');
+    expect(result.errors, hasLength(2));
+    expect(
+      result.errors,
+      contains(
+        predicate<String>(
+          (error) =>
+              error.contains('/oversized.docx') &&
+              error.contains('content limit'),
+        ),
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        predicate<String>(
+          (error) => error.contains('/malformed.docx') && error.contains('XML'),
+        ),
+      ),
+    );
+  });
+
   test(
     'archive dates, hidden ancestors, exclusions and depth follow the query',
     () async {

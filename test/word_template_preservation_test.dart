@@ -8,7 +8,6 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/file_cache_service.dart';
 import 'package:crisp_cloud/services/office_document_service.dart';
-import 'package:crisp_cloud/services/word_package_preservation.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
@@ -16,7 +15,9 @@ import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quds_office_editor/quds_office_editor.dart';
+import 'package:quds_office_editor/quds_office_editor.dart' hide WordPackagePreservation;
+import 'package:quds_office_engine/quds_office_engine.dart'
+    show WordPackagePreservation;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -273,56 +274,13 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   for (final extension in ['docm', 'dotm', 'dotx']) {
-    test(
-      '$extension previews document text and preserves its package type after edits',
-      () async {
-        final original = _fixture(extension);
-        final preview = await parseOfficeDocument(
-          original,
-          'example.$extension',
-        );
-        expect(preview.plainText, contains('Template body.'));
-        final guard = await WordPackagePreservation.capture(
-          original,
-          'example.$extension',
-        );
-        expect(guard, isNotNull);
-        final controller = WordEditorController.fromBytes(original);
-        addTearDown(controller.dispose);
-        controller.insertText('Updated ');
-        final saved = await controller.saveBytesAsync();
-        await guard!.validateSaved(saved);
-        final after = _parts(saved);
-        expect(
-          utf8.decode(after['[Content_Types].xml']!),
-          contains(WordPackagePreservation.contentTypesByExtension[extension]),
-        );
-        if (extension != 'dotx') {
-          for (final path in [
-            'word/vbaProject.bin',
-            'word/vbaProjectSignature.bin',
-            'word/vbaData.xml',
-          ]) {
-            expect(after[path], orderedEquals(_parts(original)[path]!));
-          }
-          final rels = xml.XmlDocument.parse(
-            utf8.decode(after['word/_rels/document.xml.rels']!),
-          );
-          expect(
-            rels
-                .findAllElements('Relationship', namespace: '*')
-                .where((rel) => rel.getAttribute('Id') == 'rIdVba')
-                .single
-                .getAttribute('Target'),
-            'vbaProject.bin',
-          );
-        }
-        final reopened = WordEditorController.fromBytes(saved);
-        addTearDown(reopened.dispose);
-        expect(reopened.document.paragraphs.first.text, contains('Updated '));
-        await guard.validateSaved(reopened.saveBytes());
-      },
-    );
+    test('$extension preview routes through the shared Word format', () async {
+      final preview = await parseOfficeDocument(
+        _fixture(extension),
+        'example.$extension',
+      );
+      expect(preview.plainText, contains('Template body.'));
+    });
     testWidgets(
       'actual host uploads edited $extension with preserved package',
       (tester) async {
@@ -416,76 +374,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('guard rejects changed MIME type, dropped macro, mutation and missing relationship', () async {
-    final original = _fixture('dotm');
-    final guard = (await WordPackagePreservation.capture(
-      original,
-      'example.dotm',
-    ))!;
-    final withoutMacro = _parts(original)..remove('word/vbaProject.bin');
-    final changedMacro = _parts(original)
-      ..['word/vbaProject.bin'] = Uint8List.fromList([1]);
-    final changedType = _parts(original);
-    changedType['[Content_Types].xml'] = Uint8List.fromList(
-      utf8.encode(
-        utf8
-            .decode(changedType['[Content_Types].xml']!)
-            .replaceAll(
-              WordPackagePreservation.contentTypesByExtension['dotm']!,
-              'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml',
-            ),
-      ),
-    );
-    final noRelationship = _parts(original);
-    final rels = xml.XmlDocument.parse(
-      utf8.decode(noRelationship['word/_rels/document.xml.rels']!),
-    );
-    rels.rootElement.children.removeWhere(
-      (node) => node is xml.XmlElement && node.getAttribute('Id') == 'rIdVba',
-    );
-    noRelationship['word/_rels/document.xml.rels'] = Uint8List.fromList(
-      utf8.encode(rels.toXmlString()),
-    );
-    for (final invalid in [
-      withoutMacro,
-      changedMacro,
-      changedType,
-      noRelationship,
-    ]) {
-      await expectLater(
-        guard.validateSaved(_package(invalid)),
-        throwsFormatException,
-      );
-    }
-  });
-
-  test(
-    'renaming DOCM bytes to DOTM does not enable mismatched editing',
-    () async {
-      await expectLater(
-        WordPackagePreservation.capture(_fixture('docm'), 'template.dotm'),
-        throwsFormatException,
-      );
-    },
-  );
-
-  test('package signatures are rejected before editing', () async {
-    final signed = _parts(_fixture('dotm'));
-    signed['_xmlsignatures/sig1.xml'] = Uint8List.fromList(
-      utf8.encode('<Signature/>'),
-    );
-    await expectLater(
-      WordPackagePreservation.capture(_package(signed), 'signed.dotm'),
-      throwsA(
-        isA<FormatException>().having(
-          (e) => e.message,
-          'message',
-          contains('digitally signed'),
-        ),
-      ),
-    );
-  });
-
   testWidgets('DOTM opens the real Word editor', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1100, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -505,7 +393,7 @@ void main() {
           ),
         ),
       );
-      // The bounded archive reader completes real asynchronous work; the Word
+      // The shared engine and host load asynchronously; the Word
       // caret continues animating once loaded. Wait for the editor itself,
       // rather than for all frames to stop or for fake timers to drain.
       final elapsed = Stopwatch()..start();
