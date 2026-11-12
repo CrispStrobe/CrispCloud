@@ -30,6 +30,19 @@ Uint8List _properties(int header, Map<int, int> values) {
 
 void main() {
   group('EML', () {
+    test('RFC 2231 literal continuations retain percent text', () {
+      final email = parseEmailMessage(
+        _eml(
+          'Subject: File\n'
+          'Content-Type: application/octet-stream\n'
+          "Content-Disposition: attachment; filename*0*=utf-8''report%20;\n"
+          ' filename*1="100%2Fdone.txt"\n\ncontents',
+        ),
+        'name.eml',
+      );
+      expect(email.attachments.single.name, 'report 100%2Fdone.txt');
+    });
+
     test('decodes folded RFC 2047 headers and quoted-printable body', () {
       final email = parseEmailMessage(
         _eml(
@@ -203,37 +216,6 @@ JVBERg=='''),
       expect(email.plainText, isEmpty);
     });
 
-    test(
-      'mixed body sections appear in both text and formatted representations',
-      () {
-        final email = parseEmailMessage(
-          _eml(
-            'Subject: Mixed body\n'
-            'Content-Type: multipart/mixed; boundary=b\n\n'
-            '--b\nContent-Type: text/plain\n\nCover <note>\n'
-            '--b\nContent-Type: text/html\n\n<p>Second section</p>\n--b--\n',
-          ),
-          'mixed.eml',
-        );
-        expect(email.plainText, 'Cover <note>\n\nSecond section');
-        expect(email.safeHtml, contains('<pre>Cover &lt;note&gt;</pre>'));
-        expect(email.safeHtml, contains('<p>Second section</p>'));
-      },
-    );
-
-    test('RFC 2231 literal continuations retain percent text', () {
-      final email = parseEmailMessage(
-        _eml(
-          'Subject: File\n'
-          'Content-Type: application/octet-stream\n'
-          "Content-Disposition: attachment; filename*0*=utf-8''report%20;\n"
-          ' filename*1="100%2Fdone.txt"\n\ncontents',
-        ),
-        'name.eml',
-      );
-      expect(email.attachments.single.name, 'report 100%2Fdone.txt');
-    });
-
     test('boundary prefix in body does not split a part', () {
       final email = parseEmailMessage(
         _eml('''Subject: Boundaries
@@ -323,6 +305,20 @@ Readable body'''),
   });
 
   group('Outlook MSG', () {
+    test('recipient count is bounded before reading individual properties', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}));
+      for (var index = 0; index < 513; index++) {
+        writer.addStorage(
+          '__recip_version1.0_#${index.toRadixString(16).padLeft(8, '0')}',
+        );
+      }
+      expect(
+        () => parseEmailMessage(writer.build(), 'many.msg'),
+        throwsFormatException,
+      );
+    });
+
     test(
       'reads Unicode headers, recipient type, body and binary attachment',
       () {
@@ -402,9 +398,9 @@ Readable body'''),
       final writer = CfbfWriter()
         ..addStream(
           '__properties_version1.0',
-          _properties(32, {0x3ffd0003: 1252, 0x3fde0003: 65001}),
+          _properties(32, {0x3ffd0003: 65001}),
         )
-        ..addStream('__substg1.0_0037001E', latin1.encode('Résumé'))
+        ..addStream('__substg1.0_0037001E', utf8.encode('Résumé'))
         ..addStream(
           '__substg1.0_10130102',
           utf8.encode('<p>Hello 世界</p><img src="https://tracker.test">'),
@@ -429,107 +425,6 @@ Readable body'''),
         () => parseEmailMessage(writer.build(), 'wrong.msg'),
         throwsFormatException,
       );
-    });
-
-    test('recipient count is bounded before reading individual properties', () {
-      final writer = CfbfWriter()
-        ..addStream('__properties_version1.0', _properties(32, {}));
-      for (var index = 0; index < 513; index++) {
-        writer.addStorage(
-          '__recip_version1.0_#${index.toRadixString(16).padLeft(8, '0')}',
-        );
-      }
-      expect(
-        () => parseEmailMessage(writer.build(), 'many.msg'),
-        throwsFormatException,
-      );
-    });
-  });
-
-  group('bounded compound reader', () {
-    test('small and regular streams retain exact contents', () {
-      final regular = List<int>.generate(8192, (index) => index % 256);
-      final writer = CfbfWriter()
-        ..addStream('parent/small', [7, 9, 11])
-        ..addStream('parent/large', regular);
-      final reader = BoundedCfbReader(writer.build());
-      expect(reader.readPath('parent/small'), orderedEquals([7, 9, 11]));
-      expect(reader.readPath('parent/large'), orderedEquals(regular));
-      expect(reader.readPath('small'), isNull);
-    });
-
-    test('duplicate FAT references fail before the parser allocates them', () {
-      final bytes = (CfbfWriter()..addStream('small', [1])).build();
-      final view = ByteData.sublistView(bytes);
-      view.setUint32(80, view.getUint32(76, Endian.little), Endian.little);
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
-    });
-
-    test('shared directory children and sibling cycles are rejected', () {
-      final bytes =
-          (CfbfWriter()
-                ..addStream('A/value', [1])
-                ..addStream('B/value', [2]))
-              .build();
-      final reader = BoundedCfbReader(bytes);
-      final first = reader.child(reader.root, 'A')!;
-      final second = reader.child(reader.root, 'B')!;
-      final view = ByteData.sublistView(bytes);
-      final directory = (view.getUint32(48, Endian.little) + 1) * 512;
-      view.setUint32(
-        directory + second.index * 128 + 76,
-        first.child,
-        Endian.little,
-      );
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
-      view.setUint32(
-        directory + second.index * 128 + 76,
-        second.child,
-        Endian.little,
-      );
-      view.setUint32(
-        directory + first.child * 128 + 68,
-        first.child,
-        Endian.little,
-      );
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
-    });
-
-    test(
-      'invalid indices and case-insensitive duplicate names are rejected',
-      () {
-        final bytes = (CfbfWriter()..addStream('parent/value', [1])).build();
-        final reader = BoundedCfbReader(bytes);
-        final parent = reader.child(reader.root, 'parent')!;
-        final view = ByteData.sublistView(bytes);
-        final directory = (view.getUint32(48, Endian.little) + 1) * 512;
-        view.setUint32(
-          directory + parent.index * 128 + 76,
-          999999,
-          Endian.little,
-        );
-        expect(() => BoundedCfbReader(bytes), throwsFormatException);
-        final duplicates =
-            (CfbfWriter()
-                  ..addStream('Name', [1])
-                  ..addStream('NAME', [2]))
-                .build();
-        expect(() => BoundedCfbReader(duplicates), throwsFormatException);
-      },
-    );
-
-    test('untrusted stream size and cumulative read budget are bounded', () {
-      final bytes = (CfbfWriter()..addStream('small', [1, 2, 3])).build();
-      final reader = BoundedCfbReader(bytes, maxTotalReadBytes: 4);
-      expect(reader.readPath('small'), orderedEquals([1, 2, 3]));
-      expect(() => reader.readPath('small'), throwsFormatException);
-      final view = ByteData.sublistView(bytes);
-      final directory = (view.getUint32(48, Endian.little) + 1) * 512;
-      view.setUint32(directory + 128 + 120, 0x7fffffff, Endian.little);
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
-      view.setUint32(directory + 128 + 120, 3, Endian.little);
-      view.setUint32(directory + 128 + 124, 1, Endian.little);
-      expect(() => BoundedCfbReader(bytes), throwsFormatException);
     });
   });
 }

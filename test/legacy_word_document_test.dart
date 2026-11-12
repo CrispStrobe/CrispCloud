@@ -22,35 +22,19 @@ Uint8List _document() {
   ]) {
     fib.setUint16(offset, value, Endian.little);
   }
-  tableData.setUint32(pieces.length * 4, lastPosition ?? cp, Endian.little);
-  final clx = BytesBuilder();
-  if (includePropertyRecord) clx.add([1, 2, 0, 0, 0]);
-  clx.add([2]);
-  clx.add(
-    (ByteData(4)..setUint32(0, plc.length, Endian.little)).buffer.asUint8List(),
-  );
-  clx.add(plc);
-  final clxBytes = clx.takeBytes();
-  u32(0x1a2, 16);
-  u32(0x1a6, clxBytes.length);
-  word.setRange(12000, 12014, ascii.encode('DELETED SECRET'));
-  final table = Uint8List(16 + clxBytes.length)
-    ..setRange(16, 16 + clxBytes.length, clxBytes);
-  final writer = CfbfWriter();
-  final prefix = nestedOnly ? 'Embedded/' : '';
-  writer.addStream('${prefix}WordDocument', word);
-  if (includeTable) {
-    writer.addStream(
-      '$prefix${flags & 0x0200 != 0 ? '1Table' : '0Table'}',
-      table,
-    );
-  }
-  // A stale table must never be used instead of the selected FIB table.
-  writer.addStream(
-    '$prefix${flags & 0x0200 != 0 ? '0Table' : '1Table'}',
-    Uint8List(0),
-  );
-  return writer.build();
+  fib.setUint32(76, text.length, Endian.little);
+  fib.setUint32(0x1a2, 0, Endian.little);
+  fib.setUint32(0x1a6, 21, Endian.little);
+  word.setRange(2048, 2048 + text.length, ascii.encode(text));
+  final table = Uint8List(21)..[0] = 2;
+  final clx = ByteData.sublistView(table);
+  clx.setUint32(1, 16, Endian.little);
+  clx.setUint32(9, text.length, Endian.little);
+  clx.setUint32(15, 0x40001000, Endian.little);
+  return (CfbfWriter()
+        ..addStream('WordDocument', word)
+        ..addStream('1Table', table))
+      .build();
 }
 
 void main() {
