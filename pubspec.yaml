@@ -195,6 +195,8 @@ dev_dependencies:
   covfuzz: ^0.1.1
 
 dependency_overrides:
+  legacy_doc_parser:
+    path: packages/legacy_doc_parser
   # MIT 0.10.0 runtime with cancellable mobile cursor reveal on disposal.
   # Source provenance and the narrow patch are in packages/re_editor/UPSTREAM.md.
   re_editor:

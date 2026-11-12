@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:legacy_doc_parser/src/legacy_word_document.dart';
 import 'package:test/test.dart';
-import 'package:legacy_doc_parser/src/compound/cfbf_writer.dart' show CfbfWriter;
+import 'package:legacy_doc_parser/src/compound/cfbf_writer.dart';
 
 import 'support/structured_word_fixture.dart';
 
@@ -72,25 +72,28 @@ void main() {
     },
   );
 
-  test('visible preview text omits hidden runs but the conversion model retains them', () {
-    final source = StructuredWordFixture(
-      pieces: const [WordFixturePiece('VisibleSECRETEnd\r')],
-      characterRuns: [
-        const WordFixtureFkpRun(8192, 8199),
-        WordFixtureFkpRun(8199, 8205, properties: wordSprm(0x083c, [1])),
-        const WordFixtureFkpRun(8205, 8209),
-      ],
-    ).build();
-    final document = parseLegacyWordDocument(source);
-    expect(document.plainText, 'VisibleEnd');
-    expect(document.safeHtml, isNot(contains('SECRET')));
-    final paragraph = document.blocks.single as LegacyWordParagraph;
-    expect(
-      paragraph.runs.singleWhere((run) => run.style.hidden).text,
-      'SECRET',
-    );
-    expect(extractLegacyWordText(source), 'VisibleSECRETEnd');
-  });
+  test(
+    'visible preview text omits hidden runs but the conversion model retains them',
+    () {
+      final source = StructuredWordFixture(
+        pieces: const [WordFixturePiece('VisibleSECRETEnd\r')],
+        characterRuns: [
+          const WordFixtureFkpRun(8192, 8199),
+          WordFixtureFkpRun(8199, 8205, properties: wordSprm(0x083c, [1])),
+          const WordFixtureFkpRun(8205, 8209),
+        ],
+      ).build();
+      final document = parseLegacyWordDocument(source);
+      expect(document.plainText, 'VisibleEnd');
+      expect(document.safeHtml, isNot(contains('SECRET')));
+      final paragraph = document.blocks.single as LegacyWordParagraph;
+      expect(
+        paragraph.runs.singleWhere((run) => run.style.hidden).text,
+        'SECRET',
+      );
+      expect(extractLegacyWordText(source), 'VisibleSECRETEnd');
+    },
+  );
 }
 
 Matcher everyElementCodeUnit(int codeUnit) => predicate<String>(

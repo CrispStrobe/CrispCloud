@@ -51,6 +51,7 @@ class LegacyWordDocument {
     this.fields = const [],
     this.numbering = const [],
     this.media = const LegacyWordMediaCatalog(),
+    this.evenAndOddHeaders = false,
   });
   final List<LegacyWordBlock> blocks;
   final List<LegacyWordSection> sections;
@@ -72,21 +73,41 @@ class LegacyWordDocument {
   final List<LegacyWordField> fields;
   final List<LegacyWordNumberingDefinition> numbering;
   final LegacyWordMediaCatalog media;
+
+  /// DopBase.fFacingPages. Stored even-page stories alone do not enable them.
+  final bool evenAndOddHeaders;
 }
 
 enum LegacyWordStoryKind {
-  header, footer, footnote, endnote, comment, textbox, headerTextbox,
-  footnoteSeparator, footnoteContinuationSeparator, footnoteContinuationNotice,
-  endnoteSeparator, endnoteContinuationSeparator, endnoteContinuationNotice,
+  header,
+  footer,
+  footnote,
+  endnote,
+  comment,
+  textbox,
+  headerTextbox,
+  footnoteSeparator,
+  footnoteContinuationSeparator,
+  footnoteContinuationNotice,
+  endnoteSeparator,
+  endnoteContinuationSeparator,
+  endnoteContinuationNotice,
 }
 
 enum LegacyWordHeaderFooterType { even, normal, first }
 
 class LegacyWordStory {
-  const LegacyWordStory({required this.id, required this.kind,
-    required this.startCp, required this.endCp, required this.blocks,
-    required this.plainText, required this.safeHtml, this.sectionIndex,
-    this.headerFooterType});
+  const LegacyWordStory({
+    required this.id,
+    required this.kind,
+    required this.startCp,
+    required this.endCp,
+    required this.blocks,
+    required this.plainText,
+    required this.safeHtml,
+    this.sectionIndex,
+    this.headerFooterType,
+  });
   final String id;
   final LegacyWordStoryKind kind;
   final int startCp;
@@ -99,21 +120,38 @@ class LegacyWordStory {
 }
 
 class LegacyWordNoteReference {
-  const LegacyWordNoteReference({required this.id, required this.anchorCp,
-    required this.storyId, required this.endnote, this.autoNumbered = true,
-    this.customMark});
+  const LegacyWordNoteReference({
+    required this.id,
+    required this.anchorCp,
+    required this.storyId,
+    required this.endnote,
+    this.autoNumbered = true,
+    this.customMark,
+    this.presentation = const LegacyWordMediaPresentation(),
+  });
   final int id;
   final int anchorCp;
   final String storyId;
   final bool endnote;
   final bool autoNumbered;
   final String? customMark;
+  final LegacyWordMediaPresentation presentation;
 }
 
 class LegacyWordCommentReference {
-  const LegacyWordCommentReference({required this.id, required this.anchorCp,
-    required this.storyId, this.rangeStartCp, this.rangeEndCp,
-    this.author, this.initials, this.time});
+  const LegacyWordCommentReference({
+    required this.id,
+    required this.anchorCp,
+    required this.storyId,
+    this.rangeStartCp,
+    this.rangeEndCp,
+    this.author,
+    this.initials,
+    this.time,
+    this.parentId,
+    this.ink = false,
+    this.presentation = const LegacyWordMediaPresentation(),
+  });
   final int id;
   final int anchorCp;
   final String storyId;
@@ -121,25 +159,61 @@ class LegacyWordCommentReference {
   final int? rangeEndCp;
   final String? author;
   final String? initials;
+
   /// Source wall-clock fields without a time-zone claim, as for run revisions.
   final DateTime? time;
+
+  /// Earlier comment ID for a validated ATRDPost10 reply relationship.
+  final int? parentId;
+  final bool ink;
+  final LegacyWordMediaPresentation presentation;
 }
 
 class LegacyWordTextboxReference {
-  const LegacyWordTextboxReference({required this.id, required this.storyId,
-    required this.inHeaderFooter, this.anchorCp, this.shapeId,
-    this.nextTextboxId});
+  const LegacyWordTextboxReference({
+    required this.id,
+    required this.storyId,
+    required this.inHeaderFooter,
+    this.anchorCp,
+    this.shapeId,
+    this.nextTextboxId,
+    this.chainLength = 1,
+    this.anchors = const [],
+  });
   final int id;
   final String storyId;
   final bool inHeaderFooter;
   final int? anchorCp;
   final int? shapeId;
   final int? nextTextboxId;
+  final int chainLength;
+
+  /// Actual OfficeArtClientTextbox chain indices, when available. A story is
+  /// not duplicated for each shape and the library does not invent reflow.
+  final List<LegacyWordTextboxAnchor> anchors;
+}
+
+class LegacyWordTextboxAnchor {
+  const LegacyWordTextboxAnchor({
+    required this.shapeId,
+    required this.anchorCp,
+    required this.chainIndex,
+    this.nextShapeId,
+  });
+  final int shapeId;
+  final int anchorCp;
+  final int chainIndex;
+  final int? nextShapeId;
 }
 
 class LegacyWordBookmark {
-  const LegacyWordBookmark({required this.name, required this.startCp,
-    required this.endCp, this.firstCell, this.lastCell});
+  const LegacyWordBookmark({
+    required this.name,
+    required this.startCp,
+    required this.endCp,
+    this.firstCell,
+    this.lastCell,
+  });
   final String name;
   final int startCp;
   final int endCp;
@@ -150,21 +224,33 @@ class LegacyWordBookmark {
 /// Original field syntax and cached display content. The library never
 /// evaluates a field, resolves a URL, or updates a TOC/REF from external data.
 class LegacyWordField {
-  const LegacyWordField({required this.id, required this.storyId,
-    required this.startCp, required this.endCp, required this.instruction,
-    required this.storedResult, required this.type, this.separatorCp,
-    this.parentId, this.locked = false, this.dirty = false,
-    this.privateResult = false});
+  const LegacyWordField({
+    required this.id,
+    required this.storyId,
+    required this.startCp,
+    required this.endCp,
+    required this.instruction,
+    required this.storedResult,
+    required this.type,
+    this.separatorCp,
+    this.parentId,
+    this.locked = false,
+    this.dirty = false,
+    this.privateResult = false,
+  });
   final int id;
+
   /// 'main' for the main story; otherwise an ID in LegacyWordDocument.stories.
   final String storyId;
   final int startCp;
+
   /// Exclusive position immediately after the field-end marker.
   final int endCp;
   final int? separatorCp;
   final int? parentId;
   final String instruction;
   final String storedResult;
+
   /// Uppercase leading field keyword, such as TOC, REF, PAGE or HYPERLINK.
   final String type;
   final bool locked;
@@ -175,26 +261,48 @@ class LegacyWordField {
 enum LegacyWordListSuffix { tab, space, nothing }
 
 class LegacyWordNumberingDefinition {
-  const LegacyWordNumberingDefinition({required this.id, required this.levels});
+  const LegacyWordNumberingDefinition({
+    required this.id,
+    required this.levels,
+    this.sourceListId,
+  });
+
   /// The absolute, one-based ilfo referenced by paragraph listId.
   final int id;
+
+  /// Original lsid shared by list instances that can continue one sequence.
+  final int? sourceListId;
   final List<LegacyWordNumberingLevel> levels;
 }
 
 class LegacyWordNumberingLevel {
-  const LegacyWordNumberingLevel({required this.level, required this.format,
-    required this.text, this.startAt = 1, this.suffix = LegacyWordListSuffix.tab,
-    this.legal = false, this.restartAfterLevel, this.paragraphStyle = const LegacyWordParagraphStyle(),
-    this.characterStyle = const LegacyWordCharacterStyle()});
+  const LegacyWordNumberingLevel({
+    required this.level,
+    required this.format,
+    required this.text,
+    this.startAt = 1,
+    this.suffix = LegacyWordListSuffix.tab,
+    this.legal = false,
+    this.restartAfterLevel,
+    this.paragraphStyle = const LegacyWordParagraphStyle(),
+    this.characterStyle = const LegacyWordCharacterStyle(),
+    this.markerAlignment = LegacyWordAlignment.left,
+  });
   final int level;
+
   /// A supported OOXML number-format identifier, never an invented fallback.
   final String format;
+
   /// %1..%9 placeholders; literal characters (including bullets) are retained.
   final String text;
   final int startAt;
   final LegacyWordListSuffix suffix;
   final bool legal;
+
+  /// OOXML-compatible one-based restart threshold: zero never restarts;
+  /// null uses the preceding level. This affects only the number sequence.
   final int? restartAfterLevel;
+  final LegacyWordAlignment markerAlignment;
   final LegacyWordParagraphStyle paragraphStyle;
   final LegacyWordCharacterStyle characterStyle;
 }
@@ -413,6 +521,7 @@ class LegacyWordSection {
     this.landscape = false,
     this.columns = 1,
     this.breakKind = LegacyWordSectionBreak.newPage,
+    this.titlePage = false,
   });
   final int startCp;
   final int endCp;
@@ -429,4 +538,7 @@ class LegacyWordSection {
   final bool landscape;
   final int columns;
   final LegacyWordSectionBreak breakKind;
+
+  /// sprmSFTitlePage, independently of stored first-page header/footer text.
+  final bool titlePage;
 }

@@ -9,6 +9,8 @@ import 'legacy_word_document.dart';
 
 part 'legacy_word_structured_conversion.dart';
 part 'opc_package_writer.dart';
+part 'word_story_writer.dart';
+part 'word_media_writer.dart';
 
 /// DOCM is an explicit choice. The DOCX entry point never writes active VBA.
 enum LegacyWordOutputFormat { docx, docm }
@@ -163,11 +165,12 @@ const _stylesType =
     'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml';
 const _wordDocumentStart =
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-    '<w:document xmlns:w="$_wordNamespace" '
+    '<w:document $_wordNamespaces><w:body>';
+const _wordNamespaces =
+    'xmlns:w="$_wordNamespace" '
     'xmlns:r="$_relationshipNamespace" '
     'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" '
     'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
     'xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" '
     'xmlns:v="urn:schemas-microsoft-com:vml" '
-    'xmlns:o="urn:schemas-microsoft-com:office:office"'
-    '><w:body>';
+    'xmlns:o="urn:schemas-microsoft-com:office:office"';

@@ -6,6 +6,8 @@ part of 'conversion.dart';
 class _OpcPackageWriter {
   final _parts = <String, _OpcPart>{};
   final _relationships = <String, List<_OpcRelationship>>{};
+  final _relationshipKeys = <String, Map<(String, String), String>>{};
+  var _relationshipCount = 0;
   var _totalBytes = 0;
   var _xmlBytes = 0;
 
@@ -31,14 +33,13 @@ class _OpcPackageWriter {
     if (from.isNotEmpty) _validatePartName(from);
     _validatePartName(target);
     final values = _relationships.putIfAbsent(from, () => []);
-    for (final existing in values) {
-      if (existing.type == type && existing.target == target) {
-        return existing.id;
-      }
-    }
-    if (values.length >= 4096) _tooComplex();
+    final keys = _relationshipKeys.putIfAbsent(from, () => {});
+    final existing = keys[(type, target)];
+    if (existing != null) return existing;
+    if (values.length >= 4096 || ++_relationshipCount > 100000) _tooComplex();
     final id = 'rId${values.length + 1}';
     values.add(_OpcRelationship(id, type, target));
+    keys[(type, target)] = id;
     return id;
   }
 
@@ -61,11 +62,17 @@ class _OpcPackageWriter {
       contentTypes.add('"/>');
     }
     contentTypes.add('</Types>');
-    file(
-      '[Content_Types].xml',
-      Uint8List.fromList(utf8.encode(contentTypes.toString())),
-    );
-    for (final entry in _parts.entries) file(entry.key, entry.value.bytes);
+    final typeBytes = Uint8List.fromList(utf8.encode(contentTypes.toString()));
+    _totalBytes += typeBytes.length;
+    _xmlBytes += typeBytes.length;
+    if (_totalBytes > kLegacyWordPackageLimit ||
+        _xmlBytes > kLegacyWordDocxXmlLimit) {
+      _tooComplex();
+    }
+    file('[Content_Types].xml', typeBytes);
+    for (final entry in _parts.entries) {
+      file(entry.key, entry.value.bytes);
+    }
     for (final entry in _relationships.entries) {
       final source = entry.key;
       if (source.isNotEmpty && !_parts.containsKey(source)) {
@@ -97,7 +104,11 @@ class _OpcPackageWriter {
       xml.add('</Relationships>');
       final bytes = Uint8List.fromList(utf8.encode(xml.toString()));
       _totalBytes += bytes.length;
-      if (_totalBytes > kLegacyWordPackageLimit) _tooComplex();
+      _xmlBytes += bytes.length;
+      if (_totalBytes > kLegacyWordPackageLimit ||
+          _xmlBytes > kLegacyWordDocxXmlLimit) {
+        _tooComplex();
+      }
       file(path, bytes);
     }
     final encoded = Uint8List.fromList(ZipEncoder().encode(archive));

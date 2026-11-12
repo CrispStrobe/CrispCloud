@@ -2,6 +2,24 @@
 
 import 'dart:typed_data';
 
+/// Resolved visibility and tracked-change state at a media reference's CP.
+/// Keeping this separate from the binary asset prevents reuse of a picture's
+/// bytes from accepting a deletion or revealing a hidden occurrence.
+class LegacyWordMediaPresentation {
+  const LegacyWordMediaPresentation({
+    this.hidden = false,
+    this.inserted = false,
+    this.deleted = false,
+    this.revisionAuthor,
+    this.revisionTime,
+  });
+  final bool hidden;
+  final bool inserted;
+  final bool deleted;
+  final String? revisionAuthor;
+  final DateTime? revisionTime;
+}
+
 /// Resolved character-property span. CPs are document-global UTF-16 positions.
 class LegacyWordMediaRun {
   const LegacyWordMediaRun({
@@ -12,6 +30,7 @@ class LegacyWordMediaRun {
     this.object = false,
     this.ole2 = false,
     this.data = false,
+    this.presentation = const LegacyWordMediaPresentation(),
   });
   final int startCp;
   final int endCp;
@@ -20,6 +39,7 @@ class LegacyWordMediaRun {
   final bool object;
   final bool ole2;
   final bool data;
+  final LegacyWordMediaPresentation presentation;
 }
 
 /// A precise location in an original compound-file stream. Offsets and lengths
@@ -90,6 +110,8 @@ class LegacyWordPicture {
     this.cropLeftFixed16 = 0,
     this.cropRightFixed16 = 0,
     this.storedExternalName,
+    this.presentation = const LegacyWordMediaPresentation(),
+    this.shapeDeleted = false,
   });
   final String id;
   final int cp;
@@ -105,6 +127,11 @@ class LegacyWordPicture {
 
   /// Descriptive source metadata only. It is never resolved or fetched.
   final String? storedExternalName;
+  final LegacyWordMediaPresentation presentation;
+
+  /// OfficeArt's deleted-shape bit, distinct from a tracked text deletion.
+  /// The stored payload remains evidence and must not become an active shape.
+  final bool shapeDeleted;
 }
 
 class LegacyWordDrawing {
@@ -127,6 +154,12 @@ class LegacyWordDrawing {
     this.imageId,
     this.textboxId,
     this.nextTextboxShapeId,
+    this.presentation = const LegacyWordMediaPresentation(),
+    this.shapeDeleted = false,
+    this.cropTopFixed16 = 0,
+    this.cropBottomFixed16 = 0,
+    this.cropLeftFixed16 = 0,
+    this.cropRightFixed16 = 0,
   });
   final int shapeId;
   final int anchorCp;
@@ -146,6 +179,12 @@ class LegacyWordDrawing {
   final String? imageId;
   final int? textboxId;
   final int? nextTextboxShapeId;
+  final LegacyWordMediaPresentation presentation;
+  final bool shapeDeleted;
+  final int cropTopFixed16;
+  final int cropBottomFixed16;
+  final int cropLeftFixed16;
+  final int cropRightFixed16;
 }
 
 class LegacyWordPreservedStream {
@@ -153,8 +192,8 @@ class LegacyWordPreservedStream {
     required this.path,
     required Uint8List bytes,
     this.metadata,
-  })
-    : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
+  }) : bytes = Uint8List.fromList(bytes).asUnmodifiableView();
+
   /// Path relative to the preserved storage's root.
   final String path;
   final Uint8List bytes;
@@ -177,6 +216,7 @@ class LegacyWordStorageMetadata {
        modifiedFiletime = modifiedFiletime == null
            ? null
            : Uint8List.fromList(modifiedFiletime).asUnmodifiableView();
+
   /// Empty for the preserved root; otherwise relative to that root.
   final String path;
   final Uint8List clsid;
@@ -212,17 +252,22 @@ class LegacyWordEmbeddedObject {
     this.progId,
     this.linked,
     this.canEmbed = false,
+    this.presentation = const LegacyWordMediaPresentation(),
   });
   final String id;
   final int cp;
   final LegacyWordCompoundStorage storage;
+
   /// The original CompObj ProgID, when a bounded recognized record supplies it.
   final String? progId;
+
   /// Null means the original Ole record did not establish this information.
   final bool? linked;
+
   /// The field end is present and not a zombie, and the Ole record explicitly
   /// identifies an embedded object. Other stored objects remain inert evidence.
   final bool canEmbed;
+  final LegacyWordMediaPresentation presentation;
 }
 
 class LegacyWordVbaProject {
@@ -234,6 +279,7 @@ class LegacyWordVbaProject {
   }) : signatureArtifactIds = List.unmodifiable(signatureArtifactIds);
   final String id;
   final LegacyWordCompoundStorage storage;
+
   /// PROJECT plus VBA/dir and VBA/_VBA_PROJECT are present. This is structural
   /// completeness, not verification that macros compile or are safe to execute.
   final bool hasRequiredStreams;
@@ -259,6 +305,7 @@ class LegacyWordOpaqueArtifact {
   final LegacyWordArtifactKind kind;
   final Uint8List bytes;
   final LegacyWordSourceReference source;
+
   /// Signature artifacts are retained as evidence. No cryptographic validation
   /// or assertion that a copied signature authenticates converted output occurs.
   bool get signatureVerified => false;

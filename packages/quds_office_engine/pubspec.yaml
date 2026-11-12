@@ -48,6 +48,7 @@ environment:
   sdk: ^3.12.0
 
 dependencies:
+  legacy_doc_parser: ^0.1.0-dev.1
   crypto: ^3.0.7
 
 dev_dependencies:

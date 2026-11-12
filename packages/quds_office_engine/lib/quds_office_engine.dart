@@ -91,6 +91,7 @@ export 'src/visual/sheet_chart_data.dart';
 export 'src/word/layout/word_layout.dart';
 export 'src/word/legacy/legacy_word_conversion.dart';
 export 'src/word/legacy/legacy_word_document.dart';
+export 'src/word/legacy/legacy_word_structured_render.dart';
 export 'src/word/math/omml_document.dart';
 export 'src/word/math/omml_edit.dart';
 export 'src/word/math/omml_gallery.dart';
@@ -125,5 +126,3 @@ export 'src/xml/namespaces.dart';
 export 'src/xml/xml_node.dart';
 export 'src/xml/xml_reader.dart';
 export 'src/xml/xml_writer.dart';
-
-export 'src/word/legacy/legacy_word_structured_render.dart';

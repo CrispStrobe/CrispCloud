@@ -2,7 +2,6 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:quds_office_engine/src/word/serial/word_property_io.dart';
 
 import 'step_input.dart';
-import 'table_selector.dart';
 import 'word_structure_steps.dart';
 
 const _storyFields = <String>['story', 'section', 'note', 'comment'];

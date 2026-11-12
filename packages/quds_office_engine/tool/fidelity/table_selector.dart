@@ -31,7 +31,9 @@ TableCellSelection selectTableCell(WmlTable table, StepInput step) {
 /// the preceding member. Reject these cases before any edit or unmerge.
 TableCellSelection logicalTableCell(WmlTable table, int row, int gridColumn) {
   final selected = WordTable.cellAtGrid(table, row, gridColumn);
-  if (selected == null) throw ArgumentError('Logical table coordinate is outside the table');
+  if (selected == null) {
+    throw ArgumentError('Logical table coordinate is outside the table');
+  }
   return (row: selected.row, column: selected.col, cell: selected.cell);
 }
 

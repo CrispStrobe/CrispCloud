@@ -9,37 +9,14 @@ LegacyWordStructuredConversion _convertStructuredDocument(
   LegacyWordDocument document, {
   required LegacyWordOutputFormat format,
 }) {
-  final limitations = <LegacyWordConversionLimitation>{
-    LegacyWordConversionLimitation.partialFormatting,
-    LegacyWordConversionLimitation.macrosSignatures,
-  };
-  for (final warning in document.warnings) {
-    limitations.add(switch (warning) {
-      LegacyWordWarning.unsupportedFormatting ||
-      LegacyWordWarning.nestedTablesFlattened =>
-        LegacyWordConversionLimitation.partialFormatting,
-      LegacyWordWarning.numberingNotReconstructed ||
-      LegacyWordWarning.fieldsUseStoredResults =>
-        LegacyWordConversionLimitation.fieldsLists,
-      LegacyWordWarning.imagesOmitted => LegacyWordConversionLimitation.images,
-      LegacyWordWarning.floatingObjectsOmitted ||
-      LegacyWordWarning.textboxesOmitted =>
-        LegacyWordConversionLimitation.embeddedObjects,
-      LegacyWordWarning.headersFootersOmitted =>
-        LegacyWordConversionLimitation.headersFooters,
-      LegacyWordWarning.notesOmitted || LegacyWordWarning.commentsOmitted =>
-        LegacyWordConversionLimitation.notesComments,
-      LegacyWordWarning.macrosOmitted =>
-        LegacyWordConversionLimitation.macrosSignatures,
-      LegacyWordWarning.revisionMetadataIncomplete =>
-        LegacyWordConversionLimitation.revisions,
-    });
-  }
   final writer = _StructuredWordWriter(document, format);
+  final bytes = writer.convert();
   return LegacyWordStructuredConversion(
-    bytes: writer.convert(),
-    limitations: limitations.toList(),
+    bytes: bytes,
+    limitations: writer.limitations.toList(),
     format: format,
+    preservedCounts: writer.counts,
+    signatureEvidenceParts: writer.signatureEvidenceParts,
   );
 }
 
@@ -48,17 +25,54 @@ class _StructuredWordWriter {
 
   final LegacyWordDocument document;
   final LegacyWordOutputFormat format;
-  final _xml = _BoundedWordXml();
+  var _xml = _BoundedWordXml();
+  final _package = _OpcPackageWriter();
+  var _part = 'word/document.xml';
+  var _storyId = 'main';
+  final limitations = <LegacyWordConversionLimitation>{
+    LegacyWordConversionLimitation.partialFormatting,
+  };
+  final counts = <String, int>{};
+  final signatureEvidenceParts = <String>[];
+  final _stories = <String, LegacyWordStory>{};
+  final _storyRanges = <(int, int, String)>[];
+  final _events = <String, List<_WordInlineEvent>>{};
+  final _eventOffsets = <String, int>{};
+  final _headerFooters = <int, List<(bool, String, String)>>{};
+  final _storyParts = <String, String>{};
+  final _numberingIds = <int>{};
+  final _fields = <int, LegacyWordField>{};
+  final _fieldChildren = <int, List<LegacyWordField>>{};
+  final _mediaAssets = <String, LegacyWordImageAsset>{};
+  final _mediaParts = <String, String>{};
+  final _embeddedParts = <String, String>{};
+  final _renderedTextboxes = <String>{};
+  final _unplacedTextboxes = <(LegacyWordTextboxReference, LegacyWordStory)>[];
+  final _inertStories = <String, String>{};
+  final _hiddenContentRanges = <(int, int)>[];
+  final _renderingStories = <String>{};
+  final _evidenceRecords = <Map<String, Object?>>[];
+  var _inlineEventCount = 0;
+  var _drawingId = 0;
   final _styles = <int, LegacyWordParagraphStyle>{};
   final _sectionBreaks = <int, LegacyWordSectionBreak>{};
+  final _sectionIndices = <int, int>{};
   var _revisionId = 0;
   var _breaks = 0;
 
   Uint8List convert() {
+    _prepareStories();
+    _prepareMedia();
+    _prepareSemantics();
+    _sortEvents();
     _xml.add(_wordDocumentStart);
     var sectionIndex = 0;
     final sections = document.sections;
     for (var i = 0; i < sections.length; i++) {
+      if (_sectionIndices.containsKey(sections[i].startCp)) {
+        throw const FormatException('Duplicate Word section start.');
+      }
+      _sectionIndices[sections[i].startCp] = i;
       // MS-DOC sprmSBkc terminates this section. WordprocessingML w:type
       // instead places this section relative to the previous one. Shift only
       // the break type; dimensions/margins stay with their original section.
@@ -99,28 +113,36 @@ class _StructuredWordWriter {
     if (document.blocks.isEmpty || document.blocks.last is LegacyWordTable) {
       _xml.add('<w:p/>');
     }
-    if (sections.isNotEmpty) _section(sections.last);
+    _finishStoryEvents();
+    if (sections.isNotEmpty) {
+      _section(sections.last);
+    } else if (_headerFooters.isNotEmpty) {
+      _section(LegacyWordSection(startCp: 0, endCp: _mainEnd));
+    }
     _xml.add('</w:body></w:document>');
-    final package = _OpcPackageWriter()
-      ..addXml(
-        'word/document.xml',
-        format == LegacyWordOutputFormat.docx ? _docxMainType : _docmMainType,
-        _xml,
-      )
-      ..relate('', _officeDocumentRelationship, 'word/document.xml');
+    _package.addXml(
+      'word/document.xml',
+      format == LegacyWordOutputFormat.docx ? _docxMainType : _docmMainType,
+      _xml,
+    );
+    _package.relate('', _officeDocumentRelationship, 'word/document.xml');
+    _writeAuxiliaryStories();
+    _writeNumbering();
+    _writeEvidence();
     if (_styles.isNotEmpty) {
       final styles = _styleDefinitions();
       if (_xml.byteEstimate + styles.byteEstimate > kLegacyWordDocxXmlLimit) {
         _tooComplex();
       }
-      package.addXml('word/styles.xml', _stylesType, styles);
-      package.relate(
+      _package.addXml('word/styles.xml', _stylesType, styles);
+      _package.relate(
         'word/document.xml',
         '$_relationshipNamespace/styles',
         'styles.xml',
       );
     }
-    return package.encode();
+    _summarizeLimitations();
+    return _package.encode();
   }
 
   void _paragraph(LegacyWordParagraph paragraph, {LegacyWordSection? section}) {
@@ -131,6 +153,16 @@ class _StructuredWordWriter {
     _bool('keepNext', style.keepNext);
     _bool('keepLines', style.keepTogether);
     _bool('pageBreakBefore', style.pageBreakBefore);
+    final listId = style.listId?.abs();
+    if (listId != null && listId != 0) {
+      if (_numberingIds.contains(listId)) {
+        _xml.add(
+          '<w:numPr><w:ilvl w:val="${style.listLevel ?? 0}"/><w:numId w:val="$listId"/></w:numPr>',
+        );
+      } else {
+        limitations.add(LegacyWordConversionLimitation.fieldsLists);
+      }
+    }
     _xml.add(
       '<w:spacing w:before="${style.spaceBeforeTwips}" '
       'w:after="${style.spaceAfterTwips}"',
@@ -160,13 +192,18 @@ class _StructuredWordWriter {
     _xml.add('<w:outlineLvl w:val="${heading == null ? 9 : heading - 1}"/>');
     if (section != null) _section(section);
     _xml.add('</w:pPr>');
+    _emitEventsThrough(paragraph.startCp);
     for (final run in paragraph.runs) {
       _run(run);
     }
+    _emitEventsThrough(paragraph.endCp - 1);
+    _emitBoundaryClosures(paragraph.endCp);
     _xml.add('</w:p>');
+    _count('paragraphs');
   }
 
   void _table(LegacyWordTable table) {
+    _count('tables');
     _xml.add(
       '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'
       '</w:tblPr>',
@@ -202,6 +239,7 @@ class _StructuredWordWriter {
       var offset = 0;
       for (final cell in row.cells) {
         _countBreak();
+        _count('cells');
         _xml.add('<w:tc><w:tcPr>');
         final width = cell.widthTwips;
         if (width != null && width > 0) {
@@ -237,7 +275,7 @@ class _StructuredWordWriter {
     _xml.add('</w:tbl>');
   }
 
-  void _run(LegacyWordRun run) {
+  void _writeRun(LegacyWordRun run) {
     if (run.inserted) _revisionStart('ins', run);
     if (run.deleted) _revisionStart('del', run);
     _xml.add('<w:r><w:rPr>');
@@ -333,8 +371,16 @@ class _StructuredWordWriter {
   void _section(LegacyWordSection section) {
     final breakBefore =
         _sectionBreaks[section.startCp] ?? LegacyWordSectionBreak.newPage;
+    _xml.add('<w:sectPr>');
+    final sectionIndex = _sectionIndices[section.startCp] ?? 0;
+    final references = _headerFooters[sectionIndex] ?? const [];
+    for (final reference in references) {
+      _xml.add(
+        '<w:${reference.$1 ? 'header' : 'footer'}Reference w:type="${reference.$2}" r:id="${reference.$3}"/>',
+      );
+    }
     _xml.add(
-      '<w:sectPr><w:type w:val="${switch (breakBefore) {
+      '<w:type w:val="${switch (breakBefore) {
         LegacyWordSectionBreak.continuous => 'continuous',
         LegacyWordSectionBreak.newColumn => 'nextColumn',
         LegacyWordSectionBreak.newPage => 'nextPage',
@@ -372,7 +418,12 @@ class _StructuredWordWriter {
     }
     _xml.add('<w:cols w:num="${section.columns}"');
     _optional('space', section.columnsSpaceTwips);
-    _xml.add('/></w:sectPr>');
+    _xml.add('/>');
+    if (section.titlePage) {
+      _xml.add('<w:titlePg/>');
+    }
+    _xml.add('</w:sectPr>');
+    _count('sections');
   }
 
   void _optional(String name, int? value) {
@@ -385,6 +436,9 @@ class _StructuredWordWriter {
   void _countBreak() {
     if (++_breaks > kLegacyWordDocxBreakLimit) _tooComplex();
   }
+
+  void _count(String key, [int amount = 1]) =>
+      counts[key] = (counts[key] ?? 0) + amount;
 
   _BoundedWordXml _styleDefinitions() {
     final xml = _BoundedWordXml();

@@ -101,6 +101,11 @@ class _BinarySource {
     storyLengths = [
       for (final index in [4, 5, 7, 8, 9, 10]) word.u32(64 + index * 4),
     ];
+    totalLength = storyLengths.fold(bodyLength, (sum, count) => sum + count);
+    if (totalLength > 8 * 1024 * 1024 ||
+        storyLengths.any((count) => count > 4 * 1024 * 1024)) {
+      throw const FormatException('Word stories exceed the text size limit.');
+    }
     pairCount = word.u16(152);
     if (pairCount < 34 || pairCount > 183) {
       throw const FormatException('Invalid Word FIB offset count.');
@@ -113,9 +118,16 @@ class _BinarySource {
       throw const FormatException('The selected Word text table is missing.');
     }
     table = _Bytes(selected);
+    final (dopOffset, dopLength) = pair(31);
+    if (dopLength != 0) {
+      if (dopLength < 84) {
+        throw const FormatException('Truncated Word document settings.');
+      }
+      evenAndOddHeaders = (table.u8(dopOffset) & 1) != 0;
+    }
     // An empty main story is valid, including older files whose otherwise
     // unused CLX contains a zero-length CP range. No body data is consulted.
-    if (bodyLength == 0) return;
+    if (totalLength == 0) return;
     final clx = pair(33);
     var cursor = clx.$1;
     final end = cursor + clx.$2;
@@ -183,6 +195,8 @@ class _BinarySource {
   late final _Bytes table;
   late final int version;
   late final int bodyLength;
+  late final int totalLength;
+  bool evenAndOddHeaders = false;
   late final int pairCount;
   late final List<int> storyLengths;
   final pieces = <_Piece>[];
