@@ -22,7 +22,25 @@ The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
 PowerPoint file, editing it and saving it must not silently change or lose
 content.
 
-## State (11 November 2026)
+## State (12 November 2026)
+
+- Pinned fork revision: `84b11839126a9577b6688b6acf80edd3cc2601ee` (fork
+  `main`), which merges both fidelity branches: bookmarks, content controls,
+  exact note-marker placement (completion) and inline fields, tracked-change
+  hyperlinks, replayable structure edits (coverage), plus footnote editing in
+  the notes pane. The SHA-256 guard covers 237 shared files, including the new
+  engine model/serial files, tests, fixtures and oracles.
+- Header/footer page-number content controls (`docPartObj` or bare wrappers)
+  import again; data-carrying header/footer controls still fail closed.
+- Insert > Footnote…/Endnote… prompts for the text and opens the notes pane;
+  View toggles the notes pane. Unedited saves keep imported note-body markers
+  exactly as in the source (none are invented).
+- Local verification at this pin: fork engine 774 tests; host
+  `tool/check_office_fidelity.sh` passes (all exports match goldens/oracles).
+  The editor's page-image goldens are reviewed on Linux CI; six differ on
+  macOS fonts only.
+
+## Earlier state (11 November 2026)
 
 - Pinned fork revision: `431bffa31a4f007d88cbb9b19d59bd5dcd04bdff`.
   The exact SHA-256 guard now covers 158 shared files. This adds the canvas
