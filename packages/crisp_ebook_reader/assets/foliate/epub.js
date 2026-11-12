@@ -785,10 +785,18 @@ class Loader {
     }
     async loadHref(href, base, parents = []) {
         if (isExternal(href)) return href
-        const path = resolveURL(href, base)
+        // CrispCloud: SVG paint servers, symbols and image fragments must keep
+        // their target fragment while the underlying resource becomes a blob.
+        // A fragment-only reference still belongs to the current document.
+        if (href.startsWith('#')) return href
+        const resolved = String(resolveURL(href, base))
+        const hash = resolved.indexOf('#')
+        const path = hash < 0 ? resolved : resolved.slice(0, hash)
+        const fragment = hash < 0 ? '' : resolved.slice(hash)
         const item = this.manifest.find(item => item.href === path)
         if (!item) return href
-        return this.loadItem(item, parents.concat(base))
+        const url = await this.loadItem(item, parents.concat(base))
+        return url ? url + fragment : url
     }
     async loadReplaced(item, parents = []) {
         const { href, mediaType } = item
@@ -840,6 +848,11 @@ class Loader {
             const replace = async (el, attr) => el.setAttribute(attr,
                 await this.loadHref(el.getAttribute(attr), href, parents))
             for (const el of doc.querySelectorAll('link[href]')) await replace(el, 'href')
+            // CrispCloud: SVG 2 uses unprefixed href for image/use/gradient
+            // resources; the xlink-only loop below does not cover those files.
+            for (const el of doc.querySelectorAll('[href]'))
+                if (el.namespaceURI === 'http://www.w3.org/2000/svg' && el.localName !== 'a')
+                    await replace(el, 'href')
             for (const el of doc.querySelectorAll('[src]')) await replace(el, 'src')
             for (const el of doc.querySelectorAll('[poster]')) await replace(el, 'poster')
             for (const el of doc.querySelectorAll('object[data]')) await replace(el, 'data')

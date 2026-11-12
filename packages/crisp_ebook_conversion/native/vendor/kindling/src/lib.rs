@@ -10,8 +10,7 @@
 pub mod comic;
 pub mod epub;
 // CrispCloud runtime: EPUB writing belongs to crisp_ebook, not this converter.
-// The unused upstream EPUB writer required MPL selectors via scraper.
-mod css_structure;
+// The unused upstream EPUB writer and its HTML model are not part of this bridge.
 pub mod extracted;
 pub mod font_injection;
 pub mod huffcdic;

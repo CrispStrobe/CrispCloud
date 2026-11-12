@@ -6,15 +6,19 @@ import 'pdf_file_store.dart';
 const kEbookInputLimitBytes = 64 * 1024 * 1024;
 const kEbookOutputLimitBytes = 128 * 1024 * 1024;
 
-bool isEbookFileName(String name) => const {
-  'epub',
-  'mobi',
-  'azw',
-  'azw3',
-  'fb2',
-  'fbz',
-  'cbz',
-}.contains(name.toLowerCase().split('.').last);
+bool isEbookFileName(String name) {
+  final dot = name.lastIndexOf('.');
+  if (dot <= 0) return false;
+  return const {
+    'epub',
+    'mobi',
+    'azw',
+    'azw3',
+    'fb2',
+    'fbz',
+    'cbz',
+  }.contains(name.substring(dot + 1).toLowerCase());
+}
 
 EbookSaveOutcome ebookSaveOutcome(PdfSaveOutcome outcome) => switch (outcome) {
   PdfSaveOutcome.savedOriginal => EbookSaveOutcome.savedOriginal,

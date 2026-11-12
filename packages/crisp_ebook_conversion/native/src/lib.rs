@@ -484,10 +484,6 @@ fn process(request: Request, cancel: &AtomicBool) -> Result<Value> {
             }
             warnings.extend(check.warnings);
             warnings.push("Kindle export converts the book; layout and navigation can differ from the source EPUB.".into());
-            warnings.push(
-                "CSS checks cover structure and Kindle rules, not full CSS syntax validation."
-                    .into(),
-            );
         }
         "metadata" => {
             read_bounded(&root.join("input.mobi"), request.limits.input_bytes)?;
@@ -656,6 +652,47 @@ pub unsafe extern "C" fn crisp_kindling_free(data: *mut c_char) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct TestDirectory(PathBuf);
+
+    impl TestDirectory {
+        fn new() -> Self {
+            static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+            let path = std::env::temp_dir().join(format!(
+                "crisp-kindling-test-{}-{}",
+                std::process::id(),
+                NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed)
+            ));
+            fs::create_dir(&path).unwrap();
+            Self(path)
+        }
+    }
+
+    impl Drop for TestDirectory {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn css_grammar_errors_are_reported_before_export() {
+        let root = TestDirectory::new();
+        fs::write(
+            root.0.join("book.opf"),
+            r#"<package xmlns="http://www.idpf.org/2007/opf" version="3.0"
+                unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <dc:identifier id="id">test</dc:identifier><dc:title>Test</dc:title>
+                <dc:language>en</dc:language></metadata><manifest>
+                <item id="css" href="style.css" media-type="text/css"/>
+                </manifest><spine/></package>"#,
+        )
+        .unwrap();
+        // Delimiters are balanced, but an empty selector after the comma is
+        // invalid. The former delimiter-only checker accepted this stylesheet.
+        fs::write(root.0.join("style.css"), "p, { color: red; }").unwrap();
+        let book = ExtractedEpub::from_opf_path(&root.0.join("book.opf")).unwrap();
+        assert!(book.css_summary("style.css").unwrap().parse_error.is_some());
+    }
 
     #[test]
     fn paths_cannot_escape_after_percent_decoding() {

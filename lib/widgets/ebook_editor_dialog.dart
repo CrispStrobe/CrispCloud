@@ -28,6 +28,8 @@ import '../services/panel_source_service.dart';
 import '../services/pdf_file_store.dart';
 import 'image_editor_surface.dart';
 import 'ebook_chapter_reader.dart';
+import 'internal_viewer_dialog.dart'
+    show InternalViewerAction, InternalViewerDialog;
 
 Future<void> showEbookEditorDialog(
   BuildContext context,
@@ -163,6 +165,9 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   String get _exportLabel => kIsWeb ? 'Download a copy' : 'Export a copy';
   String get _epubName =>
       '${p.basenameWithoutExtension(_name)}${_converted ? '-converted' : '-copy'}.epub';
+  bool get _canOpenTextFallback =>
+      _bytes != null &&
+      (_document != null || _name.toLowerCase().endsWith('.epub'));
 
   @override
   void initState() {
@@ -310,11 +315,14 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       if (bytes.length > kEbookInputLimitBytes) {
         throw StateError('Ebooks up to 64 MiB can be opened here.');
       }
+      if (!mounted) return;
+      // Retain a bounded read-only copy even if the strict editing model cannot
+      // open an incomplete EPUB. The legacy extractor has its own archive caps.
+      _bytes = Uint8List.fromList(bytes).asUnmodifiableView();
       final document = _name.toLowerCase().endsWith('.epub')
           ? await (widget.documentLoaderOverride?.call(bytes) ?? compute(_openEpub, bytes))
           : null;
       if (!mounted) return;
-      _bytes = Uint8List.fromList(bytes).asUnmodifiableView();
       if (document != null) _installDocument(document);
       _annotationIdentity = _store?.documentId ??
           '${origin?.storageId ?? 'attachment'}:${widget.file.path ?? _name}';
@@ -602,6 +610,34 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         setState(() => _working = false);
         _scheduleMenu();
       }
+    }
+  }
+
+  Future<void> _openTextFallback() async {
+    if (_busy || !_canOpenTextFallback) return;
+    if (_session != null && !_applyDrafts()) return;
+    try {
+      final bytes = _session?.exportBytes() ?? _bytes!;
+      // Open the legacy widget directly: showInternalViewer routes EPUB files
+      // back to this editor. A snapshot also preserves the captured source and
+      // all unsaved drafts while the fallback is on screen.
+      final result = await showDialog<InternalViewerAction>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Dialog.fullscreen(
+          child: InternalViewerDialog(
+            file: widget.file,
+            side: widget.side,
+            bytesOverride: bytes,
+            displayName: _converted ? _epubName : _name,
+          ),
+        ),
+      );
+      if (mounted && result == InternalViewerAction.edit && _editable) {
+        await _setEditing(true);
+      }
+    } catch (error) {
+      _snack(_message(error));
     }
   }
 
@@ -1339,6 +1375,12 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     enabled: !_busy,
                     onSelected: _onMenuSelection,
                     itemBuilder: (_) => [
+                      if (_canOpenTextFallback)
+                        PopupMenuItem(
+                          key: const ValueKey('ebook-text-fallback-menu'),
+                          value: 'textFallback',
+                          child: Text(context.ebookTr('Open text fallback')),
+                        ),
                       if (_document != null)
                         PopupMenuItem(
                           value: 'export',
@@ -1404,7 +1446,16 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                         ? Center(
                             child: Padding(
                               padding: const EdgeInsets.all(24),
-                              child: SelectableText(_error!),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SelectableText(_error!),
+                                  if (_canOpenTextFallback) ...[
+                                    const SizedBox(height: 16),
+                                    _textFallbackButton(),
+                                  ],
+                                ],
+                              ),
                             ),
                           )
                         : _editing
@@ -1422,6 +1473,8 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   void _onMenuSelection(String action) {
     switch (action) {
+      case 'textFallback':
+        unawaited(_openTextFallback());
       case 'export':
         unawaited(_export());
       case 'copy':
@@ -1436,6 +1489,13 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         unawaited(_requestClose());
     }
   }
+
+  Widget _textFallbackButton() => TextButton.icon(
+    key: const ValueKey('ebook-text-fallback'),
+    onPressed: _busy ? null : _openTextFallback,
+    icon: const Icon(Icons.article_outlined),
+    label: Text(context.ebookTr('Open text fallback')),
+  );
 
   Widget _banner(String text, {VoidCallback? onClose}) => Material(
     color: Theme.of(context).colorScheme.secondaryContainer,
@@ -1580,7 +1640,10 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
             ],
           ),
         ),
-        if (_readerError != null) _banner(_readerError!),
+        if (_readerError != null) ...[
+          _banner(_readerError!),
+          if (_canOpenTextFallback) _textFallbackButton(),
+        ],
         if (_searching) const LinearProgressIndicator(),
         if (_searchHits.isNotEmpty)
           SizedBox(
@@ -1637,7 +1700,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     right: 16,
                   ),
                   title: Text(item.label),
-                  onTap: () {
+                  onTap: item.href.isEmpty ? null : () {
                     Navigator.pop(context);
                     unawaited(_readerCommand(() => _reader.goTo(item.href)));
                   },

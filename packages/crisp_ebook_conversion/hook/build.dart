@@ -36,10 +36,9 @@ void main(List<String> arguments) async {
               .listSync(recursive: true, followLinks: false)
               .whereType<File>()) {
         if (p.split(file.path).contains('target')) continue;
-        if (file.path.endsWith('.rs') ||
-            p.basename(file.path).startsWith('Cargo.')) {
-          output.dependencies.add(file.uri);
-        }
+        // include_bytes! inputs (for example Kindling's ordt_greek.bin)
+        // affect the native output just as much as Rust sources do.
+        output.dependencies.add(file.uri);
       }
       final cargoDir = Directory.fromUri(
         input.outputDirectoryShared.resolve('cargo/'),

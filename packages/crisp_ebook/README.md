@@ -42,6 +42,10 @@ mode. The visual helper never silently flattens formatting, IDs or classes.
   and extra fields; the container's real OPF path and unknown resources survive.
 - Changed XML is serialized as XML and keeps unknown nodes/attributes. Changes
   to metadata preserve the publication identifier and unrelated refinements.
+  Structural edits retain the surrounding OPF, XHTML and NCX namespace prefixes.
+- Literal percent signs in resource names and encoded Unicode fragment IDs are
+  preserved through navigation, editing and normalized-publication round trips.
+  Import also keeps nested contents groups and omits empty optional metadata.
 - The saved `mimetype` entry is first, stored, extra-free and has the exact EPUB
   media type. ZIP64 and split/password-encrypted ZIP containers are unsupported.
 - ZIP headers, duplicate/unsafe paths, alternate Unicode names, overlapping
@@ -77,6 +81,10 @@ dart run tool/generate_fixtures.dart /path/to/fixtures
 The generator emits a new book, a book with a nonstandard OPF path and opaque
 extra resources, and an edited copy. It checks exact no-op and unchanged-resource
 preservation before writing these fixtures for external EPUBCheck/reader tests.
+
+The regression suite also checks that chapter deletion preserves landmarks and
+NCX page-list targets, empty contents groups are pruned, and mixed or conflicting
+encryption declarations cannot be mistaken for font obfuscation alone.
 
 Dependencies: `archive`, `xml`, `html`, `path`, `crypto`. Their upstream licenses
 are MIT (`archive`, `xml`, `html`) and BSD-3-Clause (`path`, `crypto`); retain

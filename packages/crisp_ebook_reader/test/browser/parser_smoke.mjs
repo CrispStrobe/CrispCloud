@@ -53,15 +53,27 @@ try {
             }
             if (ext === 'epub') {
                 assert.equal(payload.metadata.title,'Crisp reader fixture')
+                assert.equal(payload.toc[0].label,'Part One')
+                assert.equal(payload.toc[0].href,'','A non-link TOC heading remains a group')
                 assert.equal(payload.toc[0].children.length,1)
+                assert.equal(payload.toc[0].children[0].children[0].label,'Second shelf')
+                assert.deepEqual(payload.readingOrder.map(chapter => chapter.title),['The blue library','Second shelf'])
+                assert(!payload.warnings.some(warning => warning.includes('navigation')))
                 const styles = payload.resources.filter(item => item.mediaType === 'text/css')
                 assert.equal(styles.length,3,'Every nested imported stylesheet is retained')
                 const css = styles.map(item => Buffer.from(item.data,'base64').toString()).join('\n')
                 assert.equal((css.match(/@import url\("asset-/g) ?? []).length,2,'Stylesheets keep relative imported resource links')
                 assert(css.includes('#1f5947'))
                 assert(css.includes('letter-spacing:0.1px'))
+                assert(/url\("asset-[^"]+\.svg#clip"\)/.test(css),'SVG paint-server fragments survive normalization')
+                const symbols = payload.resources.filter(item => item.mediaType === 'image/svg+xml')
+                assert.equal(symbols.length,1,'Fragments share the same packaged SVG resource')
+                assert(/href="asset-[^"]+\.png"/.test(Buffer.from(symbols[0].data,'base64').toString()),'SVG 2 images keep their packaged href')
                 const first = payload.resources.find(item => item.href === 'chapters/0001.xhtml')
-                assert(Buffer.from(first.data,'base64').toString().includes('0002.xhtml#finish'))
+                const chapter = Buffer.from(first.data,'base64').toString()
+                assert(chapter.includes('0002.xhtml#finish'))
+                assert(/href="\.\.\/resources\/asset-[^"]+\.svg#mark"/.test(chapter),'SVG symbol target survives normalization')
+                assert(/<image[^>]+href="\.\.\/resources\/asset-[^"]+\.png"/.test(chapter),'Inline SVG 2 images are retained')
             }
             if (ext === 'cbz') {
                 assert.equal(payload.layout,'pre-paginated')

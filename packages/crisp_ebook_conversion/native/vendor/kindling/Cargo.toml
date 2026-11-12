@@ -26,6 +26,11 @@ memchr = "2"
 quick-xml = "0.41"
 rayon = "1.10"
 regex = "1"
+# Keep upstream CSS grammar checks; its MPL-2.0 selector dependency is approved.
+lightningcss = { version = "=1.0.0-alpha.71", default-features = false }
+# Match Kindling v0.46.2's lockfile. 0.28.3 switched to cssparser 0.37,
+# which is incompatible with this lightningcss release's cssparser 0.33.
+parcel_selectors = "=0.28.2"
 zip = { version = "9.3.0", default-features = false, features = ["deflate-flate2", "deflate-zopfli"] }
 ttf-parser = { version = "0.25.1", default-features = false, features = ["std"] }
 

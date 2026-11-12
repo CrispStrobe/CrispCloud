@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 
 use crate::epub;
 use crate::opf::OPFData;
@@ -14,11 +15,10 @@ use crate::profile::Profile;
 // CssSummary: lifetime-free digest of a parsed CSS stylesheet
 // ---------------------------------------------------------------------------
 
-/// Owned CSS summary using structural validation and text-based Kindle
-/// rule checks. This is not a full CSS grammar implementation.
+/// Owned CSS summary using upstream lightningcss parsing and Kindle rules.
 #[derive(Clone, Debug)]
 pub struct CssSummary {
-    /// `None` if the structural CSS check accepted the file; `Some(msg)` with
+    /// `None` if lightningcss parsed the file successfully; `Some(msg)` with
     /// the error description if parsing failed.
     pub parse_error: Option<String>,
 
@@ -200,12 +200,16 @@ impl Drop for ExtractedEpub {
 // ---------------------------------------------------------------------------
 
 /// Build a `CssSummary` from raw CSS text. Strips a leading BOM and @charset
-/// before the local structural check.
+/// before parsing so lightningcss receives the stylesheet without its prologue.
 fn build_css_summary(raw_text: &str) -> CssSummary {
     let text = strip_css_prologue(raw_text);
 
-    // CrispCloud permissive runtime: structural checks, not full CSS syntax.
-    let parse_error = crate::css_structure::check(text).err();
+    // Keep the upstream parser so balanced but invalid selectors/declarations
+    // are caught before a converted Kindle book is written.
+    let parse_error = match StyleSheet::parse(text, ParserOptions::default()) {
+        Ok(_) => None,
+        Err(error) => Some(error.to_string()),
+    };
 
     let imports = find_imports(text);
     let url_refs = find_url_refs(text);

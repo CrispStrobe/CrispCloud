@@ -83,9 +83,14 @@ export async function exportPublication(book, {filename, sourceFormat}) {
     const mapToc = async items => {
         const result = []
         for (const item of items ?? []) {
-            const href = await resolveLink(String(item.href ?? ''))
-            if (href) result.push({label:textValue(item.label), href, children:await mapToc(item.subitems)})
-            else warnings.add('Some navigation entries could not be converted.')
+            const originalHref = String(item.href ?? '')
+            const href = await resolveLink(originalHref)
+            const children = await mapToc(item.subitems)
+            // A span-only EPUB navigation heading groups chapters without
+            // pointing to one. Keep both its label and all converted children.
+            if (href || children.length) result.push({label:textValue(item.label), href:href ?? '', children})
+            if ((!href && originalHref) || (!href && !children.length))
+                warnings.add('Some navigation entries could not be converted.')
         }
         return result
     }
@@ -116,7 +121,10 @@ export async function exportPublication(book, {filename, sourceFormat}) {
     }
     const materialize = async (url, hint) => {
         if (!/^(blob:|data:)/i.test(url)) return null
-        if (urlPaths.has(url)) return urlPaths.get(url)
+        const hash = url.indexOf('#')
+        const fragment = hash < 0 ? '' : url.slice(hash)
+        if (hash >= 0) url = url.slice(0, hash)
+        if (urlPaths.has(url)) return urlPaths.get(url) + fragment
         const response = await fetch(url)
         let bytes = new Uint8Array(await response.arrayBuffer())
         const mediaType = inferType(bytes, response.headers.get('content-type'), hint)
@@ -139,7 +147,7 @@ export async function exportPublication(book, {filename, sourceFormat}) {
         }
         if (mediaType === 'application/octet-stream') warnings.add('A resource has an unknown media type; review the converted book before saving.')
         add(href, mediaType, bytes)
-        return href
+        return href + fragment
     }
     const rewriteDocumentResources = async (doc, folder) => {
         for (const el of doc.querySelectorAll('*')) for (const attr of [...el.attributes]) {
@@ -188,8 +196,15 @@ export async function exportPublication(book, {filename, sourceFormat}) {
         }
         add(chapterPaths[i], 'application/xhtml+xml', new TextEncoder().encode(new XMLSerializer().serializeToString(doc)))
     }
+    const sectionTitles = new Map()
+    const collectTitles = items => { for (const item of items) {
+        const path = item.href.split('#')[0]
+        if (path && item.label && !sectionTitles.has(path)) sectionTitles.set(path, item.label)
+        collectTitles(item.children)
+    } }
+    collectTitles(toc)
     const readingOrder = chapterPaths.map((href, index) => ({href,
-        title: toc.find(item => item.href.split('#')[0] === href)?.label || `Chapter ${index + 1}`,
+        title: sectionTitles.get(href) || `Chapter ${index + 1}`,
         linear: book.sections[index].linear !== 'no'}))
     return {schemaVersion:1, sourceFormat, metadata:metadataOf(book, filename),
         direction:book.dir === 'rtl' ? 'rtl' : 'ltr', layout:book.rendition?.layout === 'pre-paginated' ? 'pre-paginated' : 'reflowable',

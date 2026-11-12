@@ -10,6 +10,7 @@ abstract final class EbookStrings {
     'Read': 'Lesen',
     'Edit': 'Bearbeiten',
     'Read ebook': 'E-Book lesen',
+    'Open text fallback': 'Einfache Textansicht öffnen',
     'Edit ebook': 'E-Book bearbeiten',
     'Save': 'Speichern',
     'Save a copy': 'Kopie speichern',

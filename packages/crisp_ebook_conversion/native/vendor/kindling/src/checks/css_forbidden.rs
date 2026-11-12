@@ -56,12 +56,13 @@ impl Check for CssForbiddenChecks {
             };
             let file = Some(PathBuf::from(href));
 
-            // CrispCloud checks delimiters, comments and quotes here.
-            // Full CSS selector/property grammar is not validated.
+            // R6.13 CSS parse error. lightningcss only returns an `Err` for
+            // hard syntax errors; style-level mistakes survive with
+            // `error_recovery` disabled, which is what we want here.
             if let Some(err) = &summary.parse_error {
                 report.emit_at(
                     "R6.13",
-                    format!("CSS structural error: {}", err),
+                    format!("lightningcss error: {}", err),
                     file.clone(),
                     None,
                 );
@@ -304,28 +305,32 @@ fn normalize_relative_path(path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 
     // ---- R6.13 parse error ----
     //
-    // Pin the local CSS structural checker behavior.
+    // R6.13 detection lives in `CssSummary::parse_error`, which is built by
+    // `ExtractedEpub::css_summary`. These tests pin lightningcss's behavior
+    // for the inputs we rely on so a future bump cannot silently turn a
+    // hard error into a recoverable one.
 
     #[test]
     fn r6_13_valid_css_parses_clean() {
         let css = "body { color: red; } h1 { font-size: 2em; }";
-        assert!(crate::css_structure::check(css).is_ok());
+        assert!(StyleSheet::parse(css, ParserOptions::default()).is_ok());
     }
 
     #[test]
     fn r6_13_garbage_returns_err() {
         // Truly malformed input with no recoverable structure.
         let css = "this is not valid css at all $#@!";
-        assert!(crate::css_structure::check(css).is_err());
+        assert!(StyleSheet::parse(css, ParserOptions::default()).is_err());
     }
 
     #[test]
     fn r6_13_stray_brace_returns_err() {
         let css = "{";
-        assert!(crate::css_structure::check(css).is_err());
+        assert!(StyleSheet::parse(css, ParserOptions::default()).is_err());
     }
 
     #[test]
@@ -333,7 +338,7 @@ mod tests {
         // Lightningcss treats a bare `@media` with no prelude/block as a
         // parse error.
         let css = "@media";
-        assert!(crate::css_structure::check(css).is_err());
+        assert!(StyleSheet::parse(css, ParserOptions::default()).is_err());
     }
 
     // ---- R6.15 @import classifier ----

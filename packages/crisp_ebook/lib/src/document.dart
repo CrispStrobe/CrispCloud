@@ -246,10 +246,11 @@ class EpubDocument {
         ..add(XmlText(importedIdentifier));
     }
     final importedMetadata = _elements(package, 'metadata').first;
-    if (metadata['publisher'] is String) {
+    final importedPublisher = metadata['publisher'];
+    if (importedPublisher is String && importedPublisher.trim().isNotEmpty) {
       importedMetadata.children.add(
         XmlElement(XmlName('publisher', 'dc'), [], [
-          XmlText(metadata['publisher'] as String),
+          XmlText(importedPublisher),
         ]),
       );
     }
@@ -343,6 +344,7 @@ class EpubDocument {
     imported.importWarnings.add(
       'Imported as a new EPUB; the original ${imported.sourceFormat.toUpperCase()} is unchanged.',
     );
+    var tocNodes = 0;
     List<EpubTocEntry> parseToc(List values, int depth) {
       if (depth > 32)
         throw const EpubException(
@@ -350,9 +352,25 @@ class EpubDocument {
           'The imported contents tree is too deep.',
         );
       return values.whereType<Map>().map((item) {
+        if (++tocNodes > limits.maxEntries) {
+          throw const EpubException(
+            'toc_limit',
+            'The imported contents tree is too large.',
+          );
+        }
+        final children = item['children'] is List
+            ? parseToc(item['children'] as List, depth + 1)
+            : <EpubTocEntry>[];
         final href = '${item['href'] ?? ''}';
+        if (href.isEmpty && children.isNotEmpty) {
+          return EpubTocEntry(
+            label: '${item['label'] ?? item['title'] ?? 'Contents'}',
+            href: '',
+            children: children,
+          );
+        }
         final target = _resolveLocal('publication.opf', href);
-        if (target == null || !files.containsKey(target)) {
+        if (href.isEmpty || target == null || !files.containsKey(target)) {
           throw EpubException(
             'invalid_import',
             'An imported contents link has no local resource.',
@@ -363,9 +381,7 @@ class EpubDocument {
           label:
               '${item['label'] ?? item['title'] ?? titles[target] ?? target}',
           href: _archiveHref(target, Uri.parse(href).fragment),
-          children: item['children'] is List
-              ? parseToc(item['children'] as List, depth + 1)
-              : const [],
+          children: children,
         );
       }).toList();
     }
@@ -825,6 +841,7 @@ class EpubDocument {
     _assertStructure();
     _safeArchivePath(resourcePath);
     if (_exists(resourcePath) ||
+        _exists('$resourcePath/') ||
         resourcePath == 'mimetype' ||
         resourcePath.startsWith('META-INF/')) {
       throw EpubException(
@@ -972,10 +989,7 @@ class EpubDocument {
       );
     final entries = _withoutTocPath(toc, chapter.path);
     if (deleteResource) {
-      final refs = _findReferencesTo(
-        chapter.path,
-        excluding: {chapter.path},
-      );
+      final refs = _findReferencesTo(chapter.path, excluding: {chapter.path});
       if (refs.isNotEmpty)
         throw EpubException(
           'referenced_resource',
@@ -1180,7 +1194,9 @@ class EpubDocument {
             ],
             [
               XmlElement(_childName(parent, 'navLabel'), [], [
-                XmlElement(_childName(parent, 'text'), [], [XmlText(entry.label)]),
+                XmlElement(_childName(parent, 'text'), [], [
+                  XmlText(entry.label),
+                ]),
               ]),
               XmlElement(_childName(parent, 'content'), [
                 XmlAttribute(XmlName('src'), _tocRelative(ncxPath!, href)),
@@ -1564,7 +1580,7 @@ class EpubDocument {
                   (target.endsWith('.xhtml') ||
                       target.endsWith('.html') ||
                       target.endsWith('.svg'))) {
-                final fragment = Uri.parse(href).fragment;
+                final fragment = Uri.decodeComponent(Uri.parse(href).fragment);
                 try {
                   final available = targetIds.putIfAbsent(
                     target,
@@ -1779,6 +1795,13 @@ class EpubDocument {
 
   void _put(String p, Uint8List bytes) {
     _safeArchivePath(p);
+    if (_exists('$p/')) {
+      throw EpubException(
+        'duplicate_path',
+        'A directory already uses this resource path.',
+        path: p,
+      );
+    }
     if (bytes.length > limits.maxEntryBytes)
       throw EpubException(
         'entry_limit',
@@ -1846,11 +1869,11 @@ class EpubDocument {
 
   String _unusedPath(String desired) {
     desired = path.posix.normalize(desired);
-    if (!_exists(desired)) return desired;
+    if (!_exists(desired) && !_exists('$desired/')) return desired;
     final extension = path.posix.extension(desired);
     final stem = desired.substring(0, desired.length - extension.length);
     var i = 2;
-    while (_exists('$stem-$i$extension')) {
+    while (_exists('$stem-$i$extension') || _exists('$stem-$i$extension/')) {
       i++;
     }
     return '$stem-$i$extension';
@@ -1894,21 +1917,30 @@ class EpubDocument {
         // The TOC will be rewritten after deletion, but landmarks, page lists
         // and other links in the same navigation files must remain valid.
         final rewritten = resource.path == _navigationPath
-            ? _elements(document, 'nav').where(
-                (element) => _attribute(element, 'type')
-                    .split(RegExp(r'\s+')).contains('toc'),
-              ).firstOrNull
+            ? _elements(document, 'nav')
+                  .where(
+                    (element) => _attribute(
+                      element,
+                      'type',
+                    ).split(RegExp(r'\s+')).contains('toc'),
+                  )
+                  .firstOrNull
             : resource.path == _ncxPath
             ? _elements(document, 'navMap').firstOrNull
             : null;
         values = document.descendants
             .whereType<XmlElement>()
-            .where((element) => rewritten == null ||
-                (element != rewritten &&
-                    !element.ancestors.contains(rewritten)))
+            .where(
+              (element) =>
+                  rewritten == null ||
+                  (element != rewritten &&
+                      !element.ancestors.contains(rewritten)),
+            )
             .expand((element) => element.attributes)
-            .where((attribute) =>
-                {'src', 'href', 'poster'}.contains(attribute.name.local))
+            .where(
+              (attribute) =>
+                  {'src', 'href', 'poster'}.contains(attribute.name.local),
+            )
             .map((attribute) => attribute.value);
       }
       if (values.any((href) => _resolveLocal(resource.path, href) == target))
@@ -2032,6 +2064,15 @@ String? _resolveLocal(String base, String href) {
     );
   }
   if (uri.hasScheme || uri.hasAuthority) return null;
+  try {
+    Uri.decodeComponent(uri.fragment);
+  } on FormatException {
+    throw EpubException(
+      'invalid_reference',
+      'A resource fragment contains invalid UTF-8 escaping.',
+      path: href,
+    );
+  }
   if (uri.hasAbsolutePath || uri.query.isNotEmpty)
     throw EpubException(
       'unsafe_reference',
@@ -2055,17 +2096,25 @@ String? _resolveLocal(String base, String href) {
   return _safeArchivePath(resolved);
 }
 
-String _encodedPath(String p) => Uri(path: p).toString();
-String _archiveHref(String p, String fragment) =>
-    Uri(path: p, fragment: fragment.isEmpty ? null : fragment).toString();
+// pathSegments encodes a literal percent in ZIP names; Uri(path: ...) keeps
+// percent escapes and would silently reinterpret a name such as chapter%20one.
+String _encodedPath(String p) => Uri(pathSegments: p.split('/')).toString();
+String _archiveHref(String p, String fragment) => Uri(
+  pathSegments: p.split('/'),
+  fragment: fragment.isEmpty ? null : fragment,
+).toString();
 String _relativeHref(String base, String p) => Uri(
-  path: path.posix.relative(p, from: path.posix.dirname(base)),
+  pathSegments: path.posix
+      .relative(p, from: path.posix.dirname(base))
+      .split('/'),
 ).toString();
 String _tocRelative(String base, String href) {
   final uri = Uri.parse(href);
   final p = _resolveLocal('book.opf', href)!;
   return Uri(
-    path: path.posix.relative(p, from: path.posix.dirname(base)),
+    pathSegments: path.posix
+        .relative(p, from: path.posix.dirname(base))
+        .split('/'),
     fragment: uri.fragment.isEmpty ? null : uri.fragment,
   ).toString();
 }

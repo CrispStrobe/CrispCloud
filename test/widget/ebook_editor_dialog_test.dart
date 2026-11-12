@@ -8,6 +8,7 @@ import 'package:crisp_cloud/services/ebook_editor_menu.dart';
 import 'package:crisp_cloud/services/ebook_file_store.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/widgets/ebook_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_ebook/crisp_ebook.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +54,8 @@ Future<ProviderContainer> _open(
   WidgetTester tester,
   _Store store, {
   EbookDeviceExporter? exporter,
+  EbookDocumentLoader? documentLoader,
+  bool expectDocument = true,
 }) async {
   tester.view.physicalSize = const Size(1200, 900);
   tester.view.devicePixelRatio = 1;
@@ -77,8 +80,8 @@ Future<ProviderContainer> _open(
                     startEditing: true,
                     storeOverride: EbookFileStore(store),
                     deviceExporterOverride: exporter,
-                    documentLoaderOverride: (bytes) async =>
-                        EpubDocument.open(bytes),
+                    documentLoaderOverride: documentLoader ??
+                        (bytes) async => EpubDocument.open(bytes),
                     readerBuilderOverride: (_, _, _, _) =>
                         const Text('Reader preview'),
                   ),
@@ -94,7 +97,7 @@ Future<ProviderContainer> _open(
   await tester.tap(find.text('Open book'));
   await tester.pumpAndSettle();
   expect(find.byType(EbookEditorDialog), findsOneWidget);
-  expect(find.text('Original'), findsOneWidget);
+  if (expectDocument) expect(find.text('Original'), findsOneWidget);
   return container;
 }
 
@@ -122,6 +125,9 @@ void main() {
     }
     for (final name in [
       'README',
+      'epub',
+      'mobi',
+      '.epub',
       'book.epub.zip',
       'book.mobi.',
       'book.kfx',
@@ -225,5 +231,52 @@ void main() {
     await tester.tap(_close);
     await tester.pumpAndSettle();
     expect(container.read(ebookEditorMenuProvider), isNull);
+  });
+
+  testWidgets('legacy fallback previews drafts without writing or rerouting', (
+    tester,
+  ) async {
+    final store = _Store();
+    await _open(tester, store);
+    await tester.enterText(_titleField, 'Unsaved fallback title');
+    await tester.pump();
+    await tester.tap(find.byType(PopupMenuButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('ebook-text-fallback-menu')));
+    await tester.pumpAndSettle();
+    final fallback = tester.widget<InternalViewerDialog>(
+      find.byType(InternalViewerDialog),
+    );
+    expect(fallback.displayName, 'original.epub');
+    expect(EpubDocument.open(fallback.bytesOverride!).title,
+        'Unsaved fallback title');
+    expect(store.writes, isEmpty);
+    Navigator.of(tester.element(find.byType(InternalViewerDialog))).pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(InternalViewerDialog), findsNothing);
+    expect(find.text('* original.epub'), findsOneWidget);
+    expect(tester.widget<TextField>(_titleField).controller!.text,
+        'Unsaved fallback title');
+  });
+
+  testWidgets('strict package load failure keeps the text fallback available', (
+    tester,
+  ) async {
+    final store = _Store();
+    await _open(
+      tester,
+      store,
+      documentLoader: (_) async => throw StateError('Strict package failure'),
+      expectDocument: false,
+    );
+    expect(find.text('Strict package failure'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('ebook-text-fallback')));
+    await tester.pumpAndSettle();
+    final fallback = tester.widget<InternalViewerDialog>(
+      find.byType(InternalViewerDialog),
+    );
+    expect(fallback.bytesOverride, orderedEquals(store.input));
+    expect(store.writes, isEmpty);
+    expect(find.text('Strict package failure'), findsNothing);
   });
 }
