@@ -1,5 +1,11 @@
 ## 0.1.0-dev.1
 
+- Preserve bounded solid-shape background-color context, independent OfficeArt
+  group use bits and explicit layout-in-cell settings. Retain zero-count
+  symmetric-curve editing hints without claiming native tangent editing.
+- Exclude the documented textbox range separator while retaining empty content
+  and intentional blank paragraphs in main and header stories. Require all
+  fourteen boundary cases and the retained native shape input in the schema gate.
 - Reconcile saved continuation branches and retain complete versioned RGB,
   structural, schema and repeated-native-import receipts. Build the independent
   Open XML SDK gate from pinned source/dependencies with exact output coverage.

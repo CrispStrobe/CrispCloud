@@ -3379,12 +3379,9 @@ impl InternxtNativeClient {
                 let count = values.len();
                 for item in values {
                     all.push(NativeItem {
-                        name: item
-                            .get("plainName")
-                            .or_else(|| item.get("name"))
-                            .and_then(|value| value.as_str())
-                            .unwrap_or("?")
-                            .to_owned(),
+                        // Trash uses the same split name/extension metadata as
+                        // live listings, while folders retain their plain name.
+                        name: item_name(&item, requested_kind),
                         uuid: item
                             .get("uuid")
                             .or_else(|| item.get("id"))

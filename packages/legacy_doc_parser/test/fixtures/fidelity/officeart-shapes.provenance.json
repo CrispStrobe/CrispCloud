@@ -1,0 +1,25 @@
+{
+  "schema": "legacy-doc-parser/retained-native-fixture",
+  "version": 1,
+  "authored": {
+    "path": "test/fixtures/fidelity/officeart-shapes.docx",
+    "sha256": "f95be8f8d4283f7d2fd4cfc178cbd108300ea99b1be9a14ab1dd56bf1897f53b",
+    "generator": "tool/fidelity/authored_cases.py",
+    "generatorSha256": "5538882699d7b2db1db7b14461a519757d910943ac52c215e55330ac059f37bf",
+    "function": "officeart_shapes",
+    "license": "MPL-2.0"
+  },
+  "nativeDoc": {
+    "path": "test/fixtures/fidelity/officeart-shapes.doc",
+    "sha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+    "bytes": 10240,
+    "origin": "Unmodified native DOC bridge from the sealed 8060ac1 fidelity run, officeart-shapes/bridge/officeart-shapes.doc",
+    "officeVersion": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "exportFilter": "MS Word 97",
+    "originalAuthoredInputUnchanged": true
+  },
+  "scope": "Three directly painted shapes; original and native bridge routes are measured separately. Raw OfficeArt and editing hints remain evidence. Native tangent-editor behavior and exact RGB rendering are not asserted.",
+  "portableProducer": "tool/fidelity/shape_context_probe.dart",
+  "nativeProbe": "tool/fidelity/shape_context_render.py",
+  "nativeReceipt": "doc/evidence/officeart-context-native.json"
+}

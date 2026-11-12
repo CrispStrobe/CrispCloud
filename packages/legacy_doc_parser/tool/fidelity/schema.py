@@ -77,12 +77,20 @@ EXPECTED_CASES = frozenset([
     *(f"note-formats/note-formats-{name}" for name in (
         "east-asian-sepx", "korean-sepx", "rtl-dop", "south-asian-dop", "cyrillic-sepx",
         "none-sepx", "fallback-sepx", "unknown-sepx", "revision")),
+    *(f"media-reviews/{kind}-{state}" for kind in (
+        "inline-picture", "floating-picture", "embedded-object", "editable-shape",
+        "footnote-picture", "footnote-anchor", "endnote-anchor", "comment-anchor",
+    ) for state in ("inserted", "deleted", "overlapping")),
     "reviews/numbering-change", "reviews/numbering-insertion",
     "reviews/listnum-display-change", "section-review",
     "native-inputs/formatting", "native-inputs/linked-textboxes",
     "native-inputs/word14-margin-origin", "native-inputs/word16-page-origin",
     "native-inputs/poi-simple-table2",
     "native-inputs/word16-page-origin-lo-blip-count",
+    "native-inputs/officeart-shapes",
+    *(f"textbox-boundary/textbox-{story}-{kind}" for story in ("main", "header")
+      for kind in ("content", "empty", "leading-blank", "interior-blank",
+                   "trailing-blank", "two-trailing-blanks", "two-content-paragraphs")),
 ])
 PACKAGES = (
     ("DocumentFormat.OpenXml", "3.3.0",
@@ -114,6 +122,7 @@ def source_snapshot(root: Path = ROOT) -> dict:
     for pattern in ("lib/**/*.dart", "test/support/**/*.dart", "tool/fidelity/*.dart",
                     "tool/fidelity/schema.py", "tool/office-validation/*",
                     "test/fixtures/word_native/*.doc", "test/fixtures/fidelity/image-appearance/**/*",
+                    "test/fixtures/fidelity/officeart-shapes.doc",
                     "pubspec.yaml", "pubspec.lock",
                     ".dart_tool/package_config.json"):
         paths.update(path for path in root.glob(pattern) if path.is_file())

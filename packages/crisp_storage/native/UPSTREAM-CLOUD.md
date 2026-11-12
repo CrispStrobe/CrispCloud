@@ -27,3 +27,7 @@ then run `cargo test --locked` here, the bridge tests in `../../rust_cloud`,
 MPL-2.0 is file-level copyleft: these files stay under MPL-2.0 inside
 CrispCloud, their notices must be retained, and modified MPL files must be
 made available in source form. See `docs/STORAGE_ENGINE_ARCHITECTURE.md`.
+
+## Reviewed trash-name backport
+
+The gateway trash-name correction from `CrispStrobe/crisp-cloud-rs` commit `6b61faa8228e3be2eb71d0710975babbc03e5f8e` and its endpoint regressions are applied to the app consumer. Files retain their extension and exact UUID across pagination; folders and extensionless files preserve their names. Existing host transport and dependency patches are retained. This is a protocol metadata backport beyond the historical manifest-only patch list above.

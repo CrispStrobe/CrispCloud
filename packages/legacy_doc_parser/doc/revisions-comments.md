@@ -28,6 +28,40 @@ asserting UTC. Missing authors or invalid dates stay missing and produce the
 revision-metadata limitation. Unsupported pre-wall properties also produce that
 limitation, even when the supported subset can be exported.
 
+## Object and reference revision provenance
+
+Pictures, editable shapes, embedded objects, and note/comment anchors now keep
+separate `insertionRevision` and `deletionRevision` metadata on each
+`LegacyWordMediaPresentation`. Shared media bytes do not share review state.
+Overlapping insertion and deletion can retain different authors, dates, source
+author indices, raw DTTM values, reason codes and save identifiers. Native
+`w:ins`/`w:del` wrappers use their own metadata, and the wrapped run retains
+`w:rsidR`/`w:rsidDel`. An absent or invalid insertion identity cannot borrow the
+deletion identity. The existing `revisionAuthor`/`revisionTime` fields remain a
+compatibility view; public callers without the new fields retain their prior
+fallback behavior. Supplying metadata alone never marks an occurrence edited.
+
+`legacy_word_media_revisions_test.dart` authors binary character records for
+inline/floating pictures, an editable shape, an embedded object, a picture in a
+footnote, and footnote/endnote/comment references. Independent XML projections
+accept or reject the native object or anchor itself in all insertion/deletion
+combinations. The tests separately check immutable source/image bytes, complete
+story content, independent metadata, unique output revision IDs, false flags,
+malformed operands, unknown authors and bounded public save IDs. A footnote
+picture is written into its owning part with its own image relationship.
+The independent schema corpus includes all 24 object/reference and review-state
+combinations; its SDK result is a separate validity gate. Shared-image and
+private-field controls retain distinct occurrence metadata without exposing
+private payloads.
+These checks do not reconstruct moved objects, formatting histories of objects,
+comment range editing, automatic cleanup of unreferenced stories, or arbitrary
+cross-story revision topology. The converter never accepts or rejects the
+source document.
+
+The binary rules are [MS-DOC Character Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/7022285b-9621-42e9-ad4d-4e02c115ef18);
+the native representation follows [InsertedRun](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.insertedrun)
+and [DeletedRun](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.deletedrun).
+
 ## Section formatting revisions
 
 `sprmSWall` captures the supported section properties before subsequent SPRMs

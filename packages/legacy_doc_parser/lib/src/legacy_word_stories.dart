@@ -428,17 +428,22 @@ extension _WordStories on _StructuredWordParser {
     }
     final base = _storyBase(index);
     for (var i = 0; i < plc.count - 1; i++) {
-      final first = base + plc.cps[i], end = base + plc.cps[i + 1];
+      final first = base + plc.cps[i], guardEnd = base + plc.cps[i + 1];
       final reusable = plc.data.u16(i * 22 + 8);
       if (reusable != 0) {
-        if ((reusable & 1) == 0 || end - first != 1) {
+        if ((reusable & 1) == 0 || guardEnd - first != 1) {
           throw const FormatException('Invalid reusable Word textbox.');
         }
         continue; // The text belongs to an unused spare record, not a textbox.
       }
-      if (end - first < 2 || body[end - 1] != 13) {
+      if (guardEnd - first < 2 || body[guardEnd - 1] != 13) {
         throw const FormatException('Invalid Word textbox content range.');
       }
+      // MS-DOC 2.8.32/2.8.23: the final CR separates FTXBXS ranges. It is
+      // outside the editable textbox content, like the header-story guard.
+      // Exclude exactly that character; preceding paragraph marks (including
+      // intentional empty paragraphs) and their formatting remain content.
+      final end = guardEnd - 1;
       final shape = plc.data.u32(i * 22 + 14), count = plc.data.u32(i * 22);
       if (count == 0 || count > 4096 || !byShape.containsKey(shape)) {
         throw const FormatException('Unresolved Word textbox shape reference.');

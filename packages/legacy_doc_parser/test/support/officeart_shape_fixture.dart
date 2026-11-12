@@ -50,6 +50,7 @@ Uint8List officeArtShapeWordFixture({
   List<int> characterProperties = const [],
   Uint8List? rawPropertyRecord,
   (int, int, int, int) anchorBounds = (120, 240, 1560, 960),
+  Map<int, List<int>> extraTablePairs = const {},
 }) {
   final shape = officeArtRecord(0xf004, [
     ...officeArtRecord(
@@ -78,6 +79,7 @@ Uint8List officeArtShapeWordFixture({
   return StructuredWordFixture(
     pieces: const [WordFixturePiece('A\x08B\r')],
     extraTablePairs: {
+      ...extraTablePairs,
       40: drawingAnchor(
         left: anchorBounds.$1,
         top: anchorBounds.$2,

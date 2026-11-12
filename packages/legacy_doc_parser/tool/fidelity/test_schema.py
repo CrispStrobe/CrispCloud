@@ -165,6 +165,18 @@ class SchemaGateTest(unittest.TestCase):
                     if name.startswith("table-width/")}
         self.assertEqual(set(names), required)
 
+    def test_required_media_review_inventory_covers_every_native_occurrence(self):
+        fixture = (schema.ROOT / "test/support/media_revision_fixture.dart").read_text()
+        declaration = re.search(r"const mediaReviewKinds = \[(.*?)\];", fixture, re.S)
+        self.assertIsNotNone(declaration)
+        kinds = re.findall(r"'([^']+)'", declaration.group(1))
+        self.assertEqual(8, len(kinds))
+        self.assertEqual(len(kinds), len(set(kinds)))
+        required = {name.removeprefix("media-reviews/") for name in schema.EXPECTED_CASES
+                    if name.startswith("media-reviews/")}
+        self.assertEqual({f"{kind}-{state}" for kind in kinds
+                          for state in ("inserted", "deleted", "overlapping")}, required)
+
     def test_required_reconciled_inventories_match_literal_case_lists(self):
         for prefix, filename, constant, count in (
             ("table-operations", "table_operations_fixture.dart", "tableOperationsCaseNames", 12),
@@ -180,6 +192,18 @@ class SchemaGateTest(unittest.TestCase):
             required = {name.removeprefix(prefix + "/") for name in schema.EXPECTED_CASES
                         if name.startswith(prefix + "/")}
             self.assertEqual(set(names), required)
+
+    def test_required_textbox_boundaries_include_empty_and_intentional_blanks_in_both_stories(self):
+        fixture = (schema.ROOT / "test/support/textbox_boundary_fixture.dart").read_text()
+        declaration = re.search(r"const textboxBoundaryCases = .*?\{(.*?)\n\};", fixture, re.S)
+        self.assertIsNotNone(declaration)
+        names = re.findall(r"^\s*'([^']+)':", declaration.group(1), re.M)
+        self.assertEqual(7, len(names))
+        self.assertEqual(7, len(set(names)))
+        required = {f"textbox-boundary/textbox-{story}-{name}"
+                    for story in ("main", "header") for name in names}
+        self.assertEqual(required, {name for name in schema.EXPECTED_CASES
+                                    if name.startswith("textbox-boundary/")})
 
     def test_corpus_rejects_unregistered_inputs_aliases_and_escape(self):
         directory, manifest = self.make_corpus()

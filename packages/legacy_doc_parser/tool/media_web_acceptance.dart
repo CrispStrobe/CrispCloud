@@ -12,6 +12,7 @@ import 'package:xml/xml.dart';
 import '../test/support/media_word_fixture.dart';
 import '../test/support/metafile_fixture.dart';
 import '../test/support/officeart_shape_fixture.dart';
+import '../test/support/structured_word_fixture.dart';
 import 'fidelity/metafile_records.dart';
 
 void main() => print(
@@ -37,6 +38,67 @@ Map<String, Object> verifyMediaWebAcceptance() {
   }
 
   final recordCounts = <String, int>{};
+  final arc = parseLegacyWordMetafile(
+    emfFixture(
+      records: [
+        emfRecord(45, [
+          for (final value in [-80, -40, 80, 40, 60, 20, -60, -20])
+            ...wordU32(value),
+        ]),
+      ],
+    ),
+    format: LegacyWordImageFormat.emf,
+  );
+  check(
+    XmlDocument.parse(
+          arc.previewSvg!,
+        ).findAllElements('path').single.getAttribute('d') ==
+        'M66.564024 22.188008A80 40 0 0 0 -66.564024 -22.188008',
+    'oblique elliptical radial projection under VM and JavaScript',
+  );
+  final arcto = parseLegacyWordMetafile(
+    emfFixture(
+      records: [
+        emfRecord(57, wordU32(2)),
+        emfRecord(27, [...wordU32(3), ...wordU32(4)]),
+        emfRecord(55, [
+          for (final value in [20, 10, 180, 90, 420, 50, 100, -110])
+            ...wordU32(value),
+        ]),
+        emfRecord(54, [...wordU32(6), ...wordU32(7)]),
+      ],
+    ),
+    format: LegacyWordImageFormat.emf,
+  );
+  final arcPaths = XmlDocument.parse(arcto.previewSvg!)
+      .findAllElements('path')
+      .map((element) => element.getAttribute('d'))
+      .toList();
+  check(
+    arcPaths.length == 2 &&
+        arcPaths.first == 'M3 4L180 50A80 40 0 1 1 100 10' &&
+        arcPaths.last == 'M100 10L6 7',
+    'clockwise ArcTo projected endpoint under VM and JavaScript',
+  );
+  final wmfPie = parseLegacyWordMetafile(
+    wmfFixture(
+      placeable: true,
+      records: [
+        wmfRecord(0x081a, [
+          for (final value in [-110, 100, 50, 420, 90, 180, 10, 20])
+            ...wordU16(value),
+        ]),
+      ],
+    ),
+    format: LegacyWordImageFormat.wmf,
+  );
+  check(
+    XmlDocument.parse(
+          wmfPie.previewSvg!,
+        ).findAllElements('path').single.getAttribute('d') ==
+        'M180 50A80 40 0 0 0 100 10L100 50Z',
+    'WMF radial order and pie closure under VM and JavaScript',
+  );
   for (final (format, raw) in [
     (LegacyWordImageFormat.emf, authoredEmfVectors()),
     (LegacyWordImageFormat.wmf, authoredWmfVectors()),
@@ -164,10 +226,23 @@ Map<String, Object> verifyMediaWebAcceptance() {
     type: 0,
     values: {4: -15 * 65536},
     rawPropertyRecord: shapePropertyRecord(
-      values: {4: -15 * 65536},
+      values: {
+        4: -15 * 65536,
+        0x03bf: 0x80000000,
+        0x0183: 0x08000001,
+        0x01c2: 0x08000002,
+      },
       complex: {
         0x145: vertices,
-        0x146: shapeSegments([0x4000, 0x0001, 0x2001, 0x6001, 0x8000]),
+        0x146: shapeSegments([
+          0x4000,
+          0xb300,
+          0x0001,
+          0x2001,
+          0xb300,
+          0x6001,
+          0x8000,
+        ]),
       },
       complexLengths: {0x145: vertices.length - 6},
     ),
@@ -178,6 +253,13 @@ Map<String, Object> verifyMediaWebAcceptance() {
     shape.geometry!.path.first.points.single.x == -10 &&
         shape.unsupportedProperties.isEmpty,
     'full-width geometry and signed coordinates',
+  );
+  check(
+    shape.groupShapeBooleanProperties == 0x80000000 &&
+        shape.layoutInCell == false &&
+        shape.geometry!.editingHints.length == 2 &&
+        shape.geometry!.editingHints.last.vertexIndex == 4,
+    'unsigned high use bit, inactive paint colors and bounded editing hints',
   );
   final converted = convertLegacyWordDocument(document);
   final zip = ZipDecoder().decodeBytes(converted.bytes);
@@ -201,6 +283,31 @@ Map<String, Object> verifyMediaWebAcceptance() {
     converted.preservedCounts['editableShapes'] == 1,
     'editable shape preservation report',
   );
+  check(
+    vml.getAttribute(
+          'allowincell',
+          namespace: 'urn:schemas-microsoft-com:office:office',
+        ) ==
+        'f',
+    'explicit false cell-layout use bit survives VML export',
+  );
+  final inheritedHidden = parseLegacyWordDocument(
+    officeArtShapeWordFixture(
+      defaults: {0x03bf: 0x00020002},
+      values: {0x03bf: 0x80000000},
+    ),
+  );
+  check(
+    inheritedHidden.media.drawings.single.shape!.groupShapeBooleanProperties ==
+            0x80020002 &&
+        inheritedHidden.media.drawings.single.shape!.unsupportedProperties
+            .contains(0x03bf) &&
+        convertLegacyWordDocument(
+              inheritedHidden,
+            ).preservedCounts['editableShapes'] ==
+            null,
+    'layout use-bit merge cannot erase inherited hidden semantics',
+  );
   final imageResult = convertLegacyWord(
     floatingPictureWordFixture(
       anchorBounds: (-120, 240, 600, 1680),
@@ -209,6 +316,7 @@ Map<String, Object> verifyMediaWebAcceptance() {
         4: -90 * 65536,
         0x0390: 1,
         0x0392: 1,
+        0x03bf: 0x80000000,
         0x01ff: 0x80008,
         0x01c0: 0x332211,
         0x01cb: 25400,
@@ -230,6 +338,11 @@ Map<String, Object> verifyMediaWebAcceptance() {
     ),
   );
   final imageTransform = imageXml.findAllElements('a:xfrm').single;
+  check(
+    imageXml.findAllElements('wp:anchor').single.getAttribute('layoutInCell') ==
+        '0',
+    'DrawingML honors the high-bit explicit false cell-layout flag',
+  );
   check(
     imageTransform.getAttribute('rot') == '16200000' &&
         imageTransform.getAttribute('flipH') == '1' &&

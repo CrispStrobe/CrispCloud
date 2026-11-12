@@ -39,7 +39,18 @@ BLIPs still follow the earlier opaque-preservation path.
 `parseLegacyWordMetafile` exposes generated SVG for a deliberately bounded
 subset of EMF and WMF. It supports solid/null pens and brushes, lines,
 polygons, rectangles, rounded rectangles, ellipses, and EMF cubic Beziers,
-including 16-bit point records. It follows object handles, saved device
+including 16-bit point records. Elliptical arcs, chords and pie wedges retain
+the projection of source radials onto the ellipse, separate fill and stroke,
+and the EMF clockwise/counterclockwise direction. `EMR_ARCTO` alone connects
+from and updates the current drawing point. Arc direction survives saved
+device contexts. Identical arc/chord radials become a full ellipse using two
+SVG arc segments; ordinary pie wedges close through the ellipse center.
+Coincident pie radials, unequal collinear radials, center-point radials and
+degenerate/reversed ellipse boxes remain unavailable previews because their
+zero/full-sweep or outline behavior is not asserted by this subset. The exact
+native metafile is still preserved. Independent binary tests and the native
+arc probe described below cover these contracts.
+It follows object handles, saved device
 contexts, window/viewport transforms, and EMF affine world transforms.
 Compound `EMR_POLYPOLYGON` / `EMR_POLYPOLYGON16`,
 `EMR_POLYPOLYLINE` / `EMR_POLYPOLYLINE16`, and WMF `META_POLYPOLYGON`
@@ -90,6 +101,28 @@ python3 tool/fidelity/metafile_render.py --office /path/to/soffice \
   --dart /path/to/dart --output build/metafile-render
 ```
 
+`metafile_arcs_render.py` checks fifteen independently authored EMF/WMF arc,
+chord, pie and ArcTo controls. Each metafile includes a distinct reference
+rectangle: geometry is measured relative to that frame, not fitted to the
+observed arc. Fixed interior and outline samples distinguish sweep direction,
+the chord's secant from the pie's radial closure, and unfilled arcs from filled
+regions. The two ArcTo cases additionally require the following line to begin
+at the projected ellipse endpoint, rather than the original radial input.
+All fifteen native and SVG controls pass on the recorded LibreOffice build.
+The geometric tolerance is 2.1 source units on a 200 by 100 canvas, accounting
+for native inclusive-edge/device quantization; these are not pixel goldens.
+The probe retains exact input/output hashes, native PDF/text/raster evidence,
+and checks all generated input bytes remain unchanged. Its portable adversarial
+tests reject reversed sweeps, lost/invented fills, incorrect current points,
+missing samples and geometry that uses the radial endpoint as the arc endpoint.
+The VM/JavaScript acceptance path checks oblique radial projection, clockwise
+ArcTo and WMF pie coordinates separately.
+
+```
+python3 tool/fidelity/metafile_arcs_render.py --office /path/to/soffice \
+  --dart /path/to/dart --output build/metafile-arcs
+```
+
 ## OfficeArt shape and text-box model
 
 Referenced pictures and drawings now expose `shape`, a resolved typed subset
@@ -105,10 +138,17 @@ connected by straight segments, cubic Beziers, moves and closes. Nonempty segmen
 `shapePath`, as the binary specification requires. Vertex counts and segment
 consumption are checked before constructing paths. The geometry subset does
 not guess unsigned packed arc coordinates, unresolved guide formulas, adjusted
-presets or escape/client-escape segments. These remain retained evidence with
+presets or geometric escape/client-escape segments. These remain retained evidence with
 an unsupported-drawing diagnostic. The [packed vertex contract](packed-vertices.md)
 records the exact array boundary, independent source implementations and native
 full-width/packed DOC comparison.
+
+The bounded zero-count `SymmetricCurve` editing hint is retained separately from
+explicit rendered segments. Inactive solid-paint background colors and explicit
+cell-layout flags no longer suppress otherwise supported shapes. Their strict
+context checks, independent Boolean inheritance, native evidence and remaining
+tangent-editor/pixel limitations are recorded in
+[officeart-context.md](officeart-context.md).
 
 The model also exposes direct RGB fill/line colors and opacity, line width,
 dash/join/cap identifiers, and offset-shadow properties. Palette/system colors,
@@ -281,3 +321,10 @@ are capped at 16,384 elements, with 100,000 aggregate geometry points.
 - [MS-WMF PolyPolygon object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/cf1ac7c0-749d-4678-b32c-6f68d2a5f268)
 - [GDI polygon fill modes](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpolyfillmode)
 - [MS-WMF object selection](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/59b4b6f3-40db-4685-8eda-3be3e4196fb2)
+- [MS-EMF Arc](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/3e148f19-7e75-43aa-9259-fda562f60315)
+- [MS-EMF Chord](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/b442d2fb-f92b-4103-aa7d-44f864f719d5)
+- [MS-EMF Pie](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c326f6b2-ae7e-447f-b8dc-02c703f054c3)
+- [MS-EMF arc direction](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/83a955e6-13b8-4720-a521-542e3dd91cba)
+- [GDI ArcTo current-position behavior](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-arcto)
+- [MS-WMF Arc parameter order](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/742097b4-5879-4c36-b57e-77e7cc152253)
+- [MS-WMF Pie parameter order](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/b3f3e55f-6f69-4678-87ea-e6feb6af6eeb)

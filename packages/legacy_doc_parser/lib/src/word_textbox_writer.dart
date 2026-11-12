@@ -46,6 +46,9 @@ extension _WordTextboxes on _StructuredWordWriter {
     }
     _xml.add('"');
     _textboxPaint(shape);
+    if (shape?.layoutInCell case final layout?) {
+      _xml.add(' o:allowincell="${layout ? 't' : 'f'}"');
+    }
     _xml.add('><v:textbox');
     final insets = [
       text?.insetLeftEmu,

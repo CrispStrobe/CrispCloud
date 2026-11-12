@@ -13,6 +13,7 @@ import 'legacy_word_layout_model.dart';
 
 export 'legacy_word_compatibility.dart';
 export 'legacy_word_media_model.dart';
+export 'legacy_word_revision_model.dart';
 export 'legacy_word_layout_model.dart';
 
 part 'legacy_word_table_model.dart';
@@ -672,40 +673,6 @@ class LegacyWordRun {
   final LegacyWordRevisionInfo? deletionRevision;
   final LegacyWordCharacterFormattingRevision? formattingRevision;
   final int? formattingSaveId;
-}
-
-/// Source revision metadata. A missing name/date remains missing; the parser
-/// never invents an author or converts the source wall-clock timestamp to UTC.
-class LegacyWordRevisionInfo {
-  const LegacyWordRevisionInfo({
-    this.author,
-    this.time,
-    this.authorIndex,
-    this.rawDate,
-    this.saveId,
-    this.reason,
-  });
-  final String? author;
-  final DateTime? time;
-  final int? authorIndex;
-  final int? rawDate;
-  final int? saveId;
-
-  /// Original AutoFormat reason code, when recorded in the binary source.
-  final int? reason;
-
-  @override
-  bool operator ==(Object other) =>
-      other is LegacyWordRevisionInfo &&
-      author == other.author &&
-      time == other.time &&
-      authorIndex == other.authorIndex &&
-      rawDate == other.rawDate &&
-      saveId == other.saveId &&
-      reason == other.reason;
-  @override
-  int get hashCode =>
-      Object.hash(author, time, authorIndex, rawDate, saveId, reason);
 }
 
 class LegacyWordCharacterFormattingRevision {

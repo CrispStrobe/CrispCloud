@@ -3,7 +3,9 @@
 import 'dart:typed_data';
 
 import 'legacy_word_officeart_model.dart';
+import 'legacy_word_revision_model.dart';
 export 'legacy_word_officeart_model.dart';
+export 'legacy_word_revision_model.dart';
 
 /// Resolved visibility and tracked-change state at a media reference's CP.
 /// Keeping this separate from the binary asset prevents reuse of a picture's
@@ -15,12 +17,20 @@ class LegacyWordMediaPresentation {
     this.deleted = false,
     this.revisionAuthor,
     this.revisionTime,
+    this.insertionRevision,
+    this.deletionRevision,
   });
   final bool hidden;
   final bool inserted;
   final bool deleted;
   final String? revisionAuthor;
   final DateTime? revisionTime;
+
+  /// Separate provenance for insertion and deletion of this occurrence.
+  /// Neither a shared asset nor the legacy compatibility author/date may
+  /// replace the independently recorded metadata of overlapping revisions.
+  final LegacyWordRevisionInfo? insertionRevision;
+  final LegacyWordRevisionInfo? deletionRevision;
 }
 
 /// Resolved character-property span. CPs are document-global UTF-16 positions.

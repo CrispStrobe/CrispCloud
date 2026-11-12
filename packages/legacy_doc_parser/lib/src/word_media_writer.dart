@@ -380,7 +380,8 @@ extension _WordMedia on _StructuredWordWriter {
     _xml.add(
       '<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" '
       'simplePos="0" relativeHeight="$id" behindDoc="${drawing.behindText ? 1 : 0}" '
-      'locked="${drawing.anchorLocked ? 1 : 0}" layoutInCell="1" allowOverlap="1">'
+      'locked="${drawing.anchorLocked ? 1 : 0}" '
+      'layoutInCell="${drawing.shape?.layoutInCell == false ? 0 : 1}" allowOverlap="1">'
       '<wp:simplePos x="0" y="0"/>',
     );
     _officeArtDrawingPosition(
@@ -596,16 +597,24 @@ extension _WordMedia on _StructuredWordWriter {
   }
 
   void _mediaStart(LegacyWordMediaPresentation presentation) {
-    final metadata = LegacyWordRun(
-      startCp: 0,
-      endCp: 0,
-      text: '',
-      revisionAuthor: presentation.revisionAuthor,
-      revisionTime: presentation.revisionTime,
+    final fallback = LegacyWordRevisionInfo(
+      author: presentation.revisionAuthor,
+      time: presentation.revisionTime,
     );
-    if (presentation.inserted) _revisionStart('ins', metadata);
-    if (presentation.deleted) _revisionStart('del', metadata);
-    _xml.add('<w:r>');
+    if (presentation.inserted) {
+      _revisionElementStart('ins', presentation.insertionRevision ?? fallback);
+    }
+    if (presentation.deleted) {
+      _revisionElementStart('del', presentation.deletionRevision ?? fallback);
+    }
+    _xml.add('<w:r');
+    if (presentation.inserted) {
+      _revisionSaveAttribute('rsidR', presentation.insertionRevision?.saveId);
+    }
+    if (presentation.deleted) {
+      _revisionSaveAttribute('rsidDel', presentation.deletionRevision?.saveId);
+    }
+    _xml.add('>');
     if (presentation.hidden) _xml.add('<w:rPr><w:vanish/></w:rPr>');
   }
 
@@ -747,6 +756,10 @@ Map<String, Object?> _drawingMetadata(LegacyWordDrawing drawing) => {
   ],
   'horizontalOrigin': drawing.horizontalOrigin,
   'verticalOrigin': drawing.verticalOrigin,
+  if (drawing.shape?.groupShapeBooleanProperties case final group?) ...{
+    'groupShapeBooleanProperties': group,
+    'layoutInCell': drawing.shape!.layoutInCell,
+  },
   if (drawing.shape?.position case final position?)
     'officeArtPosition': {
       'horizontalMode': position.horizontalMode,
