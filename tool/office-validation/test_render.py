@@ -192,16 +192,50 @@ class HostPicturePixelTests(unittest.TestCase):
                 render.picture_pixel_evidence('bounds', width, height, bytes(altered), self.geometry(), (100, 72))
 
     def test_only_subpixel_page_rounding_accepts_an_extra_raster_row_or_column(self):
-        self.assertEqual(render.picture_raster_size('bounds', [100.006, 72]), [101, 72])
+        self.assertEqual(render.picture_raster_size('bounds', [100.006, 72.0094]), [101, 73])
         self.assertEqual(render.picture_raster_size('landscape', [720, 405.014]), [720, 406])
-        for size in ([100, 73], [100.1, 72], [99, 72], [100, float('nan')],
+        for size in ([100, 60], [100, 73], [100.1, 72], [99, 72], [100, float('nan')],
                      [100, float('inf')], [True, 72], [100], None):
             with self.subTest(size=size), self.assertRaises(render.FidelityError):
                 render.picture_raster_size('bounds', size)
         # Supplying the correct point dimensions does not excuse a raster at
         # the wrong DPI or with different dimensions.
         with self.assertRaises(render.FidelityError):
-            render.picture_pixel_evidence('bounds', *self.raster(), self.geometry(), (100.006, 72))
+            render.picture_pixel_evidence('bounds', *self.raster(), self.geometry(), (100.006, 72.0094))
+
+    def test_bounds_package_rejects_previous_subminimum_canvas_and_vertical_offset(self):
+        # Keep these literal native expectations independent of the renderer.
+        # The old 60-point slide is below OOXML's 914400 EMU size minimum;
+        # its y=6 offset is also stale when the corrected slide is 72 points.
+        expected = {'page_emu': [1270000, 914400],
+                    'rect_emu': [127000, 91440, 1143000, 571500]}
+        self.assertEqual(self.geometry(), expected)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'picture.pptx'
+            self.package(path, geometry=expected)
+            self.assertEqual(render.picture_package_geometry(path, 'bounds'), expected)
+            for changed in ('old_canvas', 'old_y', 'old_both'):
+                geometry = copy.deepcopy(expected)
+                if changed in ('old_canvas', 'old_both'):
+                    geometry['page_emu'][1] = 762000
+                if changed in ('old_y', 'old_both'):
+                    geometry['rect_emu'][1] = 76200
+                self.package(path, geometry=geometry)
+                with self.subTest(changed=changed), self.assertRaises(render.FidelityError):
+                    render.picture_package_geometry(path, 'bounds')
+
+    def test_bounds_package_rejects_one_emu_overflow_invisible_in_the_raster(self):
+        # Even a one-EMU extent change must fail: both pictures rasterize to
+        # the same clipped pixels, so the package check must remain exact.
+        self.assertEqual(self.raster(rectangle=(10, 7.2, 90 + 1 / 12700, 45)),
+                         self.raster())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'picture.pptx'
+            geometry = self.geometry()
+            geometry['rect_emu'][2] += 1
+            self.package(path, geometry=geometry)
+            with self.assertRaises(render.FidelityError):
+                render.picture_package_geometry(path, 'bounds')
 
     def test_package_geometry_rejects_hidden_overflow_even_when_visible_pixels_match(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -22,9 +22,15 @@ check the independently authored input's dimensions.
 ## Shared Quds source
 
 The guarded sync pins **417 managed files** to Quds commit
-`2d6529e52f389e8c491ce75331d9efe6bd59a821`. Every existing managed hash and changed
+`1d19150ff35e95374fa3c11e0b6a43d187d24024`. Every existing managed hash and changed
 unpinned file was checked before applying the update. No host customization was
 overwritten. The manifest is the authoritative exact commit and file inventory.
+
+The final pin also corrects the shared native bounds oracle to the legal
+100 × 72 point host fixture and its exact `(10, 7.2, 90, 45)` picture rectangle.
+All 56 renderer controls and the three focused native saves pass; the oracle
+continues to reject clipped overflow, including a one-EMU extent change.
+The earlier failed SDK attempt and interrupted rerun remain preserved as such.
 
 The shared implementation includes both recovered table-width/Unicode-wrapping
 work and the later merged-cell, font-metric, custom-tab, style and history fixes.

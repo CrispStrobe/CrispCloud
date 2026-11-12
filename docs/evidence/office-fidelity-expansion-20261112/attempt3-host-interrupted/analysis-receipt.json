@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-12T15:25:49.390664+00:00",
+  "app_commit": "a915cdaa61ddf19b868d52488d9018d261a60ebf",
+  "source_commit": "2d6529e52f389e8c491ce75331d9efe6bd59a821",
+  "command": [
+    "flutter",
+    "analyze",
+    "--no-pub",
+    "lib/services/office_picture.dart",
+    "lib/widgets/office_editor_dialogs.dart",
+    "lib/widgets/office_editor_ribbon.dart",
+    "test/widget/office_font_fidelity_test.dart",
+    "test/widget/office_picture_fidelity_test.dart",
+    "test/widget/office_save_fidelity_test.dart"
+  ],
+  "files_sha256": {
+    "lib/services/office_picture.dart": "99300b066666b2b062dd4a3e43fa783cb99270078beb8ac56a64b9fc3b80c3aa",
+    "lib/widgets/office_editor_dialogs.dart": "c637be47a1f13c1fd4acfa7491fcb986aaabf1edb927630d0315a31afc7937fe",
+    "lib/widgets/office_editor_ribbon.dart": "7b0f7fed3a82d3dbd0b957879a947111d6879791c43eb7fe222c053f1ea038c6",
+    "test/widget/office_font_fidelity_test.dart": "959a7d999485d10a331eb0c463015d3655d8c93ce3ddb49e0b71b03b9d1bf6b4",
+    "test/widget/office_picture_fidelity_test.dart": "690528becbfbc8dc9b129acb99d031782bb65745ea50f9dd82d43fea82f70ed8",
+    "test/widget/office_save_fidelity_test.dart": "1fdf6e3c08dccb74654afcf796750e323d396e5ab322b9332642749acfd130b3"
+  },
+  "scope": "All six host-owned Dart files changed since the previous completed followup checkpoint; shared source separately receives full source analysis.",
+  "exit_code": 0,
+  "finished_utc": "2026-11-12T15:26:15.315292+00:00",
+  "elapsed_seconds": 25.924654581998766,
+  "git_status_after": "",
+  "log_sha256": "4442a58a97d0cffe9a6bdd88f2aaf9e350fe7e2573e3ecf6a0ce04d4f27d986a"
+}

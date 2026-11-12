@@ -1,0 +1,291 @@
+name: crisp_cloud
+description: Flutter/Dart Cloud storage client
+publish_to: 'none'
+version: 1.1.0+12
+
+environment:
+  # Keep the application and CI toolchain compatible with dart_pdf_editor.
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Host-controlled image editing; pinned, maintained fork and provenance below.
+  pro_image_editor: 14.24.0
+  pro_video_editor: 2.51.0
+  crisp_audio:
+    path: packages/crisp_audio
+  image: ^4.12.0
+  material_ui: ^1.1.1
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  provider: ^6.1.1  # kept during incremental migration
+  
+  # UI
+  # Bundle the icon font used by adaptive controls and embedded UI.
+  cupertino_icons: 2.0.0
+  desktop_drop: ^0.7.1
+  madedit2_hex:
+    path: packages/madedit2_hex
+
+  # Code editor surface (line numbers, folding, find/replace, undo history)
+  # and its syntax-highlighting engine. Both are MIT licensed.
+  re_editor: ^0.10.0
+  re_highlight: ^0.0.3
+
+  # Native Flutter terminal emulator + desktop PTY/Windows ConPTY (MIT).
+  # Pin reviewed releases; see docs/terminal.md for license provenance.
+  xterm2: 5.4.0
+  flutter_pty2: 3.0.0
+  # Native iOS folder grants and the in-process ios_system + Dash runtime.
+  crisp_ios_files:
+    path: packages/crisp_ios_files
+  crisp_ios_shell:
+    path: packages/crisp_ios_shell
+
+  # Web specific
+  universal_html: ^2.2.4
+  
+  # Database (sync metadata, file cache, settings)
+  drift: ^2.22.1
+  sqlite3_flutter_libs: ^0.5.28
+
+  # Markdown preview
+  flutter_markdown: ^0.7.6
+
+  # Preview remains independent from the editable document surface.
+  pdfx: ^2.6.0
+  # Pinned upstream runtime with optional secure-storage adapters separated.
+  # See packages/dart_pdf_editor/UPSTREAM.md for provenance and local patches.
+  dart_pdf_editor: 14.0.0
+  pdf_operations:
+    path: packages/pdf_operations
+  dart_pdf_editor_assets: 14.0.0
+  pdf_cos: 14.0.0
+  pdf_document: 14.0.0
+
+  # Filesystem watching (sync engine)
+  watcher: ^1.1.0
+
+  # System tray (background sync on desktop)
+  system_tray: ^2.0.3
+
+  # Mobile background sync (Android Workmanager + iOS background fetch)
+  workmanager: ^0.9.0
+  flutter_local_notifications: ^17.2.4
+
+  # File Handling
+  cross_file: ^0.3.3+8
+  path: ^1.9.1
+  unorm_dart: ^0.3.3 # Unicode canonical equivalence for macOS mounted paths (MIT)
+  path_provider: ^2.1.5
+  
+  # Sharing
+  # Floor 10.1.0, NOT 8/9/10.0: Apple rejected build 4 with ITMS-91061 (missing
+  # privacy manifest) on BOTH the iOS and macOS binaries. 7.2.2 ships no
+  # PrivacyInfo.xcprivacy at all, and 8.0.x/9.x/10.0.x ship one for iOS ONLY —
+  # they would clear the iOS rejection and leave macOS failing. 10.1.0 is the
+  # first version with both. Cap <11: 11.0.0 removes the static `Share` class
+  # this app calls (Share.share / Share.shareXFiles). Still dual
+  # CocoaPods+SPM, so no SPM migration needed (cf. receive_sharing_intent below).
+  share_plus: '>=10.1.0 <11.0.0'
+  # Cap < 1.8.0: 1.8.0+ dropped CocoaPods and is Swift-Package-Manager-only,
+  # which makes `flutter pub get` fail (exit 1) on a project without SPM
+  # enabled. Revisit once the app migrates to SPM.
+  receive_sharing_intent: '>=1.5.3 <1.8.0'
+  
+  # Networking & Crypto
+  http: ^1.2.0
+  dio: ^5.10.0
+  args: ^2.4.2
+  crypto: ^3.0.3
+  web: ^1.1.1  # WebCrypto (crypto.subtle) for web secure storage
+  pointycastle: ^4.0.0
+  bip39: ^1.0.6
+  hex: ^0.2.0
+  glob: ^2.1.2
+  archive: ^4.6.0
+  file_picker: ^10.3.3
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^9.2.4
+  local_auth: ^2.3.0
+  video_player: ^2.9.2
+  file_selector: ^1.0.4
+  file_selector_macos: ^0.9.4
+  url_launcher: ^6.3.2
+  macos_secure_bookmarks: ^0.2.1
+
+  # Material You / dynamic color (Android 12+)
+  dynamic_color: ^1.7.0
+
+  # FTP/FTPS
+  ftpconnect: ^2.0.5
+
+  # SFTP
+  dartssh2: ^4.1.0
+  crisp_storage:
+    path: packages/crisp_storage
+  web_socket_channel: ^3.0.0 # for sockified (needed for web builds)
+
+  # WebDAV Dependencies
+  shelf: ^1.4.0
+  shelf_router: ^1.1.0 # for adding other handlers
+  shelf_dav: ^1.0.0    # The server
+  file: ^7.0.0         # The virtual filesystem interface
+  webdav_client: ^1.2.2
+
+  # Internxt protocol — the published pub.dev library (MPL-2.0), replacing
+  # the previous embedded copy in lib/services/internxt_client.dart
+  # (Phase 6.c). Local dev can still pin to ../internxt-dart via a
+  # gitignored pubspec_overrides.yaml for faster iteration.
+  # 0.2.3 stops masking real API errors (e.g. 420 "Max space used") as a
+  # bogus 401 — see ApiException.
+  internxt_client: ^0.2.3
+
+  # Filen protocol — the published pub.dev library (MPL-2.0), replacing
+  # the previous embedded copy in lib/services/filen.dart. Published as
+  # `filen_client` (renamed from the former `filen_dart`). Vendored from 0.2.2
+  # with the macOS OpenSSL loader disabled: App Store sandboxing aborts the
+  # process before Dart can catch a DynamicLibrary.open failure.
+  filen_client:
+    path: packages/filen_client
+
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  xml: ^6.5.0
+  html: ^0.15.6
+  flutter_svg: ^2.3.0
+  flutter_highlight: ^0.7.0
+  cryptography: ^2.9.0
+  cryptography_flutter: ^2.3.4
+  ffi: ^2.2.0
+  koni_archive: ^0.9.0
+  package_info_plus: ^9.0.1
+  flutter_widget_from_html_core: ^0.17.4
+  quds_office_engine: ^1.5.0
+  quds_office_editor: ^1.6.0
+  win32: ^5.15.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  path_provider_platform_interface: ^2.1.2
+  video_player_platform_interface: ^6.8.0
+  flutter_lints: ^3.0.0
+  drift_dev: ^2.22.1
+  build_runner: ^2.4.13
+  flutter_launcher_icons: ^0.14.4
+  covfuzz: ^0.1.1
+
+dependency_overrides:
+  # MIT 0.10.0 runtime with cancellable mobile cursor reveal on disposal.
+  # Source provenance and the narrow patch are in packages/re_editor/UPSTREAM.md.
+  re_editor:
+    path: packages/re_editor
+  # Reviewed MIT 3.0.0 runtime; omit native subprocess assets on mobile.
+  # See packages/flutter_pty2/UPSTREAM.md for the two desktop-only guards.
+  flutter_pty2:
+    path: packages/flutter_pty2
+  pro_video_editor:
+    path: packages/pro_video_editor
+  pro_image_editor:
+    path: packages/pro_image_editor
+  # Maintained core for form-preserving extraction and Unicode OCR.
+  pdf_document:
+    path: packages/pdf_document
+  # The assets companion also resolves to our pinned, plugin-free editor.
+  dart_pdf_editor:
+    path: packages/dart_pdf_editor
+  # Local fork: footnote-reference superscript + rendering fixes.
+  quds_office_engine:
+    path: packages/quds_office_engine
+  quds_office_editor:
+    path: packages/quds_office_editor
+  # SMB native build hooks require the backwards-compatible meta annotations.
+  # Remove when Flutter's SDK pin reaches 1.19.0.
+  meta: 1.19.0
+  # Internxt 0.2.3 and vendored Filen retain a 3.x constraint. Their crypto
+  # APIs are compatible with 4.x; encryption/vector regressions verify this.
+  # SSH 4.x needs the current crypto implementation and SHA256 host-key API.
+  pointycastle: ^4.0.0
+  libdbm:
+    git:
+      url: https://github.com/CrispStrobe/libdbm
+      ref: main
+  # system_tray (unmaintained) pins uuid ^3.x but pdfx needs ^4.x.
+  # Force uuid 4.x — system_tray only uses uuid.v4() which is unchanged.
+  uuid: 4.5.1
+
+
+flutter:
+  generate: true
+  uses-material-design: true
+  
+  # App Icons
+  assets:
+    - assets/images/app_icon.png # Add your new icon path
+    - assets/images/app_icon_master.png
+    - assets/fonts/MaterialIcons-Regular.otf
+    - assets/fonts/MaterialIcons_LICENSE.txt
+    - assets/fonts/Roboto_LICENSE.txt
+    - assets/fonts/RobotoMono_LICENSE.txt
+    - assets/licenses/pdf_fonts/
+    - assets/licenses/terminal/
+
+  fonts:
+    - family: StoreRoboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+    # Bundled monospace face: guarantees identical advance widths on every
+    # platform (the generic 'monospace' family is not resolved on macOS).
+    - family: AppMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+          weight: 400
+
+flutter_launcher_icons:
+  # app_icon_rounded.png must NOT be used here: it bakes in a thick navy frame
+  # plus rounded corners, so iOS/Android apply their own mask on top and the
+  # frame survives as a dark ring around the icon. Platform masks require
+  # FULL-BLEED artwork. app_icon_master.png is the same logo on an opaque white
+  # square, edge to edge, no alpha (Apple rejects alpha in the 1024 marketing
+  # icon).
+  image_path: "assets/images/app_icon_master.png"
+
+  # Android: adaptive icon with foreground + background color
+  android: true
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_background: "#0D2A4A"
+
+  # iOS: rounded corners applied automatically by the OS
+  ios: true
+  remove_alpha_ios: true
+
+  # Desktop Platforms
+  # macOS does NOT mask the icon — the artwork itself must be the rounded
+  # squircle, sitting on a transparent margin per Apple's icon grid. Feeding it
+  # the full-bleed iOS master would ship a hard-edged square.
+  macos:
+    generate: true
+    image_path: "assets/images/app_icon_macos.png"
+  windows:
+    generate: true
+  linux:
+    generate: true
+
+hooks:
+  user_defines:
+    sqlite3:
+      source: system
+      name_windows: winsqlite3
