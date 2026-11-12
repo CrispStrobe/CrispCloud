@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/editor_document.dart';
 import 'package:crisp_cloud/widgets/email_message_view.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
+import 'package:crisp_cloud/widgets/internal_viewer_views.dart';
 import 'package:crisp_cloud/widgets/xml_tree_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +31,14 @@ Future<void> _open(WidgetTester tester, String name, Uint8List bytes) async {
       ),
     ),
   );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _tapMode(WidgetTester tester, String label) async {
+  final chip = find.widgetWithText(ChoiceChip, label);
+  await tester.ensureVisible(chip);
+  await tester.pumpAndSettle();
+  await tester.tap(chip);
   await tester.pumpAndSettle();
 }
 
@@ -69,6 +79,8 @@ void main() {
 
     await tester.tap(find.byTooltip('Search (Ctrl+F)'));
     await tester.pumpAndSettle();
+    expect(find.byType(EmailMessageView), findsOneWidget);
+    expect(find.byType(MonoLineListView), findsNothing);
     await tester.enterText(
       find.byKey(const ValueKey('viewer-search-input')),
       'café content',
@@ -81,10 +93,8 @@ void main() {
     );
     expect(emailMode.selected, isTrue);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Text'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Email'));
-    await tester.pumpAndSettle();
+    await _tapMode(tester, 'Text');
+    await _tapMode(tester, 'Email');
     expect(find.text('1/1'), findsOneWidget);
 
     await tester.enterText(
@@ -106,6 +116,45 @@ void main() {
     expect(find.byType(EmailMessageView), findsOneWidget);
     expect(find.text('Decoded café content'), findsOneWidget);
   });
+
+  testWidgets(
+    'decoded search bounds newline-dense messages and keeps preview',
+    (tester) async {
+      await _open(
+        tester,
+        'many-lines.eml',
+        _bytes(
+          'Subject: Newline-dense message\r\n'
+          'Content-Type: multipart/alternative; boundary="parts"\r\n\r\n'
+          '--parts\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n'
+          '${'\n' * 200010}\r\n'
+          '--parts\r\nContent-Type: text/html; charset=utf-8\r\n\r\n'
+          '<p>Readable message</p>\r\n'
+          '--parts--\r\n',
+        ),
+      );
+      expect(find.byType(EmailMessageView), findsOneWidget);
+      expect(find.text('Readable message', findRichText: true), findsOneWidget);
+      await tester.tap(find.byTooltip('Search (Ctrl+F)'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EmailMessageView), findsOneWidget);
+      expect(find.byType(MonoLineListView), findsNothing);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('viewer-search-input')),
+        'message',
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(find.byType(EmailMessageView), findsOneWidget);
+      expect(find.byType(MonoLineListView), findsNothing);
+      expect(find.text('Readable message', findRichText: true), findsOneWidget);
+      expect(
+        find.textContaining('200,000 lines or 8 MiB of decoded UTF-8 text'),
+        findsWidgets,
+      );
+    },
+  );
 
   testWidgets(
     'email attachments use the existing viewer without an edit target',
@@ -133,6 +182,26 @@ void main() {
     expect(find.byType(EmailMessageView), findsOneWidget);
     expect(find.text('Outlook subject'), findsOneWidget);
     expect(find.text('Readable Outlook body'), findsOneWidget);
+  });
+
+  testWidgets('gzip-expanded Outlook messages use the inner MSG filename', (
+    tester,
+  ) async {
+    final writer = CfbfWriter()
+      ..addStream('__properties_version1.0', Uint8List(32))
+      ..addStream(
+        '__substg1.0_0037001F',
+        _unicode('Compressed Outlook subject'),
+      )
+      ..addStream('__substg1.0_1000001F', _unicode('Expanded Outlook body'));
+    await _open(
+      tester,
+      'message.msg.gz',
+      Uint8List.fromList(const GZipEncoder().encode(writer.build())),
+    );
+    expect(find.byType(EmailMessageView), findsOneWidget);
+    expect(find.text('Compressed Outlook subject'), findsOneWidget);
+    expect(find.text('Expanded Outlook body'), findsOneWidget);
   });
 
   testWidgets('Autodesk keyboard profiles open as an XML tree', (tester) async {

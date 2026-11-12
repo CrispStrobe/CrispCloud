@@ -33,6 +33,12 @@ searches a decoded text representation of headers, body and attachment names;
 closing search restores the formatted message. The ordinary Text/Hex modes
 remain available for inspecting the original file bytes.
 
+Decoded-search data is built only when a nonempty query is submitted. A limit
+of 200,000 lines or 8 MiB of decoded UTF-8 text is checked before allocating the
+search index. If the limit is exceeded, the formatted view remains available
+and a localized explanation is shown. Single-file compressed messages, such as
+`.msg.gz`, use the decompressed filename to select the correct parser.
+
 Selecting an ordinary attachment opens its exact bytes in the existing viewer.
 That nested viewer has no writable original-file target. Embedded Outlook
 messages and MSG files whose only body is compressed RTF are explicitly
@@ -72,6 +78,10 @@ and content type, opaque binary/VBA/custom-UI payload hashes, and VBA
 relationships. A failed check leaves the original untouched and the editor
 dirty. Macros are retained as opaque data and never run.
 
+Compact previews and page rendering follow the package's main-document
+relationship, including valid macro-enabled Word packages whose main part is
+outside the conventional `word/` directory.
+
 Package-level XML digital signatures prevent editing, because editing document
 content would invalidate them. The guard preserves opaque VBA signature bytes;
 that byte-preservation check is not an independent Microsoft Word signature
@@ -106,3 +116,10 @@ Focused regression suites include:
 
 Macro fixtures contain synthetic opaque payloads. They establish preservation
 and failure behavior, not macro execution or a Microsoft Word certification.
+
+The development validation run passed 283 tests across 20 focused parser,
+archive, favorites, viewer, preview and editor suites. A separate JavaScript
+compilation and execution smoke check passed Unicode EML, MSG/CFB and legacy DOC
+parsing. A full Flutter web release build was not run locally because the cached
+SDK lacks the Flutter web target artifacts; the JavaScript parser check does not
+replace that application build or platform acceptance testing.

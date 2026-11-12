@@ -88,6 +88,8 @@ const int kViewerFullDataCap = 64 * 1024 * 1024;
 
 const int _kSearchMaxMatches = 2000;
 const int _kHighlightMaxChars = 400 * 1024;
+const int _kEmailSearchMaxLines = 200000;
+const int _kEmailSearchMaxUtf8Bytes = 8 * 1024 * 1024;
 
 /// Rich rendered modes (markdown/CSV/office) are truncated above this size so
 /// a single huge document cannot freeze the UI thread.
@@ -281,6 +283,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   OfficeDocument? _officeDoc;
   EmailMessageDocument? _emailMessage;
   ViewBytesSource? _emailSearchSource;
+  Future<bool>? _emailSearchPreparation;
+  bool _emailSearchLimited = false;
+  bool _emailSearchLimitShown = false;
   List<String>? _emailLines;
   List<int>? _emailLineStarts;
   _OfficeView _officeView = _OfficeView.formatted;
@@ -389,7 +394,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           _mode == ViewerMode.ascii ||
           _mode == ViewerMode.binary ||
           _mode == ViewerMode.hex ||
-          (_mode == ViewerMode.email && _searchOpen));
+          (_mode == ViewerMode.email && _searchOpen && _emailLines != null));
 
   @override
   void initState() {
@@ -760,22 +765,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           }
           final data = await _ensureFullData();
           if (!mounted || token != _prepareToken) return;
-          final message = parseEmailMessage(data, _viewName);
-          final searchText = message.searchText;
-          final searchSource = ViewBytesSource.memory(
-            Uint8List.fromList(utf8.encode(searchText)),
-          );
-          await searchSource.open();
-          if (!mounted || token != _prepareToken) {
-            searchSource.dispose();
-            return;
-          }
+          final message = parseEmailMessage(data, _expansionName ?? _viewName);
           setState(() {
             _emailMessage = message;
-            _emailSearchSource = searchSource;
-            _emailLines = _splitDisplayLines(searchText);
-            _emailLineStarts = _lineStartsOf(searchText);
-            _richText = searchText;
             _preparing = false;
           });
           if (_searchOpen && _searchController.text.isNotEmpty) {
@@ -896,6 +888,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _emailMessage = null;
     _emailSearchSource?.dispose();
     _emailSearchSource = null;
+    _emailSearchPreparation = null;
+    _emailSearchLimited = false;
+    _emailSearchLimitShown = false;
     _emailLines = null;
     _emailLineStarts = null;
     final pdf = _pdfController;
@@ -1412,6 +1407,67 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _runSearch(value);
   }
 
+  Future<bool> _prepareEmailSearch() {
+    if (_emailSearchSource != null) return Future.value(true);
+    final message = _emailMessage;
+    if (message == null) return Future.value(false);
+    return _emailSearchPreparation ??= _buildEmailSearch(
+      message,
+      _prepareToken,
+    );
+  }
+
+  Future<bool> _buildEmailSearch(
+    EmailMessageDocument message,
+    int token,
+  ) async {
+    final text = message.searchText;
+    // Count before splitting or UTF-8 encoding. A small message containing
+    // millions of newlines must not allocate two huge line-index arrays just
+    // because the user opened its formatted preview.
+    var lines = 1;
+    var encodedSize = 0;
+    for (var index = 0; index < text.length; index++) {
+      final unit = text.codeUnitAt(index);
+      if (unit == 10) lines++;
+      if (unit < 0x80) {
+        encodedSize++;
+      } else if (unit < 0x800) {
+        encodedSize += 2;
+      } else if (unit >= 0xd800 &&
+          unit <= 0xdbff &&
+          index + 1 < text.length &&
+          text.codeUnitAt(index + 1) >= 0xdc00 &&
+          text.codeUnitAt(index + 1) <= 0xdfff) {
+        encodedSize += 4;
+        index++;
+      } else {
+        encodedSize += 3;
+      }
+      if (lines > _kEmailSearchMaxLines ||
+          encodedSize > _kEmailSearchMaxUtf8Bytes) {
+        _emailSearchLimited = true;
+        return false;
+      }
+    }
+    final source = ViewBytesSource.memory(
+      Uint8List.fromList(utf8.encode(text)),
+    );
+    await source.open();
+    if (!mounted ||
+        token != _prepareToken ||
+        !identical(message, _emailMessage)) {
+      source.dispose();
+      return false;
+    }
+    setState(() {
+      _emailSearchSource = source;
+      _emailLines = _splitDisplayLines(text);
+      _emailLineStarts = _lineStartsOf(text);
+    });
+    return true;
+  }
+
   Future<void> _runSearch(
     String raw, {
     int startOffset = 0,
@@ -1431,9 +1487,23 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             (!textMode && raw.trimLeft().toLowerCase().startsWith('0x'))
         ? raw.trim()
         : raw;
-    final source = emailMode ? _emailSearchSource : _source;
     setState(() => _resetSearchResults(cancel: false));
-    if (query.isEmpty || source == null) return;
+    if (query.isEmpty) return;
+    if (emailMode && !await _prepareEmailSearch()) {
+      if (!mounted || generation != _searchGeneration) return;
+      if (_emailSearchLimited) {
+        final note = EmailViewerStrings(context).text('searchLimit');
+        setState(() => _searchNote = note);
+        if (!_emailSearchLimitShown) {
+          _emailSearchLimitShown = true;
+          _showSnack(note);
+        }
+      }
+      return;
+    }
+    if (!mounted || generation != _searchGeneration) return;
+    final source = emailMode ? _emailSearchSource : _source;
+    if (source == null) return;
     try {
       String? encoding;
       if (emailMode) {
@@ -2615,7 +2685,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             theme,
           );
         }
-        if (_searchOpen) {
+        if (_searchOpen && _emailLines != null) {
           final span = _textMatchSpan();
           return SelectionArea(
             child: MonoLineListView(
