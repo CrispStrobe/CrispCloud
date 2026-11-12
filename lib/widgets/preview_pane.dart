@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
@@ -26,6 +27,8 @@ import '../l10n/provider_operation_strings.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/email_message_service.dart';
+import '../services/office_document_service.dart';
+import '../l10n/office_preview_strings.dart';
 import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'preview_media.dart';
@@ -160,6 +163,10 @@ PreviewType _classifyFile(String name) {
     case 'kdbx':
       return PreviewType.keepass;
     case 'doc':
+    case 'rtf':
+    case 'ppt':
+    case 'pps':
+    case 'pot':
     case 'dot':
     case 'docx':
     case 'docm':
@@ -217,6 +224,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   Uint8List? _previewBytes;
   String? _textContent;
   EmailMessageDocument? _emailMessage;
+  OfficeDocument? _portableOffice;
   PdfController? _pdfController;
   PdfDocument? _pdfDocument;
   ViewerSpool? _spool;
@@ -291,6 +299,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _previewBytes = null;
     _textContent = null;
     _emailMessage = null;
+    _portableOffice = null;
     _error = null;
     _loading = false;
     _loadedFile = file;
@@ -378,11 +387,24 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       } else if (type == PreviewType.email) {
         _emailMessage = parseEmailMessage(bytes, file.name);
       } else if (type == PreviewType.office) {
-        final text = await _extractOfficeText(
-          bytes,
-          file.name,
-          PreviewMediaStrings(context),
-        );
+        if (!mounted) return;
+        final locale = Localizations.localeOf(context);
+        final strings = OfficePreviewStrings(locale);
+        final mediaStrings = PreviewMediaStrings(context);
+        final portable =
+            const {'rtf', 'ppt', 'pps', 'pot'}.contains(file.extension)
+            ? await parseOfficeDocument(bytes, file.name)
+            : null;
+        final text = portable == null
+            ? await _extractOfficeText(bytes, file.name, mediaStrings)
+            : [
+                if (strings.note(portable) case final note?) note,
+                strings.headings(
+                  strings.text(portable),
+                  portable.textHeadings,
+                  locale,
+                ),
+              ].join('\n\n');
         if (!_sameRequest(file, token)) return;
         if (!origin.isCurrent) {
           throw const FileBytesLoadException(
@@ -390,6 +412,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           );
         }
         _textContent = text;
+        _portableOffice = portable;
       } else if (type == PreviewType.csv ||
           type == PreviewType.text ||
           type == PreviewType.markdown) {
@@ -817,6 +840,27 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(4),
             ),
+          ),
+        ),
+      );
+    }
+
+    final safeHtml = _portableOffice?.safeHtml;
+    if (safeHtml != null && safeHtml.length <= 4 * 1024 * 1024) {
+      final note = OfficePreviewStrings(Localizations.localeOf(context))
+          .note(_portableOffice!);
+      return SelectionArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (note != null) ...[
+                Text(note, style: theme.textTheme.bodySmall),
+                const Divider(),
+              ],
+              HtmlWidget(safeHtml, onTapUrl: (_) => true),
+            ],
           ),
         ),
       );

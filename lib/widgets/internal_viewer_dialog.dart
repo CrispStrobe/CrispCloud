@@ -2524,6 +2524,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final legacyOffice =
         lowerName.endsWith('.ppt') ||
         lowerName.endsWith('.pps') ||
+        lowerName.endsWith('.pot') ||
+        lowerName.endsWith('.rtf') ||
         lowerName.endsWith('.doc') ||
         lowerName.endsWith('.dot');
     final options = <_OfficeView>[
@@ -3089,6 +3091,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
+        final safeHtml = document.safeHtml;
+        if (safeHtml != null && safeHtml.length <= _kRichRenderCap) {
+          return SelectionArea(
+            child: SingleChildScrollView(
+              controller: _vScroll,
+              padding: const EdgeInsets.all(12),
+              child: HtmlWidget(
+                safeHtml,
+                textStyle: TextStyle(fontSize: 13 * _zoom, height: 1.45),
+                onTapUrl: (_) => true,
+              ),
+            ),
+          );
+        }
+        if (safeHtml != null) return _buildOfficeText(document, theme);
         final locale = Localizations.localeOf(context);
         final markdown = OfficePreviewStrings(locale)
             .headings(document.markdown, document.markdownHeadings, locale)

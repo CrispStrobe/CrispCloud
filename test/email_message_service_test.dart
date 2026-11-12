@@ -6,6 +6,8 @@ import 'package:crisp_cloud/services/email_message_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
 
+import 'support/outlook_rtf_fixture.dart';
+
 Uint8List _eml(String text) => Uint8List.fromList(utf8.encode(text));
 
 Uint8List _utf16(String value) {
@@ -416,7 +418,40 @@ Readable body'''),
       expect(email.safeHtml, isNot(contains('https:')));
     });
 
-    test('RTF-only message explains its limitation', () {
+    test('compressed and MELA RTF-only bodies render safe searchable text', () {
+      for (final raw in [false, true]) {
+        final writer = CfbfWriter()
+          ..addStream('__properties_version1.0', _properties(32, {}))
+          ..addStream(
+            '__substg1.0_10090102',
+            literalOutlookRtf(
+              r'{\rtf1\ansi Hello \b formatted\b0  body.\par <script>alert(1)</script>}',
+              uncompressed: raw,
+            ),
+          );
+        final email = parseEmailMessage(writer.build(), 'rtf.msg');
+        expect(email.plainText, contains('Hello formatted body.'));
+        expect(email.safeHtml, contains('formatted'));
+        expect(email.safeHtml, isNot(contains('<script>')));
+        expect(email.searchText, contains('formatted body'));
+        expect(email.warnings, isEmpty);
+      }
+    });
+
+    test(
+      'an existing plain body does not decode an unrelated corrupt RTF part',
+      () {
+        final writer = CfbfWriter()
+          ..addStream('__properties_version1.0', _properties(32, {}))
+          ..addStream('__substg1.0_1000001F', _utf16('Preferred plain body'))
+          ..addStream('__substg1.0_10090102', [1, 2, 3]);
+        final email = parseEmailMessage(writer.build(), 'rtf.msg');
+        expect(email.plainText, 'Preferred plain body');
+        expect(email.warnings, isEmpty);
+      },
+    );
+
+    test('corrupt RTF-only message explains its limitation', () {
       final writer = CfbfWriter()
         ..addStream('__properties_version1.0', _properties(32, {}))
         ..addStream('__substg1.0_10090102', [1, 2, 3]);

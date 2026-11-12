@@ -13,7 +13,8 @@ void main() {
   test('parser marks legacy and extraction fallback prose for translation', () async {
     final legacy = await parseOfficeDocument(Uint8List(0), 'old.ppt');
     final invalid = await parseOfficeDocument(Uint8List(0), 'bad.docx');
-    expect(legacy.fallback, OfficePreviewFallback.legacyPresentation);
+    expect(legacy.fallback, OfficePreviewFallback.extractionFailed);
+    expect(legacy.notice, OfficePreviewNotice.powerPointMalformed);
     expect(invalid.fallback, OfficePreviewFallback.extractionFailed);
     final english = OfficePreviewStrings(const Locale('en'));
     for (final language in LocalePreference.supported.difference({'en'})) {
@@ -21,6 +22,17 @@ void main() {
       expect(strings.text(legacy), isNot(english.text(legacy)), reason: language);
       expect(strings.note(legacy), isNot(english.note(legacy)), reason: language);
       expect(strings.text(invalid), isNot(english.text(invalid)), reason: language);
+    }
+  });
+
+  test('every portable-preview notice is translated in all supported locales', () {
+    final english = OfficePreviewStrings(const Locale('en'));
+    for (final notice in OfficePreviewNotice.values) {
+      final document = OfficeDocument(kind: OfficeDocumentKind.document, markdown: '', plainText: '', notice: notice);
+      expect(english.note(document), isNotEmpty);
+      for (final language in LocalePreference.supported.difference({'en'})) {
+        expect(OfficePreviewStrings(Locale(language)).note(document), isNot(english.note(document)), reason: '$language ${notice.name}');
+      }
     }
   });
 

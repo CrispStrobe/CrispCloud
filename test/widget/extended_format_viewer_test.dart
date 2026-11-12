@@ -13,6 +13,7 @@ import 'package:crisp_cloud/widgets/xml_tree_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 Uint8List _bytes(String text) => Uint8List.fromList(utf8.encode(text));
@@ -67,6 +68,18 @@ Uint8List _unicode(String text) {
 }
 
 void main() {
+  testWidgets('RTF opens a formatted safe preview without unsupported page layout', (tester) async {
+    await _open(tester, 'formatted.rtf', _bytes(
+      r'{\rtf1\ansi Plain \b bold\b0  body\par Second paragraph}',
+    ));
+    expect(find.byType(HtmlWidget), findsOneWidget);
+    expect(find.textContaining('bold', findRichText: true), findsWidgets);
+    expect(find.textContaining('Second paragraph', findRichText: true), findsWidgets);
+    expect(find.text('Pages'), findsNothing);
+    expect(find.byTooltip('Edit (F4)'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('F3 decodes MIME text and searches decoded message content', (
     tester,
   ) async {

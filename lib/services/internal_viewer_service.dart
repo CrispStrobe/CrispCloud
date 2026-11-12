@@ -389,6 +389,8 @@ class InternalViewerService {
         ViewerMode.office: [
           '.ppt',
           '.pps',
+          '.pot',
+          '.rtf',
           '.doc',
           '.dot',
           '.docx',
@@ -1085,6 +1087,8 @@ class InternalViewerService {
     final ext = _extensionOf(lower);
     return switch (ext) {
       '.doc' || '.dot' => 'application/msword',
+      '.ppt' || '.pps' || '.pot' => 'application/vnd.ms-powerpoint',
+      '.rtf' => 'application/rtf',
       '.docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       '.docm' => 'application/vnd.ms-word.document.macroEnabled.12',
       '.dotx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',

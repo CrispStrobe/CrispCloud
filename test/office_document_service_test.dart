@@ -139,13 +139,14 @@ void main() {
     expect(shape.x, 914400);
   });
 
-  test('legacy PPT returns a conversion hint instead of failing', () async {
+  test('truncated legacy PPT has a structured extraction failure', () async {
     final doc = await parseOfficeDocument(
       Uint8List.fromList(<int>[0xD0, 0xCF, 0x11, 0xE0]),
       'legacy.ppt',
     );
-    expect(doc.plainText, contains('Legacy PowerPoint'));
-    expect(doc.note, isNotNull);
+    expect(doc.fallback, OfficePreviewFallback.extractionFailed);
+    expect(doc.notice, OfficePreviewNotice.powerPointMalformed);
+    expect(doc.kind, OfficeDocumentKind.presentation);
   });
 
   test('ODT content.xml produces headings and paragraphs', () async {
