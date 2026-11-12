@@ -118,6 +118,10 @@ abstract final class WmlClone {
       vMerge: cell.vMerge,
       width: cell.width,
       fillColor: cell.fillColor,
+      borderTop: cell.borderTop,
+      borderBottom: cell.borderBottom,
+      borderLeft: cell.borderLeft,
+      borderRight: cell.borderRight,
       blocks: <WmlBlock>[
         for (final WmlBlock block in cell.blocks) WmlClone.block(block),
       ],
@@ -155,6 +159,9 @@ abstract final class WmlClone {
       minLevel: source.minLevel,
       maxLevel: source.maxLevel,
       showPageNumbers: source.showPageNumbers,
+      omitPageNumbersFromLevel: source.omitPageNumbersFromLevel,
+      omitPageNumbersThroughLevel: source.omitPageNumbersThroughLevel,
+      captionLabel: source.captionLabel,
       title: source.title,
       entries: <WmlTocEntry>[
         for (final WmlTocEntry entry in source.entries)

@@ -1,0 +1,29 @@
+{
+  "source_body": ["Operations", "Alpha beta gamma", "Reference placeholder", "Subtopic", "Untouched paragraph"],
+  "body": ["Operations", "Alpha beta gamma", "Alpha beta gamma", "Subtopic", "Untouched paragraph"],
+  "bookmark": "Evidence",
+  "reference_instruction": "REF Evidence",
+  "comment_anchor": "beta",
+  "create": {
+    "comments": ["Check beta", "Reviewed"], "resolved": false,
+    "table_cells": [["A", "B"], ["C", "D"]], "spans": [[1, 1], [1, 1]],
+    "toc_title": "Contents", "toc_entries": ["Operations", "Subtopic"], "toc_range": "1-2", "page_numbers": true,
+    "frame": {"x": 24.5, "y": 50.25, "width": 180, "height": 60, "anchor": "margin", "wrap": "square", "fill": "EFEFEF", "stroke": "123456"},
+    "picture": {"wrap": "square", "rotation": 1800000, "distances": [12700, 0, 0, 31750]},
+    "paragraph": {"before": "0", "after": "65", "left": "247", "right": "-31", "firstLine": "15", "tabs": [["1447", "decimal", "dot"]], "column_break": false}
+  },
+  "edit": {
+    "comments": ["Check beta revised", "Reviewed"], "resolved": true,
+    "table_cells": [["AB"], ["C", "D"]], "spans": [[2], [1, 1]],
+    "toc_title": "Updated contents", "toc_entries": ["Subtopic"], "toc_range": "2-2", "page_numbers": false,
+    "frame": {"x": 30, "y": 40, "width": 160, "height": 80, "anchor": "page", "wrap": "none", "fill": null, "stroke": "445566"},
+    "picture": {"wrap": "behind", "rotation": 0, "distances": [0, 0, 0, 0]},
+    "paragraph": {"before": "0", "after": "0", "left": "0", "right": "0", "firstLine": "0", "tabs": [], "column_break": true}
+  },
+  "remove": {
+    "comments": [], "resolved": false,
+    "table_cells": [["AB", ""], ["C", "D"]], "spans": [[1, 1], [1, 1]],
+    "toc_title": null, "toc_entries": [], "frame": null, "picture": null,
+    "paragraph": {"before": "0", "after": "0", "left": "0", "right": "0", "firstLine": "0", "tabs": [], "column_break": false}
+  }
+}

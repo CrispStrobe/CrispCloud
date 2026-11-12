@@ -516,6 +516,8 @@ class WmlToc extends WmlBlock {
     this.minLevel = 1,
     this.maxLevel = 3,
     this.showPageNumbers = true,
+    this.omitPageNumbersFromLevel,
+    this.omitPageNumbersThroughLevel,
     this.captionLabel,
     String title = 'Table of Contents',
     List<WmlTocEntry>? entries,
@@ -552,6 +554,18 @@ class WmlToc extends WmlBlock {
 
   /// showPageNumbers API.
   bool showPageNumbers;
+
+  /// Native TOC \\n suppression for a bounded range of outline levels.
+  int? omitPageNumbersFromLevel;
+  int? omitPageNumbersThroughLevel;
+
+  /// Whether this entry has a visible page number and dotted leader.
+  bool showsPageNumberForLevel(int level) {
+    if (!showPageNumbers) return false;
+    final int? first = omitPageNumbersFromLevel;
+    final int? last = omitPageNumbersThroughLevel;
+    return first == null || last == null || level < first || level > last;
+  }
 
   /// When set, the TOC is a table of figures for this caption label.
   String? captionLabel;

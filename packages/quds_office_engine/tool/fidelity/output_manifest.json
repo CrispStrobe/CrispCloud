@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 132,
+  "expected_file_count": 145,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
     {"pattern": "fidelity/unchanged-{cycle}.docx", "cycles": [1, 2, 3], "producer": "tool/fidelity/scenarios.dart"},
@@ -45,9 +45,16 @@
     {"pattern": "fidelity-table-borders/tables-imported-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/table_border_fidelity_test.dart"},
     {"pattern": "fidelity-table-borders/tables-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/table_border_fidelity_test.dart"},
     {"pattern": "fidelity-inline-fields/direct-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/inline_field_fidelity_test.dart"},
-    {"pattern": "fidelity-inline-fields/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/inline_field_fidelity_test.dart"}
+    {"pattern": "fidelity-inline-fields/isolate-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/inline_field_fidelity_test.dart"},
+    {"pattern": "fidelity-structure/create/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"},
+    {"pattern": "fidelity-structure/edit/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"},
+    {"pattern": "fidelity-structure/remove/roundtrip-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_structure_steps_test.dart"}
   ],
   "standalone": [
+    {"path": "fidelity-structure/source.docx", "producer": "test/word_structure_steps_test.dart"},
+    {"path": "fidelity-structure/create/edited.docx", "producer": "test/word_structure_steps_test.dart"},
+    {"path": "fidelity-structure/edit/edited.docx", "producer": "test/word_structure_steps_test.dart"},
+    {"path": "fidelity-structure/remove/edited.docx", "producer": "test/word_structure_steps_test.dart"},
     {"path": "fidelity-comment-threads/threads-source.docx", "producer": "test/comment_thread_fidelity_test.dart"},
     {"path": "fidelity-notes/source.docx", "producer": "tool/fidelity/notes.dart"},
     {"path": "fidelity-script.docx", "producer": "tool/fidelity/check.sh"},

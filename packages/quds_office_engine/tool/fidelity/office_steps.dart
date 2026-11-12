@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:quds_office_engine/quds_office_engine.dart';
+
 import 'sheet_steps.dart';
 import 'slide_steps.dart';
 import 'step_input.dart';
 import 'word_steps.dart';
+import 'word_structure_steps.dart';
 export 'word_steps.dart' show applyStep;
 
 /// Import, inspect, edit, and export real DOCX/XLSX/PPTX using host async saves.
@@ -123,6 +126,31 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
     'style': value.properties.styleId,
     'heading': value.properties.headingLevel,
     'list': value.properties.listLabel,
+    'bookmark': value.properties.bookmarkName,
+    'field': value.properties.fieldInstruction,
+    'paragraphFormat': <String, Object?>{
+      'alignment': value.properties.justification.name,
+      'before': value.properties.spacingBefore,
+      'after': value.properties.spacingAfter,
+      'lineSpacing': value.properties.lineSpacing,
+      'lineSpacingRule': value.properties.lineSpacingRule.name,
+      'left': value.properties.indent.left,
+      'right': value.properties.indent.right,
+      'firstLine': value.properties.indent.firstLine,
+      'hanging': value.properties.indent.hanging,
+      'tabs': [
+        for (final tab in value.properties.tabs)
+          {
+            'position': tab.position,
+            'alignment': tab.alignment.name,
+            'leader': tab.leader.name,
+          },
+      ],
+      'keepTogether': value.properties.keepTogether,
+      'pageBreakBefore': value.properties.pageBreakBefore,
+      'columnBreakBefore': value.properties.columnBreakBefore,
+      'rtl': value.properties.rightToLeft,
+    },
     'runs': <Object?>[
       for (final run in value.inlines.whereType<WmlRun>())
         <String, Object?>{
@@ -131,6 +159,7 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
           'note': run.noteRefId,
           'endnote': run.noteRefEndnote,
           'link': run.hyperlink?.displayTarget,
+          'comments': run.commentIds,
         },
     ],
   };
@@ -139,6 +168,8 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
     'width': value.visual.width,
     'height': value.visual.height,
     'picture': value.visual.isPicture,
+    'wrap': value.visual.picture.wrap.name,
+    'rotation': value.visual.picture.rotationDeg,
   };
   return <String, Object?>{
     'format': 'docx',
@@ -156,6 +187,77 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
         },
     ],
     'images': <Object?>[for (final v in doc.visuals) image(v)],
+    'tables': [
+      for (final t in bodyBlocks(doc).whereType<WmlTable>())
+        {
+          'grid': t.grid,
+          'style': t.properties.styleId,
+          'rows': [
+            for (final row in t.rows)
+              {
+                'height': row.height,
+                'cantSplit': row.cantSplit,
+                'cells': [
+                  for (final cell in row.cells)
+                    {
+                      'width': cell.width,
+                      'span': cell.gridSpan,
+                      'merge': cell.vMerge.name,
+                      'fill': cell.fillColor,
+                      'paragraphs': [
+                        for (final para
+                            in cell.blocks.whereType<WmlParagraph>())
+                          p(para),
+                      ],
+                    },
+                ],
+              },
+          ],
+        },
+    ],
+    'frames': [
+      for (final frame in bodyBlocks(doc).whereType<WmlFrame>())
+        {
+          'x': frame.x,
+          'y': frame.y,
+          'width': frame.width,
+          'height': frame.height,
+          'anchor': frame.anchor.name,
+          'wrap': frame.wrap.name,
+          'fill': frame.fillColor,
+          'stroke': frame.strokeColor,
+        },
+    ],
+    'tocs': [
+      for (final toc in WordToc.tocs(doc))
+        {
+          'title': toc.title,
+          'minLevel': toc.minLevel,
+          'maxLevel': toc.maxLevel,
+          'showPageNumbers': toc.showPageNumbers,
+          'entries': [
+            for (final entry in toc.entries)
+              {
+                'text': entry.text,
+                'level': entry.level,
+                'page': entry.pageNumber,
+              },
+          ],
+        },
+    ],
+    'comments': [
+      for (final comment in doc.comments)
+        {
+          'id': comment.id,
+          'parentId': comment.parentId,
+          'author': comment.author,
+          'initials': comment.initials,
+          'date': comment.dateIso,
+          'resolved': comment.resolved,
+          'paragraphs': [for (final para in comment.paragraphs) p(para)],
+          'images': [for (final visual in comment.visuals) image(visual)],
+        },
+    ],
     'sections': <Object?>[
       for (final s in doc.sections)
         <String, Object?>{

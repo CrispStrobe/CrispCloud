@@ -289,7 +289,15 @@ class WordSerializer {
     w.writeStartElement('r', prefix: 'w');
     w.writeStartElement('instrText', prefix: 'w');
     w.writeAttribute('xml:space', 'preserve');
-    w.writeText(' TOC \\o "${toc.minLevel}-${toc.maxLevel}" \\h \\z \\u ');
+    final String numberSwitch = !toc.showPageNumbers
+        ? ' \\n'
+        : toc.omitPageNumbersFromLevel != null &&
+              toc.omitPageNumbersThroughLevel != null
+        ? ' \\n "${toc.omitPageNumbersFromLevel}-${toc.omitPageNumbersThroughLevel}"'
+        : '';
+    w.writeText(
+      ' TOC \\o "${toc.minLevel}-${toc.maxLevel}" \\h \\z \\u$numberSwitch ',
+    );
     w.writeEndElement();
     w.writeEndElement();
     _writeFieldChar(w, 'separate');
@@ -297,14 +305,22 @@ class WordSerializer {
     final int count = toc.itemParagraphs.length;
     for (int i = 0; i < count; i++) {
       final WmlParagraph para = _copyParagraph(toc.itemParagraphs[i]);
-      para.properties.tabs = <WmlTabStop>[
-        WmlTabStop(
-          position: 468,
-          alignment: WmlTabAlignment.right,
-          leader: WmlTabLeader.dot,
-        ),
-      ];
-      if (toc.showPageNumbers && i < toc.entries.length) {
+      final bool showNumber =
+          i < toc.entries.length &&
+          toc.showsPageNumberForLevel(toc.entries[i].level);
+      if (showNumber &&
+          !para.properties.tabs.any(
+            (tab) => tab.alignment == WmlTabAlignment.right,
+          )) {
+        para.properties.tabs.add(
+          const WmlTabStop(
+            position: 468,
+            alignment: WmlTabAlignment.right,
+            leader: WmlTabLeader.dot,
+          ),
+        );
+      }
+      if (showNumber) {
         para.inlines.add(WmlRun(text: '\t${toc.entries[i].pageNumber}'));
       }
       _writeParagraph(w, para);
@@ -588,10 +604,7 @@ class WordSerializer {
       }
     }
     if (paragraph.properties.columnBreakBefore &&
-        !paragraph.inlines.any(
-          (WmlInline inline) =>
-              inline is WmlBreak && inline.type == WmlBreakType.column,
-        )) {
+        !_hasLeadingColumnBreak(paragraph)) {
       w.writeStartElement('r', prefix: 'w');
       w.writeStartElement('br', prefix: 'w');
       w.writeAttribute('w:type', 'column');
@@ -754,6 +767,14 @@ class WordSerializer {
     }
     _writeRun(w, inline, deleted: revision.kind == WmlRevisionKind.delete);
     w.writeEndElement();
+  }
+
+  bool _hasLeadingColumnBreak(WmlParagraph paragraph) {
+    for (final WmlInline inline in paragraph.inlines) {
+      if (inline is WmlRun && inline.text.isEmpty) continue;
+      return inline is WmlBreak && inline.type == WmlBreakType.column;
+    }
+    return false;
   }
 
   WmlRevision? _revisionAt(WmlParagraph paragraph, int offset, int length) {

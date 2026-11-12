@@ -1,4 +1,3 @@
-import '../properties/wml_properties.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
 import 'word_link.dart';
@@ -293,8 +292,9 @@ abstract final class WordFields {
           final String? instruction = run.fieldInstruction;
           if (instruction == null || run.fieldLocked) continue;
           final WmlFieldKind kind = kindOf(instruction);
-          if (kind == WmlFieldKind.unknown || kind == WmlFieldKind.toc)
+          if (kind == WmlFieldKind.unknown || kind == WmlFieldKind.toc) {
             continue;
+          }
           var seqIndex = 1;
           if (kind == WmlFieldKind.seq) {
             final String name = argumentOf(instruction);

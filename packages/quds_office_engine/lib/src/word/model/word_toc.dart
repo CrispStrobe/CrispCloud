@@ -103,6 +103,32 @@ abstract final class WordToc {
     return (min, max);
   }
 
+  /// Reads the native TOC page-number suppression switch without losing a
+  /// partial level range. An unqualified \\n suppresses all entry numbers.
+  static void applyPageNumberInstruction(WmlToc toc, String? instruction) {
+    toc
+      ..showPageNumbers = true
+      ..omitPageNumbersFromLevel = null
+      ..omitPageNumbersThroughLevel = null;
+    final Match? match = RegExp(
+      r'\\n\b(?:\s+"?([1-9])(?:-([1-9]))?"?)?',
+      caseSensitive: false,
+    ).firstMatch(instruction ?? '');
+    if (match == null) return;
+    final String? first = match.group(1);
+    if (first == null) {
+      toc.showPageNumbers = false;
+      return;
+    }
+    final int start = int.parse(first);
+    final int end = int.parse(match.group(2) ?? first);
+    if (end >= start) {
+      toc
+        ..omitPageNumbersFromLevel = start
+        ..omitPageNumbersThroughLevel = end;
+    }
+  }
+
   /// runLook API.
   static WmlRunProps runLook(int level) {
     return switch (level) {
@@ -412,7 +438,12 @@ abstract final class WordToc {
     if (raw.isEmpty) {
       return;
     }
-    final RegExpMatch? page = _trailingPage.firstMatch(raw);
+    final int level =
+        tocLevelFromStyle(paragraph.properties.styleId) ??
+        ((paragraph.properties.indent.left / 18).round() + 1).clamp(1, 9);
+    final RegExpMatch? page = toc.showsPageNumberForLevel(level)
+        ? _trailingPage.firstMatch(raw)
+        : null;
     final String text = page == null
         ? raw
         : raw.substring(0, page.start).trim();
@@ -420,9 +451,6 @@ abstract final class WordToc {
       return;
     }
     _keepPrefix(paragraph, text);
-    final int level =
-        tocLevelFromStyle(paragraph.properties.styleId) ??
-        ((paragraph.properties.indent.left / 18).round() + 1).clamp(1, 9);
     toc.entries.add(
       WmlTocEntry(
         text: text,

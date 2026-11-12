@@ -58,12 +58,12 @@ are resolved against **the step file's directory**, regardless of the current
 working directory. Inspect a document before choosing indexes, since each edit
 can change the indexes used by later steps.
 
-### DOCX: 25 operations
+### DOCX: 49 operations
 
 For paragraph/run/image operations that accept a story selector, `story`
 defaults to `body`. Other values are `header`, `footer`, `firstHeader`,
-`firstFooter`, `evenHeader`, `evenFooter`, `footnote`, and `endnote`. Header/footer
-stories use `section` (default 0); note stories require the actual `note` ID.
+`firstFooter`, `evenHeader`, `evenFooter`, `footnote`, `endnote`, and `comment`. Header/footer
+stories use `section` (default 0); note stories require the actual `note` ID; comment stories require the actual `comment` ID.
 `addNote`, paragraph structure and list commands target the body.
 
 | Operation | Fields besides `op` | Result |
@@ -74,7 +74,7 @@ stories use `section` (default 0); note stories require the actual `note` ID.
 | `characterStyle` | `paragraph`, `run`, `style`, story selector | Apply a source character style |
 | `tableStyle` | `table`, `style` | Apply a source table style |
 | `styleDefinition` | `style`, `type`; optional `rPr`, `pPr`, `tblPr`, `tcPr` | Edit sparse source style properties |
-| `paragraphFormat` | `paragraph`; optional `alignment`, `before`, `after`, `lineSpacing`, `keepTogether`, `pageBreakBefore`, `rtl`, story selector | Change supplied properties, preserving explicit defaults |
+| `paragraphFormat` | `paragraph`; optional `alignment`, `before`, `after`, `lineSpacing`, `lineSpacingRule`, `left`, `right`, `firstLine`, `hanging`, `tabs`, `keepTogether`, `pageBreakBefore`, `columnBreakBefore`, `dropCapLines`, `shading`, `border`, `rtl`, story selector | Change supplied properties, preserving explicit defaults |
 | `runFormat` | `paragraph`; optional `start`, `end`, `bold`, `italic`, `strike`, `underline`, `color`, `highlight`, `font`, `size`, story selector | Format a range; explicit false/black/default-size values stay direct |
 | `addNote` | `paragraph`, `text`; optional `offset`, `endnote` | Insert a footnote/endnote at the caret offset, or the end if omitted |
 | `editNote` | `id`, `text`; optional `endnote` | Replace the note body; use story run operations for rich formatting |
@@ -93,6 +93,39 @@ stories use `section` (default 0); note stories require the actual `note` ID.
 | `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's text |
 | `headerFooterText` | `story`, `text`; optional `section`, `paragraph` | Replace/add text in one of the six header/footer variants |
 | `sectionFormat` | optional `section`, `width`, `height`, `top`, `bottom`, `left`, `right`, `header`, `footer`, `columns`, `columnSpace`, `columnSep`, `breakKind`, `differentFirstPage`, `differentOddEven` | Edit page/section geometry and flags |
+
+### Word structure operations
+
+These 24 additional commands use body indexes shown by `inspect`. Exact required
+fields and accepted optional fields are available from `operations`.
+
+| Operations | Purpose and important fields |
+| --- | --- |
+| `tableAdd`, `tableFormat` | Create a table with `rows`, `columns`, `width`; edit alignment, RTL and uniform border properties |
+| `tableRowInsert`, `tableRowDelete`, `tableColumnInsert`, `tableColumnDelete` | Edit a rectangular grid by zero-based `row` or `column`; merged grids must be unmerged first |
+| `tableMerge`, `tableUnmerge` | Merge the inclusive rectangle `row`, `column`, `endRow`, `endColumn`; retain ordered rich blocks |
+| `tableRowFormat`, `tableCellFormat` | Change row `height`/`cantSplit`, or cell `fill`/`width` |
+| `tocAdd`, `tocUpdate`, `tocRemove` | Insert, refresh or remove native TOCs; set `title`, `minLevel`, `maxLevel`, `showPageNumbers` |
+| `bookmarkSet`, `reference` | Set one paragraph bookmark `name`; replace a distinct paragraph with a native REF field targeting `bookmark` |
+| `commentAdd`, `commentReply`, `commentEdit`, `commentResolve`, `commentDelete` | Anchor a nonempty text range, maintain thread replies and resolved state, and remove a thread |
+| `imageWrap` | Set `wrap`, distances `top`/`bottom`/`left`/`right`, `rotation`, `altTitle`, `altDescription` |
+| `frameAdd`, `frameFormat`, `frameRemove` | Create and position a text frame with `x`, `y`, `width`, `height`, `anchor`, `wrap`, `fill`, `stroke` |
+
+Paragraph tab stops are arrays of `{ "position": 72, "alignment": "right",
+"leader": "dots" }`. Distances are points. `firstLine` and `hanging` cannot both
+be supplied. Comment `date` values, when supplied, are ISO-8601 timestamps.
+Bookmark creation rejects duplicate names and replacement of a differently named
+bookmark, preventing silent breakage of existing references. General multiple
+or cross-paragraph bookmark ranges remain a separately tracked format gap.
+
+The independently authored `word_structure_source.xml`,
+`word_structure_expected.json`, and `scripts/word-structure-{create,edit,remove}.json`
+cover all three phases and three save/reopen cycles. Run
+`dart test test/word_structure_steps_test.dart`, then
+`python3 tool/fidelity/word_structure_oracle.py` and its corruption controls.
+The XML oracle checks comment anchors and thread metadata, native REF and TOC
+fields, grid spans, paragraph geometry, positioned frames, picture relationships
+and original image bytes. Normal validation never rewrites expected values.
 
 `endnote` defaults to false. Alignment, underline and break-kind strings use the
 model enum names printed in the source. `highlight: null` clears a highlight.

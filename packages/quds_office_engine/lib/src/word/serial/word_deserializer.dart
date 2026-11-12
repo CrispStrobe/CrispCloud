@@ -842,6 +842,10 @@ class WordDeserializer {
             block.properties.fieldInstruction,
           );
           open = WmlToc(minLevel: min, maxLevel: max);
+          WordToc.applyPageNumberInstruction(
+            open,
+            block.properties.fieldInstruction,
+          );
           WordToc.absorbResult(open, block);
           if (block.properties.fieldEnd) {
             collapsed.add(open);
@@ -856,6 +860,10 @@ class WordDeserializer {
             );
             open.minLevel = min;
             open.maxLevel = max;
+            WordToc.applyPageNumberInstruction(
+              open,
+              block.properties.fieldInstruction,
+            );
           }
           WordToc.absorbResult(open, block);
           if (block.properties.fieldEnd) {

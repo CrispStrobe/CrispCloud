@@ -1,0 +1,14 @@
+[
+  {"op":"commentEdit","id":0,"text":"Check beta revised"},
+  {"op":"commentResolve","id":0,"resolved":true},
+  {"op":"runFormat","story":"comment","comment":0,"paragraph":0,"bold":true},
+  {"op":"frameFormat","frame":0,"x":30,"y":40,"width":160,"height":80,"anchor":"page","wrap":"none","fill":null,"stroke":"445566"},
+  {"op":"tableRowInsert","table":0,"row":1},
+  {"op":"tableColumnInsert","table":0,"column":1},
+  {"op":"tableRowDelete","table":0,"row":1},
+  {"op":"tableColumnDelete","table":0,"column":1},
+  {"op":"tableMerge","table":0,"row":0,"column":0,"endRow":0,"endColumn":1},
+  {"op":"tocUpdate","toc":0,"title":"Updated contents","minLevel":2,"maxLevel":2,"showPageNumbers":false},
+  {"op":"imageWrap","image":0,"wrap":"behind","rotation":0,"top":0,"bottom":0,"left":0,"right":0},
+  {"op":"paragraphFormat","paragraph":1,"before":0,"after":0,"left":0,"right":0,"firstLine":0,"tabs":[],"columnBreakBefore":true,"dropCapLines":2,"shading":"FFF000","border":"FF0000"}
+]

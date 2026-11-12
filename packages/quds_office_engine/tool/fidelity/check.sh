@@ -19,6 +19,7 @@ dart test \
   test/xml_whitespace_fidelity_test.dart test/styleless_import_fidelity_test.dart \
   test/table_border_fidelity_test.dart test/word_picture_distance_fidelity_test.dart \
   test/word_edit_integrity_test.dart test/inline_field_fidelity_test.dart \
+  test/word_structure_steps_test.dart test/word_structure_integrity_test.dart \
   test/scripted_transitions_test.dart
 dart run tool/fidelity/scenarios.dart
 python3 tool/fidelity/corpus.py verify
@@ -39,6 +40,7 @@ python3 tool/fidelity/altchunk_oracle.py
 python3 tool/fidelity/edge_oracle.py
 python3 tool/fidelity/table_borders_oracle.py
 python3 tool/fidelity/inline_fields_oracle.py
+python3 tool/fidelity/word_structure_oracle.py
 python3 tool/fidelity/audit_operations.py
 python3 tool/fidelity/inventory.py verify
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
