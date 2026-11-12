@@ -30,7 +30,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Localized help
 
-**Status:** Scoped. **Dependencies:** Canonical English guide; documentation localization.
+**Status:** Implementing. **Dependencies:** Canonical English guide; documentation localization.
 
 **Scope:** Provide maintained German and French help, then align other locales with available guides.
 

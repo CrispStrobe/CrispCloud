@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### FTP byte-offset resume
 
-**Status:** Scoped. **Dependencies:** Existing transfer recovery.
+**Status:** Implementing. **Dependencies:** Existing transfer recovery.
 
 **Scope:** Resume verified partial downloads using server restart capabilities and durable checkpoints.
 

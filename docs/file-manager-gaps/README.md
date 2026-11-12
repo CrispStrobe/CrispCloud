@@ -33,7 +33,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 Eight implementation increments are preserved on remote feature branches:
 **five closed scopes** (G02, G03, G13, G27, G37) and **three implemented features
 with target-runtime acceptance pending** (G01, G04, G12). The remaining 43 items
-comprise **31 scoped implementation gaps, 10 research prerequisites and two
+comprise **31 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -41,6 +41,11 @@ The [12 November validation record](validation-20261112.md) separates passing
 unit/widget/native-loopback evidence, static analysis, JavaScript compilation,
 the unsuccessful optional WebAssembly dry run and outstanding native/live checks.
 The current stack contains the original scope and every incremental checkpoint.
+
+Continuation work from `403e942d` is recorded in
+[the active increment plan](continuation-20261112.md). G05, G09, G25 and G49
+are being implemented; their closure requires separate regression evidence and
+remote checkpoints.
 
 ## Lane index
 
@@ -61,11 +66,11 @@ The current stack contains the original scope and every incremental checkpoint.
 | [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Closed: direct saved-item workflow | New network discovery remains G30 |
 | [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
 | [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Implemented / target-runtime acceptance pending | Native menu presentation and keyboard dispatch under G50/G51 |
-| [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Scoped | G01; existing collections |
+| [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Implementing | G01; existing collections |
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
-| [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Scoped | G04; existing terminal/custom commands |
+| [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implementing | G04; existing terminal/custom commands |
 | [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Scoped | Captured editor session; conflict review |
 | [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Scoped | G10 staging lifetime |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
@@ -81,7 +86,7 @@ The current stack contains the original scope and every incremental checkpoint.
 | [G22](03-archives-and-containers.md#g22) | Archive format coverage | Scoped | License and format review per codec |
 | [G23](03-archives-and-containers.md#g23) | Remote and browser archive creation | Scoped | G18; G21 where streaming is required |
 | [G24](03-archives-and-containers.md#g24) | External packer adapters | Scoped | G17 extension isolation |
-| [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Scoped | Existing transfer recovery |
+| [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Implementing | Existing transfer recovery |
 | [G26](04-connections-and-transfers.md#g26) | Server-to-server FTP transfer | Scoped | G25 transfer evidence; server support |
 | [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Closed: native HTTP/HTTPS scope | Direct-protocol proxy work remains G28 |
 | [G28](04-connections-and-transfers.md#g28) | Direct-protocol proxy routing | Scoped | Per-protocol socket factories |
@@ -105,7 +110,7 @@ The current stack contains the original scope and every incremental checkpoint.
 | [G46](05-native-platforms-and-release.md#g46) | Direct cable transfer | Hardware research | Hardware/protocol fixtures; compatible runtime |
 | [G47](05-native-platforms-and-release.md#g47) | Native binary extension compatibility | Architecture research | ABI specification; bitness/OS hosts; license review |
 | [G48](06-localization-and-acceptance.md#g48) | UI language coverage | Scoped | Terminology review; localization inventory |
-| [G49](06-localization-and-acceptance.md#g49) | Localized help | Scoped | Canonical English guide; documentation localization |
+| [G49](06-localization-and-acceptance.md#g49) | Localized help | Implementing | Canonical English guide; documentation localization |
 | [G50](06-localization-and-acceptance.md#g50) | Native and live-provider acceptance | Acceptance pending | Target machines; explicit test accounts and fixtures |
 | [G51](06-localization-and-acceptance.md#g51) | Web runtime and WebAssembly acceptance | Acceptance pending | Browser test harness; dependency compatibility |
 

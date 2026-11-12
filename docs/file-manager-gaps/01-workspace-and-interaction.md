@@ -156,7 +156,7 @@ platform-menu model passing tests does not establish signed application behavior
 
 ### Gathering stack
 
-**Status:** Scoped. **Dependencies:** G01; existing collections.
+**Status:** Implementing. **Dependencies:** G01; existing collections.
 
 **Scope:** Gather source-bound references from different folders and transfer them through one reviewed plan.
 
@@ -236,7 +236,7 @@ platform-menu model passing tests does not establish signed application behavior
 
 ### Command entry and keyboard conventions
 
-**Status:** Scoped. **Dependencies:** G04; existing terminal/custom commands.
+**Status:** Implementing. **Dependencies:** G04; existing terminal/custom commands.
 
 **Scope:** Complete reviewed program launch and file/path insertion shortcuts across supported desktop targets.
 
