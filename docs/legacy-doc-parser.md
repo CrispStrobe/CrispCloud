@@ -41,8 +41,8 @@ python3 tool/sync_legacy_doc_parser.py --source /path/to/legacy-doc-parser --ref
 
 The default is read-only. After reviewing the plan, repeat with `--apply`, then
 resolve dependencies and run the gates. The tool validates the entire current
-mirror against its original Git commit before writing, bounds the source tree,
-rejects symlinks and unexplained source files, updates the Git pin and mirror
+mirror bytes and Git executable bits against its original commit before writing,
+bounds the source tree, rejects symlinks and unexplained source files, updates the Git pin and mirror
 metadata together, and writes the new Office inventory last. It leaves Quds
 bytes and historical release evidence unchanged. Generated local test outputs
 are not treated as source patches. Verify the exact result with:
@@ -50,6 +50,13 @@ are not treated as source patches. Verify the exact result with:
 ```sh
 python3 tool/verify_office_fidelity.py --legacy-source /path/to/legacy-doc-parser
 ```
+
+The source-mode check uses the committed `100644`/`100755` distinction, including
+new executable tools and changes that only add or remove executable permission.
+Source checkout modifications do not override the pinned Git tree. The
+`--legacy-source` verification also detects mode drift when file bytes still
+match; no dependency pin, inventory schema or release policy changes are needed
+for this check.
 
 ## App behavior
 
