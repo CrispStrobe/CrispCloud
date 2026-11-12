@@ -1,6 +1,9 @@
 {
   "version": 1,
   "outputs": [
+    "build/fidelity-custom-tabs/host-tabs-1.docx",
+    "build/fidelity-custom-tabs/host-tabs-2.docx",
+    "build/fidelity-custom-tabs/host-tabs-3.docx",
     "build/fidelity-host/after-late-edits.docx",
     "build/fidelity-host/before-late-edits.docx",
     "build/fidelity-host/close-after-late-edit.docx",

@@ -50,6 +50,7 @@ jobs:
           path: |
             build/fidelity/
             build/fidelity-host/
+            build/fidelity-custom-tabs/
             packages/quds_office_engine/build/fidelity*
   external-schema:
     needs: host-roundtrip
