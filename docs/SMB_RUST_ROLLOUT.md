@@ -50,6 +50,41 @@ Regenerate the bridge with `flutter_rust_bridge_codegen` 2.11.1:
 flutter_rust_bridge_codegen generate --rust-root rust --rust-input crate::api --dart-output lib/src/rust --dart-root . --no-deps-check --no-auto-upgrade-dependency --type-64bit-int --no-dart-fix
 ```
 
+## Bundled app builds (native-asset hook)
+
+An app can ship the bridge without `CRISP_SMB_LIBRARY` by opting in from its
+own pubspec:
+
+```yaml
+hooks:
+  user_defines:
+    crisp_storage:
+      rust_smb: true
+```
+
+`packages/crisp_storage/hook/build.dart` then runs `cargo build --release
+--locked --target <triple>` for each Flutter build target and bundles the
+cdylib as the code asset `package:crisp_storage/crisp_smb_bridge`. Flutter
+embeds and signs it (`crisp_smb_bridge.framework` on iOS/macOS, next to
+`libdart_smb2.framework`). Supported: iOS device/simulator, macOS (both
+architectures for universal builds), Linux and Windows. Other targets bundle
+nothing, so `auto` keeps using libsmb2. Install the matching rustup targets
+(`aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`,
+`aarch64-apple-darwin`, `x86_64-apple-darwin`). The hook finds `cargo` via
+`$CARGO`, `PATH` or `~/.cargo/bin` (Xcode phases have a reduced PATH) and
+sets `SDKROOT` with `xcrun`. `rust_smb_library: <path>` bundles a prebuilt
+library instead. Without the opt-in nothing changes and no Rust toolchain is
+needed.
+
+At runtime `RustSmbSession.initialize` tries, in order: `CRISP_SMB_LIBRARY`
+(define or environment), the app-bundled locations from
+`bundledRustLibraryCandidates`, then FRB's developer default.
+`rustSmbLibraryLocation` reports which one loaded (diagnostic only).
+
+The native session holds at most eight open read/write handles. The Dart
+adapter now queues further streams/uploads for a free slot instead of failing
+with `TooManyHandles`, matching libsmb2's behavior under concurrent use.
+
 ## Transfer semantics
 
 Rust-to-disk downloads keep file bytes native, cap reads at 256 KiB and use four
