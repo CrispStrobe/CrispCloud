@@ -252,5 +252,41 @@ void main() {
         './lib/libcrisp_smb_bridge.so',
       );
     });
+
+    test('flutter test native-asset folder is the last resort', () {
+      final mac = bundledRustLibraryCandidates(
+        os: 'macos',
+        executable: '/x/flutter_tester',
+        workingDirectory: '/repo',
+      );
+      expect(
+        mac.last,
+        '/repo/build/native_assets/macos/libcrisp_smb_bridge.dylib',
+      );
+      expect(
+        bundledRustLibraryCandidates(
+          os: 'linux',
+          executable: '/x/flutter_tester',
+          workingDirectory: '/repo',
+        ).last,
+        '/repo/build/native_assets/linux/libcrisp_smb_bridge.so',
+      );
+      expect(
+        bundledRustLibraryCandidates(
+          os: 'windows',
+          executable: r'C:\x\flutter_tester.exe',
+          workingDirectory: r'C:\repo',
+        ).last,
+        r'C:\repo\build\native_assets\windows\crisp_smb_bridge.dll',
+      );
+      expect(
+        bundledRustLibraryCandidates(
+          os: 'ios',
+          executable: '/a/Runner.app/Runner',
+          workingDirectory: '/repo',
+        ).any((p) => p.contains('native_assets')),
+        isFalse,
+      );
+    });
   });
 }
