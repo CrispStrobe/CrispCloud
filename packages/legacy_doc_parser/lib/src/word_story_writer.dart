@@ -683,7 +683,7 @@ extension _WordStories on _StructuredWordWriter {
             matches.single,
             path,
             xml,
-            () => _blocks(matches.single.blocks),
+            () => _blocks(matches.single.blocks, paragraphAfterTable: false),
           );
         } else {
           xml.add('<w:p><w:r><w:$type/></w:r></w:p>');
@@ -696,7 +696,12 @@ extension _WordStories on _StructuredWordWriter {
         }
         final story = _stories[reference.storyId]!;
         xml.add('<w:$singular w:id="${reference.id}">');
-        _withStory(story, path, xml, () => _blocks(story.blocks));
+        _withStory(
+          story,
+          path,
+          xml,
+          () => _blocks(story.blocks, paragraphAfterTable: false),
+        );
         xml.add('</w:$singular>');
         _count(plural);
       }
@@ -812,7 +817,10 @@ extension _WordStories on _StructuredWordWriter {
     }
   }
 
-  void _blocks(List<LegacyWordBlock> blocks) {
+  void _blocks(
+    List<LegacyWordBlock> blocks, {
+    bool paragraphAfterTable = true,
+  }) {
     for (final block in blocks) {
       switch (block) {
         case LegacyWordParagraph():
@@ -821,7 +829,11 @@ extension _WordStories on _StructuredWordWriter {
           _table(block);
       }
     }
-    if (blocks.isEmpty || blocks.last is LegacyWordTable) {
+    // CT_FtnEdn permits a table as its final block. A synthesized paragraph
+    // changes note height and becomes real content on a subsequent DOC import.
+    // Preserve every parsed paragraph; this option changes only the fallback.
+    if (blocks.isEmpty ||
+        (paragraphAfterTable && blocks.last is LegacyWordTable)) {
       _xml.add('<w:p');
       _commentParagraphAttribute();
       _xml.add('/>');
@@ -840,6 +852,7 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.recoveredTextboxChainLength:
         case LegacyWordWarning.terminalMarkFormattingUnavailable:
         case LegacyWordWarning.recoveredGlobalTextboxSentinel:
+        case LegacyWordWarning.recoveredHeaderTextboxAlias:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

@@ -33,3 +33,16 @@ discloses its narrow recovery as `recoveredTextboxChainLength` and retains
 the original declared count separately. The fixture is not an exact-layout
 golden. The native probe also checks marker positions and resize-driven
 reflow so preserving only the link XML cannot pass its native gate.
+
+## Separate header textbox occurrences
+
+`header-textbox-duplicate-chain.doc` retains the original native import failure
+and its independently authored source. The original red receipt is unchanged.
+`header-textbox-first-enabled.doc` is the exact activation control from the
+sealed header-alias archive: only the first-page-header setting is enabled,
+leaving the textbox range and drawing identities intact. Its adjacent JSON
+records the source, output and archive hashes. Both are required native corpus
+and SDK cases; neither is an automatically adopted layout golden.
+
+See [the header alias contract](../../../doc/header-textbox-aliases.md) for the
+narrow recovery, seven native paragraph controls and reproduction commands.

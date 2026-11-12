@@ -721,6 +721,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_table_styles.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_table_text.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_tables.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_textbox_alias.dart",
     "packages/legacy_doc_parser/lib/src/opc_package_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_comment_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_compatibility_writer.dart",

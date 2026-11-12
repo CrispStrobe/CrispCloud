@@ -1,0 +1,116 @@
+{
+  "schema": "legacy-doc-parser/native-header-textbox-duplicate-chain",
+  "version": 1,
+  "purpose": "Retained red input; duplicate-chain guard rejects it before and after the separator correction.",
+  "sourceKind": "Literal independently authored OOXML exported to DOC by the recorded native renderer.",
+  "generator": "tool/fidelity/textbox_boundary_probe.py::authored_control",
+  "generatorSha256": "8024b2823abddecb17cb60bc5fc9fa907ea5ca98acad44ae20de443059a7661a",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "authoredDocx": {
+    "path": "test/fixtures/word_native/header-textbox-duplicate-chain-source.docx",
+    "sha256": "d76bbecfe01642d3b6473ca55111656007ca3b02832aacfe4b081c9f06d79272",
+    "expectedParagraphs": [
+      "ALPHA"
+    ]
+  },
+  "binaryDoc": {
+    "path": "test/fixtures/word_native/header-textbox-duplicate-chain.doc",
+    "sha256": "4e8a4388d0a509836760d84c8ef28158ee90018518928a93f4c01980e5387624",
+    "bytes": 10240
+  },
+  "nativeProjection": {
+    "sha256": "4613026e3503cd1012eaa824f6d4cca3ce8934b3b321c477e91f3e49b488501f",
+    "boxes": [
+      {
+        "part": "word/header1.xml",
+        "paragraphs": [
+          "ALPHA"
+        ],
+        "framePoints": {
+          "cx": 143.95,
+          "cy": 21.95
+        }
+      }
+    ],
+    "alternateContent": [
+      {
+        "part": "word/header1.xml",
+        "choices": [
+          [
+            "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+          ]
+        ],
+        "fallbackAvailable": true,
+        "selected": "choice",
+        "selectedNamespaces": [
+          "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+        ]
+      }
+    ],
+    "matchesAuthoredParagraphs": true
+  },
+  "baselineCommit": "34e14841ef679c6b480673ef5be354286dbd67dc",
+  "baselineError": "convert-before exited 255: Unhandled exception:\nFormatException: Invalid Word drawing-to-textbox reference.\n#0      _WordStories._linkTextboxDrawings (package:legacy_doc_parser/src/legacy_word_stories.dart:486)\n#1      _StructuredWordParser.parse (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:142)\n#2      readStructuredLegacyWord (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:36)\n#3      parseLegacyWordDocument (package:legacy_doc_parser/src/legacy_word_document.dart:14)\n#4      main (file:///workspace/scratch/143959eed1a1/parser-textbox-boundary/tool/fidelity/convert.dart:21)\n#5      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311)\n#6      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)\n",
+  "patchedError": "convert exited 255: Unhandled exception:\nFormatException: Invalid Word drawing-to-textbox reference.\n#0      _WordStories._linkTextboxDrawings (package:legacy_doc_parser/src/legacy_word_stories.dart:491)\n#1      _StructuredWordParser.parse (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:142)\n#2      readStructuredLegacyWord (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:36)\n#3      parseLegacyWordDocument (package:legacy_doc_parser/src/legacy_word_document.dart:14)\n#4      main (file:///workspace/scratch/143959eed1a1/parser-textbox-boundary/tool/fidelity/convert.dart:21)\n#5      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311)\n#6      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)\n",
+  "headerDocumentLength": 9,
+  "plcfHddCps": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2,
+    5,
+    5,
+    5,
+    8,
+    8,
+    10
+  ],
+  "duplicateReferences": [
+    {
+      "shapeId": 1025,
+      "headerAnchorCp": 2,
+      "headerSlot": 7,
+      "headerKind": "normal",
+      "rawHeaderRange": [
+        2,
+        5
+      ],
+      "clientTextbox": 65536
+    },
+    {
+      "shapeId": 1026,
+      "headerAnchorCp": 5,
+      "headerSlot": 10,
+      "headerKind": "first",
+      "rawHeaderRange": [
+        5,
+        8
+      ],
+      "clientTextbox": 65536
+    }
+  ],
+  "plcfHdrTxbxTxt": {
+    "cps": [
+      0,
+      7,
+      8
+    ],
+    "records": [
+      {
+        "count": 1,
+        "reusable": 0,
+        "shapeId": 1025
+      },
+      {
+        "count": 0,
+        "reusable": 0,
+        "shapeId": 0
+      }
+    ]
+  },
+  "interpretation": "The duplicate index occurs in distinct normal and first-page header ranges. No linked next-shape chain or independent second FTXBXS is inferred."
+}

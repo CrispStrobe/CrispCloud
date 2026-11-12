@@ -294,6 +294,33 @@
         "pagination"
       ],
       "origin": "Unmodified public Apache POI binary; independently demonstrates table-style PAPX framing and TInsert/TDxaCol/TIstd operation order"
+    },
+    {
+      "id": "header-textbox-alias",
+      "path": "test/fixtures/word_native/header-textbox-duplicate-chain.doc",
+      "sha256": "4e8a4388d0a509836760d84c8ef28158ee90018518928a93f4c01980e5387624",
+      "source": "authored-package-fixture",
+      "features": [
+        "header-textbox-alias",
+        "textboxes",
+        "stories",
+        "pagination"
+      ],
+      "origin": "Retained native DOC from independently authored header textbox OOXML; one real FTXBXS and distinct normal/first header occurrences; earlier failure receipt retained unchanged."
+    },
+    {
+      "id": "header-textbox-first-enabled",
+      "path": "test/fixtures/word_native/header-textbox-first-enabled.doc",
+      "sha256": "587d2223311f734c768e88473eccba829dfb048afd9a471a1f2c3ea20071afd1",
+      "source": "authored-package-fixture",
+      "features": [
+        "header-textbox-alias",
+        "first-page-header",
+        "textboxes",
+        "stories",
+        "pagination"
+      ],
+      "origin": "Exact activation control from sealed header alias evidence; only the title-page section setting is enabled, retaining original drawing/textbox identities and range bytes."
     }
   ],
   "reference_expectations": [

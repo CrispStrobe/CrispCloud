@@ -9,6 +9,7 @@ import 'legacy_word_number_formats.dart';
 import 'legacy_word_numbering.dart';
 import 'legacy_word_structured_model.dart';
 import 'legacy_word_structured_render.dart';
+import 'legacy_word_textbox_alias.dart';
 
 part 'legacy_word_binary_source.dart';
 part 'legacy_word_compatibility_parser.dart';

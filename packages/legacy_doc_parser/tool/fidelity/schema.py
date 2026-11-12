@@ -88,9 +88,17 @@ EXPECTED_CASES = frozenset([
     "native-inputs/poi-simple-table2",
     "native-inputs/word16-page-origin-lo-blip-count",
     "native-inputs/officeart-shapes",
+    "native-inputs/header-textbox-duplicate-chain",
+    "native-inputs/header-textbox-first-enabled",
+    *(f"header-alias/header-alias-{kind}" for kind in (
+        "content", "empty", "leading-blank", "interior-blank", "trailing-blank",
+        "two-trailing-blanks", "two-content-paragraphs")),
     *(f"textbox-boundary/textbox-{story}-{kind}" for story in ("main", "header")
       for kind in ("content", "empty", "leading-blank", "interior-blank",
                    "trailing-blank", "two-trailing-blanks", "two-content-paragraphs")),
+    *(f"note-boundary/{story}-{kind}" for story in ("footnote", "endnote")
+      for kind in ("plain", "empty", "trailing-blank", "two-trailing-blanks",
+                   "table", "table-blank", "table-two-blanks", "table-text")),
 ])
 PACKAGES = (
     ("DocumentFormat.OpenXml", "3.3.0",

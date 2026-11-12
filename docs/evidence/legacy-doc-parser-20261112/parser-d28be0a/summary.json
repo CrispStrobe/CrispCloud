@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "appBaseCommit": "4bbd323263f4c97a057bc74be8411e6a629e4100",
+  "appCodeAndTestsUnchangedFromBase": true,
+  "parserCommit": "d28be0a173415ebb392a8309aacdbe2bb1a50da7",
+  "suiteCommit": "da0979a5c6c4273ea68f360ce9a079bfa747384f",
+  "parserUpstreamFiles": 422,
+  "officeManagedFiles": 843,
+  "ebookGitCommit": "5c49682143a44e14bc0eea10c52e769bc4a4c03a",
+  "ebookFilesVerified": 278,
+  "flutterTests": 131,
+  "flutterSuites": 17,
+  "pythonHarnessTests": 101,
+  "portableJavaScriptFormats": [
+    "DOC",
+    "RTF",
+    "PPT",
+    "MSG"
+  ],
+  "installedOfficeRoutes": [
+    "built-in DOCX",
+    "native DOCX",
+    "native DOCM"
+  ],
+  "releasePubspecRestored": true,
+  "testConfiguration": "Existing system SQLite wrapper, retained Clang19.1.7 and SQLite3.46.1; optional ebook hook disabled only during local tests. Native ebook conversion is not validated.",
+  "sourceIdentity": "App lib/ and test/ bytes equal the public base commit; exact standalone parser and Quds mirrors plus verified Git modes, configuration hashes and complete logs bind this integration worktree before commit.",
+  "sourceBinding": {
+    "inventory_sha256": "f4468d7473e861ef3be0d20524bdd711658a48956ed2ef3023c94ddb00d1f15c",
+    "pubspec_lock_sha256": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+    "reviewed_source_sha256": "073469fab02b20c3d950190f93b57539b06b6f490ee775ea4e9610d9b81099cf"
+  },
+  "files": {
+    "pubspec.yaml": "34bc343098d26797c597203eca885a1cc24a14f5d69679d3702c0ec34776c617",
+    "pubspec.lock": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+    "tool/office_fidelity_manifest.json": "086eb4bbbdcc3a15ccd1050ef72a6f9408e02f108616398ce4f4e922f6af73a4",
+    "packages/legacy_doc_parser/UPSTREAM.json": "4debdf2916a3cb1b2037deecfdc37c2073f07b112bc68d097d602944282e8bf1",
+    "docs/ebook-source-manifest.json": "f08e781f9f99f2c8a221db685c7311cf2082138089d69925c0daa9bfa0c27fe3"
+  },
+  "checks": {
+    "focused": {
+      "archive": "focused.log.gz",
+      "sha256": "1ca4a2b7dbd780d7784a009f4befc5d00b99eda6783fdde890973d04c60bf7d1",
+      "uncompressedSha256": "4be447032ff641fde1eee24427f5baebd282d05aeaae699e3e344bbacb07e1c7",
+      "bytes": 26030
+    },
+    "python": {
+      "archive": "python.log.gz",
+      "sha256": "41d0f9bae180ea9b8ccc6539fb019592eca53f6bc2e47c89ea7ce9371cffd4f5",
+      "uncompressedSha256": "d3dd63c97cccb8b8c95d13101ac04d15e4725a1bb277e89dcd0097bbc2596122",
+      "bytes": 1532
+    },
+    "native": {
+      "archive": "native.log.gz",
+      "sha256": "61fd6c38ee7e559190df859b3a025809eabc18e57c1520b8e5391e6f2a4489a4",
+      "uncompressedSha256": "b5f253ec0144ca8c9a4f67cf0caa286dd533cb2f9f499e409a418fe7f638e5d3",
+      "bytes": 4250
+    },
+    "web": {
+      "archive": "web.log.gz",
+      "sha256": "c0e8b1d75a1302a1d6d521e5ec9ade0f2560de9c7aef937c2fa6455e652e30d8",
+      "uncompressedSha256": "80ffaaadf9256885a3bd292053c7e74fcbae11e591d6b92a30249d171a29e4e6",
+      "bytes": 262
+    }
+  },
+  "upstreamNativeBoundary": "All 24 initial imports succeed and preserve page count; 23 cases complete three cycles. The first-page-enabled header fails its first regenerated DOC import, sealed upstream in 8367ce0. This app acceptance does not certify exact pagination or complete editing semantics."
+}

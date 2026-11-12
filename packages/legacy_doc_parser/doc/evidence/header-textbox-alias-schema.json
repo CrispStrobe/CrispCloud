@@ -1,0 +1,193 @@
+{
+  "schema": "legacy-doc-parser/header-textbox-alias-schema",
+  "version": 1,
+  "productionCommit": "e7f2ed75a25b4caec81b3ac65c4e56dddc09642d",
+  "measuredSourceBase": "65db108a4dae3b73b39d0c6c0c2ed46326339906",
+  "measuredWorktreeDirty": true,
+  "parserSourceFiles": {
+    "lib/legacy_doc_parser.dart": "5ef8f92595c74eae08b104a750559fff9dd8b62f39d989ecef74ebd881f2e0a1",
+    "lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
+    "lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
+    "lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
+    "lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
+    "lib/src/conversion.dart": "cf628f1d5e6df24bc8a1a4dd75766d5f8c19f49f45eec79c81bd5f5d9a51d0ba",
+    "lib/src/legacy_word_binary_source.dart": "f2e0a0ffba3c61d0ea97c2d4fc5165b4f27cf360ab85e8aa18c58b61f0f1f0c2",
+    "lib/src/legacy_word_compatibility.dart": "c82c73dd557ef7406e914235877f005b4b2760e635ded5e00243e46b0d366c2a",
+    "lib/src/legacy_word_compatibility_parser.dart": "01c11adb30b9af788e42ecb644a37782ab7cab0d3bb15eb07a2cc1abe9e5ddfe",
+    "lib/src/legacy_word_decorations.dart": "fcfee3253857e367c1c586592340c77431f80540bf5d75321611b0882cc0cbed",
+    "lib/src/legacy_word_document.dart": "9c84e371c9f0ded06bf7b413d6811985a91ba9407a273d9ccec66c69b2432e23",
+    "lib/src/legacy_word_fields.dart": "17b8a4e781417772593612b79afd746c2f2b52b508b82313d45dd5b222e589e4",
+    "lib/src/legacy_word_format_tables.dart": "36b62086b56bf7f0c005d819627a99a2450b349792f107cfed84152d1d7254ef",
+    "lib/src/legacy_word_html_media.dart": "00b2e9d3a6f0a77b91d727838f9e53028817596ebc388a523f5bd15d6a06119c",
+    "lib/src/legacy_word_layout_model.dart": "0f3c1ae25ab3f6a2eff97db493ab15144c6dd162969fc96c43e1aee8ace45061",
+    "lib/src/legacy_word_layout_parser.dart": "8bee3ec3f81e147c3919f1054d1e5459cb6fa47fd41b451f28653a0b367a4efd",
+    "lib/src/legacy_word_lists.dart": "1b6b9625981bb81651a58261e1d2824a9731ea2db6f57706fb46b10da6f640b7",
+    "lib/src/legacy_word_media_model.dart": "0726aa7402a81f9b1cea4e83f7d9e8631bc1fcc363d2f1b333f39080a5361a7d",
+    "lib/src/legacy_word_media_parser.dart": "eb597709fc5044cb5aee8cc751c99c4646a5dca20bd2b8f385173457788e3642",
+    "lib/src/legacy_word_metafile.dart": "5298ed995f4fa1f229c263f1e2b9bbd99ae41d040601e8ce9a0aea1559d3c725",
+    "lib/src/legacy_word_metafile_render.dart": "2d0a811b15e465e3f02a5810230126c5d49f7a1c0ec038c2b0ce19548cfba565",
+    "lib/src/legacy_word_number_formats.dart": "3a98b56587fe4f1f72b2bcd6ca3020569d5a8f0f3b7f68fe19867b2fd19d42c8",
+    "lib/src/legacy_word_numbering.dart": "ed851e376cfabb7d2db0588718273b2bf891408fd8eb8a0c70e4d0dc8a94fa77",
+    "lib/src/legacy_word_officeart_model.dart": "834a2d6df68d02178a8d73291d719e19e78ee16c29323ad513780eb54ecaee48",
+    "lib/src/legacy_word_officeart_parser.dart": "055ce982cf157f72530f3ad40386595593c30b02645f30d61731a65130633b42",
+    "lib/src/legacy_word_revisions.dart": "52c090b4d1e2b45280c0ee09f5fcf32bed1c9a2d28e096d3beeecbca7f328ec0",
+    "lib/src/legacy_word_sprms.dart": "9d77a52c30842604e29bda177f08024464d5bf271cdb262aae347e97a3657324",
+    "lib/src/legacy_word_stories.dart": "d1f7d5592cd760bf47211e60b9b116ad7ec7e6c68d0adc029ba07732d32628ea",
+    "lib/src/legacy_word_structured_conversion.dart": "cf9c325ccd3261bdc99dce53cd1325d4ac2ed98e204dd0478465edeaec837592",
+    "lib/src/legacy_word_structured_model.dart": "33e8a52b2d338c30d741faeea28ee23559d03251052326f65fad4c1679c916ae",
+    "lib/src/legacy_word_structured_parser.dart": "c531fd2a7c3d1718939f1f3e04373c4c156dc057af3a9c83198ee1fd759e96ec",
+    "lib/src/legacy_word_structured_render.dart": "45a039b1872d2ae6e37fc5dd2fafe38f926f8855475d1c004c627ff1ae89e503",
+    "lib/src/legacy_word_table_model.dart": "91a11e4327468ca56bf445cf76df63761b57cf85314dd6eb9ff4499d5d91404b",
+    "lib/src/legacy_word_table_operations.dart": "3c5ee6009319cfc2aebb72d9744f72c754dcbaabaca076dd83cb830c7f67c5ff",
+    "lib/src/legacy_word_table_revisions.dart": "275e1795441c96583d3d6c828bdde0356a382e6cc3447a9d20ed9806f6bc68a3",
+    "lib/src/legacy_word_table_styles.dart": "2a74eb977559d3bcb23df79b2c68045660d93d810ecfc7edaf909dd3f2e92686",
+    "lib/src/legacy_word_table_text.dart": "21b5cf79dca85b3b52b545e07183a3c3fd1da4956ba03aa6f555c1ddfb481aba",
+    "lib/src/legacy_word_tables.dart": "2af3ea36751799d97509e15fdd02e7e92fd0173f7c6eb60d992d7036787ead1d",
+    "lib/src/legacy_word_textbox_alias.dart": "41e3801cbe07ef04eb6991b46a4644888b8c1387b0ecac287c00f2f8ae86c34c",
+    "lib/src/opc_package_writer.dart": "6852b0de555c609ace9c7bddb29de27e0a2e46e642c69c853cd49beeb66cf97c",
+    "lib/src/word_comment_writer.dart": "1d6d02c61fd87b75e174760fe08a9c0dcfe31ab604298ee274f027c7a7fc6997",
+    "lib/src/word_compatibility_writer.dart": "0e7d54c6948198165236f561c018243a64c0b89d6d112b553d6b9357f97452d8",
+    "lib/src/word_decoration_writer.dart": "8a6354c2e4970a2c504db2623885f5250765a49d8414ebf0da76e3e1ac3a1281",
+    "lib/src/word_image_appearance_writer.dart": "bbab8149662c0ee56f8586ab85e482117cbbad80f13ff78c3a45ae89e4da9cb1",
+    "lib/src/word_layout_writer.dart": "eb239b04072b12722437ebef803df692b785f41c34ff29fa56215b0fe4da96a5",
+    "lib/src/word_media_writer.dart": "9f1808032a186a90585f9e58db0a86a0f99aa090435b984e6d084d7861f3777a",
+    "lib/src/word_numbering_writer.dart": "5b42d1b06158bfc6823cd4ffd0e33a61a090af528caf524234fa5a6540337c09",
+    "lib/src/word_officeart_position_writer.dart": "8071ea2373c72ff323593ea7fdf142c2a4dbe5bd4bac08bd7ef2b371a1acb74e",
+    "lib/src/word_revision_writer.dart": "8f481233ca7591dc33e216db393b1959d4171b96190b3ca1c1c47798feb5ca57",
+    "lib/src/word_shape_writer.dart": "94b30ef61cbfe3b3bf65941677aa71f8cd1a6c74b3c4c42aab73d61774d87458",
+    "lib/src/word_story_writer.dart": "820ca7a3302c0a9955195812f7607b9a61017a6b4149503952e53ed1d05c93c5",
+    "lib/src/word_table_revision_writer.dart": "2430d40ffe5c694a53ce21f5ec2c813c6f1cb8b579fe6ee402fa32fb9d4b0740",
+    "lib/src/word_table_style_writer.dart": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+    "lib/src/word_table_text_writer.dart": "04b7d64caf9025fa90bbb7a9b2a492490cfbd2ee518609f2bf63cb9867d86f13",
+    "lib/src/word_table_writer.dart": "f53d13e7886d04b7b077a49befce57e8be44ec1301c5060ad13f3d834c8e434f",
+    "lib/src/word_textbox_writer.dart": "1f658ff408bf0608b3f7efec5da113c9113e499ed1d1effd388df4faa01a3448"
+  },
+  "generatorFiles": {
+    "tool/fidelity/header_textbox_alias_fixture.dart": "d7a282ffe29486d472356484e303db05139f0e694ec4634b897c7eea30d2b332",
+    "test/support/header_textbox_alias_fixture.dart": "0ac82b4c49765de46943691b0a37be477c374a7fc03438c830a61d1e3aaab34b",
+    "test/support/textbox_boundary_fixture.dart": "d33272830951864c23a65c20364fe97949d1bdc6e6df9c0f6cd09dbfd5c7ca04",
+    "test/support/media_word_fixture.dart": "eef79c9d11684dfdbad94edc4d21b5f99bd17a5bd18d399bde054d548a9fc599",
+    "test/support/officeart_shape_fixture.dart": "58bc12ed14c07e59ff0934afe5c0122df9671868767a4f411f25350f008638a6",
+    "test/support/story_word_fixture.dart": "6e75a78d4b298ae7324d82d68b546b57fc3ee21f70246c77ab67f6fb7d57498f",
+    "test/support/structured_word_fixture.dart": "fe5f214598c04a977b744705724d79f9102df1cee954b6b2b443f8f9a77a584f"
+  },
+  "validator": {
+    "sha256": "698a090f1ba04ef8a844eea2614c9378c3713aa74101a4bf5e0c00e0588085c1",
+    "sdkVersion": "3.3.0",
+    "officeVersion": "Office2019",
+    "selfTest": "8 valid Word packages, 4 invalid XML, 12 mismatched types, and exact discovery passed."
+  },
+  "deterministicGeneratedFiles": 15,
+  "report": {
+    "Files": 21,
+    "Failures": 0,
+    "Reports": [
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-content.docx",
+        "Sha256": "c25e7297eb9ad3b7c8402a9ab4b0000af42a47797edd25bb59db0c8fa0161289",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-empty.docx",
+        "Sha256": "55a8585f1e850ad7c101647ff3aefa4fcecb3c7b7e1bf44dbd4cd8530183cfef",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-interior-blank.docx",
+        "Sha256": "6b0f4f17e898ab0ce11c5dcd1aecf70de4ee2bd093539a5e7c1276ff76177d2c",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-leading-blank.docx",
+        "Sha256": "65c1a0969890517cba64796fe70729d55c6a712059c570cb6d5d821b605e692f",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-trailing-blank.docx",
+        "Sha256": "301add0096c8935076a58905a002f79bd211eac937504752c0ab44e729089527",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-two-content-paragraphs.docx",
+        "Sha256": "15f01514d0843a0918247cde091e5b336c2e7f0a0c2cb10733858f79dddabc25",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/header-alias-two-trailing-blanks.docx",
+        "Sha256": "62ab8ddecef8eda12588f7bf46e1930259597460766c32e491c0105b4232a058",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-content-converted.docx",
+        "Sha256": "2c98569580f723ae58d57ef9c9f6b215fd3e7b73374a09ff7857902c032aae31",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-content-first-converted.docx",
+        "Sha256": "98ca503956f5ffe48795c01154f849de832120bb28894535d813ca5fc118efce",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-empty-converted.docx",
+        "Sha256": "b4d0a22cea8ddab87274696caae62f237c3fd0ef732a07494a9131cd9f0aaf86",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-empty-first-converted.docx",
+        "Sha256": "5569d089401f617868ffa85f7da6fdbb3318f53b264ee72514feed131dd3ff3a",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-interior-blank-converted.docx",
+        "Sha256": "6f3f0aaf67830afc80957f7d09cf00e2e10e6279c1ae89313ac59bf8411a14d6",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-interior-blank-first-converted.docx",
+        "Sha256": "1ea023c927479de149de3f95a2899a5f8ae06a8918ff9b6443c4053ff2864cea",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-leading-blank-converted.docx",
+        "Sha256": "70b79341618a80e79d26008bb14a8d6665a80c33f35d0caeac7a483e5bc8d365",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-leading-blank-first-converted.docx",
+        "Sha256": "c6f8fd07282cb48970bcc33efc5f8c63bd23f17ae86b9220d4a6f1cb374e692d",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-trailing-blank-converted.docx",
+        "Sha256": "b1984775bbbf67875165fb0e2d019021f183acb31f320ec0cb8de12ba5e1e72e",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-trailing-blank-first-converted.docx",
+        "Sha256": "c94f684ece580ce085b65c2ca03c24344bf39a21ceb9223045c172bd306c24bb",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-two-content-paragraphs-converted.docx",
+        "Sha256": "77cd7f2915b40621687aba1d8fbf93946b6396034e93b84c46c229d893838304",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-two-content-paragraphs-first-converted.docx",
+        "Sha256": "700ac3ef544c101e8538b4f191c1117ca03591ba20fb47db813577484889b30e",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-two-trailing-blanks-converted.docx",
+        "Sha256": "e99dc68b69dc38eef94cc8c8635a8bcd3539c581e28bdd104bbd54455264c46f",
+        "Errors": []
+      },
+      {
+        "File": "build/header-alias/schema-inputs/native-two-trailing-blanks-first-converted.docx",
+        "Sha256": "9524828bea5bb9aba20f331ee46854a1c99fdc420a4eaf7ef8b59e745ca4bbe1",
+        "Errors": []
+      }
+    ]
+  },
+  "archiveSchemaInputs": "schema-inputs/"
+}

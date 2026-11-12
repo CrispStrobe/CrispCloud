@@ -1,0 +1,1601 @@
+{
+  "schema": "legacy-doc-parser/note-boundary-summary",
+  "version": 1,
+  "parserCommit": "d622754b46ab4fd4e38ceed0c0fe4aa64dc23f2d",
+  "nativeRenderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "requestedCases": 16,
+  "completedInitialImports": 16,
+  "completedRoundtripImports": 48,
+  "rawWriterBlockChecks": 64,
+  "sdkRoutes": {
+    "authored": {
+      "files": 16,
+      "errors": 0,
+      "hashesVerified": true,
+      "valid": true
+    },
+    "parser": {
+      "files": 64,
+      "errors": 0,
+      "hashesVerified": true,
+      "valid": true
+    },
+    "native": {
+      "files": 16,
+      "errors": 48,
+      "hashesVerified": true,
+      "valid": false
+    }
+  },
+  "rawProbeExitedSuccessfully": false,
+  "rawProbeErrors": [
+    "ValueError: Open XML SDK rejected the corpus with 48 schema errors"
+  ],
+  "rawProbeAggregateFieldCaveat": "Version 1 writerContractPassed includes whole-corpus SDK success. It is false because native projections have schema errors; all 64 individual writerPreservesSourceBlocks checks are true.",
+  "sourceUnchanged": true,
+  "allNativeComparisonsExact": false,
+  "cases": [
+    {
+      "id": "footnote-plain",
+      "authoredBlockKinds": [
+        [
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": true,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            709.0,
+            99.56200408935547,
+            720.0,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              709.0,
+              99.56200408935547,
+              720.0,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              709.0,
+              99.56200408935547,
+              720.0,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              709.0,
+              99.56200408935547,
+              720.0,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              709.0,
+              99.56200408935547,
+              720.0,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "footnote-empty",
+      "authoredBlockKinds": [
+        [
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": true,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        []
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          []
+        ],
+        [
+          []
+        ],
+        [
+          []
+        ],
+        [
+          []
+        ]
+      ]
+    },
+    {
+      "id": "footnote-trailing-blank",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": true,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            695.5499877929688,
+            99.56200408935547,
+            706.5499877929688,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              695.5499877929688,
+              99.56200408935547,
+              706.5499877929688,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              695.5499877929688,
+              99.56200408935547,
+              706.5499877929688,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              695.5499877929688,
+              99.56200408935547,
+              706.5499877929688,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              695.5499877929688,
+              99.56200408935547,
+              706.5499877929688,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "footnote-two-trailing-blanks",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "p",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": true,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            682.0999755859375,
+            99.56200408935547,
+            693.0999755859375,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "footnote-table",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": true,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            682.0999755859375,
+            99.56200408935547,
+            693.0999755859375,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              682.0999755859375,
+              99.56200408935547,
+              693.0999755859375,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "footnote-table-blank",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": false,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": false,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            668.6500244140625,
+            99.56200408935547,
+            679.6500244140625,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              655.2000122070312,
+              99.56200408935547,
+              666.2000122070312,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              641.75,
+              99.56200408935547,
+              652.75,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              628.2999877929688,
+              99.56200408935547,
+              639.2999877929688,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              614.8499755859375,
+              99.56200408935547,
+              625.8499755859375,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "footnote-table-two-blanks",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl",
+          "p",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": false,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": false,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            655.2000122070312,
+            99.56200408935547,
+            666.2000122070312,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              641.75,
+              99.56200408935547,
+              652.75,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              628.2999877929688,
+              99.56200408935547,
+              639.2999877929688,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              614.8499755859375,
+              99.56200408935547,
+              625.8499755859375,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              601.4000244140625,
+              99.56200408935547,
+              612.4000244140625,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "footnote-table-text",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": false,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": false,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            668.6500244140625,
+            99.56200408935547,
+            679.6500244140625,
+            "1Note"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              655.2000122070312,
+              99.56200408935547,
+              666.2000122070312,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              641.75,
+              99.56200408935547,
+              652.75,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              628.2999877929688,
+              99.56200408935547,
+              639.2999877929688,
+              "1Note"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              614.8499755859375,
+              99.56200408935547,
+              625.8499755859375,
+              "1Note"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-plain",
+      "authoredBlockKinds": [
+        [
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-empty",
+      "authoredBlockKinds": [
+        [
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ],
+        [
+          [
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        []
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          []
+        ],
+        [
+          []
+        ],
+        [
+          []
+        ],
+        [
+          []
+        ]
+      ]
+    },
+    {
+      "id": "endnote-trailing-blank",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-two-trailing-blanks",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "p",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": true,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-table",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": true,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-table-blank",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": false,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-table-two-blanks",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl",
+          "p",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": false,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": true,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "endnote-table-text",
+      "authoredBlockKinds": [
+        [
+          "p",
+          "tbl",
+          "p"
+        ]
+      ],
+      "parserBlockKindsByImport": [
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ],
+        [
+          [
+            "p",
+            "tbl",
+            "p",
+            "p",
+            "p",
+            "p",
+            "p"
+          ]
+        ]
+      ],
+      "sourceBlocksPreserved": true,
+      "nativeBridgeBlocksUnchanged": false,
+      "exactToAuthoredEveryImport": false,
+      "exactToFirstImportEveryCycle": false,
+      "exactToBinaryEveryImport": false,
+      "authoredNoteMarkers": [
+        [
+          [
+            72.0999984741211,
+            143.20001220703125,
+            96.51200103759766,
+            154.20001220703125,
+            "iNote"
+          ]
+        ]
+      ],
+      "convertedNoteMarkersByImport": [
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              72.0999984741211,
+              156.6500244140625,
+              96.51200103759766,
+              167.6500244140625,
+              "iNote"
+            ]
+          ]
+        ]
+      ]
+    }
+  ]
+}

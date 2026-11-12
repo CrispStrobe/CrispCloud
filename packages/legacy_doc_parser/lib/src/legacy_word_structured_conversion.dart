@@ -54,7 +54,7 @@ class _StructuredWordWriter {
   final _mediaAssets = <String, LegacyWordImageAsset>{};
   final _mediaParts = <String, String>{};
   final _embeddedParts = <String, String>{};
-  final _renderedTextboxes = <String>{};
+  final _renderedTextboxes = <(String, String?)>{};
   final _unplacedTextboxes = <(LegacyWordTextboxReference, LegacyWordStory)>[];
   final _inertStories = <String, String>{};
   final _hiddenContentRanges = <(int, int)>[];
