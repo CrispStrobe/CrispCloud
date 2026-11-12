@@ -17,7 +17,7 @@ dependencies:
   crisperbooks:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: c7d2dcdd64665fd4bd28f6818c1083274aae8141
+      ref: b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5
   crisp_ebook: ^0.1.0
   crisp_ebook_reader: ^0.1.0
   crisp_ebook_conversion: ^0.1.0
@@ -203,17 +203,17 @@ dependency_overrides:
   crisp_ebook:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: c7d2dcdd64665fd4bd28f6818c1083274aae8141
+      ref: b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5
       path: packages/crisp_ebook
   crisp_ebook_reader:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: c7d2dcdd64665fd4bd28f6818c1083274aae8141
+      ref: b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5
       path: packages/crisp_ebook_reader
   crisp_ebook_conversion:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: c7d2dcdd64665fd4bd28f6818c1083274aae8141
+      ref: b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5
       path: packages/crisp_ebook_conversion
   # MIT 0.10.0 runtime with cancellable mobile cursor reveal on disposal.
   # Source provenance and the narrow patch are in packages/re_editor/UPSTREAM.md.

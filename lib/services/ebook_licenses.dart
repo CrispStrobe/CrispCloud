@@ -14,7 +14,7 @@ void registerEbookLicenses() {
           'packages/crisp_ebook_reader/assets/licenses/sjcl-LICENSE.txt',
       'fflate':
           'packages/crisp_ebook_reader/assets/licenses/fflate-LICENSE.txt',
-      'Kindling and native dependencies':
+      'Kindling and converter dependencies':
           'packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt',
     }.entries) {
       yield LicenseEntryWithLineBreaks([

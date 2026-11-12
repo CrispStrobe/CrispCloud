@@ -139,6 +139,11 @@ def resolved_checkout(root):
         matches = [p for p in packages if p.get("name") == name]
         if len(matches) != 1 or not isinstance(matches[0].get("rootUri"), str):
             raise SourceError(f"Resolve {name} with flutter pub get first")
+        # Dart resolves package: imports against packageUri, not rootUri alone.
+        # Pub generates lib/ for these packages; accepting a different URI
+        # would verify one tree while compiling code from somewhere else.
+        if matches[0].get("packageUri") != "lib/":
+            raise SourceError(f"{name} package imports are redirected outside lib/")
         uri = urlsplit(urljoin(config_file.as_uri(), matches[0]["rootUri"]))
         if uri.scheme != "file" or uri.netloc not in {"", "localhost"} or uri.query or uri.fragment:
             raise SourceError(f"Non-local package root for {name}")
@@ -182,7 +187,9 @@ def verify(root=ROOT, *, resolve=True):
         if (len(data) != expected.get("bytes") or blob != expected["git_blob"]
                 or hashlib.sha256(data).hexdigest() != expected.get("sha256")):
             raise SourceError(f"Ebook source bytes differ: {name}")
-    untracked = git(checkout, "ls-files", "--others", "--exclude-standard").decode().strip()
+    # Local Git excludes must not hide injected Dart/native/browser sources.
+    # Pub's resolved Git cache is a source checkout, not a build workspace.
+    untracked = git(checkout, "ls-files", "--others").decode().strip()
     if untracked:
         raise SourceError(f"Unreviewed files in the resolved ebook checkout: {untracked}")
     return {"repository": REPOSITORY, "revision": revision,

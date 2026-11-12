@@ -2,7 +2,7 @@
 
 Assessment date: **12 November 2026**. This document distinguishes code that is
 implemented, behavior that has been exercised, and work still required for a
-release. See [the user guide](ebooks.md), [reader package](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/README.md),
+release. See [the user guide](ebooks.md), [reader package](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/README.md),
 and [recovery checkpoints](recovery/ebook-parity-2026-11-12.md) for usage and
 the verification record. Implementation is on draft PR
 [CrispStrobe/CrispCloud#53](https://github.com/CrispStrobe/CrispCloud/pull/53).

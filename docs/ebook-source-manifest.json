@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "https://github.com/CrispStrobe/crisperbooks.git",
-  "revision": "c7d2dcdd64665fd4bd28f6818c1083274aae8141",
-  "git_tree": "ebda740ef488a17e72b2987db864a98beb314cfd",
+  "revision": "b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5",
+  "git_tree": "58b4b20ed06da5677880086f714e0ab17d77c3a9",
   "packages": {
     "crisperbooks": ".",
     "crisp_ebook": "packages/crisp_ebook",
@@ -24,9 +24,9 @@
     },
     ".github/workflows/ebook-editor.yml": {
       "mode": "100644",
-      "git_blob": "d7033d47698cb6ea11bf87481b38aa09a53c5952",
-      "bytes": 14323,
-      "sha256": "fde5952df570b1abbfddcbff378c7fa96ebe37449f4eefdad4613d03bf6f544d"
+      "git_blob": "93735fd9600ea64ee32bc5a5063c0fbc094d9b6c",
+      "bytes": 14429,
+      "sha256": "c9cd54c2caa6ab8ad33490063fc4668bbaecac9c4d3b3750cd83658536bff953"
     },
     ".github/workflows/ebook-linux-host.yml": {
       "mode": "100644",
@@ -348,9 +348,15 @@
     },
     "packages/crisp_ebook_conversion/CHANGELOG.md": {
       "mode": "100644",
-      "git_blob": "0a2a383de26ca9f3441f9e3e9c0dfb81a6c5db9d",
-      "bytes": 194,
-      "sha256": "1e111e10ff92cb9bfaee17dec45b87ac2ba3eb8980e846b16a28ce0822ee34bd"
+      "git_blob": "aed09a6c89a76247bf69a059e994be3f78c81660",
+      "bytes": 833,
+      "sha256": "ebc57e267f66f34a9789de2a06856d3e41ab496723752aacd6911248bfa16e4a"
+    },
+    "packages/crisp_ebook_conversion/CONVERSION_WASM.json": {
+      "mode": "100644",
+      "git_blob": "eddaca8ea4bbb5f799234afbea9e5e8e6b58ff60",
+      "bytes": 1560,
+      "sha256": "ec42a550cb0f24b0031184509708eb843b2104de226353cef1760d09d1a02675"
     },
     "packages/crisp_ebook_conversion/LICENSE": {
       "mode": "100644",
@@ -360,33 +366,39 @@
     },
     "packages/crisp_ebook_conversion/README.md": {
       "mode": "100644",
-      "git_blob": "3414d9697c34fd22875454f5c5a26b5732ef232c",
-      "bytes": 11592,
-      "sha256": "00279ec559d5f97b42ca457810c17d06fa263802dfaebf3ac4b6b2ecf57dd6ed"
+      "git_blob": "d4861ab1a9761887ffd5da5dcf95753e1edfb351",
+      "bytes": 12998,
+      "sha256": "eb906149baaba44d3a039ba262d63d4c51f5dcd03881c065ca574a6c849bbf1f"
     },
     "packages/crisp_ebook_conversion/UPSTREAM.json": {
       "mode": "100644",
-      "git_blob": "ea013935a2215d5039ee5ca1f22ddf99e308df7d",
+      "git_blob": "52f5a2786dd0b099441b1fa5ca67d26ffd55b555",
       "bytes": 11800,
-      "sha256": "fbdb7d2bbcac96d137f9bdcf092b88ae779550f48e1c25c101c035bc05eb0b70"
+      "sha256": "0675648253a127aeead480dd939138be9887ca049187daf57ad8b1231eebc8ff"
     },
     "packages/crisp_ebook_conversion/UPSTREAM.md": {
       "mode": "100644",
-      "git_blob": "de618ce5141d00abc994921905b691bc6efa62bc",
-      "bytes": 3879,
-      "sha256": "268187f8e2785bd4c96dc012b6281f649c49cddb66bb55a63135325e7ed87e6f"
+      "git_blob": "7c828c76c7439354bb40e5ce198321f791e7c6ed",
+      "bytes": 4513,
+      "sha256": "bf7768abe3de9ddc6896c80f844ad661136f6cb45e0fc71f0733d3f83a7a1ec3"
     },
     "packages/crisp_ebook_conversion/UPSTREAM.patch": {
       "mode": "100644",
-      "git_blob": "4ab5ca356f0f2cbb1dd8193bc80fe245a3e02fef",
-      "bytes": 33887,
-      "sha256": "211abf8514784119fe3d0354b60f32c226254b71ade353966b8719f393ebaf30"
+      "git_blob": "b1fd8a6077960c62b1b4eb10f6d0b6c9349f7bbd",
+      "bytes": 38535,
+      "sha256": "b7a1a8f5052d128800098ca8b695ea0ef069039008a7f05e25f896a89b4a6b1f"
+    },
+    "packages/crisp_ebook_conversion/WASI_SHIM.json": {
+      "mode": "100644",
+      "git_blob": "c1c200ec7818bb3ea08ed5fdeb4f8b07168bdb49",
+      "bytes": 1149,
+      "sha256": "8bfe93ec48029d680e8fbc939e0645a794f38246b1b6fb2fadd5cce1aaf9a977"
     },
     "packages/crisp_ebook_conversion/WASM.json": {
       "mode": "100644",
-      "git_blob": "7a250a2d99f394556ebf32909247504059fc40a8",
+      "git_blob": "33aaf79bda162e3b45fd300c7ef878a7bc131bfd",
       "bytes": 1236,
-      "sha256": "3e45f55dbb4094c358ffc5176db146f7676b536999ff3fce078a60b64857b079"
+      "sha256": "42004aa79be62411b5f7071ada74212579a4a298990771e60edd26cb9cadcb74"
     },
     "packages/crisp_ebook_conversion/analysis_options.yaml": {
       "mode": "100644",
@@ -394,11 +406,29 @@
       "bytes": 41,
       "sha256": "8727cc3a54c8cd9ff62e8fb49de7f1e3fd2f1c67c68523570fc55b43c44a8199"
     },
+    "packages/crisp_ebook_conversion/assets/conversion_runtime.js": {
+      "mode": "100644",
+      "git_blob": "d58d0e449fbc1ca8da324a3208f8e5c9c1bd4d0f",
+      "bytes": 7945,
+      "sha256": "fb1bde1fa4fbef151c03837c10d0e78fb18fbf14466e037057e66bf7d5ddae37"
+    },
+    "packages/crisp_ebook_conversion/assets/conversion_worker.js": {
+      "mode": "100644",
+      "git_blob": "de613ae59e53db74ad9d416a4dc0eb47affd84e0",
+      "bytes": 2782,
+      "sha256": "2cb47fa149e93fa1e47317a595c31739ed1dc5f85282f76632aafd92d1491466"
+    },
+    "packages/crisp_ebook_conversion/assets/kindling_conversion.wasm.gz": {
+      "mode": "100644",
+      "git_blob": "68c200f574d7c7c980eefa9e0d06b7ca1583ca24",
+      "bytes": 1332168,
+      "sha256": "142b2446f4ba86fab41a093c3c7ec9864205bac1627b31d720936dc2d2d89f98"
+    },
     "packages/crisp_ebook_conversion/assets/kindling_metadata.wasm": {
       "mode": "100644",
-      "git_blob": "f943815cc9034f7a2381a15ba1331b2cfe8c70de",
-      "bytes": 884408,
-      "sha256": "0066f950a5d127fcad27fc11a08a587c5c3d7e245f3ecb1b140cadd94f84e3b6"
+      "git_blob": "583406817833b929956da60d2e04c6c3bead86ec",
+      "bytes": 884588,
+      "sha256": "9919718b866085a9c466ccb320809860384699a977b89f704efb785ec959fd0c"
     },
     "packages/crisp_ebook_conversion/assets/metadata_runtime.js": {
       "mode": "100644",
@@ -411,6 +441,42 @@
       "git_blob": "93d26e00dab8cf98dfcc018db1b964c078178cda",
       "bytes": 1515,
       "sha256": "883c8cac2f8c5496db8969a9cc4c2518512ef6e43e523c61db3f2343523665ed"
+    },
+    "packages/crisp_ebook_conversion/assets/wasi_shim/LICENSE-MIT": {
+      "mode": "100644",
+      "git_blob": "31aa79387f27e730e33d871925e152e35e428031",
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "packages/crisp_ebook_conversion/assets/wasi_shim/debug.js": {
+      "mode": "100644",
+      "git_blob": "b7e03accbd70afae265ba4fdfcb712ac88225657",
+      "bytes": 414,
+      "sha256": "a91848ee180529e2a60c05dfb9584cad19cd4e1c6f391fdb76a938bcae4c0328"
+    },
+    "packages/crisp_ebook_conversion/assets/wasi_shim/fd.js": {
+      "mode": "100644",
+      "git_blob": "f71cd9b697fcd88296decb4f98891769a0281792",
+      "bytes": 1906,
+      "sha256": "9e82e1fc1bfd3e3573f64349dc42b4b624ed61d24e5c553f2bb4d041444f166c"
+    },
+    "packages/crisp_ebook_conversion/assets/wasi_shim/fs_mem.js": {
+      "mode": "100644",
+      "git_blob": "35f0026855c7fabd70dd9d46df671036ecddc19a",
+      "bytes": 12206,
+      "sha256": "85dbc9e0ee784d9ff8b55452644e00bf7058e32355aab974f8b71d7d85772324"
+    },
+    "packages/crisp_ebook_conversion/assets/wasi_shim/wasi.js": {
+      "mode": "100644",
+      "git_blob": "02579a144f96e652ead09fc848205ac7f7f932ee",
+      "bytes": 16429,
+      "sha256": "168eb977a826f75ab0c39f9322f78cc58dbd5b233019ad1d6a7e940af8a7c4aa"
+    },
+    "packages/crisp_ebook_conversion/assets/wasi_shim/wasi_defs.js": {
+      "mode": "100644",
+      "git_blob": "90b025279e23539f7e03bf0e17b19921f3a235e0",
+      "bytes": 9027,
+      "sha256": "0db0f42ba330749a7b05095ea1fd0ff63fd2b30e84cead30fe4c28359d15f194"
     },
     "packages/crisp_ebook_conversion/dart_test.yaml": {
       "mode": "100644",
@@ -456,9 +522,9 @@
     },
     "packages/crisp_ebook_conversion/lib/src/converter_web.dart": {
       "mode": "100644",
-      "git_blob": "e94d5426121cc7f11383576835be6d70e75a281b",
-      "bytes": 9526,
-      "sha256": "5ca853d24d05d4823a4d08cfd25d9e5650cc589b86519f12cd78932fe14503ab"
+      "git_blob": "cee64b822dfe245612c24e6cf70ec4ba1ff06829",
+      "bytes": 9643,
+      "sha256": "19429bd0ecf1a5acd008c1d64f25d1f5205445a8fd866a2be65790001caa0ea7"
     },
     "packages/crisp_ebook_conversion/lib/src/models.dart": {
       "mode": "100644",
@@ -468,15 +534,15 @@
     },
     "packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt": {
       "mode": "100644",
-      "git_blob": "257ae133c93c2d17302038fb4e7622c5d9385f09",
-      "bytes": 1322807,
-      "sha256": "ca4f4b3864e0fa04abc4eeac720a9cccdd38d73d833146c77b2e4143943d5ad8"
+      "git_blob": "3d658b736e1dd6cb63de25a51ef6629f27b42ae4",
+      "bytes": 1324037,
+      "sha256": "0f8d80ecb4171b240abbf1af4c61a65baf1f858595b2a4da36b72f6cc061b270"
     },
     "packages/crisp_ebook_conversion/licensing/cargo_licenses.json": {
       "mode": "100644",
-      "git_blob": "0d045a4322a330a8ece3ab23223136123a4b3344",
-      "bytes": 76073,
-      "sha256": "1b79b21fb0692f553f2ff598cd3282dbd3cc3a6adbb9ef4fd0a4cfc8fe8bd419"
+      "git_blob": "db512f2d36ccb9dfbd9a41d808cdedadf2b10574",
+      "bytes": 76590,
+      "sha256": "42ec39614b08ebaa16cff9511916ef670be0c1437f9c595cb249d9ea7860e4e6"
     },
     "packages/crisp_ebook_conversion/licensing/upstream/const-str-0.3.2-LICENSE": {
       "mode": "100644",
@@ -510,9 +576,9 @@
     },
     "packages/crisp_ebook_conversion/native/src/lib.rs": {
       "mode": "100644",
-      "git_blob": "b980f1905ef6c925ab93e276031e2f410c0ce443",
-      "bytes": 26981,
-      "sha256": "933cb6121055ba0790baf2b526e858dea2e7bcc363d0f9bfba5416a39167430f"
+      "git_blob": "36d46f7f86373b410fc33927583a7a7bafa30718",
+      "bytes": 27428,
+      "sha256": "e6f9dbebcb68e53024b503d8bddfb5ec032b0fc98d395902875500511d84801d"
     },
     "packages/crisp_ebook_conversion/native/src/main.rs": {
       "mode": "100644",
@@ -786,9 +852,9 @@
     },
     "packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs": {
       "mode": "100644",
-      "git_blob": "357deacd79c3c6dd3b952b842d889030f944190e",
-      "bytes": 370526,
-      "sha256": "6c5957c7569592b7ce97c76ceb0cb4ebd553ca71bfb5b9260b936776557dc351"
+      "git_blob": "62e87bb095eea9ccbb101f14c9bef6604ea98981",
+      "bytes": 370813,
+      "sha256": "1b78477207ff2ed427181d9bd00b547b3fd27af9dee89ddb469d4581ded4e1e7"
     },
     "packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_check.rs": {
       "mode": "100644",
@@ -894,9 +960,9 @@
     },
     "packages/crisp_ebook_conversion/pubspec.yaml": {
       "mode": "100644",
-      "git_blob": "2cdf15c7a629d680088d29c276e1579a74c09c87",
-      "bytes": 588,
-      "sha256": "dd8e6a02496956f754a8d1b7201005306495940b45a218cb6a825081ade0899d"
+      "git_blob": "f0dd3ce609dcc87d559403af9348f57ca09fa521",
+      "bytes": 612,
+      "sha256": "02f5344207c0fc20b4b98e4ab67fb51ebce071eb6af84d4a6eb326a7063811e4"
     },
     "packages/crisp_ebook_conversion/test/conversion_test.dart": {
       "mode": "100644",
@@ -934,17 +1000,29 @@
       "bytes": 20108,
       "sha256": "4177b1de8da14e1bc58007682c1dced76b623b63bc78853777c94f809f13eb9b"
     },
+    "packages/crisp_ebook_conversion/tool/build_conversion_wasm.py": {
+      "mode": "100644",
+      "git_blob": "6e9fcb7bf739d34f08981b7361c14050459a02ec",
+      "bytes": 1470,
+      "sha256": "34f685726ba5fa8a2e780955664844ad7522df79f7dfb4498513e84f8ad18f3d"
+    },
     "packages/crisp_ebook_conversion/tool/build_metadata_wasm.py": {
       "mode": "100644",
       "git_blob": "37c3f487f8c62af9748596a93bbe63a4d6ab1918",
       "bytes": 2421,
       "sha256": "69243a09863bff80ed931a8f798236880b405815a366484e4b6b5a0926b44cd4"
     },
+    "packages/crisp_ebook_conversion/tool/check_conversion_wasm.py": {
+      "mode": "100644",
+      "git_blob": "b4d4843b19bcfd159fd78927ea124f0bdacff917",
+      "bytes": 2025,
+      "sha256": "73e4c57ffd6d6e90b41a7f71869ae07685e4acf79f44b1020ff28cc1f0ff0398"
+    },
     "packages/crisp_ebook_conversion/tool/check_licenses.py": {
       "mode": "100644",
-      "git_blob": "7d89766b4c42f098a3f9b0daa6fff292a2adfcac",
-      "bytes": 7191,
-      "sha256": "cf54ee7a06ea768c18e49bc4b083531d7e598c9f0e1f19407a290f414ff652ec"
+      "git_blob": "68d88bd35b6783106c464658f1c2d33b5c2e8d65",
+      "bytes": 8197,
+      "sha256": "6f5b3e7550f86fff729c3a3121bc712b25cc025a6ccc1cadf623deab832ea9e9"
     },
     "packages/crisp_ebook_conversion/tool/check_vendor.py": {
       "mode": "100644",
@@ -957,6 +1035,12 @@
       "git_blob": "eca485b2344161a0132e53f7174579ed7273ee0f",
       "bytes": 1354,
       "sha256": "664336e5c7a82835718dcceec361f6ac888d993b9fe9bbd2ce5d95177cfc36e8"
+    },
+    "packages/crisp_ebook_conversion/tool/conversion_wasm_smoke.mjs": {
+      "mode": "100644",
+      "git_blob": "81bb7c9e64e9dbf8b15481d4f02d8f10790d2136",
+      "bytes": 6149,
+      "sha256": "f7083207b965c45b8bc43bc3755806d1adf220b16a70c8281fe40cc77eda4fde"
     },
     "packages/crisp_ebook_conversion/tool/import_publication_fixture.dart": {
       "mode": "100644",
@@ -984,9 +1068,9 @@
     },
     "packages/crisp_ebook_conversion/tool/run_web_metadata_probe.mjs": {
       "mode": "100644",
-      "git_blob": "60758a5bc7c89faf75c1f125a626632b183524c7",
-      "bytes": 5478,
-      "sha256": "4e154305a713f72b189e4e1e86258d390f4f2b1310662e52187c6b5cf83a3021"
+      "git_blob": "f116b60af7f494d139b0266fe4fb5e5c2ffaed15",
+      "bytes": 5945,
+      "sha256": "48fc2a1f385b5e9867f3bf6c6f9ed94a62bd277fd8ceadfda57cf6e2cc8108bb"
     },
     "packages/crisp_ebook_conversion/tool/smoke.py": {
       "mode": "100644",
@@ -1002,9 +1086,9 @@
     },
     "packages/crisp_ebook_conversion/tool/web_metadata_probe.dart": {
       "mode": "100644",
-      "git_blob": "cc21928b899037070322efd03399e4a3a0eda6d7",
-      "bytes": 5185,
-      "sha256": "f33a23e1c4e7ee09495e4d70a083299fb8ce40cb3a411355c12b2b4770b687ab"
+      "git_blob": "b4c91ef4e1f3a0963c7bd67777bb69de67433b26",
+      "bytes": 7191,
+      "sha256": "584018376b2f4e77270a6166e9071ef41738eacf02dd8fab7e0841c0b00b213f"
     },
     "packages/crisp_ebook_conversion/tool/web_probe.dart": {
       "mode": "100644",
@@ -1470,9 +1554,9 @@
     },
     "packages/crisp_ebook_reader/test/linux/reader_host_integration.dart": {
       "mode": "100644",
-      "git_blob": "868b2e710a08591871c39a69687de73b459ab299",
-      "bytes": 17664,
-      "sha256": "841cdbfdac79ce92df1e4bd2e5d10c456a1bc48cefbe1d7c474b9fb798c09fac"
+      "git_blob": "41190e2e25cc38d66a2ae9d58a039ea860b65841",
+      "bytes": 19074,
+      "sha256": "9c3a4f4dccc86c649505baf51cccb4439673f8a56f8b873467308c3b7dde12ec"
     },
     "packages/crisp_ebook_reader/test/linux/runtime_probe_test.cc": {
       "mode": "100644",

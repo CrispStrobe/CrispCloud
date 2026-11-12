@@ -225,7 +225,7 @@ entries; this is not a promise of an identical complete ZIP after editing.
 | **Save a copy** / Ctrl+Shift+S, or Command+Shift+S | Creates a differently named EPUB in the original directory when a storage destination is available. Existing targets are rejected. |
 | **Export a copy** | Uses the native save/document-provider dialog to choose a destination. |
 | **Download a copy** on web | Starts an EPUB download. It does not acknowledge an overwrite of the original file. |
-| **Export AZW3** / **Export MOBI** | Converts the current EPUB and exports a separate Kindle file when the native converter is available. MOBI export contains legacy KF7 and modern KF8 streams. |
+| **Export AZW3** / **Export MOBI** | Converts the current EPUB and exports a separate Kindle file when the native or browser converter is available. MOBI export contains legacy KF7 and modern KF8 streams. |
 
 Archive members and other byte-only inputs are copy-only editing sessions.
 Failed writes retain edits for retry or export. An asynchronous save acknowledges
@@ -262,11 +262,11 @@ it does not overwrite the original book.
 
 In a native build with cover capability, **Replace cover** accepts a bounded PNG
 or JPEG replacement for an existing Kindle cover. **Remove replacement** clears
-the pending replacement and keeps the book's existing cover. Full EPUB-to-Kindle
-export and Kindle cover replacement require the native converter.
+the pending replacement and keeps the book's existing cover. Kindle cover replacement requires the native converter. Full EPUB-to-Kindle
+export also runs in the bundled browser converter.
 
-Browser metadata editing runs offline in a bundled WebAssembly worker, using
-the same metadata byte engine as native builds. It supports unencrypted AZW3,
+Browser Kindle export and metadata editing run offline in a bundled WebAssembly
+worker, using the same request validator and Kindling engine as native builds. It supports unencrypted AZW3,
 dual MOBI and legacy MOBI files. No book is uploaded to a conversion service.
 The operation is offered only when the worker and Wasm asset load successfully.
 Cancellation or timeout terminates that request's worker and discards partial
@@ -298,24 +298,24 @@ validation, and retain Source mode for complex or unsupported content.
 
 ## Implementation, provenance and verification
 
-- [EPUB package core](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook/README.md): preservation model,
+- [EPUB package core](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook/README.md): preservation model,
   structural operations, validation and limits.
-- [Reader integration](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/README.md): hosts,
+- [Reader integration](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/README.md): hosts,
   offline behavior, tests and licenses. The exact foliate-js revision is
   [78914aef4466eb960965702401634c2cb348e9b1](https://github.com/johnfactotum/foliate-js/tree/78914aef4466eb960965702401634c2cb348e9b1);
-  [UPSTREAM.json](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/UPSTREAM.json) and the
-  [local patch](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_reader/patches/foliate.patch) record the
+  [UPSTREAM.json](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/UPSTREAM.json) and the
+  [local patch](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_reader/patches/foliate.patch) record the
   vendored sources and modifications. No Anx Reader or Foliate desktop app code
   is vendored.
-- [Kindle conversion](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_conversion/README.md): native
+- [Kindle conversion](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/README.md): native
   build instructions, runtime capability checks and reproducible import/export
-  tests. [Kindling provenance](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_conversion/UPSTREAM.md)
+  tests. [Kindling provenance](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/UPSTREAM.md)
   pins MIT-licensed Kindling 0.46.2 at
   [7774dbae758435d6ed94a4cd4a50e3f33ab61aa7](https://github.com/ciscoriordan/kindling/tree/7774dbae758435d6ed94a4cd4a50e3f33ab61aa7).
   Native builds require Rust 1.88+ and the target toolchain. Approved MPL-2.0
   dependencies, including the CSS parser, are recorded with the other
-  [third-party notices](https://github.com/CrispStrobe/crisperbooks/blob/c7d2dcdd64665fd4bd28f6818c1083274aae8141/packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt).
-- [Ebook CI workflow](../.github/workflows/ebook-editor.yml): package checks,
+  [third-party notices](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/packages/crisp_ebook_conversion/licensing/THIRD_PARTY_LICENSES.txt).
+- [Shared package CI workflow](https://github.com/CrispStrobe/crisperbooks/blob/b5b698ba872cc4a11b0b88f0fae2dc5324faf3c5/.github/workflows/ebook-editor.yml): package checks,
   EPUBCheck, native conversion, independent reader parsing, browser probes and
   focused application tests. The package READMEs contain local commands.
 
