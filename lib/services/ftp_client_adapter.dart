@@ -322,7 +322,7 @@ class FTPClientAdapter extends CloudStorageClient
             await _operationClient.changeDirectory(currentDir);
             return {
               'type': 'folder',
-              'name': p.basename(path),
+              'name': p.posix.basename(path),
               'path': path,
               'uuid': path,
             };
@@ -330,7 +330,7 @@ class FTPClientAdapter extends CloudStorageClient
           // If changeDirectory failed, it might be a file
           return {
             'type': 'file',
-            'name': p.basename(path),
+            'name': p.posix.basename(path),
             'path': path,
             'uuid': path,
           };
@@ -514,7 +514,7 @@ class FTPClientAdapter extends CloudStorageClient
     final tempDir = await Directory.systemTemp.createTemp(
       'crisp-ftp-download-',
     );
-    final tempFile = File(p.join(tempDir.path, 'payload'));
+    final tempFile = File(p.join(tempDir.path, 'payload')); // local path
     try {
       final success = await client.downloadFile(source, tempFile);
       if (!success) {

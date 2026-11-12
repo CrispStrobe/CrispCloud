@@ -269,7 +269,7 @@ class B2ClientAdapter extends CloudStorageClient
     if (folders.isNotEmpty) {
       final folderName = folders.first as String;
       return {
-        'name': p.basename(folderName.replaceAll(RegExp(r'/$'), '')),
+        'name': p.posix.basename(folderName.replaceAll(RegExp(r'/$'), '')),
         'isFolder': true,
         'path': '/$folderName',
       };
@@ -307,7 +307,7 @@ class B2ClientAdapter extends CloudStorageClient
 
     final folders = rawFolders.map<Map<String, dynamic>>((f) {
       final folderPath = f as String;
-      final name = p.basename(folderPath.replaceAll(RegExp(r'/$'), ''));
+      final name = p.posix.basename(folderPath.replaceAll(RegExp(r'/$'), ''));
       return {
         'name': name,
         'isFolder': true,
@@ -854,8 +854,8 @@ class B2ClientAdapter extends CloudStorageClient
 
   @override
   Future<void> renamePath(String path, String newName) async {
-    final parent = p.dirname(path);
-    final target = p.join(parent, newName);
+    final parent = p.posix.dirname(path);
+    final target = p.posix.join(parent, newName);
     await movePath(path, target);
   }
 
@@ -1184,7 +1184,7 @@ class B2ClientAdapter extends CloudStorageClient
   /// Convert a raw B2 fileInfo map to a CrispCloud FileItem-compatible map.
   static Map<String, dynamic> _fileInfoToMap(Map<String, dynamic> info) {
     final fileName = info['fileName'] as String? ?? '';
-    final name = p.basename(fileName);
+    final name = p.posix.basename(fileName);
     final size = info['contentLength'] as int? ?? info['size'] as int? ?? 0;
     final uploadTimestamp = info['uploadTimestamp'] as int?;
     final fileId = info['fileId'] as String? ?? '';
