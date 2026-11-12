@@ -100,10 +100,16 @@ In that same run, **all 41 actual host exports passed Open XML SDK validation**.
 The overall schema job failed only on **14 shared auxiliary-control fixtures**:
 the authored source and six export cycles in each of `fidelity-aux-controls`
 and `fidelity-aux-header-footer`. Their paragraph-property element order was
-incorrect. The current sync pins
-[`c19e90d`](https://github.com/CrispStrobe/quds_office_suite/commit/c19e90d60002ff088acfcfcd3b2d34633cb4cb72),
-which corrects that fixture order and the native note-separator and render-gate
-counterexamples. **The full host gate for this new checkpoint is pending**;
+incorrect. The earlier synchronized checkpoint
+[`c19e90d`](https://github.com/CrispStrobe/quds_office_suite/commit/c19e90d60002ff088acfcfcd3b2d34633cb4cb72)
+corrected that fixture order and the native note-separator and render-gate
+counterexamples. The current sync pins
+[`31add779`](https://github.com/CrispStrobe/quds_office_suite/commit/31add77938bb1242d510ab544dbe886d87ebdf75),
+which also prevents newly inserted footnotes and endnotes from reusing IDs held
+by retained native note definitions. It includes the reviewed story-page
+separator correction and extends that source-derived golden scenario through
+three actual asynchronous save/reopen cycles. **The full host gate for this
+current checkpoint is pending**;
 the previous run's results do not certify the synchronized changes.
 
 For historical comparison, the earlier **54.9%** report measured an older source

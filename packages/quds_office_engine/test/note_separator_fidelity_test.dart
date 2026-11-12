@@ -46,12 +46,13 @@ OpcPackage _nativeSeparators(
   bool endnote, {
   required bool custom,
   bool aliases = false,
+  int noticeId = 42,
 }) {
   final kind = endnote ? 'endnote' : 'footnote';
   final prefix = aliases ? 'q' : 'w';
   final context = aliases ? ' mc:Ignorable="w" w:custom="retained"' : '';
   final chrome = custom
-      ? '<$prefix:$kind $prefix:id="42" $prefix:type="continuationNotice"$context>'
+      ? '<$prefix:$kind $prefix:id="$noticeId" $prefix:type="continuationNotice"$context>'
             '<$prefix:p><$prefix:r><$prefix:t>Continued on next page</$prefix:t></$prefix:r></$prefix:p></$prefix:$kind>'
             '<$prefix:$kind $prefix:id="-1" $prefix:type="separator">'
             '<$prefix:p><$prefix:pPr><$prefix:spacing $prefix:after="80"/><$prefix:jc $prefix:val="center"/></$prefix:pPr>'
@@ -94,17 +95,30 @@ OpcPackage _nativeSeparators(
   return package;
 }
 
-List<XmlElement> _separatorDefinitions(OpcPackage package, bool endnote) {
+String _mainPartUri(OpcPackage package) {
+  final office = package.packageRelationships.firstByType(
+    RelationshipTypes.officeDocument,
+  )!;
+  return package.packageRelationships.resolve(office);
+}
+
+XmlElement _noteRoot(OpcPackage package, bool endnote) {
   final kind = endnote ? 'endnote' : 'footnote';
-  final relations = package.relationshipsFor('/word/document.xml');
+  final mainUri = _mainPartUri(package);
+  final relations = package.relationshipsFor(mainUri);
   final relationship = relations.firstByType(
     endnote ? RelationshipTypes.endnotes : RelationshipTypes.footnotes,
-  )!;
-  final root = XmlDocument.parse(
-    package.getPart(relations.resolve(relationship))!.readText(),
-  ).root!;
-  return root
-      .childrenNamed(kind)
+  );
+  final uri = relationship == null
+      ? OpcUris.resolve(mainUri, '${kind}s.xml')
+      : relations.resolve(relationship);
+  return XmlDocument.parse(package.getPart(uri)!.readText()).root!;
+}
+
+List<XmlElement> _separatorDefinitions(OpcPackage package, bool endnote) {
+  final kind = endnote ? 'endnote' : 'footnote';
+  return _noteRoot(package, endnote)
+      .childrenNamed(kind, namespaceUri: OfficeNamespaces.w)
       .where(
         (node) => const {
           'separator',
@@ -113,6 +127,33 @@ List<XmlElement> _separatorDefinitions(OpcPackage package, bool endnote) {
         }.contains(node.getAttribute('type', namespaceUri: OfficeNamespaces.w)),
       )
       .toList();
+}
+
+void _relocateMain(OpcPackage package, String mainUri) {
+  final previous = _mainPartUri(package);
+  final part = package.getPart(previous)!;
+  package.createPart(mainUri, part.contentType, part.readBytes());
+  final relations = package.relationshipsFor(previous);
+  for (final relationship in relations.items) {
+    package
+        .relationshipsFor(mainUri)
+        .add(
+          id: relationship.id,
+          type: relationship.type,
+          target: OpcUris.relativize(mainUri, relations.resolve(relationship)),
+        );
+  }
+  final office = package.packageRelationships.firstByType(
+    RelationshipTypes.officeDocument,
+  )!;
+  package.packageRelationships
+    ..removeById(office.id)
+    ..add(
+      id: office.id,
+      type: RelationshipTypes.officeDocument,
+      target: mainUri.substring(1),
+    );
+  package.deletePart(previous);
 }
 
 Object _nativeSnapshot(XmlElement node) => [
@@ -143,6 +184,153 @@ List<LaidOutBox> _previewSeparators(WmlDocument document) =>
 
 void main() {
   for (final endnote in [false, true]) {
+    for (final relocateMain in [false, true]) {
+      test(
+        'inserting notes reserves native special IDs through three saves: endnote=$endnote relocatedMain=$relocateMain',
+        () async {
+          final source = _nativeSeparators(
+            endnote,
+            custom: true,
+            aliases: true,
+            noticeId: 13,
+          );
+          if (relocateMain) _relocateMain(source, '/legacy/word/main.xml');
+          final mainUri = _mainPartUri(source);
+          final kind = endnote ? 'endnote' : 'footnote';
+          final noteUri = '/custom/${kind}s.xml';
+          final nativeDefinitions = _separatorDefinitions(
+            source,
+            endnote,
+          ).map(_nativeSnapshot).toList();
+          var document = WordDeserializer().read(source);
+          for (var cycle = 0; cycle < 3; cycle++) {
+            final package = document.package!;
+            final originalNoteXml = package.getPart(noteUri)!.readText();
+            final originalMainXml = package.getPart(mainUri)!.readText();
+            final originalRelations = package.relationshipsFor(mainUri).toXml();
+            final note = WordNotes.insert(
+              document,
+              document.paragraphs.first,
+              endnote: endnote,
+              text: 'Inserted $cycle',
+            );
+            expect(note.id, 14 + cycle);
+            expect(
+              document.paragraphs.first.inlines
+                  .whereType<WmlRun>()
+                  .where((run) => run.noteRefId == note.id)
+                  .single
+                  .noteRefEndnote,
+              endnote,
+            );
+            // Allocation only reads the package. Native definitions and their
+            // source relationship remain byte-for-byte intact until save.
+            expect(package.getPart(noteUri)!.readText(), originalNoteXml);
+            expect(package.getPart(mainUri)!.readText(), originalMainXml);
+            expect(
+              package.relationshipsFor(mainUri).toXml(),
+              originalRelations,
+            );
+
+            final saved = OpcPackage.openBytes(
+              await OfficeIsolateSave.word(document),
+            );
+            final ids = _noteRoot(saved, endnote)
+                .childrenNamed(kind, namespaceUri: OfficeNamespaces.w)
+                .map(
+                  (node) =>
+                      node.getAttribute('id', namespaceUri: OfficeNamespaces.w),
+                )
+                .toList();
+            expect(ids, [
+              '13',
+              '-1',
+              '0',
+              '12',
+              for (var i = 0; i <= cycle; i++) '${14 + i}',
+            ]);
+            expect(ids.toSet().length, ids.length);
+            expect(
+              _separatorDefinitions(
+                saved,
+                endnote,
+              ).map(_nativeSnapshot).toList(),
+              nativeDefinitions,
+            );
+            expect(_mainPartUri(saved), mainUri);
+            final owner = saved.relationshipsFor(mainUri);
+            expect(owner.resolve(owner.byId('nativeNotes')!), noteUri);
+            expect(saved.getPart('/word/${kind}s.xml'), isNull);
+            document = WordDeserializer().read(saved);
+            expect(
+              (endnote ? document.endnotes : document.footnotes).map(
+                (note) => note.id,
+              ),
+              [12, for (var i = 0; i <= cycle; i++) 14 + i],
+            );
+          }
+        },
+      );
+    }
+    test(
+      'legacy unowned note part reserves its retained special IDs: endnote=$endnote',
+      () async {
+        final source = _nativeSeparators(endnote, custom: true, noticeId: 13);
+        final kind = endnote ? 'endnote' : 'footnote';
+        final previousUri = '/custom/${kind}s.xml';
+        final part = source.getPart(previousUri)!;
+        source.createPart(
+          '/word/${kind}s.xml',
+          part.contentType,
+          part.readBytes(),
+        );
+        source.deletePart(previousUri);
+        source.relationshipsFor('/word/document.xml').removeById('nativeNotes');
+        final expected = _separatorDefinitions(
+          source,
+          endnote,
+        ).map(_nativeSnapshot).toList();
+        final document = WordDeserializer().read(source);
+        expect(
+          WordNotes.insert(
+            document,
+            document.paragraphs.first,
+            endnote: endnote,
+          ).id,
+          14,
+        );
+        final saved = OpcPackage.openBytes(
+          await OfficeIsolateSave.word(document),
+        );
+        expect(
+          _separatorDefinitions(saved, endnote).map(_nativeSnapshot).toList(),
+          expected,
+        );
+        expect(
+          _noteRoot(
+            saved,
+            endnote,
+          ).childrenNamed(kind).map((node) => node.getAttribute('id')),
+          ['13', '-1', '0', '12', '14'],
+        );
+      },
+    );
+    test(
+      'an unrelated high special ID does not renumber the next note: endnote=$endnote',
+      () {
+        final document = WordDeserializer().read(
+          _nativeSeparators(endnote, custom: true),
+        );
+        expect(
+          WordNotes.insert(
+            document,
+            document.paragraphs.first,
+            endnote: endnote,
+          ).id,
+          13,
+        );
+      },
+    );
     for (final (custom, aliases) in [
       (false, false),
       (true, false),
@@ -287,6 +475,7 @@ void main() {
           endnote: endnote,
           text: 'New note',
         );
+        expect(note.id, 1);
         if (!endnote) {
           expect(document.sourceFootnoteSeparatorsPresent, isNull);
           expect(_previewSeparators(document), isNotEmpty);
@@ -321,4 +510,13 @@ void main() {
       },
     );
   }
+  test('footnotes and endnotes reserve IDs in separate domains', () {
+    final document = WordDeserializer().read(
+      _nativeSeparators(false, custom: true, noticeId: 13),
+    );
+    document.endnotes.add(WmlNote(id: 12, endnote: true)..text = 'Endnote');
+    final paragraph = document.paragraphs.first;
+    expect(WordNotes.insert(document, paragraph, endnote: true).id, 13);
+    expect(WordNotes.insert(document, paragraph, endnote: false).id, 14);
+  });
 }
