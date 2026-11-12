@@ -57,6 +57,13 @@ extension _WordTables on _StructuredWordParser {
           }
           rows.add(
             LegacyWordTableRow(
+              originTwips:
+                  properties['tableOrigin'] as int? ?? definition.edges.first,
+              tableStyleId: _resolvedTableStyleId(
+                properties['tableStyleId'] as int?,
+              ),
+              styleOptions: properties['tableStyleOptions'] as int? ?? 0x600,
+              halfGapTwips: properties['tableGapHalf'] as int? ?? 0,
               // Only leading, contiguous rows are repeating headers.
               isHeader:
                   properties['rowHeader'] == true &&
@@ -69,13 +76,35 @@ extension _WordTables on _StructuredWordParser {
                       cells[i].whereType<LegacyWordParagraph>(),
                     ),
                     widthTwips: definition.edges[i + 1] - definition.edges[i],
+                    formatting: _mergeTableCellFormat(
+                      i < definition.formats.length
+                          ? definition.formats[i]
+                          : const LegacyWordTableCellFormat(),
+                      LegacyWordTableCellFormat(
+                        margins: Map.unmodifiable({
+                          ...?properties['tableMargins']
+                              as Map<LegacyWordBorderSide, int?>?,
+                          ...?(properties['cellMargins']
+                              as Map<
+                                int,
+                                Map<LegacyWordBorderSide, int?>
+                              >?)?[i],
+                        }),
+                      ),
+                    ),
                     mergeStart: (definition.flags[i] & 3) >= 2,
                     mergeContinue: (definition.flags[i] & 3) == 1,
                     verticalMergeStart: ((definition.flags[i] >> 5) & 3) >= 2,
                     verticalMergeContinue:
                         ((definition.flags[i] >> 5) & 3) == 1,
                     shading:
-                        (properties['cellShading']
+                        (properties[source.version > 0xd9 &&
+                                    _resolvedTableStyleId(
+                                          properties['tableStyleId'] as int?,
+                                        ) !=
+                                        null
+                                ? 'cellShadingRaw'
+                                : 'cellShading']
                             as Map<int, LegacyWordShading>?)?[i],
                   ),
               ]),
@@ -100,7 +129,7 @@ extension _WordTables on _StructuredWordParser {
       return LegacyWordTable(
         startCp: start,
         endCp: end,
-        rows: List.unmodifiable(rows),
+        rows: List.unmodifiable(_resolveTableStyleCells(rows)),
       );
     }
 

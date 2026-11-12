@@ -106,6 +106,34 @@ extension _WordStories on _StructuredWordWriter {
         throw const FormatException('Invalid Word numbering definition.');
       }
     }
+    final definitions = {
+      for (final value in document.numbering) value.id: value,
+    };
+    for (final definition in document.numbering) {
+      final targetId = definition.continuationOf;
+      if (targetId != null) {
+        final target = definitions[targetId];
+        if (target == null ||
+            target.id == definition.id ||
+            target.continuationOf != null ||
+            target.sourceListId == null ||
+            target.sourceListId != definition.sourceListId ||
+            target.levels.length != definition.levels.length ||
+            !List.generate(
+              target.levels.length,
+              (i) => identical(target.levels[i], definition.levels[i]),
+            ).every((v) => v)) {
+          throw const FormatException('Invalid Word numbering continuation.');
+        }
+        _evidenceRecords.add({
+          'kind': 'numberingContinuation',
+          'sourceIlfo': definition.id,
+          'sourceLsid': definition.sourceListId,
+          'nativeNumId': targetId,
+        });
+      }
+      _numberingReferences[definition.id] = targetId ?? definition.id;
+    }
   }
 
   String? _storyAt(int cp) {
@@ -403,6 +431,7 @@ extension _WordStories on _StructuredWordWriter {
         throw const FormatException('Invalid Word field identity or extent.');
       }
       _fields[field.id] = field;
+      _displayFieldRevisionEvidence(field);
       if (field.parentId != null) {
         _fieldChildren.putIfAbsent(field.parentId!, () => []).add(field);
       }
@@ -469,6 +498,7 @@ extension _WordStories on _StructuredWordWriter {
         'SECTION',
         'SECTIONPAGES',
         'SEQ',
+        'LISTNUM',
         'TC',
         'XE',
         'INDEX',
@@ -506,8 +536,10 @@ extension _WordStories on _StructuredWordWriter {
   void _fieldBegin(LegacyWordField field, [int depth = 0]) {
     if (depth > 64) _tooComplex();
     _xml.add(
-      '<w:r><w:fldChar w:fldCharType="begin" w:fldLock="1" w:dirty="0"/></w:r>',
+      '<w:r><w:fldChar w:fldCharType="begin" w:fldLock="1" w:dirty="0">',
     );
+    _displayFieldRevision(field);
+    _xml.add('</w:fldChar></w:r>');
     final instructionStart = field.startCp + 1;
     final instructionEnd = field.separatorCp ?? field.endCp - 1;
     final children = (_fieldChildren[field.id] ?? const <LegacyWordField>[])
@@ -800,6 +832,7 @@ extension _WordStories on _StructuredWordWriter {
     if (document.numbering.isEmpty) return;
     final xml = _wordPart('numbering');
     for (final definition in document.numbering) {
+      if (definition.continuationOf != null) continue;
       xml.add(
         '<w:abstractNum w:abstractNumId="${definition.id}"><w:multiLevelType w:val="multilevel"/>',
       );
@@ -930,6 +963,7 @@ extension _WordStories on _StructuredWordWriter {
       xml.add('</w:abstractNum>');
     }
     for (final definition in document.numbering) {
+      if (definition.continuationOf != null) continue;
       xml.add(
         '<w:num w:numId="${definition.id}"><w:abstractNumId w:val="${definition.id}"/></w:num>',
       );
@@ -957,6 +991,7 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.nestedTablesFlattened:
         case LegacyWordWarning.recoveredNonconformingProperties:
         case LegacyWordWarning.recoveredEmptySection:
+        case LegacyWordWarning.recoveredTextboxChainLength:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

@@ -1,0 +1,186 @@
+{
+  "Files": 11,
+  "Failures": 15,
+  "Reports": [
+    {
+      "File": "bookmarks.docx",
+      "Sha256": "c7ec74f6740ce1300d6f31d8332c699d1a34d76895f10588eed5c9fa9760ba4f",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "comment-threads.docx",
+      "Sha256": "51ff6e33ec5c1b88ddd3a6e0c63b92f25502322ce1aaa585db3e3de86405c157",
+      "Errors": []
+    },
+    {
+      "File": "content-controls-legacy.docx",
+      "Sha256": "9c95142f532be788052d3d29b02dce1cee76c63e5be87d983992b0633a964b9e",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "content-controls.docx",
+      "Sha256": "0e6bc689783c902a7c760c9d3a35965211fcb8ad40c5bcba487b32d14c605d36",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "formatting.docx",
+      "Sha256": "b0045c88008231fba601574c60361f09ee7cb3b3461fb05d2af36c07d35008a7",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[2]/w:tc[2]/w:tcPr[1]/w:noWrap[1]"
+        },
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[2]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        },
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[2]/w:tcPr[1]/w:noWrap[1]"
+        },
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "note-markers.docx",
+      "Sha256": "08daa39f6e45be68eba80e9cc3975fdfe416ffe7c1afce310b6a704f51c108de",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/footnotes.xml",
+          "XPath": "/w:footnotes[1]/w:footnote[8]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "story-media.docx",
+      "Sha256": "138857e25b150967056cccecb3e578652adf7f33ed2ec44bfb064c372944e529",
+      "Errors": []
+    },
+    {
+      "File": "table-borders.docx",
+      "Sha256": "5ce759a8eae569fd4eb44e1d3d1deaad482ecf6822cb644dd019c9ba043b18b8",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[3]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        },
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[2]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        },
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        },
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/footnotes.xml",
+          "XPath": "/w:footnotes[1]/w:footnote[3]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "word-altchunk.docx",
+      "Sha256": "b4173897d170ad8a1efa5fd5c2ba15a958b29bd60ca651cfacbd19e6ab92492a",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "word-compatibility.docx",
+      "Sha256": "9b95ca119103c0e87a76ceaa2a843eb9f4159c2c6c824f5a697b3bdc19ab1e88",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    },
+    {
+      "File": "word.docx",
+      "Sha256": "22b9af3ea0ec958367b166cbe2fa2fef392ac6e46c8243fdc7e10d65c2c71a2f",
+      "Errors": [
+        {
+          "Id": "Sch_AttributeValueDataTypeDetailed",
+          "Description": "The attribute 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:val' has invalid value '0'. The Enumeration constraint failed.",
+          "Type": "Schema",
+          "Part": "/word/document.xml",
+          "XPath": "/w:document[1]/w:body[1]/w:tbl[1]/w:tr[1]/w:tc[1]/w:tcPr[1]/w:noWrap[1]"
+        }
+      ]
+    }
+  ],
+  "Validator": {
+    "source_commit": "31add77938bb1242d510ab544dbe886d87ebdf75",
+    "program_cs_sha256": "755bd8c32ce0b4c23ecb38c614f316150722e06ea07dd296988a7fa743618a13",
+    "validator_sha256": "3b6f5daa17c8e71a797b66e8708ae4be3976998d514ec2252b793c413ebd36a9",
+    "runtime_framework": "Microsoft.NETCore.App/8.0.34",
+    "sdk": "8.0.428",
+    "OpenXmlSdk": "3.3.0",
+    "self_test_passed": true
+  },
+  "ParserCommit": "f24e5b25208368cb6c9bdf41c0c13851f862e79b",
+  "SourceReportSha256": "c4fca0b41c71352dda304e153547e5949bc4a79f02ab3184219dbff9c0352414"
+}

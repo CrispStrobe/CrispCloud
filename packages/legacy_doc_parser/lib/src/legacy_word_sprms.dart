@@ -162,6 +162,7 @@ const _prm0Codes = <int, int>{
   0x75: 0x0855,
   0x76: 0x0856,
   0x78: 0x2640,
+  0x7e: 0x2443,
 };
 
 const _toggleProperties = <int, String>{
@@ -323,6 +324,8 @@ void _applyCharacter(
       case 0xca57:
       case 0xca89:
         _applyPropertyRevision(data, output, 'character');
+      case 0xca62:
+        output['displayFieldRevision'] = _displayFieldRevisionRecord(data);
       case 0x6815:
         output['formattingSaveId'] = data.u32(0);
       case 0x6816:
@@ -391,9 +394,10 @@ const _underlineStyles = <int, String>{
 };
 
 class _TableDefinition {
-  const _TableDefinition(this.edges, this.flags);
+  const _TableDefinition(this.edges, this.flags, [this.formats = const []]);
   final List<int> edges;
   final List<int> flags;
+  final List<LegacyWordTableCellFormat> formats;
 }
 
 void _applyParagraph(
@@ -415,6 +419,8 @@ void _applyParagraph(
           final preserved = <String, Object?>{
             for (final entry in output.entries)
               if (_paragraphStylePreserved.contains(entry.key) ||
+                  entry.key.startsWith('table') ||
+                  entry.key.startsWith('cell') ||
                   entry.key.startsWith('paragraphRevision'))
                 entry.key: entry.value,
           };
@@ -433,6 +439,10 @@ void _applyParagraph(
         _applyPropertyRevision(value, output, 'paragraph');
       case 0x6467:
         output['paragraphSaveId'] = value.u32(0);
+      case 0x2443:
+        output['numberingInserted'] = _boolean(value);
+      case 0xc645:
+        output['numberingRevisionRecord'] = _numberingRevisionRecord(value);
       case 0x2403:
       case 0x2461:
         final alignment = value.u8(0);
@@ -481,6 +491,137 @@ void _applyParagraph(
         output['inTable'] = depth != 0;
       case 0x3404:
         output['rowHeader'] = _boolean(value);
+      case 0x563a:
+        output['tableStyleId'] = value.u16(0);
+      case 0x740a:
+        output['tableStyleOptions'] = value.u16(2);
+      case 0xd632:
+      case 0xd634:
+        final wholeRow = operation.code == 0xd634;
+        final (first, limit, margins) = _readTableMargins(
+          value,
+          wholeRow: wholeRow,
+        );
+        if (wholeRow) {
+          output['tableMargins'] =
+              Map<LegacyWordBorderSide, int?>.unmodifiable({
+                ...?output['tableMargins'] as Map<LegacyWordBorderSide, int?>?,
+                ...margins,
+              });
+        } else {
+          final all = <int, Map<LegacyWordBorderSide, int?>>{
+            ...?output['cellMargins']
+                as Map<int, Map<LegacyWordBorderSide, int?>>?,
+          };
+          for (var i = first; i < limit; i++) {
+            all[i] = Map.unmodifiable({...?all[i], ...margins});
+          }
+          output['cellMargins'] =
+              Map<int, Map<LegacyWordBorderSide, int?>>.unmodifiable(all);
+        }
+      case 0x7621:
+        final old =
+            output['tableDefinition'] as _TableDefinition? ??
+            _TableDefinition([output['tableOrigin'] as int? ?? 0], const []);
+        final first = value.u8(0), count = value.u8(1), width = value.i16(2);
+        if (first > old.flags.length ||
+            count == 0 ||
+            count + old.flags.length > 63 ||
+            width < 0 ||
+            old.edges.last - old.edges.first + count * width > 31680) {
+          throw const FormatException('Invalid Word table cell insertion.');
+        }
+        final edges = [
+          ...old.edges.take(first + 1),
+          for (var i = 1; i <= count; i++) old.edges[first] + i * width,
+          for (final edge in old.edges.skip(first + 1)) edge + count * width,
+        ];
+        final formats = [
+          for (var i = 0; i < old.flags.length; i++)
+            i < old.formats.length
+                ? old.formats[i]
+                : const LegacyWordTableCellFormat(),
+        ];
+        output['tableDefinition'] = _TableDefinition(
+          edges,
+          [
+            ...old.flags.take(first),
+            ...List.filled(count, 0),
+            ...old.flags.skip(first),
+          ],
+          [
+            ...formats.take(first),
+            ...List.filled(count, const LegacyWordTableCellFormat()),
+            ...formats.skip(first),
+          ],
+        );
+        // Indexed overrides belong to the original cells, not their old
+        // numeric positions. Newly inserted cells inherit row/style defaults.
+        void shiftCells<T>(String key) {
+          final values = output[key] as Map<int, T>?;
+          if (values == null) return;
+          output[key] = Map<int, T>.unmodifiable({
+            for (final entry in values.entries)
+              if (entry.key < old.flags.length)
+                entry.key < first ? entry.key : entry.key + count: entry.value,
+          });
+        }
+        shiftCells<LegacyWordShading>('cellShading');
+        shiftCells<LegacyWordShading>('cellShadingRaw');
+        shiftCells<Map<LegacyWordBorderSide, int?>>('cellMargins');
+      case 0xd620:
+      case 0xd62f:
+        final old = operation.code == 0xd620;
+        final definition = output['tableDefinition'] as _TableDefinition?;
+        final width = old ? 4 : 8;
+        if (value.length != 3 + width || definition == null) {
+          throw const FormatException('Invalid Word cell border range.');
+        }
+        final first = value.u8(0), limit = value.u8(1), sides = value.u8(2);
+        if (first >= definition.flags.length ||
+            limit < first ||
+            limit > definition.flags.length ||
+            sides > (old ? 15 : 63)) {
+          throw const FormatException('Invalid Word cell border range.');
+        }
+        final border = _readTableBorder(
+          _Bytes(value.slice(3, width)),
+          old: old,
+        );
+        final borders = <LegacyWordTableBorderSide, LegacyWordBorder>{
+          for (var side = 0; side < (old ? 4 : 6); side++)
+            if ((sides & (1 << side)) != 0)
+              LegacyWordTableBorderSide.values[side < 4 ? side : side + 2]:
+                  border,
+        };
+        output['tableDefinition'] =
+            _TableDefinition(definition.edges, definition.flags, [
+              for (var i = 0; i < definition.flags.length; i++)
+                _mergeTableCellFormat(
+                  i < definition.formats.length
+                      ? definition.formats[i]
+                      : const LegacyWordTableCellFormat(),
+                  i >= first && i < limit
+                      ? LegacyWordTableCellFormat(borders: borders)
+                      : const LegacyWordTableCellFormat(),
+                ),
+            ]);
+      case 0x9601:
+        final left = value.i16(0);
+        output['tableDxaLeft'] = left;
+        output['tableOrigin'] = left - (output['tableGapHalf'] as int? ?? 0);
+      case 0x9602:
+        final gap = value.i16(0);
+        if (gap < 0) {
+          throw const FormatException('Invalid Word table origin offset.');
+        }
+        final left =
+            output['tableDxaLeft'] as int? ??
+            (output['tableOrigin'] as int? ?? 0) +
+                (output['tableGapHalf'] as int? ?? 0);
+        output['tableGapHalf'] = gap;
+        output['tableDxaLeft'] = left;
+        output['tableOrigin'] = left - gap;
       case 0x840f:
       case 0x845e:
         output['leftIndent'] = value.i16(0);
@@ -597,7 +738,34 @@ void _applyParagraph(
         if (flags.any((flag) => ((flag >> 5) & 3) == 2)) {
           throw const FormatException('Invalid Word vertical cell merge.');
         }
-        output['tableDefinition'] = _TableDefinition(edges, flags);
+        final formats = <LegacyWordTableCellFormat>[];
+        for (var i = 0; i < count; i++) {
+          final flag = flags[i];
+          final alignment = (flag >> 7) & 3;
+          if (alignment > 2) {
+            throw const FormatException('Invalid Word cell alignment.');
+          }
+          final borders = <LegacyWordTableBorderSide, LegacyWordBorder>{};
+          for (var side = 0; side < 4; side++) {
+            borders[LegacyWordTableBorderSide.values[side]] = i * 20 < available
+                ? _readTableBorder(
+                    _Bytes(value.slice(cellStart + i * 20 + 4 + side * 4, 4)),
+                    old: true,
+                  )
+                : const LegacyWordBorder(style: 'none', widthEighthPoints: 0);
+          }
+          formats.add(
+            LegacyWordTableCellFormat(
+              borders: Map.unmodifiable(borders),
+              verticalAlignment: LegacyWordCellAlignment.values[alignment],
+              noWrap: ((flag >> 9) & 7) != 3 && (flag & 0x2000) != 0,
+            ),
+          );
+        }
+        output['tableDefinition'] = _TableDefinition(edges, flags, formats);
+        output['tableOrigin'] = edges.first;
+        output['tableDxaLeft'] =
+            edges.first + (output['tableGapHalf'] as int? ?? 0);
       // Section/table style properties beyond the represented subset are
       // reported rather than being represented as a different formatting.
       default:
@@ -610,9 +778,10 @@ void _applyParagraph(
 Map<String, Object?> _sectionProperties(
   List<_Sprm> operations,
   _Budget budget,
-  Set<LegacyWordWarning> warnings,
-) {
-  final output = <String, Object?>{};
+  Set<LegacyWordWarning> warnings, {
+  _Props initial = const {},
+}) {
+  final output = <String, Object?>{...initial};
   for (final operation in operations) {
     if (operation.group != 4) continue;
     budget.apply();
@@ -660,8 +829,15 @@ Map<String, Object?> _sectionProperties(
         }
         output['columns'] = columns;
       case 0x703a:
-        break; // revision save ID
+        output['sectionSaveId'] = value.u32(0);
+      case 0x3239:
+        output['_oldSection'] = _boolean(value)
+            ? _revisionSnapshot(output)
+            : null;
+      case 0xd243:
+        _applyPropertyRevision(value, output, 'section');
       default:
+        output['_unsupportedSection'] = true;
         warnings.add(LegacyWordWarning.unsupportedFormatting);
     }
   }

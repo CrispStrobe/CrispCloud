@@ -1,0 +1,127 @@
+{
+  "schema": "legacy-doc-parser/table-origin-golden",
+  "version": 1,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "measurement": "CELL horizontal position relative to BODY, or OUTER for nested tables; not whole-page equivalence",
+  "cases": [
+    {
+      "name": "default",
+      "originTwips": 0,
+      "marginTwips": 108,
+      "halfGapTwips": 0,
+      "depth": 1,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        108
+      ],
+      "relativeCellXPoints": 5.4,
+      "sourceSha256": "de2e0ef43a0d44d9bd923513890be55d1f418ab43de14574638316300a53e035"
+    },
+    {
+      "name": "zero-margin",
+      "originTwips": 0,
+      "marginTwips": 0,
+      "halfGapTwips": 0,
+      "depth": 1,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        0
+      ],
+      "relativeCellXPoints": 0.0,
+      "sourceSha256": "94d22e0dfb78b0335d142f58658c8b84f083446f4acd2279aa58d1e058ccb9ba"
+    },
+    {
+      "name": "wide-margin",
+      "originTwips": 0,
+      "marginTwips": 240,
+      "halfGapTwips": 0,
+      "depth": 1,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        240
+      ],
+      "relativeCellXPoints": 12.0,
+      "sourceSha256": "0545f9c4d8c99abe06f2e7e64799733e2be4eb5b01dd5b7e566e559c1ed03aaf"
+    },
+    {
+      "name": "negative-origin",
+      "originTwips": -108,
+      "marginTwips": 108,
+      "halfGapTwips": 0,
+      "depth": 1,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        0
+      ],
+      "relativeCellXPoints": 0.0,
+      "sourceSha256": "11759b637ae15eeae99e81ce516cf7d7ccb3dc3d82e25e181c7ad2b222cd5506"
+    },
+    {
+      "name": "positive-origin",
+      "originTwips": 720,
+      "marginTwips": 240,
+      "halfGapTwips": 0,
+      "depth": 1,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        960
+      ],
+      "relativeCellXPoints": 48.0,
+      "sourceSha256": "e776104ed25fc8a8be9ac51a3decc1f7643b798617e2dda4354dcfa1fe8fc254"
+    },
+    {
+      "name": "independent-gap",
+      "originTwips": 480,
+      "marginTwips": 240,
+      "halfGapTwips": 300,
+      "depth": 1,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        720
+      ],
+      "relativeCellXPoints": 36.0,
+      "sourceSha256": "7bed0156e41cf86960410fb11c8cc140aed7b9bc6c4d86ef0ec17bab2c12883a"
+    },
+    {
+      "name": "cell-margin",
+      "originTwips": 0,
+      "marginTwips": 240,
+      "halfGapTwips": 0,
+      "depth": 1,
+      "perCellMargin": true,
+      "nativeIndentTwips": [
+        240
+      ],
+      "relativeCellXPoints": 12.0,
+      "sourceSha256": "5a8d39ee78c2d1391cc71da72700435a1cfca3e7bdc0a0937beb58bd4b8b0f62"
+    },
+    {
+      "name": "nested",
+      "originTwips": 0,
+      "marginTwips": 108,
+      "halfGapTwips": 0,
+      "depth": 2,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        108,
+        0
+      ],
+      "relativeCellXPoints": 5.4,
+      "sourceSha256": "b5ccf1dd6a8177cd41b25a26dab328947b3a86b7aace6f511cf49c944d204e34"
+    },
+    {
+      "name": "nested-wide",
+      "originTwips": 240,
+      "marginTwips": 240,
+      "halfGapTwips": 0,
+      "depth": 2,
+      "perCellMargin": false,
+      "nativeIndentTwips": [
+        108,
+        240
+      ],
+      "relativeCellXPoints": 24.0,
+      "sourceSha256": "0aeeb8e22de0b0fc0ea5cbd4dbabfdd1d3bf1d9171385f3c4194345a69f3aa9d"
+    }
+  ]
+}

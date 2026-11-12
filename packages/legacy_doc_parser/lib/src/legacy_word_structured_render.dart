@@ -72,6 +72,7 @@ class _HtmlWriter {
     if (numberingDefinitions.isEmpty) return;
     final definitions = <int, Map<int, LegacyWordNumberingLevel>>{};
     final sourceInstances = <int, List<int>>{};
+    final sequenceIds = <int, int>{};
     if (numberingDefinitions.length > 4096) {
       throw const FormatException('Word numbering preview is too complex.');
     }
@@ -105,9 +106,31 @@ class _HtmlWriter {
         sourceInstances.putIfAbsent(sourceId, () => []).add(definition.id);
       }
     }
+    final sourceDefinitions = {
+      for (final definition in numberingDefinitions) definition.id: definition,
+    };
+    for (final definition in numberingDefinitions) {
+      final targetId = definition.continuationOf;
+      if (targetId != null) {
+        final target = sourceDefinitions[targetId];
+        if (target == null ||
+            target.id == definition.id ||
+            target.continuationOf != null ||
+            target.sourceListId == null ||
+            target.sourceListId != definition.sourceListId ||
+            target.levels.length != definition.levels.length ||
+            !List.generate(
+              target.levels.length,
+              (i) => identical(target.levels[i], definition.levels[i]),
+            ).every((v) => v)) {
+          throw const FormatException('Invalid Word numbering continuation.');
+        }
+      }
+      sequenceIds[definition.id] = targetId ?? definition.id;
+    }
     final ambiguous = <int>{
       for (final ids in sourceInstances.values)
-        if (ids.length > 1) ...ids,
+        if (ids.map((id) => sequenceIds[id]).toSet().length > 1) ...ids,
     };
     final ordered = <(int, LegacyWordParagraph)>[];
     var scanned = 0;
@@ -162,7 +185,10 @@ class _HtmlWriter {
         _markers[paragraph] = const _HtmlListMarker(unsupported: true);
         continue;
       }
-      final values = counters.putIfAbsent(id, () => List<int?>.filled(9, null));
+      final values = counters.putIfAbsent(
+        sequenceIds[id]!,
+        () => List<int?>.filled(9, null),
+      );
       values[index] = values[index] == null
           ? level.startAt
           : values[index]! + 1;

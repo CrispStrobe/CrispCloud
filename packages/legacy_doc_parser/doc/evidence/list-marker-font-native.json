@@ -1,0 +1,96 @@
+{
+  "schema": "legacy-doc-parser/list-marker-font-evidence",
+  "version": 1,
+  "sourceCorpusCase": "word",
+  "sourceDocxSha256": "501bdd2f897b9a0d417988903b3a378bac958cacbcba5f842736802a5d47af1b",
+  "binaryDocSha256": "2d2943d799d3a48430a90bff0bee68d7ab30fc2e5c26666d793160439e1f483d",
+  "correctedDocxSha256": "28ee9d7058fa6480af148bcb7031810f4faed6538671b0a0d52f33a0e96dcb67",
+  "renderer": {
+    "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+    "sha256": "35c5a2736f68e6370a7b9fe5082e66bc438c1a8de11261d6c4bc847073ced45b",
+    "version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5"
+  },
+  "pdfExtraction": {
+    "path": "/usr/bin/pdftotext",
+    "sha256": "7fe3559cac3ba61dd93650a1ba90499b9fc488184ef8d0f2f1305ddf52c0378b",
+    "version": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+  },
+  "observedBinaryProperties": {
+    "nFib": "0x0101",
+    "paragraphStyleIndex": 28,
+    "ilfo": 1,
+    "listLevel": 0,
+    "linkedListStyle": "0x0fff",
+    "lvlParagraphSprmsHex": "5e8400006084000015c6050001000006",
+    "lvlCharacterSprmsHex": "",
+    "paragraphDirectSprmsHex": "0a26000b460100608498fe5e84d002412400",
+    "lvlLeftTwips": 0,
+    "lvlFirstLineTwips": 0,
+    "paragraphLeftTwips": 720,
+    "paragraphFirstLineTwips": -360
+  },
+  "measurements": [
+    {
+      "route": "sourceDoc",
+      "pdfSha256": "21a5f30647364c1564575ade0d429b0e8b10de3193699f7c1a3b24ffabadaaba",
+      "markerText": "1.",
+      "markerBoundsPoints": {
+        "xMin": 90.1,
+        "yMin": 145.545,
+        "xMax": 99.252,
+        "yMax": 157.821
+      },
+      "markerRenderedFont": "LiberationSans"
+    },
+    {
+      "route": "nativeDocx",
+      "pdfSha256": "fd0917e7185573dc9ce9f192084a47731b7f4f5a314e91a5575e5040a024a59b",
+      "markerText": "1.",
+      "markerBoundsPoints": {
+        "xMin": 90.1,
+        "yMin": 145.545,
+        "xMax": 99.252,
+        "yMax": 157.821
+      },
+      "markerRenderedFont": "LiberationSans"
+    },
+    {
+      "route": "priorParser",
+      "pdfSha256": "03e9132d1e8977b90244ee9b089b27f1aab2697162007bf98a9382af349a49c8",
+      "markerText": "1.",
+      "markerBoundsPoints": {
+        "xMin": 72.1,
+        "yMin": 145.699,
+        "xMax": 80.35,
+        "yMax": 157.876
+      },
+      "markerRenderedFont": "LiberationSerif"
+    },
+    {
+      "route": "correctedParser",
+      "pdfSha256": "70e40f3924cfce732be6ec2fe76898f49aa187a7d4f126129dbef0b5cbe7673f",
+      "markerText": "1.",
+      "markerBoundsPoints": {
+        "xMin": 72.1,
+        "yMin": 145.545,
+        "xMax": 81.252,
+        "yMax": 157.821
+      },
+      "markerRenderedFont": "LiberationSans"
+    }
+  ],
+  "fontVerification": {
+    "passed": true,
+    "nativeMarkerFontOverrideAbsent": true,
+    "replacementFontInvented": false
+  },
+  "indentationVerification": {
+    "closed": false,
+    "reason": "Positive ilfo and explicit LVL zero indents follow MS-DOC list-last ordering. LibreOffice preserves different paragraph indents in this bridge. No global precedence reversal was made."
+  },
+  "references": [
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/d8b66123-1a3d-4e06-94c5-5ab16e9b6417",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/1a0bc623-211f-44f6-828b-51993f16e586",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/484822ee-a9d9-4af4-8423-29fda67a6a58"
+  ]
+}

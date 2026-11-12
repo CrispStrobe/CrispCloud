@@ -25,11 +25,15 @@ class TableFixtureParagraph {
   final List<int> character;
 }
 
-List<int> tableFixtureDefinition(List<int> widths, {List<int>? flags}) {
-  var edge = 0;
+List<int> tableFixtureDefinition(
+  List<int> widths, {
+  List<int>? flags,
+  int origin = 0,
+}) {
+  var edge = origin;
   final body = <int>[
     widths.length,
-    ...wordU16(0),
+    ...wordU16(origin),
     for (final width in widths) ...wordU16(edge += width),
     for (var i = 0; i < widths.length; i++) ...[
       ...wordU16(flags?[i] ?? 0),

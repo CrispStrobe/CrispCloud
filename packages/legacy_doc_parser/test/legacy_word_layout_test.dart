@@ -172,7 +172,8 @@ void main() {
       expect(_attr(_all(xml, 'cols').single, 'equalWidth'), '0');
       expect(_attr(_all(xml, 'cols').single, 'sep'), '1');
       expect(_all(xml, 'col').map((e) => _attr(e, 'w')), ['2400', '4800']);
-      expect(_attr(_all(xml, 'lnNumType').single, 'start'), '7');
+      expect(section.layout.lineNumberStart, 7);
+      expect(_attr(_all(xml, 'lnNumType').single, 'start'), '6');
       expect(_attr(_all(xml, 'lnNumType').single, 'restart'), 'continuous');
       expect(_attr(_all(xml, 'pgNumType').single, 'start'), '42');
       expect(_attr(_all(xml, 'pgNumType').single, 'fmt'), 'lowerRoman');

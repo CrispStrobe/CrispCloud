@@ -15,6 +15,8 @@ export 'legacy_word_compatibility.dart';
 export 'legacy_word_media_model.dart';
 export 'legacy_word_layout_model.dart';
 
+part 'legacy_word_table_model.dart';
+
 enum LegacyWordWarning {
   unsupportedFormatting,
   numberingNotReconstructed,
@@ -30,6 +32,9 @@ enum LegacyWordWarning {
   revisionMetadataIncomplete,
   recoveredTableStoryBoundary,
   recoveredEmptySection,
+
+  /// A declared-one FTXBXS disagreed with a complete explicit OfficeArt chain.
+  recoveredTextboxChainLength,
 
   /// A cb=0 PAPX had one uninterpreted final byte after complete properties.
   recoveredNonconformingProperties,
@@ -61,6 +66,7 @@ class LegacyWordDocument {
     this.bookmarks = const [],
     this.fields = const [],
     this.numbering = const [],
+    this.tableStyles = const [],
     this.media = const LegacyWordMediaCatalog(),
     this.evenAndOddHeaders = false,
     this.defaultTabStopTwips,
@@ -85,6 +91,7 @@ class LegacyWordDocument {
   final List<LegacyWordBookmark> bookmarks;
   final List<LegacyWordField> fields;
   final List<LegacyWordNumberingDefinition> numbering;
+  final List<LegacyWordTableStyle> tableStyles;
   final LegacyWordMediaCatalog media;
 
   /// DopBase.fFacingPages. Stored even-page stories alone do not enable them.
@@ -222,6 +229,7 @@ class LegacyWordTextboxReference {
     this.shapeId,
     this.nextTextboxId,
     this.chainLength = 1,
+    this.declaredChainLength,
     this.anchors = const [],
   });
   final int id;
@@ -231,6 +239,10 @@ class LegacyWordTextboxReference {
   final int? shapeId;
   final int? nextTextboxId;
   final int chainLength;
+
+  /// Original FTXBXS count when a nonconforming declared-one chain was
+  /// recovered from agreeing OfficeArt indices and next-shape references.
+  final int? declaredChainLength;
 
   /// Actual OfficeArtClientTextbox chain indices, when available. A story is
   /// not duplicated for each shape and the library does not invent reflow.
@@ -281,6 +293,7 @@ class LegacyWordField {
     this.locked = false,
     this.dirty = false,
     this.privateResult = false,
+    this.displayRevision,
   });
   final int id;
 
@@ -300,6 +313,33 @@ class LegacyWordField {
   final bool locked;
   final bool dirty;
   final bool privateResult;
+  final LegacyWordDisplayFieldRevision? displayRevision;
+}
+
+/// Tracked replacement of the cached result of a LISTNUM display field.
+/// This is separate from a revision to the field's instruction or text runs.
+class LegacyWordDisplayFieldRevision {
+  LegacyWordDisplayFieldRevision({
+    required this.original,
+    this.revision = const LegacyWordRevisionInfo(),
+    this.hidden = false,
+    Uint8List? sourceRecord,
+  }) : sourceRecord = sourceRecord == null
+           ? null
+           : Uint8List.fromList(sourceRecord).asUnmodifiableView() {
+    if (original.length > 15 ||
+        sourceRecord != null && sourceRecord.length != 39) {
+      throw ArgumentError('Invalid Word display-field revision.');
+    }
+  }
+
+  final String original;
+  final LegacyWordRevisionInfo revision;
+
+  /// Explicitly hidden source text or a field inside a private field result.
+  /// Such history is retained as evidence and is not activated in native XML.
+  final bool hidden;
+  final Uint8List? sourceRecord;
 }
 
 enum LegacyWordListSuffix { tab, space, nothing }
@@ -309,6 +349,7 @@ class LegacyWordNumberingDefinition {
     required this.id,
     required this.levels,
     this.sourceListId,
+    this.continuationOf,
   });
 
   /// The absolute, one-based ilfo referenced by paragraph listId.
@@ -316,6 +357,11 @@ class LegacyWordNumberingDefinition {
 
   /// Original lsid shared by list instances that can continue one sequence.
   final int? sourceListId;
+
+  /// Another instance whose number sequence this instance continues. The
+  /// parser sets this only for a shared lsid with no LFO level overrides.
+  /// Both definitions retain their original ids and share the same levels.
+  final int? continuationOf;
   final List<LegacyWordNumberingLevel> levels;
 }
 
@@ -364,12 +410,14 @@ class LegacyWordParagraph extends LegacyWordBlock {
     required this.runs,
     this.style = const LegacyWordParagraphStyle(),
     this.formattingRevision,
+    this.numberingRevision,
     this.mark,
     this.revisionSaveId,
   });
   final List<LegacyWordRun> runs;
   final LegacyWordParagraphStyle style;
   final LegacyWordParagraphFormattingRevision? formattingRevision;
+  final LegacyWordNumberingRevision? numberingRevision;
 
   /// Properties of the terminating paragraph mark, independently of text.
   /// Deleting this mark does not delete the paragraph contents.
@@ -387,9 +435,28 @@ class LegacyWordTable extends LegacyWordBlock {
 }
 
 class LegacyWordTableRow {
-  const LegacyWordTableRow({required this.cells, this.isHeader = false});
+  const LegacyWordTableRow({
+    required this.cells,
+    this.isHeader = false,
+    this.originTwips = 0,
+    this.tableStyleId,
+    this.styleOptions = 0x600,
+    this.halfGapTwips = 0,
+  });
   final List<LegacyWordTableCell> cells;
   final bool isHeader;
+
+  /// Logical left outer edge, including cell spacing, relative to the page's
+  /// logical left margin. Negative values retain an outdent. Rows can differ.
+  final int originTwips;
+  final int? tableStyleId;
+
+  /// Original Fatl options. Bits 5–8 enable edge rows/columns; bits 9–10
+  /// disable horizontal/vertical banding. Unrelated auto-format bits survive.
+  final int styleOptions;
+
+  /// Source origin offset; it is not a cell margin.
+  final int halfGapTwips;
 }
 
 class LegacyWordTableCell {
@@ -402,6 +469,7 @@ class LegacyWordTableCell {
     this.verticalMergeStart = false,
     this.verticalMergeContinue = false,
     this.shading,
+    this.formatting = const LegacyWordTableCellFormat(),
   }) : _blocks = blocks;
 
   /// Direct paragraphs in this cell. [blocks] retains their order relative to
@@ -415,6 +483,7 @@ class LegacyWordTableCell {
   final bool verticalMergeStart;
   final bool verticalMergeContinue;
   final LegacyWordShading? shading;
+  final LegacyWordTableCellFormat formatting;
 }
 
 enum LegacyWordTabAlignment { left, center, right, decimal, bar, list }
@@ -586,6 +655,35 @@ class LegacyWordParagraphFormattingRevision {
   final bool previousPropertiesComplete;
 }
 
+/// The legacy NumRM paragraph-numbering history and PFNumRMIns insertion flag.
+/// A missing native original string is deliberately different from no previous
+/// numbering; the immutable source record still retains all nine levels.
+class LegacyWordNumberingRevision {
+  LegacyWordNumberingRevision({
+    this.previouslyNumbered,
+    this.original,
+    this.inserted = false,
+    this.revision = const LegacyWordRevisionInfo(),
+    Uint8List? sourceRecord,
+  }) : sourceRecord = sourceRecord == null
+           ? null
+           : Uint8List.fromList(sourceRecord).asUnmodifiableView() {
+    if (sourceRecord != null && sourceRecord.length != 128) {
+      throw const FormatException('Invalid Word numbering revision record.');
+    }
+  }
+
+  /// Null means no NumRM record supplied this previous state.
+  final bool? previouslyNumbered;
+
+  /// OOXML legacy numbering history, e.g. %1:3:0:. for old decimal "3.".
+  /// Null means the original cannot be represented without interpretation.
+  final String? original;
+  final bool inserted;
+  final LegacyWordRevisionInfo revision;
+  final Uint8List? sourceRecord;
+}
+
 class LegacyWordParagraphMark {
   const LegacyWordParagraphMark({
     this.style = const LegacyWordCharacterStyle(),
@@ -745,6 +843,8 @@ class LegacyWordParagraphStyle {
 class LegacyWordSection {
   const LegacyWordSection({
     this.layout = const LegacyWordSectionLayout(),
+    this.formattingRevision,
+    this.revisionSaveId,
     required this.startCp,
     required this.endCp,
     this.pageWidthTwips,
@@ -763,6 +863,10 @@ class LegacyWordSection {
     this.titlePage = false,
   });
   final LegacyWordSectionLayout layout;
+
+  /// One previous section-property state captured by sprmSWall.
+  final LegacyWordSectionFormattingRevision? formattingRevision;
+  final int? revisionSaveId;
   final int startCp;
   final int endCp;
   final int? pageWidthTwips;
@@ -781,4 +885,20 @@ class LegacyWordSection {
 
   /// sprmSFTitlePage, independently of stored first-page header/footer text.
   final bool titlePage;
+}
+
+class LegacyWordSectionFormattingRevision {
+  const LegacyWordSectionFormattingRevision({
+    this.previousSection,
+    this.revision = const LegacyWordRevisionInfo(),
+    this.marked = true,
+    this.previousPropertiesComplete = true,
+  });
+
+  /// Supported section properties immediately before sprmSWall, with the
+  /// original source range. It has no recursively reconstructed history.
+  final LegacyWordSection? previousSection;
+  final LegacyWordRevisionInfo revision;
+  final bool marked;
+  final bool previousPropertiesComplete;
 }

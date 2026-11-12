@@ -232,6 +232,8 @@ class WordFixtureStyle {
     this.builtinId = 0x0ffe,
     this.parentIndex = 0x0fff,
     this.character = false,
+    this.table = false,
+    this.tableProperties = const [],
     this.paragraphProperties = const [],
     this.characterProperties = const [],
   });
@@ -239,6 +241,8 @@ class WordFixtureStyle {
   final int builtinId;
   final int parentIndex;
   final bool character;
+  final bool table;
+  final List<int> tableProperties;
   final List<int> paragraphProperties;
   final List<int> characterProperties;
 }
@@ -358,10 +362,23 @@ Uint8List _stylesheet(Map<int, WordFixtureStyle> styles) {
     fields.setUint16(0, style.builtinId, Endian.little);
     fields.setUint16(
       2,
-      (style.parentIndex << 4) | (style.character ? 2 : 1),
+      (style.parentIndex << 4) |
+          (style.table
+              ? 3
+              : style.character
+              ? 2
+              : 1),
       Endian.little,
     );
-    fields.setUint16(4, style.character ? 1 : 2, Endian.little);
+    fields.setUint16(
+      4,
+      style.table
+          ? 3
+          : style.character
+          ? 1
+          : 2,
+      Endian.little,
+    );
     final record = BytesBuilder(copy: false)
       ..add(base)
       ..add(wordU16(style.name.length));
@@ -374,6 +391,7 @@ Uint8List _stylesheet(Map<int, WordFixtureStyle> styles) {
       if (value.length.isOdd) record.addByte(0);
     }
 
+    if (style.table) upx(style.tableProperties);
     if (!style.character) {
       upx([...wordU16(index), ...style.paragraphProperties]);
     }

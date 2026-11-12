@@ -31,10 +31,133 @@ Uint8List _transform(int type, List<double> values, [int? mode]) {
   return emfRecord(type, [...bytes, if (mode != null) ...wordU32(mode)]);
 }
 
+Uint8List _emfMultiPoly(int type, List<List<(int, int)>> figures) =>
+    emfRecord(type, [
+      ...List.filled(16, 0),
+      ...wordU32(figures.length),
+      ...wordU32(figures.fold<int>(0, (sum, points) => sum + points.length)),
+      for (final points in figures) ...wordU32(points.length),
+      for (final points in figures)
+        for (final (x, y) in points)
+          if (type >= 90) ...[
+            ...wordU16(x),
+            ...wordU16(y),
+          ] else ...[
+            ...wordU32(x),
+            ...wordU32(y),
+          ],
+    ]);
+
+Uint8List _wmfMultiPoly(List<List<(int, int)>> figures) => wmfRecord(0x0538, [
+  ...wordU16(figures.length),
+  for (final points in figures) ...wordU16(points.length),
+  for (final points in figures)
+    for (final (x, y) in points) ...[...wordU16(x), ...wordU16(y)],
+]);
+
 List<XmlElement> _elements(LegacyWordMetafileInfo result, String name) =>
     XmlDocument.parse(result.previewSvg!).findAllElements(name).toList();
 
 void main() {
+  test('EMF and WMF compound polygons preserve holes and fill rules', () {
+    final polygons = [
+      [(-10, -10), (100, -10), (100, 90), (-10, 90)],
+      [(20, 20), (70, 20), (70, 60), (20, 60)],
+    ];
+    for (final mode in [1, 2]) {
+      final results = [
+        for (final type in [8, 91])
+          _emf([
+            _emfInts(19, [mode]),
+            _emfMultiPoly(type, polygons),
+          ]),
+        _wmf([
+          _wmfInts(0x0106, [mode]),
+          _wmfMultiPoly(polygons),
+        ]),
+      ];
+      for (final result in results) {
+        final path = _elements(result, 'path').single;
+        expect(result.hasCompletePreview, isTrue);
+        expect(
+          path.getAttribute('d'),
+          'M-10 -10L100 -10L100 90L-10 90ZM20 20L70 20L70 60L20 60Z',
+        );
+        expect(
+          path.getAttribute('fill-rule'),
+          mode == 1 ? 'evenodd' : 'nonzero',
+        );
+        expect(path.getAttribute('fill'), '#FFFFFF');
+      }
+    }
+  });
+
+  test(
+    'EMF multi-polylines stay separate and preserve the drawing position',
+    () {
+      for (final type in [7, 90]) {
+        final result = _emf([
+          _emfInts(27, [3, 4]),
+          _emfMultiPoly(type, [
+            [(-5, -6), (10, 20)],
+            [(30, 40), (50, 60), (70, 80)],
+          ]),
+          _emfInts(54, [9, 10]),
+        ]);
+        final paths = _elements(result, 'path');
+        expect(paths.map((path) => path.getAttribute('d')), [
+          'M-5 -6L10 20M30 40L50 60L70 80',
+          'M3 4L9 10',
+        ]);
+        expect(paths.first.getAttribute('fill'), 'none');
+      }
+    },
+  );
+
+  test('compound polygon counts validate every extent and total', () {
+    for (final record in [
+      _emfInts(8, [0, 0, 0, 0, 0xffffffff, 0]),
+      _emfInts(91, [0, 0, 0, 0, 2, 4, 4]),
+      _emfInts(7, [0, 0, 0, 0, 1, 3, 2, 0, 0, 10, 10]),
+      _emfInts(8, [0, 0, 0, 0, 1, 2, 2, 0, 0]),
+      _emfMultiPoly(90, [
+        [(0, 0)],
+      ]),
+    ]) {
+      expect(() => _emf([record]), throwsFormatException);
+    }
+    for (final record in [
+      _wmfInts(0x0538, [65535]),
+      _wmfInts(0x0538, [1, 65535]),
+      _wmfMultiPoly([
+        [(0, 0)],
+      ]),
+      _wmfInts(0x0538, [1, 2, 0, 0]),
+    ]) {
+      expect(() => _wmf([record]), throwsFormatException);
+    }
+  });
+
+  test('compound points share the global preview budget', () {
+    final record = _emfMultiPoly(91, [List.filled(50000, (1, 1))]);
+    expect(
+      () => _emf([
+        record,
+        record,
+        _emfMultiPoly(91, [
+          [(0, 0), (1, 1)],
+        ]),
+      ]),
+      throwsFormatException,
+    );
+    final constrained = _emf([
+      _emfMultiPoly(8, [List.filled(16385, (1, 1))]),
+    ]);
+    expect(constrained.previewSvg, isNull);
+    expect(constrained.unsupportedPreviewRecords, [8]);
+    expect(constrained.nativeEmbeddingAllowed, isTrue);
+  });
+
   test(
     'EMF emits generated rectangles, ellipses, polygons and cubic curves',
     () {
@@ -96,6 +219,17 @@ void main() {
       _elements(result, 'path').last.getAttribute('d'),
       'M0 0L80 0L40 80Z',
     );
+  });
+
+  test('WMF selection does not invent EMF-style stock-object handles', () {
+    for (final value in [0x8000, 0x8004, 0x8008]) {
+      expect(
+        () => _wmf([
+          _wmfInts(0x012d, [value]),
+        ]),
+        throwsFormatException,
+      );
+    }
   });
 
   test(

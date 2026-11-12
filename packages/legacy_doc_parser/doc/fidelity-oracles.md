@@ -12,6 +12,8 @@ python3 tool/fidelity/oracle.py
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
 python3 tool/fidelity/run.py --office /path/to/installed/soffice \
   --dart /path/to/dart --output build/fidelity-first-run
+python3 tool/fidelity/run.py --office /path/to/installed/soffice \
+  --dart /path/to/dart --roundtrip-cycles 3 --output build/fidelity-three-cycles
 ```
 
 No Office application is installed or downloaded. Normal unit tests do not
@@ -34,18 +36,44 @@ converted DOCX are also independently rendered to PDF. Page dimensions, page
 count, page-by-page words, bounding-box drift, layout text, and raster hashes
 are recorded. A same-page-count result alone never passes exact pagination.
 
-Finally our DOCX is saved back to DOC by Office and imported a second time.
-Changes are reported separately from the first conversion. Renderer version,
-font inventory hash, source hashes, package commit and dirty-worktree state
-are included. The native DOCX render is measured too, so native conversion
-loss cannot silently become the expected output.
+Finally our DOCX is saved back to DOC by Office and imported again. The default
+is one cycle; `--roundtrip-cycles 3` measures three successive binary imports.
+Each cycle starts with the preceding parser output, records its native DOC and
+native DOCX interpretation, and measures the new parser output. Native bridge
+loss and parser differences stay separate. Semantic and rendering comparisons
+refer to both the immediately preceding import and the first parser import.
+A revision lost on the first cycle therefore remains a measured loss when the
+second and third cycles produce the same damaged state. `--no-roundtrip` or
+`--roundtrip-cycles 0` disables these extra measurements explicitly.
+
+Every semantic snapshot and successful render is saved immediately with its
+source-document hash. Atomic report checkpoints identify each running,
+completed or failed stage. A failed third import leaves the preceding two
+cycles and the native third-cycle snapshot available; a failed render retains
+the earlier semantic and rendering evidence. Build failures also leave a report
+with the compiler/environment information already collected.
+
+The version 2 report records SHA-256 receipts for repository Dart sources,
+fidelity tools, corpus manifest, dependency lock and package configuration,
+as well as the actual compiled parser executable. It records compiler, Office,
+PDF extraction and raster tool versions and executable hashes, Python/platform
+details, font inventory, package commit and dirty-worktree state. Build inputs
+are hashed before and after compilation; a concurrent change fails the run
+instead of assigning ambiguous source provenance to the executable. These
+receipts identify the measured repository and tool binaries; they do not claim
+that every transitive runtime library or external dependency source was hashed.
 
 `run.py` exits unsuccessfully for conversion/oracle failures. Ordinary measured
 differences are findings, not an assertion of equality. `--require-exact`
-additionally rejects every semantic, round-trip, or exact-render difference.
+additionally rejects every semantic, round-trip, or exact-render difference,
+including native bridge changes and native DOCX rendering drift. Missing stages,
+incomplete cycles, changed inputs and missing comparison results cannot pass.
 It never regenerates or blesses goldens. Reports and rasters stay in the
 requested output directory for inspection. Exact results apply only to the
 recorded fixture, Office build and fonts; they do not certify all documents.
+`test_run.py` exercises a mocked three-cycle native/parser pipeline, distinguishes
+bridge loss from parser loss, and injects late conversion/render/build failures.
+It does not substitute those mocks for a native rendering result.
 
 ## Structure beyond element counts
 
