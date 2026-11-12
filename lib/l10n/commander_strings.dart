@@ -157,6 +157,7 @@ abstract final class CommanderStrings {
     "grid view": l.gridView,
     "keep both": l.keepBoth,
     "key management": l.keyManagement,
+    "system log": l.systemLog,
     "keyboard shortcuts": l.keyboardShortcuts,
     "list view": l.listView,
     "logged in": l.loggedIn,

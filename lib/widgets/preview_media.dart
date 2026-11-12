@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:quds_office_engine/quds_office_engine.dart'
-    show extractLegacyWordText;
+    show OfficePackageParts, extractLegacyWordText;
 import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
@@ -101,8 +101,11 @@ const int _kOfficeXmlCap = 8 * 1024 * 1024;
 ///
 /// Uses the viewer's hardened archive layer: metadata-only open, per-entry
 /// size caps while decompressing (zip-bomb safe), typed rejections.
-Future<String> extractOfficeText(Uint8List bytes, String filename,
-    {PreviewMediaStrings? strings}) async {
+Future<String> extractOfficeText(
+  Uint8List bytes,
+  String filename, {
+  PreviewMediaStrings? strings,
+}) async {
   final ext = filename.split('.').last.toLowerCase();
   final buffer = StringBuffer();
   ViewerArchive? archive;
@@ -114,62 +117,81 @@ Future<String> extractOfficeText(Uint8List bytes, String filename,
           : text;
     }
     archive = await openViewerArchive(bytes, name: filename);
+    final openedArchive = archive;
     final files = archive.members.where((m) => m.isFile).toList();
+    Future<String?> readPart(String name) async {
+      final member = files.where((file) => file.name == name).firstOrNull;
+      if (member == null || member.size > _kOfficeXmlCap) return null;
+      try {
+        final data = await openedArchive.readMember(
+          member,
+          maxBytes: _kOfficeXmlCap,
+        );
+        return utf8.decode(data, allowMalformed: true);
+      } on ArchiveViewException {
+        return null;
+      }
+    }
+
     final xmlPaths = switch (ext) {
-      'docx' || 'docm' || 'dotx' || 'dotm' => <String>['word/document.xml'],
-      'xlsx' || 'xlsm' || 'xltx' => files
-          .map((f) => f.name)
-          .where((n) => n.startsWith('xl/worksheets/') && n.endsWith('.xml'))
-          .toList(),
-      'pptx' || 'pptm' || 'potx' => files
-          .map((f) => f.name)
-          .where((n) => n.startsWith('ppt/slides/') && n.endsWith('.xml'))
-          .toList(),
+      // Follow the package's main-part relationship; documents may place
+      // their body outside word/document.xml.
+      'docx' || 'docm' || 'dotx' || 'dotm' => <String>[
+        await OfficePackageParts(readPart).mainPart('word/document.xml'),
+      ],
+      'xlsx' || 'xlsm' || 'xltx' =>
+        files
+            .map((f) => f.name)
+            .where((n) => n.startsWith('xl/worksheets/') && n.endsWith('.xml'))
+            .toList(),
+      'pptx' || 'pptm' || 'potx' =>
+        files
+            .map((f) => f.name)
+            .where((n) => n.startsWith('ppt/slides/') && n.endsWith('.xml'))
+            .toList(),
       'odt' || 'ods' || 'odp' => <String>['content.xml'],
-      'epub' => files
-          .map((f) => f.name)
-          .where((n) =>
-              n.endsWith('.xhtml') || n.endsWith('.html') || n.endsWith('.htm'))
-          .toList(),
+      'epub' =>
+        files
+            .map((f) => f.name)
+            .where(
+              (n) =>
+                  n.endsWith('.xhtml') ||
+                  n.endsWith('.html') ||
+                  n.endsWith('.htm'),
+            )
+            .toList(),
       _ => <String>[],
     };
 
     for (final xmlPath in xmlPaths) {
-      final matches = files.where((f) => f.name == xmlPath).toList();
-      if (matches.isEmpty) continue;
-      final member = matches.first;
-      if (member.size > _kOfficeXmlCap) continue;
-      try {
-        final data = await archive.readMember(
-          member,
-          maxBytes: _kOfficeXmlCap,
-        );
-        final xmlContent = utf8.decode(data, allowMalformed: true);
-        // Strip XML tags and extract text content.
-        final text = xmlContent
-            .replaceAll(RegExp(r'<[^>]+>'), ' ')
-            .replaceAll(RegExp(r'\s+'), ' ')
-            .trim();
-        if (text.isNotEmpty) {
-          if (buffer.isNotEmpty) buffer.writeln('\n---\n');
-          buffer.writeln(text);
-          if (buffer.length > 4 * 1024 * 1024) break;
-        }
-      } on ArchiveViewException {
-        continue;
+      final xmlContent = await readPart(xmlPath);
+      if (xmlContent == null) continue;
+      // Strip XML tags and extract text content.
+      final text = xmlContent
+          .replaceAll(RegExp(r'<[^>]+>'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      if (text.isNotEmpty) {
+        if (buffer.isNotEmpty) buffer.writeln('\n---\n');
+        buffer.writeln(text);
+        if (buffer.length > 4 * 1024 * 1024) break;
       }
     }
   } on FormatException {
-    return (strings?.text('extractFailed') ?? '(Could not extract text from this document)');
+    return (strings?.text('extractFailed') ??
+        '(Could not extract text from this document)');
   } on ArchiveViewException {
-    return (strings?.text('extractFailed') ?? '(Could not extract text from this document)');
+    return (strings?.text('extractFailed') ??
+        '(Could not extract text from this document)');
   } on ArchivePasswordRequiredException {
     return (strings?.text('encrypted') ?? '(This document is encrypted)');
   } finally {
     await archive?.close();
   }
 
-  return buffer.isEmpty ? (strings?.text('noText') ?? '(No text content found)') : buffer.toString();
+  return buffer.isEmpty
+      ? (strings?.text('noText') ?? '(No text content found)')
+      : buffer.toString();
 }
 
 /// Inline media player for video and audio files.
@@ -228,13 +250,18 @@ class _MediaPlayerState extends State<MediaPlayer> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.music_note,
-                          size: 64, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.music_note,
+                        size: 64,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(height: 8),
                       Text(
-                        PreviewMediaStrings(context).text(isPlaying ? 'playing' : 'paused'),
+                        PreviewMediaStrings(context)
+                            .text(isPlaying ? 'playing' : 'paused'),
                         style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant),
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -262,10 +289,12 @@ class _MediaPlayerState extends State<MediaPlayer> {
               SliderTheme(
                 data: SliderThemeData(
                   trackHeight: 3,
-                  thumbShape:
-                      const RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape:
-                      const RoundSliderOverlayShape(overlayRadius: 12),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 6,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 12,
+                  ),
                   activeTrackColor: theme.colorScheme.primary,
                   inactiveTrackColor: theme.colorScheme.surfaceContainerHigh,
                   thumbColor: theme.colorScheme.primary,
@@ -275,9 +304,11 @@ class _MediaPlayerState extends State<MediaPlayer> {
                       ? position.inMilliseconds / duration.inMilliseconds
                       : 0.0,
                   onChanged: (v) {
-                    controller.seekTo(Duration(
-                      milliseconds: (v * duration.inMilliseconds).round(),
-                    ));
+                    controller.seekTo(
+                      Duration(
+                        milliseconds: (v * duration.inMilliseconds).round(),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -285,9 +316,12 @@ class _MediaPlayerState extends State<MediaPlayer> {
               Row(
                 children: [
                   IconButton(
-                    icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow,
-                        size: 20),
-                    tooltip: PreviewMediaStrings(context).text(isPlaying ? 'pause' : 'play'),
+                    icon: Icon(
+                      isPlaying ? Icons.pause : Icons.play_arrow,
+                      size: 20,
+                    ),
+                    tooltip: PreviewMediaStrings(context)
+                        .text(isPlaying ? 'pause' : 'play'),
                     onPressed: () {
                       if (isPlaying) {
                         controller.pause();
@@ -296,14 +330,17 @@ class _MediaPlayerState extends State<MediaPlayer> {
                       }
                     },
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                   Text(
                     '${_formatDuration(position)} / ${_formatDuration(duration)}',
                     style: TextStyle(
-                        fontSize: 11,
-                        color: theme.colorScheme.onSurfaceVariant),
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const Spacer(),
                   // Volume toggle
@@ -314,14 +351,18 @@ class _MediaPlayerState extends State<MediaPlayer> {
                           : Icons.volume_off,
                       size: 18,
                     ),
-                    tooltip: PreviewMediaStrings(context).text(controller.value.volume > 0 ? 'mute' : 'unmute'),
+                    tooltip: PreviewMediaStrings(context)
+                        .text(controller.value.volume > 0 ? 'mute' : 'unmute'),
                     onPressed: () {
-                      controller
-                          .setVolume(controller.value.volume > 0 ? 0.0 : 1.0);
+                      controller.setVolume(
+                        controller.value.volume > 0 ? 0.0 : 1.0,
+                      );
                     },
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ],
               ),
@@ -350,16 +391,15 @@ class WebMediaPlayer extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            isAudio ? Icons.music_note : Icons.videocam,
-            size: 64,
-          ),
+          Icon(isAudio ? Icons.music_note : Icons.videocam, size: 64),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.play_arrow),
-            label: Text(isAudio
-                ? PreviewMediaStrings(context).text('playAudio')
-                : PreviewMediaStrings(context).text('playVideo')),
+            label: Text(
+              isAudio
+                  ? PreviewMediaStrings(context).text('playAudio')
+                  : PreviewMediaStrings(context).text('playVideo'),
+            ),
             onPressed: () {
               html.window.open(blobUrl, '_blank');
             },
@@ -427,19 +467,23 @@ class _FontPreviewState extends State<FontPreview> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.filename,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              )),
+          Text(
+            widget.filename,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
           const SizedBox(height: 16),
           for (final size in [12.0, 16.0, 24.0, 32.0, 48.0, 72.0]) ...[
-            Text('${size.toInt()}px',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: theme.colorScheme.onSurfaceVariant,
-                )),
+            Text(
+              '${size.toInt()}px',
+              style: TextStyle(
+                fontSize: 10,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               PreviewMediaStrings(context).text('sample'),
@@ -480,11 +524,14 @@ class CsvTableView extends StatelessWidget {
     final isTsv = filename.toLowerCase().endsWith('.tsv');
     final separator = isTsv ? '\t' : ',';
 
-    final rows = _parseDelimited(content, separator)
-        .where((row) => row.any((cell) => cell.trim().isNotEmpty))
-        .toList();
+    final rows = _parseDelimited(
+      content,
+      separator,
+    ).where((row) => row.any((cell) => cell.trim().isNotEmpty)).toList();
     if (rows.isEmpty) {
-      return Center(child: Text(PreviewMediaStrings(context).text('emptyFile')));
+      return Center(
+        child: Text(PreviewMediaStrings(context).text('emptyFile')),
+      );
     }
 
     final headerRow = rows.first;
@@ -517,10 +564,12 @@ class CsvTableView extends StatelessWidget {
               return DataRow(
                 cells: List.generate(
                   colCount,
-                  (i) => DataCell(Text(
-                    i < row.length ? row[i].trim() : '',
-                    overflow: TextOverflow.ellipsis,
-                  )),
+                  (i) => DataCell(
+                    Text(
+                      i < row.length ? row[i].trim() : '',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ),
               );
             }).toList(),

@@ -38,6 +38,19 @@ import 'panel_header.dart';
 import 'panel_listing_placeholder.dart';
 import '../l10n/file_panel_strings.dart';
 
+/// Below this height a panel scrolls as a whole rather than overflowing.
+const double _compactPanelHeight = 160;
+
+Widget _scrollWhenShort(BoxConstraints constraints, Widget column) {
+  if (!constraints.hasBoundedHeight ||
+      constraints.maxHeight >= _compactPanelHeight) {
+    return column;
+  }
+  return SingleChildScrollView(
+    child: SizedBox(height: _compactPanelHeight, child: column),
+  );
+}
+
 class FilePanel extends ConsumerStatefulWidget {
   final PanelSide side;
   final bool isActive;
@@ -659,178 +672,195 @@ class _FilePanelState extends ConsumerState<FilePanel> {
             ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
             : null,
       ),
-      child: Column(
-        children: [
-          Row(
+      // Very short panels (stacked panes on a phone in landscape) scroll as a
+      // whole instead of clipping their tabs, path and toolbar rows.
+      child: LayoutBuilder(
+        builder: (context, constraints) => _scrollWhenShort(
+          constraints,
+          Column(
             children: [
-              Expanded(
-                child: PanelTabBar(
-                  tabs: panel.tabs,
-                  activeTabId: panel.activeTabId,
-                  activeSelectionCount: selection.length,
-                  onTabSelected: (id) => panel.selectTab(id),
-                  onTabClosed: (id) => panel.closeTab(id),
-                  onNewTab: () => panel.addTab(),
-                  onTabPinToggle: (id) => panel.toggleTabPin(id),
-                  onTabRenamed: (id, name) => panel.renameTab(id, name),
-                  onReopenClosedTab: panel.reopenClosedTab,
-                  canReopenClosedTab: panel.canReopenClosedTab,
-                  onTabLockChanged: (id, mode) => panel.setTabLock(id, mode),
-                  onTabDuplicated: (id) => panel.duplicateTab(id),
-                  onTabReordered: panel.reorderTabs,
-                  onTabForceClosed: (id) => panel.closeTab(id, force: true),
-                  onCloseDuplicates: () => panel.closeDuplicateTabs(),
-                  onWorkspace: () =>
-                      showWorkspaceDialog(context, ref, widget.side),
-                  tabDropTargetBuilder: (tab, child) => FolderDropTarget(
-                    key: ValueKey(
-                      'tab-folder-drop-${widget.side.name}-${tab.id}',
-                    ),
-                    side: widget.side,
-                    folder: FileItem(
-                      name: tab.label,
-                      path: tab.path,
-                      isFolder: true,
-                    ),
-                    captureDestination: () =>
-                        const FolderDropService().captureTab(
-                          panel,
-                          tab,
-                          ref.read(localFileServiceProvider),
+              Row(
+                children: [
+                  Expanded(
+                    child: PanelTabBar(
+                      tabs: panel.tabs,
+                      activeTabId: panel.activeTabId,
+                      activeSelectionCount: selection.length,
+                      onTabSelected: (id) => panel.selectTab(id),
+                      onTabClosed: (id) => panel.closeTab(id),
+                      onNewTab: () => panel.addTab(),
+                      onTabPinToggle: (id) => panel.toggleTabPin(id),
+                      onTabRenamed: (id, name) => panel.renameTab(id, name),
+                      onReopenClosedTab: panel.reopenClosedTab,
+                      canReopenClosedTab: panel.canReopenClosedTab,
+                      onTabLockChanged: (id, mode) =>
+                          panel.setTabLock(id, mode),
+                      onTabDuplicated: (id) => panel.duplicateTab(id),
+                      onTabReordered: panel.reorderTabs,
+                      onTabForceClosed: (id) => panel.closeTab(id, force: true),
+                      onCloseDuplicates: () => panel.closeDuplicateTabs(),
+                      onWorkspace: () =>
+                          showWorkspaceDialog(context, ref, widget.side),
+                      tabDropTargetBuilder: (tab, child) => FolderDropTarget(
+                        key: ValueKey(
+                          'tab-folder-drop-${widget.side.name}-${tab.id}',
                         ),
-                    child: child,
-                  ),
-                ),
-              ),
-              PathFavoritesButton(side: widget.side),
-            ],
-          ),
-          PanelHeader(
-            side: widget.side,
-            isActive: widget.isActive,
-            showSource: MediaQuery.sizeOf(context).width > 800,
-          ),
-          FileCommandToolbar(side: widget.side),
-          if (panel.showingSearchResults) _buildFileListHeader(context, panel),
-          if (panel.collectionBusy && !panel.showingSearchResults)
-            Row(
-              children: [
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    panel.collectionProgress,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                TextButton(
-                  onPressed: panel.cancelCollectionRefresh,
-                  child: Text(context.commanderTr("Cancel")),
-                ),
-              ],
-            ),
-          // Selection bar: off by default (DC mode — info is in status bar).
-          // Enable in settings for touch/tablet mode.
-          if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
-            FileSelectionBar(side: widget.side, selection: selection),
-          if (ref.watch(panelViewModeProvider(widget.side)) ==
-                  PanelViewMode.full &&
-              layout == ViewMode.list)
-            _CompactColumnHeader(side: widget.side, panel: panel),
-          // Loading indicator shown while directory listing is in progress
-          if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
-          Expanded(
-            child:
-                !retainColumns &&
-                    listingState != null &&
-                    (listingState.blocksListing ||
-                        (!visualLayout &&
-                            listingState != PanelListingState.loading) ||
-                        (listingState == PanelListingState.loading &&
-                            (files == null ||
-                                !files.any((file) => file.name != '..'))))
-                ? PanelListingPlaceholder(
-                    side: widget.side,
-                    state: listingState,
-                    dropHint: _isDragging && sourceIsRemote,
-                  )
-                // Pull-to-refresh on mobile, with type-ahead overlay
-                : Stack(
-                    children: [
-                      RefreshIndicator(
-                        onRefresh: () => panel.refresh(),
-                        child: _buildFileView(widget.side, files ?? const []),
-                      ),
-                      if (panel.isTypeahead)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            color: Theme.of(context).colorScheme.inverseSurface
-                                .withValues(alpha: 0.9),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
+                        side: widget.side,
+                        folder: FileItem(
+                          name: tab.label,
+                          path: tab.path,
+                          isFolder: true,
+                        ),
+                        captureDestination: () =>
+                            const FolderDropService().captureTab(
+                              panel,
+                              tab,
+                              ref.read(localFileServiceProvider),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  panel.isQuickFilterActive
-                                      ? Icons.filter_list
-                                      : Icons.search,
-                                  size: 16,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onInverseSurface,
+                        child: child,
+                      ),
+                    ),
+                  ),
+                  PathFavoritesButton(side: widget.side),
+                ],
+              ),
+              PanelHeader(
+                side: widget.side,
+                isActive: widget.isActive,
+                showSource: MediaQuery.sizeOf(context).width > 800,
+              ),
+              if (constraints.maxHeight >= _compactPanelHeight)
+                FileCommandToolbar(side: widget.side),
+              if (panel.showingSearchResults)
+                _buildFileListHeader(context, panel),
+              if (panel.collectionBusy && !panel.showingSearchResults)
+                Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        panel.collectionProgress,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: panel.cancelCollectionRefresh,
+                      child: Text(context.commanderTr("Cancel")),
+                    ),
+                  ],
+                ),
+              // Selection bar: off by default (DC mode — info is in status bar).
+              // Enable in settings for touch/tablet mode.
+              if (ref.watch(showSelectionBarProvider) && selection.isNotEmpty)
+                FileSelectionBar(side: widget.side, selection: selection),
+              if (ref.watch(panelViewModeProvider(widget.side)) ==
+                      PanelViewMode.full &&
+                  layout == ViewMode.list)
+                _CompactColumnHeader(side: widget.side, panel: panel),
+              // Loading indicator shown while directory listing is in progress
+              if (panel.isLoading) const LinearProgressIndicator(minHeight: 2),
+              Expanded(
+                child:
+                    !retainColumns &&
+                        listingState != null &&
+                        (listingState.blocksListing ||
+                            (!visualLayout &&
+                                listingState != PanelListingState.loading) ||
+                            (listingState == PanelListingState.loading &&
+                                (files == null ||
+                                    !files.any((file) => file.name != '..'))))
+                    ? PanelListingPlaceholder(
+                        side: widget.side,
+                        state: listingState,
+                        dropHint: _isDragging && sourceIsRemote,
+                      )
+                    // Pull-to-refresh on mobile, with type-ahead overlay
+                    : Stack(
+                        children: [
+                          RefreshIndicator(
+                            onRefresh: () => panel.refresh(),
+                            child: _buildFileView(
+                              widget.side,
+                              files ?? const [],
+                            ),
+                          ),
+                          if (panel.isTypeahead)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inverseSurface
+                                    .withValues(alpha: 0.9),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    (panel.isQuickFilterActive
-                                            ? 'Filter: '
-                                            : 'Find: ') +
-                                        panel.filterQuery,
-                                    style: TextStyle(
-                                      fontSize: 13,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      panel.isQuickFilterActive
+                                          ? Icons.filter_list
+                                          : Icons.search,
+                                      size: 16,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onInverseSurface,
                                     ),
-                                  ),
-                                ),
-                                if (panel.typeaheadMatchCount > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: Text(
-                                      '${panel.typeaheadMatchPosition}/'
-                                      '${panel.typeaheadMatchCount}',
-                                      style: TextStyle(
-                                        fontSize: 12,
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        (panel.isQuickFilterActive
+                                                ? 'Filter: '
+                                                : 'Find: ') +
+                                            panel.filterQuery,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onInverseSurface,
+                                        ),
+                                      ),
+                                    ),
+                                    if (panel.typeaheadMatchCount > 0)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8,
+                                        ),
+                                        child: Text(
+                                          '${panel.typeaheadMatchPosition}/'
+                                          '${panel.typeaheadMatchCount}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onInverseSurface,
+                                          ),
+                                        ),
+                                      ),
+                                    GestureDetector(
+                                      onTap: () => panel.clearTypeahead(),
+                                      child: Icon(
+                                        Icons.close,
+                                        size: 16,
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onInverseSurface,
                                       ),
                                     ),
-                                  ),
-                                GestureDetector(
-                                  onTap: () => panel.clearTypeahead(),
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onInverseSurface,
-                                  ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
+                        ],
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
