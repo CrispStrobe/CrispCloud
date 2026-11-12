@@ -111,4 +111,3 @@ class Aes256Ffi extends Aes256 {
       ..fillRange(data.length, data.length + padLen, padLen);
   }
 }
-

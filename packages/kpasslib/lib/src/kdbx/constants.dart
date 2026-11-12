@@ -261,4 +261,3 @@ abstract final class XmlAttr {
   static const compressed = 'Compressed';
   static const hash = 'Hash';
 }
-

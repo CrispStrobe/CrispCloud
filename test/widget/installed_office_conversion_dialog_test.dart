@@ -126,6 +126,7 @@ Future<_DialogOutcome> _open(
   required Uint8List source,
   required InstalledOfficeConversion convert,
   required Future<void> Function(LegacyWordCopy) onSave,
+  Future<void> Function(Uint8List, String)? onPreviewPdf,
 }) async {
   final outcome = _DialogOutcome();
   await tester.binding.setSurfaceSize(const Size(1100, 1000));
@@ -145,6 +146,7 @@ Future<_DialogOutcome> _open(
                 discover: () async => [_engine],
                 convert: convert,
                 onSave: onSave,
+                onPreviewPdf: onPreviewPdf,
                 describeSaveError: (_) => 'Choose another filename.',
               );
               outcome.completed = true;
@@ -191,6 +193,76 @@ Future<void> _tapUntil(
 }
 
 void main() {
+  for (final invalidPreview in [false, true]) {
+    testWidgets(
+      'page review ${invalidPreview ? 'failure preserves' : 'renders'} the exact prepared copy without saving',
+      (tester) async {
+        final package = _package();
+        final pdf = Uint8List.fromList(
+          ascii.encode('%PDF-1.7\npreview fixture\n%%EOF\n'),
+        );
+        final calls = <InstalledOfficeOutput>[];
+        final saved = <LegacyWordCopy>[];
+        var previews = 0;
+        final outcome = await _open(
+          tester,
+          source: legacyWordFixture('Original body\r'),
+          onSave: (copy) async => saved.add(copy),
+          onPreviewPdf: (bytes, name) async {
+            previews++;
+            expect(bytes, orderedEquals(pdf));
+            expect(name, 'legacy (converted).pdf');
+            expect(() => bytes[0] = 0, throwsUnsupportedError);
+          },
+          convert:
+              ({
+                required bytes,
+                required sourceName,
+                required installation,
+                output = InstalledOfficeOutput.docx,
+              }) async {
+                calls.add(output);
+                if (output == InstalledOfficeOutput.pdf) {
+                  expect(bytes, orderedEquals(package));
+                  expect(sourceName, 'legacy (converted).docx');
+                  expect(installation, same(_engine));
+                }
+                return InstalledOfficeConversionResult(
+                  bytes: output == InstalledOfficeOutput.pdf && !invalidPreview
+                      ? pdf
+                      : package,
+                  installation: installation,
+                  output: output,
+                  elapsed: Duration.zero,
+                );
+              },
+        );
+        await _convertUntil(tester, find.text('Review converted copy'));
+        await _tapUntil(
+          tester,
+          find.byKey(const ValueKey('word-conversion-preview-pages')),
+          () => invalidPreview
+              ? find.byKey(_error).evaluate().isNotEmpty
+              : previews == 1,
+        );
+        expect(saved, isEmpty);
+        expect(outcome.completed, isFalse);
+        expect(calls, [InstalledOfficeOutput.docx, InstalledOfficeOutput.pdf]);
+        if (invalidPreview) {
+          expect(previews, 0);
+          expect(
+            find.text('The converter did not return a valid PDF preview.'),
+            findsOneWidget,
+          );
+        }
+        await _tapUntil(tester, find.byKey(_primary), () => outcome.completed);
+        expect(saved.single.bytes, orderedEquals(package));
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
   testWidgets(
     'reviews installed output before saving its exact package bytes',
     (tester) async {

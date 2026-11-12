@@ -12,4 +12,3 @@ abstract class Salsa20 extends StreamCipher {
     int counter = 0,
   });
 }
-

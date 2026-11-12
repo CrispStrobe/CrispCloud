@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'installed_office_converter_models.dart';
 import 'installed_office_converter_scripts.dart';
+import 'word_conversion_inspection.dart';
 
 bool get _desktop => Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
@@ -100,6 +101,8 @@ Future<List<InstalledOfficeInstallation>> discoverInstalledOfficeConverters({
 ///
 /// The caller must validate the OOXML package, inspect preservation, and save a
 /// new file. A ZIP signature alone is not proof of a valid Word document.
+/// PDF previews also accept inspected DOCX/DOCM packages and never save over
+/// either the source or the converted Word package.
 Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
   required Uint8List bytes,
   required String sourceName,
@@ -126,7 +129,7 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
   if (timeout <= Duration.zero || timeout > const Duration(minutes: 10)) {
     throw ArgumentError.value(timeout, 'timeout');
   }
-  _validateLegacyInput(bytes, sourceName);
+  await _validateInput(bytes, sourceName, output);
   final clock = Stopwatch()..start();
   Directory? workspace;
   try {
@@ -151,9 +154,11 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
     if (installation.kind == InstalledOfficeKind.libreOffice) {
       final profile = Directory(p.join(workspace.path, 'profile'));
       await _writeLibreOfficeProfile(profile);
-      final filter = output == InstalledOfficeOutput.docm
-          ? 'MS Word 2007 XML VBA'
-          : 'Office Open XML Text';
+      final filter = switch (output) {
+        InstalledOfficeOutput.docx => 'Office Open XML Text',
+        InstalledOfficeOutput.docm => 'MS Word 2007 XML VBA',
+        InstalledOfficeOutput.pdf => 'writer_pdf_Export',
+      };
       result = await _runProcess(
         installation.executablePath,
         [
@@ -270,7 +275,9 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
       }
     }
     final convertedBytes = buffer.takeBytes();
-    if (convertedBytes.length < 4 ||
+    if (output == InstalledOfficeOutput.pdf) {
+      validateInstalledOfficePdf(convertedBytes);
+    } else if (convertedBytes.length < 4 ||
         convertedBytes[0] != 0x50 ||
         convertedBytes[1] != 0x4b ||
         convertedBytes[2] != 0x03 ||
@@ -298,6 +305,37 @@ Future<InstalledOfficeConversionResult> convertWithInstalledOffice({
   } finally {
     if (workspace != null) await _deleteWorkspace(workspace);
   }
+}
+
+Future<void> _validateInput(
+  Uint8List bytes,
+  String sourceName,
+  InstalledOfficeOutput output,
+) async {
+  if (bytes.length > kInstalledOfficeInputLimit) {
+    throw const InstalledOfficeConversionException(
+      InstalledOfficeConversionErrorCode.inputTooLarge,
+    );
+  }
+  final extension = p.extension(sourceName).toLowerCase();
+  if (output == InstalledOfficeOutput.pdf &&
+      const {'.docx', '.docm'}.contains(extension)) {
+    try {
+      await inspectConvertedWord(
+        bytes,
+        extension: extension.substring(1),
+        source: const LegacyWordSourceInspection(),
+      );
+      return;
+    } on WordConversionInspectionException catch (error) {
+      throw InstalledOfficeConversionException(
+        error.issue == WordConversionInspectionIssue.tooLarge
+            ? InstalledOfficeConversionErrorCode.inputTooLarge
+            : InstalledOfficeConversionErrorCode.invalidInput,
+      );
+    }
+  }
+  _validateLegacyInput(bytes, sourceName);
 }
 
 void _validateLegacyInput(Uint8List bytes, String sourceName) {

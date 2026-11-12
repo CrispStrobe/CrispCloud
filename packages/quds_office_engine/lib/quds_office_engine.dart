@@ -125,3 +125,5 @@ export 'src/xml/namespaces.dart';
 export 'src/xml/xml_node.dart';
 export 'src/xml/xml_reader.dart';
 export 'src/xml/xml_writer.dart';
+
+export 'src/word/legacy/legacy_word_structured_render.dart';

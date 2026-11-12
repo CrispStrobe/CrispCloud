@@ -61,4 +61,3 @@ class ProtectSaltGenerator {
     return result;
   }
 }
-

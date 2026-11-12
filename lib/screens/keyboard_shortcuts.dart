@@ -30,6 +30,7 @@ import '../services/archive_service.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/command_entry_dialog.dart';
 import '../widgets/bookmark_actions.dart';
+import '../widgets/path_favorites.dart';
 import '../widgets/pattern_selection_dialog.dart';
 import '../widgets/file_list_dialog.dart';
 import '../widgets/file_clipboard_actions.dart';
@@ -460,6 +461,8 @@ KeyEventResult executeBrowserShortcut(
       panel.setSortBy(SortBy.size);
     case ShortcutAction.bookmark:
       togglePanelBookmark(context, ref, side);
+    case ShortcutAction.pathFavorites:
+      unawaited(showPathFavoritesMenu(context, side));
     case ShortcutAction.multiRename:
       showMultiRenameFromSelection(context, ref);
   }

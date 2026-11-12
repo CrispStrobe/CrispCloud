@@ -312,43 +312,46 @@ void main() {
     },
   );
 
-  test('parent rows leave nested archives, their folders, then storage', () async {
-    await IOOverrides.runZoned(() async {
-      final (left, _) = await localPanes();
-      await openNestedArchive(left);
-      final staleParent = left.files!.first;
-      expect(staleParent.name, '..');
-      left.toggleSelection(staleParent);
-      expect(left.selection, isEmpty);
-      left.setFilter('does-not-match-any-member');
-      expect(left.displayedFiles!.map((row) => row.name), ['..']);
-      left.clearFilter();
+  test(
+    'parent rows leave nested archives, their folders, then storage',
+    () async {
+      await IOOverrides.runZoned(() async {
+        final (left, _) = await localPanes();
+        await openNestedArchive(left);
+        final staleParent = left.files!.first;
+        expect(staleParent.name, '..');
+        left.toggleSelection(staleParent);
+        expect(left.selection, isEmpty);
+        left.setFilter('does-not-match-any-member');
+        expect(left.displayedFiles!.map((row) => row.name), ['..']);
+        left.clearFilter();
 
-      await left.navigateInto(staleParent);
-      await _eventually(
-        () => left.currentPath == 'outer.zip:/folder/' && !left.isLoading,
-        'The inner archive parent must return to its enclosing directory.',
-      );
-      expect(left.cursorItem?.name, 'inner.zip');
-      expect(left.files!.first.name, '..');
+        await left.navigateInto(staleParent);
+        await _eventually(
+          () => left.currentPath == 'outer.zip:/folder/' && !left.isLoading,
+          'The inner archive parent must return to its enclosing directory.',
+        );
+        expect(left.cursorItem?.name, 'inner.zip');
+        expect(left.files!.first.name, '..');
 
-      // A row captured in the closed frame must not navigate the new frame.
-      await left.navigateInto(staleParent);
-      expect(left.currentPath, 'outer.zip:/folder/');
+        // A row captured in the closed frame must not navigate the new frame.
+        await left.navigateInto(staleParent);
+        expect(left.currentPath, 'outer.zip:/folder/');
 
-      await left.navigateInto(left.files!.first);
-      expect(left.currentPath, 'outer.zip:/');
-      expect(left.files!.first.name, '..');
-      await left.navigateInto(left.files!.first);
-      await _eventually(
-        () => !left.isInArchive && !left.isLoading,
-        'The outer archive parent must return to its physical source.',
-      );
-      expect(left.currentPath, leftDirectory.path);
-      expect(left.files!.any((row) => row.name == 'outer.zip'), isTrue);
-      expect(container.read(errorProvider).errors, isEmpty);
-    }, getSystemTempDirectory: () => spoolDirectory);
-  });
+        await left.navigateInto(left.files!.first);
+        expect(left.currentPath, 'outer.zip:/');
+        expect(left.files!.first.name, '..');
+        await left.navigateInto(left.files!.first);
+        await _eventually(
+          () => !left.isInArchive && !left.isLoading,
+          'The outer archive parent must return to its physical source.',
+        );
+        expect(left.currentPath, leftDirectory.path);
+        expect(left.files!.any((row) => row.name == 'outer.zip'), isTrue);
+        expect(container.read(errorProvider).errors, isEmpty);
+      }, getSystemTempDirectory: () => spoolDirectory);
+    },
+  );
 
   test('empty archive has a usable parent row', () async {
     await IOOverrides.runZoned(() async {

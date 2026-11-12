@@ -67,4 +67,3 @@ class KdbxUuid {
   @override
   int get hashCode => _uuid.hashCode;
 }
-

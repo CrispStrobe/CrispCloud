@@ -58,4 +58,3 @@ class Salsa20Ffi extends Salsa20 {
     }
   }
 }
-

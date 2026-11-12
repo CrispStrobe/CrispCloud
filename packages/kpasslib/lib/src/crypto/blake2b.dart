@@ -223,4 +223,3 @@ class Blake2bHash {
     return (a + b + c) & _mask64;
   }
 }
-

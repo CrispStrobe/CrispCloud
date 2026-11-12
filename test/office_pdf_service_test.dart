@@ -14,13 +14,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('PPTX is laid out as a PDF', () async {
-    final deck = (PptxDeckBuilder()
-          ..addCoverSlide(title: 'Conversion Test', subtitle: 'Subtitle')
-          ..addTitleBodySlide(
-            title: 'Second slide',
-            bullets: <String>['Revenue up 20%'],
-          ))
-        .build();
+    final deck =
+        (PptxDeckBuilder()
+              ..addCoverSlide(title: 'Conversion Test', subtitle: 'Subtitle')
+              ..addTitleBodySlide(
+                title: 'Second slide',
+                bullets: <String>['Revenue up 20%'],
+              ))
+            .build();
 
     final pdf = await convertOfficeToPdf(deck);
 

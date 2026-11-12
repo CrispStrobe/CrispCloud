@@ -42,6 +42,7 @@ import 'file_clipboard_actions.dart';
 import 'pdf_editor_dialog.dart';
 import 'pdf_operations_dialog.dart';
 import 'workspace_dialog.dart';
+import 'path_favorites.dart';
 import 'file_view_editor_dialog.dart';
 import 'custom_command_dialog.dart';
 import 'extensions_dialog.dart';
@@ -265,6 +266,13 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         name: context.commanderTr("Commander workspaces"),
         icon: Icons.bookmarks_outlined,
         action: () => showWorkspaceDialog(widget.parentContext, ref, side),
+      ),
+      _Command(
+        name: WorkspaceUxStrings(context).action(ShortcutAction.pathFavorites),
+        binding: ShortcutAction.pathFavorites,
+        icon: Icons.star_outline,
+        keywords: 'favorites favourite bookmark path directory group',
+        action: () => showPathFavoritesMenu(widget.parentContext, side),
       ),
       _Command(
         name: context.commanderTr("Columns and view"),

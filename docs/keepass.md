@@ -14,10 +14,29 @@
   usernames. View the title, username, password, URL and notes. Passwords remain
   obscured until explicitly revealed or copied.
 - **New entry**, **Edit entry** and **Delete entry** modify the unlocked
-  in-memory database. New entries can use the selected existing group. Deletion
+  in-memory database. **Move entry**, or the group selector while editing, moves
+  entries between groups. New entries use the selected group. Deletion
   follows the database's recycle-bin setting; deleting an already recycled
   entry creates a deletion tombstone. Recycled entries are excluded from
   **All groups** and remain visible when their group is selected.
+- The buttons beneath the group selector create, rename, move and delete groups.
+  A new group is created inside the selected group (or the root when viewing
+  **All groups**). Moving a group retains its complete subtree. Root groups and
+  the designated recycle bin cannot be moved or deleted, and moving a group
+  into itself or a descendant is rejected. Group deletion follows the recycle
+  setting; permanently deleting a group records deletion IDs for all its
+  entries and subgroups. Moving a recycled group out of the bin restores it.
+- **Custom fields** shows each entry's additional named fields. Protected values
+  remain hidden until explicitly revealed or copied. **Edit entry** can add,
+  rename, change, remove or change protection for these fields. Names must be
+  nonempty, unique and distinct from the five standard field names. Renaming
+  retains the original field's unknown attributes and metadata.
+- **Entry history** lists previous versions with their recorded modification
+  time. A version can be inspected with passwords/protected fields hidden.
+  **Restore version** requires confirmation, restores the full snapshot
+  including custom fields and attachments, and retains the current entry in
+  history. The entry keeps its current group and UUID. History is also viewable
+  in F3, where restoration and other changes are disabled.
 - **Save** encrypts the complete edited database and writes through its captured
   file target. A changed/disconnected source or save conflict leaves the work
   dirty. A platform download of a copy does not count as saving the original.
@@ -47,7 +66,7 @@ key-file inputs are cleared after unlocking. Mutable buffers are cleared on a
 best-effort basis; Dart cannot guarantee erasure of immutable strings or all
 garbage-collected copies.
 
-A copied password is cleared after 30 seconds or on lock/close if the clipboard
+A copied password or protected custom value is cleared after 30 seconds or on lock/close if the clipboard
 still contains that value and the copy operation still owns it. Clipboard reads
 can be refused by browsers/platforms, so clipboard clearing is best effort.
 
@@ -59,13 +78,16 @@ can be refused by browsers/platforms, so clipboard clearing is best effort.
 | Outer encryption | AES-256-CBC and ChaCha20 |
 | Key derivation | AES-KDF and Argon2d/Argon2id, versions 0x10 and 0x13, within the limits below |
 | Credentials | Master password, key file, or both; XML v1/v2 key files, raw 32-byte, 64-character hex and arbitrary-file SHA-256 key material |
-| Entry editing | Title, username, password, URL and notes; add/delete entries in existing groups |
-| Existing data | Preserve unknown XML elements/attributes, custom fields, auto-type data, attachments, entry history and database metadata |
+| Entry editing | Title, username, password, URL and notes; add/delete entries and move them between groups |
+| Groups | Create, rename, move, recycle and permanently delete complete subtrees, with root/cycle/recycle-bin guards |
+| Custom fields | View, add, rename, edit and remove fields; retain or change each value's protected status |
+| History | Inspect and restore complete prior entry versions; keep the displaced current version and existing history |
+| Existing data | Preserve untouched unknown XML elements/attributes, auto-type data, attachments, entry history and database metadata |
 | Changes recorded | Keep a history snapshot before editing an existing entry; update modification/location times as appropriate |
 | Database format | Keep its version, cipher, compression and KDF parameters; generate fresh encryption salts/IVs on save |
 
 This is an editor for existing databases. It does not create a new vault, change
-the master key, edit groups/custom fields/attachments, provide auto-type, or
+the master key, edit attachments directly, provide auto-type, or
 implement hardware challenge-response and Windows-account key providers.
 Unsupported ciphers, KDF features and malformed structures fail with a fixed
 error; they are never silently downgraded.
@@ -84,6 +106,9 @@ These are application limits, not restrictions of the KDBX specification.
 | --- | --- |
 | Encrypted file and decoded document | 32 MiB each |
 | Key file / individual edited field | 1 MiB each |
+| Edited group or custom-field name | 1,024 UTF-8 bytes |
+| Custom fields per edited/viewed entry | 256 |
+| History inspection/restoration | 2,048 versions per entry; reaching this limit blocks edits that need another snapshot |
 | Active groups and entries | 20,000 combined |
 | XML structure | 200,000 parser events; depth 64; group depth 48 |
 | KDBX4 inner binary attachments | 4,096 records |
@@ -94,7 +119,9 @@ These are application limits, not restrictions of the KDBX specification.
 
 Saved output must pass the same structural limits as input. Existing databases
 above a limit receive a resource-limit error. The editor does not reduce their
-KDF settings. Native unlock/save uses a worker isolate; browser AES-KDF work
+KDF settings or silently trim history. Mutation checks reserve space for history
+and metadata before changing the tree, including depth checks for combined
+entry edits/moves. Native unlock/save uses a worker isolate; browser AES-KDF work
 yields between bounded chunks. Browser Argon2 still runs in the Dart JavaScript
 runtime, so the web limits are lower.
 
@@ -120,6 +147,18 @@ recovery, key-file-only unlock and asynchronous source/clipboard ownership.
 Routing tests cover F3/F4 and the locked compact preview. UI controls are
 translated into all nine supported languages.
 
+The richer editing increment adds `test/keepass_extended_service_test.dart`
+and `test/widget/keepass_extended_editor_test.dart`. These exercise encrypted
+round trips for group/subtree moves, recycling/permanent deletion, custom-field
+renaming/protection and full history restoration. The widget scenarios cover
+the actual group controls, protected custom drafts retained after lock
+validation fails, explicit history restoration, and history dialogs closing on
+background lock. A route-local privacy shield also blanks revealed history
+while its dialog is already closing, before its reverse animation completes.
+The regression checks the first frame after an inactive lifecycle event.
+These suites use the same unchanged upstream KDBX fixtures; no new
+cryptographic algorithm or database-format conversion is introduced.
+
 `tool/verify_keepass_crypto.dart` checks a known Argon2 answer on VM/JavaScript.
 `tool/verify_keepass_database.dart` also passes complete JavaScript
 open/edit/save/reopen cycles for KDBX3/AES-KDF/AES, KDBX4/Argon2id/AES and
@@ -131,7 +170,7 @@ dart compile js -O1 --no-source-maps tool/verify_keepass_database.dart -o /tmp/k
 node -e 'globalThis.self = globalThis; require("/tmp/keepass.js")'
 ```
 
-The combined development run passed **360 tests across 28 suites**, including
+The earlier combined development run passed **360 tests across 28 suites**, including
 all new KeePass and Word-conversion suites and existing parser, viewer, archive,
 favorites and editor regressions.
 After the final inner-header allocation guard, a focused rerun passed all

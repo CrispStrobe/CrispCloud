@@ -9,6 +9,9 @@ const int kKeePassMaxFileBytes = 32 * 1024 * 1024;
 const int kKeePassMaxKeyFileBytes = 1024 * 1024;
 const int _maxFieldBytes = 1024 * 1024;
 const int _maxItems = 20000;
+const int kKeePassMaxCustomFields = 256;
+const int kKeePassMaxHistoryItems = 2048;
+const _standardFields = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
 enum KeePassErrorCode {
   invalidCredentials,
@@ -16,6 +19,7 @@ enum KeePassErrorCode {
   corrupt,
   resourceLimit,
   locked,
+  invalidOperation,
 }
 
 /// Only fixed, non-sensitive errors cross the backend/UI boundary.
@@ -33,6 +37,8 @@ class KeePassException implements Exception {
     KeePassErrorCode.resourceLimit =>
       'The KeePass database exceeds the supported resource limits.',
     KeePassErrorCode.locked => 'The KeePass database is locked or busy.',
+    KeePassErrorCode.invalidOperation =>
+      'The requested KeePass change is not valid.',
   };
 }
 
@@ -41,10 +47,46 @@ class KeePassGroupInfo {
     required this.id,
     required this.name,
     required this.path,
+    this.parentId,
+    this.isRoot = false,
+    this.isRecycleBin = false,
+    this.isRecycled = false,
   });
   final String id;
   final String name;
   final String path;
+  final String? parentId;
+  final bool isRoot;
+  final bool isRecycleBin;
+  final bool isRecycled;
+}
+
+/// The original key identifies an existing XML field when its name is edited.
+/// Unknown attributes/children on that String node remain with the same field.
+class KeePassCustomField {
+  const KeePassCustomField({
+    required this.name,
+    required this.value,
+    this.isProtected = true,
+    this.originalName,
+  });
+  final String name;
+  final String value;
+  final bool isProtected;
+  final String? originalName;
+}
+
+class KeePassHistoryInfo {
+  const KeePassHistoryInfo({
+    required this.index,
+    required this.title,
+    required this.userName,
+    this.modifiedAt,
+  });
+  final int index;
+  final String title;
+  final String userName;
+  final DateTime? modifiedAt;
 }
 
 class KeePassEntryInfo {
@@ -175,11 +217,7 @@ class KeePassSession {
 
   List<KeePassEntryInfo> get entries {
     final raw = _openDocument;
-    final meta = raw.xml.rootElement.getElement('Meta')!;
-    final recycle =
-        meta.getElement('RecycleBinEnabled')?.innerText.toLowerCase() == 'true'
-        ? _groups[meta.getElement('RecycleBinUUID')?.innerText]
-        : null;
+    final recycle = _recycleEnabled ? _recycleGroup : null;
     return List.unmodifiable(
       _entries.entries.map((entry) {
         final fields = _fieldNodes(entry.value);
@@ -198,9 +236,11 @@ class KeePassSession {
   }
 
   KeePassEntryFields entryFields(String id) {
+    return _fieldsOf(_entry(id));
+  }
+
+  KeePassEntryFields _fieldsOf(XmlElement entry) {
     final raw = _openDocument;
-    final entry = _entries[id];
-    if (entry == null) throw const KeePassException(KeePassErrorCode.corrupt);
     final fields = _fieldNodes(entry);
     String value(String name) =>
         fields[name] == null ? '' : raw.textOf(fields[name]!);
@@ -216,13 +256,15 @@ class KeePassSession {
   String addEntry({
     required String groupId,
     required KeePassEntryFields fields,
+    List<KeePassCustomField> customFields = const [],
   }) {
     _checkMutable();
     final raw = _openDocument;
     final group = _groups[groupId];
     if (group == null) throw const KeePassException(KeePassErrorCode.corrupt);
     _validateFields(fields);
-    _checkGrowth(fields);
+    _validateCustomFields(customFields);
+    _checkGrowth(fields, customFields: customFields);
     if (_groups.length + _entries.length >= _maxItems) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
     }
@@ -234,92 +276,427 @@ class KeePassSession {
       XmlElement(XmlName('History')),
     ]);
     _setFields(raw, entry, fields);
+    _setCustomFields(entry, customFields);
     group.children.add(entry);
     _entries[id] = entry;
     _entryGroups[id] = groupId;
     return id;
   }
 
-  void updateEntry(String id, KeePassEntryFields fields) {
+  void updateEntry(
+    String id,
+    KeePassEntryFields fields, {
+    List<KeePassCustomField>? customFields,
+    String? groupId,
+  }) {
     _checkMutable();
     _validateFields(fields);
     final raw = _openDocument;
     final entry = _entries[id];
     if (entry == null) throw const KeePassException(KeePassErrorCode.corrupt);
-    final old = entryFields(id)._values;
-    if (fields._values.entries.every(
-      (value) => old[value.key] == value.value,
-    )) {
-      return;
+    final destination = groupId == null ? null : _group(groupId);
+    final moving = destination != null && groupId != _entryGroups[id];
+    if (moving) _validateEntryMove(entry, destination);
+    if (customFields != null) {
+      _validateCustomFields(customFields, existing: entry);
     }
-    _checkGrowth(fields, history: entry);
-    final snapshot = raw.cloneElement(entry, omitHistory: true);
-    final history =
-        entry.getElement('History') ?? XmlElement(XmlName('History'));
-    if (history.parent == null) entry.children.add(history);
-    history.children.add(snapshot);
-    _setFields(raw, entry, fields);
-    _touch(entry);
+    final old = entryFields(id)._values;
+    final changed =
+        !fields._values.entries.every(
+          (value) => old[value.key] == value.value,
+        ) ||
+        (customFields != null && _customFieldsChanged(entry, customFields));
+    if (changed) {
+      _validateTouch(entry);
+      _checkGrowth(
+        fields,
+        history: entry,
+        customFields: customFields,
+        historyEntryDepth: moving ? _xmlDepth(destination) + 1 : null,
+      );
+      _appendHistory(entry);
+      _setFields(raw, entry, fields);
+      if (customFields != null) _setCustomFields(entry, customFields);
+      _touch(entry);
+    }
+    if (moving) {
+      if (!changed) _checkCapacity(bytes: 4096, events: 64);
+      _moveEntry(entry, destination, groupId!);
+    }
+  }
+
+  String addGroup({required String parentId, required String name}) {
+    _checkMutable();
+    _validateName(name);
+    final parent = _group(parentId);
+    if (_groups.length + _entries.length >= _maxItems ||
+        _groupDepth(parent) >= 48 ||
+        _xmlDepth(parent) + 4 > 64) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    _checkCapacity(bytes: 4096 + utf8.encode(name).length * 6, events: 64);
+    final id = _newId();
+    parent.children.add(
+      XmlElement(XmlName('Group'), [], [
+        _element('UUID', id),
+        _element('Name', name),
+        _element('IconID', '48'),
+        _newTimes(),
+        _element('IsExpanded', 'True'),
+      ]),
+    );
+    _reindex();
+    return id;
+  }
+
+  void renameGroup(String id, String name) {
+    _checkMutable();
+    _validateName(name);
+    final group = _group(id);
+    final value = _singleText(group, 'Name');
+    if (value != null && _openDocument.textOf(value) == name) return;
+    _validateTouch(group);
+    _checkCapacity(bytes: 4096 + utf8.encode(name).length * 6, events: 64);
+    _setValue(group, 'Name', name);
+    _touch(group);
+    _reindex();
+  }
+
+  void moveGroup(String id, String parentId) {
+    _checkMutable();
+    final group = _group(id);
+    final parent = _group(parentId);
+    _validateGroupMove(group, parent);
+    if (identical(group.parent, parent)) return;
+    _checkCapacity(bytes: 4096, events: 64);
+    _moveGroup(group, parent);
+    _reindex();
+  }
+
+  void moveEntry(String id, String groupId) {
+    _checkMutable();
+    final entry = _entry(id);
+    final group = _group(groupId);
+    if (_entryGroups[id] == groupId) return;
+    _validateEntryMove(entry, group);
+    _checkCapacity(bytes: 4096, events: 64);
+    _moveEntry(entry, group, groupId);
+  }
+
+  /// Deleting outside the recycle bin moves the complete subtree there. A
+  /// second deletion, or disabled recycling, records every removed active UUID.
+  void deleteGroup(String id) {
+    _checkMutable();
+    final group = _group(id);
+    final recycle = _recycleGroup;
+    if (_isRoot(group) ||
+        identical(group, recycle) ||
+        (recycle != null && recycle.ancestors.contains(group))) {
+      throw const KeePassException(KeePassErrorCode.invalidOperation);
+    }
+    if (_recycleEnabled &&
+        (recycle == null || !group.ancestors.contains(recycle))) {
+      if (recycle != null) {
+        _validateGroupMove(group, recycle);
+      } else {
+        _validateTouch(group);
+        _singleText(group, 'PreviousParentGroup');
+        final root = _groups[_groupInfo.first.id]!;
+        _checkGroupPlacement(
+          group,
+          parentGroupDepth: _groupDepth(root) + 1,
+          parentXmlDepth: _xmlDepth(root) + 1,
+        );
+        _validateRecycleCreation();
+      }
+      _checkCapacity(bytes: 8192, events: 128);
+      _moveGroup(group, recycle ?? _createRecycleBin());
+    } else {
+      final removed = <String>[
+        for (final item in _groups.entries)
+          if (identical(item.value, group) ||
+              item.value.ancestors.contains(group))
+            item.key,
+        for (final item in _entries.entries)
+          if (item.value.ancestors.contains(group)) item.key,
+      ];
+      _deleteObjects(group, removed);
+    }
+    _reindex();
   }
 
   void deleteEntry(String id) {
     _checkMutable();
-    final raw = _openDocument;
-    final entry = _entries[id];
-    if (entry == null) throw const KeePassException(KeePassErrorCode.corrupt);
-    final meta = raw.xml.rootElement.getElement('Meta')!;
-    final recycleEnabled =
-        meta.getElement('RecycleBinEnabled')?.innerText.toLowerCase() == 'true';
-    var recycle = recycleEnabled
-        ? _groups[meta.getElement('RecycleBinUUID')?.innerText]
-        : null;
-    if (recycleEnabled && recycle == null) {
-      final rootGroup = _groups[_groupInfo.first.id]!;
-      final recycleId = _newId();
-      recycle = XmlElement(XmlName('Group'), [], [
-        _element('UUID', recycleId),
-        _element('Name', 'Recycle Bin'),
-        _element('IconID', '43'),
-        _newTimes(),
-        _element('EnableSearching', 'False'),
-        _element('EnableAutoType', 'False'),
-      ]);
-      rootGroup.children.add(recycle);
-      _groups[recycleId] = recycle;
-      _groupInfo = List.unmodifiable([
-        ..._groupInfo,
-        KeePassGroupInfo(
-          id: recycleId,
-          name: 'Recycle Bin',
-          path: '${_groupInfo.first.path} / Recycle Bin',
-        ),
-      ]);
-      _setChild(meta, 'RecycleBinUUID', recycleId);
-      _setChild(meta, 'RecycleBinChanged', _now());
-    }
-    final alreadyRecycled =
-        recycle != null && entry.ancestors.contains(recycle);
-    entry.parent?.children.remove(entry);
-    if (recycle != null && !alreadyRecycled) {
-      recycle.children.add(entry);
-      _setChild(entry, 'PreviousParentGroup', _entryGroups[id]!);
-      _touch(entry, location: true);
-      _entryGroups[id] = _id(recycle);
+    final entry = _entry(id);
+    var recycle = _recycleGroup;
+    if (_recycleEnabled &&
+        (recycle == null || !entry.ancestors.contains(recycle))) {
+      if (recycle != null) {
+        _validateEntryMove(entry, recycle);
+      } else {
+        _validateTouch(entry);
+        _singleText(entry, 'PreviousParentGroup');
+        final root = _groups[_groupInfo.first.id]!;
+        if (_xmlDepth(root) + 1 + _subtreeDepth(entry) > 64) {
+          throw const KeePassException(KeePassErrorCode.resourceLimit);
+        }
+        _validateRecycleCreation();
+      }
+      _checkCapacity(bytes: 8192, events: 128);
+      recycle ??= _createRecycleBin();
+      _moveEntry(entry, recycle, _id(recycle));
+      _reindex();
     } else {
-      final root = raw.xml.rootElement.getElement('Root')!;
-      final deleted =
-          root.getElement('DeletedObjects') ??
-          XmlElement(XmlName('DeletedObjects'));
-      if (deleted.parent == null) root.children.add(deleted);
-      deleted.children.add(
-        XmlElement(XmlName('DeletedObject'), [], [
-          _element('UUID', id),
-          _element('DeletionTime', _now()),
-        ]),
-      );
-      raw.forgetElement(entry);
+      _deleteObjects(entry, [id]);
       _entries.remove(id);
       _entryGroups.remove(id);
+    }
+  }
+
+  List<KeePassCustomField> customFields(String id) =>
+      _customFieldsOf(_entry(id));
+
+  List<KeePassCustomField> _customFieldsOf(XmlElement entry) {
+    final raw = _openDocument;
+    final fields = _fieldNodes(entry, includeCustom: true);
+    final custom = fields.entries.where(
+      (item) => !_standardFields.contains(item.key),
+    );
+    if (custom.length > kKeePassMaxCustomFields) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    return List.unmodifiable(
+      custom.map(
+        (field) => KeePassCustomField(
+          name: field.key,
+          originalName: field.key,
+          value: raw.textOf(field.value),
+          isProtected: raw.isProtected(field.value),
+        ),
+      ),
+    );
+  }
+
+  List<KeePassHistoryInfo> entryHistory(String id) {
+    final raw = _openDocument;
+    final records = _historyRecords(_entry(id));
+    KeePassHistoryInfo summary(int index) {
+      final fields = _fieldNodes(records[index]);
+      String value(String name) =>
+          fields[name] == null ? '' : raw.textOf(fields[name]!);
+      return KeePassHistoryInfo(
+        index: index,
+        title: value('Title'),
+        userName: value('UserName'),
+        modifiedAt: KdbxTime.fromXmlText(
+          text:
+              records[index]
+                  .getElement('Times')
+                  ?.getElement('LastModificationTime')
+                  ?.innerText ??
+              '',
+          isBinary: raw.header.version.$1 >= 4,
+        ).time,
+      );
+    }
+
+    return List.unmodifiable([
+      for (var index = 0; index < records.length; index++) summary(index),
+    ]);
+  }
+
+  KeePassEntryFields historyFields(String id, int index) =>
+      _fieldsOf(_historyRecord(id, index));
+
+  List<KeePassCustomField> historyCustomFields(String id, int index) =>
+      _customFieldsOf(_historyRecord(id, index));
+
+  /// Restore the complete snapshot, including opaque fields and attachments.
+  /// The current entry becomes a new history record; existing history and the
+  /// entry's UUID/current group remain intact.
+  void restoreEntryHistory(String id, int index) {
+    _checkMutable();
+    final raw = _openDocument;
+    final entry = _entry(id);
+    final historical = _historyRecord(id, index);
+    if (_id(historical) != id ||
+        historical.findElements('History').isNotEmpty) {
+      throw const KeePassException(KeePassErrorCode.unsupported);
+    }
+    _fieldNodes(historical, includeCustom: true);
+    _validateTouch(historical);
+    _singleText(entry, 'PreviousParentGroup');
+    _singleText(historical, 'PreviousParentGroup');
+    final oldLocation = entry
+        .getElement('Times')
+        ?.getElement('LocationChanged');
+    if (oldLocation != null) {
+      _singleText(entry.getElement('Times')!, 'LocationChanged');
+    }
+    final records = _historyRecords(entry);
+    _checkHistoryDepth(entry);
+    if (records.length >= kKeePassMaxHistoryItems) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    _checkCapacity(
+      bytes:
+          raw.estimateHistorySnapshot(entry) +
+          raw.estimateHistorySnapshot(historical) +
+          4096,
+      events: _snapshotEvents(entry) + _eventCount(historical) + 64,
+    );
+    final restored = raw.cloneElement(historical, omitHistory: true);
+    final previous = raw.cloneElement(entry, omitHistory: true);
+    final oldParent = entry.getElement('PreviousParentGroup');
+    final restoredParent = restored.getElement('PreviousParentGroup');
+    if (restoredParent != null) {
+      restored.children.remove(restoredParent);
+      raw.forgetElement(restoredParent);
+    }
+    if (oldParent != null) restored.children.add(raw.cloneElement(oldParent));
+    final times = restored.getElement('Times') ?? XmlElement(XmlName('Times'));
+    if (times.parent == null) restored.children.add(times);
+    final restoredLocation = times.getElement('LocationChanged');
+    if (restoredLocation != null) {
+      times.children.remove(restoredLocation);
+      raw.forgetElement(restoredLocation);
+    }
+    if (oldLocation != null) times.children.add(raw.cloneElement(oldLocation));
+    final history =
+        entry.getElement('History') ?? XmlElement(XmlName('History'));
+    entry.children.remove(history);
+    history.children.add(previous);
+    restored.children.add(history);
+    _touch(restored);
+    final parent = entry.parent!;
+    parent.children[parent.children.indexOf(entry)] = restored;
+    raw.forgetElement(entry);
+    _entries[id] = restored;
+  }
+
+  XmlElement _entry(String id) {
+    _openDocument;
+    final entry = _entries[id];
+    if (entry == null) {
+      throw const KeePassException(KeePassErrorCode.invalidOperation);
+    }
+    return entry;
+  }
+
+  XmlElement _group(String id) {
+    _openDocument;
+    final group = _groups[id];
+    if (group == null) {
+      throw const KeePassException(KeePassErrorCode.invalidOperation);
+    }
+    return group;
+  }
+
+  List<XmlElement> _historyRecords(XmlElement entry) {
+    if (entry.findElements('History').length > 1) {
+      throw const KeePassException(KeePassErrorCode.unsupported);
+    }
+    final records =
+        entry.getElement('History')?.findElements('Entry').toList() ??
+        <XmlElement>[];
+    if (records.length > kKeePassMaxHistoryItems) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    return records;
+  }
+
+  XmlElement _historyRecord(String id, int index) {
+    final records = _historyRecords(_entry(id));
+    if (index < 0 || index >= records.length) {
+      throw const KeePassException(KeePassErrorCode.invalidOperation);
+    }
+    return records[index];
+  }
+
+  void _appendHistory(XmlElement entry) {
+    if (_historyRecords(entry).length >= kKeePassMaxHistoryItems) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    final history =
+        entry.getElement('History') ?? XmlElement(XmlName('History'));
+    final snapshot = _openDocument.cloneElement(entry, omitHistory: true);
+    if (history.parent == null) entry.children.add(history);
+    history.children.add(snapshot);
+  }
+
+  bool _customFieldsChanged(XmlElement entry, List<KeePassCustomField> fields) {
+    final old = {for (final value in _customFieldsOf(entry)) value.name: value};
+    return old.length != fields.length ||
+        fields.any((field) {
+          final previous = old[field.name];
+          return previous == null ||
+              previous.value != field.value ||
+              previous.isProtected != field.isProtected ||
+              (field.originalName != null && field.originalName != field.name);
+        });
+  }
+
+  void _validateCustomFields(
+    List<KeePassCustomField> fields, {
+    XmlElement? existing,
+  }) {
+    if (fields.length > kKeePassMaxCustomFields) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    final old = existing == null
+        ? <String, XmlElement>{}
+        : _fieldNodes(existing, includeCustom: true);
+    final names = <String>{};
+    final origins = <String>{};
+    for (final field in fields) {
+      _validateName(field.name);
+      _validateText(field.value);
+      if (_standardFields.contains(field.name) || !names.add(field.name)) {
+        throw const KeePassException(KeePassErrorCode.invalidOperation);
+      }
+      final origin = field.originalName ?? field.name;
+      if (_standardFields.contains(origin) ||
+          !origins.add(origin) ||
+          (existing != null &&
+              field.originalName != null &&
+              !old.containsKey(origin))) {
+        throw const KeePassException(KeePassErrorCode.invalidOperation);
+      }
+    }
+  }
+
+  void _setCustomFields(XmlElement entry, List<KeePassCustomField> fields) {
+    final raw = _openDocument;
+    final old = _fieldNodes(entry, includeCustom: true);
+    final retained = <XmlElement>{};
+    for (final field in fields) {
+      var value = old[field.originalName ?? field.name];
+      if (value == null) {
+        value = XmlElement(XmlName('Value'));
+        entry.children.add(
+          XmlElement(XmlName('String'), [], [
+            _element('Key', field.name),
+            value,
+          ]),
+        );
+      } else {
+        retained.add(value);
+        final key = (value.parent! as XmlElement).getElement('Key')!;
+        if (key.innerText != field.name) raw.setText(key, field.name);
+      }
+      if (raw.textOf(value) != field.value ||
+          raw.isProtected(value) != field.isProtected) {
+        raw.setText(value, field.value, protected: field.isProtected);
+      }
+    }
+    for (final field in old.entries) {
+      if (_standardFields.contains(field.key) ||
+          retained.contains(field.value)) {
+        continue;
+      }
+      final node = field.value.parent! as XmlElement;
+      entry.children.remove(node);
+      raw.forgetElement(node);
     }
   }
 
@@ -366,20 +743,45 @@ class KeePassSession {
     }
     final info = <KeePassGroupInfo>[];
     final seen = <String>{};
-    void group(XmlElement node, String parentPath, int depth) {
+    final groups = <String, XmlElement>{};
+    final entries = <String, XmlElement>{};
+    final entryGroups = <String, String>{};
+    final recycleId = _metaText('RecycleBinUUID');
+    final recycleEnabled = _recycleEnabled;
+    void group(
+      XmlElement node,
+      String parentPath,
+      String? parentId,
+      int depth,
+      bool recycled,
+    ) {
       if (depth > 48 || seen.length >= _maxItems) {
         throw const KeePassException(KeePassErrorCode.resourceLimit);
       }
       final id = _id(node);
       if (!seen.add(id)) throw const KeePassException(KeePassErrorCode.corrupt);
-      _groups[id] = node;
-      final nameNode = node.getElement('Name');
+      groups[id] = node;
+      final nameNode = _singleText(node, 'Name');
       final name = nameNode == null ? '' : raw.textOf(nameNode);
       final path = parentPath.isEmpty ? name : '$parentPath / $name';
-      info.add(KeePassGroupInfo(id: id, name: name, path: path));
+      final isRecycled = recycled || (recycleEnabled && id == recycleId);
+      if (parentId == null && id == recycleId && recycleEnabled) {
+        throw const KeePassException(KeePassErrorCode.unsupported);
+      }
+      info.add(
+        KeePassGroupInfo(
+          id: id,
+          name: name,
+          path: path,
+          parentId: parentId,
+          isRoot: parentId == null,
+          isRecycleBin: id == recycleId,
+          isRecycled: isRecycled,
+        ),
+      );
       for (final child in node.childElements) {
         if (child.name.qualified == 'Group') {
-          group(child, path, depth + 1);
+          group(child, path, id, depth + 1, isRecycled);
         } else if (child.name.qualified == 'Entry') {
           final entryId = _id(child);
           if (!seen.add(entryId)) {
@@ -389,17 +791,223 @@ class KeePassSession {
             throw const KeePassException(KeePassErrorCode.resourceLimit);
           }
           _fieldNodes(child);
-          _entries[entryId] = child;
-          _entryGroups[entryId] = id;
+          entries[entryId] = child;
+          entryGroups[entryId] = id;
         }
       }
     }
 
     for (final node in doc.getElement('Root')!.findElements('Group')) {
-      group(node, '', 0);
+      group(node, '', null, 0, false);
     }
     if (info.isEmpty) throw const KeePassException(KeePassErrorCode.corrupt);
+    _groups
+      ..clear()
+      ..addAll(groups);
+    _entries
+      ..clear()
+      ..addAll(entries);
+    _entryGroups
+      ..clear()
+      ..addAll(entryGroups);
     _groupInfo = List.unmodifiable(info);
+  }
+
+  String? _metaText(String name) {
+    final node = _singleText(
+      _openDocument.xml.rootElement.getElement('Meta')!,
+      name,
+    );
+    return node == null ? null : _openDocument.textOf(node);
+  }
+
+  bool get _recycleEnabled =>
+      _metaText('RecycleBinEnabled')?.toLowerCase() == 'true';
+
+  XmlElement? get _recycleGroup {
+    final id = _metaText('RecycleBinUUID');
+    return _groups[id];
+  }
+
+  static bool _isRoot(XmlElement group) =>
+      group.parent is XmlElement &&
+      (group.parent! as XmlElement).name.qualified == 'Root';
+
+  static int _xmlDepth(XmlElement node) =>
+      node.ancestors.whereType<XmlElement>().length + 1;
+
+  static int _groupDepth(XmlElement node) => node.ancestors
+      .whereType<XmlElement>()
+      .where((item) => item.name.qualified == 'Group')
+      .length;
+
+  static int _subtreeDepth(XmlElement node) {
+    var depth = 1;
+    for (final child in node.childElements) {
+      final nested = 1 + _subtreeDepth(child);
+      if (nested > depth) depth = nested;
+    }
+    return depth;
+  }
+
+  void _checkGroupPlacement(
+    XmlElement group, {
+    required int parentGroupDepth,
+    required int parentXmlDepth,
+  }) {
+    int height(XmlElement node) {
+      var result = 0;
+      for (final child in node.findElements('Group')) {
+        final next = 1 + height(child);
+        if (next > result) result = next;
+      }
+      return result;
+    }
+
+    if (parentGroupDepth + 1 + height(group) > 48 ||
+        parentXmlDepth + _subtreeDepth(group) > 64) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+  }
+
+  void _validateGroupMove(XmlElement group, XmlElement parent) {
+    if (_isRoot(group) ||
+        identical(group, _recycleGroup) ||
+        identical(group, parent) ||
+        parent.ancestors.contains(group)) {
+      throw const KeePassException(KeePassErrorCode.invalidOperation);
+    }
+    _validateTouch(group);
+    _singleText(group, 'PreviousParentGroup');
+    _checkGroupPlacement(
+      group,
+      parentGroupDepth: _groupDepth(parent),
+      parentXmlDepth: _xmlDepth(parent),
+    );
+  }
+
+  void _validateEntryMove(XmlElement entry, XmlElement group) {
+    _validateTouch(entry);
+    _singleText(entry, 'PreviousParentGroup');
+    if (_xmlDepth(group) + _subtreeDepth(entry) > 64) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+  }
+
+  void _moveGroup(XmlElement group, XmlElement parent) {
+    final previous = _id(group.parent! as XmlElement);
+    group.parent!.children.remove(group);
+    parent.children.add(group);
+    _setValue(group, 'PreviousParentGroup', previous);
+    _touch(group, location: true);
+  }
+
+  void _moveEntry(XmlElement entry, XmlElement group, String groupId) {
+    final id = _id(entry);
+    final previous = _entryGroups[id]!;
+    entry.parent!.children.remove(entry);
+    group.children.add(entry);
+    _setValue(entry, 'PreviousParentGroup', previous);
+    _touch(entry, location: true);
+    _entryGroups[id] = groupId;
+  }
+
+  void _validateRecycleCreation() {
+    if (_groups.length + _entries.length >= _maxItems) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    final meta = _openDocument.xml.rootElement.getElement('Meta')!;
+    _singleText(meta, 'RecycleBinUUID');
+    _singleText(meta, 'RecycleBinChanged');
+  }
+
+  XmlElement _createRecycleBin() {
+    final root = _groups[_groupInfo.first.id]!;
+    final id = _newId();
+    final recycle = XmlElement(XmlName('Group'), [], [
+      _element('UUID', id),
+      _element('Name', 'Recycle Bin'),
+      _element('IconID', '43'),
+      _newTimes(),
+      _element('EnableSearching', 'False'),
+      _element('EnableAutoType', 'False'),
+    ]);
+    root.children.add(recycle);
+    _groups[id] = recycle;
+    final meta = _openDocument.xml.rootElement.getElement('Meta')!;
+    _setValue(meta, 'RecycleBinUUID', id);
+    _setValue(meta, 'RecycleBinChanged', _now());
+    return recycle;
+  }
+
+  void _deleteObjects(XmlElement subtree, List<String> ids) {
+    final raw = _openDocument;
+    final root = raw.xml.rootElement.getElement('Root')!;
+    if (root.findElements('DeletedObjects').length > 1) {
+      throw const KeePassException(KeePassErrorCode.unsupported);
+    }
+    final deleted =
+        root.getElement('DeletedObjects') ??
+        XmlElement(XmlName('DeletedObjects'));
+    final existing = <String, XmlElement>{};
+    for (final node in deleted.findElements('DeletedObject')) {
+      final id = _id(node);
+      if (existing.containsKey(id)) {
+        throw const KeePassException(KeePassErrorCode.unsupported);
+      }
+      existing[id] = node;
+    }
+    for (final id in ids) {
+      if (existing[id] case final node?) _singleText(node, 'DeletionTime');
+    }
+    final netBytes = ids.length * 256 - raw.estimateHistorySnapshot(subtree);
+    final netEvents = ids.length * 8 - _eventCount(subtree);
+    _checkCapacity(
+      bytes: netBytes > 0 ? netBytes + 4096 : 4096,
+      events: netEvents > 0 ? netEvents + 32 : 32,
+    );
+    final meta = raw.xml.rootElement.getElement('Meta')!;
+    final reset = <String>[];
+    for (final name in [
+      'EntryTemplatesGroup',
+      'LastSelectedGroup',
+      'LastTopVisibleGroup',
+    ]) {
+      final value = _singleText(meta, name);
+      if (value != null && ids.contains(raw.textOf(value))) reset.add(name);
+    }
+    if (reset.contains('EntryTemplatesGroup')) {
+      _singleText(meta, 'EntryTemplatesGroupChanged');
+    }
+    if (deleted.parent == null) root.children.add(deleted);
+    final now = _now();
+    for (final id in ids) {
+      final node = existing[id];
+      if (node == null) {
+        deleted.children.add(
+          XmlElement(XmlName('DeletedObject'), [], [
+            _element('UUID', id),
+            _element('DeletionTime', now),
+          ]),
+        );
+      } else {
+        _setValue(node, 'DeletionTime', now);
+      }
+    }
+    for (final name in reset) {
+      _setValue(
+        meta,
+        name,
+        name == 'EntryTemplatesGroup'
+            ? 'AAAAAAAAAAAAAAAAAAAAAA=='
+            : _groupInfo.first.id,
+      );
+    }
+    if (reset.contains('EntryTemplatesGroup')) {
+      _setValue(meta, 'EntryTemplatesGroupChanged', now);
+    }
+    subtree.parent!.children.remove(subtree);
+    raw.forgetElement(subtree);
   }
 
   String _newId() {
@@ -433,9 +1041,42 @@ class KeePassSession {
   void _touch(XmlElement entry, {bool location = false}) {
     final times = entry.getElement('Times') ?? XmlElement(XmlName('Times'));
     if (times.parent == null) entry.children.add(times);
-    _setChild(times, 'LastModificationTime', _now());
-    _setChild(times, 'LastAccessTime', _now());
-    if (location) _setChild(times, 'LocationChanged', _now());
+    _setValue(times, 'LastModificationTime', _now());
+    _setValue(times, 'LastAccessTime', _now());
+    if (location) _setValue(times, 'LocationChanged', _now());
+  }
+
+  static XmlElement? _singleText(XmlElement parent, String name) {
+    final values = parent.findElements(name).toList();
+    if (values.length > 1 ||
+        (values.isNotEmpty &&
+            values.single.children.any(
+              (node) => node is! XmlText && node is! XmlCDATA,
+            ))) {
+      throw const KeePassException(KeePassErrorCode.unsupported);
+    }
+    return values.isEmpty ? null : values.single;
+  }
+
+  static void _validateTouch(XmlElement item) {
+    if (item.findElements('Times').length > 1) {
+      throw const KeePassException(KeePassErrorCode.unsupported);
+    }
+    final times = item.getElement('Times');
+    if (times == null) return;
+    for (final field in [
+      'LastModificationTime',
+      'LastAccessTime',
+      'LocationChanged',
+    ]) {
+      _singleText(times, field);
+    }
+  }
+
+  void _setValue(XmlElement node, String name, String text) {
+    final element = _singleText(node, name) ?? XmlElement(XmlName(name));
+    if (element.parent == null) node.children.add(element);
+    _openDocument.setText(element, text);
   }
 
   static void _setFields(
@@ -464,22 +1105,30 @@ class KeePassSession {
     }
   }
 
-  static Map<String, XmlElement> _fieldNodes(XmlElement entry) {
+  static Map<String, XmlElement> _fieldNodes(
+    XmlElement entry, {
+    bool includeCustom = false,
+  }) {
     final fields = <String, XmlElement>{};
-    const standard = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
     for (final field in entry.findElements('String')) {
       final key = field.getElement('Key')?.innerText;
-      if (!standard.contains(key)) continue;
+      if (!includeCustom && !_standardFields.contains(key)) continue;
       final values = field.findElements('Value').toList();
-      if (fields.containsKey(key) ||
+      final keyNode = field.getElement('Key');
+      if (key == null ||
+          fields.containsKey(key) ||
           values.length != 1 ||
           field.findElements('Key').length != 1 ||
+          keyNode!.children.any(
+            (child) => child is! XmlText && child is! XmlCDATA,
+          ) ||
+          keyNode.getAttribute('Protected')?.toLowerCase() == 'true' ||
           values.single.children.any(
             (child) => child is! XmlText && child is! XmlCDATA,
           )) {
         throw const KeePassException(KeePassErrorCode.unsupported);
       }
-      fields[key!] = values.single;
+      fields[key] = values.single;
     }
     return fields;
   }
@@ -496,36 +1145,110 @@ class KeePassSession {
     return id;
   }
 
-  void _checkGrowth(KeePassEntryFields fields, {XmlElement? history}) {
+  void _checkGrowth(
+    KeePassEntryFields fields, {
+    XmlElement? history,
+    List<KeePassCustomField>? customFields,
+    int? historyEntryDepth,
+  }) {
     final raw = _openDocument;
     var added = 4096;
-    for (final value in fields._values.values) {
+    for (final value in [
+      ...fields._values.values,
+      for (final field in customFields ?? const <KeePassCustomField>[]) ...[
+        field.name,
+        field.value,
+      ],
+    ]) {
       // Account for XML escaping and protected base64 expansion before changing
       // original values or creating a potentially large history snapshot.
       added += utf8.encode(XmlText(value).toXmlString()).length;
       added += ((utf8.encode(value).length + 2) ~/ 3) * 4;
     }
-    if (history != null) added += raw.estimateHistorySnapshot(history);
-    if (raw.estimatedBytes + added > kKeePassMaxFileBytes) {
+    if (history != null) {
+      _checkHistoryDepth(history, atDepth: historyEntryDepth);
+      added += raw.estimateHistorySnapshot(history);
+    }
+    _checkCapacity(
+      bytes: added,
+      events:
+          128 +
+          (customFields?.length ?? 0) * 8 +
+          (history == null ? 0 : _snapshotEvents(history)),
+    );
+  }
+
+  int _eventCount(XmlNode node) {
+    var total = node is XmlDocument
+        ? 0
+        : node is XmlElement
+        ? 2
+        : 1;
+    if (node is XmlElement && _openDocument.isProtected(node)) total++;
+    for (final child in node.children) {
+      total += _eventCount(child);
+    }
+    return total;
+  }
+
+  void _checkHistoryDepth(XmlElement entry, {int? atDepth}) {
+    var snapshotDepth = 1;
+    for (final child in entry.childElements.where(
+      (node) => node.name.qualified != 'History',
+    )) {
+      final depth = _subtreeDepth(child) + 1;
+      if (depth > snapshotDepth) snapshotDepth = depth;
+    }
+    if ((atDepth ?? _xmlDepth(entry)) + snapshotDepth + 1 > 64) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+  }
+
+  int _snapshotEvents(XmlElement entry) =>
+      2 +
+      entry.children
+          .where(
+            (node) => node is! XmlElement || node.name.qualified != 'History',
+          )
+          .fold<int>(0, (total, node) => total + _eventCount(node));
+
+  void _checkCapacity({required int bytes, required int events}) {
+    final raw = _openDocument;
+    if (raw.estimatedBytes + bytes > kKeePassMaxFileBytes ||
+        _eventCount(raw.xml) + events > 200000) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
     }
   }
 
   static void _validateFields(KeePassEntryFields fields) {
     for (final value in fields._values.values) {
-      if (value.length > _maxFieldBytes ||
-          utf8.encode(value).length > _maxFieldBytes) {
-        throw const KeePassException(KeePassErrorCode.resourceLimit);
-      }
-      for (final rune in value.runes) {
-        if (!(rune == 9 ||
-            rune == 10 ||
-            rune == 13 ||
-            (rune >= 0x20 && rune <= 0xd7ff) ||
-            (rune >= 0xe000 && rune <= 0xfffd) ||
-            (rune >= 0x10000 && rune <= 0x10ffff))) {
-          throw const KeePassException(KeePassErrorCode.unsupported);
-        }
+      _validateText(value);
+    }
+  }
+
+  static void _validateName(String value) {
+    if (value.trim().isEmpty) {
+      throw const KeePassException(KeePassErrorCode.invalidOperation);
+    }
+    if (value.length > 1024 || utf8.encode(value).length > 1024) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    _validateText(value);
+  }
+
+  static void _validateText(String value) {
+    if (value.length > _maxFieldBytes ||
+        utf8.encode(value).length > _maxFieldBytes) {
+      throw const KeePassException(KeePassErrorCode.resourceLimit);
+    }
+    for (final rune in value.runes) {
+      if (!(rune == 9 ||
+          rune == 10 ||
+          rune == 13 ||
+          (rune >= 0x20 && rune <= 0xd7ff) ||
+          (rune >= 0xe000 && rune <= 0xfffd) ||
+          (rune >= 0x10000 && rune <= 0x10ffff))) {
+        throw const KeePassException(KeePassErrorCode.unsupported);
       }
     }
   }
@@ -533,12 +1256,6 @@ class KeePassSession {
 
 XmlElement _element(String name, String text) =>
     XmlElement(XmlName(name))..innerText = text;
-
-void _setChild(XmlElement node, String name, String text) {
-  final element = node.getElement(name) ?? XmlElement(XmlName(name));
-  if (element.parent == null) node.children.add(element);
-  element.innerText = text;
-}
 
 typedef _UnlockRequest = ({
   Uint8List bytes,

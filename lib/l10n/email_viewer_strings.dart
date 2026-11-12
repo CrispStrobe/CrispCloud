@@ -33,7 +33,7 @@ class EmailViewerStrings {
       'malformedEncoding': 'Some message text uses malformed encoding.',
       'incompleteMultipart': 'The message has an incomplete MIME boundary; available parts are shown.',
       'embeddedOutlookAttachment': 'Embedded Outlook messages are listed but cannot be opened from this preview.',
-      'richTextOnly': 'This Outlook message has only a compressed RTF body, which is not rendered here.',
+      'richTextOnly': "This Outlook RTF body is damaged or uses formatting that this preview cannot read.",
     },
     'de': {
       'email': 'E-Mail',
@@ -58,7 +58,7 @@ class EmailViewerStrings {
           'Teile des Nachrichtentexts sind fehlerhaft kodiert.',
       'incompleteMultipart': 'Die Nachricht hat eine unvollständige MIME-Grenze; verfügbare Teile werden angezeigt.',
       'embeddedOutlookAttachment': 'Eingebettete Outlook-Nachrichten werden aufgelistet, können hier aber nicht geöffnet werden.',
-      'richTextOnly': 'Diese Outlook-Nachricht enthält nur komprimierten RTF-Inhalt, der hier nicht dargestellt wird.',
+      'richTextOnly': "Dieser Outlook-RTF-Inhalt ist beschädigt oder verwendet eine Formatierung, die diese Vorschau nicht lesen kann.",
     },
     'fr': {
       'email': 'Courriel',
@@ -83,7 +83,7 @@ class EmailViewerStrings {
           'Une partie du message utilise un encodage incorrect.',
       'incompleteMultipart': 'Le message contient une délimitation MIME incomplète ; les parties disponibles sont affichées.',
       'embeddedOutlookAttachment': 'Les messages Outlook intégrés sont répertoriés mais ne peuvent pas être ouverts ici.',
-      'richTextOnly': 'Ce message Outlook contient uniquement du RTF compressé, non affiché ici.',
+      'richTextOnly': "Ce corps RTF Outlook est endommagé ou utilise une mise en forme que cet aperçu ne peut pas lire.",
     },
     'es': {
       'email': 'Correo',
@@ -107,7 +107,7 @@ class EmailViewerStrings {
           'Parte del mensaje tiene una codificación incorrecta.',
       'incompleteMultipart': 'El mensaje tiene un límite MIME incompleto; se muestran las partes disponibles.',
       'embeddedOutlookAttachment': 'Los mensajes de Outlook incrustados aparecen en la lista pero no se pueden abrir aquí.',
-      'richTextOnly': 'Este mensaje de Outlook solo contiene RTF comprimido, que no se muestra aquí.',
+      'richTextOnly': "Este cuerpo RTF de Outlook está dañado o utiliza un formato que esta vista previa no puede leer.",
     },
     'pt': {
       'email': 'Email',
@@ -130,7 +130,7 @@ class EmailViewerStrings {
       'malformedEncoding': 'Parte da mensagem tem uma codificação incorreta.',
       'incompleteMultipart': 'A mensagem tem um limite MIME incompleto; são mostradas as partes disponíveis.',
       'embeddedOutlookAttachment': 'As mensagens Outlook incorporadas são listadas, mas não podem ser abertas aqui.',
-      'richTextOnly': 'Esta mensagem Outlook contém apenas RTF comprimido, que não é apresentado aqui.',
+      'richTextOnly': "Este corpo RTF do Outlook está danificado ou usa formatação que esta pré-visualização não consegue ler.",
     },
     'zh': {
       'email': '电子邮件',
@@ -153,7 +153,7 @@ class EmailViewerStrings {
       'malformedEncoding': '部分邮件文本的编码不正确。',
       'incompleteMultipart': '邮件的 MIME 分隔符不完整；显示可用的部分。',
       'embeddedOutlookAttachment': '已列出嵌入的 Outlook 邮件，但无法在此预览中打开。',
-      'richTextOnly': '此 Outlook 邮件只有压缩的 RTF 正文，无法在此显示。',
+      'richTextOnly': "此 Outlook RTF 正文已损坏，或使用了此预览无法读取的格式。",
     },
     'ja': {
       'email': 'メール',
@@ -177,7 +177,7 @@ class EmailViewerStrings {
       'malformedEncoding': 'メールの一部に不正な文字コードがあります。',
       'incompleteMultipart': 'MIME 境界が不完全です。利用可能な部分を表示しています。',
       'embeddedOutlookAttachment': '埋め込み Outlook メールは一覧に表示されますが、ここでは開けません。',
-      'richTextOnly': 'この Outlook メールは圧縮 RTF 本文のみのため、ここでは表示できません。',
+      'richTextOnly': "この Outlook の RTF 本文は破損しているか、このプレビューでは読み取れない書式を使用しています。",
     },
     'ko': {
       'email': '이메일',
@@ -200,7 +200,7 @@ class EmailViewerStrings {
       'malformedEncoding': '메시지 일부의 인코딩이 잘못되었습니다.',
       'incompleteMultipart': 'MIME 경계가 불완전합니다. 사용 가능한 부분을 표시합니다.',
       'embeddedOutlookAttachment': '포함된 Outlook 메시지는 목록에 표시되지만 여기에서 열 수 없습니다.',
-      'richTextOnly': '이 Outlook 메시지에는 압축된 RTF 본문만 있어 여기에서는 표시하지 않습니다.',
+      'richTextOnly': "이 Outlook RTF 본문이 손상되었거나 이 미리보기에서 읽을 수 없는 서식을 사용합니다.",
     },
     'ar': {
       'email': 'بريد إلكتروني',
@@ -225,8 +225,7 @@ class EmailViewerStrings {
           'حدود MIME في الرسالة غير مكتملة؛ يتم عرض الأجزاء المتاحة.',
       'embeddedOutlookAttachment':
           'تظهر رسائل Outlook المضمنة في القائمة ولكن لا يمكن فتحها هنا.',
-      'richTextOnly':
-          'تحتوي رسالة Outlook هذه على نص RTF مضغوط فقط، ولا يتم عرضه هنا.',
+      'richTextOnly': "نص RTF في رسالة Outlook تالف أو يستخدم تنسيقًا لا تستطيع هذه المعاينة قراءته.",
     },
   };
 }

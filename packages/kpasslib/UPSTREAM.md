@@ -62,6 +62,11 @@ fresh seeds, stream keys, salts, and IVs come from the upstream `Random.secure`
 implementation. The application validates KDF budgets before invoking it.
 No cryptographic primitive is authored in these adaptations.
 
+On 2026-11-12 the vendored Dart files were formatted with the repository's Dart
+3.13.7 toolchain to satisfy the existing whole-PR formatting gate. This changes
+layout only; upstream copyright/license notices and algorithm behavior remain
+intact. The source evidence fingerprint includes these exact formatted bytes.
+
 ## Verification
 
 `test/keepass_service_test.dart` uses public KeePass-authored interoperability
@@ -80,6 +85,9 @@ known-answer tests are separate from these full-database round trips.
 
 The app-facing supported subset and concrete resource budgets are documented in
 `docs/keepass.md`. Hardware challenge-response providers, Windows account keys,
-changing the master key, group editing, and attachment/custom-field editing are
-outside that subset. Unsupported features are never silently converted or
+changing the master key and direct attachment editing are outside that subset.
+Group management, protected custom fields and complete entry-history restoration
+are implemented by the app service using the retained raw XML; the upstream
+object-model writer is not substituted for that preservation path.
+Unsupported features are never silently converted or
 discarded to make a file writable.

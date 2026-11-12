@@ -37,4 +37,3 @@ abstract class CryptoEngine {
     required List<int> salt,
   });
 }
-

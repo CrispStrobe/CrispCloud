@@ -84,4 +84,3 @@ class CryptoFfi extends CryptoEngine {
     );
   }
 }
-

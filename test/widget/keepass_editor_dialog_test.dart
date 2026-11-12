@@ -74,8 +74,13 @@ class _Session extends Fake implements KeePassSession {
   String get formatLabel => 'KDBX 4.1 · AES-256 · Argon2id';
   @override
   List<KeePassGroupInfo> get groups => const [
-    KeePassGroupInfo(id: 'root', name: 'Vault', path: '/Vault'),
-    KeePassGroupInfo(id: 'personal', name: 'Personal', path: '/Vault/Personal'),
+    KeePassGroupInfo(id: 'root', name: 'Vault', path: '/Vault', isRoot: true),
+    KeePassGroupInfo(
+      id: 'personal',
+      name: 'Personal',
+      path: '/Vault/Personal',
+      parentId: 'root',
+    ),
   ];
   @override
   List<KeePassEntryInfo> get entries => records.entries
@@ -91,9 +96,14 @@ class _Session extends Fake implements KeePassSession {
   @override
   KeePassEntryFields entryFields(String id) => records[id]!.fields;
   @override
+  List<KeePassCustomField> customFields(String id) => const [];
+  @override
+  List<KeePassHistoryInfo> entryHistory(String id) => const [];
+  @override
   String addEntry({
     required String groupId,
     required KeePassEntryFields fields,
+    List<KeePassCustomField> customFields = const [],
   }) {
     if (owner.failMutation) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
@@ -104,11 +114,16 @@ class _Session extends Fake implements KeePassSession {
   }
 
   @override
-  void updateEntry(String id, KeePassEntryFields fields) {
+  void updateEntry(
+    String id,
+    KeePassEntryFields fields, {
+    List<KeePassCustomField>? customFields,
+    String? groupId,
+  }) {
     if (owner.failMutation) {
       throw const KeePassException(KeePassErrorCode.resourceLimit);
     }
-    records[id] = _Record(records[id]!.groupId, fields);
+    records[id] = _Record(groupId ?? records[id]!.groupId, fields);
   }
 
   @override

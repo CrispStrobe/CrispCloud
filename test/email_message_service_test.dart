@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:crisp_cloud/services/email_message_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_engine/quds_office_engine.dart' show CfbfWriter;
+
+import 'support/outlook_rtf_fixture.dart';
 
 Uint8List _eml(String text) => Uint8List.fromList(utf8.encode(text));
 
@@ -30,17 +33,32 @@ Uint8List _properties(int header, Map<int, int> values) {
 
 void main() {
   group('EML', () {
-    test('RFC 2231 literal continuations retain percent text', () {
+    test('empty sanitized HTML cannot hide a readable alternative', () {
       final email = parseEmailMessage(
         _eml(
-          'Subject: File\n'
-          'Content-Type: application/octet-stream\n'
-          "Content-Disposition: attachment; filename*0*=utf-8''report%20;\n"
-          ' filename*1="100%2Fdone.txt"\n\ncontents',
+          'Subject: Empty HTML\r\nContent-Type: multipart/alternative; boundary="alt"\r\n\r\n'
+          '--alt\r\nContent-Type: text/plain\r\n\r\nReadable plain body\r\n'
+          '--alt\r\nContent-Type: text/html\r\n\r\n<div> </div><script>hidden</script>\r\n'
+          '--alt--\r\n',
         ),
-        'name.eml',
+        'empty-html.eml',
       );
-      expect(email.attachments.single.name, 'report 100%2Fdone.txt');
+      expect(email.plainText, 'Readable plain body');
+      expect(email.safeHtml, isNull);
+    });
+
+    test('whitespace plain alternative falls back to readable HTML', () {
+      final email = parseEmailMessage(
+        _eml(
+          'Subject: Empty text\r\nContent-Type: multipart/alternative; boundary="alt"\r\n\r\n'
+          '--alt\r\nContent-Type: text/plain\r\n\r\n \t \r\n'
+          '--alt\r\nContent-Type: text/html\r\n\r\n<p>Readable HTML body</p>\r\n'
+          '--alt--\r\n',
+        ),
+        'empty-text.eml',
+      );
+      expect(email.plainText, 'Readable HTML body');
+      expect(email.safeHtml, contains('Readable HTML body'));
     });
 
     test('decodes folded RFC 2047 headers and quoted-printable body', () {
@@ -216,6 +234,37 @@ JVBERg=='''),
       expect(email.plainText, isEmpty);
     });
 
+    test(
+      'mixed body sections appear in both text and formatted representations',
+      () {
+        final email = parseEmailMessage(
+          _eml(
+            'Subject: Mixed body\n'
+            'Content-Type: multipart/mixed; boundary=b\n\n'
+            '--b\nContent-Type: text/plain\n\nCover <note>\n'
+            '--b\nContent-Type: text/html\n\n<p>Second section</p>\n--b--\n',
+          ),
+          'mixed.eml',
+        );
+        expect(email.plainText, 'Cover <note>\n\nSecond section');
+        expect(email.safeHtml, contains('<pre>Cover &lt;note&gt;</pre>'));
+        expect(email.safeHtml, contains('<p>Second section</p>'));
+      },
+    );
+
+    test('RFC 2231 literal continuations retain percent text', () {
+      final email = parseEmailMessage(
+        _eml(
+          'Subject: File\n'
+          'Content-Type: application/octet-stream\n'
+          "Content-Disposition: attachment; filename*0*=utf-8''report%20;\n"
+          ' filename*1="100%2Fdone.txt"\n\ncontents',
+        ),
+        'name.eml',
+      );
+      expect(email.attachments.single.name, 'report 100%2Fdone.txt');
+    });
+
     test('boundary prefix in body does not split a part', () {
       final email = parseEmailMessage(
         _eml('''Subject: Boundaries
@@ -305,20 +354,6 @@ Readable body'''),
   });
 
   group('Outlook MSG', () {
-    test('recipient count is bounded before reading individual properties', () {
-      final writer = CfbfWriter()
-        ..addStream('__properties_version1.0', _properties(32, {}));
-      for (var index = 0; index < 513; index++) {
-        writer.addStorage(
-          '__recip_version1.0_#${index.toRadixString(16).padLeft(8, '0')}',
-        );
-      }
-      expect(
-        () => parseEmailMessage(writer.build(), 'many.msg'),
-        throwsFormatException,
-      );
-    });
-
     test(
       'reads Unicode headers, recipient type, body and binary attachment',
       () {
@@ -398,9 +433,9 @@ Readable body'''),
       final writer = CfbfWriter()
         ..addStream(
           '__properties_version1.0',
-          _properties(32, {0x3ffd0003: 65001}),
+          _properties(32, {0x3ffd0003: 1252, 0x3fde0003: 65001}),
         )
-        ..addStream('__substg1.0_0037001E', utf8.encode('Résumé'))
+        ..addStream('__substg1.0_0037001E', latin1.encode('Résumé'))
         ..addStream(
           '__substg1.0_10130102',
           utf8.encode('<p>Hello 世界</p><img src="https://tracker.test">'),
@@ -411,7 +446,71 @@ Readable body'''),
       expect(email.safeHtml, isNot(contains('https:')));
     });
 
-    test('RTF-only message explains its limitation', () {
+    test('compressed and MELA RTF-only bodies render safe searchable text', () {
+      for (final raw in [false, true]) {
+        final writer = CfbfWriter()
+          ..addStream('__properties_version1.0', _properties(32, {}))
+          ..addStream(
+            '__substg1.0_10090102',
+            literalOutlookRtf(
+              r'{\rtf1\ansi Hello \b formatted\b0  body.\par <script>alert(1)</script>}',
+              uncompressed: raw,
+            ),
+          );
+        final email = parseEmailMessage(writer.build(), 'rtf.msg');
+        expect(email.plainText, contains('Hello formatted body.'));
+        expect(email.safeHtml, contains('formatted'));
+        expect(email.safeHtml, isNot(contains('<script>')));
+        expect(email.searchText, contains('formatted body'));
+        expect(email.warnings, isEmpty);
+      }
+    });
+
+    test('whitespace plain and empty HTML do not hide a readable RTF body', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}))
+        ..addStream('__substg1.0_1000001F', _utf16(' \r\n\t '))
+        ..addStream(
+          '__substg1.0_10130102',
+          utf8.encode('<div> </div><script>hidden</script>'),
+        )
+        ..addStream(
+          '__substg1.0_10090102',
+          literalOutlookRtf(r'{\rtf1 Readable RTF body}'),
+        );
+      final email = parseEmailMessage(writer.build(), 'blank-alternatives.msg');
+      expect(email.plainText, 'Readable RTF body');
+      expect(email.safeHtml, contains('Readable RTF body'));
+      expect(email.warnings, isEmpty);
+    });
+
+    test('empty sanitized HTML cannot mask a readable Outlook plain body', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}))
+        ..addStream('__substg1.0_1000001F', _utf16('Readable plain body'))
+        ..addStream(
+          '__substg1.0_10130102',
+          utf8.encode('<div> </div><script>hidden</script>'),
+        );
+      final email = parseEmailMessage(writer.build(), 'blank-html.msg');
+      expect(email.plainText, 'Readable plain body');
+      expect(email.safeHtml, isNull);
+    });
+
+    test(
+      'an existing plain body does not decode an unrelated corrupt RTF part',
+      () {
+        final writer = CfbfWriter()
+          ..addStream('__properties_version1.0', _properties(32, {}))
+          ..addStream('__substg1.0_1000001F', _utf16('Preferred plain body'))
+          ..addStream('__substg1.0_10090102', [1, 2, 3]);
+        final email = parseEmailMessage(writer.build(), 'rtf.msg');
+        expect(email.plainText, 'Preferred plain body');
+        expect(email.warnings, isEmpty);
+      },
+    );
+
+    test('corrupt RTF-only message explains its limitation', () {
       final writer = CfbfWriter()
         ..addStream('__properties_version1.0', _properties(32, {}))
         ..addStream('__substg1.0_10090102', [1, 2, 3]);
@@ -425,6 +524,107 @@ Readable body'''),
         () => parseEmailMessage(writer.build(), 'wrong.msg'),
         throwsFormatException,
       );
+    });
+
+    test('recipient count is bounded before reading individual properties', () {
+      final writer = CfbfWriter()
+        ..addStream('__properties_version1.0', _properties(32, {}));
+      for (var index = 0; index < 513; index++) {
+        writer.addStorage(
+          '__recip_version1.0_#${index.toRadixString(16).padLeft(8, '0')}',
+        );
+      }
+      expect(
+        () => parseEmailMessage(writer.build(), 'many.msg'),
+        throwsFormatException,
+      );
+    });
+  });
+
+  group('bounded compound reader', () {
+    test('small and regular streams retain exact contents', () {
+      final regular = List<int>.generate(8192, (index) => index % 256);
+      final writer = CfbfWriter()
+        ..addStream('parent/small', [7, 9, 11])
+        ..addStream('parent/large', regular);
+      final reader = BoundedCfbReader(writer.build());
+      expect(reader.readPath('parent/small'), orderedEquals([7, 9, 11]));
+      expect(reader.readPath('parent/large'), orderedEquals(regular));
+      expect(reader.readPath('small'), isNull);
+    });
+
+    test('duplicate FAT references fail before the parser allocates them', () {
+      final bytes = (CfbfWriter()..addStream('small', [1])).build();
+      final view = ByteData.sublistView(bytes);
+      view.setUint32(80, view.getUint32(76, Endian.little), Endian.little);
+      expect(() => BoundedCfbReader(bytes), throwsFormatException);
+    });
+
+    test('shared directory children and sibling cycles are rejected', () {
+      final bytes =
+          (CfbfWriter()
+                ..addStream('A/value', [1])
+                ..addStream('B/value', [2]))
+              .build();
+      final reader = BoundedCfbReader(bytes);
+      final first = reader.child(reader.root, 'A')!;
+      final second = reader.child(reader.root, 'B')!;
+      final view = ByteData.sublistView(bytes);
+      final directory = (view.getUint32(48, Endian.little) + 1) * 512;
+      view.setUint32(
+        directory + second.index * 128 + 76,
+        first.child,
+        Endian.little,
+      );
+      expect(() => BoundedCfbReader(bytes), throwsFormatException);
+      view.setUint32(
+        directory + second.index * 128 + 76,
+        second.child,
+        Endian.little,
+      );
+      view.setUint32(
+        directory + first.child * 128 + 68,
+        first.child,
+        Endian.little,
+      );
+      expect(() => BoundedCfbReader(bytes), throwsFormatException);
+    });
+
+    test(
+      'invalid indices and case-insensitive duplicate names are rejected',
+      () {
+        final bytes = (CfbfWriter()..addStream('parent/value', [1])).build();
+        final reader = BoundedCfbReader(bytes);
+        final parent = reader.child(reader.root, 'parent')!;
+        final view = ByteData.sublistView(bytes);
+        final directory = (view.getUint32(48, Endian.little) + 1) * 512;
+        view.setUint32(
+          directory + parent.index * 128 + 76,
+          999999,
+          Endian.little,
+        );
+        expect(() => BoundedCfbReader(bytes), throwsFormatException);
+        final duplicates =
+            (CfbfWriter()
+                  ..addStream('Name', [1])
+                  ..addStream('NAME', [2]))
+                .build();
+        expect(() => BoundedCfbReader(duplicates), throwsFormatException);
+      },
+    );
+
+    test('untrusted stream size and cumulative read budget are bounded', () {
+      final bytes = (CfbfWriter()..addStream('small', [1, 2, 3])).build();
+      final reader = BoundedCfbReader(bytes, maxTotalReadBytes: 4);
+      expect(reader.readPath('small'), orderedEquals([1, 2, 3]));
+      expect(() => reader.readPath('small'), throwsFormatException);
+      final view = ByteData.sublistView(bytes);
+      final directory = (view.getUint32(48, Endian.little) + 1) * 512;
+      view.setUint32(directory + 128 + 120, 0x7fffffff, Endian.little);
+      expect(() => BoundedCfbReader(bytes), throwsFormatException);
+      view.setUint32(directory + 128 + 120, 3, Endian.little);
+      view.setUint32(directory + 128 + 124, 1, Endian.little);
+      expect(() => BoundedCfbReader(bytes), throwsFormatException);
     });
   });
 }

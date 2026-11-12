@@ -57,4 +57,3 @@ abstract final class MergeUtils {
     parent.groups = newItems.whereType<KdbxGroup>().toList();
   }
 }
-

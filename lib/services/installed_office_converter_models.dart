@@ -5,7 +5,8 @@ enum InstalledOfficeKind { libreOffice, microsoftWord }
 
 enum InstalledOfficeOutput {
   docx,
-  docm;
+  docm,
+  pdf;
 
   String get extension => name;
 }
@@ -21,6 +22,7 @@ class InstalledOfficeInstallation {
     this.supportedOutputs = const {
       InstalledOfficeOutput.docx,
       InstalledOfficeOutput.docm,
+      InstalledOfficeOutput.pdf,
     },
   });
 
@@ -34,6 +36,9 @@ class InstalledOfficeInstallation {
   /// still be inspected: this is not a fidelity or signature guarantee.
   bool get supportsMacros =>
       supportedOutputs.contains(InstalledOfficeOutput.docm);
+
+  bool get supportsPagePreview =>
+      supportedOutputs.contains(InstalledOfficeOutput.pdf);
 }
 
 class InstalledOfficeConversionResult {
@@ -79,3 +84,29 @@ class InstalledOfficeConversionException implements Exception {
 const kInstalledOfficeInputLimit = 64 * 1024 * 1024;
 const kInstalledOfficeOutputLimit = 64 * 1024 * 1024;
 const kInstalledOfficeDefaultTimeout = Duration(minutes: 2);
+
+/// Checks the bounded PDF envelope before handing it to the PDF renderer. The
+/// renderer still validates the document structure; this is not a fidelity or
+/// signature check. Only generated preview bytes are accepted by this helper.
+void validateInstalledOfficePdf(Uint8List bytes) {
+  if (bytes.length > kInstalledOfficeOutputLimit) {
+    throw const InstalledOfficeConversionException(
+      InstalledOfficeConversionErrorCode.outputTooLarge,
+    );
+  }
+  if (bytes.length < 16 ||
+      !String.fromCharCodes(bytes.take(8))
+          .startsWith(RegExp(r'%PDF-[12]\.\d'))) {
+    throw const InstalledOfficeConversionException(
+      InstalledOfficeConversionErrorCode.invalidOutput,
+    );
+  }
+  final tail = String.fromCharCodes(
+    bytes.skip(bytes.length > 1024 ? bytes.length - 1024 : 0),
+  );
+  if (!RegExp(r'%%EOF[\x00\x09\x0a\x0c\x0d\x20]*$').hasMatch(tail)) {
+    throw const InstalledOfficeConversionException(
+      InstalledOfficeConversionErrorCode.invalidOutput,
+    );
+  }
+}

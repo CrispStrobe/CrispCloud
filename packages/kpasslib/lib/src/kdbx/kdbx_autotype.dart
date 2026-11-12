@@ -135,4 +135,3 @@ class KdbxAutoType {
       defaultSequence.hashCode +
       items.hashCode;
 }
-

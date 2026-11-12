@@ -76,4 +76,3 @@ abstract class KdbxItem {
   ///Merges remote [objectMap] to the item.
   merge(MergeObjectMap objectMap);
 }
-

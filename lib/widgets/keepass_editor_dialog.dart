@@ -96,11 +96,40 @@ class _HiddenDraft {
     required this.creating,
     required this.groupId,
     required this.entryId,
+    required this.customFields,
   });
   final KeePassEntryFields fields;
   final bool creating;
   final String? groupId;
   final String? entryId;
+  final List<KeePassCustomField> customFields;
+}
+
+class _CustomFieldDraft {
+  _CustomFieldDraft(KeePassCustomField field)
+    : originalName = field.originalName,
+      name = TextEditingController(text: field.name),
+      value = TextEditingController(text: field.value),
+      isProtected = field.isProtected;
+  final String? originalName;
+  final TextEditingController name;
+  final TextEditingController value;
+  bool isProtected;
+  bool revealed = false;
+
+  KeePassCustomField get field => KeePassCustomField(
+    name: name.text,
+    value: value.text,
+    isProtected: isProtected,
+    originalName: originalName,
+  );
+
+  void dispose() {
+    name.clear();
+    value.clear();
+    name.dispose();
+    value.dispose();
+  }
 }
 
 class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
@@ -112,6 +141,8 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   final _password = TextEditingController();
   final _url = TextEditingController();
   final _notes = TextEditingController();
+  final _customDrafts = <_CustomFieldDraft>[];
+  final _revealedCustom = <String>{};
   var _saves = SaveCoordinator<Uint8List>();
   final _messenger = GlobalKey<ScaffoldMessengerState>();
 
@@ -133,6 +164,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Future<void>? _activeLock;
   Route<dynamic>? _prompt;
   NavigatorState? _promptNavigator;
+  ValueNotifier<bool>? _promptShield;
   int _generation = 0;
   int _documentEpoch = 0;
   int _clipboardGeneration = 0;
@@ -361,7 +393,11 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         final draft = _hiddenDraft;
         _hiddenDraft = null;
         if (draft != null) {
-          _setDraft(draft.fields, creating: draft.creating);
+          _setDraft(
+            draft.fields,
+            creating: draft.creating,
+            customFields: draft.customFields,
+          );
           _draftGroupId = draft.groupId;
           _selectedId = draft.entryId;
           _draftChanged = true;
@@ -391,6 +427,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     KeePassErrorCode.corrupt => 'corrupt',
     KeePassErrorCode.resourceLimit => 'resourceLimit',
     KeePassErrorCode.locked => 'locked',
+    KeePassErrorCode.invalidOperation => 'invalidOperation',
   };
 
   void _touch() {
@@ -423,6 +460,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         _locking = true;
         _unlocking = false;
         _revealPassword = false;
+        _revealedCustom.clear();
         _errorKey = null;
       });
     }
@@ -467,6 +505,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
           creating: _creating,
           groupId: _draftGroupId,
           entryId: _selectedId,
+          customFields: _draftCustomFields,
         );
       }
       _clearDraft();
@@ -488,16 +527,33 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     notes: _notes.text,
   );
 
-  void _setDraft(KeePassEntryFields fields, {required bool creating}) {
+  List<KeePassCustomField> get _draftCustomFields =>
+      _customDrafts.map((draft) => draft.field).toList(growable: false);
+
+  void _setDraft(
+    KeePassEntryFields fields, {
+    required bool creating,
+    List<KeePassCustomField> customFields = const [],
+  }) {
     _title.text = fields.title;
     _userName.text = fields.userName;
     _password.text = fields.password;
     _url.text = fields.url;
     _notes.text = fields.notes;
+    _clearCustomDrafts();
+    _customDrafts.addAll(customFields.map(_CustomFieldDraft.new));
     _editing = true;
     _creating = creating;
     _draftChanged = false;
     _revealPassword = false;
+    _revealedCustom.clear();
+  }
+
+  void _clearCustomDrafts() {
+    for (final draft in _customDrafts) {
+      draft.dispose();
+    }
+    _customDrafts.clear();
   }
 
   void _clearDraft() {
@@ -506,11 +562,13 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     _password.clear();
     _url.clear();
     _notes.clear();
+    _clearCustomDrafts();
     _editing = false;
     _creating = false;
     _draftChanged = false;
     _draftGroupId = null;
     _revealPassword = false;
+    _revealedCustom.clear();
   }
 
   void _editEntry({bool creating = false}) {
@@ -520,13 +578,22 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       final fields = creating
           ? const KeePassEntryFields()
           : session.entryFields(_selectedId!);
+      final custom = creating
+          ? const <KeePassCustomField>[]
+          : session.customFields(_selectedId!);
       setState(() {
-        _setDraft(fields, creating: creating);
-        _draftGroupId = _groupId ?? session.groups.first.id;
+        _setDraft(fields, creating: creating, customFields: custom);
+        _draftGroupId = creating
+            ? (_groupId ?? session.groups.first.id)
+            : session.entries
+                  .firstWhere((entry) => entry.id == _selectedId)
+                  .groupId;
         if (creating) _selectedId = null;
         _errorKey = null;
       });
       _touch();
+    } on KeePassException catch (error) {
+      setState(() => _errorKey = _errorFor(error));
     } catch (_) {
       setState(() => _errorKey = 'entryError');
     }
@@ -544,14 +611,23 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         _selectedId = session.addEntry(
           groupId: _draftGroupId ?? session.groups.first.id,
           fields: _draftFields,
+          customFields: _draftCustomFields,
         );
       } else {
-        session.updateEntry(_selectedId!, _draftFields);
+        session.updateEntry(
+          _selectedId!,
+          _draftFields,
+          customFields: _draftCustomFields,
+          groupId: _draftGroupId,
+        );
       }
       _saves.markChanged();
       _clearDraft();
       _errorKey = null;
       return true;
+    } on KeePassException catch (error) {
+      _errorKey = _errorFor(error);
+      return false;
     } catch (_) {
       _errorKey = 'entryError';
       return false;
@@ -621,6 +697,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
       _groupId = chosen.isEmpty ? null : chosen;
       _selectedId = null;
       _revealPassword = false;
+      _revealedCustom.clear();
     });
     _touch();
   }
@@ -635,6 +712,442 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     return future.whenComplete(() {
       if (identical(_activeSave, future)) _activeSave = null;
     });
+  }
+
+  void _change(void Function(KeePassSession session) action) {
+    final session = _session;
+    if (session == null || _locked || _busy || !_editable || _editing) return;
+    try {
+      action(session);
+      _saves.markChanged();
+      setState(() {
+        _errorKey = null;
+        _revealPassword = false;
+        _revealedCustom.clear();
+      });
+      _touch();
+    } on KeePassException catch (error) {
+      setState(() => _errorKey = _errorFor(error));
+    } catch (_) {
+      setState(() => _errorKey = 'entryError');
+    }
+  }
+
+  Future<String?> _destination(
+    String title, {
+    String? current,
+    Set<String> excluded = const {},
+  }) async {
+    final session = _session;
+    if (session == null || _locked || _busy) return null;
+    final groups = session.groups
+        .where((group) => !excluded.contains(group.id))
+        .toList();
+    final chosen = await _ask<String>(
+      AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: 480,
+          height: 360,
+          child: ListView.builder(
+            itemCount: groups.length,
+            itemBuilder: (context, index) {
+              final group = groups[index];
+              return ListTile(
+                key: ValueKey('keepass-destination-${group.id}'),
+                leading: Icon(
+                  group.isRecycleBin
+                      ? Icons.delete_outline
+                      : Icons.folder_outlined,
+                ),
+                title: Text(group.path),
+                selected: group.id == current,
+                onTap: () => Navigator.of(context).pop(group.id),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.commanderTr('Cancel')),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || _locked || !identical(session, _session)) return null;
+    _touch();
+    return chosen;
+  }
+
+  Future<void> _groupName({bool rename = false}) async {
+    final session = _session;
+    if (session == null || _locked || _busy || _editing || !_editable) return;
+    final group = session.groups.firstWhere(
+      (item) => item.id == (_groupId ?? session.groups.first.id),
+    );
+    final controller = TextEditingController(text: rename ? group.name : '');
+    final strings = KeePassStrings(context);
+    try {
+      final accepted = await _ask<bool>(
+        StatefulBuilder(
+          builder: (context, update) => AlertDialog(
+            title: Text(strings.text(rename ? 'renameGroup' : 'newGroup')),
+            content: SizedBox(
+              width: 440,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(group.path),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const ValueKey('keepass-group-name'),
+                    controller: controller,
+                    autofocus: true,
+                    maxLength: 1024,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    enableIMEPersonalizedLearning: false,
+                    decoration: InputDecoration(
+                      labelText: strings.text('groupName'),
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (_) {
+                      _touch();
+                      update(() {});
+                    },
+                    onSubmitted: (_) {
+                      if (controller.text.trim().isNotEmpty) {
+                        Navigator.of(context).pop(true);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(context.commanderTr('Cancel')),
+              ),
+              FilledButton(
+                key: const ValueKey('keepass-apply-group'),
+                onPressed: controller.text.trim().isEmpty
+                    ? null
+                    : () => Navigator.of(context).pop(true),
+                child: Text(strings.text('applyChanges')),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (!mounted ||
+          accepted != true ||
+          _locked ||
+          !identical(session, _session)) {
+        return;
+      }
+      final name = controller.text;
+      _change((session) {
+        if (rename) {
+          session.renameGroup(group.id, name);
+        } else {
+          _groupId = session.addGroup(parentId: group.id, name: name);
+          _selectedId = null;
+        }
+      });
+    } finally {
+      controller.clear();
+      controller.dispose();
+    }
+  }
+
+  Future<void> _moveGroup() async {
+    final session = _session;
+    final id = _groupId;
+    if (session == null || id == null || _editing || !_editable) return;
+    final groups = {for (final group in session.groups) group.id: group};
+    final excluded = <String>{id};
+    for (final group in groups.values) {
+      var parent = group.parentId;
+      while (parent != null) {
+        if (parent == id) {
+          excluded.add(group.id);
+          break;
+        }
+        parent = groups[parent]?.parentId;
+      }
+    }
+    final target = await _destination(
+      KeePassStrings(context).text('moveGroup'),
+      current: groups[id]?.parentId,
+      excluded: excluded,
+    );
+    if (!mounted || target == null || !identical(session, _session)) return;
+    _change((session) => session.moveGroup(id, target));
+  }
+
+  Future<void> _deleteGroup() async {
+    final session = _session;
+    final id = _groupId;
+    if (session == null ||
+        id == null ||
+        _locked ||
+        _busy ||
+        _editing ||
+        !_editable) {
+      return;
+    }
+    final strings = KeePassStrings(context);
+    final accepted = await _ask<bool>(
+      AlertDialog(
+        title: Text(strings.text('deleteGroup')),
+        content: Text(strings.text('deleteGroupQuestion')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.commanderTr('Cancel')),
+          ),
+          FilledButton(
+            key: const ValueKey('keepass-confirm-delete-group'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(context.commanderTr('Delete')),
+          ),
+        ],
+      ),
+    );
+    if (!mounted ||
+        accepted != true ||
+        _locked ||
+        !identical(session, _session)) {
+      return;
+    }
+    _change((session) {
+      session.deleteGroup(id);
+      _groupId = null;
+      _selectedId = null;
+    });
+  }
+
+  Future<void> _moveSelectedEntry() async {
+    final session = _session;
+    final id = _selectedId;
+    if (session == null || id == null || _editing || !_editable) return;
+    final current = session.entries
+        .firstWhere((entry) => entry.id == id)
+        .groupId;
+    final target = await _destination(
+      KeePassStrings(context).text('moveEntry'),
+      current: current,
+    );
+    if (!mounted ||
+        target == null ||
+        !identical(session, _session) ||
+        target == current) {
+      return;
+    }
+    _change((session) {
+      session.moveEntry(id, target);
+      if (_groupId != null) _groupId = target;
+    });
+  }
+
+  Future<void> _chooseDraftGroup() async {
+    final session = _session;
+    if (!_editing || !_editable) return;
+    final chosen = await _destination(
+      KeePassStrings(context).text('group'),
+      current: _draftGroupId,
+    );
+    if (!mounted ||
+        chosen == null ||
+        _locked ||
+        !_editing ||
+        !identical(session, _session)) {
+      return;
+    }
+    setState(() {
+      _draftGroupId = chosen;
+      _draftChanged = true;
+    });
+  }
+
+  Future<void> _showHistory() async {
+    final session = _session;
+    final id = _selectedId;
+    if (session == null || id == null || _locked || _busy || _editing) return;
+    final strings = KeePassStrings(context);
+    try {
+      final history = session.entryHistory(id);
+      final index = await _ask<int>(
+        AlertDialog(
+          title: Text(strings.text('history')),
+          content: SizedBox(
+            width: 560,
+            height: 360,
+            child: history.isEmpty
+                ? Center(child: Text(strings.text('noHistory')))
+                : ListView.builder(
+                    itemCount: history.length,
+                    itemBuilder: (context, index) {
+                      final record = history[history.length - index - 1];
+                      final date = record.modifiedAt?.toLocal();
+                      final timestamp = date == null
+                          ? strings.text('unknownTime')
+                          : '${MaterialLocalizations.of(context).formatShortDate(date)} '
+                                '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(date))}';
+                      return ListTile(
+                        key: ValueKey('keepass-history-${record.index}'),
+                        title: Text(
+                          record.title.isEmpty
+                              ? strings.text('untitled')
+                              : record.title,
+                        ),
+                        subtitle: Text(
+                          '${strings.text('revision')} ${record.index + 1} · $timestamp',
+                        ),
+                        onTap: () => Navigator.of(context).pop(record.index),
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.commanderTr('Close')),
+            ),
+          ],
+        ),
+      );
+      if (!mounted ||
+          index == null ||
+          _locked ||
+          !identical(session, _session)) {
+        return;
+      }
+      _touch();
+      final fields = session.historyFields(id, index);
+      final custom = session.historyCustomFields(id, index);
+      var revealPassword = false;
+      final revealed = <String>{};
+      final restore = await _ask<bool>(
+        StatefulBuilder(
+          builder: (context, update) => AlertDialog(
+            title: Text('${strings.text('revision')} ${index + 1}'),
+            content: SizedBox(
+              width: 600,
+              height: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      fields.title,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(strings.text('userName')),
+                    SelectableText(fields.userName),
+                    const SizedBox(height: 12),
+                    Text(strings.text('entryPassword')),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: revealPassword
+                              ? SelectableText(fields.password)
+                              : const Text('••••••••'),
+                        ),
+                        IconButton(
+                          key: const ValueKey('keepass-history-reveal'),
+                          tooltip: strings.text(
+                            revealPassword ? 'hide' : 'reveal',
+                          ),
+                          onPressed: () {
+                            _touch();
+                            update(() => revealPassword = !revealPassword);
+                          },
+                          icon: Icon(
+                            revealPassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: strings.text('copyPassword'),
+                          onPressed: () => _copy(fields.password, secret: true),
+                          icon: const Icon(Icons.copy_outlined),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(strings.text('url')),
+                    SelectableText(fields.url),
+                    const SizedBox(height: 12),
+                    Text(strings.text('notes')),
+                    SelectableText(fields.notes),
+                    ..._customFieldViews(custom, strings, revealed, (action) {
+                      _touch();
+                      update(action);
+                    }),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(context.commanderTr('Close')),
+              ),
+              if (_editable)
+                FilledButton(
+                  key: const ValueKey('keepass-restore-history'),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(strings.text('restoreVersion')),
+                ),
+            ],
+          ),
+        ),
+      );
+      if (!mounted ||
+          restore != true ||
+          _locked ||
+          !identical(session, _session)) {
+        return;
+      }
+      final accepted = await _ask<bool>(
+        AlertDialog(
+          title: Text(strings.text('restoreVersion')),
+          content: Text(strings.text('restoreQuestion')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(context.commanderTr('Cancel')),
+            ),
+            FilledButton(
+              key: const ValueKey('keepass-confirm-restore'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.text('restoreVersion')),
+            ),
+          ],
+        ),
+      );
+      if (!mounted ||
+          accepted != true ||
+          _locked ||
+          !identical(session, _session)) {
+        return;
+      }
+      _change((session) => session.restoreEntryHistory(id, index));
+    } on KeePassException catch (error) {
+      if (mounted && !_locked && identical(session, _session)) {
+        setState(() => _errorKey = _errorFor(error));
+      }
+    } catch (_) {
+      if (mounted && !_locked && identical(session, _session)) {
+        setState(() => _errorKey = 'historyError');
+      }
+    }
   }
 
   Future<bool> _performSave() async {
@@ -697,22 +1210,53 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
   Future<T?> _ask<T>(Widget dialog) async {
     if (_prompt != null) return null;
     final navigator = Navigator.of(context);
-    final route = DialogRoute<T>(context: context, builder: (_) => dialog);
+    final shield = ValueNotifier<bool>(false);
+    final route = DialogRoute<T>(
+      context: context,
+      builder: (_) => ValueListenableBuilder<bool>(
+        valueListenable: shield,
+        builder: (_, hidden, child) => hidden
+            ? const SizedBox.shrink(key: ValueKey('keepass-dialog-shield'))
+            : child!,
+        child: Listener(
+          onPointerDown: (_) => _touch(),
+          onPointerSignal: (_) => _touch(),
+          child: Focus(
+            onKeyEvent: (_, _) {
+              _touch();
+              return KeyEventResult.ignored;
+            },
+            child: dialog,
+          ),
+        ),
+      ),
+    );
     _prompt = route;
     _promptNavigator = navigator;
+    _promptShield = shield;
     try {
-      return await navigator.push(route);
+      final result = await navigator.push(route);
+      // The pop result precedes the reverse animation. Callers may own secret
+      // text controllers; keep them alive until the dialog widgets are gone.
+      await route.completed;
+      return result;
     } finally {
       if (identical(route, _prompt)) {
         _prompt = null;
         _promptNavigator = null;
+        _promptShield = null;
       }
+      shield.dispose();
     }
   }
 
   void _removePrompt() {
     final route = _prompt;
     final navigator = _promptNavigator;
+    // Popping routes are no longer active but can still paint during their
+    // reverse animation. Blank their content before dropping our reference.
+    _promptShield?.value = true;
+    _promptShield = null;
     _prompt = null;
     _promptNavigator = null;
     if (route != null && navigator != null && route.isActive) {
@@ -820,6 +1364,8 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
     _idleTimer?.cancel();
     if (disposing) {
       // The Navigator removes its routes while the widget tree is disposed.
+      _promptShield?.value = true;
+      _promptShield = null;
       _prompt = null;
       _promptNavigator = null;
     } else {
@@ -1100,6 +1646,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
         .toList(growable: false);
     final groups = session.groups;
     final groupNames = groups.where((group) => group.id == _groupId);
+    final selectedGroup = groupNames.isEmpty ? null : groupNames.first;
     final groupLabel = groupNames.isEmpty
         ? strings.text('allGroups')
         : groupNames.first.path;
@@ -1135,6 +1682,52 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (_editable)
+                    Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          key: const ValueKey('keepass-new-group'),
+                          tooltip: strings.text('newGroup'),
+                          icon: const Icon(Icons.create_new_folder_outlined),
+                          onPressed: _busy || _editing ? null : _groupName,
+                        ),
+                        IconButton(
+                          key: const ValueKey('keepass-rename-group'),
+                          tooltip: strings.text('renameGroup'),
+                          icon: const Icon(Icons.drive_file_rename_outline),
+                          onPressed: _busy || _editing || selectedGroup == null
+                              ? null
+                              : () => _groupName(rename: true),
+                        ),
+                        IconButton(
+                          key: const ValueKey('keepass-move-group'),
+                          tooltip: strings.text('moveGroup'),
+                          icon: const Icon(Icons.drive_file_move_outline),
+                          onPressed:
+                              _busy ||
+                                  _editing ||
+                                  selectedGroup == null ||
+                                  selectedGroup.isRoot ||
+                                  selectedGroup.isRecycleBin
+                              ? null
+                              : _moveGroup,
+                        ),
+                        IconButton(
+                          key: const ValueKey('keepass-delete-group'),
+                          tooltip: strings.text('deleteGroup'),
+                          icon: const Icon(Icons.folder_delete_outlined),
+                          onPressed:
+                              _busy ||
+                                  _editing ||
+                                  selectedGroup == null ||
+                                  selectedGroup.isRoot ||
+                                  selectedGroup.isRecycleBin
+                              ? null
+                              : _deleteGroup,
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 8),
                   TextField(
                     key: const ValueKey('keepass-search'),
@@ -1196,6 +1789,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
                           onTap: () => setState(() {
                             _selectedId = entry.id;
                             _revealPassword = false;
+                            _revealedCustom.clear();
                           }),
                         );
                       },
@@ -1212,6 +1806,7 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
                   onPressed: () => setState(() {
                     _selectedId = null;
                     _revealPassword = false;
+                    _revealedCustom.clear();
                   }),
                   icon: const Icon(Icons.arrow_back),
                   label: Text(strings.text('back')),
@@ -1240,6 +1835,15 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
 
   Widget _entryView(KeePassStrings strings) {
     final fields = _session!.entryFields(_selectedId!);
+    List<KeePassCustomField> custom = const [];
+    String? customError;
+    try {
+      custom = _session!.customFields(_selectedId!);
+    } on KeePassException catch (error) {
+      customError = _errorFor(error);
+    } catch (_) {
+      customError = 'unsupported';
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -1254,6 +1858,12 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
               spacing: 8,
               children: [
                 TextButton.icon(
+                  key: const ValueKey('keepass-move-entry'),
+                  onPressed: _busy ? null : _moveSelectedEntry,
+                  icon: const Icon(Icons.drive_file_move_outline),
+                  label: Text(strings.text('moveEntry')),
+                ),
+                TextButton.icon(
                   key: const ValueKey('keepass-edit-entry'),
                   onPressed: _busy ? null : _editEntry,
                   icon: const Icon(Icons.edit_outlined),
@@ -1267,6 +1877,15 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
                 ),
               ],
             ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const ValueKey('keepass-history'),
+              onPressed: _busy ? null : _showHistory,
+              icon: const Icon(Icons.history),
+              label: Text(strings.text('history')),
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             strings.text('userName'),
@@ -1331,6 +1950,13 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
             style: Theme.of(context).textTheme.labelLarge,
           ),
           SelectableText(fields.notes),
+          if (customError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Text(strings.text(customError)),
+            )
+          else
+            ..._customFieldViews(custom, strings, _revealedCustom, setState),
         ],
       ),
     );
@@ -1388,11 +2014,54 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 16),
+          OutlinedButton.icon(
+            key: const ValueKey('keepass-draft-group'),
+            onPressed: _busy ? null : _chooseDraftGroup,
+            icon: const Icon(Icons.folder_outlined),
+            label: Text(
+              _session!.groups
+                  .firstWhere(
+                    (group) => group.id == _draftGroupId,
+                    orElse: () => _session!.groups.first,
+                  )
+                  .path,
+            ),
+          ),
+          const SizedBox(height: 16),
           field('title', _title),
           field('userName', _userName),
           field('password', _password, secret: true),
           field('url', _url),
           field('notes', _notes, lines: 4),
+          Text(
+            strings.text('customFields'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          for (var index = 0; index < _customDrafts.length; index++)
+            _customFieldEditor(_customDrafts[index], index, strings),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const ValueKey('keepass-add-field'),
+              onPressed:
+                  _busy || _customDrafts.length >= kKeePassMaxCustomFields
+                  ? null
+                  : () {
+                      setState(() {
+                        _customDrafts.add(
+                          _CustomFieldDraft(
+                            const KeePassCustomField(name: '', value: ''),
+                          ),
+                        );
+                        _draftChanged = true;
+                      });
+                    },
+              icon: const Icon(Icons.add),
+              label: Text(strings.text('addField')),
+            ),
+          ),
+          const SizedBox(height: 16),
           Wrap(
             alignment: WrapAlignment.end,
             spacing: 12,
@@ -1413,6 +2082,160 @@ class _KeePassEditorDialogState extends ConsumerState<KeePassEditorDialog>
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  List<Widget> _customFieldViews(
+    List<KeePassCustomField> fields,
+    KeePassStrings strings,
+    Set<String> revealed,
+    void Function(VoidCallback) update,
+  ) => [
+    const SizedBox(height: 20),
+    Text(
+      strings.text('customFields'),
+      style: Theme.of(context).textTheme.titleMedium,
+    ),
+    if (fields.isEmpty)
+      Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(strings.text('noCustomFields')),
+      ),
+    for (final field in fields) ...[
+      const SizedBox(height: 12),
+      Text(field.name, style: Theme.of(context).textTheme.labelLarge),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: field.isProtected && !revealed.contains(field.name)
+                ? const Text('••••••••')
+                : SelectableText(field.value),
+          ),
+          if (field.isProtected)
+            IconButton(
+              key: ValueKey('keepass-reveal-field-${field.name}'),
+              tooltip: strings.text(
+                revealed.contains(field.name) ? 'hideValue' : 'revealValue',
+              ),
+              icon: Icon(
+                revealed.contains(field.name)
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              onPressed: () => update(() {
+                if (!revealed.remove(field.name)) revealed.add(field.name);
+              }),
+            ),
+          IconButton(
+            tooltip: strings.text('copyValue'),
+            icon: const Icon(Icons.copy_outlined),
+            onPressed: () => _copy(field.value, secret: field.isProtected),
+          ),
+        ],
+      ),
+    ],
+  ];
+
+  Widget _customFieldEditor(
+    _CustomFieldDraft draft,
+    int index,
+    KeePassStrings strings,
+  ) {
+    void changed() {
+      _touch();
+      setState(() => _draftChanged = true);
+    }
+
+    return Card(
+      key: ObjectKey(draft),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              key: ValueKey('keepass-custom-name-$index'),
+              controller: draft.name,
+              enabled: !_busy,
+              autocorrect: false,
+              enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
+              decoration: InputDecoration(
+                labelText: strings.text('fieldName'),
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (_) => changed(),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: ValueKey('keepass-custom-value-$index'),
+              controller: draft.value,
+              enabled: !_busy,
+              obscureText: draft.isProtected && !draft.revealed,
+              maxLines: draft.isProtected && !draft.revealed ? 1 : 3,
+              autocorrect: false,
+              enableSuggestions: false,
+              enableIMEPersonalizedLearning: false,
+              decoration: InputDecoration(
+                labelText: strings.text('fieldValue'),
+                border: const OutlineInputBorder(),
+                suffixIcon: draft.isProtected
+                    ? IconButton(
+                        tooltip: strings.text(
+                          draft.revealed ? 'hideValue' : 'revealValue',
+                        ),
+                        onPressed: _busy
+                            ? null
+                            : () => setState(
+                                () => draft.revealed = !draft.revealed,
+                              ),
+                        icon: Icon(
+                          draft.revealed
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                      )
+                    : null,
+              ),
+              onChanged: (_) => changed(),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: SwitchListTile(
+                    key: ValueKey('keepass-custom-protected-$index'),
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(strings.text('protectValue')),
+                    value: draft.isProtected,
+                    onChanged: _busy
+                        ? null
+                        : (value) {
+                            draft.isProtected = value;
+                            draft.revealed = false;
+                            changed();
+                          },
+                  ),
+                ),
+                IconButton(
+                  key: ValueKey('keepass-remove-field-$index'),
+                  tooltip: strings.text('deleteField'),
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: _busy
+                      ? null
+                      : () {
+                          setState(() {
+                            _customDrafts.remove(draft);
+                            draft.dispose();
+                            _draftChanged = true;
+                          });
+                        },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

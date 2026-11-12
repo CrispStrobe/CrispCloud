@@ -2549,6 +2549,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final legacyOffice =
         lowerName.endsWith('.ppt') ||
         lowerName.endsWith('.pps') ||
+        lowerName.endsWith('.pot') ||
+        lowerName.endsWith('.rtf') ||
         lowerName.endsWith('.doc') ||
         lowerName.endsWith('.dot');
     final options = <_OfficeView>[
@@ -3114,6 +3116,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         }
         return _buildOfficeText(document, theme);
       case _OfficeView.formatted:
+        final safeHtml = document.safeHtml;
+        if (safeHtml != null && safeHtml.length <= _kRichRenderCap) {
+          return SelectionArea(
+            child: SingleChildScrollView(
+              controller: _vScroll,
+              padding: const EdgeInsets.all(12),
+              child: HtmlWidget(
+                safeHtml,
+                textStyle: TextStyle(fontSize: 13 * _zoom, height: 1.45),
+                onTapUrl: (_) => true,
+              ),
+            ),
+          );
+        }
+        if (safeHtml != null) return _buildOfficeText(document, theme);
         final locale = Localizations.localeOf(context);
         final markdown = OfficePreviewStrings(locale)
             .headings(document.markdown, document.markdownHeadings, locale)
@@ -3454,6 +3471,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildStatusBar(ThemeData theme) {
+    final note = _mode == ViewerMode.office && _officeDoc != null
+        ? OfficePreviewStrings(Localizations.localeOf(context))
+                  .note(_officeDoc!) ??
+              _viewNote
+        : _viewNote;
     final style = TextStyle(
       fontSize: 11.5,
       color: theme.colorScheme.onSurfaceVariant,
@@ -3469,12 +3491,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (_mode == ViewerMode.pdf && _pdfShowText && _pdfText != null)
         context.commanderTr("{0} characters", [_pdfText!.length]),
       if (_canChangeEncoding && _encoding != null) _encoding!,
-      if (_viewNote != null)
-        if (_mode == ViewerMode.office && _officeDoc != null)
-          OfficePreviewStrings(Localizations.localeOf(context))
-              .note(_officeDoc!)!
-        else
-          _viewNote!,
+      if (note != null) note,
       if (_mode == ViewerMode.hex && _selectedByte != null) _selectedByteText(),
       if (_searchStatusText != null) _searchStatusText!,
     ];

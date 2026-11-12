@@ -23,4 +23,3 @@ abstract class Aes256 {
     bool padding = true,
   });
 }
-

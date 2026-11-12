@@ -1,11 +1,16 @@
 import 'dart:typed_data';
 
 import '../../opc/opc_archive.dart';
+import '../../opc/content_types.dart';
+import '../../xml/namespaces.dart';
 import '../../xml/xml_writer.dart';
 
 import 'legacy_word_document.dart';
 
 /// A new DOCX prepared from the extracted main-story text of a legacy DOC/DOT.
+part 'legacy_word_structured_conversion.dart';
+
+/// A new Word package prepared from a legacy DOC/DOT.
 /// It has no association with a writable destination; the caller must create
 /// a separate file using its captured storage source.
 class LegacyWordDocxCopy {
@@ -13,6 +18,33 @@ class LegacyWordDocxCopy {
 
   final String fileName;
   final Uint8List bytes;
+}
+
+/// Backwards-compatible name for callers of the original text-copy workflow.
+
+
+/// The built-in structured importer is deliberately a partial conversion.
+/// These categories are presented before the user saves a separate copy.
+enum LegacyWordConversionLimitation {
+  partialFormatting,
+  images,
+  embeddedObjects,
+  headersFooters,
+  notesComments,
+  revisions,
+  macrosSignatures,
+  fieldsLists,
+}
+
+class LegacyWordStructuredConversion {
+  LegacyWordStructuredConversion({
+    required Uint8List bytes,
+    required List<LegacyWordConversionLimitation> limitations,
+  }) : bytes = bytes.asUnmodifiableView(),
+       limitations = List.unmodifiable(limitations);
+
+  final Uint8List bytes;
+  final List<LegacyWordConversionLimitation> limitations;
 }
 
 enum LegacyWordConversionIssue { invalidName, invalidText, tooComplex }
