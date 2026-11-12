@@ -4,6 +4,21 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Provide bounded legacy DOC/DOT body-text conversion into a newly authored DOCX
+  with an explicit text-only result contract. Port global compound-file directory
+  ownership and raw stream-size checks; identify relocated DOCM/DOTM main parts
+  without lowercasing case-sensitive package keys. Host conversion dialogs and
+  destination capture remain in CrispCloud.
+
+- Preserve imported formula caches when the evaluator cannot parse the entire
+  expression, and serialize supported string, Boolean and error results with
+  their native cell types. Internal error provenance keeps literal error-looking
+  text distinct while the public evaluator continues returning scalars. Decode
+  escaped formula quotes and resolve worksheet
+  names case-insensitively without redirecting missing sheets to the active one.
+  Rename undo updates owned reference slots without discarding later cell edits
+  or values produced by a save; complete shared-formula groups remain supported.
+
 - Expose namespace-aware Office part navigation and bounded OOXML/OpenDocument
   text search through the pure-Dart engine. Follow declared package graphs and
   referenced stories, notes, worksheets and slides; reject ambiguous roots,

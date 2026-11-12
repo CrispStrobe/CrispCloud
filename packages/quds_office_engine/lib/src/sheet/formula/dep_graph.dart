@@ -33,8 +33,8 @@ class FormulaDepGraph {
   /// Recalculates in dependency order. Returns cells that were updated.
   ///
   /// When [keepCachedOnUnsupported] is true, a formula this engine cannot
-  /// evaluate (`#NAME?` for an unknown function, `#ERROR!` for syntax it
-  /// cannot parse) keeps the value saved in the file instead of replacing
+  /// evaluate (`#NAME?` for an unknown function, `#ERROR!` for unsupported
+  /// reference syntax or incomplete parsing) keeps the value saved in the file instead of replacing
   /// it with the error.
   List<String> recalculate({bool keepCachedOnUnsupported = true}) {
     rebuild();
@@ -74,25 +74,24 @@ class FormulaDepGraph {
         continue;
       }
       final Object? cached = cell.value;
-      final Object? result = evaluateFormula(
+      final Object? result = evaluateFormulaForCache(
         cell.formula!,
         FormulaContext(workbook: workbook, sheet: sheet, origin: ref),
       );
       if (keepCachedOnUnsupported &&
-          _unsupported(result) &&
+          result is FormulaErrorValue &&
+          _unsupported(result.code) &&
           cached != null &&
-          !_unsupported(cached)) {
+          !(cell.type == SmlCellType.error && _unsupported(cached))) {
         continue;
       }
-      cell.value = result;
+      cell.value = FormulaErrorValue.unwrap(result);
       if (cell.formula != null && cell.formula!.isNotEmpty) {
-        if (cell.value is String &&
-            (cell.value as String).startsWith('#') &&
-            cell.value != cell.formula) {
-          cell.type = SmlCellType.error;
-        } else {
-          cell.type = SmlCellType.formula;
-        }
+        cell.type = result is FormulaErrorValue
+            ? SmlCellType.error
+            : result is String
+            ? SmlCellType.string
+            : SmlCellType.formula;
       } else if (cell.value is num) {
         cell.type = SmlCellType.number;
       } else if (cell.value is bool) {

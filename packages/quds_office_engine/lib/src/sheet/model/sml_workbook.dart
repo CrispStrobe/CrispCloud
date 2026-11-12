@@ -1281,8 +1281,9 @@ class SmlWorkbook {
 
   /// sheetByName API.
   SmlWorksheet? sheetByName(String name) {
+    final key = name.toLowerCase();
     for (final SmlWorksheet s in sheets) {
-      if (s.name == name) {
+      if (s.name.toLowerCase() == key) {
         return s;
       }
     }

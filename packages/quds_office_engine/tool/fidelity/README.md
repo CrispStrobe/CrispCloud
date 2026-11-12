@@ -229,16 +229,26 @@ notation and must stay within Excel row/column bounds.
 | `mergeCells` | `range` | Merge and center a multi-cell range |
 | `unmergeCells` | `range` | Unmerge the selected range |
 | `freeze` | `rows` and/or `columns` | Set frozen row/column counts |
-| `renameSheet` | `name` | Rename an unreferenced sheet with a unique valid name |
+| `renameSheet` | `name` | Atomically rename a sheet and rewrite supported local references |
 | `sheetOrder` | `to` | Move the sheet to a new index |
 | `rowHeight` | `row`, `height` | Set row height in pixels |
 | `columnWidth` | `column`, `width` | Set column width in pixels |
 
-After all edits, formulas are recalculated by the engine. The scripting command
-rejects a rename if formulas, names, charts or pivots reference that sheet;
-rewriting every possible formula grammar/reference is not implemented. This is
-an explicit unsupported operation, not a silently broken workbook. See
-`scripts/sheet.json` for formulas, styles, freeze panes, dimensions and reordering.
+After all edits, the engine recalculates supported formulas. Unsupported external,
+three-dimensional, whole-row/column and qualified-name expressions retain their
+imported cached values; preservation does not establish evaluation support.
+
+`renameSheet` uses the shared `SheetRename` plan also exposed to editor history.
+It rewrites local quoted/unquoted and three-dimensional sheet qualifiers in
+modeled and native formulas, defined/print names, validation and conditional
+rules, internal hyperlinks, consolidation sources, charts and pivot sources.
+Formula strings, structured references and external workbook qualifiers are
+retained. A unique valid name is required. Opaque executable/data-model owners,
+unrecognized reference-bearing XML, stale edits, incomplete shared formulas,
+array/data-table formulas and lossy native projections reject before mutation.
+Undo patches only the reference fields owned by the rename, preserving later
+edits and save-generated cached results. See `scripts/sheet.json` and the
+independently authored `sheet-rename-native.xlsx` fixture and XML oracle.
 
 ### PPTX: 8 operations
 
@@ -251,13 +261,20 @@ Every operation accepts `slide` (default 0). Shape indexes follow `inspect`.
 | `shapeGeometry` | `shape`; optional `x`, `y`, `width`, `height`, `rotation` | Edit points/degrees, keeping visual geometry synchronized |
 | `slideNotes` | `text` | Replace speaker notes |
 | `slideHidden` | `hidden` | Set visibility |
-| `slideOrder` | `to` | Move a slide and preserve its owning parts |
+| `slideOrder` | `to` | Move a slide, preserve its owning parts and update section membership |
 | `slideTransition` | `kind`; optional `direction`, `durationMs`, `advanceOnClick` | Set a schema-valid transition |
 | `slideImageReplace` | `shape`, `file` | Replace picture bytes |
 
-Text replacement refuses picture/table shapes. Slide reordering is rejected
-when presentation sections would also need rewriting. See `scripts/slide.json`
-for combined text, geometry, notes, transition, picture and reorder steps.
+Text replacement refuses picture/table shapes. Section-aware slide reordering
+retains native section GUIDs, order, empty sections, membership metadata and
+namespace bindings. The moved slide adopts the original destination slide's
+section; every other membership stays unchanged. Malformed, ambiguous,
+nonconsecutive or stale section membership and unresolved native slide targets
+reject before mutation. The same reversible plan is used by editor history.
+See `scripts/slide.json` for combined operations and the independently authored
+`slide-sections.pptx` corpus for three-save direct/isolate permutations. Native
+acceptance compares the complete rendered page text and RGB fingerprints with
+the corresponding source-page order.
 
 ## Evidence layers
 

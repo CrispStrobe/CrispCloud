@@ -161,7 +161,11 @@ typedef _XmlSlot = ({String Function() read, void Function(String) write});
 
 // Stable semantic keys tolerate namespace prefix/attribute-order changes and
 // worksheet row/cell serialization. They do not alias repeated native owners.
-Map<String, _XmlSlot> _xmlSlots(XmlElement root, {bool preserved = false}) {
+Map<String, _XmlSlot> _xmlSlots(
+  XmlElement root, {
+  bool preserved = false,
+  bool cellFormulas = true,
+}) {
   String identity(XmlElement node) {
     final attributes = node.namespaceUri == OfficeNamespaces.x
         ? switch (node.localName) {
@@ -184,6 +188,17 @@ Map<String, _XmlSlot> _xmlSlots(XmlElement root, {bool preserved = false}) {
   void visit(XmlElement node, String parent, int ordinal) {
     final x = node.namespaceUri == OfficeNamespaces.x;
     final c = node.namespaceUri == OfficeNamespaces.c;
+    // The cell model is authoritative for worksheet formulas. The serializer
+    // replaces sheetData, including buffered edits, removed formulas and newly
+    // created cells. A native patch must not restore its older projection.
+    if (!cellFormulas &&
+        root.localName == 'worksheet' &&
+        x &&
+        node.localName == 'f' &&
+        node.parent?.localName == 'c' &&
+        node.parent?.parent?.localName == 'row') {
+      return;
+    }
     if (preserved &&
         ((node.parent == root &&
                 x &&
@@ -251,7 +266,8 @@ String _nativeState(XmlElement root) {
 /// Renames local sheet qualifiers without changing formula strings, structured
 /// column names, external-workbook references, or unrelated sheet names.
 ///
-/// Native formula owners are rewritten together with the editable projection.
+/// Native-only reference owners are rewritten with the editable projection.
+/// Worksheet formula XML is published from the model by SheetSerializer.
 /// Unknown reference-bearing XML, opaque executable/data-model owners, and
 /// modified lossy native projections reject before any workbook mutation.
 abstract final class SheetRename {
@@ -404,9 +420,23 @@ abstract final class SheetRename {
       }
       final beforeState = _nativeState(root);
       final beforeSlots = {
-        for (final slot in _xmlSlots(root).entries) slot.key: slot.value.read(),
+        for (final slot in _xmlSlots(root, cellFormulas: false).entries)
+          slot.key: slot.value.read(),
       };
-      final changed = _rewriteNative(root, old, name, sheet.sheetId, part.uri);
+      final changed = _rewriteNative(
+        root,
+        old,
+        name,
+        sheet.sheetId,
+        part.uri,
+        modeledCellFormulas: {
+          for (final tab in book.sheets)
+            if (tab.sourcePartUri == part.uri)
+              for (final cell in tab.allCells)
+                if (cell.formula != null && cell.formula!.isNotEmpty)
+                  cell.ref.a1,
+        },
+      );
       if (!changed) continue;
       if (root.localName == 'workbook' &&
           root.firstChild('definedNames') != null &&
@@ -436,7 +466,7 @@ abstract final class SheetRename {
           }
         }
       }
-      final afterSlots = _xmlSlots(root);
+      final afterSlots = _xmlSlots(root, cellFormulas: false);
       nativeChanges.add(
         _NativeRenamePart(
           part.uri,
@@ -604,8 +634,9 @@ abstract final class SheetRename {
     String old,
     String name,
     int sheetId,
-    String uri,
-  ) {
+    String uri, {
+    required Set<String> modeledCellFormulas,
+  }) {
     var changed = false;
     bool matches(String? value) => value?.toLowerCase() == old.toLowerCase();
     String rewrite(String value) => rewriteFormula(value, old, name);
@@ -627,17 +658,23 @@ abstract final class SheetRename {
               }.contains(node.localName)) ||
           (c && node.localName == 'f');
       if (formula) {
+        // Complete shared formulas are expanded by the deserializer into
+        // independent model formulas. Missing masters, array ownership and
+        // data-table ownership cannot be reconstructed safely on save.
+        final kind = node.getAttribute('t');
+        final expandedShared =
+            kind == 'shared' &&
+            node.getAttribute('si') != null &&
+            node.parent?.localName == 'c' &&
+            modeledCellFormulas.contains(node.parent?.getAttribute('r'));
+        if (x &&
+            node.localName == 'f' &&
+            !<String?>{null, 'normal'}.contains(kind) &&
+            !expandedShared) {
+          throw UnsupportedError('Unmodeled native formula topology in $uri');
+        }
         final next = rewrite(node.text);
         if (next != node.text) {
-          if (x &&
-              node.localName == 'f' &&
-              !<String?>{
-                null,
-                'normal',
-                'shared',
-              }.contains(node.getAttribute('t'))) {
-            throw UnsupportedError('Unmodeled native formula topology in $uri');
-          }
           if (node.childElements.isNotEmpty) {
             throw UnsupportedError('Non-scalar native formula in $uri');
           }

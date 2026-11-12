@@ -12,6 +12,7 @@ import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../formula/dep_graph.dart';
+import '../formula/formula_eval.dart';
 import '../formula/formula_refs.dart';
 import '../model/sml_analysis.dart';
 import '../model/sml_sparkline.dart';
@@ -276,6 +277,7 @@ class SheetDeserializer {
   ) {
     final XmlPullReader reader = XmlPullReader(xml);
     SmlCell? current;
+    String? valueType;
     // `t="shared"` masters by `si`: formula text and the cell it is written for.
     final Map<String, ({String formula, SmlCellRef anchor})> shared =
         <String, ({String formula, SmlCellRef anchor})>{};
@@ -406,6 +408,7 @@ class SheetDeserializer {
           reader.localName == 'c') {
         final String ref = reader.getAttribute('r') ?? 'A1';
         final String? t = reader.getAttribute('t');
+        valueType = t;
         final int s = int.parse(reader.getAttribute('s') ?? '0');
         current = sheet.cellA1(ref);
         current.styleIndex = s;
@@ -467,13 +470,20 @@ class SheetDeserializer {
           }
           if (formula != null && formula.isNotEmpty) {
             current.formula = formula;
-            current.type = SmlCellType.formula;
+            current.type = valueType == 'e'
+                ? SmlCellType.error
+                : valueType == 'str' || valueType == 's'
+                ? SmlCellType.string
+                : SmlCellType.formula;
           }
-        } else if (current.type == SmlCellType.string &&
-            int.tryParse(text) != null) {
+        } else if (valueType == 's' && int.tryParse(text) != null) {
           current.value = sst[int.parse(text)];
-        } else if (current.type == SmlCellType.boolean) {
+        } else if (valueType == 'b') {
           current.value = text == '1' || text.toLowerCase() == 'true';
+        } else if (valueType == 'str' ||
+            valueType == 'inlineStr' ||
+            valueType == 'e') {
+          current.value = text;
         } else {
           current.value = double.tryParse(text) ?? text;
         }
@@ -627,6 +637,20 @@ class SheetSerializer {
   OpcPackage write(SmlWorkbook book, {bool recalculate = true}) {
     if (recalculate) {
       FormulaDepGraph(book).recalculate();
+    }
+    // Explicit native cache types are authoritative. A caller bypassing
+    // recalculation must type an error-looking cache instead of asking the
+    // writer to guess whether it is literal text or an actual error.
+    for (final sheet in book.sheets) {
+      for (final cell in sheet.allCells) {
+        if (cell.formula != null &&
+            cell.type == SmlCellType.formula &&
+            FormulaEvaluator.hasErrorSpelling(cell.value)) {
+          throw UnsupportedError(
+            'Ambiguous formula cache type at ${sheet.name}!${cell.ref.a1}; recalculate or supply an explicit text/error type',
+          );
+        }
+      }
     }
     SheetChartData.refreshWorkbook(book);
     final bool fresh = book.package == null;
@@ -985,6 +1009,11 @@ class SheetSerializer {
           w.writeAttribute('s', '${cell.styleIndex}');
         }
         if (cell.formula != null) {
+          if (cell.value is bool) {
+            w.writeAttribute('t', 'b');
+          } else if (cell.value is String) {
+            w.writeAttribute('t', cell.type == SmlCellType.error ? 'e' : 'str');
+          }
           w.writeStartElement('f');
           w.writeText(
             cell.formula!.startsWith('=')
@@ -992,6 +1021,15 @@ class SheetSerializer {
                 : cell.formula!,
           );
           w.writeEndElement();
+          w.writeStartElement('v');
+          w.writeText(
+            cell.value is bool
+                ? (cell.value == true ? '1' : '0')
+                : cell.asString,
+          );
+          w.writeEndElement();
+        } else if (cell.type == SmlCellType.error) {
+          w.writeAttribute('t', 'e');
           w.writeStartElement('v');
           w.writeText(cell.asString);
           w.writeEndElement();

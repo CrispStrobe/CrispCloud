@@ -17,6 +17,7 @@ dart test \
   test/slide_section_fidelity_test.dart \
   test/sheet_rename_fidelity_test.dart \
   test/sheet_rename_adversarial_test.dart \
+  test/sheet_formula_cache_fidelity_test.dart \
   test/style_cascade_test.dart test/story_media_fidelity_test.dart \
   test/word_part_routing_test.dart test/sheet_schema_fidelity_test.dart \
   test/slide_text_fidelity_test.dart test/word_compatibility_fidelity_test.dart \

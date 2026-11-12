@@ -4,6 +4,11 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Expose worksheet renaming through shared atomic reference rewriting and one
+  undo/redo command. Commit pending drafts before planning, retain later edits
+  through save/undo, and keep read-only, unchanged and rejected operations out
+  of history and dirty-state changes.
+
 - Route slide reordering through the shared section-aware plan. Undo/redo keep
   native section identities, empty sections and active-slide identity; invalid
   memberships reject before history or dirty-state changes.
