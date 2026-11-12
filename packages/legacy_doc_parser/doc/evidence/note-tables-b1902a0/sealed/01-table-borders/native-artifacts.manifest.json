@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "sourceCommit": "b1902a0ba0ec2539c7f413769cb18347f98f7556",
+  "sourceWorktreeDirty": false,
+  "report": {
+    "path": "native-report.json.xz",
+    "sha256": "c71a572da2a56c04576697081b9b6fb05945fec34dd444f6fc4bfb1515e89e34",
+    "bytes": 26216,
+    "uncompressedSha256": "393c1b003d7068fe5edab889208b07277c764c997a76ea5756425b3a5f9d985d",
+    "uncompressedBytes": 7020560
+  },
+  "archive": {
+    "path": "native-artifacts.tar.xz",
+    "sha256": "705aeea50daa4c898d5f382c52ef87ae770ef9619390976f3a2c35f7be335731",
+    "bytes": 127224,
+    "format": "USTAR/XZ",
+    "compressionPreset": 6
+  },
+  "fileCount": 114,
+  "uncompressedFileBytes": 8519023,
+  "excludedGeneratedFiles": [
+    "Office profile directories",
+    "temporary directory",
+    "compiled parser executable (hash retained in report)"
+  ],
+  "files": [
+    {
+      "path": "inputs/table-borders.docx",
+      "bytes": 2358,
+      "sha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83"
+    },
+    {
+      "path": "run/compile.log",
+      "bytes": 124,
+      "sha256": "83c359b3fda2e7f4365078061887456ebc128fe043b73b37aa0aa3db9b43c5f8"
+    },
+    {
+      "path": "run/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    {
+      "path": "run/fonts.txt",
+      "bytes": 51943,
+      "sha256": "cda9e96d268b4149761b3233661bd91d6fcd03573ed3d540cd378714a2c821fc"
+    },
+    {
+      "path": "run/table-borders/binary-render.json",
+      "bytes": 4203,
+      "sha256": "d6a979a66f4fae6ff97ceca98b2d5871db21554ee8ad9026905842a5473e395c"
+    },
+    {
+      "path": "run/table-borders/bridge/conversion.log",
+      "bytes": 294,
+      "sha256": "b74cb1d2e163a1ff46f45033ef16d969d69516444361fa1d12c1b85abf4c3ee1"
+    },
+    {
+      "path": "run/table-borders/bridge/table-borders.doc",
+      "bytes": 10752,
+      "sha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115"
+    },
+    {
+      "path": "run/table-borders/converted-render.json",
+      "bytes": 4201,
+      "sha256": "49f241c556ed05df980483ae2a3cc07581b78c75baf269ccd6761cce0320c4de"
+    },
+    {
+      "path": "run/table-borders/converted-semantic.json",
+      "bytes": 205030,
+      "sha256": "84b8cca8e6f070053e55bea2f9123ff3a3e3635451171c0bae753f6811c7f12a"
+    },
+    {
+      "path": "run/table-borders/converted.docx",
+      "bytes": 6421,
+      "sha256": "4946c71c9a176d55c0a3f5f19bf5359d1e5fb6776e3d060e8099fd230c49b114"
+    },
+    {
+      "path": "run/table-borders/native-docx/conversion.log",
+      "bytes": 362,
+      "sha256": "d748e952a4f40d5cae1be14ef1a47fb7384bbb45cad03e9d9ffa75cf7f93eda9"
+    },
+    {
+      "path": "run/table-borders/native-docx/table-borders.docx",
+      "bytes": 6144,
+      "sha256": "b6abccd36d74dc66083414f34d2ca2fe7c1250a9622d22d5accd70bd70ff1687"
+    },
+    {
+      "path": "run/table-borders/native-render.json",
+      "bytes": 4365,
+      "sha256": "7b569a51658c4d29a236787d0a28af4b09859c14e3546c9807008b287d4cddf2"
+    },
+    {
+      "path": "run/table-borders/native-semantic.json",
+      "bytes": 87403,
+      "sha256": "1a103959040467a7a3642a44d6195b50c1e27a6ab6834707bb91c180be08b3dd"
+    },
+    {
+      "path": "run/table-borders/original-render.json",
+      "bytes": 4201,
+      "sha256": "a4fc51cf073dcb3a8175b4b7f022a799285feec10fb70a382c1b77dcb29dc1de"
+    },
+    {
+      "path": "run/table-borders/original-semantic.json",
+      "bytes": 34437,
+      "sha256": "c765be9278c2ae95d709aa29ed6dc9ed3c60993eea618592b435ea691df0701b"
+    },
+    {
+      "path": "run/table-borders/render-binary/conversion.log",
+      "bytes": 360,
+      "sha256": "ef1c1926ef35afee03d3b2e4edc40c31a58b4dc230695ae12a68577bf94f6b22"
+    },
+    {
+      "path": "run/table-borders/render-binary/page-0001.ppm.gz",
+      "bytes": 8384,
+      "sha256": "c67ebcdb6f5b7ab957704b0727a0724a749885ab6a170046026203dfaa812ee5",
+      "uncompressedSha256": "8b093fdd11eaf8dd26c0ba333aca844cb7ba3254cf2d0705b1a6051904f493db",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/binary-render.json",
+        "manifest": "run/table-borders/render-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-binary/pages.txt",
+      "bytes": 151,
+      "sha256": "d86f93d8f19e37fb46a7fb4d1493bb498dbc57ec81cf28560021f776095cf29e"
+    },
+    {
+      "path": "run/table-borders/render-binary/pages.xhtml",
+      "bytes": 3541,
+      "sha256": "73740d473253924201198a0194b492f41503b35e633058f106cbd70c295c7071"
+    },
+    {
+      "path": "run/table-borders/render-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "8790566709e47987495dfc9c4bbe77a33cd5ec160a1f67d7974af22cc17d34b1"
+    },
+    {
+      "path": "run/table-borders/render-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "75b69d41021352f65654bdee95cd821b05b3f5f138c2a5174863cfadef2497e5"
+    },
+    {
+      "path": "run/table-borders/render-binary/table-borders.pdf",
+      "bytes": 24552,
+      "sha256": "d9427061521915ac2a90e2f1f2ae03459e4610eaaa642b38e8f2b7046dbff022"
+    },
+    {
+      "path": "run/table-borders/render-converted/conversion.log",
+      "bytes": 349,
+      "sha256": "94d8ab643973f476bd6eabda7cb5552f6c89c2f144ea559d0d43140646237447"
+    },
+    {
+      "path": "run/table-borders/render-converted/converted.pdf",
+      "bytes": 25059,
+      "sha256": "cfe4ef35b67c07a96c3482c6a56437bca8ea9849e9b332e03b1825c881f8937f"
+    },
+    {
+      "path": "run/table-borders/render-converted/page-0001.ppm.gz",
+      "bytes": 8575,
+      "sha256": "bab3153b96e1e310a572efa2ac85acda9421563f9b852755c6ed0f7f6409247f",
+      "uncompressedSha256": "7b3043f11fb112d41677e5d25ae07096619951b519dd5e13a1dd0359a68263f9",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/converted-render.json",
+        "manifest": "run/table-borders/render-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-converted/pages.txt",
+      "bytes": 153,
+      "sha256": "266b5331eb9246c1fd70e5affee145e83c6a1cab99050a78fd509b23fd004cc3"
+    },
+    {
+      "path": "run/table-borders/render-converted/pages.xhtml",
+      "bytes": 3642,
+      "sha256": "28d8c3f96fd183371da031610628419c42082ac0d800c95e202770009834f35f"
+    },
+    {
+      "path": "run/table-borders/render-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "f34dbf3538d92b675838bafef81790dbd8c9e2545581d36013047ac4093d2bbe"
+    },
+    {
+      "path": "run/table-borders/render-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "f76147621dcc3f229f4c5cca6a1fc60350bf6d8a1993bf20b85b93779691695a"
+    },
+    {
+      "path": "run/table-borders/render-native/conversion.log",
+      "bytes": 366,
+      "sha256": "1df8ce5f463d7b801aeff126c3f87f95be36b863f52c9052dfe2166281b4cf3c"
+    },
+    {
+      "path": "run/table-borders/render-native/page-0001.ppm.gz",
+      "bytes": 8551,
+      "sha256": "7e0339a746823525643fe5ca3cde248f15072b3f310b424e70827fe8a0f233d7",
+      "uncompressedSha256": "82c0f7fc222b2ff08894883db072555805aec35e9cdc4596e897da022cd1227c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/native-render.json",
+        "manifest": "run/table-borders/render-native/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-native/pages.txt",
+      "bytes": 161,
+      "sha256": "4f1a835f23aaa42a0e44dd887d208f6243abb45560113aa1516eb57e18b716ba"
+    },
+    {
+      "path": "run/table-borders/render-native/pages.xhtml",
+      "bytes": 3857,
+      "sha256": "c051b978bc1cffd251f76572149bae54aea8e4c1786d03d611fa4e315cdeb412"
+    },
+    {
+      "path": "run/table-borders/render-native/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "a15b5a8496679e05312c87d0aa2cb939436499505037830f0c15ac16235910f8"
+    },
+    {
+      "path": "run/table-borders/render-native/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "e0bf29722fdb4d00bdbd2933910842cdac83fafeb6f539d185f3267070d2ad43"
+    },
+    {
+      "path": "run/table-borders/render-native/table-borders.pdf",
+      "bytes": 24422,
+      "sha256": "f45144bffec0def6a3ab68cab358701586c3673c4fa2590f50749ef11c16fecc"
+    },
+    {
+      "path": "run/table-borders/render-original/conversion.log",
+      "bytes": 310,
+      "sha256": "c344cb7966cc6bfebf7698bd8a859de8c0b54db393620453d41404d65e220d02"
+    },
+    {
+      "path": "run/table-borders/render-original/page-0001.ppm.gz",
+      "bytes": 8575,
+      "sha256": "bab3153b96e1e310a572efa2ac85acda9421563f9b852755c6ed0f7f6409247f",
+      "uncompressedSha256": "7b3043f11fb112d41677e5d25ae07096619951b519dd5e13a1dd0359a68263f9",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/original-render.json",
+        "manifest": "run/table-borders/render-original/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-original/pages.txt",
+      "bytes": 153,
+      "sha256": "266b5331eb9246c1fd70e5affee145e83c6a1cab99050a78fd509b23fd004cc3"
+    },
+    {
+      "path": "run/table-borders/render-original/pages.xhtml",
+      "bytes": 3642,
+      "sha256": "063d1fe410341ab1f65eed1db47709a97b47bc8ec0919bfdb1b8784c4144f290"
+    },
+    {
+      "path": "run/table-borders/render-original/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "17bf4c5cbbf4135eb377027ed8a2888823c12ef724a5af22930d556fa779a8b3"
+    },
+    {
+      "path": "run/table-borders/render-original/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "b0113cdc917ee19c3a5a697180393899f881d2b39c0c87b18f947c15be405aec"
+    },
+    {
+      "path": "run/table-borders/render-original/table-borders.pdf",
+      "bytes": 25224,
+      "sha256": "5f38c51bf4a1ac0a31582670b8b5b315f59de5695b4032ad3d17da865f36ac13"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/conversion.log",
+      "bytes": 378,
+      "sha256": "98e1a0211072edb3f0316e7aa9eb511eb33ca6c950055a070eedcec980ae82fb"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/converted.pdf",
+      "bytes": 24552,
+      "sha256": "b70d64a144b919819f13d4417c3598fba1be1686c81f25ec59c5dd4a653129dd"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/page-0001.ppm.gz",
+      "bytes": 8384,
+      "sha256": "c67ebcdb6f5b7ab957704b0727a0724a749885ab6a170046026203dfaa812ee5",
+      "uncompressedSha256": "8b093fdd11eaf8dd26c0ba333aca844cb7ba3254cf2d0705b1a6051904f493db",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/roundtrip-01-binary-render.json",
+        "manifest": "run/table-borders/render-roundtrip-01-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/pages.txt",
+      "bytes": 151,
+      "sha256": "d86f93d8f19e37fb46a7fb4d1493bb498dbc57ec81cf28560021f776095cf29e"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/pages.xhtml",
+      "bytes": 3541,
+      "sha256": "2302bca577177524d6e0e61b9e2b9dc46cff8d93f8b05cf0df9cb5aa7d8d2814"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "6763f70ece94e56fdd06be177279e57c37ab222dce205628676a2de020d3df0e"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "18e340ccf888b134477c88a6bc79f6dd928a0f3c9655db9d138b8ec10d758496"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/conversion.log",
+      "bytes": 369,
+      "sha256": "8c355353b7a3ae2fbd96901f1acf9449ff80be2f3bd8ba810d4f58c74eea44fb"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/import.pdf",
+      "bytes": 25059,
+      "sha256": "488e92137d9fc15de1987e9461796e767f220348b8fa3dbe8a5845cfc20b0fad"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/page-0001.ppm.gz",
+      "bytes": 8575,
+      "sha256": "bab3153b96e1e310a572efa2ac85acda9421563f9b852755c6ed0f7f6409247f",
+      "uncompressedSha256": "7b3043f11fb112d41677e5d25ae07096619951b519dd5e13a1dd0359a68263f9",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/roundtrip-01-converted-render.json",
+        "manifest": "run/table-borders/render-roundtrip-01-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/pages.txt",
+      "bytes": 153,
+      "sha256": "266b5331eb9246c1fd70e5affee145e83c6a1cab99050a78fd509b23fd004cc3"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/pages.xhtml",
+      "bytes": 3642,
+      "sha256": "3cd526fc764fed5a8b141be9a7df496b7ef5a3cbf18dc3bb4701287c64c4fb55"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "cc8e629cf81f1d9a701a45cd3c93a4f96634ce3803725d8d02d6be2ac9e9a36c"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-01-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "4680860490bc2b6561c2d76e8c070a25774c6b9bf57cda594cdb770195188ccd"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/conversion.log",
+      "bytes": 372,
+      "sha256": "a964f65407247a99ad463817e8271812518e834a44bbe6488399d2758ebd3811"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/import.pdf",
+      "bytes": 24552,
+      "sha256": "e63797a7fdb68044393aa54718c845eaa93cb54ac1f93abd8df2cd5f2f1c8c3c"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/page-0001.ppm.gz",
+      "bytes": 8384,
+      "sha256": "c67ebcdb6f5b7ab957704b0727a0724a749885ab6a170046026203dfaa812ee5",
+      "uncompressedSha256": "8b093fdd11eaf8dd26c0ba333aca844cb7ba3254cf2d0705b1a6051904f493db",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/roundtrip-02-binary-render.json",
+        "manifest": "run/table-borders/render-roundtrip-02-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/pages.txt",
+      "bytes": 151,
+      "sha256": "d86f93d8f19e37fb46a7fb4d1493bb498dbc57ec81cf28560021f776095cf29e"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/pages.xhtml",
+      "bytes": 3541,
+      "sha256": "0e1c54de7502bf49ddb0ca0152190aaef88d8d10e84fa073ed1eac7d6249c763"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "4d5fc591013def7343f4e8abf226a1f2de2a97caad1b01ae83e0e8326545fcb8"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "0e073684ec42fec23af20216bf2832628f3769314d2b97d930c60d651c2e1919"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/conversion.log",
+      "bytes": 369,
+      "sha256": "44b1859b6a9d7d258e8d0961241e1fe7c3554e19a042dad4635cdd26a077889d"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/import.pdf",
+      "bytes": 25059,
+      "sha256": "c4909460076878eeebae70ce2f7530a3614082325b9bf0939b5640a255cf139c"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/page-0001.ppm.gz",
+      "bytes": 8575,
+      "sha256": "bab3153b96e1e310a572efa2ac85acda9421563f9b852755c6ed0f7f6409247f",
+      "uncompressedSha256": "7b3043f11fb112d41677e5d25ae07096619951b519dd5e13a1dd0359a68263f9",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/roundtrip-02-converted-render.json",
+        "manifest": "run/table-borders/render-roundtrip-02-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/pages.txt",
+      "bytes": 153,
+      "sha256": "266b5331eb9246c1fd70e5affee145e83c6a1cab99050a78fd509b23fd004cc3"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/pages.xhtml",
+      "bytes": 3642,
+      "sha256": "9eda455a00287c87174c986bbc99911d289119e5c2857e428a23a7e511ac7c01"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "66b66e9008bc4782e70123df5aba4c4459cef42e8d3812e90bb8958ed251ecdd"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-02-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "b631d22c462e42a2e4b5df4fbd1578b4a1c101a6d2c662004aa353e8b22b8e05"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/conversion.log",
+      "bytes": 372,
+      "sha256": "82dec8c3c80f1892ecac4fb70e24953bfc8312646f2612df0db0091991e9b358"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/import.pdf",
+      "bytes": 24552,
+      "sha256": "cc424cf567a5d72ef00a58dd9624b9dcd1d95f1ffb3f4a4ebd44d1f0a609680b"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/page-0001.ppm.gz",
+      "bytes": 8384,
+      "sha256": "c67ebcdb6f5b7ab957704b0727a0724a749885ab6a170046026203dfaa812ee5",
+      "uncompressedSha256": "8b093fdd11eaf8dd26c0ba333aca844cb7ba3254cf2d0705b1a6051904f493db",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/roundtrip-03-binary-render.json",
+        "manifest": "run/table-borders/render-roundtrip-03-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/pages.txt",
+      "bytes": 151,
+      "sha256": "d86f93d8f19e37fb46a7fb4d1493bb498dbc57ec81cf28560021f776095cf29e"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/pages.xhtml",
+      "bytes": 3541,
+      "sha256": "4e0496722a0eec54ec88e1b0525fb1edaf820caea650620f13038f5ee0d72777"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "d5b9391ed45b0753c3ba1417f962257caae724eacaa2f2d809129f986c5e8d16"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "edfb0e22179a864a154bfb30a9af26b5e46e5d4dab9b60a882c565e094f99945"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/conversion.log",
+      "bytes": 369,
+      "sha256": "16ca8f03fe03c2ed90d4cfc9629b90d6fa787f46754cd388359a4d526a216c90"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/import.pdf",
+      "bytes": 25059,
+      "sha256": "a4ccc3d8412989c7d5fa92c44ccf5319a226b718cacf3569b5896c00c0f3b124"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/page-0001.ppm.gz",
+      "bytes": 8575,
+      "sha256": "bab3153b96e1e310a572efa2ac85acda9421563f9b852755c6ed0f7f6409247f",
+      "uncompressedSha256": "7b3043f11fb112d41677e5d25ae07096619951b519dd5e13a1dd0359a68263f9",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/table-borders/roundtrip-03-converted-render.json",
+        "manifest": "run/table-borders/render-roundtrip-03-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/pages.txt",
+      "bytes": 153,
+      "sha256": "266b5331eb9246c1fd70e5affee145e83c6a1cab99050a78fd509b23fd004cc3"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/pages.xhtml",
+      "bytes": 3642,
+      "sha256": "cfd6e0ccf0fd02019371ad413156416cc266f5f1a44825899acc0f5ccf702cf1"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "c0d25ee0ac7a7682e7d32bb7a3dd4ed93a401690c71b5f494da3c913ac6b4dad"
+    },
+    {
+      "path": "run/table-borders/render-roundtrip-03-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "5c13f8ffc3cb293c8ef56a3e6f4ee201f90a732b9ca05a99e3a5aaeaea4e19d4"
+    },
+    {
+      "path": "run/table-borders/result.json",
+      "bytes": 6363204,
+      "sha256": "033613f88872e72a2a0d49172f7c0b1e460634e1fc8fc3dd7e2c4e7c6dd3bfd2"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01-binary-render.json",
+      "bytes": 4203,
+      "sha256": "cd29fa0cac8f3b79897807ae83c36b72c662be17f0dfd40af889fccbaef6b9cf"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01-converted-render.json",
+      "bytes": 4201,
+      "sha256": "db0d5d26d87dd3690adc5a166674077c9b8467ab5e7b219f41a05b2ad09aef8c"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01-converted-semantic.json",
+      "bytes": 218123,
+      "sha256": "3a4ff0d8dde2bdb4d0949d1057e6b302ce8f7bcc725381fcb9576a7891cc949f"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01-native-semantic.json",
+      "bytes": 167462,
+      "sha256": "16f7bd9336b775ac606e02cad0e8f79d1b29aa3d7ba0223e4335320bf16d301a"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01/binary/conversion.log",
+      "bytes": 345,
+      "sha256": "d7704f58bc622d701aa3d34cde3cb9b1375d51471033ede44144c4f63d790a60"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01/binary/converted.doc",
+      "bytes": 10752,
+      "sha256": "f8bed91ef6e14b6e414db7a02efe01ed79ffa54a8d8e823b60f2c69f260bbef9"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01/import.docx",
+      "bytes": 6466,
+      "sha256": "96f7b82268c4851d7af82b696caab072c3c491930733ea4b8fdce9ea32c5e9dc"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01/native-docx/conversion.log",
+      "bytes": 380,
+      "sha256": "7314d9621340c46627b967133f8122e6e72f8b204d2898081a9a54d21c348f30"
+    },
+    {
+      "path": "run/table-borders/roundtrip-01/native-docx/converted.docx",
+      "bytes": 6594,
+      "sha256": "02bc2850ae86dcef4d3a41470a4f131689cf14ac6d26fd4677a8f29136016e5e"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02-binary-render.json",
+      "bytes": 4203,
+      "sha256": "b636a10cf3c96a4f7717c0c76b895707ef450f24c442d0a9994ccd68cf646dd9"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02-converted-render.json",
+      "bytes": 4201,
+      "sha256": "41fc60f9e7bb96b3621776afb96e11cd8d909a0b1e053307dea6a2b20c057c92"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02-converted-semantic.json",
+      "bytes": 218370,
+      "sha256": "4a157f7cd5696fead47b36ed8acbc6442691f8b4abc67636f00825efd98b28b0"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02-native-semantic.json",
+      "bytes": 175847,
+      "sha256": "82579b62fe3582467dbe1228d0dd73117df48953f53ec9e4ee697b43bfb89f4c"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02/binary/conversion.log",
+      "bytes": 352,
+      "sha256": "4cae04104cd0a8be4d7dcacb65dce7fd087c5175ad6a47619c80103ae18ebf09"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "0122f9697ee794b08423251f46fdc1117e5531aa51f7b137f9e6786dcee3e708"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02/import.docx",
+      "bytes": 6473,
+      "sha256": "d693331f8bc98557343e0491f4133afeaaac732b1a4eb4b3b3a78f7af564e89f"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02/native-docx/conversion.log",
+      "bytes": 374,
+      "sha256": "16a5e807b1a3e58bb4ee1e74c8fb85bec8ebbdb114797d86dcc1cd15a943c3cd"
+    },
+    {
+      "path": "run/table-borders/roundtrip-02/native-docx/import.docx",
+      "bytes": 6600,
+      "sha256": "63636b9dbc363db9798448c32318032e9b3571ce771e2d940ba5a9e6cb0c7da7"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03-binary-render.json",
+      "bytes": 4203,
+      "sha256": "5060989f0e934c76c33b6262cbbd7c73ac6c4dad57336477f54e5cbba17a0834"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03-converted-render.json",
+      "bytes": 4201,
+      "sha256": "c1c3828835e08443f235f3bdf20c4ae1876b2910e62eac65954becc1c4196ef2"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03-converted-semantic.json",
+      "bytes": 218370,
+      "sha256": "1314747907d55c89d51f735e95487178ea67364b869b3e268b81bb2159315309"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03-native-semantic.json",
+      "bytes": 175847,
+      "sha256": "f78f1c732ff99a5e46820b275a1397fb32cd55dbd9c9759b41b14c1f4c6dc4b6"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03/binary/conversion.log",
+      "bytes": 352,
+      "sha256": "d9831bba2cae1bc29777f321987965d0f219c0c649fecd70229a68393d83c926"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03/binary/import.doc",
+      "bytes": 10752,
+      "sha256": "f47e323181f3d0e10af4b7aa13c7a85cc591196d20449008a5cd95be87a89561"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03/import.docx",
+      "bytes": 6473,
+      "sha256": "5c069c14ce26787983b7a536e471dbeb598baf8a4539b383ebc02e072bff66a6"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03/native-docx/conversion.log",
+      "bytes": 374,
+      "sha256": "2319ff560e98ec938468ee7493177803b5fadecdac73cf8ddc1a2126a74473fe"
+    },
+    {
+      "path": "run/table-borders/roundtrip-03/native-docx/import.docx",
+      "bytes": 6600,
+      "sha256": "26ef9d343aa28143dd13d5a64eb2601d2dad3e56f2c61c87e6ce792a54ec15df"
+    }
+  ]
+}

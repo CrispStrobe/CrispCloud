@@ -11,7 +11,9 @@ extension _WordTextboxes on _StructuredWordWriter {
   }) {
     final occurrence = (
       story.id,
-      reference.headerAliases.isEmpty ? null : _storyId,
+      reference.headerAliases.isEmpty && reference.replicaAnchors.isEmpty
+          ? null
+          : _part,
     );
     if (first && !_renderedTextboxes.add(occurrence)) return;
     final shape = drawing.shape, text = shape?.text;

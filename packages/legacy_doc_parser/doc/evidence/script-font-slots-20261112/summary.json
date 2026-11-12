@@ -1,0 +1,121 @@
+{
+  "sourceCommit": "63eb2911156533d04f20946f6e62889eae8a22dd",
+  "sourceWorktreeDirty": true,
+  "sourceBuildSha256": "0039500891f906544b6fa6e5a7ea239b0d28f18f92cd81e2e9a43f82c37aacc8",
+  "sourcesUnchangedDuringCompilation": true,
+  "case": "formatting",
+  "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+  "pagination": {
+    "referencePages": 1,
+    "actualPages": 1,
+    "pageDimensionsMatch": true,
+    "pageTextMatches": false,
+    "maximumWordDriftPoints": null,
+    "tolerancePoints": 0.25,
+    "matchesWithinTolerance": false,
+    "rasterSettingsMatch": true,
+    "rasterExactlyMatches": false,
+    "layoutTextExactlyMatches": false,
+    "exactOnThisRenderer": false
+  },
+  "sourceGolden": {
+    "status": "matched",
+    "referencePages": 1,
+    "actualPages": 1,
+    "pageDimensionsMatch": true,
+    "pageTextMatches": true,
+    "maximumWordDriftPoints": 0.0,
+    "tolerancePoints": 0.25,
+    "matchesWithinTolerance": true,
+    "rasterSettingsMatch": true,
+    "rasterExactlyMatches": true,
+    "layoutTextExactlyMatches": true,
+    "exactOnThisRenderer": true
+  },
+  "parserAgainstSourceGolden": {
+    "status": "different",
+    "referencePages": 1,
+    "actualPages": 1,
+    "pageDimensionsMatch": true,
+    "pageTextMatches": false,
+    "maximumWordDriftPoints": null,
+    "tolerancePoints": 0.25,
+    "matchesWithinTolerance": false,
+    "rasterSettingsMatch": true,
+    "rasterExactlyMatches": false,
+    "layoutTextExactlyMatches": false,
+    "exactOnThisRenderer": false
+  },
+  "roundtripCycles": [
+    {
+      "index": 1,
+      "paginationFromBinaryDoc": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 11.951999999999998,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "paginationFromPreviousImport": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "paginationFromFirstImport": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      }
+    }
+  ],
+  "sourceFontEvidence": {
+    "location": "WordDocument/Table STSH Normal style CHPX",
+    "rawGrpprlHex": "422a004f4a0400514a0400434a16006d480904734809044b480000504a05006e480904744809045e4a0600614a16005f480104",
+    "fontIndices": {
+      "sprmCRgFtc0": 4,
+      "sprmCRgFtc1": 5,
+      "sprmCRgFtc2": 4,
+      "sprmCFtcBi": 6
+    },
+    "fontTable": {
+      "4": "Cambria",
+      "5": "ＭＳ 明朝",
+      "6": ""
+    },
+    "directlyObservedSourceText": "Unicode café — 東京 😀. "
+  },
+  "interpretation": "Separate source font slots are now retained. This native run displays the source 東京 text that the binary native render omitted; the per-page word sequences differ, so a whole-page corresponding-word drift cannot be computed. This is not an exact native-fidelity claim.",
+  "tests": {
+    "count": 57,
+    "passed": true,
+    "log": {
+      "path": "font-tests.log.gz",
+      "sha256": "c78d6b1da6ced52f6312e02a4c713caf1590db74d1a2297e2f61076676db3e07",
+      "bytes": 1019,
+      "uncompressedSha256": "5425eee01697ac1b8784e01da12b5bd71fb48156c2abc26bd3945b2e4b6a914b",
+      "uncompressedBytes": 6969
+    }
+  }
+}

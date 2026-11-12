@@ -14,6 +14,7 @@ import 'legacy_word_textbox_alias.dart';
 part 'legacy_word_structured_conversion.dart';
 part 'opc_package_writer.dart';
 part 'word_story_writer.dart';
+part 'word_field_binary_metadata.dart';
 part 'word_numbering_writer.dart';
 part 'word_layout_writer.dart';
 part 'word_compatibility_writer.dart';

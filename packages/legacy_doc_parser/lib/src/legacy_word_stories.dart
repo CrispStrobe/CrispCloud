@@ -549,6 +549,31 @@ extension _WordStories on _StructuredWordParser {
           );
     }
     WordHeaderTextboxAliases? headerAliases;
+    final headerStories =
+        stories
+            .where(
+              (story) =>
+                  story.kind == LegacyWordStoryKind.header ||
+                  story.kind == LegacyWordStoryKind.footer,
+            )
+            .toList()
+          ..sort((a, b) => a.startCp.compareTo(b.startCp));
+    String? headerOwner(int cp) {
+      var low = 0, high = headerStories.length;
+      while (low < high) {
+        final middle = (low + high) ~/ 2;
+        final story = headerStories[middle];
+        if (cp < story.startCp) {
+          high = middle;
+        } else if (cp >= story.endCp) {
+          low = middle + 1;
+        } else {
+          return story.id;
+        }
+      }
+      return null;
+    }
+
     for (final entry in links.entries) {
       final index = references[entry.key]!;
       final reference = textboxReferences[index];
@@ -574,8 +599,10 @@ extension _WordStories on _StructuredWordParser {
             shapeId: reference.shapeId,
             anchors: List.unmodifiable([pair.primary]),
             headerAliases: List.unmodifiable([pair.alias]),
+            replicaAnchors: List.unmodifiable([pair.alias]),
           );
           warnings.add(LegacyWordWarning.recoveredHeaderTextboxAlias);
+          warnings.add(LegacyWordWarning.recoveredSharedHeaderTextbox);
           if (pair.sharedShape) {
             recoveredRepeatedShapes.add((true, pair.primary.shapeId));
             warnings.add(LegacyWordWarning.recoveredHeaderTextboxShapeAlias);
@@ -583,9 +610,6 @@ extension _WordStories on _StructuredWordParser {
           warnings.add(LegacyWordWarning.unsupportedFormatting);
           continue;
         }
-        throw const FormatException(
-          'Invalid Word drawing-to-textbox reference.',
-        );
       }
       if (anchors.any(
         (anchor) =>
@@ -597,6 +621,76 @@ extension _WordStories on _StructuredWordParser {
       }
       if (anchors.length > 4096 || anchors.first.chainIndex != 0) {
         throw const FormatException('Incomplete Word textbox shape chain.');
+      }
+      // Native exports can reuse one singleton FTXBXS in separate normal,
+      // even and first-page header/footer stories. Their index-zero shapes
+      // are independent instances, not a continuation chain. Recover only
+      // when the declared primary exists and every owner is a distinct real
+      // header/footer range, with no next-shape links anywhere.
+      if (reference.inHeaderFooter &&
+          reference.chainLength == 1 &&
+          anchors.length > 1 &&
+          anchors.every((anchor) => anchor.chainIndex == 0)) {
+        headerAliases ??= WordHeaderTextboxAliases(
+          stories: stories,
+          media: media,
+          fields: fields,
+          bookmarks: bookmarks,
+          notes: noteReferences,
+          comments: commentReferences,
+        );
+        final textStory = stories.firstWhere(
+          (story) => story.id == reference.storyId,
+        );
+        final recordedControls = <int>{
+          for (final field in fields.where(
+            (field) => field.storyId == reference.storyId,
+          )) ...[
+            field.startCp,
+            field.endCp - 1,
+            if (field.separatorCp != null) field.separatorCp!,
+          ],
+        };
+        final hasUnrecordedFieldControls =
+            Iterable<int>.generate(
+              textStory.endCp - textStory.startCp,
+              (offset) => textStory.startCp + offset,
+            ).any(
+              (cp) =>
+                  body[cp] >= 0x13 &&
+                  body[cp] <= 0x15 &&
+                  !recordedControls.contains(cp),
+            );
+        if (hasUnrecordedFieldControls ||
+            !headerAliases.validReplicas(reference, anchors)) {
+          throw const FormatException('Invalid shared Word header textbox.');
+        }
+        final primary = anchors
+            .where((anchor) => anchor.shapeId == reference.shapeId)
+            .toList();
+        final owners = <String>{};
+        if (primary.length != 1 ||
+            anchors.any((anchor) {
+              final owner = headerOwner(anchor.anchorCp);
+              return owner == null ||
+                  !owners.add(owner) ||
+                  (anchor.nextShapeId ?? 0) != 0;
+            })) {
+          throw const FormatException('Invalid shared Word header textbox.');
+        }
+        textboxReferences[index] = LegacyWordTextboxReference(
+          id: reference.id,
+          storyId: reference.storyId,
+          inHeaderFooter: true,
+          anchorCp: reference.anchorCp,
+          shapeId: reference.shapeId,
+          anchors: List.unmodifiable(primary),
+          replicaAnchors: List.unmodifiable(
+            anchors.where((anchor) => anchor.shapeId != reference.shapeId),
+          ),
+        );
+        warnings.add(LegacyWordWarning.recoveredSharedHeaderTextbox);
+        continue;
       }
       if (anchors.first.shapeId != reference.shapeId) {
         throw const FormatException(

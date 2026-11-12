@@ -1,0 +1,23 @@
+{
+  "license": "MPL-2.0",
+  "source": "CrispCloud-authored fidelity cases; original native export bytes retained unchanged",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "cases": [
+    {
+      "file": "note-table-ending.doc",
+      "sha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+      "sourceDocx": "test/fixtures/fidelity/table-borders.docx",
+      "sourceDocxSha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83",
+      "retainedBaselineArchive": "doc/evidence/native-corpus-7308125/sealed/04-table-borders/native-artifacts.tar.xz",
+      "archiveMember": "run/table-borders/bridge/table-borders.doc"
+    },
+    {
+      "file": "note-floating-table.doc",
+      "sha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+      "sourceDocx": "test/fixtures/fidelity/note-markers.docx",
+      "sourceDocxSha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "retainedBaselineArchive": "doc/evidence/native-corpus-7308125/sealed/07-note-markers/native-artifacts.tar.xz",
+      "archiveMember": "run/note-markers/bridge/note-markers.doc"
+    }
+  ]
+}

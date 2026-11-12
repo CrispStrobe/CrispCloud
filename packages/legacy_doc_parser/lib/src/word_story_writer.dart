@@ -200,10 +200,10 @@ extension _WordStories on _StructuredWordWriter {
   void _emitEventsThrough(int cp) {
     final events = _events[_storyId];
     if (events == null) return;
-    var index = _eventOffsets[_storyId] ?? 0;
+    var index = _eventOffsets[(_storyId, _part)] ?? 0;
     while (index < events.length && events[index].cp <= cp) {
       final event = events[index++];
-      _eventOffsets[_storyId] = index;
+      _eventOffsets[(_storyId, _part)] = index;
       event.write();
     }
   }
@@ -211,19 +211,20 @@ extension _WordStories on _StructuredWordWriter {
   void _emitBoundaryClosures(int cp) {
     final events = _events[_storyId];
     if (events == null) return;
-    var index = _eventOffsets[_storyId] ?? 0;
+    var index = _eventOffsets[(_storyId, _part)] ?? 0;
     while (index < events.length &&
         events[index].cp == cp &&
         events[index].closing) {
       final event = events[index++];
-      _eventOffsets[_storyId] = index;
+      _eventOffsets[(_storyId, _part)] = index;
       event.write();
     }
   }
 
   void _finishStoryEvents() {
     final events = _events[_storyId];
-    if (events == null || (_eventOffsets[_storyId] ?? 0) == events.length) {
+    if (events == null ||
+        (_eventOffsets[(_storyId, _part)] ?? 0) == events.length) {
       return;
     }
     _xml.add('<w:p');
@@ -243,7 +244,7 @@ extension _WordStories on _StructuredWordWriter {
     var position = run.startCp;
     final events = _events[_storyId] ?? const <_WordInlineEvent>[];
     while (position < run.endCp) {
-      final index = _eventOffsets[_storyId] ?? 0;
+      final index = _eventOffsets[(_storyId, _part)] ?? 0;
       final boundary = index < events.length && events[index].cp < run.endCp
           ? events[index].cp
           : run.endCp;
@@ -282,6 +283,15 @@ extension _WordStories on _StructuredWordWriter {
   }
 
   void _prepareSemantics() {
+    for (final artifact in document.media.artifacts) {
+      final cp = artifact.source.cp;
+      if (artifact.kind == LegacyWordArtifactKind.binaryData && cp != null) {
+        // An ambiguous occurrence must not authorize field metadata removal.
+        _fieldBinaryData[cp] = _fieldBinaryData.containsKey(cp)
+            ? null
+            : artifact;
+      }
+    }
     final bookmarkNames = <String>{};
     var bookmarkId = 0;
     for (final bookmark in document.bookmarks) {
@@ -518,7 +528,7 @@ extension _WordStories on _StructuredWordWriter {
         'IF',
         '=',
       }.contains(field.type.toUpperCase()) &&
-      field.instruction.runes.every(
+      _fieldInstruction(field).runes.every(
         (rune) =>
             (rune >= 0x20 && rune != 0xfffe && rune != 0xffff) ||
             const {9, 10, 13, 19, 20, 21}.contains(rune),
@@ -535,6 +545,21 @@ extension _WordStories on _StructuredWordWriter {
 
   void _fieldBegin(LegacyWordField field, [int depth = 0]) {
     if (depth > 64) _tooComplex();
+    final instruction = _fieldInstruction(field);
+    if (instruction != field.instruction) {
+      _count('binaryHyperlinkFields');
+      _evidenceRecords.add({
+        'kind': 'binaryHyperlinkField',
+        'story': field.storyId,
+        'startCp': field.startCp,
+        'instruction': field.instruction,
+        'emittedInstruction': instruction,
+        'reason':
+            'A referenced HFD internal location agrees with the literal field '
+            'target; its binary metadata marker is not instruction text. '
+            'The original data is retained and no link is traversed.',
+      });
+    }
     _xml.add(
       '<w:r><w:fldChar w:fldCharType="begin" w:fldLock="1" w:dirty="0">',
     );
@@ -553,7 +578,7 @@ extension _WordStories on _StructuredWordWriter {
           'Word field instruction positions do not match text.',
         );
       }
-      final value = field.instruction.substring(start, end);
+      final value = instruction.substring(start, end);
       if (value.isNotEmpty) {
         _xml.add('<w:r><w:instrText xml:space="preserve">');
         // Tabs are legal field instruction separators; no raw field controls
@@ -850,6 +875,7 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.recoveredNonconformingProperties:
         case LegacyWordWarning.recoveredEmptySection:
         case LegacyWordWarning.recoveredTextboxChainLength:
+        case LegacyWordWarning.recoveredSharedHeaderTextbox:
         case LegacyWordWarning.terminalMarkFormattingUnavailable:
         case LegacyWordWarning.recoveredGlobalTextboxSentinel:
         case LegacyWordWarning.recoveredHeaderTextboxAlias:

@@ -52,6 +52,9 @@ class _StructuredWordParser {
   final fonts = <String>[];
   final authors = <String>[];
   int? defaultFont;
+  int? defaultEastAsianFont;
+  int? defaultNonAsciiFont;
+  int? defaultComplexScriptFont;
   int runCount = 0;
   int paragraphCount = 0;
   int fieldTextUnits = 0;
@@ -738,17 +741,20 @@ class _StructuredWordParser {
     _Props properties, {
     bool useDocumentDefaultFont = true,
   }) {
-    final fontIndex =
-        properties['fontIndex'] as int? ??
-        (useDocumentDefaultFont ? defaultFont : null);
-    String? font;
-    if (fontIndex != null) {
-      if (fontIndex >= 0 && fontIndex < fonts.length) {
-        font = fonts[fontIndex];
-      } else if (fonts.isNotEmpty) {
-        warnings.add(LegacyWordWarning.unsupportedFormatting);
+    String? font(String key, int? documentDefault) {
+      final index =
+          properties[key] as int? ??
+          (useDocumentDefaultFont ? documentDefault : null);
+      if (index != null) {
+        if (index >= 0 && index < fonts.length) {
+          return fonts[index];
+        } else if (fonts.isNotEmpty) {
+          warnings.add(LegacyWordWarning.unsupportedFormatting);
+        }
       }
+      return null;
     }
+
     return LegacyWordCharacterStyle(
       bold: properties['bold'] == true,
       italic: properties['italic'] == true,
@@ -759,7 +765,12 @@ class _StructuredWordParser {
       smallCaps: properties['smallCaps'] == true,
       allCaps: properties['allCaps'] == true,
       hidden: properties['hidden'] == true,
-      fontName: font,
+      fontName: font('fontIndex', defaultFont),
+      scriptFonts: LegacyWordScriptFonts(
+        nonAscii: font('nonAsciiFontIndex', defaultNonAsciiFont),
+        eastAsia: font('eastAsianFontIndex', defaultEastAsianFont),
+        complexScript: font('complexScriptFontIndex', defaultComplexScriptFont),
+      ),
       fontSizeHalfPoints: properties['fontSize'] as int?,
       kerningThresholdHalfPoints: properties['kerning'] as int? ?? 0,
       colorHex: properties['color'] as String?,

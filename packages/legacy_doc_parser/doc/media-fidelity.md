@@ -237,6 +237,15 @@ count is retained as `declaredChainLength`; conversion evidence includes
 both declared and resolved lengths. `recoveredTextboxChainLength` explicitly
 marks this interoperability recovery.
 
+A separate native representation reuses one singleton textbox story in
+different header/footer variants. The [shared-header recovery](shared-header-textboxes.md)
+requires distinct owning ranges, index zero on every instance, a matching
+primary shape and no continuation links. Each output part receives its own
+editable instance and inline field events; the source text is still parsed
+once. `recoveredSharedHeaderTextbox` and placement evidence disclose the
+recovery. The retained sources now import successfully, while their measured
+0.35 pt placement offset remains visible.
+
 Actual positioning is checked independently: the first run also exposed a
 page-origin discrepancy in the native bridge. A successful chain recovery
 does not by itself claim correct positions or an exact raster match.

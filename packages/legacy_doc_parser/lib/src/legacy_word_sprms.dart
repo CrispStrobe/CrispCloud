@@ -255,6 +255,9 @@ void _applyCharacter(
       'hidden',
       'fontSize',
       'fontIndex',
+      'eastAsianFontIndex',
+      'nonAsciiFontIndex',
+      'complexScriptFontIndex',
       'color',
       'verticalAlign',
       'position',
@@ -290,7 +293,13 @@ void _applyCharacter(
         }
         output['fontSize'] = size;
       case 0x4a4f:
-        output['fontIndex'] = data.u16(0);
+        output['fontIndex'] = data.i16(0);
+      case 0x4a50:
+        output['eastAsianFontIndex'] = data.i16(0);
+      case 0x4a51:
+        output['nonAsciiFontIndex'] = data.i16(0);
+      case 0x4a5e:
+        output['complexScriptFontIndex'] = data.i16(0);
       case 0x4a30:
         final index = data.u16(0);
         if (resolveCharacterStyle == null) {
@@ -364,7 +373,7 @@ void _applyCharacter(
       case 0x080a:
         output['ole2'] = _boolean(data);
       // Language, proofing and revision-save identifiers do not change the
-      // supported visual properties. Alternate script fonts remain a limit.
+      // supported visual properties. Script language selection remains a limit.
       case 0x486d:
       case 0x4873:
       case 0x4874:
@@ -547,20 +556,26 @@ void _applyParagraph(
       case 0x3615:
         output['tableAutoFit'] = _boolean(value);
       case 0x360d:
+        // PositionCodeOperand's low four padding bits MUST be ignored.
+        output['tablePosition${operation.code}'] = value.u8(0) & 0xf0;
       case 0x3465:
+        output['tablePosition${operation.code}'] = _boolean(value) ? 1 : 0;
       case 0x940e:
       case 0x940f:
+        final position = value.i16(0);
+        if (position < -31679 || position > 31681) {
+          throw const FormatException('Invalid Word table absolute position.');
+        }
+        output['tablePosition${operation.code}'] = position;
       case 0x9410:
       case 0x9411:
       case 0x941e:
       case 0x941f:
-        // Retain the operand identity for adjacent-row grouping. Floating
-        // placement itself still needs its own native layout interpretation.
-        output['tablePosition${operation.code}'] = value.bytes.fold<int>(
-          0,
-          (a, b) => a * 256 + b,
-        );
-        warnings.add(LegacyWordWarning.unsupportedFormatting);
+        final distance = value.u16(0);
+        if (distance > 31680) {
+          throw const FormatException('Invalid Word table wrapping distance.');
+        }
+        output['tablePosition${operation.code}'] = distance;
       case 0x740a:
         output['tableStyleOptions'] = value.u16(2);
       case 0xd605:

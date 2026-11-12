@@ -29,6 +29,44 @@ enum LegacyWordTableBorderSide {
 
 enum LegacyWordCellAlignment { top, center, bottom }
 
+enum LegacyWordTableAnchor { text, margin, page }
+
+enum LegacyWordTableHorizontalPlacement { left, center, right, inside, outside }
+
+enum LegacyWordTableVerticalPlacement {
+  inline,
+  top,
+  center,
+  bottom,
+  inside,
+  outside,
+}
+
+/// Floating-table geometry. Each axis has either a relative placement or an
+/// absolute offset in twips. These are physical positions, independent of RTL.
+class LegacyWordTablePosition {
+  const LegacyWordTablePosition({
+    this.horizontalAnchor = LegacyWordTableAnchor.text,
+    this.verticalAnchor = LegacyWordTableAnchor.margin,
+    this.horizontalPlacement,
+    this.verticalPlacement,
+    this.horizontalOffsetTwips,
+    this.verticalOffsetTwips,
+    this.leftFromTextTwips = 0,
+    this.rightFromTextTwips = 0,
+    this.topFromTextTwips = 0,
+    this.bottomFromTextTwips = 0,
+    this.allowOverlap = true,
+  });
+  final LegacyWordTableAnchor horizontalAnchor, verticalAnchor;
+  final LegacyWordTableHorizontalPlacement? horizontalPlacement;
+  final LegacyWordTableVerticalPlacement? verticalPlacement;
+  final int? horizontalOffsetTwips, verticalOffsetTwips;
+  final int leftFromTextTwips, rightFromTextTwips;
+  final int topFromTextTwips, bottomFromTextTwips;
+  final bool allowOverlap;
+}
+
 /// The five text flow modes defined by MS-DOC TextFlow, using native XML names.
 enum LegacyWordCellTextDirection { lrTb, tbRl, btLr, lrTbV, tbRlV }
 
@@ -124,6 +162,9 @@ enum LegacyWordTableCharacterProperty {
   allCaps,
   hidden,
   fontIndex,
+  eastAsianFontIndex,
+  nonAsciiFontIndex,
+  complexScriptFontIndex,
   fontSize,
   color,
   highlight,
