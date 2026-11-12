@@ -68,6 +68,8 @@ def mirror_files(directory, tracked):
             if relative.endswith('.pyc') and '__pycache__' in Path(relative).parts:
                 continue
             files.add(relative)
+            if len(files) > 5000:
+                raise office.SyncError('Standalone parser mirror exceeds the file-count limit')
     return files
 
 
@@ -76,6 +78,10 @@ def plan(source, target_root, ref):
     manifest = json.loads(manifest_path.read_text())
     office.standalone_sources(manifest, target_root)
     metadata_path = target_root / PREFIX / 'UPSTREAM.json'
+    if (metadata_path.is_symlink() or not metadata_path.is_file()
+            or not metadata_path.resolve().is_relative_to(target_root.resolve())
+            or metadata_path.stat().st_size > 64 * 1024):
+        raise office.SyncError('Missing, oversized or unsafe legacy parser upstream metadata')
     upstream = json.loads(metadata_path.read_text())
     if (upstream.get('repository') != REPOSITORY or upstream.get('patches') != []
             or not re.fullmatch(r'[0-9a-f]{40}', upstream.get('commit', ''))):
@@ -89,7 +95,8 @@ def plan(source, target_root, ref):
         raise office.SyncError('Standalone parser mirror has missing or unreviewed files')
     for name, data in old.items():
         path = mirror / name
-        if not path.is_file() or path.read_bytes() != data:
+        if (not path.is_file() or path.stat().st_size != len(data)
+                or path.read_bytes() != data):
             raise office.SyncError(f'Standalone parser vendor drift: {name}')
     # Validate the entire existing inventory before deriving a new one. Quds
     # files and their historical source identity remain byte-for-byte intact.

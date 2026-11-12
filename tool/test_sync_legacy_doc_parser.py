@@ -102,6 +102,28 @@ class StandaloneParserSyncTest(unittest.TestCase):
         with self.assertRaisesRegex(office.SyncError, 'Vendor drift'):
             legacy.plan(self.source, self.host, after)
 
+    def test_oversized_mirror_drift_is_rejected_before_allocating_file_contents(self):
+        path = self.host / legacy.PREFIX / 'lib/legacy_doc_parser.dart'
+        with path.open('wb') as stream:
+            stream.truncate(65 * 1024 * 1024)
+        original = Path.read_bytes
+        def checked_read(candidate):
+            if candidate == path:
+                self.fail('oversized mirror drift was read into memory')
+            return original(candidate)
+        with mock.patch.object(Path, 'read_bytes', checked_read):
+            with self.assertRaisesRegex(office.SyncError, 'vendor drift'):
+                legacy.plan(self.source, self.host, self.before)
+
+    def test_upstream_metadata_symlink_is_rejected_before_following_it(self):
+        path = self.host / legacy.PREFIX / 'UPSTREAM.json'
+        outside = self.base / 'metadata.json'
+        outside.write_bytes(path.read_bytes())
+        path.unlink()
+        path.symlink_to(outside)
+        with self.assertRaisesRegex(office.SyncError, 'unsafe legacy parser upstream metadata'):
+            legacy.plan(self.source, self.host, self.before)
+
     def test_git_pin_or_missing_override_cannot_misdescribe_runtime(self):
         after = self.update()
         path = self.host / 'pubspec.yaml'
