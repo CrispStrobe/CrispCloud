@@ -986,3 +986,35 @@ and artifact/live evidence controls. No Apple API call or filing was made.
 The maintained MPL-2.0 legacy DOC parser is pinned in its own upstream record and consumed through Quds compatibility exports. Its only runtime package dependency is archive. It parses existing signature markers and can retain signature bytes as inert evidence; it does not verify signatures, decrypt protected Word files, execute VBA, or claim signature validity for a converted copy. DOCM output is an explicit reviewed choice. The native parser and JavaScript acceptance checks remain separate from native Word visual certification.
 
 Retained external-tool drafts, conditional Dropbox publication, archive publication/recovery, source unlink checks, and viewer spooling reuse existing content digests and private staging. Their exact inputs are included in the merged source binding. Existing Apple/store decisions retain their original dated evidence. The new technical hashes do not constitute a new distribution approval.
+
+## FictionBook output and native keyboard qualification
+
+The shared FictionBook writer produces an explicit separate FB2/FBZ copy from a
+validated EPUB snapshot. Its bounded XML/resource conversion rejects unsupported
+media and foreign/active markup, checks emitted internal links, and retains
+supported structural text, Unicode, notes and raster images. The existing Dart
+SHA-256 implementation supplies a fallback format identifier from title and
+authors when necessary; it is not an exact-content binding, cipher, signature or
+access grant. Base64 image encoding and passwordless ZIP output add no crypto
+implementation or network capability. The unmodified author's schemas are
+development-only validation evidence with their pinned BSD notice.
+
+The Linux change forwards Tab/Shift+Tab to WebKit links and reserves Ctrl+Tab
+and Ctrl+Shift+Tab for escape to Flutter controls. The same tab setting is used
+in the guarded helper and production view. A content-surface semantics hint
+describes the controls; it does not expose book text to assistive technology.
+The added desktop/mobile CI applications exercise the actual existing hosts and
+converter. A workflow definition is not a platform pass. Browser sandboxing,
+resource policy and enhanced-runtime assertions remain enabled.
+
+This checkpoint binds 293 staged source paths and excludes concurrent reader,
+browser-converter and temporary local test-hook changes. All non-digest policy
+values remain unchanged:
+
+```json
+{
+  "inventory_sha256": "3a7ca748564e8e6db84b1d32d3ce923ec5570a4270b238dfade06e37e8126de3",
+  "pubspec_lock_sha256": "e4af3d0674ff75b84ea258f7ed72a3d89c071eaad7cabac37d40b6997b32a9f1",
+  "reviewed_source_sha256": "83c558c0ebbaa2d429e53821e8d5022457ff13e2bd95d33a61dd178deaa07e7e"
+}
+```

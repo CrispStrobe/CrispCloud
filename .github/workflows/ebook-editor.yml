@@ -100,7 +100,7 @@ jobs:
   native-and-reader:
     name: Kindle runtime (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       matrix:
@@ -125,6 +125,27 @@ jobs:
           dart pub get
           dart analyze
           dart test
+      - name: Prepare a real desktop WebView reader and editor
+        if: runner.os != 'Linux'
+        env:
+          EBOOK_PLATFORM: ${{ runner.os == 'Windows' && 'windows' || 'macos' }}
+        run: |
+          flutter create --platforms="$EBOOK_PLATFORM" \
+            --project-name crisp_native_ebook_smoke "$RUNNER_TEMP/ebook-native-host"
+          python packages/crisp_ebook_reader/tool/prepare_native_host_smoke.py \
+            "$RUNNER_TEMP/ebook-native-host" --platform="$EBOOK_PLATFORM"
+          cd "$RUNNER_TEMP/ebook-native-host"
+          flutter pub get
+          flutter analyze integration_test/reader_platform_test.dart
+      - name: Exercise the actual desktop host and bundled converter
+        if: runner.os != 'Linux'
+        env:
+          EBOOK_PLATFORM: ${{ runner.os == 'Windows' && 'windows' || 'macos' }}
+        run: |
+          cd "$RUNNER_TEMP/ebook-native-host"
+          set -o pipefail
+          flutter test integration_test/reader_platform_test.dart \
+            -d "$EBOOK_PLATFORM" --reporter expanded 2>&1 | tee ebook-native-host.log
       - name: Verify reviewed native and Wasm source and license inventory
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_conversion
@@ -171,6 +192,16 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm run test:parser -- ../crisp_ebook_conversion/test/fixtures/generated/*.azw3 ../crisp_ebook_conversion/test/fixtures/generated/*.mobi
           CRISP_TEST_GROUPING_FALLBACK=1 CRISP_TEST_RAW_INFLATE_FALLBACK=1 npm run test:parser
+      - name: Validate FictionBook exports against the schema and independent reader
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+          dart pub get
+          python3 tool/verify_fictionbook_export.py \
+            --xmllint "$(command -v xmllint)" \
+            --directory ../../build/ebook-fictionbook
       - name: Validate actual Kindle to EPUB imports independently
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_conversion
@@ -205,6 +236,106 @@ jobs:
           path: |
             packages/crisp_ebook_conversion/test/fixtures/generated/
             packages/crisp_ebook_conversion/build/import-chain/
+            build/ebook-fictionbook/
+            ${{ runner.temp }}/ebook-native-host/ebook-native-host.log
+          retention-days: 14
+
+  mobile-host:
+    name: Actual ebook host (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: android
+            rust-targets: x86_64-linux-android
+          - os: macos-latest
+            platform: ios
+            rust-targets: aarch64-apple-ios-sim,x86_64-apple-ios
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: ${{ matrix.rust-targets }}
+          android: ${{ matrix.platform == 'android' }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        if: matrix.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Prepare the isolated production reader and editor
+        env:
+          EBOOK_PLATFORM: ${{ matrix.platform }}
+        run: |
+          flutter create --platforms="$EBOOK_PLATFORM" \
+            --project-name crisp_native_ebook_smoke "$RUNNER_TEMP/ebook-native-host"
+          python packages/crisp_ebook_reader/tool/prepare_native_host_smoke.py \
+            "$RUNNER_TEMP/ebook-native-host" --platform="$EBOOK_PLATFORM"
+          cd "$RUNNER_TEMP/ebook-native-host"
+          flutter pub get
+          flutter analyze integration_test/reader_platform_test.dart
+      - name: Enable Android emulator acceleration
+        if: matrix.platform == 'android'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Exercise the actual Android WebView and native code asset
+        if: matrix.platform == 'android'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: >-
+            cd "$RUNNER_TEMP/ebook-native-host" &&
+            set -o pipefail &&
+            flutter test integration_test/reader_platform_test.dart
+            -d emulator-5554 --reporter expanded 2>&1 | tee ebook-native-host.log
+      - name: Boot an available iPhone simulator
+        if: matrix.platform == 'ios'
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          devices = json.loads(subprocess.check_output(
+              ['xcrun', 'simctl', 'list', 'devices', 'available', '--json']))['devices']
+          candidates = [device for runtime in sorted(devices, reverse=True)
+                        if '.iOS-' in runtime for device in devices[runtime]
+                        if device['name'].startswith('iPhone') and device.get('isAvailable')]
+          if not candidates:
+              raise SystemExit('No available iPhone simulator; do not substitute a build-only pass.')
+          device = next((item for item in candidates if item['state'] == 'Booted'), candidates[0])
+          if device['state'] != 'Booted':
+              subprocess.run(['xcrun', 'simctl', 'boot', device['udid']], check=True)
+          subprocess.run(['xcrun', 'simctl', 'bootstatus', device['udid'], '-b'], check=True)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              output.write('EBOOK_SIMULATOR=' + device['udid'] + '\n')
+          PY
+      - name: Exercise actual WKWebView and native conversion on iOS
+        if: matrix.platform == 'ios'
+        run: |
+          cd "$RUNNER_TEMP/ebook-native-host"
+          set -o pipefail
+          flutter test integration_test/reader_platform_test.dart \
+            -d "$EBOOK_SIMULATOR" --reporter expanded 2>&1 | tee ebook-native-host.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ebook-native-host-${{ matrix.platform }}
+          path: ${{ runner.temp }}/ebook-native-host/ebook-native-host.log
           retention-days: 14
 
   app-integration:

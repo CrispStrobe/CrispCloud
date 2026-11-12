@@ -33,6 +33,7 @@ struct DirectSettingsApi {
   DIRECT(webkit_settings_set_enable_page_cache)
   DIRECT(webkit_settings_set_enable_developer_extras)
   DIRECT(webkit_settings_set_enable_media_stream)
+  DIRECT(webkit_settings_set_enable_tabs_to_links)
   DIRECT(webkit_settings_set_media_playback_requires_user_gesture)
   DIRECT(webkit_settings_set_hardware_acceleration_policy)
 #undef DIRECT

@@ -147,6 +147,7 @@ void Error(FlMethodCall* call, const std::string& message) {
   X(webkit_settings_set_enable_html5_database) X(webkit_settings_set_enable_page_cache) \
   X(webkit_settings_set_enable_developer_extras) \
   X(webkit_settings_set_enable_media_stream) \
+  X(webkit_settings_set_enable_tabs_to_links) \
   X(webkit_settings_set_media_playback_requires_user_gesture) \
   X(webkit_settings_set_hardware_acceleration_policy) \
   X(webkit_navigation_policy_decision_get_navigation_action) \
@@ -508,7 +509,10 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     if (!IsDocument(api_.webkit_web_view_get_uri(webview_)) || message.size() > kMaximumMessage) {
       Error(call, "The reader document is not ready or the message exceeds its limit."); return;
     }
-    Evaluate("window.crispEbookHost?.receive(" + message + ")", call);
+    // receive() returns a Promise, whose value WebKit's synchronous result
+    // serializer cannot transport. The session/id message channel carries the
+    // asynchronous result (including errors); evaluation only dispatches it.
+    Evaluate("void window.crispEbookHost?.receive(" + message + ")", call);
   }
 
   void Focus(bool focused) {

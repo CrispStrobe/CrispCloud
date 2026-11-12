@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/gribuser/fb2",
+  "revision": "4d3740e319039911c30d291abb0c8b26ec99703b",
+  "license": "BSD-2-Clause",
+  "purpose": "Unmodified official FictionBook 2 schema used only by development-time validation; not bundled as an application asset.",
+  "files": {
+    "FictionBook.xsd": "db2c0a239f4654db808d580b4d835fda9b41df09c169556116c4092ca47865b3",
+    "FictionBookLinks.xsd": "f4697d9a42f191a9030b74f7611dd340b0298860b5eb30e67ea6560b52ff6af6",
+    "FictionBookGenres.xsd": "4e412d345b72c633a763e4c49f1e7c198e9f21b74b6be53d2d844d7b90133722",
+    "FictionBookLang.xsd": "4873a0ec10a86a68c8e511ded5fdbb71f1cc8d7319bc71a791cd13575db51158",
+    "LICENSE.md": "b5e8a64ae8c61c8587ac325cae8dafd5f49b16c1f2beff550f1e06eb9597e43c"
+  }
+}

@@ -17,3 +17,4 @@ part 'src/models.dart';
 part 'src/zip_container.dart';
 part 'src/document.dart';
 part 'src/prose.dart';
+part 'src/fictionbook.dart';

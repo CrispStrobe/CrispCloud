@@ -438,6 +438,17 @@
         "lib/utils/system_links.dart"
       ],
       "note": "Digests bind retained copies and reviewed publication/recovery inputs. No new cipher, password decryption path or distribution decision is introduced."
+    },
+    {
+      "name": "FictionBook conversion and bounded serialization",
+      "source_reviewed_on": "2026-11-12",
+      "algorithms": [
+        "Existing Dart crypto SHA-256 for a fallback document identifier derived from title and authors"
+      ],
+      "sources": [
+        "packages/crisp_ebook/lib/src/fictionbook.dart"
+      ],
+      "note": "Pure Dart EPUB-to-FB2/FBZ conversion writes a separate in-memory output. It validates the source, refuses signed/encrypted input and non-representable active/foreign/media content, confines packaged resource paths, bounds output and image counts, and validates emitted local links. The fallback hash is a format identifier, not authentication, encryption or an exact-content identity. Embedded raster resources use Base64; FBZ uses the existing passwordless archive writer. No new cryptographic implementation, key handling, credential store, network destination or native dependency is added."
     }
   ],
   "reviewed_files": [
@@ -768,6 +779,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_stories.dart",
     "packages/legacy_doc_parser/lib/src/compound/byte_source.dart",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_writer.dart",
-    "packages/legacy_doc_parser/lib/src/compound/cfbf_reader.dart"
+    "packages/legacy_doc_parser/lib/src/compound/cfbf_reader.dart",
+    "packages/crisp_ebook/lib/src/fictionbook.dart"
   ]
 }

@@ -242,18 +242,35 @@ class _LinuxHostState extends State<_LinuxHost> {
       LogicalKeyboardKey.end: 'End',
       LogicalKeyboardKey.enter: 'Return',
       LogicalKeyboardKey.space: 'space',
+      LogicalKeyboardKey.tab: 'Tab',
     };
     final modifier = _modifiers;
     final control = (modifier & (2 | 8)) != 0;
     final copyOrSelectAll = event.logicalKey == LogicalKeyboardKey.keyC ||
         event.logicalKey == LogicalKeyboardKey.keyA;
-    // Flutter retains app shortcuts, Escape and Tab traversal. This is a
-    // read-only browser surface: search and note text fields live in Flutter.
+    // Tab follows links inside the publication. Ctrl+Tab always leaves the
+    // browser surface, including documents without a usable focus boundary;
+    // Ctrl+Shift+Tab goes back to the previous Flutter control. Repeats do not
+    // cycle through controls after the initial keydown has moved focus.
+    if (event.logicalKey == LogicalKeyboardKey.tab &&
+        (modifier & 2) != 0 &&
+        (modifier & (4 | 8)) == 0) {
+      if (event is KeyDownEvent) {
+        (modifier & 1) != 0 ? node.previousFocus() : node.nextFocus();
+      }
+      return KeyEventResult.handled;
+    }
+    // Flutter retains other app shortcuts and Escape. Search and note text
+    // fields live in Flutter, rather than in this read-only browser surface.
+    if ((modifier & 4) != 0) return KeyEventResult.ignored;
     if (control && !copyOrSelectAll) return KeyEventResult.ignored;
-    final name = names[event.logicalKey] ??
-        (control && copyOrSelectAll
-            ? event.logicalKey.keyLabel.toLowerCase()
-            : null);
+    final name =
+        event.logicalKey == LogicalKeyboardKey.tab && (modifier & 1) != 0
+            ? 'ISO_Left_Tab'
+            : names[event.logicalKey] ??
+                (control && copyOrSelectAll
+                    ? event.logicalKey.keyLabel.toLowerCase()
+                    : null);
     if (name == null) return KeyEventResult.ignored;
     unawaited(_invoke('key', {
       'name': name,
@@ -285,42 +302,47 @@ class _LinuxHostState extends State<_LinuxHost> {
       if (size.isFinite && !size.isEmpty) {
         _scheduleResize(size, View.of(context).devicePixelRatio);
       }
-      return Focus(
-        focusNode: _focus,
-        onKeyEvent: _key,
-        onFocusChange: (focused) =>
-            unawaited(_invoke('focus', {'focused': focused})),
-        child: MouseRegion(
-          cursor: _cursor,
-          onHover: (event) => _pointer('move', event),
-          child: Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (event) => _pointer('down', event),
-            onPointerMove: (event) => _pointer('move', event),
-            onPointerUp: (event) => _pointer('up', event),
-            onPointerCancel: (event) => _pointer('cancel', event),
-            onPointerSignal: (event) {
-              if (event is PointerScrollEvent) {
-                GestureBinding.instance.pointerSignalResolver.register(event,
-                    (_) {
-                  unawaited(_invoke('scroll', {
-                    'x': event.localPosition.dx,
-                    'y': event.localPosition.dy,
-                    'dx': event.scrollDelta.dx,
-                    'dy': event.scrollDelta.dy,
-                    'modifiers': _modifiers,
-                  }));
-                });
-              }
-            },
-            onPointerPanZoomUpdate: (event) => unawaited(_invoke('scroll', {
-              'x': event.localPosition.dx,
-              'y': event.localPosition.dy,
-              'dx': -event.panDelta.dx,
-              'dy': -event.panDelta.dy,
-              'modifiers': _modifiers,
-            })),
-            child: Texture(textureId: texture),
+      return Semantics(
+        label: 'Ebook content',
+        hint: 'Tab follows book links. Control Tab returns to reader controls. '
+            'Control Shift Tab returns to the previous control.',
+        child: Focus(
+          focusNode: _focus,
+          onKeyEvent: _key,
+          onFocusChange: (focused) =>
+              unawaited(_invoke('focus', {'focused': focused})),
+          child: MouseRegion(
+            cursor: _cursor,
+            onHover: (event) => _pointer('move', event),
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (event) => _pointer('down', event),
+              onPointerMove: (event) => _pointer('move', event),
+              onPointerUp: (event) => _pointer('up', event),
+              onPointerCancel: (event) => _pointer('cancel', event),
+              onPointerSignal: (event) {
+                if (event is PointerScrollEvent) {
+                  GestureBinding.instance.pointerSignalResolver.register(event,
+                      (_) {
+                    unawaited(_invoke('scroll', {
+                      'x': event.localPosition.dx,
+                      'y': event.localPosition.dy,
+                      'dx': event.scrollDelta.dx,
+                      'dy': event.scrollDelta.dy,
+                      'modifiers': _modifiers,
+                    }));
+                  });
+                }
+              },
+              onPointerPanZoomUpdate: (event) => unawaited(_invoke('scroll', {
+                'x': event.localPosition.dx,
+                'y': event.localPosition.dy,
+                'dx': -event.panDelta.dx,
+                'dy': -event.panDelta.dy,
+                'modifiers': _modifiers,
+              })),
+              child: Texture(textureId: texture),
+            ),
           ),
         ),
       );
