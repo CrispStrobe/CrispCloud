@@ -976,7 +976,7 @@ packages:
     source: hosted
     version: "0.9.0"
   koni_codecs:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: koni_codecs
       sha256: "0a0ffa23f62f627bc50db6de79e88a6a41e019d3a21c6a455ac5ae7c1677a8bd"

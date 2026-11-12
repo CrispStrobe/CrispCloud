@@ -98,6 +98,8 @@ class ViewerArchive {
   final Future<Uint8List> Function(ViewerArchiveMember member, int maxBytes)
   _read;
   final Future<void> Function() _close;
+  final Stream<List<int>> Function(ViewerArchiveMember member, int chunkSize)?
+  _streamReader;
   bool _closed = false;
 
   ViewerArchive.reader({
@@ -110,13 +112,17 @@ class ViewerArchive {
     )
     read,
     required Future<void> Function() close,
+    Stream<List<int>> Function(ViewerArchiveMember member, int chunkSize)?
+    streamReader,
   }) : members = List<ViewerArchiveMember>.unmodifiable(members),
        notices = List<String>.unmodifiable(notices),
        // Keep public callback names while storing them privately.
        // ignore: prefer_initializing_formals
        _read = read,
        // ignore: prefer_initializing_formals
-       _close = close;
+       _close = close,
+       // ignore: prefer_initializing_formals
+       _streamReader = streamReader;
 
   /// A one-member archive over already-decompressed bytes.
   factory ViewerArchive.direct({
@@ -142,10 +148,55 @@ class ViewerArchive {
 
   bool get isClosed => _closed;
 
-  Future<Uint8List> readMember(
+  /// Streams a member through the same identity, safety and exact-length
+  /// checks as [readMember]. Image readers supply a positional implementation;
+  /// older codecs retain their bounded buffered fallback.
+  Stream<List<int>> openMember(
     ViewerArchiveMember member, {
     int maxBytes = kArchiveReadLimit,
-  }) async {
+    int chunkSize = 256 * 1024,
+  }) async* {
+    if (chunkSize <= 0 || chunkSize > 16 * 1024 * 1024) {
+      throw ArgumentError.value(chunkSize, 'chunkSize');
+    }
+    _validateRead(member, maxBytes);
+    final streaming = _streamReader;
+    final stream = streaming == null
+        ? Stream<Uint8List>.fromFuture(readMember(member, maxBytes: maxBytes))
+        : streaming(member, chunkSize);
+    var received = 0;
+    await for (final chunk in stream) {
+      _validateRead(member, maxBytes);
+      if (chunk.length > member.size - received ||
+          chunk.length > maxBytes - received) {
+        throw const ArchiveViewException(
+          'Archive member exceeds its declared length or read limit.',
+        );
+      }
+      if (chunk is! Uint8List && chunk.any((byte) => byte < 0 || byte > 255)) {
+        throw const ArchiveViewException(
+          'Archive reader returned invalid bytes.',
+        );
+      }
+      for (var start = 0; start < chunk.length; start += chunkSize) {
+        _validateRead(member, maxBytes);
+        final end = start + chunkSize < chunk.length
+            ? start + chunkSize
+            : chunk.length;
+        final copy = Uint8List.fromList(chunk.sublist(start, end));
+        received += copy.length;
+        yield copy;
+      }
+    }
+    _validateRead(member, maxBytes);
+    if (received != member.size) {
+      throw const ArchiveViewException(
+        'Archive member size does not match its metadata.',
+      );
+    }
+  }
+
+  void _validateRead(ViewerArchiveMember member, int maxBytes) {
     if (_closed) {
       throw const ArchiveViewException(
         'This archive has been closed.',
@@ -170,6 +221,13 @@ class ViewerArchive {
         'The entry is larger than the ${_mb(maxBytes)} safety limit.',
       );
     }
+  }
+
+  Future<Uint8List> readMember(
+    ViewerArchiveMember member, {
+    int maxBytes = kArchiveReadLimit,
+  }) async {
+    _validateRead(member, maxBytes);
     final data = await _read(member, maxBytes);
     if (data.length > maxBytes) {
       throw ArchiveViewException(

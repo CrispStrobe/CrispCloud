@@ -240,21 +240,64 @@ void main() {
     );
   });
 
-  group('reader recognition never grants a package writer', () {
-    test('only existing ZIP, 7z, TAR and TAR.GZ writers are advertised', () {
+  group('writer capabilities require content-specific eligibility', () {
+    test('creation and editing advertise their distinct format families', () {
       expect(
         archiveFormatCapabilities
             .where((format) => format.canCreate)
             .map((format) => format.id)
             .toSet(),
-        {'zip', '7z', 'tar', 'tar-gzip'},
+        {
+          'zip',
+          'zip-alias',
+          'java-archive',
+          '7z',
+          '7z-alias',
+          'tar',
+          'tar-alias',
+          'tar-gzip',
+          'tar-bzip2',
+          'tar-xz',
+          'tar-zstd',
+          'gzip',
+          'bzip2',
+          'xz',
+          'zstd',
+          'iso',
+          'dmg',
+          'hfs',
+          'ar',
+          'cpio',
+          'xar',
+        },
       );
       expect(
         archiveFormatCapabilities
             .where((format) => format.canModify)
             .map((format) => format.id)
             .toSet(),
-        {'zip', '7z', 'tar', 'tar-gzip'},
+        {
+          'zip',
+          'zip-alias',
+          'java-archive',
+          '7z',
+          '7z-alias',
+          'tar',
+          'tar-alias',
+          'tar-gzip',
+          'tar-bzip2',
+          'tar-xz',
+          'tar-zstd',
+          'gzip',
+          'bzip2',
+          'xz',
+          'zstd',
+          'iso',
+          'ar',
+          'deb',
+          'cpio',
+          'xar',
+        },
       );
     });
 
@@ -372,7 +415,6 @@ void main() {
               archive,
               null,
             );
-            expect(policy.format, ArchiveEndpointFormat.readOnly, reason: name);
             expect(policy.reason, isNotNull, reason: name);
           } finally {
             await archive.close();

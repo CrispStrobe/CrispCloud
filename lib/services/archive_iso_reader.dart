@@ -166,6 +166,21 @@ class _IsoReader {
         }
         return _read(_extents[member.index].offset, member.size);
       },
+      streamReader: (member, chunkSize) async* {
+        if (member.size > maxMemberBytes) {
+          throw ArchiveViewException(
+            'ISO entry exceeds the $maxMemberBytes-byte read limit.',
+          );
+        }
+        final extent = _extents[member.index];
+        for (var offset = 0; offset < member.size; offset += chunkSize) {
+          final remaining = member.size - offset;
+          yield await _read(
+            extent.offset + offset,
+            remaining < chunkSize ? remaining : chunkSize,
+          );
+        }
+      },
       close: source.close,
     );
   }

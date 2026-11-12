@@ -6,7 +6,24 @@ import 'file_item.dart';
 import 'storage_reference.dart';
 import 'transfer_job.dart';
 
-enum ArchiveEndpointFormat { zip, sevenZip, tar, tarGzip, readOnly }
+enum ArchiveEndpointFormat {
+  zip,
+  sevenZip,
+  tar,
+  tarGzip,
+  tarBzip2,
+  tarXz,
+  tarZstd,
+  gzip,
+  bzip2,
+  xz,
+  zstd,
+  ar,
+  cpio,
+  xar,
+  iso,
+  readOnly,
+}
 
 enum ArchivePublicationPhase {
   prepared,
@@ -43,8 +60,14 @@ class ArchiveEndpointCapabilities {
   final String? reason;
   bool get supportsMemberWrites =>
       canPublish && format != ArchiveEndpointFormat.readOnly;
-  bool get supportsModifiedTime => format != ArchiveEndpointFormat.readOnly;
-  bool get supportsPermissions => format != ArchiveEndpointFormat.readOnly;
+  bool get supportsModifiedTime => supportsMemberWrites && !_singlePayload;
+  bool get supportsPermissions => supportsMemberWrites && !_singlePayload;
+  bool get _singlePayload => const {
+    ArchiveEndpointFormat.gzip,
+    ArchiveEndpointFormat.bzip2,
+    ArchiveEndpointFormat.xz,
+    ArchiveEndpointFormat.zstd,
+  }.contains(format);
   bool get repacksWholeContainer => true;
   bool get supportsDurableDrafts => false;
 }

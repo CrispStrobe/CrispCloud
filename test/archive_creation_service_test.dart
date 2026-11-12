@@ -45,7 +45,12 @@ void main() {
     isA<ArchiveCreationException>().having((value) => value.code, 'code', code),
   );
 
-  for (final format in ArchiveCreationFormat.values) {
+  for (final format in ArchiveCreationFormat.values.where(
+    (format) =>
+        format.supportsDirectories &&
+        !format.diskImage &&
+        format != ArchiveCreationFormat.kmz,
+  )) {
     test(
       '${format.name} preserves recursive Unicode, empty files and directories',
       () async {

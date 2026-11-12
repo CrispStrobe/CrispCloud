@@ -17,8 +17,12 @@ The public sequence is `prepareImport`, `stageImport`, a concrete
 copied member against a fresh source snapshot and full SHA-256, reads declared
 source permission bits, and adopts the entire successful import in one draft
 mutation. A failed or cancelled copy does not adopt a partial overlay. The
-review repacks and independently decodes the archive, compares every member's
-bytes and supported metadata, and lists add/replace/rename/remove/directory
+import refuses setuid/setgid source files because source ownership is not
+captured. Existing privileged records can be retained only by a format profile
+that preserves their ownership and original privilege bits. Review repacks and
+independently decodes the archive, compares member bytes, types, modification
+times and permission bits, then revalidates the format/protection profile. It
+lists add/replace/rename/remove/directory
 changes. Changing the draft or a parent generation invalidates that review.
 
 The dialog supports explicit keep-both, replace and skip policies. Its result
@@ -53,9 +57,14 @@ container or falls back to a direct provider upload.
 | --- | --- | --- | --- |
 | ZIP | Plain or the supported AES-256 policy | UTC whole seconds in the supported signed timestamp range; otherwise DOS wall-time fields at two-second resolution | Mixed protected/plain files, legacy or other AES strengths, and encrypted directory entries are refused. |
 | 7z | Plain or original AES password, retaining original header visibility | Millisecond resolution | Header encryption is detected independently of file data, including containers with no ordinary files. |
-| TAR | Plain | Whole seconds | Unsupported links and special members are rejected. |
-| TAR.GZ / TGZ | Plain TAR inside gzip | Whole seconds | The decoded TAR container is additionally limited to 64 MiB. |
-| Other recognized formats | Browsing and extraction only | Not applicable | No edit/publication capability is advertised. |
+| TAR / CBT | Inspected regular-file profiles | Whole seconds for imports | Known ownership and PAX metadata are retained; unsupported extensions, links and special entries are refused. |
+| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
+| CBZ / CB7 / unsigned JAR/WAR/EAR / KMZ | Corresponding ZIP/7z policy | Corresponding underlying format | Java signatures/digests block editing; KMZ needs a top-level KML; original member order is retained. |
+| gzip / bzip2 / XZ / Zstandard | Exactly one ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. |
+| AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. Unknown fields and unsupported structures remain read-only. |
+| DEB / UDEB | Coordinated prebuilt control/data payload replacement | Whole seconds for outer members | Exact three-member wrapper; required control fields and present md5sums checked. In-app nested payload editing is disabled. |
+| ISO | Inspected data-only ISO 9660/Rock Ridge/Joliet | Whole seconds for imports | Known volume/member metadata retained. Boot/hybrid/UDF/unknown structures block rewriting. |
+| Existing HFS / DMG and other packages | Browsing and extraction only | Not applicable | Separate fresh HFSX/DMG creation does not grant existing filesystem rewrite access. |
 
 A bounded ZIP metadata finalizer writes explicit UTC-second fields to both
 local and central headers while copying compressed/encrypted payloads unchanged.
@@ -80,10 +89,13 @@ Supported existing modification times and POSIX permission bits are compared
 after repacking; inability to preserve them refuses publication. Imported times
 are normalized to the chosen format's supported precision. Empty directories
 are retained. Merging an existing explicit archive directory preserves its
-original mode and modification time; new directories import supported metadata. Opaque comments, archive extras, ownership, ACLs and other member
-extensions are not promised by the current member writer. That limitation is
-shown in the review and is separate from the stricter outer-container access
-policy below.
+original mode and modification time; new directories import supported metadata.
+The legacy ZIP/7z member model does not promise arbitrary comments, ownership,
+ACLs or opaque extras. Format-specific TAR/AR/CPIO/XAR/ISO inspectors separately
+capture supported metadata and refuse structures their writers cannot preserve.
+This member policy is separate from the stricter outer-container access policy
+below. See the complete [format matrix](archive-format-coverage.md) for each
+creation/editing boundary.
 
 The original password must successfully decode and authenticate every original
 protected file before editing, within the decoded-content limits. Replacing or
@@ -276,7 +288,7 @@ flutter test test/archive_container_publisher_test.dart \
   test/archive_endpoint_policy_malformed_test.dart
 ```
 
-No dependency was added. Transaction and publication code is project-owned.
+Transaction and publication code is project-owned and adds no dependency.
 
 ## Format references and licensing
 
@@ -297,6 +309,8 @@ format and AES-256 encryption; support here remains limited by the pinned
 reader/writer and the verification above.
 
 The implementation reuses the existing `koni_archive` 0.9.0 and `archive`
-dependencies. The pinned `koni_archive` package's MIT license was checked; no
-new library, external binary or upstream implementation code was introduced.
-Publication, policy, transaction, lifetime and recovery code is project-owned.
+dependencies. `koni_codecs` 0.9.0, already present transitively, is now an
+explicit direct dependency for LZMA2 compression. The pinned codec packages use
+the MIT license. No native runtime, subprocess packer or external binary is
+added to the app. Publication, policy, transaction, lifetime and recovery code
+is project-owned.
