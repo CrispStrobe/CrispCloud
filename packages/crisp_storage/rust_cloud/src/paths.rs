@@ -101,9 +101,15 @@ mod tests {
 
     #[test]
     fn rejects_traversal_and_nul() {
-        assert_eq!(components("/a/../b").unwrap_err().code, ErrorCode::InvalidPath);
+        assert_eq!(
+            components("/a/../b").unwrap_err().code,
+            ErrorCode::InvalidPath
+        );
         assert_eq!(components("..").unwrap_err().code, ErrorCode::InvalidPath);
-        assert_eq!(components("/a\0b").unwrap_err().code, ErrorCode::InvalidPath);
+        assert_eq!(
+            components("/a\0b").unwrap_err().code,
+            ErrorCode::InvalidPath
+        );
     }
 
     #[test]
@@ -112,7 +118,11 @@ mod tests {
             validate_name(ok).unwrap();
         }
         for bad in ["", ".", "..", "a/b", "a\\b", "a\0"] {
-            assert_eq!(validate_name(bad).unwrap_err().code, ErrorCode::InvalidName, "{bad:?}");
+            assert_eq!(
+                validate_name(bad).unwrap_err().code,
+                ErrorCode::InvalidName,
+                "{bad:?}"
+            );
         }
         assert!(validate_name(&"x".repeat(1025)).is_err());
     }

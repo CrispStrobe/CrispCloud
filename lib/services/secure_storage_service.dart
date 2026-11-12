@@ -7,6 +7,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,18 +54,60 @@ class PlatformSecureStorage extends SecureStorage {
   // libsecret (Linux), DPAPI (Windows).
   //
   // Browser startup uses WebEncryptedStorage instead of this implementation.
-  PlatformSecureStorage({bool useDataProtectionKeyChain = true})
+  PlatformSecureStorage({bool? useDataProtectionKeyChain})
     : _storage = FlutterSecureStorage(
         aOptions: const AndroidOptions(encryptedSharedPreferences: true),
         iOptions: const IOSOptions(
           accessibility: KeychainAccessibility.first_unlock,
         ),
         mOptions: MacOsOptions(
-          useDataProtectionKeyChain: useDataProtectionKeyChain,
+          useDataProtectionKeyChain:
+              useDataProtectionKeyChain ?? _macOsDataProtection,
         ),
       );
 
   final FlutterSecureStorage _storage;
+
+  // macOS only: whether this build may use the data-protection keychain.
+  static bool _macOsDataProtection = true;
+
+  /// macOS builds without a provisioning profile (ad-hoc signed nightlies,
+  /// local builds) lack the keychain-access-groups entitlement, so every
+  /// data-protection keychain call fails with errSecMissingEntitlement
+  /// (-34018). Such a build can never have stored anything there, so it uses
+  /// the user's login keychain instead. Locked or denied keychains are NOT
+  /// treated this way; they still surface as unavailable. Call once at
+  /// startup, before any credential is read.
+  static Future<void> detectMacOsKeychain() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) return;
+    _macOsDataProtection = !await _missingEntitlement(
+      const FlutterSecureStorage(
+        mOptions: MacOsOptions(useDataProtectionKeyChain: true),
+      ),
+    );
+    if (!_macOsDataProtection) {
+      _secureLog.info(
+        'This build is not entitled to the data-protection keychain '
+        '(-34018); using the login keychain.',
+      );
+    }
+  }
+
+  /// Whether the current macOS build uses the data-protection keychain.
+  static bool get usesMacOsDataProtection => _macOsDataProtection;
+
+  static Future<bool> _missingEntitlement(FlutterSecureStorage storage) async {
+    try {
+      await storage.containsKey(key: '__crispcloud_entitlement_probe__');
+      return false;
+    } catch (error) {
+      return isMissingEntitlementError(error);
+    }
+  }
+
+  /// errSecMissingEntitlement as reported by flutter_secure_storage.
+  static bool isMissingEntitlementError(Object error) =>
+      error.toString().contains('-34018');
 
   /// Probe the OS keychain without exposing a secret. A locked or unavailable
   /// keychain throws/returns false instead of making every later read fail.
@@ -178,10 +221,14 @@ class CredentialMigration {
         }
         if (existing == null) await secure.write(key, raw);
         if (await secure.read(key) != raw) {
-          throw StateError('Credential migration could not verify secure storage.');
+          throw StateError(
+            'Credential migration could not verify secure storage.',
+          );
         }
         if (!await prefs.remove(key)) {
-          throw StateError('Credential migration could not remove a legacy entry.');
+          throw StateError(
+            'Credential migration could not remove a legacy entry.',
+          );
         }
         _secureLog.debug('Migrated $key');
       }

@@ -60,8 +60,10 @@ mod tests {
     #[test]
     fn returns_values_and_errors() {
         assert_eq!(block_on(run(|| Ok(41 + 1))).unwrap(), 42);
-        let error = block_on(run(|| -> CloudResult<()> { Err(CloudError::new(ErrorCode::NotFound)) }))
-            .unwrap_err();
+        let error = block_on(run(|| -> CloudResult<()> {
+            Err(CloudError::new(ErrorCode::NotFound))
+        }))
+        .unwrap_err();
         assert_eq!(error.code, ErrorCode::NotFound);
     }
 

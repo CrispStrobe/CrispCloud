@@ -23,6 +23,10 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::time::{Duration, Instant};
 
+/// Sent on every request. Internxt's Cloudflare front rejects requests
+/// without a User-Agent with 403 Forbidden (reqwest sends none by default).
+pub const HTTP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+
 pub const DEFAULT_GATEWAY_URL: &str = "https://gateway.filen.io";
 pub const DEFAULT_INGEST_URL: &str = "https://ingest.filen.io";
 pub const DEFAULT_EGEST_URL: &str = "https://egest.filen.io";
@@ -83,7 +87,9 @@ pub struct HttpConfig {
 
 impl HttpConfig {
     fn build_client(&self) -> Result<reqwest::blocking::Client> {
-        let mut builder = reqwest::blocking::Client::builder().timeout(Duration::from_secs(30));
+        let mut builder = reqwest::blocking::Client::builder()
+            .user_agent(HTTP_USER_AGENT)
+            .timeout(Duration::from_secs(30));
         if let Some(url) = &self.proxy_url {
             let mut proxy = reqwest::Proxy::all(url)
                 .with_context(|| format!("invalid Filen proxy URL: {url}"))?;
@@ -1323,6 +1329,7 @@ impl FilenNativeClient {
         tfa: Option<&str>,
     ) -> Result<FilenSession> {
         let http = reqwest::blocking::Client::builder()
+            .user_agent(HTTP_USER_AGENT)
             .timeout(Duration::from_secs(30))
             .build()?;
         let base = gateway_url.trim_end_matches('/');
@@ -2430,6 +2437,9 @@ impl FilenNativeClient {
         item: &NativeItem,
         writer: &mut W,
     ) -> Result<u64> {
+        if is_empty_file(item) {
+            return Ok(0);
+        }
         self.download_chunks_to_writer(item, 0, item.chunks.max(1) as usize, writer)
     }
 
@@ -2565,6 +2575,10 @@ impl FilenNativeClient {
         writer: &mut W,
         mut progress: F,
     ) -> Result<u64> {
+        if is_empty_file(item) {
+            progress(0, 0);
+            return Ok(0);
+        }
         self.download_chunks_to_writer_with_progress(
             item,
             0,
@@ -4383,5 +4397,43 @@ mod tests {
         assert_eq!(std::fs::read(destination).unwrap(), b"hello");
         assert_eq!(progress, vec![(0, 1, 5, 5), (1, 1, 5, 5)]);
         assert!(!state_path.exists());
+    }
+}
+
+/// Files uploaded through `/v3/upload/empty` have no chunks on the storage
+/// nodes; asking for chunk 0 answers 404, so they are served locally.
+fn is_empty_file(item: &NativeItem) -> bool {
+    !item.is_dir && item.size == 0 && item.chunks == 0
+}
+
+#[cfg(test)]
+mod empty_file_tests {
+    use super::*;
+
+    fn item(is_dir: bool, size: u64, chunks: u64) -> NativeItem {
+        NativeItem {
+            uuid: "u".into(),
+            name: "n".into(),
+            is_dir,
+            size,
+            parent: "p".into(),
+            file_key: None,
+            bucket: String::new(),
+            region: String::new(),
+            chunks,
+            version: 2,
+            mime: String::new(),
+            created: 0,
+            modified: 0,
+            hash: String::new(),
+        }
+    }
+
+    #[test]
+    fn only_chunkless_zero_byte_files_are_served_locally() {
+        assert!(is_empty_file(&item(false, 0, 0)));
+        assert!(!is_empty_file(&item(false, 1, 1)));
+        assert!(!is_empty_file(&item(false, 0, 1)));
+        assert!(!is_empty_file(&item(true, 0, 0)));
     }
 }

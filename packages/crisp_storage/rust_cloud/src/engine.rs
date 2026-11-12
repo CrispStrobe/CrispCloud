@@ -8,11 +8,13 @@ use crate::error::{classify, CloudError, CloudResult, ErrorCode};
 use crate::paths;
 use crate::session::Provider;
 use crate::transfer::{CountingReader, CountingWriter, Transfer};
+use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 /// Provider-native identity needed by follow-up operations.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -90,8 +92,72 @@ pub trait Backend: Send + Sync {
     fn revision(&self) -> u64;
 }
 
+/// How long a local mutation stays visible over the provider's listing.
+/// Internxt's listing lags behind its writes for a few hundred milliseconds,
+/// so a folder created a moment ago may be missing and a trashed item may
+/// still appear. Entries leave the overlay as soon as the listing agrees.
+const OVERLAY_TTL: Duration = Duration::from_secs(30);
+
+/// Read-your-writes overlay: folder uuid -> pending changes.
+#[derive(Default)]
+struct Overlay {
+    added: HashMap<String, Vec<(Entry, Instant)>>,
+    /// (uuid, name) pairs that must not be listed; `None` hides any name.
+    hidden: HashMap<String, Vec<(String, Option<String>, Instant)>>,
+}
+
+impl Overlay {
+    fn add(&mut self, parent: &str, entry: Entry) {
+        let list = self.added.entry(parent.to_owned()).or_default();
+        list.retain(|(e, _)| e.uuid != entry.uuid);
+        list.push((entry, Instant::now()));
+    }
+
+    fn hide(&mut self, parent: &str, uuid: &str, name: Option<&str>) {
+        if let Some(list) = self.added.get_mut(parent) {
+            list.retain(|(e, _)| e.uuid != uuid);
+        }
+        self.hidden.entry(parent.to_owned()).or_default().push((
+            uuid.to_owned(),
+            name.map(str::to_owned),
+            Instant::now(),
+        ));
+    }
+
+    fn apply(&mut self, parent: &str, mut items: Vec<Entry>) -> Vec<Entry> {
+        let now = Instant::now();
+        if let Some(hidden) = self.hidden.get_mut(parent) {
+            hidden.retain(|(uuid, name, at)| {
+                now.duration_since(*at) < OVERLAY_TTL
+                    && items.iter().any(|item| {
+                        &item.uuid == uuid && name.as_ref().is_none_or(|n| &item.name == n)
+                    })
+            });
+            items.retain(|item| {
+                !hidden.iter().any(|(uuid, name, _)| {
+                    &item.uuid == uuid && name.as_ref().is_none_or(|n| &item.name == n)
+                })
+            });
+        }
+        if let Some(added) = self.added.get_mut(parent) {
+            added.retain(|(entry, at)| {
+                now.duration_since(*at) < OVERLAY_TTL
+                    && !items
+                        .iter()
+                        .any(|item| item.uuid == entry.uuid && item.name == entry.name)
+            });
+            for (entry, _) in added.iter() {
+                items.retain(|item| item.uuid != entry.uuid);
+                items.push(entry.clone());
+            }
+        }
+        items
+    }
+}
+
 pub struct Engine {
     backend: Box<dyn Backend>,
+    overlay: Mutex<Overlay>,
 }
 
 static STAGING_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -105,7 +171,10 @@ fn fail(error: anyhow::Error, transfer: Option<&Transfer>) -> CloudError {
 
 impl Engine {
     pub fn new(backend: Box<dyn Backend>) -> Self {
-        Self { backend }
+        Self {
+            backend,
+            overlay: Mutex::new(Overlay::default()),
+        }
     }
 
     pub fn provider(&self) -> Provider {
@@ -129,11 +198,22 @@ impl Engine {
         self.backend.export_session().map_err(|e| fail(e, None))
     }
 
-    fn child(&self, folder: &Entry, name: &str, fresh: bool) -> CloudResult<Option<Entry>> {
-        Ok(self
+    fn overlay(&self) -> std::sync::MutexGuard<'_, Overlay> {
+        self.overlay.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Provider listing with this engine's own recent mutations applied.
+    fn listing(&self, folder: &Entry, fresh: bool) -> CloudResult<Vec<Entry>> {
+        let items = self
             .backend
             .list(folder, fresh)
-            .map_err(|e| fail(e, None))?
+            .map_err(|e| fail(e, None))?;
+        Ok(self.overlay().apply(&folder.uuid, items))
+    }
+
+    fn child(&self, folder: &Entry, name: &str, fresh: bool) -> CloudResult<Option<Entry>> {
+        Ok(self
+            .listing(folder, fresh)?
             .into_iter()
             .find(|item| item.name == name))
     }
@@ -165,7 +245,7 @@ impl Engine {
 
     pub fn list(&self, path: &str, fresh: bool) -> CloudResult<Vec<Entry>> {
         let folder = self.folder(path, fresh)?;
-        self.backend.list(&folder, fresh).map_err(|e| fail(e, None))
+        self.listing(&folder, fresh)
     }
 
     /// Create every missing folder in `path`; existing folders are reused.
@@ -177,10 +257,14 @@ impl Engine {
             current = match self.child(&current, part, false)? {
                 Some(existing) if existing.is_dir => existing,
                 Some(_) => return Err(CloudError::new(ErrorCode::AlreadyExists)),
-                None => self
-                    .backend
-                    .create_folder(&current, part)
-                    .map_err(|e| fail(e, None))?,
+                None => {
+                    let created = self
+                        .backend
+                        .create_folder(&current, part)
+                        .map_err(|e| fail(e, None))?;
+                    self.overlay().add(&current.uuid, created.clone());
+                    created
+                }
             };
         }
         Ok(current)
@@ -202,7 +286,17 @@ impl Engine {
         }
         self.backend
             .rename(&item, new_name)
-            .map_err(|e| fail(e, None))
+            .map_err(|e| fail(e, None))?;
+        let mut overlay = self.overlay();
+        overlay.hide(&parent.uuid, &item.uuid, Some(&item.name));
+        overlay.add(
+            &parent.uuid,
+            Entry {
+                name: new_name.to_owned(),
+                ..item
+            },
+        );
+        Ok(())
     }
 
     /// Move `path` into the existing folder `target_folder`.
@@ -216,6 +310,7 @@ impl Engine {
             return Err(CloudError::new(ErrorCode::InvalidPath));
         }
         let item = self.resolve_parts(&source, false)?;
+        let parent = self.resolve_parts(&source[..source.len() - 1], false)?;
         if target == source[..source.len() - 1] {
             return Ok(());
         }
@@ -228,7 +323,11 @@ impl Engine {
         }
         self.backend
             .move_to(&item, &folder)
-            .map_err(|e| fail(e, None))
+            .map_err(|e| fail(e, None))?;
+        let mut overlay = self.overlay();
+        overlay.hide(&parent.uuid, &item.uuid, None);
+        overlay.add(&folder.uuid, item);
+        Ok(())
     }
 
     pub fn trash(&self, path: &str) -> CloudResult<()> {
@@ -237,7 +336,10 @@ impl Engine {
             return Err(CloudError::new(ErrorCode::RootMutation));
         }
         let item = self.resolve_parts(&parts, false)?;
-        self.backend.trash(&item).map_err(|e| fail(e, None))
+        let parent = self.resolve_parts(&parts[..parts.len() - 1], false)?;
+        self.backend.trash(&item).map_err(|e| fail(e, None))?;
+        self.overlay().hide(&parent.uuid, &item.uuid, None);
+        Ok(())
     }
 
     /// Upload a local file. The caller owns conflict policy; providers keep
@@ -255,6 +357,11 @@ impl Engine {
             return Err(CloudError::new(ErrorCode::NotAFile));
         }
         let size = metadata.len();
+        if size == 0 && self.backend.provider() == Provider::Internxt {
+            // Internxt rejects zero-byte files on every plan (402 "You can
+            // not have empty files"); fail before any request.
+            return Err(CloudError::new(ErrorCode::EmptyFileUnsupported));
+        }
         transfer.set_total(size);
         let folder = self.folder(target_folder, false)?;
         if transfer.is_cancelled() {
@@ -287,7 +394,8 @@ impl Engine {
             writer.flush().map_err(|_| CloudError::new(ErrorCode::Io))?;
             let written = writer.written;
             let file = writer.into_inner();
-            file.sync_all().map_err(|_| CloudError::new(ErrorCode::Io))?;
+            file.sync_all()
+                .map_err(|_| CloudError::new(ErrorCode::Io))?;
             drop(file);
             if written != item.size {
                 return Err(CloudError::new(ErrorCode::Integrity));
@@ -393,9 +501,10 @@ pub mod fake {
             Self::take_failure(&mut state)?;
             state.next += 1;
             let entry = Entry::folder(&format!("d{}", state.next), name);
-            state
-                .items
-                .insert(entry.uuid.clone(), (entry.clone(), parent.uuid.clone(), vec![]));
+            state.items.insert(
+                entry.uuid.clone(),
+                (entry.clone(), parent.uuid.clone(), vec![]),
+            );
             Ok(entry)
         }
         fn rename(&self, item: &Entry, new_name: &str) -> anyhow::Result<()> {
@@ -498,7 +607,13 @@ mod tests {
         assert_eq!(created.name, "c");
         let again = engine.mkdir("a/b/c/").unwrap();
         assert_eq!(again.uuid, created.uuid);
-        let mkdirs = state.lock().unwrap().calls.iter().filter(|c| c.starts_with("mkdir")).count();
+        let mkdirs = state
+            .lock()
+            .unwrap()
+            .calls
+            .iter()
+            .filter(|c| c.starts_with("mkdir"))
+            .count();
         assert_eq!(mkdirs, 3);
         assert_eq!(engine.stat("/a/b").unwrap().name, "b");
     }
@@ -508,9 +623,18 @@ mod tests {
         let (engine, _) = engine();
         let dir = tempfile::tempdir().unwrap();
         upload_bytes(&engine, dir.path(), "/", "file.txt", b"x");
-        assert_eq!(engine.mkdir("/file.txt").unwrap_err().code, ErrorCode::AlreadyExists);
-        assert_eq!(engine.mkdir("/a/../b").unwrap_err().code, ErrorCode::InvalidPath);
-        assert_eq!(engine.mkdir("/a\\b").unwrap_err().code, ErrorCode::InvalidName);
+        assert_eq!(
+            engine.mkdir("/file.txt").unwrap_err().code,
+            ErrorCode::AlreadyExists
+        );
+        assert_eq!(
+            engine.mkdir("/a/../b").unwrap_err().code,
+            ErrorCode::InvalidPath
+        );
+        assert_eq!(
+            engine.mkdir("/a\\b").unwrap_err().code,
+            ErrorCode::InvalidName
+        );
     }
 
     #[test]
@@ -519,9 +643,18 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         engine.mkdir("/docs").unwrap();
         upload_bytes(&engine, dir.path(), "/docs", "a.txt", b"abc");
-        assert_eq!(engine.stat("/missing").unwrap_err().code, ErrorCode::NotFound);
-        assert_eq!(engine.list("/docs/a.txt", false).unwrap_err().code, ErrorCode::NotAFolder);
-        assert_eq!(engine.stat("/docs/a.txt/x").unwrap_err().code, ErrorCode::NotAFolder);
+        assert_eq!(
+            engine.stat("/missing").unwrap_err().code,
+            ErrorCode::NotFound
+        );
+        assert_eq!(
+            engine.list("/docs/a.txt", false).unwrap_err().code,
+            ErrorCode::NotAFolder
+        );
+        assert_eq!(
+            engine.stat("/docs/a.txt/x").unwrap_err().code,
+            ErrorCode::NotAFolder
+        );
         let listing = engine.list("/docs", true).unwrap();
         assert_eq!(listing.len(), 1);
         assert_eq!(listing[0].size, 3);
@@ -547,13 +680,27 @@ mod tests {
         let (engine, state) = engine();
         engine.mkdir("/a").unwrap();
         engine.mkdir("/b").unwrap();
-        assert_eq!(engine.rename("/a", "b").unwrap_err().code, ErrorCode::AlreadyExists);
-        assert!(!state.lock().unwrap().calls.iter().any(|c| c.starts_with("rename")));
+        assert_eq!(
+            engine.rename("/a", "b").unwrap_err().code,
+            ErrorCode::AlreadyExists
+        );
+        assert!(!state
+            .lock()
+            .unwrap()
+            .calls
+            .iter()
+            .any(|c| c.starts_with("rename")));
         engine.rename("/a", "c").unwrap();
         assert_eq!(engine.stat("/c").unwrap().name, "c");
         engine.rename("/c", "c").unwrap();
-        assert_eq!(engine.rename("/", "x").unwrap_err().code, ErrorCode::RootMutation);
-        assert_eq!(engine.rename("/c", "x/y").unwrap_err().code, ErrorCode::InvalidName);
+        assert_eq!(
+            engine.rename("/", "x").unwrap_err().code,
+            ErrorCode::RootMutation
+        );
+        assert_eq!(
+            engine.rename("/c", "x/y").unwrap_err().code,
+            ErrorCode::InvalidName
+        );
     }
 
     #[test]
@@ -561,16 +708,36 @@ mod tests {
         let (engine, state) = engine();
         engine.mkdir("/a/inner").unwrap();
         engine.mkdir("/b").unwrap();
-        assert_eq!(engine.move_into("/a", "/a/inner").unwrap_err().code, ErrorCode::InvalidPath);
-        assert_eq!(engine.move_into("/a", "/a").unwrap_err().code, ErrorCode::InvalidPath);
-        assert_eq!(engine.move_into("/", "/b").unwrap_err().code, ErrorCode::RootMutation);
-        assert_eq!(engine.move_into("/a", "/missing").unwrap_err().code, ErrorCode::NotFound);
+        assert_eq!(
+            engine.move_into("/a", "/a/inner").unwrap_err().code,
+            ErrorCode::InvalidPath
+        );
+        assert_eq!(
+            engine.move_into("/a", "/a").unwrap_err().code,
+            ErrorCode::InvalidPath
+        );
+        assert_eq!(
+            engine.move_into("/", "/b").unwrap_err().code,
+            ErrorCode::RootMutation
+        );
+        assert_eq!(
+            engine.move_into("/a", "/missing").unwrap_err().code,
+            ErrorCode::NotFound
+        );
         engine.move_into("/a/inner", "/a").unwrap(); // already there: no-op
-        assert!(!state.lock().unwrap().calls.iter().any(|c| c.starts_with("move")));
+        assert!(!state
+            .lock()
+            .unwrap()
+            .calls
+            .iter()
+            .any(|c| c.starts_with("move")));
         engine.move_into("/a/inner", "/b").unwrap();
         assert_eq!(engine.stat("/b/inner").unwrap().name, "inner");
         engine.mkdir("/a/inner").unwrap();
-        assert_eq!(engine.move_into("/a/inner", "/b").unwrap_err().code, ErrorCode::AlreadyExists);
+        assert_eq!(
+            engine.move_into("/a/inner", "/b").unwrap_err().code,
+            ErrorCode::AlreadyExists
+        );
     }
 
     #[test]
@@ -579,7 +746,10 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         engine.mkdir("/a").unwrap();
         upload_bytes(&engine, dir.path(), "/", "f.bin", b"1");
-        assert_eq!(engine.move_into("/a", "/f.bin").unwrap_err().code, ErrorCode::NotAFolder);
+        assert_eq!(
+            engine.move_into("/a", "/f.bin").unwrap_err().code,
+            ErrorCode::NotAFolder
+        );
     }
 
     #[test]
@@ -600,11 +770,17 @@ mod tests {
         let local = dir.path().join("in.bin");
         fs::write(&local, &data).unwrap();
         let up = Arc::new(Transfer::default());
-        assert_eq!(engine.upload(&local, "/", "in.bin", up.clone()).unwrap(), 100_000);
+        assert_eq!(
+            engine.upload(&local, "/", "in.bin", up.clone()).unwrap(),
+            100_000
+        );
         assert_eq!(up.snapshot(), (100_000, 100_000));
         let out = dir.path().join("out.bin");
         let down = Arc::new(Transfer::default());
-        assert_eq!(engine.download("/in.bin", &out, down.clone()).unwrap(), 100_000);
+        assert_eq!(
+            engine.download("/in.bin", &out, down.clone()).unwrap(),
+            100_000
+        );
         assert_eq!(fs::read(&out).unwrap(), data);
         assert_eq!(down.snapshot(), (100_000, 100_000));
         let leftovers: Vec<_> = fs::read_dir(dir.path())
@@ -622,13 +798,28 @@ mod tests {
         let local = dir.path().join("a");
         fs::write(&local, b"1").unwrap();
         let t = || Arc::new(Transfer::default());
-        assert_eq!(engine.upload(&local, "/", "a/b", t()).unwrap_err().code, ErrorCode::InvalidName);
-        assert_eq!(engine.upload(dir.path(), "/", "a", t()).unwrap_err().code, ErrorCode::NotAFile);
         assert_eq!(
-            engine.upload(&dir.path().join("missing"), "/", "a", t()).unwrap_err().code,
+            engine.upload(&local, "/", "a/b", t()).unwrap_err().code,
+            ErrorCode::InvalidName
+        );
+        assert_eq!(
+            engine.upload(dir.path(), "/", "a", t()).unwrap_err().code,
+            ErrorCode::NotAFile
+        );
+        assert_eq!(
+            engine
+                .upload(&dir.path().join("missing"), "/", "a", t())
+                .unwrap_err()
+                .code,
             ErrorCode::Io
         );
-        assert_eq!(engine.upload(&local, "/missing", "a", t()).unwrap_err().code, ErrorCode::NotFound);
+        assert_eq!(
+            engine
+                .upload(&local, "/missing", "a", t())
+                .unwrap_err()
+                .code,
+            ErrorCode::NotFound
+        );
     }
 
     #[test]
@@ -639,7 +830,10 @@ mod tests {
         fs::write(&local, vec![1u8; 1000]).unwrap();
         let transfer = Arc::new(Transfer::default());
         transfer.cancel();
-        assert_eq!(engine.upload(&local, "/", "a", transfer).unwrap_err().code, ErrorCode::Cancelled);
+        assert_eq!(
+            engine.upload(&local, "/", "a", transfer).unwrap_err().code,
+            ErrorCode::Cancelled
+        );
         assert!(state.lock().unwrap().items.is_empty());
     }
 
@@ -657,9 +851,11 @@ mod tests {
         assert_eq!(error.code, ErrorCode::Server);
         assert!(error.retryable);
         assert_eq!(fs::read(&out).unwrap(), b"previous");
-        assert!(!fs::read_dir(dir.path())
+        assert!(!fs::read_dir(dir.path()).unwrap().any(|e| e
             .unwrap()
-            .any(|e| e.unwrap().file_name().to_string_lossy().contains("crisp-part")));
+            .file_name()
+            .to_string_lossy()
+            .contains("crisp-part")));
     }
 
     #[test]
@@ -670,7 +866,10 @@ mod tests {
         let transfer = Arc::new(Transfer::default());
         transfer.cancel();
         let out = dir.path().join("out.bin");
-        assert_eq!(engine.download("/r.bin", &out, transfer).unwrap_err().code, ErrorCode::Cancelled);
+        assert_eq!(
+            engine.download("/r.bin", &out, transfer).unwrap_err().code,
+            ErrorCode::Cancelled
+        );
         assert!(!out.exists());
     }
 
@@ -680,11 +879,20 @@ mod tests {
         engine.mkdir("/d").unwrap();
         let dir = tempfile::tempdir().unwrap();
         let t = || Arc::new(Transfer::default());
-        assert_eq!(engine.download("/d", &dir.path().join("x"), t()).unwrap_err().code, ErrorCode::NotAFile);
+        assert_eq!(
+            engine
+                .download("/d", &dir.path().join("x"), t())
+                .unwrap_err()
+                .code,
+            ErrorCode::NotAFile
+        );
         let tmp = tempfile::tempdir().unwrap();
         upload_bytes(&engine, tmp.path(), "/", "f", b"1");
         assert_eq!(
-            engine.download("/f", &dir.path().join("no/such/dir/x"), t()).unwrap_err().code,
+            engine
+                .download("/f", &dir.path().join("no/such/dir/x"), t())
+                .unwrap_err()
+                .code,
             ErrorCode::Io
         );
     }
@@ -693,7 +901,10 @@ mod tests {
     fn backend_errors_are_classified() {
         let (engine, state) = engine();
         state.lock().unwrap().fail_next = Some("Filen HTTP 401: expired".into());
-        assert_eq!(engine.list("/", false).unwrap_err().code, ErrorCode::SessionExpired);
+        assert_eq!(
+            engine.list("/", false).unwrap_err().code,
+            ErrorCode::SessionExpired
+        );
         state.lock().unwrap().fail_next = Some("Internxt folder endpoint returned 500 x".into());
         let error = engine.mkdir("/t").unwrap_err();
         assert_eq!(error.code, ErrorCode::Server);
@@ -720,10 +931,94 @@ mod tests {
         let b = staging_path(&dir.path().join("x.bin")).unwrap();
         assert_ne!(a, b);
         assert_eq!(a.parent(), Some(dir.path()));
-        assert!(a.file_name().unwrap().to_string_lossy().starts_with(".x.bin.crisp-part-"));
+        assert!(a
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .starts_with(".x.bin.crisp-part-"));
         assert_eq!(
-            staging_path(&dir.path().join("missing/x")).unwrap_err().code,
+            staging_path(&dir.path().join("missing/x"))
+                .unwrap_err()
+                .code,
             ErrorCode::Io
         );
+    }
+
+    fn file(uuid: &str, name: &str) -> Entry {
+        Entry {
+            is_dir: false,
+            ..Entry::folder(uuid, name)
+        }
+    }
+
+    #[test]
+    fn overlay_shows_a_created_folder_until_the_listing_has_it() {
+        let mut overlay = Overlay::default();
+        overlay.add("root", Entry::folder("new", "Docs"));
+        // Lagging listing: the folder is still missing.
+        let listed = overlay.apply("root", vec![file("a", "a.txt")]);
+        assert_eq!(
+            listed.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(),
+            ["a.txt", "Docs"]
+        );
+        // Listing caught up: no duplicate, and the overlay entry is dropped.
+        let listed = overlay.apply("root", vec![Entry::folder("new", "Docs")]);
+        assert_eq!(listed.len(), 1);
+        assert!(overlay.added.get("root").unwrap().is_empty());
+        // Other folders are not affected.
+        assert!(overlay.apply("other", vec![]).is_empty());
+    }
+
+    #[test]
+    fn overlay_hides_trashed_items_until_the_listing_drops_them() {
+        let mut overlay = Overlay::default();
+        overlay.hide("root", "a", None);
+        assert!(overlay.apply("root", vec![file("a", "a.txt")]).is_empty());
+        assert!(overlay.apply("root", vec![]).is_empty());
+        assert!(overlay.hidden.get("root").unwrap().is_empty());
+        // A later item that reuses the uuid is visible again.
+        assert_eq!(overlay.apply("root", vec![file("a", "a.txt")]).len(), 1);
+    }
+
+    #[test]
+    fn overlay_rename_hides_only_the_old_name() {
+        let mut overlay = Overlay::default();
+        overlay.hide("root", "a", Some("old.txt"));
+        overlay.add("root", file("a", "new.txt"));
+        let names = |items: Vec<Entry>| items.into_iter().map(|e| e.name).collect::<Vec<_>>();
+        assert_eq!(
+            names(overlay.apply("root", vec![file("a", "old.txt")])),
+            ["new.txt"]
+        );
+        assert_eq!(
+            names(overlay.apply("root", vec![file("a", "new.txt")])),
+            ["new.txt"]
+        );
+    }
+
+    #[test]
+    fn overlay_expires_stale_entries() {
+        let mut overlay = Overlay::default();
+        let past = Instant::now() - OVERLAY_TTL - Duration::from_secs(1);
+        overlay
+            .added
+            .insert("root".into(), vec![(Entry::folder("x", "Ghost"), past)]);
+        overlay
+            .hidden
+            .insert("root".into(), vec![("a".into(), None, past)]);
+        let listed = overlay.apply("root", vec![file("a", "a.txt")]);
+        assert_eq!(
+            listed.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(),
+            ["a.txt"]
+        );
+    }
+
+    #[test]
+    fn overlay_move_hides_in_source_and_adds_in_target() {
+        let mut overlay = Overlay::default();
+        overlay.hide("src", "a", None);
+        overlay.add("dst", file("a", "a.txt"));
+        assert!(overlay.apply("src", vec![file("a", "a.txt")]).is_empty());
+        assert_eq!(overlay.apply("dst", vec![]).len(), 1);
     }
 }

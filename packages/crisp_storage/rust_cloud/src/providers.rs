@@ -36,8 +36,13 @@ fn filen_item(entry: &Entry) -> CloudResult<&crisp_filen::NativeItem> {
 }
 
 impl FilenBackend {
-    pub fn login(email: &str, password: &str, tfa: Option<&str>) -> anyhow::Result<SessionEnvelope> {
-        let session = FilenNativeClient::login(crisp_filen::DEFAULT_GATEWAY_URL, email, password, tfa)?;
+    pub fn login(
+        email: &str,
+        password: &str,
+        tfa: Option<&str>,
+    ) -> anyhow::Result<SessionEnvelope> {
+        let session =
+            FilenNativeClient::login(crisp_filen::DEFAULT_GATEWAY_URL, email, password, tfa)?;
         Ok(SessionEnvelope::new(
             Provider::Filen,
             &session.email,
@@ -110,7 +115,8 @@ impl Backend for FilenBackend {
     }
     fn download(&self, item: &Entry, writer: &mut dyn Write) -> anyhow::Result<u64> {
         let mut writer = writer;
-        self.client.download_file_to_writer(filen_item(item)?, &mut writer)
+        self.client
+            .download_file_to_writer(filen_item(item)?, &mut writer)
     }
     fn export_session(&self) -> anyhow::Result<serde_json::Value> {
         Ok(serde_json::to_value(&self.session)?)
@@ -166,7 +172,11 @@ fn internxt_entry(item: crisp_internxt::NativeItem) -> Entry {
 }
 
 impl InternxtBackend {
-    pub fn login(email: &str, password: &str, tfa: Option<&str>) -> anyhow::Result<SessionEnvelope> {
+    pub fn login(
+        email: &str,
+        password: &str,
+        tfa: Option<&str>,
+    ) -> anyhow::Result<SessionEnvelope> {
         let session = InternxtNativeClient::login_without_keys(
             crisp_internxt::DEFAULT_DRIVE_API_URL,
             email,
@@ -371,7 +381,11 @@ pub mod tests {
             private_key: None,
             hmac_key: None,
         };
-        SessionEnvelope::new(Provider::Filen, "f@example.com", serde_json::to_value(session).unwrap())
+        SessionEnvelope::new(
+            Provider::Filen,
+            "f@example.com",
+            serde_json::to_value(session).unwrap(),
+        )
     }
 
     pub fn internxt_envelope() -> SessionEnvelope {
@@ -387,7 +401,11 @@ pub mod tests {
             bridge_user: "bridge".into(),
             bucket_id: "00112233445566778899aabb".into(),
         };
-        SessionEnvelope::new(Provider::Internxt, "i@example.com", serde_json::to_value(session).unwrap())
+        SessionEnvelope::new(
+            Provider::Internxt,
+            "i@example.com",
+            serde_json::to_value(session).unwrap(),
+        )
     }
 
     #[test]
@@ -411,37 +429,62 @@ pub mod tests {
     fn rejects_identity_mismatch_and_incomplete_sessions() {
         let mut envelope = filen_envelope();
         envelope.account = "other@example.com".into();
-        assert_eq!(FilenBackend::open(&envelope).err().unwrap().code, ErrorCode::InvalidSession);
+        assert_eq!(
+            FilenBackend::open(&envelope).err().unwrap().code,
+            ErrorCode::InvalidSession
+        );
         let mut envelope = filen_envelope();
         envelope.session["api_key"] = "".into();
-        assert_eq!(FilenBackend::open(&envelope).err().unwrap().code, ErrorCode::InvalidSession);
+        assert_eq!(
+            FilenBackend::open(&envelope).err().unwrap().code,
+            ErrorCode::InvalidSession
+        );
         let mut envelope = internxt_envelope();
         envelope.session["bucket_id"] = "zz".into();
-        assert_eq!(InternxtBackend::open(&envelope).err().unwrap().code, ErrorCode::InvalidSession);
+        assert_eq!(
+            InternxtBackend::open(&envelope).err().unwrap().code,
+            ErrorCode::InvalidSession
+        );
         let mut envelope = internxt_envelope();
         envelope.session["mnemonic"] = "".into();
-        assert_eq!(InternxtBackend::open(&envelope).err().unwrap().code, ErrorCode::InvalidSession);
+        assert_eq!(
+            InternxtBackend::open(&envelope).err().unwrap().code,
+            ErrorCode::InvalidSession
+        );
         let mut envelope = internxt_envelope();
         envelope.session = serde_json::json!({"token": "t"});
-        assert_eq!(InternxtBackend::open(&envelope).err().unwrap().code, ErrorCode::InvalidSession);
+        assert_eq!(
+            InternxtBackend::open(&envelope).err().unwrap().code,
+            ErrorCode::InvalidSession
+        );
     }
 
     #[test]
     fn login_rejects_empty_credentials_before_network() {
         let error = login(Provider::Filen, " ", "pw", None).unwrap_err();
-        assert_eq!(crate::error::classify(&error).code, ErrorCode::InvalidArgument);
+        assert_eq!(
+            crate::error::classify(&error).code,
+            ErrorCode::InvalidArgument
+        );
         let error = login(Provider::Internxt, "a@b", "", None).unwrap_err();
-        assert_eq!(crate::error::classify(&error).code, ErrorCode::InvalidArgument);
+        assert_eq!(
+            crate::error::classify(&error).code,
+            ErrorCode::InvalidArgument
+        );
     }
 
     #[test]
     fn expired_token_predicate() {
-        assert!(is_expired_token(&anyhow::anyhow!("Internxt list returned 401 Unauthorized")));
+        assert!(is_expired_token(&anyhow::anyhow!(
+            "Internxt list returned 401 Unauthorized"
+        )));
         assert!(is_expired_token(&anyhow::anyhow!("token expired")));
         assert!(!is_expired_token(&anyhow::anyhow!("returned 4010 bytes")));
         assert!(!is_expired_token(&anyhow::anyhow!("folder 401 not empty")));
         assert!(is_expired_token(&anyhow::anyhow!("Filen HTTP 401: x")));
-        assert!(!is_expired_token(&anyhow::anyhow!("returned 403 Forbidden")));
+        assert!(!is_expired_token(&anyhow::anyhow!(
+            "returned 403 Forbidden"
+        )));
     }
 
     #[test]
@@ -480,6 +523,9 @@ pub mod tests {
         let backend = InternxtBackend::open(&internxt_envelope()).unwrap();
         let error = backend.list(&backend.root(), true).unwrap_err();
         let code = crate::error::classify(&error).code;
-        assert!(matches!(code, ErrorCode::Network | ErrorCode::Provider), "{code:?}");
+        assert!(
+            matches!(code, ErrorCode::Network | ErrorCode::Provider),
+            "{code:?}"
+        );
     }
 }

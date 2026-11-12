@@ -438,6 +438,7 @@ enum _StartupAction { retry, restoreAccess }
 Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
   required bool allowFirstSetup,
 }) async {
+  await PlatformSecureStorage.detectMacOsKeychain();
   String? firstVaultPassword;
   var freshSetupAllowed = allowFirstSetup;
   final bootstrap = CredentialStorageBootstrap(

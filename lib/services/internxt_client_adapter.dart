@@ -22,6 +22,7 @@ import 'package:internxt_client/internxt_client.dart';
 import 'package:crisp_storage/rust_cloud.dart';
 
 import 'cloud_storage_interface.dart';
+import 'connection_failure.dart';
 import 'internxt_client.dart' show InternxtUrls;
 import 'internxt_operation_failure.dart';
 import 'internxt_flutter/secure_config_storage.dart';
@@ -387,6 +388,7 @@ class InternxtClientAdapter extends CloudStorageClient
     String targetPath, {
     Function(int, int)? onProgress,
   }) async {
+    if (length == 0) throw InternxtEmptyFileUnsupported();
     final rust = _rust;
     if (rust != null) {
       return rust.uploadStream(

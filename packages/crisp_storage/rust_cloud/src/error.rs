@@ -31,6 +31,8 @@ pub enum ErrorCode {
     Io,
     Integrity,
     Provider,
+    /// The provider cannot store zero-byte files (Internxt).
+    EmptyFileUnsupported,
     Internal,
 }
 
@@ -60,6 +62,7 @@ impl ErrorCode {
             ErrorCode::Io => "Io",
             ErrorCode::Integrity => "Integrity",
             ErrorCode::Provider => "Provider",
+            ErrorCode::EmptyFileUnsupported => "EmptyFileUnsupported",
             ErrorCode::Internal => "Internal",
         }
     }
@@ -168,6 +171,9 @@ pub fn classify_text(raw: &str) -> CloudError {
     if text.contains(crate::transfer::CANCELLED_MARKER) || text.contains("transfer cancelled") {
         return CloudError::new(ErrorCode::Cancelled);
     }
+    if text.contains("empty files") {
+        return with(CloudError::new(ErrorCode::EmptyFileUnsupported));
+    }
     if text.contains("enter_2fa")
         || text.contains("wrong_2fa")
         || text.contains("2fa")
@@ -225,7 +231,9 @@ pub fn classify_text(raw: &str) -> CloudError {
     {
         return with(CloudError::new(ErrorCode::Network));
     }
-    if text.contains("no space left") || text.contains("permission denied") || text.contains("os error")
+    if text.contains("no space left")
+        || text.contains("permission denied")
+        || text.contains("os error")
     {
         return with(CloudError::new(ErrorCode::Io));
     }
@@ -238,7 +246,9 @@ mod tests {
 
     #[test]
     fn error_json_contains_only_code_retry_and_status() {
-        let json = CloudError::new(ErrorCode::Server).with_status(503).to_json();
+        let json = CloudError::new(ErrorCode::Server)
+            .with_status(503)
+            .to_json();
         let value: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(value["code"], "Server");
         assert_eq!(value["retryable"], true);
@@ -274,37 +284,72 @@ mod tests {
     #[test]
     fn classifies_internxt_login_failures() {
         assert_eq!(
-            classify_text("Internxt login access returned 401 Unauthorized (wrong_2fa): Invalid code").code,
+            classify_text(
+                "Internxt login access returned 401 Unauthorized (wrong_2fa): Invalid code"
+            )
+            .code,
             ErrorCode::TwoFactorRequired
         );
-        let error = classify_text("Internxt login access returned 401 Unauthorized: Wrong login credentials");
+        let error = classify_text(
+            "Internxt login access returned 401 Unauthorized: Wrong login credentials",
+        );
         assert_eq!(error.code, ErrorCode::AuthFailed);
         assert_eq!(error.status, Some(401));
-        assert_eq!(classify_text("decrypting Internxt mnemonic").code, ErrorCode::AuthFailed);
+        assert_eq!(
+            classify_text("decrypting Internxt mnemonic").code,
+            ErrorCode::AuthFailed
+        );
     }
 
     #[test]
     fn classifies_http_status_families() {
-        assert_eq!(classify_text("Filen HTTP 401: nope").code, ErrorCode::SessionExpired);
+        assert_eq!(
+            classify_text("Filen HTTP 401: nope").code,
+            ErrorCode::SessionExpired
+        );
         let limited = classify_text("Filen HTTP 429: slow down");
         assert_eq!(limited.code, ErrorCode::RateLimited);
         assert!(limited.retryable);
         let server = classify_text("Internxt trash endpoint returned 502 Bad Gateway: x");
         assert_eq!(server.code, ErrorCode::Server);
         assert_eq!(server.status, Some(502));
-        assert_eq!(classify_text("Internxt move endpoint returned 409 Conflict: x").code, ErrorCode::AlreadyExists);
-        assert_eq!(classify_text("returned 404 Not Found").code, ErrorCode::NotFound);
+        assert_eq!(
+            classify_text("Internxt move endpoint returned 409 Conflict: x").code,
+            ErrorCode::AlreadyExists
+        );
+        assert_eq!(
+            classify_text("returned 404 Not Found").code,
+            ErrorCode::NotFound
+        );
     }
 
     #[test]
     fn classifies_paths_integrity_network_and_io() {
-        assert_eq!(classify_text("Filen path not found: \"/a\"").code, ErrorCode::NotFound);
-        assert_eq!(classify_text("Internxt path component not found: x").code, ErrorCode::NotFound);
-        assert_eq!(classify_text("Filen file hash mismatch").code, ErrorCode::Integrity);
+        assert_eq!(
+            classify_text("Filen path not found: \"/a\"").code,
+            ErrorCode::NotFound
+        );
+        assert_eq!(
+            classify_text("Internxt path component not found: x").code,
+            ErrorCode::NotFound
+        );
+        assert_eq!(
+            classify_text("Filen file hash mismatch").code,
+            ErrorCode::Integrity
+        );
         assert_eq!(classify_text("aead::Error").code, ErrorCode::Integrity);
-        assert_eq!(classify_text("error sending request for url").code, ErrorCode::Network);
-        assert_eq!(classify_text("operation timed out").code, ErrorCode::Network);
-        assert_eq!(classify_text("No space left on device (os error 28)").code, ErrorCode::Io);
+        assert_eq!(
+            classify_text("error sending request for url").code,
+            ErrorCode::Network
+        );
+        assert_eq!(
+            classify_text("operation timed out").code,
+            ErrorCode::Network
+        );
+        assert_eq!(
+            classify_text("No space left on device (os error 28)").code,
+            ErrorCode::Io
+        );
         assert_eq!(classify_text("something odd").code, ErrorCode::Provider);
     }
 
@@ -316,7 +361,10 @@ mod tests {
         assert_eq!(classify(&wrapped).code, ErrorCode::NotAFolder);
         let io = std::io::Error::other(crate::transfer::CANCELLED_MARKER);
         assert_eq!(classify(&anyhow::Error::new(io)).code, ErrorCode::Cancelled);
-        assert_eq!(classify_text("transfer cancelled").code, ErrorCode::Cancelled);
+        assert_eq!(
+            classify_text("transfer cancelled").code,
+            ErrorCode::Cancelled
+        );
     }
 
     #[test]

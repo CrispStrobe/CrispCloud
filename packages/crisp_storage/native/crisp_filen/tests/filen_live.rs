@@ -89,17 +89,29 @@ fn filen_live_100m_resumable_round_trip() {
     let source = tempfile::NamedTempFile::new().unwrap();
     source.as_file().set_len(LARGE_FILE_SIZE).unwrap();
     let mut upload = client
-        .begin_upload(&folder_uuid, "large.bin", "application/octet-stream", LARGE_FILE_SIZE)
+        .begin_upload(
+            &folder_uuid,
+            "large.bin",
+            "application/octet-stream",
+            LARGE_FILE_SIZE,
+        )
         .unwrap();
     let upload_state = tempfile::NamedTempFile::new().unwrap();
-    client.save_upload_resume_state(upload_state.path(), &upload).unwrap();
-    upload = FilenNativeClient::load_upload_resume_state(upload_state.path()).unwrap().unwrap();
+    client
+        .save_upload_resume_state(upload_state.path(), &upload)
+        .unwrap();
+    upload = FilenNativeClient::load_upload_resume_state(upload_state.path())
+        .unwrap()
+        .unwrap();
     client
         .resume_upload_from_reader(&mut upload, std::fs::File::open(source.path()).unwrap())
         .unwrap();
 
     let item = client
-        .resolve_path(&session, std::path::Path::new(&format!("/{folder}/large.bin")))
+        .resolve_path(
+            &session,
+            std::path::Path::new(&format!("/{folder}/large.bin")),
+        )
         .unwrap();
     assert_eq!(item.size, LARGE_FILE_SIZE);
     let output_dir = tempfile::tempdir().unwrap();

@@ -71,8 +71,8 @@ impl SessionEnvelope {
             Some(_) => return Err(CloudError::new(ErrorCode::UnsupportedSessionVersion)),
             None => return Err(CloudError::new(ErrorCode::InvalidSession)),
         }
-        let envelope: SessionEnvelope =
-            serde_json::from_value(value).map_err(|_| CloudError::new(ErrorCode::InvalidSession))?;
+        let envelope: SessionEnvelope = serde_json::from_value(value)
+            .map_err(|_| CloudError::new(ErrorCode::InvalidSession))?;
         if envelope.provider != expected {
             return Err(CloudError::new(ErrorCode::ProviderMismatch));
         }
@@ -88,21 +88,34 @@ mod tests {
     use super::*;
 
     fn sample() -> SessionEnvelope {
-        SessionEnvelope::new(Provider::Filen, "a@example.com", serde_json::json!({"k": 1}))
+        SessionEnvelope::new(
+            Provider::Filen,
+            "a@example.com",
+            serde_json::json!({"k": 1}),
+        )
     }
 
     #[test]
     fn round_trips() {
         let encoded = sample().encode();
-        assert_eq!(SessionEnvelope::decode(&encoded, Provider::Filen).unwrap(), sample());
+        assert_eq!(
+            SessionEnvelope::decode(&encoded, Provider::Filen).unwrap(),
+            sample()
+        );
     }
 
     #[test]
     fn provider_names_parse_strictly() {
         assert_eq!(Provider::parse("filen").unwrap(), Provider::Filen);
         assert_eq!(Provider::parse("internxt").unwrap(), Provider::Internxt);
-        assert_eq!(Provider::parse("Filen").unwrap_err().code, ErrorCode::InvalidArgument);
-        assert_eq!(Provider::parse("").unwrap_err().code, ErrorCode::InvalidArgument);
+        assert_eq!(
+            Provider::parse("Filen").unwrap_err().code,
+            ErrorCode::InvalidArgument
+        );
+        assert_eq!(
+            Provider::parse("").unwrap_err().code,
+            ErrorCode::InvalidArgument
+        );
         assert_eq!(Provider::Internxt.as_str(), "internxt");
     }
 
@@ -110,7 +123,9 @@ mod tests {
     fn rejects_other_provider() {
         let encoded = sample().encode();
         assert_eq!(
-            SessionEnvelope::decode(&encoded, Provider::Internxt).unwrap_err().code,
+            SessionEnvelope::decode(&encoded, Provider::Internxt)
+                .unwrap_err()
+                .code,
             ErrorCode::ProviderMismatch
         );
     }
@@ -120,12 +135,16 @@ mod tests {
         let mut value: serde_json::Value = serde_json::from_str(&sample().encode()).unwrap();
         value["version"] = 2.into();
         assert_eq!(
-            SessionEnvelope::decode(&value.to_string(), Provider::Filen).unwrap_err().code,
+            SessionEnvelope::decode(&value.to_string(), Provider::Filen)
+                .unwrap_err()
+                .code,
             ErrorCode::UnsupportedSessionVersion
         );
         value.as_object_mut().unwrap().remove("version");
         assert_eq!(
-            SessionEnvelope::decode(&value.to_string(), Provider::Filen).unwrap_err().code,
+            SessionEnvelope::decode(&value.to_string(), Provider::Filen)
+                .unwrap_err()
+                .code,
             ErrorCode::InvalidSession
         );
     }

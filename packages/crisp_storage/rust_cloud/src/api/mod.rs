@@ -137,11 +137,17 @@ pub async fn cloud_list(id: u64, path: String, fresh: bool) -> anyhow::Result<St
 }
 
 pub async fn cloud_stat(id: u64, path: String) -> anyhow::Result<String> {
-    out(on_worker(id, move |engine| Ok(engine.stat(&path)?.to_json().to_string())).await)
+    out(on_worker(id, move |engine| {
+        Ok(engine.stat(&path)?.to_json().to_string())
+    })
+    .await)
 }
 
 pub async fn cloud_mkdir(id: u64, path: String) -> anyhow::Result<String> {
-    out(on_worker(id, move |engine| Ok(engine.mkdir(&path)?.to_json().to_string())).await)
+    out(on_worker(id, move |engine| {
+        Ok(engine.mkdir(&path)?.to_json().to_string())
+    })
+    .await)
 }
 
 pub async fn cloud_rename(id: u64, path: String, new_name: String) -> anyhow::Result<()> {
@@ -266,11 +272,15 @@ mod tests {
             assert_eq!(info["root"], root);
             assert_eq!(cloud_session_revision(id).unwrap(), 1);
             let exported = block_on(cloud_export_session(id)).unwrap();
-            let decoded = SessionEnvelope::decode(&exported, Provider::parse(provider).unwrap()).unwrap();
+            let decoded =
+                SessionEnvelope::decode(&exported, Provider::parse(provider).unwrap()).unwrap();
             assert_eq!(decoded, envelope);
             cloud_close_session(id).unwrap();
             assert_eq!(code(cloud_session_info(id).unwrap_err()), "Closed");
-            assert_eq!(code(block_on(cloud_list(id, "/".into(), false)).unwrap_err()), "Closed");
+            assert_eq!(
+                code(block_on(cloud_list(id, "/".into(), false)).unwrap_err()),
+                "Closed"
+            );
             cloud_close_session(id).unwrap();
         }
     }
@@ -283,7 +293,13 @@ mod tests {
             "ProviderMismatch"
         );
         assert_eq!(
-            code(block_on(cloud_open_session("filen".into(), r#"{"apiKey":"k"}"#.into())).unwrap_err()),
+            code(
+                block_on(cloud_open_session(
+                    "filen".into(),
+                    r#"{"apiKey":"k"}"#.into()
+                ))
+                .unwrap_err()
+            ),
             "InvalidSession"
         );
         assert_eq!(
@@ -322,8 +338,14 @@ mod tests {
             serde_json::from_str(&block_on(cloud_stat(id, "/z/c".into())).unwrap()).unwrap();
         assert_eq!(stat["name"], "c");
         block_on(cloud_trash(id, "/z/c".into())).unwrap();
-        assert_eq!(code(block_on(cloud_stat(id, "/z/c".into())).unwrap_err()), "NotFound");
-        assert_eq!(code(block_on(cloud_trash(id, "/".into())).unwrap_err()), "RootMutation");
+        assert_eq!(
+            code(block_on(cloud_stat(id, "/z/c".into())).unwrap_err()),
+            "NotFound"
+        );
+        assert_eq!(
+            code(block_on(cloud_trash(id, "/".into())).unwrap_err()),
+            "RootMutation"
+        );
         cloud_close_session(id).unwrap();
     }
 
@@ -350,7 +372,13 @@ mod tests {
 
         let down = cloud_new_transfer().unwrap();
         let target = dir.path().join("t.bin");
-        block_on(cloud_download(id, down, "/s.bin".into(), target.to_string_lossy().into())).unwrap();
+        block_on(cloud_download(
+            id,
+            down,
+            "/s.bin".into(),
+            target.to_string_lossy().into(),
+        ))
+        .unwrap();
         assert_eq!(std::fs::read(&target).unwrap().len(), 4096);
         cloud_release_transfer(down).unwrap();
 
@@ -358,7 +386,15 @@ mod tests {
         cloud_cancel_transfer(cancelled).unwrap();
         let other = dir.path().join("u.bin");
         assert_eq!(
-            code(block_on(cloud_download(id, cancelled, "/s.bin".into(), other.to_string_lossy().into())).unwrap_err()),
+            code(
+                block_on(cloud_download(
+                    id,
+                    cancelled,
+                    "/s.bin".into(),
+                    other.to_string_lossy().into()
+                ))
+                .unwrap_err()
+            ),
             "Cancelled"
         );
         assert!(!other.exists());

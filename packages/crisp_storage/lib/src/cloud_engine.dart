@@ -99,6 +99,7 @@ enum RustCloudErrorCode {
   io,
   integrity,
   provider,
+  emptyFileUnsupported,
   internal,
 }
 
@@ -178,6 +179,8 @@ class RustCloudException implements Exception {
       RustCloudErrorCode.rateLimited => 'the provider is rate limiting requests.',
       RustCloudErrorCode.server => 'the provider reported a server error.',
       RustCloudErrorCode.integrity => 'downloaded data failed verification.',
+      RustCloudErrorCode.emptyFileUnsupported =>
+        'empty files are not supported.',
       _ => 'request failed (${code.name}).',
     };
     return '$who: $what';

@@ -151,6 +151,37 @@ void main() {
       skip: python == null
           ? 'Set CRISPER_SFTP_PYTHON to a Python with paramiko'
           : false);
+  test('SFTP answers OpenSSH "(user@host) Password:" keyboard-interactive prompts',
+      () async {
+    final root = await Directory.systemTemp.createTemp('crispcloud_ssh_pam_');
+    final process = await Process.start(
+        python!, ['test/support/sftp_fixture.py', root.path, 'interactive-openssh']);
+    final stderr = process.stderr.drain<void>();
+    final info = jsonDecode(await process.stdout
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .first
+        .timeout(const Duration(seconds: 15))) as Map;
+    final client = SFTPClientAdapter(
+        config: SFTPConfigService(
+            configPath: '', secureStorage: InMemorySecureStorage()));
+    client.confirmHostKey = (_, __) async => true;
+    try {
+      await client.login(
+          'reader@127.0.0.1:${info['port']}', 'fixture-password');
+      expect(client.isAuthenticated, isTrue);
+      expect(await File('${root.path}/auth-count').readAsString(), '1');
+    } finally {
+      await client.logout();
+      process.kill();
+      await process.exitCode;
+      await stderr;
+      await root.delete(recursive: true);
+    }
+  },
+      skip: python == null
+          ? 'Set CRISPER_SFTP_PYTHON to a Python with paramiko'
+          : false);
   test('CrispCloud verifies and persists SSH trust before sending a password',
       () async {
     final root = await Directory.systemTemp.createTemp('crispcloud_ssh_');

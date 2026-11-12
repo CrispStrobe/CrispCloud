@@ -32,7 +32,10 @@ fn scratch_name(provider: Provider) -> String {
 
 fn round_trip(provider: Provider) {
     let Some((email, password)) = credentials(provider) else {
-        eprintln!("skipping {} live test: credentials not set", provider.as_str());
+        eprintln!(
+            "skipping {} live test: credentials not set",
+            provider.as_str()
+        );
         return;
     };
     let envelope = providers::login(provider, &email, &password, None).expect("login");
@@ -41,9 +44,8 @@ fn round_trip(provider: Provider) {
     let reopened = SessionEnvelope::decode(&encoded, provider).unwrap();
     let engine = Engine::new(providers::open(&reopened).unwrap());
     let scratch = scratch_name(provider);
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        exercise(&engine, &scratch)
-    }));
+    let result =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| exercise(&engine, &scratch)));
     let cleanup = engine.trash(&scratch);
     if let Err(panic) = result {
         std::panic::resume_unwind(panic);
@@ -58,18 +60,25 @@ fn exercise(engine: &Engine, scratch: &str) {
     assert!(engine.list(scratch, true).unwrap().is_empty());
 
     let dir = tempfile::tempdir().unwrap();
-    let data: Vec<u8> = (0..(1024 * 1024 + 4099)).map(|i| (i * 13 + 5) as u8).collect();
+    let data: Vec<u8> = (0..(1024 * 1024 + 4099))
+        .map(|i| (i * 13 + 5) as u8)
+        .collect();
     let local = dir.path().join("payload.bin");
     std::fs::write(&local, &data).unwrap();
     let upload = Arc::new(Transfer::default());
     assert_eq!(
-        engine.upload(&local, scratch, "payload.bin", upload.clone()).unwrap(),
+        engine
+            .upload(&local, scratch, "payload.bin", upload.clone())
+            .unwrap(),
         data.len() as u64
     );
     assert_eq!(upload.snapshot().1, data.len() as u64);
 
     let listing = engine.list(scratch, true).unwrap();
-    let file = listing.iter().find(|e| e.name == "payload.bin").expect("listed");
+    let file = listing
+        .iter()
+        .find(|e| e.name == "payload.bin")
+        .expect("listed");
     assert_eq!(file.size, data.len() as u64);
     assert!(!file.is_dir);
 
@@ -100,7 +109,10 @@ fn exercise(engine: &Engine, scratch: &str) {
         .rename(&format!("{scratch}/payload.bin"), "renamed.bin")
         .unwrap();
     assert_eq!(
-        engine.stat(&format!("{scratch}/payload.bin")).unwrap_err().code,
+        engine
+            .stat(&format!("{scratch}/payload.bin"))
+            .unwrap_err()
+            .code,
         ErrorCode::NotFound
     );
     engine
@@ -111,10 +123,18 @@ fn exercise(engine: &Engine, scratch: &str) {
     engine
         .rename(&format!("{scratch}/sub/deeper"), "deepest")
         .unwrap();
-    assert!(engine.stat(&format!("{scratch}/sub/deepest")).unwrap().is_dir);
+    assert!(
+        engine
+            .stat(&format!("{scratch}/sub/deepest"))
+            .unwrap()
+            .is_dir
+    );
     engine.trash(&format!("{scratch}/sub/renamed.bin")).unwrap();
     assert_eq!(
-        engine.stat(&format!("{scratch}/sub/renamed.bin")).unwrap_err().code,
+        engine
+            .stat(&format!("{scratch}/sub/renamed.bin"))
+            .unwrap_err()
+            .code,
         ErrorCode::NotFound
     );
 }

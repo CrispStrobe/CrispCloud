@@ -13,6 +13,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
+import 'package:crisp_cloud/services/connection_failure.dart';
 import 'package:crisp_cloud/services/filen_client_adapter.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/internxt_client_adapter.dart';
@@ -43,6 +44,9 @@ String? _env(String key) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // The test binding answers every HTTP request with 400; the Dart engines
+  // need the real network here.
+  HttpOverrides.global = null;
   final rustLibrary = _env('CRISP_CLOUD_LIBRARY');
   final providers = {
     'filen': (_env('CRISP_LIVE_FILEN_EMAIL'), _env('CRISP_LIVE_FILEN_PASSWORD')),
@@ -147,6 +151,15 @@ void main() {
         });
 
         test('empty file round trip', () async {
+          if (provider == 'internxt') {
+            // Internxt refuses zero-byte files on every plan.
+            await expectLater(
+              client.uploadFile(const [], 'empty.txt', scratch),
+              throwsA(isA<InternxtEmptyFileUnsupported>()),
+            );
+            expect(await client.resolvePath('$scratch/empty.txt'), isNull);
+            return;
+          }
           await client.uploadFile(const [], 'empty.txt', scratch);
           expect(await client.downloadFileBytes('$scratch/empty.txt'), isEmpty);
         });
