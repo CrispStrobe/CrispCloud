@@ -318,6 +318,7 @@ void main() {
           ArchiveCompressionKind.zstd => 'zst',
           ArchiveCompressionKind.lz4 => 'lz4',
           ArchiveCompressionKind.lzma => 'lzma',
+          ArchiveCompressionKind.compress => 'Z',
         };
         final source = await _fixture(bytes, name: 'fixture.tar.$extension');
         expect(source.inspection.reason, isNull);

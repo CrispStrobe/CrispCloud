@@ -32,12 +32,14 @@ enum ArchiveCreationFormat {
   tarZstd,
   tarLz4,
   tarLzma,
+  tarCompress,
   gzip,
   bzip2,
   xz,
   zstd,
   lz4,
   lzma,
+  compress,
   ar,
   cpio,
   cpioOdc,
@@ -65,9 +67,11 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarZstd => '.tar.zst',
     ArchiveCreationFormat.tarLz4 => '.tar.lz4',
     ArchiveCreationFormat.tarLzma => '.tar.lzma',
+    ArchiveCreationFormat.tarCompress => '.tar.Z',
     ArchiveCreationFormat.gzip => '.gz',
     ArchiveCreationFormat.bzip2 => '.bz2',
     ArchiveCreationFormat.zstd => '.zst',
+    ArchiveCreationFormat.compress => '.Z',
     ArchiveCreationFormat.cpioOdc ||
     ArchiveCreationFormat.cpioBinaryLittleEndian ||
     ArchiveCreationFormat.cpioBinaryBigEndian => '.cpio',
@@ -82,12 +86,14 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarZstd => 'TAR.ZST',
     ArchiveCreationFormat.tarLz4 => 'TAR.LZ4',
     ArchiveCreationFormat.tarLzma => 'TAR.LZMA',
+    ArchiveCreationFormat.tarCompress => 'TAR.Z',
     ArchiveCreationFormat.gzip => 'gzip — one file',
     ArchiveCreationFormat.bzip2 => 'bzip2 — one file',
     ArchiveCreationFormat.xz => 'XZ — one file',
     ArchiveCreationFormat.zstd => 'Zstandard — one file',
     ArchiveCreationFormat.lz4 => 'LZ4 — one file',
     ArchiveCreationFormat.lzma => 'LZMA — one file',
+    ArchiveCreationFormat.compress => 'UNIX compress — one file',
     ArchiveCreationFormat.hfsx => 'HFSX data image',
     ArchiveCreationFormat.dmg => 'DMG (HFSX data volume)',
     ArchiveCreationFormat.iso => 'ISO data image',
@@ -120,12 +126,14 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarZstd => ArchiveEndpointFormat.tarZstd,
     ArchiveCreationFormat.tarLz4 => ArchiveEndpointFormat.tarLz4,
     ArchiveCreationFormat.tarLzma => ArchiveEndpointFormat.tarLzma,
+    ArchiveCreationFormat.tarCompress => ArchiveEndpointFormat.tarCompress,
     ArchiveCreationFormat.gzip => ArchiveEndpointFormat.gzip,
     ArchiveCreationFormat.bzip2 => ArchiveEndpointFormat.bzip2,
     ArchiveCreationFormat.xz => ArchiveEndpointFormat.xz,
     ArchiveCreationFormat.zstd => ArchiveEndpointFormat.zstd,
     ArchiveCreationFormat.lz4 => ArchiveEndpointFormat.lz4,
     ArchiveCreationFormat.lzma => ArchiveEndpointFormat.lzma,
+    ArchiveCreationFormat.compress => ArchiveEndpointFormat.compress,
     ArchiveCreationFormat.ar => ArchiveEndpointFormat.ar,
     ArchiveCreationFormat.cpio ||
     ArchiveCreationFormat.cpioOdc ||
@@ -149,6 +157,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.lz4 => ArchiveCompressionKind.lz4,
     ArchiveCreationFormat.tarLzma ||
     ArchiveCreationFormat.lzma => ArchiveCompressionKind.lzma,
+    ArchiveCreationFormat.tarCompress ||
+    ArchiveCreationFormat.compress => ArchiveCompressionKind.compress,
     _ => null,
   };
 
@@ -174,6 +184,7 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.zstd,
     ArchiveCreationFormat.lz4,
     ArchiveCreationFormat.lzma,
+    ArchiveCreationFormat.compress,
   }.contains(this);
   bool get diskImage => const {
     ArchiveCreationFormat.iso,
@@ -208,6 +219,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarBzip2 ||
     ArchiveCreationFormat.tarLzma ||
     ArchiveCreationFormat.lzma ||
+    ArchiveCreationFormat.tarCompress ||
+    ArchiveCreationFormat.compress ||
     ArchiveCreationFormat.tarXz ||
     ArchiveCreationFormat.tarZstd ||
     ArchiveCreationFormat.bzip2 ||
@@ -278,7 +291,7 @@ class ArchiveCreationOptions {
         name.endsWith('.') ||
         utf8.encode(name).length > 240 ||
         format.singlePayload && name.length == format.extension.length ||
-        !name.toLowerCase().endsWith(format.extension)) {
+        !name.toLowerCase().endsWith(format.extension.toLowerCase())) {
       throw const ArchiveCreationException(ArchiveCreationError.invalidName);
     }
     final stem = name.split('.').first.toUpperCase();
@@ -732,6 +745,7 @@ class ArchiveCreationService {
             ArchiveEndpointFormat.tarZstd,
             ArchiveEndpointFormat.tarLz4,
             ArchiveEndpointFormat.tarLzma,
+            ArchiveEndpointFormat.tarCompress,
           }.contains(options.format.endpointFormat) ||
           options.format.singlePayload) {
         await writeArchiveEntries(

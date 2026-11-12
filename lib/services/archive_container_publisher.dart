@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -151,10 +152,18 @@ class ArchiveContainerPublisher {
       );
     }
     var count = 0;
+    final elapsed = Stopwatch()..start();
     final hash = await sha256
         .bind(
-          backend.readFile(file).map((chunk) {
+          backend.readFile(file).timeout(const Duration(seconds: 30)).map((
+            chunk,
+          ) {
             _check(isCancelled: isCancelled);
+            if (elapsed.elapsed > const Duration(minutes: 5)) {
+              throw TimeoutException(
+                'Archive verification exceeded five minutes.',
+              );
+            }
             count += chunk.length;
             if (count > ArchivePublicationRecord.maximumContainerBytes ||
                 count > file.size!) {
@@ -172,6 +181,59 @@ class ArchiveContainerPublisher {
     return (file: after!, hash: hash.toString());
   }
 
+  Future<void> _verifyDependency(
+    ArchivePublicationRecord record, {
+    bool Function()? isCancelled,
+  }) async {
+    final dependency = record.dependency;
+    if (dependency == null) return;
+    _check(isCancelled: isCancelled);
+    final path = dependency.file.path!;
+    if (dependency.storage != backend.storageReference ||
+        !backend.paths.isAbsolute(path) ||
+        backend.paths.normalize(path) != path ||
+        backend.isRootPath(path) ||
+        [
+          record.original.path!,
+          record.candidatePath(backend.paths),
+          record.backupPath(backend.paths),
+        ].any((other) => backend.samePath(path, other))) {
+      throw StateError('The saved move destination authority is invalid.');
+    }
+    var parent = backend.paths.dirname(path);
+    while (true) {
+      final item = await backend
+          .stat(parent)
+          .timeout(const Duration(seconds: 30));
+      _check(isCancelled: isCancelled);
+      if (item == null || !item.isFolder || item.isSymlink == true) {
+        throw StateError('The move destination parent changed.');
+      }
+      final next = backend.paths.dirname(parent);
+      if (next == parent) break;
+      parent = next;
+    }
+    final current = await _inspect(path, isCancelled: isCancelled);
+    if (current == null ||
+        current.hash != dependency.sha256 ||
+        !sameArchiveFile(dependency.file, current.file)) {
+      throw StateError(
+        'The verified move destination changed or is missing. Source recovery files are retained.',
+      );
+    }
+    if (_accessPolicyHash(await _readAccessPolicy(path)) !=
+            dependency.accessPolicySha256 ||
+        !sameArchiveFile(
+          dependency.file,
+          await backend.stat(path).timeout(const Duration(seconds: 30)),
+        )) {
+      throw StateError(
+        'The verified move destination identity or access policy changed.',
+      );
+    }
+    _check(isCancelled: isCancelled);
+  }
+
   Future<ArchivePublicationReceipt> publish({
     required FileItem original,
     required String originalSha256,
@@ -180,6 +242,7 @@ class ArchiveContainerPublisher {
     bool Function()? isCancelled,
     void Function(ArchivePublicationPhase)? onPhase,
     TransferCheckpoint? beforePublication,
+    ArchivePublicationDependency? dependency,
   }) async {
     if (_running) {
       throw StateError('An archive publication is already running.');
@@ -202,15 +265,22 @@ class ArchiveContainerPublisher {
             candidateBytes: bytes.length,
             phase: ArchivePublicationPhase.prepared,
             createdAt: DateTime.now().toUtc(),
+            dependency: dependency,
           );
       if (record.candidateSha256 != sha256.convert(bytes).toString() ||
           record.candidateBytes != bytes.length ||
-          record.originalSha256 != originalSha256) {
+          record.originalSha256 != originalSha256 ||
+          dependency != null &&
+              jsonEncode(record.dependency?.toJson()) !=
+                  jsonEncode(dependency.toJson())) {
         throw StateError(
           'The saved publication belongs to a different archive draft.',
         );
       }
       await _guardPaths(record);
+      if (retry == null) {
+        await _verifyDependency(record, isCancelled: isCancelled);
+      }
       _lease = await journal.acquirePublication(record.id);
       if (_lease == null) {
         throw StateError(
@@ -242,7 +312,9 @@ class ArchiveContainerPublisher {
             .firstOrNull;
         if (saved == null ||
             saved.candidateSha256 != record.candidateSha256 ||
-            saved.storage != record.storage) {
+            saved.storage != record.storage ||
+            jsonEncode(saved.dependency?.toJson()) !=
+                jsonEncode(record.dependency?.toJson())) {
           throw StateError(
             'The original publication intent is no longer available.',
           );
@@ -281,6 +353,7 @@ class ArchiveContainerPublisher {
   }) async {
     var record = _active!;
     await _guardPaths(record);
+    await _verifyDependency(record, isCancelled: isCancelled);
     final original = await _inspect(
       record.original.path!,
       isCancelled: isCancelled,
@@ -383,6 +456,7 @@ class ArchiveContainerPublisher {
   }) async {
     var record = _active!;
     await _guardPaths(record);
+    await _verifyDependency(record, isCancelled: isCancelled);
     var original = await _inspect(
       record.original.path!,
       isCancelled: isCancelled,
@@ -433,6 +507,7 @@ class ArchiveContainerPublisher {
         throw StateError('The original archive changed before backup.');
       }
       await _verifyAccessPolicy(record, original.file.path!);
+      await _verifyDependency(record, isCancelled: isCancelled);
       _check(isCancelled: isCancelled);
       if (!await backend.moveNoReplace(
         original.file,
@@ -468,6 +543,7 @@ class ArchiveContainerPublisher {
     // record. An already installed candidate is confirmed above without
     // replaying this guard; source files are never part of recovery deletion.
     await beforePublication?.call();
+    await _verifyDependency(record, isCancelled: isCancelled);
     await _guardPaths(_active!);
     _check(isCancelled: isCancelled);
     final checkedCandidate = await _inspect(
@@ -509,6 +585,10 @@ class ArchiveContainerPublisher {
     FileItem file, {
     void Function(ArchivePublicationPhase)? onPhase,
   }) async {
+    // This also guards restart confirmation of a candidate already installed
+    // before a lost acknowledgement. An ordinary transient callback cannot
+    // provide that guarantee after restart.
+    await _verifyDependency(_active!);
     await _verifyAccessPolicy(_active!, file.path!);
     await _record(
       _active!.copyWith(
@@ -552,6 +632,9 @@ class ArchiveContainerPublisher {
     } catch (_) {
       // Publication was already verified and durably recorded. An uncertain
       // cleanup does not remove the backup reference or claim a rollback.
+      // A missing move destination is stronger than an ordinary cleanup
+      // warning: do not issue a successful source-removal receipt for it.
+      await _verifyDependency(_active!);
       return ArchivePublicationReceipt(
         record: _active!,
         file: file,
@@ -571,6 +654,9 @@ class ArchiveContainerPublisher {
       throw StateError('Unsafe archive cleanup path.');
     }
     await _guardPaths(record);
+    final guardedCleanup =
+        record.dependency != null && publishedSha256 == record.candidateSha256;
+    if (guardedCleanup) await _verifyDependency(record);
     final published = await _inspect(record.original.path!);
     if (published?.hash != publishedSha256) {
       throw StateError(
@@ -596,6 +682,7 @@ class ArchiveContainerPublisher {
       recoverySha256: hash,
       publishedSha256: publishedSha256,
       checkpoint: () async => _check(),
+      beforeDelete: guardedCleanup ? () => _verifyDependency(record) : null,
     );
     if (!removed) {
       if (!backend.capabilities.conditionalDelete || !_hasVersion(item.file)) {
@@ -603,12 +690,68 @@ class ArchiveContainerPublisher {
           'This provider cannot conditionally delete a verified recovery object. Its exact backup remains recorded.',
         );
       }
+      if (guardedCleanup) await _verifyDependency(record);
+      _check();
       await backend.deleteFile(item.file);
     }
     _check();
     if (await backend.stat(path) != null) {
       throw StateError('Recovery cleanup was not confirmed.');
     }
+  }
+
+  /// A reviewed restore of a guarded source may undo an installed removal
+  /// candidate while its verified original backup still exists. Keep that
+  /// candidate at its generated path before restoring; never overwrite either
+  /// the installed name or an occupied recovery path.
+  Future<void> _retainInstalledCandidateForRestore({
+    bool Function()? isCancelled,
+    void Function(ArchivePublicationPhase)? onPhase,
+  }) async {
+    final record = _active!;
+    if (record.dependency == null) return;
+    await _guardPaths(record);
+    var original = await _inspect(
+      record.original.path!,
+      isCancelled: isCancelled,
+    );
+    if (original == null || original.hash == record.originalSha256) return;
+    if (original.hash != record.candidateSha256 ||
+        original.file.size != record.candidateBytes) {
+      throw StateError(
+        'The installed source archive changed before restoration.',
+      );
+    }
+    await _intent(ArchivePublicationPhase.restoring, onPhase: onPhase);
+    await _guardPaths(record);
+    original = await _inspect(record.original.path!, isCancelled: isCancelled);
+    final backup = await _inspect(
+      record.backupPath(backend.paths),
+      isCancelled: isCancelled,
+    );
+    if (original?.hash != record.candidateSha256 ||
+        original?.file.size != record.candidateBytes ||
+        backup?.hash != record.originalSha256 ||
+        await backend.stat(record.candidatePath(backend.paths)) != null) {
+      throw StateError('Source recovery files changed before restoration.');
+    }
+    await _verifyAccessPolicy(record, original!.file.path!);
+    await _verifyAccessPolicy(record, backup!.file.path!);
+    _check(isCancelled: isCancelled);
+    if (!await backend.moveNoReplace(
+      original.file,
+      record.candidatePath(backend.paths),
+    )) {
+      throw UnsupportedError(
+        'Exclusive source candidate retention was refused.',
+      );
+    }
+    final retained = await _inspect(record.candidatePath(backend.paths));
+    if (retained?.hash != record.candidateSha256 ||
+        retained?.file.size != record.candidateBytes) {
+      throw StateError('The retained source candidate could not be verified.');
+    }
+    await _record(_active!.copyWith(candidate: retained!.file));
   }
 
   Future<void> _restoreVacantOriginal() async {
@@ -635,6 +778,7 @@ class ArchiveContainerPublisher {
         _active!.copyWith(
           phase: ArchivePublicationPhase.restored,
           original: original!.file,
+          clearPublished: record.dependency != null,
         ),
       );
     } catch (_) {
@@ -667,20 +811,34 @@ class ArchiveContainerPublisher {
         original != null && !oldOriginal && !published ||
         candidate != null && candidate.hash != record.candidateSha256 ||
         backup != null && !backupValid;
+    String? dependencyFailure;
+    try {
+      await _verifyDependency(record);
+    } catch (error) {
+      dependencyFailure = '$error';
+    }
+    final guardedRestore =
+        record.dependency != null &&
+        published &&
+        backupValid &&
+        candidate == null;
     return ArchiveRecoveryInspection(
       record: record,
       canFinish:
           !foreign &&
+          dependencyFailure == null &&
           (published ||
               candidateValid &&
                   (oldOriginal && backup == null ||
                       original == null && backupValid)),
       canRestore:
           !foreign &&
-          !published &&
-          (oldOriginal || original == null && backupValid),
+          (!published && (oldOriginal || original == null && backupValid) ||
+              guardedRestore),
       message: foreign
           ? 'A container or recovery file changed. No automatic mutation is safe.'
+          : dependencyFailure != null
+          ? 'Source publication and original-backup cleanup are blocked: $dependencyFailure Restore the verified source original when available.'
           : published
           ? 'The published container matches the verified candidate. Finish confirmation and exact cleanup.'
           : candidateValid
@@ -715,7 +873,9 @@ class ArchiveContainerPublisher {
       if (current == null ||
           current.storage != record.storage ||
           current.originalSha256 != record.originalSha256 ||
-          current.candidateSha256 != record.candidateSha256) {
+          current.candidateSha256 != record.candidateSha256 ||
+          jsonEncode(current.dependency?.toJson()) !=
+              jsonEncode(record.dependency?.toJson())) {
         throw StateError('The saved archive recovery intent changed.');
       }
       _active = current;
@@ -726,6 +886,12 @@ class ArchiveContainerPublisher {
         return await _finish(isCancelled: isCancelled, onPhase: onPhase);
       }
       if (!inspection.canRestore) throw StateError(inspection.message);
+      if (current.dependency != null) {
+        await _retainInstalledCandidateForRestore(
+          isCancelled: isCancelled,
+          onPhase: onPhase,
+        );
+      }
       await _restoreVacantOriginal();
       final restored = await _inspect(
         current.original.path!,
@@ -775,6 +941,7 @@ class ArchiveContainerPublisher {
 
   Future<void> verifyReceipt(ArchivePublicationReceipt receipt) async {
     await _guardPaths(receipt.record);
+    await _verifyDependency(receipt.record);
     final current = await _inspect(receipt.file.path!);
     if (current == null ||
         current.hash != receipt.sha256 ||

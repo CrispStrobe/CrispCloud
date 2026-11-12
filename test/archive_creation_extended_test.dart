@@ -134,6 +134,7 @@ void main() {
   for (final format in [
     ArchiveCreationFormat.tarLz4,
     ArchiveCreationFormat.tarLzma,
+    ArchiveCreationFormat.tarCompress,
   ]) {
     test(
       '${format.name} creates a verified tree including empty folders',

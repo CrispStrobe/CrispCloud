@@ -62,6 +62,8 @@ Future<void> writeArchiveEntries(
     ArchiveEndpointFormat.lz4 => ArchiveCompressionKind.lz4,
     ArchiveEndpointFormat.tarLzma ||
     ArchiveEndpointFormat.lzma => ArchiveCompressionKind.lzma,
+    ArchiveEndpointFormat.tarCompress ||
+    ArchiveEndpointFormat.compress => ArchiveCompressionKind.compress,
     _ => null,
   };
   final expectedSingle = const {
@@ -71,6 +73,7 @@ Future<void> writeArchiveEntries(
     ArchiveEndpointFormat.zstd,
     ArchiveEndpointFormat.lz4,
     ArchiveEndpointFormat.lzma,
+    ArchiveEndpointFormat.compress,
   }.contains(format);
   if (compression != expectedCompression || singlePayload != expectedSingle) {
     throw const ArchiveViewException(
@@ -163,6 +166,7 @@ Future<void> writeArchiveEntries(
     ArchiveEndpointFormat.tarZstd,
     ArchiveEndpointFormat.tarLz4,
     ArchiveEndpointFormat.tarLzma,
+    ArchiveEndpointFormat.tarCompress,
   }.contains(format)) {
     if (compression == null) {
       await writeTarArchive(

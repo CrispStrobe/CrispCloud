@@ -7,8 +7,9 @@ import 'package:koni_codecs/koni_codecs.dart' as koni;
 import 'archive_types.dart';
 import 'archive_lz4_codec.dart';
 import 'archive_lzma_codec.dart';
+import 'archive_unix_compress_codec.dart';
 
-enum ArchiveCompressionKind { gzip, bzip2, xz, zstd, lz4, lzma }
+enum ArchiveCompressionKind { gzip, bzip2, xz, zstd, lz4, lzma, compress }
 
 /// LZMA-alone has no magic signature. Only an explicit filename hint can route
 /// it here, and reader/rewrite validation must still decode the exact stream.
@@ -21,6 +22,7 @@ ArchiveCompressionKind? archiveCompressionForBytes(
       Iterable<int>.generate(signature.length)
           .every((i) => bytes[i] == signature[i]);
   if (starts(const [0x1f, 0x8b])) return ArchiveCompressionKind.gzip;
+  if (starts(const [0x1f, 0x9d])) return ArchiveCompressionKind.compress;
   if (starts(const [0x42, 0x5a, 0x68])) return ArchiveCompressionKind.bzip2;
   if (starts(const [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0])) {
     return ArchiveCompressionKind.xz;
@@ -110,6 +112,12 @@ Uint8List encodeArchiveCompression(
         level: level,
         maxOutputBytes: maxOutputBytes,
       );
+    case ArchiveCompressionKind.compress:
+      return encodeArchiveUnixCompress(
+        input,
+        maxBits: level <= 1 ? 12 : (level >= 9 ? 16 : 14),
+        maxOutputBytes: maxOutputBytes,
+      );
   }
   return Uint8List.fromList(output.getBytes());
 }
@@ -133,6 +141,11 @@ void validateArchiveCompressionRewrite(
       if (!decodeArchiveLz4(bytes).canRewrite) refuse();
     case ArchiveCompressionKind.lzma:
       decodeArchiveLzma(bytes);
+    case ArchiveCompressionKind.compress:
+      // UNIX compress carries no per-file metadata or concatenated-member
+      // framing. A rewrite retains the full decoded payload and canonicalizes
+      // the dictionary settings; decoding alone makes no checksum claim.
+      decodeArchiveUnixCompress(bytes);
     case ArchiveCompressionKind.gzip:
       final header = _gzipHeaderLength(bytes);
       if (bytes[3] & 4 != 0) {

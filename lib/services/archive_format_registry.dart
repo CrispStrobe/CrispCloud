@@ -179,7 +179,9 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     label: 'TAR + UNIX compress',
     suffixes: ['.tar.z', '.taz'],
     mimeType: 'application/x-compress',
-    notes: 'Read-only TAR in UNIX compress (.Z) streams. The compression format has no content checksum; decoded contents are limited to 64 MiB.',
+    canCreate: true,
+    canModify: true,
+    notes: 'Bounded TAR in UNIX compress (.Z) streams. Rewrite requires eligible TAR metadata in one wrapper; output uses 14-bit block coding. The compression format has no content checksum or decoded length.',
   ),
   ArchiveFormatCapability(
     id: 'gzip',
@@ -250,8 +252,10 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     label: 'UNIX compress',
     suffixes: ['.z'],
     mimeType: 'application/x-compress',
+    canCreate: true,
+    canModify: true,
     singleFileCompression: true,
-    notes: 'Read-only UNIX compress (.Z) streams. The format has no content checksum; compressed and decoded contents are limited to 64 MiB.',
+    notes: 'Bounded UNIX compress (.Z) streams. Create 12-, 14- or 16-bit block coding; replace only an immediate regular payload, rewritten with 14-bit block coding. The format has no content checksum or decoded length; compressed and decoded contents are limited to 64 MiB.',
   ),
   ArchiveFormatCapability(
     id: 'iso',

@@ -120,7 +120,7 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
   void _chooseFormat(ArchiveCreationFormat format) {
     setState(() {
       final old = _format.extension;
-      if (_name.text.toLowerCase().endsWith(old)) {
+      if (_name.text.toLowerCase().endsWith(old.toLowerCase())) {
         var stem = _name.text.substring(0, _name.text.length - old.length);
         if (format.singlePayload &&
             widget.files.length == 1 &&
@@ -390,6 +390,14 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   Text(
                     tr(
                       'LZMA uses a 64 KiB dictionary for Fast, 8 MiB for Normal and 64 MiB for Maximum. The format has no content checksum.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (_format == ArchiveCreationFormat.compress ||
+                    _format == ArchiveCreationFormat.tarCompress)
+                  Text(
+                    tr(
+                      'UNIX compress uses 12-bit dictionaries for Fast, 14-bit for Normal and 16-bit for Maximum. The format has no content checksum or decoded length.',
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),

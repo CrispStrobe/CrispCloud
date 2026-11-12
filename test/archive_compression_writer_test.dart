@@ -18,6 +18,7 @@ void main() {
     ArchiveCompressionKind.zstd: '.zst',
     ArchiveCompressionKind.lz4: '.lz4',
     ArchiveCompressionKind.lzma: '.lzma',
+    ArchiveCompressionKind.compress: '.Z',
   };
 
   for (final kind in ArchiveCompressionKind.values) {
@@ -43,9 +44,15 @@ void main() {
         final corrupt = Uint8List.fromList(packed);
         // Alter the trailer or index rather than accidentally making a valid
         // differently-compressed stream with the same content.
-        corrupt[corrupt.length -
-                (kind == ArchiveCompressionKind.xz ? 16 : 1)] ^=
-            0x80;
+        if (kind == ArchiveCompressionKind.compress) {
+          // .Z has no checksum. A reserved flag is a structural failure;
+          // arbitrary payload-bit changes cannot always be detected.
+          corrupt[2] |= 0x20;
+        } else {
+          corrupt[corrupt.length -
+                  (kind == ArchiveCompressionKind.xz ? 16 : 1)] ^=
+              0x80;
+        }
         await expectLater(
           openViewerArchive(corrupt, name: 'content.txt${suffixes[kind]}'),
           throwsA(anything),

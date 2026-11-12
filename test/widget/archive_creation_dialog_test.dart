@@ -25,6 +25,8 @@ const _lz4Help =
     'LZ4 offers fast compression or storage without compression. Both modes include content checksums.';
 const _lzmaHelp =
     'LZMA uses a 64 KiB dictionary for Fast, 8 MiB for Normal and 64 MiB for Maximum. The format has no content checksum.';
+const _compressHelp =
+    'UNIX compress uses 12-bit dictionaries for Fast, 14-bit for Normal and 16-bit for Maximum. The format has no content checksum or decoded length.';
 const _legacyCpioHelp =
     'Use legacy CPIO for compatibility. These profiles have no content checksum or encryption; names, sizes and metadata must fit their older fields.';
 
@@ -422,6 +424,8 @@ void main() {
     ArchiveCreationFormat.tarLz4,
     ArchiveCreationFormat.lzma,
     ArchiveCreationFormat.tarLzma,
+    ArchiveCreationFormat.compress,
+    ArchiveCreationFormat.tarCompress,
   ]) {
     testWidgets('${value.label} exposes accurate controls and format guidance', (
       tester,
@@ -437,6 +441,9 @@ void main() {
       final lz4 =
           value == ArchiveCreationFormat.lz4 ||
           value == ArchiveCreationFormat.tarLz4;
+      final compress =
+          value == ArchiveCreationFormat.compress ||
+          value == ArchiveCreationFormat.tarCompress;
       final expectedName =
           '${value.singlePayload ? 'report.txt' : 'report'}${value.extension}';
       expect(name(tester), expectedName);
@@ -448,8 +455,11 @@ void main() {
         find.byKey(const ValueKey('archive-create-password')),
         findsNothing,
       );
-      expect(find.text(lz4 ? _lz4Help : _lzmaHelp), findsOneWidget);
-      expect(find.text(lz4 ? _lzmaHelp : _lz4Help), findsNothing);
+      final detail = compress ? _compressHelp : (lz4 ? _lz4Help : _lzmaHelp);
+      expect(find.text(detail), findsOneWidget);
+      for (final other in [_lz4Help, _lzmaHelp, _compressHelp]) {
+        if (other != detail) expect(find.text(other), findsNothing);
+      }
       expect(
         find.text(value.singlePayload ? _singleFileHelp : _compressedTarHelp),
         findsOneWidget,
@@ -550,6 +560,7 @@ void main() {
     ArchiveCreationFormat.tarZstd,
     ArchiveCreationFormat.tarLz4,
     ArchiveCreationFormat.tarLzma,
+    ArchiveCreationFormat.tarCompress,
   ]) {
     testWidgets('${value.label} displays the shared decompression limit', (
       tester,
@@ -596,6 +607,7 @@ void main() {
         'Zstandard — one file',
         'LZ4 — one file',
         'LZMA — one file',
+        'UNIX compress — one file',
         'ISO data image',
         'HFSX data image',
         'DMG (HFSX data volume)',
@@ -613,6 +625,7 @@ void main() {
         _isoHelp,
         _lz4Help,
         _lzmaHelp,
+        _compressHelp,
         _legacyCpioHelp,
       ]) {
         expect(tr(tester, key), isNot(key), reason: '${locale.$1}: $key');
@@ -624,8 +637,10 @@ void main() {
         ArchiveCreationFormat.tarBzip2,
         ArchiveCreationFormat.tarLz4,
         ArchiveCreationFormat.tarLzma,
+        ArchiveCreationFormat.tarCompress,
         ArchiveCreationFormat.lz4,
         ArchiveCreationFormat.lzma,
+        ArchiveCreationFormat.compress,
         ArchiveCreationFormat.cpioOdc,
         ArchiveCreationFormat.cpioBinaryLittleEndian,
         ArchiveCreationFormat.cpioBinaryBigEndian,
@@ -652,11 +667,16 @@ void main() {
         if (value == ArchiveCreationFormat.lz4 ||
             value == ArchiveCreationFormat.tarLz4 ||
             value == ArchiveCreationFormat.lzma ||
-            value == ArchiveCreationFormat.tarLzma) {
+            value == ArchiveCreationFormat.tarLzma ||
+            value == ArchiveCreationFormat.compress ||
+            value == ArchiveCreationFormat.tarCompress) {
           final detail =
               value == ArchiveCreationFormat.lz4 ||
                   value == ArchiveCreationFormat.tarLz4
               ? _lz4Help
+              : value == ArchiveCreationFormat.compress ||
+                    value == ArchiveCreationFormat.tarCompress
+              ? _compressHelp
               : _lzmaHelp;
           expect(find.text(tr(tester, detail)), findsOneWidget);
           expect(find.text(detail), findsNothing);
