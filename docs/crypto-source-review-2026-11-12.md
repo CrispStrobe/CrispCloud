@@ -1138,3 +1138,28 @@ remain unchanged; this is a technical source update.
 ```
 
 The 1.2.6 snapshot consumes the native-backed textbox rollback and shared-header parser guards, plus the complete CrisperBooks tree with corrected acceptance harnesses. The Windows-only scoped WebView compiler definition introduces no cryptographic behavior.
+
+
+### Parser d14f03f final evidence binding
+
+The exact parser mirror follows `d14f03f198a9735c660d0f8ae18ba6fc316fcf25` through Quds `78ed85f5fd19d44f672dee11420fed261c974f4a`.
+Runtime and app implementation bytes are unchanged from tested app base
+`b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5`; the roll retains the completed native comparison, integrated
+schema/portable receipts and one producer-metadata regression. Existing source
+inventory entries cover every parser runtime file. This adds no runtime
+cryptographic implementation, provider, credential storage or network operation.
+
+The 142 Word conversion/UI tests across 17 suites, 101 Python harness tests,
+portable Office JavaScript and installed-Office/PDF checks pass. The optional
+ebook hook was disabled only during those local Word checks and the manifest
+was restored exactly. The independent ebook source checkout verifies separately.
+The dependency lock and all non-digest policy values remain unchanged. Only
+technical source-binding fingerprints are refreshed; no release action is taken.
+
+```json
+{
+  "inventory_sha256": "97eefcfba5be069db36068fd49029f82e69e061840f79e74b75aa8e3d514992c",
+  "pubspec_lock_sha256": "81915cfd1d62de2777a4717723eb05998c8588e77be55bef4e0249465e7350b8",
+  "reviewed_source_sha256": "8363ea907f2aa8a48f1b0db4932c98b294c441d53b7377324f4e8ff2e60e338f"
+}
+```

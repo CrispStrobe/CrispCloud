@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 import 'package:test/test.dart';
 import 'package:xml/xml.dart';
 
+import '../tool/fidelity/textbox_table_fixture.dart' as producer;
 import 'support/textbox_table_fixture.dart';
 
 const _w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -50,6 +52,42 @@ List<int> _indents(XmlNode node) => [
 ];
 
 void main() {
+  test('producer metadata matches each generated textbox table package', () {
+    final temporary = Directory.systemTemp.createTempSync('textbox-tables-');
+    addTearDown(() => temporary.deleteSync(recursive: true));
+    final output = '${temporary.path}/fixtures';
+    producer.main([output]);
+    final cases =
+        (jsonDecode(File('$output/cases.json').readAsStringSync())
+                as List<Object?>)
+            .cast<Map<String, Object?>>();
+    expect(cases, hasLength(24));
+    expect(cases.map((item) => item['id']).toSet(), hasLength(24));
+    for (final item in cases) {
+      final id = item['id']! as String;
+      final archive = ZipDecoder().decodeBytes(
+        File('$output/$id.docx').readAsBytesSync(),
+      );
+      final part = item['header'] == true
+          ? 'word/header1.xml'
+          : 'word/document.xml';
+      final xml = XmlDocument.parse(
+        utf8.decode(archive.findFile(part)!.content),
+      );
+      final box = xml.findAllElements('txbxContent', namespace: _w).single;
+      final expected = (item['expectedTextboxIndentsTwips']! as List<Object?>)
+          .cast<int>();
+      final anchor = (item['expectedAnchorIndentsTwips']! as List<Object?>)
+          .cast<int>();
+      expect(_indents(box), expected, reason: id);
+      expect(_indents(xml), [
+        if (anchor.isNotEmpty) anchor.first,
+        ...expected,
+        ...anchor.skip(1),
+      ], reason: id);
+    }
+  });
+
   for (final header in [false, true]) {
     for (final margin in [null, 0, 240]) {
       for (final nested in [false, true]) {

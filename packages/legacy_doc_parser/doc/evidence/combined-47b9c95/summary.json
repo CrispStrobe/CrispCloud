@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "sourceCommit": "47b9c95c061178fec69d0d546bf12948ccca0709",
+  "sourceTree": "16a87e43d168e1023eb58e1198643dfbc3e55426",
+  "cleanWorktree": true,
+  "portable": {
+    "dartTests": 809,
+    "pythonTests": 162,
+    "javascriptMediaChecks": 51,
+    "javascriptDocAcceptance": "passed",
+    "format": "clean",
+    "analysis": "clean",
+    "publishDryRunWarnings": 0
+  },
+  "schema": {
+    "errors": 0,
+    "files": 218,
+    "hashesVerified": true,
+    "inputsUnchanged": true,
+    "report": "schema-validation.json",
+    "reportSha256": "4e96e37748f6b0c083d8d8dd15138bbada6efd92023027ad669ec5cbaf1464ac"
+  },
+  "determinism": {
+    "cases": 218,
+    "files": 464,
+    "passed": true
+  },
+  "focusedFollowup": {
+    "localSourceCommit": "1ac720b6ba827306328fe79d480c54ef502b2206",
+    "testPath": "test/legacy_word_textbox_table_test.dart",
+    "testBlob": "c759722c79f414fb5d8a54b032e252f51b246aa3",
+    "tests": 13,
+    "generatedVariants": 24,
+    "format": "clean",
+    "analysis": "clean",
+    "scope": "Test-only addition; producer/runtime/schema input files unchanged."
+  },
+  "nativeEvidence": {
+    "commit": "c3fa95e5ac9b27114f77333e28e604a70e89575d",
+    "directory": "../e90f38f",
+    "libTree": "8a736b4af3ee3a12b0daac73568f602e6e7f4f7d",
+    "runtimeAndDependencyManifestsIdentical": true,
+    "newNativeRunForGzipOption": false
+  },
+  "files": {
+    "portable.log.gz": {
+      "bytes": 11770,
+      "sha256": "70509dab451b8cb0e8fd8e1c352f99585f679c9fad037947e79e80d454d42504",
+      "rawBytes": 125798,
+      "rawSha256": "e5c567f95db9901bc95bdd3931104f5cf9a22d4c4fc9c23dc34554029c912c0b"
+    },
+    "schema-report.json.gz": {
+      "bytes": 69634,
+      "sha256": "100ad37a57aaa0875ddde13558d093804664f70a280921906b067587dde0e7f2",
+      "rawBytes": 256913,
+      "rawSha256": "a5910aaf28f5d0e6b465b0d3dd08a5ca5a8827256f299205f59458df0b160b83"
+    },
+    "schema-validation.json.gz": {
+      "bytes": 10108,
+      "sha256": "5b89b4e0fbe4ccb2e790a5edf7efb6a9349827924b0cb8600fc8b2569e1021d1",
+      "rawBytes": 54408,
+      "rawSha256": "4e96e37748f6b0c083d8d8dd15138bbada6efd92023027ad669ec5cbaf1464ac"
+    },
+    "textbox-metadata.log.gz": {
+      "bytes": 258,
+      "sha256": "2e3ee91693e6fcd0789e330c3bc207c9219680adb8576914275f928486c1b074",
+      "rawBytes": 1162,
+      "rawSha256": "da16ad1db7132c7a66da07ccb1311895a83f38d7659b9ddd57fa58f73c3f7d36"
+    }
+  }
+}
