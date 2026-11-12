@@ -116,7 +116,7 @@ not claim additional image formats or live-provider certification.
 
 ### Configurable main menus
 
-**Status:** Scoped. **Dependencies:** G02 command identity.
+**Status:** Implemented / target-runtime acceptance pending. **Dependencies:** None for saved configuration and application command routing.
 
 **Scope:** Persist command-based menu layouts, user commands, reset and import/export.
 
@@ -131,6 +131,26 @@ not claim additional image formats or live-provider certification.
 - User commands receive captured file/path parameters and open their normal execution review; menu and shortcut enablement agree.
 
 **Starting points:** lib/screens/file_browser_screen.dart; keyboard_shortcut_service.dart; custom_toolbar_command_service.dart.
+
+**Delivered:** [Main menus](../main-menus.md) documents saved command-based
+menu trees, submenus, separators, a command picker, reorder/move/rename,
+inactive preview, reset and bounded JSON import/export. Native macOS browser
+menus and in-app menus share the same configuration. Settings, recovery and
+reset remain reachable outside the editable tree. Saved external commands are
+references that open the existing captured-context execution review. No
+dependency was added.
+
+**Observed validation:** 96 tests passed across 11 suites, including schema and
+persistence failures, last-valid recovery, source-bound user-command callbacks,
+real-screen registry resolution, native editor/terminal ownership, keyboard
+bindings, legacy translated labels, panel headers and narrow enlarged German
+and Arabic layouts. The existing system-SQLite test wrapper and runtime probe
+were used after the environment's native-asset download failed its checksum;
+the release dependency configuration was restored unchanged.
+
+**Remaining acceptance:** Actual operating-system menu presentation and native
+keyboard dispatch remain target-runtime checks under G50/G51. Flutter's
+platform-menu model passing tests does not establish signed application behavior.
 
 ## G05
 
