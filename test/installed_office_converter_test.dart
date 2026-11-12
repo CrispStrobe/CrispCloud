@@ -252,6 +252,64 @@ $body
     );
 
     test(
+      'PDF preview uses an inspected package and the isolated PDF filter',
+      () async {
+        final pdf = File(p.join(fixtures.path, 'preview.pdf'));
+        await pdf.writeAsString(
+          '%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n',
+        );
+        final installation = await fake(
+          'cp ${_quote(pdf.path)} "\$out/input.pdf"',
+        );
+        final input = await package.readAsBytes();
+        final original = Uint8List.fromList(input);
+        final result = await convertWithInstalledOffice(
+          bytes: input,
+          sourceName: 'reviewed.DOCX',
+          installation: installation,
+          output: InstalledOfficeOutput.pdf,
+        );
+        expect(result.output, InstalledOfficeOutput.pdf);
+        expect(result.bytes, orderedEquals(await pdf.readAsBytes()));
+        expect(input, orderedEquals(original));
+        expect(() => result.bytes[0] = 0, throwsUnsupportedError);
+        final arguments = await argumentRecord.readAsString();
+        expect(arguments, contains('pdf:writer_pdf_Export\n'));
+        expect(arguments, contains('/input.docx\n'));
+        await expectWorkspaceDeleted();
+      },
+    );
+
+    test(
+      'PDF rejects invalid OOXML before launch and non-PDF output',
+      () async {
+        final installation = await fake(
+          'cp ${_quote(package.path)} "\$out/input.pdf"',
+        );
+        await expectLater(
+          convertWithInstalledOffice(
+            bytes: source,
+            sourceName: 'renamed.docx',
+            installation: installation,
+            output: InstalledOfficeOutput.pdf,
+          ),
+          failure(InstalledOfficeConversionErrorCode.invalidInput),
+        );
+        expect(await workspaceRecord.exists(), isFalse);
+        await expectLater(
+          convertWithInstalledOffice(
+            bytes: await package.readAsBytes(),
+            sourceName: 'reviewed.docx',
+            installation: installation,
+            output: InstalledOfficeOutput.pdf,
+          ),
+          failure(InstalledOfficeConversionErrorCode.invalidOutput),
+        );
+        await expectWorkspaceDeleted();
+      },
+    );
+
+    test(
       'invalid/encrypted/oversized input fails before launching Office',
       () async {
         final installation = await fake('exit 0');

@@ -144,8 +144,15 @@ try {
     [ref]$empty, [ref]$missing, [ref]$missing, [ref]$no,
     [ref]$missing, [ref]$no, [ref]$missing, [ref]$yes)
   if ($null -eq $document) { throw 'Word did not open the document' }
-  $format = if ($request.output -eq 'docm') { 13 } else { 12 }
-  $document.SaveAs2([ref]$destination, [ref]$format, [ref]$missing, [ref]$empty, [ref]$no)
+  if ($request.output -eq 'pdf') {
+    # PDF (17), all pages (0), with tracked-change markup (7). Keep IRM/labels
+    # and document structure. Do not open the exported file or update fields.
+    $document.ExportAsFixedFormat($destination, 17, $false, 0, 0, 0, 0, 7,
+      $true, $true, 1, $true, $true, $false)
+  } else {
+    $format = if ($request.output -eq 'docm') { 13 } else { 12 }
+    $document.SaveAs2([ref]$destination, [ref]$format, [ref]$missing, [ref]$empty, [ref]$no)
+  }
   $document.Close([ref]$no)
   [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($document)
   $document = $null

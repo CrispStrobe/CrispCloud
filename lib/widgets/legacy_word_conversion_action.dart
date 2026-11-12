@@ -62,6 +62,16 @@ Future<void> showLegacyWordConversionForFile(
       bytes: bytes,
       discover: ref.read(installedOfficeDiscoveryProvider),
       convert: ref.read(installedOfficeConversionProvider),
+      onPreviewPdf: (pdf, name) async {
+        if (!context.mounted) return;
+        await showInternalViewer(
+          context,
+          file: FileItem(name: name, isFolder: false, size: pdf.length),
+          side: side,
+          bytesOverride: pdf,
+          displayName: name,
+        );
+      },
       onSave: (copy) async {
         created = await destination.create(copy);
       },
