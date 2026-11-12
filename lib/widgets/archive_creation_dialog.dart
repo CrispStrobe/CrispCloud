@@ -32,6 +32,9 @@ Future<void> showArchiveCreationDialog(
     // Keep both the rows and their output directory from the original menu.
     // Navigation while the review is open cannot redirect the operation.
     final selection = List<FileItem>.unmodifiable(files);
+    final rememberSelection = ref
+        .read(panelProvider(side))
+        .captureSelectionMemoryForOperation(selection);
     final directory = p.dirname(selection.first.path!);
     final backend = fileOperationBackend(
       source: sourceOrigin.source,
@@ -46,6 +49,7 @@ Future<void> showArchiveCreationDialog(
         destination: backend,
         files: selection,
         destinationDirectory: directory,
+        onCreated: rememberSelection,
       ),
     );
     if (context.mounted) await ref.read(panelProvider(side)).refresh();
@@ -66,6 +70,7 @@ class ArchiveCreationDialog extends StatefulWidget {
     required this.files,
     required this.destinationDirectory,
     this.service = const ArchiveCreationService(),
+    this.onCreated,
   });
 
   final FileOperationBackend source;
@@ -73,6 +78,7 @@ class ArchiveCreationDialog extends StatefulWidget {
   final List<FileItem> files;
   final String destinationDirectory;
   final ArchiveCreationService service;
+  final VoidCallback? onCreated;
 
   @override
   State<ArchiveCreationDialog> createState() => _ArchiveCreationDialogState();
@@ -171,6 +177,7 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
           if (mounted) setState(() => _progress = value);
         },
       );
+      widget.onCreated?.call();
       if (mounted) setState(() => _result = result);
     } catch (error) {
       if (mounted) setState(() => _error = error);
@@ -347,6 +354,13 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (_format == ArchiveCreationFormat.tarGzip)
+                  Text(
+                    tr(
+                      'TAR.GZ is limited to 64 MiB after decompression, including archive headers.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (_busy) ...[
                   const SizedBox(height: 12),
                   LinearProgressIndicator(

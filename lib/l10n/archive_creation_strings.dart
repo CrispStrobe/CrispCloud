@@ -56,6 +56,17 @@ String archiveCreationError(BuildContext context, Object error) {
 }
 
 const _messages = <String, List<String>>{
+  'TAR.GZ is limited to 64 MiB after decompression, including archive headers.':
+      [
+        'TAR.GZ ist nach dem Entpacken einschließlich Archiv-Headern auf 64 MiB begrenzt.',
+        'TAR.GZ est limité à 64 Mio après décompression, en-têtes inclus.',
+        'TAR.GZ se limita a 64 MiB tras descomprimir, incluidas las cabeceras.',
+        'TAR.GZ está limitado a 64 MiB após descompressão, incluindo cabeçalhos.',
+        'TAR.GZ 解压后最大为 64 MiB，包含压缩包头信息。',
+        'TAR.GZはヘッダーを含め、展開後64 MiBまでです。',
+        'TAR.GZ는 헤더를 포함하여 압축 해제 후 64 MiB로 제한됩니다.',
+        'يقتصر TAR.GZ على 64 MiB بعد فك الضغط، بما فيها رؤوس الأرشيف.',
+      ],
   'Create archive…': [
     'Archiv erstellen…',
     'Créer une archive…',

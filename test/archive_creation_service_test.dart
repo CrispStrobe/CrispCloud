@@ -347,6 +347,58 @@ void main() {
     },
   );
 
+  test(
+    'TGZ rejects decoded contents beyond the viewer container limit',
+    () async {
+      backend.advertisedSizes['/input/folder/Ünicode.txt'] =
+          kArchiveReadLimit ~/ 2;
+      backend.advertisedSizes['/input/folder/empty.txt'] =
+          kArchiveReadLimit ~/ 2 + 1;
+      await expectLater(
+        create(ArchiveCreationFormat.tarGzip),
+        error(ArchiveCreationError.tooLarge),
+      );
+      expect(backend.writes, isEmpty);
+    },
+  );
+
+  test(
+    'duplicate member names from separate folders fail without overwriting',
+    () async {
+      backend.put('/other/Ünicode.txt', [4, 5]);
+      await expectLater(
+        service.create(
+          source: backend,
+          destination: backend,
+          files: [
+            (await backend.stat('/input/folder/Ünicode.txt'))!,
+            (await backend.stat('/other/Ünicode.txt'))!,
+          ],
+          destinationDirectory: '/output',
+          options: const ArchiveCreationOptions(name: 'duplicates.zip'),
+        ),
+        error(ArchiveCreationError.duplicateName),
+      );
+      expect(backend.writes, isEmpty);
+    },
+  );
+
+  test(
+    'corrupt staged bytes are rejected before the final name is published',
+    () async {
+      backend.beforeStageVerification = () {
+        final staged = backend.contents['/output/.stage']!;
+        backend.put('/output/.stage', [staged.first ^ 1, ...staged.skip(1)]);
+      };
+      await expectLater(
+        create(ArchiveCreationFormat.zip),
+        error(ArchiveCreationError.verificationFailed),
+      );
+      expect(backend.writes, isEmpty);
+      expect(backend.contents.containsKey('/output/selection.zip'), isFalse);
+    },
+  );
+
   test('path traversal, mismatched extensions and unsupported security options fail closed', () {
     for (final name in [
       '../out.zip',

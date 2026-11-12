@@ -40,7 +40,9 @@ Keep the dialog open until it reports completion or cancellation.
 Creation is bounded to 64 MiB per source file, 256 MiB of total source content
 and packed output, 200,000 entries, 200 folder levels and 8 MiB of member-path
 text. Format headers also count toward packed limits. Existing decoder limits
-apply during verification. Archive data is buffered within these limits; large
+apply during verification: TAR.GZ is limited to a 64 MiB decoded TAR container,
+including its headers, so a created archive remains readable by the normal
+viewer. Archive data is buffered within these limits; large
 background archive jobs remain separate work. The current creation entry point
 accepts native local selections. Other supported archive browsing and editing
 workflows are described in [file operations](commander-file-operations.md).

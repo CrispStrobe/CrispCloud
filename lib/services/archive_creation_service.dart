@@ -328,7 +328,9 @@ class ArchiveCreationService {
       } else {
         totalBytes += current.size!;
         if (current.size! > kArchiveReadLimit ||
-            totalBytes > ArchiveService.maxExtractedBytes) {
+            totalBytes > ArchiveService.maxExtractedBytes ||
+            options.format == ArchiveCreationFormat.tarGzip &&
+                totalBytes > kArchiveReadLimit) {
           throw const ArchiveCreationException(ArchiveCreationError.tooLarge);
         }
       }
@@ -378,7 +380,14 @@ class ArchiveCreationService {
       return bytes.takeBytes();
     }
 
-    final memory = _BoundedArchiveMemory(check);
+    final memory = _BoundedArchiveMemory(
+      check,
+      // GZIP-backed browsing buffers the decoded container. Produce archives
+      // that the normal viewer can open, including TAR header overhead.
+      limit: options.format == ArchiveCreationFormat.tarGzip
+          ? kArchiveReadLimit
+          : ArchiveService.maxArchiveBytes,
+    );
     final sink = _CreationSink(memory);
     final zip = options.format == ArchiveCreationFormat.zip
         ? codecs.ZipEncoder(password: options.password, streamed: true)
@@ -600,11 +609,15 @@ class ArchiveCreationService {
 }
 
 class _BoundedArchiveMemory extends codecs.OutputMemoryStream {
-  _BoundedArchiveMemory(this.check);
+  _BoundedArchiveMemory(
+    this.check, {
+    this.limit = ArchiveService.maxArchiveBytes,
+  });
   final void Function() check;
+  final int limit;
   void _allow(int count) {
     check();
-    if (count < 0 || length + count > ArchiveService.maxArchiveBytes) {
+    if (count < 0 || length + count > limit) {
       throw const ArchiveCreationException(ArchiveCreationError.tooLarge);
     }
   }
@@ -630,7 +643,7 @@ class _BoundedArchiveMemory extends codecs.OutputMemoryStream {
   @override
   void reserve(int total) {
     check();
-    if (total > ArchiveService.maxArchiveBytes) {
+    if (total > limit) {
       throw const ArchiveCreationException(ArchiveCreationError.tooLarge);
     }
     super.reserve(total);
