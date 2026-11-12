@@ -103,7 +103,13 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
         inspection: inspection,
         gzipHeader: gzipHeader,
       );
-      final ownedArchive = _own(inner, source, decodedSource, decoded, maxBytes);
+      final ownedArchive = _own(
+        inner,
+        source,
+        decodedSource,
+        decoded,
+        maxBytes,
+      );
       inner = null;
       decodedSource = null;
       decoded = null;
@@ -216,11 +222,8 @@ ViewerArchive _own(
   members: inner.members,
   notices: inner.notices,
   read: (member, limit) => inner.readMember(member, maxBytes: limit),
-  streamReader: (member, chunkSize) => inner.openMember(
-    member,
-    maxBytes: maxBytes,
-    chunkSize: chunkSize,
-  ),
+  streamReader: (member, chunkSize) =>
+      inner.openMember(member, maxBytes: maxBytes, chunkSize: chunkSize),
   close: () async {
     try {
       await inner.close();

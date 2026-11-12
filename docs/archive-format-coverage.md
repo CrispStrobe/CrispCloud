@@ -15,10 +15,10 @@ metadata, protection or filesystem structures cannot be preserved.
 
 | Format | Browse / read / extract | Create | Edit existing | Writer boundary |
 | --- | --- | --- | --- | --- |
-| ZIP / CBZ | Yes | Yes | Eligible ZIP policy | Original supported AES-256 protection is retained. Comic member order is preserved. |
-| 7z / CB7 | Yes | Yes | Eligible 7z policy | Original password and header visibility are retained. |
+| ZIP / CBZ | Yes | Yes | Eligible ZIP policy | Native unencrypted creation/editing streams within an 8 GiB budget; ZIP64 is supported. Original supported AES-256 protection uses the smaller buffered path. Comic member order is preserved. |
+| 7z / CB7 | Yes | Yes | Eligible 7z policy | Native unencrypted Store/LZMA2 creation and eligible editing stream within an 8 GiB budget. Protected archives retain their password/header visibility on the smaller buffered path. |
 | TAR / CBT | Yes | Yes | Inspected regular-file profiles | Preserves understood ownership, names, permissions, timestamps and PAX metadata; unknown extensions, links and special records are refused. |
-| Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, all seven | Eligible TAR plus one supported wrapper | Includes TGZ, TBZ/TBZ2, TXZ, TZST, TLZ, TAZ and long suffix aliases. Decoded TAR is limited to 64 MiB, including headers. |
+| Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, all seven | Eligible TAR plus one supported wrapper | Native TGZ/TAR.GZ creation/editing streams within an 8 GiB budget, including the decoded TAR headers. Other wrappers and buffered paths retain a 64 MiB decoded TAR limit. Includes short and long suffix aliases. |
 | Compressed files | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; single-payload editing requires the immediate decoded payload and cannot flatten inner wrappers. |
 | Lzip | Lzip v1 and TAR.LZ | No | No | Checks CRC32, size, EOS and full member boundaries. Consecutive nonempty members are supported; v0, ignored tails and empty members inside collections are refused. |
 | UNIX compress | .Z, .tar.Z and .taz | .Z and TAR.Z | Eligible direct payload or supported TAR | Reads 9–16-bit block/nonblock LZW; creates 12/14/16-bit block streams and rewrites with 14-bit block coding. No stored checksum or decoded size: some corruption or valid-prefix truncation cannot be detected. |
@@ -123,7 +123,10 @@ intact original can be restored through verified exclusive moves.
 This is ordered publication of two archives, not one atomic filesystem update.
 Nested cross-container routes, browser/remote publication, same physical outer
 archives and hard-link aliases remain outside this move scope. The combined
-packed candidate limit is 256 MiB. See the [endpoint contract](archive-endpoints.md)
+packed candidate budget is the sum of the two workspace limits when either
+workspace uses native streaming, up to 16 GiB for two eligible 8 GiB workspaces;
+each container retains its individual limit. Two buffered workspaces share the
+existing 256 MiB combined budget. See the [endpoint contract](archive-endpoints.md)
 for precise receipt, source-authority, recovery and external-change boundaries.
 Rearrangement within one workspace uses the grouped move below.
 
@@ -215,16 +218,21 @@ content checksums from publisher authentication.
 
 ## Bounds and integrity
 
-- Native pane sessions spool at most 2 GiB; browser pane sessions keep at most
+- Native pane sessions spool at most 8 GiB; browser pane sessions keep at most
   256 MiB in memory. These are input limits, not promised resident-memory use.
 - Native F3 borrows its existing random-access source for archive metadata
   and member reads. Large local disk images do not require a full-file buffer;
   remote files use the existing 2 GiB spool limit. Browser F3 retains its
   64 MiB full-data input limit. Password retries borrow a fresh reader, and
   changing modes or closing the viewer immediately invalidates pending reads.
-- Interactive member reads and existing workspace edits are capped at 64 MiB per member. Direct whole-archive extraction keeps
-  its 256 MiB input/total-output limits. Copying through a pane keeps its own
-  operation planning and cancellation rules.
+- Buffered interactive member reads remain capped at 64 MiB per member.
+  Eligible native top-level ZIP/CBZ, 7z/CB7, TAR/CBT and TGZ/TAR.GZ workspaces
+  stream imports, copy-out, repacking, verification and publication within an
+  8 GiB member/container/expanded-content budget. Editing a member in an in-memory
+  text or hex editor retains its separate bound. Native direct extraction uses
+  the streamed reader for eligible common formats; buffered extraction keeps
+  its 64 MiB member and 256 MiB input/total-output limits. Copying through a pane
+  keeps its own operation planning and cancellation rules.
 - Fresh native ISO/HFSX/DMG creation streams output up to 2 GiB, including image
   metadata. Files larger than 64 MiB are supported in that creation path and
   verified by streaming; this does not raise the existing workspace edit,
@@ -234,13 +242,15 @@ content checksums from publisher authentication.
   output bound, including headers and alignment. Eligible bounded native-local
   endpoints can create members above 64 MiB and archives above 256 MiB, with
   streaming member hashes, full source rechecks and staged byte readback.
-  TAR member streaming is used explicitly for this verification path; ordinary
-  viewer reads, extraction and existing TAR editing keep their previous bounds.
-  Compressed TAR, browser/fallback creation and durable background jobs do not
-  inherit this extension. See the [measured large TAR evidence](archive-sync-large-tar-verification.md).
-- Ordinary creation and existing workspace publication keep the 256 MiB packed
-  and decoded-total limits; compressed streams and decoded TAR wrappers keep
-  their 64 MiB bounds. Native spooling does not make buffered codecs unbounded.
+  Existing eligible native TAR editing uses its separate 8 GiB streaming budget.
+  See the [measured large TAR evidence](archive-sync-large-tar-verification.md).
+- Native unencrypted ZIP/CBZ, 7z/CB7 Store/LZMA2 and TGZ/TAR.GZ creation streams
+  within an 8 GiB member/expanded/packed budget. TGZ's decoded TAR including
+  headers must also fit. Protected archives, nested writes, browser/fallback
+  paths, 7z Deflate creation and other formats retain their buffered limits:
+  64 MiB/member and 256 MiB total/packed, with 64 MiB for compressed streams
+  and decoded TAR wrappers. Durable background packing remains separate work.
+  See the [parity and verification status](archive-parity-large-continuation.md).
 - Compression wrappers are bounded by 64 MiB input/output by default and
   four nested wrappers. Readers check available integrity/framing information;
   formats without a stored checksum or decoded length cannot detect every valid

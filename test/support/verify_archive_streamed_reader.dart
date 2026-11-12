@@ -116,9 +116,11 @@ Future<void> main(List<String> args) async {
         level: level,
       );
       final bytes = out.takeBytes();
+      var cancelled = false;
       final opened = await openStreamedArchiveSource(
         koni.MemoryByteSource(bytes),
         name: name,
+        isCancelled: () => cancelled,
       );
       try {
         if (opened.policy.reason != null) {
@@ -127,6 +129,9 @@ Future<void> main(List<String> args) async {
         final member = opened.archive.members.firstWhere(
           (m) => m.name == 'data.txt',
         );
+        // A completed opening must release its job's cancellation callback;
+        // the returned archive can outlive the operation that created it.
+        cancelled = true;
         equal(await opened.archive.readMember(member), payload, '$name/$level');
       } finally {
         await opened.archive.close();

@@ -13,7 +13,9 @@ import 'archive_types.dart';
 import 'archive_write_model.dart';
 
 const _chunkBytes = 256 * 1024;
-const _maxMetadataBytes = 32 * 1024 * 1024;
+// Match the streamed reader's metadata budget so every generated header can
+// be reopened without switching to a buffered codec.
+const _maxMetadataBytes = 16 * 1024 * 1024;
 const _zip32 = 0xffffffff;
 
 bool supportsStreamingArchiveWriting(

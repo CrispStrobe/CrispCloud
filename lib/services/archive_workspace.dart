@@ -36,9 +36,9 @@ class ArchiveWorkspace {
     this.journal, {
     bool streaming = false,
     ArchiveOutputSpool? snapshot,
-  }) : _streaming = streaming {
     // ignore: prefer_initializing_formals
-    _snapshotSpool = snapshot;
+  }) : _streaming = streaming,
+       _snapshotSpool = snapshot {
     if (snapshot != null) _ownedSpools.add(snapshot);
     _loadEntries();
   }
@@ -217,22 +217,34 @@ class ArchiveWorkspace {
     final spool = await ArchiveOutputSpool.create(maxBytes: maxBytes);
     try {
       var length = 0;
-      final digest = await sha256
-          .bind(
-            source.readFile(file).asyncMap((chunk) async {
-              check();
-              if (chunk.length > file.size! - length) {
-                throw const ArchiveViewException(
-                  'The captured archive input grew.',
-                );
-              }
-              await spool.write(chunk);
-              length += chunk.length;
-              check();
-              return chunk;
-            }),
-          )
-          .single;
+      Stream<List<int>> capture() async* {
+        await for (final chunk in source.readFile(file)) {
+          check();
+          if (chunk.length > file.size! - length) {
+            throw const ArchiveViewException(
+              'The captured archive input grew.',
+            );
+          }
+          if (chunk is! Uint8List &&
+              chunk.any((byte) => byte < 0 || byte > 255)) {
+            throw const ArchiveViewException(
+              'The captured input contains invalid bytes.',
+            );
+          }
+          for (var at = 0; at < chunk.length; at += 256 * 1024) {
+            final end = at + 256 * 1024 < chunk.length
+                ? at + 256 * 1024
+                : chunk.length;
+            final owned = Uint8List.fromList(chunk.sublist(at, end));
+            await spool.write(owned);
+            length += owned.length;
+            check();
+            yield owned;
+          }
+        }
+      }
+
+      final digest = await sha256.bind(capture()).single;
       check();
       if (length != file.size ||
           !sameArchiveFile(file, await source.stat(file.path!))) {
@@ -1598,8 +1610,9 @@ class ArchiveWorkspace {
                     .bind(
                       spool.openRead().map((chunk) {
                         _check(writing: true);
-                        if (isCancelled?.call() ?? false)
+                        if (isCancelled?.call() ?? false) {
                           throw const FileOperationCancelled();
+                        }
                         return chunk;
                       }),
                     )
@@ -1730,8 +1743,9 @@ class ArchiveWorkspace {
           Stream<List<int>> checked(Stream<List<int>> stream) async* {
             await for (final chunk in stream) {
               _check(writing: true);
-              if (isCancelled?.call() ?? false)
+              if (isCancelled?.call() ?? false) {
                 throw const FileOperationCancelled();
+              }
               yield chunk;
             }
           }

@@ -173,7 +173,7 @@ void main() {
             format == ArchiveCreationFormat.tar ||
                 format == ArchiveCreationFormat.cbt
             ? ArchiveCreationBackend()
-            : _CapabilityBackend();
+            : _CapabilityBackend(local: false);
         backend.put('/input/large.bin', [1]);
         backend.advertisedSizes['/input/large.bin'] = 65 * _mib;
         await expectLater(
