@@ -248,6 +248,20 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
         'Links and special entries cannot be extracted.',
   ),
   ArchiveFormatCapability(
+    id: 'rpm',
+    label: 'RPM package',
+    suffixes: ['.rpm'],
+    mimeType: 'application/x-rpm',
+    notes: 'Read classic RPM CPIO payloads with gzip, bzip2, XZ, Zstandard or no compression. Package scripts are never run; publisher signatures are not verified.',
+  ),
+  ArchiveFormatCapability(
+    id: 'cab',
+    label: 'Microsoft Cabinet',
+    suffixes: ['.cab'],
+    mimeType: 'application/vnd.ms-cab-compressed',
+    notes: 'Read single-cabinet stored/MSZIP folders. Multi-cabinet files, Quantum and LZX are unavailable; cabinet signatures are not verified.',
+  ),
+  ArchiveFormatCapability(
     id: 'xar',
     label: 'XAR archive',
     suffixes: ['.xar'],
@@ -261,7 +275,14 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     label: 'Apple package / XIP',
     suffixes: ['.pkg', '.xip'],
     mimeType: 'application/x-xar',
-    notes: 'XAR package members only. Publisher signatures are not verified; package metadata and signing require a dedicated workflow.',
+    notes: 'XAR package members; preview supported PBZX/CPIO Payload or Content members to browse their files. Publisher signatures are not verified; package metadata and signing require a dedicated workflow.',
+  ),
+  ArchiveFormatCapability(
+    id: 'pbzx',
+    label: 'Apple PBZX payload',
+    suffixes: ['.pbzx'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read stored/XZ block-compressed payloads and supported inner archives. Package signatures are not verified.',
   ),
 ];
 

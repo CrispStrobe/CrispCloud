@@ -112,6 +112,9 @@ void main() {
           '/packages/outer.deb:/data.tar.xz:/usr/share',
           '/extensions/app.msix:/assets',
           '/objects/libsample.a:/object.o',
+          '/packages/app.rpm:/usr/share',
+          '/packages/app.cab:/readme.txt',
+          '/packages/data.pbzx:/docs',
         ]) {
           expect(isArchiveVirtualPath(path), isTrue, reason: path);
         }
@@ -121,7 +124,7 @@ void main() {
           '/images/disc.iso',
           '/images/disc.iso.partial:/DOCS',
           '/images/disc.iso/folder:/DOCS',
-          '/unsupported/data.cab:/entry',
+          '/unsupported/data.arj:/entry',
           'https://example.test/data.iso',
         ]) {
           expect(isArchiveVirtualPath(path), isFalse, reason: path);
@@ -141,6 +144,9 @@ void main() {
         'installer.pkg': 'application/x-xar',
         'signed.xip': 'application/x-xar',
         'extension.crx': 'application/x-chrome-extension',
+        'package.rpm': 'application/x-rpm',
+        'cabinet.cab': 'application/vnd.ms-cab-compressed',
+        'payload.pbzx': 'application/octet-stream',
       };
       for (final entry in expected.entries) {
         expect(
@@ -191,8 +197,6 @@ void main() {
 
     test('unsupported formats are not advertised as browsable or writable', () {
       for (final suffix in [
-        '.rpm',
-        '.cab',
         '.arj',
         '.lzh',
         '.lha',
