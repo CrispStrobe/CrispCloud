@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "kind": "development-native-sanity-check",
+  "recorded_on": "2026-11-12",
+  "parser_repository": "CrispStrobe/legacy-doc-parser",
+  "parser_pin": "c8848d2b7323636d922ed211dfc911534f3acc9f",
+  "source_fingerprint": {
+    "algorithm": "SHA-256 of compact sorted JSON mapping relative path to file SHA-256",
+    "recursive_directories": [
+      "lib",
+      "packages/legacy_doc_parser/lib",
+      "packages/quds_office_engine/lib"
+    ],
+    "additional_files": [
+      "pubspec.yaml",
+      "pubspec.lock",
+      "tool/office_fidelity_manifest.json",
+      "packages/legacy_doc_parser/UPSTREAM.json",
+      "packages/legacy_doc_parser/pubspec.yaml",
+      "packages/quds_office_engine/pubspec.yaml",
+      "tool/verify_legacy_word_structured.dart"
+    ],
+    "file_count": 1222,
+    "sha256": "bf19b1785a51813abc90f335a75f03412d4d6125a286c2db82320406b0f38c3d",
+    "unchanged_during_run": true
+  },
+  "verified_resolved_packages": {
+    "crisp_cloud": ".",
+    "legacy_doc_parser": "packages/legacy_doc_parser",
+    "quds_office_engine": "packages/quds_office_engine"
+  },
+  "command": [
+    "dart",
+    "tool/verify_legacy_word_structured.dart",
+    "<installed-soffice>"
+  ],
+  "runtime": {
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "dart_executable_sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "office": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "office_entrypoint_sha256": "35c5a2736f68e6370a7b9fe5082e66bc438c1a8de11261d6c4bc847073ced45b"
+  },
+  "unavailable_acceptance": {
+    "microsoft_word_execution": true,
+    "open_xml_sdk_validation": true
+  },
+  "scope": [
+    "One authored DOC converted by the standalone writer and rendered by installed Linux LibreOffice.",
+    "PDF text/info/image checks use installed Poppler.",
+    "Source-input fingerprints bind tree contents, not a local merge commit identifier.",
+    "This is not a release, production-configuration LCOV, full-environment or exact-pagination receipt."
+  ],
+  "result": {
+    "engine": "LibreOffice",
+    "checks": {
+      "tableAndCells": true,
+      "bold": true,
+      "fontSize": true,
+      "fontColor": true,
+      "pageDimensions": true,
+      "headersAndFootersPreserved": true,
+      "notesPreserved": true,
+      "imagesPreserved": true,
+      "independentPdfInfo": true,
+      "independentPdfText": true,
+      "independentPdfImage": true,
+      "sourceUnchanged": true,
+      "preparedPackageUnchanged": true
+    },
+    "counts": {
+      "paragraphs": 18,
+      "sections": 1,
+      "tables": 1,
+      "cells": 4,
+      "images": 1,
+      "objects": 0,
+      "headers": 3,
+      "footers": 3,
+      "footnotes": 1,
+      "endnotes": 0,
+      "comments": 0,
+      "revisions": 0,
+      "vba": 0,
+      "signatures": 0
+    },
+    "limitations": [
+      "partialFormatting",
+      "embeddedObjects"
+    ],
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+    "docxSha256": "08a12a2b41f17070f7eab7b25e2fe8da2b1fd48353370b14b575d695891170ca"
+  }
+}
