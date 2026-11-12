@@ -209,3 +209,5 @@ to trash. Existing files and personal-account credentials are unused. On
 19 October 2026, all eleven isolated checks and the live account check passed.
 
 For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the current source revision; `bash tool/sign_macos_local.sh` uses the installed development profile and `bash tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 10` checks startup. The alternate Linux reader parity/canary branches remain separate pending native focus/selection acceptance; this integration retains the guarded isolated host and its runtime assertions.
+
+Release `v1.2.0` (`1.2.0+13`) uses the multi-platform GitHub Release workflow for macOS, Windows, Linux, Android, iOS and Web archives. Store uploads use explicit `ios-v*` or `macos-v*` tags and their separate release workflows; the GitHub iOS archive is unsigned.

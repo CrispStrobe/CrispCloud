@@ -108,7 +108,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
 
@@ -143,13 +143,24 @@ jobs:
           python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
           python3 tool/crypto_release_evidence.py --check
 
-      - name: Analyze
+      - name: Resolve vendored analyzer dependencies
         run: |
-          flutter analyze --no-fatal-warnings 2>&1 | grep -v "cli/" | tee analyze.log || true
-          if grep -q "  error • " analyze.log; then exit 1; fi
+          (cd packages/quds_office_engine && dart pub get)
+          (cd packages/quds_office_editor && flutter pub get)
+          (cd packages/legacy_doc_parser && dart pub get)
+          (cd packages/dart_pdf_editor && flutter pub get)
+          (cd packages/dart_pdf_editor_secure_storage && flutter pub get)
+          (cd packages/pdf_document && dart pub get)
+          (cd packages/pdf_operations && dart pub get)
+
+      - name: Install trusted distro SQLite for tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - run: >-
-          flutter test --concurrency=4
+          python3 tool/with_ci_system_sqlite.py flutter test --concurrency=4
           --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
 
   # ---------- Create Release (empty, assets added by each build) ----------

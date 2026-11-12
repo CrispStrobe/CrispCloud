@@ -3,7 +3,7 @@ name: iOS Release (App Store)
 # Builds, signs and uploads the iOS app to App Store Connect from CI.
 #
 # Triggers:
-#   * push a tag matching v*        -> full build + upload (a real release)
+#   * push a tag matching ios-v*        -> full build + upload (a real release)
 #   * manual "Run workflow"         -> choose dry_run=true to build+sign WITHOUT
 #                                      uploading (validates signing safely)
 #
@@ -22,7 +22,7 @@ name: iOS Release (App Store)
 
 on:
   push:
-    tags: ['v*']
+    tags: ['ios-v*']
   workflow_dispatch:
     inputs:
       dry_run:
