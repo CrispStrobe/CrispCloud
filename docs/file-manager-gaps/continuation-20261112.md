@@ -4,7 +4,7 @@ Continuation baseline: `403e942dc99779883210125a01841ef209e19d2e`.
 The preceding scope and eight implementation increments remain preserved in the
 [gap register](README.md) and [validation record](validation-20261112.md).
 
-## Active increments
+## Continuation increments
 
 | Gap | Concrete increment | Completion boundary |
 | --- | --- | --- |
@@ -159,3 +159,82 @@ Status is **closed for maintained English/German/French offline help**.
 Additional complete guides and broader UI language coverage remain separate
 localization work. No dependency was added. Maintenance instructions are in
 [docs/help/README.md](../help/README.md).
+
+The help code checkpoint is `e4750326670a0cde85793c3569b961780917cbff` on
+`feature/localized-help-20261112` in
+[PR #73](https://github.com/CrispStrobe/CrispCloud/pull/73), stacked on the gathering
+branch. Later documentation-only checkpoints record this evidence without
+changing the compiled implementation.
+
+## Integrated validation
+
+Toolchain: **Flutter 3.47.8 / Dart 3.13.7**, Linux host. Test gates overlap;
+their counts must not be summed as unique tests.
+
+| Gate | Observed result | Scope |
+| --- | --- | --- |
+| FTP resume and transfer regressions | 285 passed across eight suites | Wire order/bytes for plain/implicit/explicit TLS, source/suffix mutation, durable interrupted writes, retained-stage cleanup, journal failures and physical transport ownership |
+| Final empty-stage crash/recovery gate | 89 passed across three suites | Empty newest payload falls back to an older verified prefix; directories/symlinks are refused; recovery and native backend regressions |
+| Command/context/runner/keyboard gate | 152 passed across eight suites | Source capture, literal arguments, review/run/cancel, process completion, default/custom keys and translated layouts |
+| Final interpreter/model correction | 62 passed across three suites | Supported prefix grammar, literal script arguments, resolved aliases, Windows normalization, service/dialog/context regressions |
+| Gathering stack and transfer dialog | 56 passed across three suites | Durable references, fixed destinations, grouped partial outcomes, failed persistence, cancellation and ordinary transfer compatibility |
+| Help and real-screen integration | 35 passed across three suites | Bundled topic/digest/fallback validation, reader layout/async behavior and menu/F1 routes |
+| Final configurable-menu regressions | 55 passed across six suites | Layout/store/shortcut/string contracts, editor persistence/import and actual source-bound command context |
+| Guide maintenance and release assets | Passed | Three guides have 23 matching topics; explicit source/translation revision workflow; built asset bytes match all reviewed digests |
+
+The full application analyzer completed the existing nonfatal warning/info
+gate with **0 errors, 96 warnings and 1,039 informational findings**. These
+repository findings remain visible; this is not a lint-clean application claim.
+The final interpreter follow-up also passed focused analysis without findings,
+and final release compilation includes that correction.
+
+The versioned **JavaScript release web build passed in 198.9 seconds** for
+`e4750326670a0cde85793c3569b961780917cbff`:
+
+```sh
+flutter build web --release --no-pub \
+  --dart-define=APP_VERSION=1.1.0+12 \
+  --dart-define=GIT_HASH=e4750326
+```
+
+The build's automatic optional WebAssembly probe again exited **247**. The
+JavaScript build still succeeded. This does not establish a particular failure
+cause or successful WebAssembly support; G51 remains open. The produced English,
+German, French and manifest assets were checked against the reviewed source
+bytes after compilation.
+
+The real-screen test gate used the repository's existing opt-in system-SQLite
+wrapper and installed Linux library. The helper restored the original package
+configuration; no release dependency verification or production behavior was
+weakened. `git diff --check` passes. All 51 scope headings are unique and
+consecutive, relative document links resolve, and the outgoing-file scan finds
+no competing product names.
+
+At the compiled checkpoint's hosted-check inspection, one GUI check had passed
+and other checks were queued or in progress. Overall hosted CI completion is
+not claimed. All continuation PRs are draft, open and unmerged; remote updates
+use fast-forward leases and preserve previous feature branches.
+
+## Remaining work and acceptance
+
+The register now contains **seven closed scopes, five implemented scopes with
+named runtime/live acceptance pending, 27 scoped implementation gaps, ten
+research prerequisites and two cross-cutting acceptance items**.
+
+- G09 still needs actual native argument transport, permissions and keyboard
+  dispatch evidence. G25 still needs selected real-server interoperability and
+  signed/runtime evidence. Their passing fixtures do not replace those checks.
+- Previously recorded G01/G04/G12 target acceptance remains pending, as do the
+  cross-cutting native/live/browser/WebAssembly checks under G50/G51.
+- G05 gathers through explicit selection commands and foreground per-account
+  reviews. Native outgoing drag is still G06; no atomic multi-account behavior
+  or copied-content ownership is implied.
+- G49 provides three complete guides and nine-language reader controls.
+  Additional guide languages and broader UI language coverage remain explicit.
+- The [G29 transport design](transfer-bandwidth-design.md) maps the next shared
+  bandwidth implementation. Native transport integration is feasible with
+  existing dependencies; browser upload buffering and separate background
+  runtimes require their own coverage decisions. G29 remains scoped.
+
+No dependency was added by these four increments. New dependencies in later
+lanes still require permissive-license and provenance review.

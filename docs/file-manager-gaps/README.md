@@ -145,7 +145,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, cleanup `5b2f1fa` · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
 | G09 command entry | `feature/command-entry-20261112` · `50a9547` · PR #71 | 152 tests passed across eight command/context/keyboard suites; 62 passed in the final service/dialog/context gate | Implemented; native argument/permission/keyboard acceptance pending |
 | G05 gathering stack | `feature/gathering-stack-20261112` · `8f117e7` · PR #72 | 56 service/widget/operation-dialog tests passed; focused analysis clean | Closed for the reviewed reference workflow |
-| G49 localized help | `feature/localized-help-20261112` | 35 guide/reader/real-screen integration tests passed; all three guides and revision-update workflow verified | Closed for maintained English/German/French offline help |
+| G49 localized help | `feature/localized-help-20261112` · code `e475032` · PR #73 | 35 guide/reader/real-screen integration tests passed; all three guides and revision-update workflow verified | Closed for maintained English/German/French offline help |
+| Continuation integrated validation | `feature/localized-help-20261112` · compiled code `e475032` | 55 menu regressions passed; full analysis gate: 0 errors, 96 warnings, 1,039 infos; versioned JavaScript release build passed; optional WebAssembly probe exited 247 | [Continuation evidence and remaining acceptance](continuation-20261112.md#integrated-validation) |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

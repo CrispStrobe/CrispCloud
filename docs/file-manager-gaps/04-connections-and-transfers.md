@@ -145,6 +145,13 @@ routing remains G28; this closure does not claim live-server certification.
 
 **Starting points:** Transfer scheduler/service; existing bandwidth-limited stream helpers.
 
+**Preparation evidence:** The [transport implementation design](transfer-bandwidth-design.md)
+maps the shared allocator, actual HTTP/direct-protocol byte boundaries,
+per-direction coverage and incremental test gates. Native-runtime integration
+is feasible with existing dependencies. Browser upload buffering and separate
+background runtimes need explicit coverage boundaries; a scheduler-only or
+logical-copy limiter does not close this gap. Status remains scoped.
+
 ## G30
 
 ### Network volume discovery

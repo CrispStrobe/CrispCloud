@@ -287,3 +287,13 @@ cleanup, G09 reviewed command entry, G05 persistent gathering references and
 G49 maintained offline help. Its focused transfer, command, stack and help
 gates are recorded separately in the continuation document; their overlapping
 test counts are not summed. These four increments also add no dependency.
+
+At continuation code checkpoint `e475032`, the final menu regression gate passed
+55 tests. Full analysis completed with **0 errors, 96 warnings and 1,039
+informational findings**, and the final interpreter adjustment separately
+passed focused analysis. The integrated JavaScript release build passed in
+198.9 seconds with `APP_VERSION=1.1.0+12` and `GIT_HASH=e4750326`; bundled guide
+bytes match their reviewed digests. The automatic optional WebAssembly probe
+again exited 247. Native/live/browser acceptance and complete hosted CI evidence
+remain open. The [transport bandwidth design](file-manager-gaps/transfer-bandwidth-design.md)
+records the next G29 implementation boundaries without claiming it implemented.
