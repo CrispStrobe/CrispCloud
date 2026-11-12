@@ -36,6 +36,11 @@ extension _WordTableStyles on _StructuredWordParser {
           heightTwips: rows[r].heightTwips,
           cantSplit: rows[r].cantSplit,
           borders: rows[r].borders,
+          defaultCellMargins: Map.unmodifiable({
+            if (rows[r].tableStyleId case final id?)
+              for (final style in _tableStyleChain(id)) ...style.cell.margins,
+            ...rows[r].defaultCellMargins,
+          }),
           alignment: rows[r].alignment,
           autoFit: rows[r].autoFit,
           cells: List.unmodifiable([

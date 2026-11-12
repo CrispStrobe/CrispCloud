@@ -230,6 +230,11 @@ class _WordMediaReader {
       if (!ids.add(id)) {
         throw const FormatException('Duplicate OfficeArt property identifier.');
       }
+      if (id >= 0x0384 && id <= 0x0387 && (opid & 0x4000) != 0) {
+        throw const FormatException(
+          'OfficeArt wrap distance cannot reference a BLIP.',
+        );
+      }
       if ((opid & 0x8000) != 0) {
         var size = value;
         if (id == 0x0145 && value != 0) {

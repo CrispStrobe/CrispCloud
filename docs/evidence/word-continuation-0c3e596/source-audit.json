@@ -1,0 +1,184 @@
+{
+  "addedReviewedRuntimePaths": [
+    "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart"
+  ],
+  "after": {
+    "inventorySha256": "791a9cdc9d97f21d5425a5c3cf790559f953e38653d1195b929cee10ec0ee6cb",
+    "policySha256": "46ebb7327293792125cd8b1f282ac397ecf93940d1b80362dabcf51b7321d395",
+    "pubspecLockSha256": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5",
+    "reviewedSourceSha256": "689c13772a53680552d686b29a206d462ac4099a1c1d7c34e6e2d285e4bebd7a"
+  },
+  "baselineMainCommit": "07a1ce776ffd08aa37c5dc789746276556bbd225",
+  "before": {
+    "inventorySha256": "38ebdcc8747382ee2afba73985df68e830238b819fa59f59e983a2e25c0065a3",
+    "policySha256": "f96a9329959541e44069d5e55a70083faf545745048911e32e126c646c01fe44",
+    "pubspecLockSha256": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5",
+    "reviewedSourceSha256": "908ead0565d9b292ea1a75e862745d30a6a70124dd6535a4412f3cd0498d5e72"
+  },
+  "integrationBaseCommit": "f357283cd00bddcaf8aef90357d7c34c69ae7355",
+  "officeFileCount": 1074,
+  "parserCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "parserFileCount": 653,
+  "parserTree": "e763288ee642c26854572e1cae212c36bf683918",
+  "preservedPolicyFields": [
+    "bundle_id",
+    "documentation",
+    "france",
+    "pubspec_lock_sha256",
+    "reviewed_on",
+    "schema_version",
+    "testflight",
+    "uses_non_exempt_encryption"
+  ],
+  "qudsCommit": "71bb109e81217ed55c534881304a44ae8fa608d5",
+  "reviewedSourceChanges": [
+    {
+      "afterSha256": "5f9831fe65256dc60d119a7c47279b1df6fac3db3aa13b79963c95c0bf7cac67",
+      "beforeSha256": "6d93c04ae7d2f1af81e6b4b6bd6c9ec6f5b2891f1953f030d6a55ac27f1a8e0a",
+      "path": "packages/legacy_doc_parser/UPSTREAM.json"
+    },
+    {
+      "afterSha256": "07370b5859bc979db85d3b6d948d8f027421c867dac4548bea84cf400d9311e6",
+      "beforeSha256": "cf628f1d5e6df24bc8a1a4dd75766d5f8c19f49f45eec79c81bd5f5d9a51d0ba",
+      "path": "packages/legacy_doc_parser/lib/src/conversion.dart"
+    },
+    {
+      "afterSha256": "d453cb51beede2a92d082decb4b6c13ba50b6ea0800dce5ba3e0478143a2f833",
+      "beforeSha256": "36b62086b56bf7f0c005d819627a99a2450b349792f107cfed84152d1d7254ef",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_format_tables.dart"
+    },
+    {
+      "afterSha256": "c7add4966316b24acecd1482375f3f4a9fabee4326a3e75ed1c61ed74a4e266e",
+      "beforeSha256": "eb597709fc5044cb5aee8cc751c99c4646a5dca20bd2b8f385173457788e3642",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_media_parser.dart"
+    },
+    {
+      "afterSha256": "06cb308a7ce97dbcec5ac0ec56fe1cfda880ff38b9d35d84863e403d3d82f78b",
+      "beforeSha256": "834a2d6df68d02178a8d73291d719e19e78ee16c29323ad513780eb54ecaee48",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_officeart_model.dart"
+    },
+    {
+      "afterSha256": "f2a70642e389dfb3522203dfef82c2674a0a154b18af960d57b772926ae7cb86",
+      "beforeSha256": "055ce982cf157f72530f3ad40386595593c30b02645f30d61731a65130633b42",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart"
+    },
+    {
+      "afterSha256": "7ea4d770bf593a233ef2ca0f2478eeaf7257921bf4d058165eb8e2558e659ee7",
+      "beforeSha256": "9d77a52c30842604e29bda177f08024464d5bf271cdb262aae347e97a3657324",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_sprms.dart"
+    },
+    {
+      "afterSha256": "88146ab5f37d6da2e8cfe43134aee5628d8e2838396e3102028eab312a922d13",
+      "beforeSha256": "8401a9100a3c9eb21721a8c4829cc0c0074230b8850da19084d8af5182cdb62a",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_stories.dart"
+    },
+    {
+      "afterSha256": "eb3bb9e7b4eecfade607bb696b2c983ad2ec000b5f3300b4c928313840b752c9",
+      "beforeSha256": "cf9c325ccd3261bdc99dce53cd1325d4ac2ed98e204dd0478465edeaec837592",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_structured_conversion.dart"
+    },
+    {
+      "afterSha256": "0ba9b808794aa1fc46fc7d9ad0d08864e68a2caef5d4baeb413845ca9d47ea04",
+      "beforeSha256": "751092d022bab06adfe23b186c83c26d273e6968ba7e7e336a361229a6cd7e81",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_structured_model.dart"
+    },
+    {
+      "afterSha256": "589873f1c54c8281587149c7de54776958b2c02f710b7a381572dcc0ebb83d70",
+      "beforeSha256": "230a259da3a18823c1b0bc5ad121974eab360f6421af23d00cc96193ae2d9b2e",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_structured_parser.dart"
+    },
+    {
+      "afterSha256": "a7cf0c0fe01e2f3f43b6ddaff20482e8d00b4a36a94795bbeb3fc43eaf2f09fc",
+      "beforeSha256": "91a11e4327468ca56bf445cf76df63761b57cf85314dd6eb9ff4499d5d91404b",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_table_model.dart"
+    },
+    {
+      "afterSha256": "46cd63467319282656f61af0b4c85ac3925839a3276f8ccce9523590c1c5d27d",
+      "beforeSha256": "2a74eb977559d3bcb23df79b2c68045660d93d810ecfc7edaf909dd3f2e92686",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_table_styles.dart"
+    },
+    {
+      "afterSha256": "83490e718fdd3b641173e67350e5518b2f2232549c4ad155c402e06e5340bdbf",
+      "beforeSha256": "21b5cf79dca85b3b52b545e07183a3c3fd1da4956ba03aa6f555c1ddfb481aba",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_table_text.dart"
+    },
+    {
+      "afterSha256": "6c1d4ddb93e8f367f3afb70736fd853a27f548103cd2b6d86d54765eedc86a36",
+      "beforeSha256": "2af3ea36751799d97509e15fdd02e7e92fd0173f7c6eb60d992d7036787ead1d",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_tables.dart"
+    },
+    {
+      "afterSha256": "7e6d28d480b70bf883cdaa5ed4d06f90171bd8cd891b17cc0a53828d19d1a24e",
+      "beforeSha256": "d474de28a98f1361dce10c0f7050e042d3dd08dbedf34830088bec8de9983736",
+      "path": "packages/legacy_doc_parser/lib/src/legacy_word_textbox_alias.dart"
+    },
+    {
+      "afterSha256": "0f09c2bc3f81a25a11fc335ad85c17b9aca467a0e7b7e37ffaff4e7d74059769",
+      "beforeSha256": null,
+      "path": "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart"
+    },
+    {
+      "afterSha256": "c81545dca31cae5991596844d72491dffb4fc30074212d73d79768bd9d0eca0f",
+      "beforeSha256": "4ebd2dc05a3cc6d4fd7c190df1ebac4056d8ec2894cfa09a167853ddbd7beedb",
+      "path": "packages/legacy_doc_parser/lib/src/word_media_writer.dart"
+    },
+    {
+      "afterSha256": "e518cf2a1fd6e5ff0c180fbd2d19f0902e9e04f65492a71b7d1cebe635610409",
+      "beforeSha256": "5b42d1b06158bfc6823cd4ffd0e33a61a090af528caf524234fa5a6540337c09",
+      "path": "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart"
+    },
+    {
+      "afterSha256": "e6a4dbd0621c97624dad8da26de63a5c057d96f440509a8a2dcc98e7c3f5a321",
+      "beforeSha256": "8071ea2373c72ff323593ea7fdf142c2a4dbe5bd4bac08bd7ef2b371a1acb74e",
+      "path": "packages/legacy_doc_parser/lib/src/word_officeart_position_writer.dart"
+    },
+    {
+      "afterSha256": "26d00d7a334a6cf9d96188e988c64c268ac55e7aca4d69433561e4ad8aba8862",
+      "beforeSha256": "cd4e23820d47cfbf4b6159fffb403aad00243fcc9fd260428b72a79471f0759f",
+      "path": "packages/legacy_doc_parser/lib/src/word_story_writer.dart"
+    },
+    {
+      "afterSha256": "1e739f7f7179fbf1d3ee1b79825a779f035e7e20eb1406083466ece9d52dca99",
+      "beforeSha256": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+      "path": "packages/legacy_doc_parser/lib/src/word_table_style_writer.dart"
+    },
+    {
+      "afterSha256": "2dc0ffd3e896839571586209337424aa18772c7cb1a91e7b0915422196740a86",
+      "beforeSha256": "04b7d64caf9025fa90bbb7a9b2a492490cfbd2ee518609f2bf63cb9867d86f13",
+      "path": "packages/legacy_doc_parser/lib/src/word_table_text_writer.dart"
+    },
+    {
+      "afterSha256": "e7511b11d0084b7f87e81a69d18aa53221651559b55ed333586c2c3a25e06b9b",
+      "beforeSha256": "f53d13e7886d04b7b077a49befce57e8be44ec1301c5060ad13f3d834c8e434f",
+      "path": "packages/legacy_doc_parser/lib/src/word_table_writer.dart"
+    },
+    {
+      "afterSha256": "772dfc3eaff3a2259cd87495b1b5520ada1593ec50c8f89ac69961b052a6ab6e",
+      "beforeSha256": "3297b140596b8cf6afb03e0631887cd40b7d8dd0866d905213ae8e796402a850",
+      "path": "packages/legacy_doc_parser/lib/src/word_textbox_writer.dart"
+    },
+    {
+      "afterSha256": "d7ebc24a483d45e8f9e5dfc59fe9251cd296ef1fcad9e9068c18c85238405b96",
+      "beforeSha256": "d4e6af7604560f37f231f04a4ffb154a833f7123c16b0205bf0f79a3dc33164a",
+      "path": "pubspec.yaml"
+    },
+    {
+      "afterSha256": "77f90ea0926ed225a4ed988893dd9230e3e0f8b7ca5e1291371d76955666cb55",
+      "beforeSha256": "97c39efa000e54fc8d8f9c060756e0c44783fa1326cd92b7b77124cc574db270",
+      "path": "tool/office_fidelity_manifest.json"
+    }
+  ],
+  "sourceReview": {
+    "documentPropertyMapping": "Reviewed script-font slots, inherited table padding, floating-table anchors and row exceptions, explicit OfficeArt wrapping distances and stroke-operand bounds. These change bounded document parsing/model/XML output. The unstable automatic textbox stroke default is withdrawn.",
+    "metadata": "Reviewed exact parser pin, guarded full-tree mirror and Office inventory; no app-local parser patch or Quds source changes.",
+    "scope": "Technical source identity refresh only. No classification, distribution, date, reference, plist declaration or lockfile change; no release or external-account action.",
+    "storyAndFieldHandling": "Reviewed bounded shared-header instances and their event ownership; the new binary hyperlink module accepts only a corroborated bounded internal bookmark location, escapes emitted instruction text and never traverses a link.",
+    "technicalConclusion": "No new cryptographic primitive, credential store, native dependency, network destination or external execution path is introduced by these reviewed source changes."
+  },
+  "unchangedNonParserOfficeFileCount": 421,
+  "unchangedSourcePlists": {
+    "ios/Runner/Info.plist": "876f9cd3666bdc0deaccddd4a7b10e42b997329256e08f32f84f28f1e4cf48e2",
+    "macos/Runner/Info.plist": "f4d88c62a438789233101cf3bd796686600f8b782238c80889314f02ad4c0609"
+  },
+  "version": 1
+}

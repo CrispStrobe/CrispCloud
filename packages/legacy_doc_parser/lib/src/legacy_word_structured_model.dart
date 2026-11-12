@@ -502,6 +502,7 @@ class LegacyWordTableRow {
     this.heightTwips,
     this.cantSplit,
     this.borders = const {},
+    this.defaultCellMargins = const {},
     this.alignment,
     this.autoFit,
   });
@@ -540,6 +541,12 @@ class LegacyWordTableRow {
   /// Direct row-wide outer and interior border defaults. Cell borders whose
   /// type is none inherit; an explicit nil cell border suppresses the edge.
   final Map<LegacyWordTableBorderSide, LegacyWordBorder> borders;
+
+  /// Row-wide source cell-padding defaults, including inherited table-style
+  /// defaults, before per-cell or conditional overrides. Keeping these
+  /// separate also preserves floating-table origins: a cell override does
+  /// not replace the table's default padding in OOXML.
+  final Map<LegacyWordBorderSide, int?> defaultCellMargins;
 }
 
 /// The bounded, native row properties represented by a table revision wall.

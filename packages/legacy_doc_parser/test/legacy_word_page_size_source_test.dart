@@ -25,7 +25,9 @@ XmlDocument _xml(LegacyWordDocument document) {
 void main() {
   for (final name in ['list-continue', 'list-restart']) {
     test('$name contains no source page-size or margin declaration', () {
-      final bytes = File('test/fixtures/word_native/$name.doc').readAsBytesSync();
+      final bytes = File(
+        'test/fixtures/word_native/$name.doc',
+      ).readAsBytesSync();
       // Independent FIB inspection: these authored sparse DOCs contain no
       // PlcfSed. A renderer's chosen A4 default is not a stored source size.
       final word = ByteData.sublistView(

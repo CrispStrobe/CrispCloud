@@ -41,6 +41,23 @@ XmlElement _position(Uint8List bytes) =>
 String? _attr(XmlElement node, String name) =>
     node.getAttribute(name, namespace: _w);
 
+List<int> _padding(int code, int width) =>
+    wordSprm(code, [6, 0, 1, 2, 3, ...wordU16(width)]);
+List<int> _border(int width, {int style = 1, int? rightWidth}) =>
+    wordSprm(0xd613, [
+      48,
+      for (var side = 0; side < 6; side++) ...[
+        0,
+        0,
+        0,
+        0,
+        side == 3 ? rightWidth ?? width : width,
+        style,
+        0,
+        0,
+      ],
+    ]);
+
 Uint8List _noteSource({required bool endnote, String trailing = ''}) {
   const main = 'A\x02\r';
   final note = '\x02N\rCELL\x07\x07$trailing';
@@ -72,7 +89,7 @@ Uint8List _noteSource({required bool endnote, String trailing = ''}) {
 
 void main() {
   test(
-    'floating table anchors retain each physical origin and ignore padding',
+    'floating table anchors retain each physical origin and ignore padding bits',
     () {
       for (var horizontal = 0; horizontal < 3; horizontal++) {
         for (var vertical = 0; vertical < 3; vertical++) {
@@ -93,8 +110,8 @@ void main() {
             _attr(node, 'vertAnchor'),
             ['margin', 'page', 'text'][vertical],
           );
-          expect(_attr(node, 'tblpX'), '1440');
-          expect(_attr(node, 'tblpY'), '720');
+          expect(_attr(node, 'tblpX'), '1549');
+          expect(_attr(node, 'tblpY'), '721');
         }
       }
     },
@@ -130,12 +147,167 @@ void main() {
       }
     }
     for (final stored in [-31679, -1440, -1, 1, 31681]) {
-      final node = _position(
-        _source([..._two(0x940e, stored), ..._two(0x940f, stored)]),
-      );
-      expect(_attr(node, 'tblpX'), '${stored - 1}');
-      expect(_attr(node, 'tblpY'), '${stored - 1}');
+      final source = _source([
+        ..._two(0x940e, stored),
+        ..._two(0x940f, stored),
+      ]);
+      final position = _table(source).position!;
+      expect(position.horizontalOffsetTwips, stored - 1);
+      expect(position.verticalOffsetTwips, stored - 1);
+      final node = _position(source);
+      expect(_attr(node, 'tblpX'), '${stored + 108}');
+      expect(_attr(node, 'tblpY'), '$stored');
     }
+  });
+
+  test('native page table retains source defaults independently of cells', () {
+    final source = File(
+      'test/fixtures/word_native/word16-page-origin.doc',
+    ).readAsBytesSync();
+    final table = parseLegacyWordDocument(
+      source,
+    ).blocks.whereType<LegacyWordTable>().single;
+    expect(table.position!.horizontalOffsetTwips, 856);
+    expect(table.position!.verticalOffsetTwips, 2544);
+    for (final row in table.rows) {
+      expect(row.defaultCellMargins, {
+        LegacyWordBorderSide.top: 0,
+        LegacyWordBorderSide.left: 0,
+        LegacyWordBorderSide.bottom: 0,
+        LegacyWordBorderSide.right: 0,
+      });
+      for (final cell in row.cells) {
+        expect(cell.formatting.margins[LegacyWordBorderSide.bottom], 113);
+      }
+    }
+    final xml = _xml(source);
+    final margins = xml.findAllElements('tblCellMar', namespace: _w).single;
+    expect(margins.childElements.map((e) => e.name.local), [
+      'top',
+      'left',
+      'bottom',
+      'right',
+    ]);
+    expect(margins.childElements.map((e) => _attr(e, 'w')), [
+      '0',
+      '0',
+      '0',
+      '0',
+    ]);
+    final position = xml.findAllElements('tblpPr', namespace: _w).single;
+    expect(_attr(position, 'tblpX'), '857');
+    expect(_attr(position, 'tblpY'), '2545');
+  });
+
+  test(
+    'absolute table origin maps padding and bounded single-border edges',
+    () {
+      // Literal expected offsets are independently checked by native exports
+      // and CELL-to-BODY measurements, including the source .75pt -> 7tw half.
+      for (final (stored, margin, cellMargin, border, origin, expected)
+          in <(int, int, int?, int, int, int)>[
+            (1441, 0, null, 0, 0, 1441),
+            (1441, 108, null, 0, 0, 1549),
+            (1441, 240, null, 0, 0, 1681),
+            (-361, 240, null, 0, 0, -121),
+            (-361, 240, null, 8, 0, -111),
+            (-361, 240, null, 6, 0, -114),
+            (-361, 240, null, 10, 0, -109),
+            (1441, 240, 0, 0, 0, 1681),
+            (1441, 0, 240, 0, 0, 1441),
+            (1441, 240, null, 6, 480, 2168),
+            (1441, 240, null, 6, -108, 1580),
+          ]) {
+        final source = _source([
+          ...tableFixtureDefinition([2400], origin: origin),
+          ..._one(0x360d, 0x50),
+          ..._two(0x940e, stored),
+          ..._two(0x940f, 2161),
+          ..._padding(0xd634, margin),
+          if (cellMargin != null) ..._padding(0xd632, cellMargin),
+          if (border != 0) ..._border(border),
+        ]);
+        expect(_table(source).position!.horizontalOffsetTwips, stored - 1);
+        expect(_attr(_position(source), 'tblpX'), '$expected');
+        expect(_attr(_position(source), 'tblpY'), '2161');
+      }
+    },
+  );
+
+  test('physical floating edge keeps the first left border for RTL rows', () {
+    for (final rtl in [false, true]) {
+      final source = tableFixture([
+        const TableFixtureParagraph('CELL0\x07', depth: 1, cell: true),
+        const TableFixtureParagraph('CELL1\x07', depth: 1, cell: true),
+        TableFixtureParagraph(
+          '\x07',
+          depth: 1,
+          row: true,
+          widths: [1200, 1200],
+          extra: [
+            ..._one(0x360d, 0x50),
+            ..._two(0x940e, 1441),
+            ..._two(0x940f, 2161),
+            ..._two(0x560b, rtl ? 1 : 0),
+            ..._padding(0xd634, 240),
+            ..._border(6, rightWidth: 16),
+          ],
+        ),
+      ]);
+      expect(_attr(_position(source), 'tblpX'), '1688');
+    }
+  });
+
+  test('named horizontal positions do not receive absolute-origin offsets', () {
+    for (final (sourceValue, name) in [
+      (0, 'left'),
+      (-4, 'center'),
+      (-8, 'right'),
+    ]) {
+      final node = _position(
+        _source([
+          ..._one(0x360d, 0x50),
+          ..._two(0x940e, sourceValue),
+          ..._two(0x940f, 2161),
+          ..._padding(0xd634, 240),
+          ..._border(8),
+        ]),
+      );
+      expect(_attr(node, 'tblpXSpec'), name);
+      expect(_attr(node, 'tblpX'), isNull);
+    }
+  });
+
+  test('compound-border origins stay diagnosed without invented extents', () {
+    final source = _source([
+      ..._two(0x940e, 1441),
+      ..._two(0x940f, 2161),
+      ..._padding(0xd634, 240),
+      ..._border(8, style: 3),
+    ]);
+    final converted = convertLegacyWordToStructuredDocx(source);
+    expect(_attr(_position(source), 'tblpX'), '1681');
+    expect(
+      converted.limitations,
+      contains(LegacyWordConversionLimitation.partialFormatting),
+    );
+    final evidence = ZipDecoder()
+        .decodeBytes(converted.bytes)
+        .files
+        .where((file) => file.name.endsWith('.json'))
+        .map((file) => utf8.decode(file.content))
+        .join();
+    expect(evidence, contains('floatingTableBorderOrigin'));
+  });
+
+  test('absolute position plus its row context fails on target overflow', () {
+    final source = _source([
+      ..._two(0x940e, 31681),
+      ..._two(0x940f, 1),
+      ..._padding(0xd634, 2000),
+    ]);
+    expect(_table(source).position!.horizontalOffsetTwips, 31680);
+    expect(() => _position(source), throwsFormatException);
   });
 
   test(

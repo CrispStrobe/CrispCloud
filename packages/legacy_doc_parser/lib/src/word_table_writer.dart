@@ -33,6 +33,7 @@ extension _WordTableWriter on _StructuredWordWriter {
     final edgeIndices = {for (var i = 0; i < edges.length; i++) edges[i]: i};
     _xml.add('<w:tbl><w:tblPr>');
     final firstRow = table.rows.firstOrNull;
+    final tableMargins = firstRow?.defaultCellMargins ?? const {};
     final firstMargins = firstRow?.cells.firstOrNull?.formatting.margins;
     final leadingMargin =
         firstMargins?.containsKey(LegacyWordBorderSide.left) == true
@@ -55,7 +56,51 @@ extension _WordTableWriter on _StructuredWordWriter {
       }
       _xml.add('<w:tblStyle w:val="LegacyTable$id"/>');
     }
-    if (table.position case final position?) _tablePosition(position);
+    if (table.position case final position?) {
+      var horizontalOrigin = 0;
+      if (position.horizontalOffsetTwips != null) {
+        // MS-DOC's physical table origin precedes its row boundary, default
+        // padding and border. OOXML floats the resulting table edge. Keep
+        // the table default distinct from a first-cell padding override.
+        final margin = tableMargins.containsKey(LegacyWordBorderSide.left)
+            ? tableMargins[LegacyWordBorderSide.left] ?? 0
+            : 108;
+        horizontalOrigin = origin + margin;
+        // The source first cell's left border defines this physical origin
+        // even when bidiVisual reverses the displayed cells. Single borders
+        // straddle the edge; truncate fractional twips as in source geometry.
+        final border = firstRow
+            ?.cells
+            .firstOrNull
+            ?.formatting
+            .borders[LegacyWordTableBorderSide.left];
+        if (border != null &&
+            border.style != 'none' &&
+            border.style != 'nil' &&
+            border.widthEighthPoints != 0) {
+          if (border.style == 'single' &&
+              border.spacingPoints == 0 &&
+              !border.shadow &&
+              !border.frame) {
+            horizontalOrigin += border.widthEighthPoints * 5 ~/ 4;
+          } else {
+            limitations.add(LegacyWordConversionLimitation.partialFormatting);
+            _evidenceRecords.add({
+              'kind': 'floatingTableBorderOrigin',
+              'tableStartCp': table.startCp,
+              'borderStyle': border.style,
+              'widthEighthPoints': border.widthEighthPoints,
+              'spacingPoints': border.spacingPoints,
+              'shadow': border.shadow,
+              'frame': border.frame,
+              'reason':
+                  'Source border is preserved; its contribution to the floating origin is not mapped outside an unadorned single line.',
+            });
+          }
+        }
+      }
+      _tablePosition(position, horizontalOriginTwips: horizontalOrigin);
+    }
     if (table.rightToLeft) _xml.add('<w:bidiVisual w:val="on"/>');
     _xml.add(
       canWriteGrid
@@ -65,6 +110,7 @@ extension _WordTableWriter on _StructuredWordWriter {
     _xml.add('<w:jc w:val="${_tableJustification(table.alignment)}"/>');
     _xml.add('<w:tblInd w:w="$nativeIndent" w:type="dxa"/>');
     _xml.add('<w:tblLayout w:type="${table.autoFit ? 'autofit' : 'fixed'}"/>');
+    _tableCellMargins(tableMargins, _xml, 'tblCellMar');
     _tableLook(firstRow?.styleOptions ?? 0x600, _xml);
     _xml.add('</w:tblPr>');
     if (canWriteGrid) {
@@ -85,9 +131,32 @@ extension _WordTableWriter on _StructuredWordWriter {
       _xml.add('<w:tr>');
       final rowAlignment = row.alignment ?? table.alignment;
       final rowAutoFit = row.autoFit ?? table.autoFit;
+      // MS-DOC sprmTCellPaddingDefault is row-wide. The first row supplies
+      // tblPr; later defaults belong to tblPrEx, including resets to 108/0.
+      final marginExceptions = <LegacyWordBorderSide, int?>{};
+      for (final side in const [
+        LegacyWordBorderSide.top,
+        LegacyWordBorderSide.left,
+        LegacyWordBorderSide.bottom,
+        LegacyWordBorderSide.right,
+      ]) {
+        final fallback =
+            side == LegacyWordBorderSide.left ||
+                side == LegacyWordBorderSide.right
+            ? 108
+            : 0;
+        final before = tableMargins.containsKey(side)
+            ? tableMargins[side]
+            : fallback;
+        final after = row.defaultCellMargins.containsKey(side)
+            ? row.defaultCellMargins[side]
+            : fallback;
+        if (before != after) marginExceptions[side] = after;
+      }
       if (row.borders.isNotEmpty ||
           rowAlignment != table.alignment ||
-          rowAutoFit != table.autoFit) {
+          rowAutoFit != table.autoFit ||
+          marginExceptions.isNotEmpty) {
         _xml.add('<w:tblPrEx>');
         if (rowAlignment != table.alignment) {
           _xml.add('<w:jc w:val="${_tableJustification(rowAlignment)}"/>');
@@ -98,6 +167,7 @@ extension _WordTableWriter on _StructuredWordWriter {
             '<w:tblLayout w:type="${rowAutoFit ? 'autofit' : 'fixed'}"/>',
           );
         }
+        _tableCellMargins(marginExceptions, _xml, 'tblCellMar');
         _xml.add('</w:tblPrEx>');
       }
       final before = canWriteGrid ? edgeIndices[row.originTwips]! : 0;
@@ -218,12 +288,17 @@ extension _WordTableWriter on _StructuredWordWriter {
     _tableDepth--;
   }
 
-  void _tablePosition(LegacyWordTablePosition position) {
+  void _tablePosition(
+    LegacyWordTablePosition position, {
+    required int horizontalOriginTwips,
+  }) {
     final x = position.horizontalOffsetTwips, y = position.verticalOffsetTwips;
+    final storedX = x == null ? null : x + horizontalOriginTwips + 1;
     if ((x == null) == (position.horizontalPlacement == null) ||
         (y == null) == (position.verticalPlacement == null) ||
         (x != null && (x < -31680 || x > 31680)) ||
         (y != null && (y < -31680 || y > 31680)) ||
+        (storedX != null && (storedX < -32768 || storedX > 32767)) ||
         [
           position.leftFromTextTwips,
           position.rightFromTextTwips,
@@ -240,15 +315,18 @@ extension _WordTableWriter on _StructuredWordWriter {
       'w:topFromText="${position.topFromTextTwips}" '
       'w:bottomFromText="${position.bottomFromTextTwips}"',
     );
+    // MS-OI29500 2.1.162(e): Word stores each absolute OOXML distance plus
+    // one twip, just like the MS-DOC XAS/YAS_plusOne source operands. The
+    // public model retains the actual signed distance; sentinels stay named.
     _xml.add(
       x == null
           ? ' w:tblpXSpec="${position.horizontalPlacement!.name}"'
-          : ' w:tblpX="$x"',
+          : ' w:tblpX="$storedX"',
     );
     _xml.add(
       y == null
           ? ' w:tblpYSpec="${position.verticalPlacement!.name}"'
-          : ' w:tblpY="$y"',
+          : ' w:tblpY="${y + 1}"',
     );
     _xml.add(
       '/><w:tblOverlap w:val="${position.allowOverlap ? 'overlap' : 'never'}"/>',
