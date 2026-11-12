@@ -1,0 +1,16 @@
+{
+  "recorded_utc": "2026-11-12T13:53:30.213831+00:00",
+  "purpose": "Resume final acceptance after interrupted session; preserve executable acceptance runner before final results.",
+  "remote_branch": "feature/office-fidelity-followup-20261112",
+  "implementation_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "managed_source_files": 366,
+  "required_engine_outputs": 296,
+  "required_host_captures": 62,
+  "status_at_checkpoint": "Complete host gate running; no final acceptance claimed.",
+  "checkpoint_method": "A separate documentation worktree preserves incremental evidence without changing the frozen validation checkout.",
+  "latest_ci_at_recovery": {
+    "office_run": 43229916550,
+    "status": "queued"
+  }
+}

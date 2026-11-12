@@ -1,0 +1,47 @@
+{
+  "source_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "managed_source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "parent_input_manifest_sha256": "26e1d8b3c631f04b148620b73f6e442b4e6743c5dfecd1758e6e61ec0640981e",
+  "parent_schema_report_sha256": "9dcea9b14060a41a62626520563b76cb9fe5ff13b60652e87930a7ea55a4c73c",
+  "parent_total": 358,
+  "input_root": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/inputs",
+  "total": 6,
+  "files": [
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-1.docx",
+      "bytes": 5367,
+      "sha256": "376e758654a46e432ced3d5b32df6fe180359c591c5771efcaefd9123a87379c",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-2.docx",
+      "bytes": 5402,
+      "sha256": "ddbd3ba2d46b93f3b51b51f795f3234802a5aa21c23494d14cf1caf2a5680874",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-3.docx",
+      "bytes": 5403,
+      "sha256": "037cb0b567320f8213868e556a30623e3993dc3e697e8baf28dea2200b8bbf34",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-1.docx",
+      "bytes": 9291,
+      "sha256": "09f17f404b39b1ce437fcdf7fd0d5bee94fece0fd72feb6db6c8b13560d61e15",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-2.docx",
+      "bytes": 9354,
+      "sha256": "3a5eee862098e13d6c1ac9b792a887ee7478712a298afcb816fb1f1d71e85180",
+      "producer_group": "host"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-3.docx",
+      "bytes": 9353,
+      "sha256": "166fed5bb6afc38225607edcd87f08e6d481ee08f3bf123b42516f132c769377",
+      "producer_group": "host"
+    }
+  ]
+}

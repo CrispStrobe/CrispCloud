@@ -1,0 +1,16 @@
+{
+  "host-gate.log.gz": {
+    "uncompressed_path": "host-gate.log",
+    "uncompressed_bytes": 167207,
+    "uncompressed_sha256": "9ce0362be218c6b9f3a2ed8fee8ec4729b5cd56002dbf9e32e36f5851584471a",
+    "gzip_bytes": 15223,
+    "gzip_sha256": "90eec3901b2adb5318d07826119e31fadcfca9d8381b3069d75fc323c9a5f314"
+  },
+  "host-lcov.info.gz": {
+    "uncompressed_path": "host-lcov.info",
+    "uncompressed_bytes": 633258,
+    "uncompressed_sha256": "5f7d698f2aee6483d1ff42a0fc212654d4d8319576c927f56a074cc3e51a5e37",
+    "gzip_bytes": 103106,
+    "gzip_sha256": "8ccaa78cb3620996bbfcd737f90a7d7dbd5e4cfbf69d6edd7f107194b4a54085"
+  }
+}

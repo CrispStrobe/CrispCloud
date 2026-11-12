@@ -1,0 +1,15 @@
+{
+  "source": "quds_office_suite/tool/office-validation/Program.cs",
+  "source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "sdk": "8.0.428",
+  "runtime": "8.0.34",
+  "dependencies_sha256": {
+    "documentformat.openxml.3.3.0.nupkg": "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7",
+    "DocumentFormat.OpenXml.dll": "72e8f6e3e3527d7e6ee29f2f9182ef1b39a4de6da355a33013c0940efb24d87e",
+    "documentformat.openxml.framework.3.3.0.nupkg": "5f539f1602b642198ec6ed3ec567eac3fff62309f6ec65e28db2751a488ec30d",
+    "DocumentFormat.OpenXml.Framework.dll": "5b8c2b9ca1aa70539af0b8054d649bd09fdce4dec812b263ab511b13789c8589",
+    "system.io.packaging.8.0.1.nupkg": "c5fd0101fa90bc84e89a906cbdfa7188bb6cffab11404cdd8cd0377ffabfbd8e",
+    "System.IO.Packaging.dll": "12ddc8bff279fad856551a74894dc52b80fa437d5d2b32722e70ae6899217b7c"
+  },
+  "assembly_sha256": "dfcb15de8e16acc0e70d736fe2bcc350aae3b3f9cbb740ba19cf9ad18b66821c"
+}

@@ -33,7 +33,7 @@ it; “round-trip” means the vendored serializer preserves it.
 | Space before/after | ✅ | ✅ | ✅ | Presets and numeric dialog |
 | Left/right indent | ✅ | ✅ | ✅ | Ribbon nudge + dialog |
 | First line / hanging indent | ✅ | ✅ | ✅ | Dialog |
-| Tab stops | ✅ | ✅ | ✅ | Comma-separated positions in the paragraph dialog |
+| Tab stops | ✅ | ✅ | ✅ | Shared per-stop controls in the paragraph dialog; fractional positions, add/remove, and left/center/right/decimal alignment |
 | Keep lines together | ✅ | ✅ | ✅ | |
 | Page break before | ✅ | ✅ | ✅ | |
 | Paragraph borders | ✅ | ✅ | ✅ | Border color in the paragraph dialog; layout tab has shading |
@@ -42,7 +42,14 @@ it; “round-trip” means the vendored serializer preserves it.
 | Bullets / numbering | ✅ | ✅ | ✅ | Two built-in list definitions |
 | Text direction | ✅ | ✅ | ✅ | LTR/RTL |
 | Keep with next / widow control | — | — | — | Not in the current model |
-| Custom tab leaders | — | ✅ | ✅ | UI exposes positions; existing alignment/leaders survive unrelated edits and retained positions |
+| Custom tab leaders | ✅ | ✅ | ✅ | None, dot, hyphen and underscore; invalid or duplicate native positions cannot apply |
+
+Tab drafts remain local until Apply; Cancel and unchanged Apply preserve clean
+state and existing history. Applied changes support undo/redo and repeated
+saves. When tabs were not changed, applying another paragraph property keeps
+each selected paragraph's own tab metadata. Bar/clear tab types,
+heavy/middleDot leaders and inherited style-tab semantics remain outside these
+controls. See the [follow-up acceptance](office-fidelity-followup-20261112.md).
 
 ### Styles
 
@@ -89,6 +96,10 @@ settings; those features have their own controls and tests.
 | Theme/design editing | limited | partial | Outside this pass |
 
 ## Verification
+
+The [follow-up report](office-fidelity-followup-20261112.md) records the current
+verified Quds pin, shared custom-tab controls and exact host capture inventory.
+The earlier reports below retain their original measurement scope.
 
 The [host fidelity audit](office-host-fidelity-20261112.md) adds actual ribbon and
 dialog tests for fractional values, custom styles, tab metadata, header story

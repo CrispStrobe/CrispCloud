@@ -1,0 +1,61 @@
+{
+  "scope": "Only committed receipts and compressed logs; artifact-hashes.json additionally inventories reproducible runtime PDF/PNG/text outputs.",
+  "files": {
+    "artifact-hashes.json": {
+      "bytes": 9350,
+      "sha256": "dfc1a1b4b5627b3ba9e6f7652141f1745c2e66a3d063a3a87d1372884bfcb51c"
+    },
+    "engine-inventory.json": {
+      "bytes": 69175,
+      "sha256": "979fe58ad58e82e8fa3f61ed284f0a034893e3028d4bdd3a9a4804ca8468e85f"
+    },
+    "engine-output-manifest.json": {
+      "bytes": 15868,
+      "sha256": "afd6ba8068bae37959cc365b15648a1901f51538c3ffeea3236e822a5d203fdc"
+    },
+    "external-summary.json": {
+      "bytes": 1031,
+      "sha256": "dc45db80ed7ae24e8020b9771d8c227115b757e558edbcdceac3c524f182ad5a"
+    },
+    "host-inventory.json": {
+      "bytes": 14984,
+      "sha256": "d52fb5e83f83dfa1173dbca8fea89d842f62ff384037fc5c66fec53968276d5a"
+    },
+    "host-native/render-report.json": {
+      "bytes": 19833,
+      "sha256": "a5389cd22c398db8feda43c3ee1aa720a48b77ad4aff7de61c6f3ba19f649807"
+    },
+    "host-native.log.gz": {
+      "bytes": 250,
+      "sha256": "b344ecd14f1ec1ce1afb5de1ce56fd98c307c7abc97e610cc5da4819a54458e6"
+    },
+    "host-output-manifest.json": {
+      "bytes": 3196,
+      "sha256": "2636351bc0d151e7d4f0dcbc6b4284d59562371a3e3637a8c14d9e3a7515668f"
+    },
+    "input-manifest.json": {
+      "bytes": 86279,
+      "sha256": "b7c0dd8b0e6b2ae7df971f8719867f330c5059577610fa750a42ba9f902e3495"
+    },
+    "managed-source-manifest.json": {
+      "bytes": 52064,
+      "sha256": "18556afca2ab8831dc1c861f4098c5ae6734b3923b56bcdddc2b6842fbc8662d"
+    },
+    "native-renderer-provenance.json": {
+      "bytes": 4984,
+      "sha256": "0ccd0f13183f25bc77e9f805dfa10db8e78056ea80a68da9bd3ef3db188ad891"
+    },
+    "schema-report.json": {
+      "bytes": 95253,
+      "sha256": "19ca37e0285d00a7ced831995a5c2fca53a2a6c0408f4bbc521882e84104fdc5"
+    },
+    "schema.log.gz": {
+      "bytes": 1919,
+      "sha256": "aa45c6d9e186535b2bf8d43cba569069355f5dcbfbce418b5e0b5087911fb3fe"
+    },
+    "validator-build-receipt.json": {
+      "bytes": 1002,
+      "sha256": "17e857813747994eaf69a5e05cc242bea546471bc00965ff13634661b37e5367"
+    }
+  }
+}

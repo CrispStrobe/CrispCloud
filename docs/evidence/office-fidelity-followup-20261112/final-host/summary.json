@@ -1,0 +1,97 @@
+{
+  "status": "passed",
+  "recorded_utc": "2026-11-12T13:55:43.053520+00:00",
+  "implementation_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "managed_source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "managed_files": 366,
+  "engine_tests": 921,
+  "host_tests": 143,
+  "skipped": 0,
+  "python_controls": {
+    "sync": 7,
+    "engine_fidelity": 344,
+    "host_inventory": 10,
+    "host_coverage": 9
+  },
+  "inventories": {
+    "engine": 296,
+    "host": 62,
+    "total": 358
+  },
+  "schema_validated": 358,
+  "schema_failures": 0,
+  "host_native_probe": {
+    "files": 11,
+    "pages": 23,
+    "failures": []
+  },
+  "host_tabs_native": {
+    "files": 6,
+    "pages": 9,
+    "cycle_groups": 2,
+    "failures": []
+  },
+  "coverage": {
+    "all_sources_instrumented": true,
+    "covered_lines": 2216,
+    "instrumented_lines": 3549,
+    "source_count": 10
+  },
+  "tracked_files_unchanged": true,
+  "tracked_tree_sha256": "6a10ddc84b4c0b16226d1f9ee56477b4fc59beea8578c762a59c46685a188acb",
+  "tracked_snapshot": {
+    "uncompressed_sha256": "2abe077c661e554b4a01ee5e3da253a6a670eb9701853a0a45a9cab386b3ef80",
+    "compressed_sha256": "3d44f88eee256375b76e8577be91931b0add8a6160ea85ebe29b47952bb54098",
+    "note": "The identical before/after whole tracked snapshots are preserved once, compressed. Decompression reproduces both receipt hashes."
+  },
+  "dependency_files_restored": true,
+  "native_scope": "Seventeen selected actual host files; the six tab/ribbon files form two complete three-save groups. This is not complete native equivalence coverage of all 62 host captures.",
+  "logs": {
+    "files": 10,
+    "sha256": "0557e42a179935563bf0da5190b3a37cb82888099a7e3d5c838297a922412c60",
+    "members": {
+      "validation/fid068/host-analysis-final.log": "360f9b1372da7b38dca21167968ba8696a9dc2ed6e321270c2d3b5263b252c40",
+      "validation/fid068/host-analysis.log": "2904ac3f24ce203e1cb0c33d32ce6bc635c3b7ad872f3d48145d5f20a42e935e",
+      "validation/fid068/host-focused.log": "4c3c03da537d7d258d770e59c192b781817d6f90e4d26f706215f6316aaa437f",
+      "validation/fid068/host-upload-final.log": "749125ea96f84fff7c61cfddb210ad20f6d25eee2a40115782f923eab48e777e",
+      "validation/host-external-final/host-native.log": "be409eff9cce201f8042277240e63d3f1bc19ff7100f8dff68235e43e561d3d0",
+      "validation/host-external-final/schema.log": "26f167d0d2d506b29c2a2d6c5a6f715fd0fa0b26efa65777bec6c0e0aa17b507",
+      "validation/host-final/gate.log": "97e7d3d28cba86eb806d88ac0633b711bf09b7a798a31662ce46e88846b09d68",
+      "validation/host-final/lcov.info": "ad5a0e3e2948060b39c537291da73a6a152aa92563111ef7f29193047c1dfcee",
+      "validation/host-tabs-native-final/render.log": "6ef4e52b882f0579a7bce981184fbc5079e8ae3f46fed8238662fedad0df9797",
+      "validation/host-tabs-native-final/schema.log": "6484311868d8eefdc1a988695295db558d24a611275c41375d19094fdba2a028"
+    }
+  },
+  "artifacts": {
+    "host-acceptance.json": "e938daa93aa54b579890a57900cac1084825d87abb62eb0047a6b2f1b86ca212",
+    "coverage.json": "f0797c05b76efd3acd6265db92a3cb1cf53bdcd555e4b48e7c9f336c3923c322",
+    "engine-inventory.json": "fcbb1424353e8d7cca5b2b1d1bc5323c49a104e2a11609cbe5a29e67e2684b87",
+    "host-inventory.json": "38c26ab8e6320077cdb7b81ee7693a85cc068d3b576a41fbeb59dfdeeff3ad68",
+    "output-snapshot.json": "d6158ba945563be570f2cdbe670791495bd9ba48f315abfc13f98e5892778238",
+    "external-acceptance.json": "97287cd4ce7e9dc707e43b1b52830c80a8c2cb276bc597809fa3d2534024fd49",
+    "input-manifest.json": "26e1d8b3c631f04b148620b73f6e442b4e6743c5dfecd1758e6e61ec0640981e",
+    "schema-report.json": "9dcea9b14060a41a62626520563b76cb9fe5ff13b60652e87930a7ea55a4c73c",
+    "native-host-report.json": "c9cec151da760c1fdac69c7bf1359f3c7fd2edf56b9779a3c8076a483b69e3e6",
+    "native-renderer-provenance.json": "2c2634f724ccacc9739480a38fb94ba1a1a707d3ae9d51960a88041e6f9480ad",
+    "validator-build-receipt.json": "5b4b298125abe4e6de1f7447ee223ed2e393812a7de521ffc2f492dc5b0c9446",
+    "managed-source-manifest.json": "18556afca2ab8831dc1c861f4098c5ae6734b3923b56bcdddc2b6842fbc8662d",
+    "tabs-native-summary.json": "1d5228ff372aa8456ae7d219010303f04f496814969df77381a0ce000d26c756",
+    "tabs-input-manifest.json": "25bd45a846a88d16f49219a6efd5e5bd2c023c1e4439f4e46050c8ac358b8846",
+    "tabs-schema-report.json": "ca52c72ebe33ca832afd8f8b689f45a4893c681d258e9953ba72d251c6e2a49b",
+    "tabs-render-report.json": "6d69357984f28e1c7cda241312291356351d28492a1f3535403291937e95e116",
+    "remote-implementation-audit.json": "a980c52e02dce98e460d13af46a5f2f66516afb6dfc409dead50263dc546636f"
+  },
+  "acceptance_runner_archive": {
+    "path": "../runtime/run_host_acceptance_verified.py",
+    "sha256": "1db655730df4799bc5768efe7e30e889df3037937b338f4c66f61a058052c843",
+    "original_scratch_name": "run_host_acceptance.py"
+  },
+  "preserved_concurrent_checkpoint": {
+    "commit": "a62e396ce2e3966555f224a0cc234061fe8e72ce",
+    "paths": [
+      "resumption.json",
+      "runtime/run_host_acceptance.py"
+    ],
+    "note": "Earlier resumable runner checkpoint retained without changing any accepted implementation bytes."
+  }
+}

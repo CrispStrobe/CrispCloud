@@ -1,0 +1,195 @@
+{
+  "renderer": "LibreOffice 24.2.7.2 ee3885777aa7032db5a9b65deec9457448a91162 (LibreOfficeKit embedding API)",
+  "files": 6,
+  "rendered_files": 6,
+  "visual_input_files": 6,
+  "native_schema_only_files": 0,
+  "native_schema_only": [],
+  "schema_report": "/workspace/scratch/10b2b87c2738/validation/host-tabs-native-final/schema-report.json",
+  "pixel_fingerprint": "SHA-256 of big-endian uint32 width/height followed by RGB bytes",
+  "cycle_groups": 2,
+  "cycle_comparisons": [
+    {
+      "case": "build/fidelity-custom-tabs/host-tabs.docx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "build/fidelity-custom-tabs/host-tabs-1.docx",
+        "build/fidelity-custom-tabs/host-tabs-2.docx",
+        "build/fidelity-custom-tabs/host-tabs-3.docx"
+      ],
+      "baseline": null,
+      "baseline_candidate": null,
+      "baseline_page_order": null,
+      "passed": true
+    },
+    {
+      "case": "build/fidelity-host/ribbon-edits.docx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "build/fidelity-host/ribbon-edits-1.docx",
+        "build/fidelity-host/ribbon-edits-2.docx",
+        "build/fidelity-host/ribbon-edits-3.docx"
+      ],
+      "baseline": null,
+      "baseline_candidate": null,
+      "baseline_page_order": null,
+      "passed": true
+    }
+  ],
+  "baseline_comparisons": 0,
+  "page_order_comparisons": 0,
+  "render_only_files": [],
+  "failures": [],
+  "reports": [
+    {
+      "file": "build/fidelity-custom-tabs/host-tabs-1.docx",
+      "pages": 1,
+      "text": "     Header paragraph\n\n\nFirst paragraph\n\n  Second paragraph\n\f",
+      "pixel_sha256": [
+        "bb50d1f8ea7555e9a1aa93658145e4491bd7f6e4a816c86de4e24b9bc5491ec8"
+      ],
+      "pdf": "000/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "000/page-0001.png",
+          "pixel_sha256": "bb50d1f8ea7555e9a1aa93658145e4491bd7f6e4a816c86de4e24b9bc5491ec8"
+        }
+      ]
+    },
+    {
+      "file": "build/fidelity-custom-tabs/host-tabs-2.docx",
+      "pages": 1,
+      "text": "     Header paragraph\n\n\nFirst paragraph\n\n  Second paragraph\n\f",
+      "pixel_sha256": [
+        "bb50d1f8ea7555e9a1aa93658145e4491bd7f6e4a816c86de4e24b9bc5491ec8"
+      ],
+      "pdf": "001/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "001/page-0001.png",
+          "pixel_sha256": "bb50d1f8ea7555e9a1aa93658145e4491bd7f6e4a816c86de4e24b9bc5491ec8"
+        }
+      ]
+    },
+    {
+      "file": "build/fidelity-custom-tabs/host-tabs-3.docx",
+      "pages": 1,
+      "text": "     Header paragraph\n\n\nFirst paragraph\n\n  Second paragraph\n\f",
+      "pixel_sha256": [
+        "bb50d1f8ea7555e9a1aa93658145e4491bd7f6e4a816c86de4e24b9bc5491ec8"
+      ],
+      "pdf": "002/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "002/page-0001.png",
+          "pixel_sha256": "bb50d1f8ea7555e9a1aa93658145e4491bd7f6e4a816c86de4e24b9bc5491ec8"
+        }
+      ]
+    },
+    {
+      "file": "build/fidelity-host/ribbon-edits-1.docx",
+      "pages": 2,
+      "text": "Header link\n\n\n                      Importe d heading\n                             1i\n\n\n\n\n            2ii\nBody text\nBody link\n   1. List item\n Cell text\n\n\n\n\n1 Footnote text\nNote link\n2 Footnote first\nsecond         line\n\n\nFooter text\n\fi Endnote text\nii Endnote from the ribbon\n\f",
+      "pixel_sha256": [
+        "c28ebc4551b0cff5e805a96410ee509a0093cbd0232abf8be272ee013519f7e3",
+        "2ff24eed2bc11b83cb818703b26ebefa09e02e01556be531df2fdb6934daf4d3"
+      ],
+      "pdf": "003/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "003/page-0001.png",
+          "pixel_sha256": "c28ebc4551b0cff5e805a96410ee509a0093cbd0232abf8be272ee013519f7e3"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "003/page-0002.png",
+          "pixel_sha256": "2ff24eed2bc11b83cb818703b26ebefa09e02e01556be531df2fdb6934daf4d3"
+        }
+      ]
+    },
+    {
+      "file": "build/fidelity-host/ribbon-edits-2.docx",
+      "pages": 2,
+      "text": "Header link\n\n\n                      Importe d heading\n                             1i\n\n\n\n\n            2ii\nBody text\nBody link\n   1. List item\n Cell text\n\n\n\n\n1 Footnote text\nNote link\n2 Footnote first\nsecond         line\n\n\nFooter text\n\fi Endnote text\nii Endnote from the ribbon\n\f",
+      "pixel_sha256": [
+        "c28ebc4551b0cff5e805a96410ee509a0093cbd0232abf8be272ee013519f7e3",
+        "2ff24eed2bc11b83cb818703b26ebefa09e02e01556be531df2fdb6934daf4d3"
+      ],
+      "pdf": "004/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "004/page-0001.png",
+          "pixel_sha256": "c28ebc4551b0cff5e805a96410ee509a0093cbd0232abf8be272ee013519f7e3"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "004/page-0002.png",
+          "pixel_sha256": "2ff24eed2bc11b83cb818703b26ebefa09e02e01556be531df2fdb6934daf4d3"
+        }
+      ]
+    },
+    {
+      "file": "build/fidelity-host/ribbon-edits-3.docx",
+      "pages": 2,
+      "text": "Header link\n\n\n                      Importe d heading\n                             1i\n\n\n\n\n            2ii\nBody text\nBody link\n   1. List item\n Cell text\n\n\n\n\n1 Footnote text\nNote link\n2 Footnote first\nsecond         line\n\n\nFooter text\n\fi Endnote text\nii Endnote from the ribbon\n\f",
+      "pixel_sha256": [
+        "c28ebc4551b0cff5e805a96410ee509a0093cbd0232abf8be272ee013519f7e3",
+        "2ff24eed2bc11b83cb818703b26ebefa09e02e01556be531df2fdb6934daf4d3"
+      ],
+      "pdf": "005/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "005/page-0001.png",
+          "pixel_sha256": "c28ebc4551b0cff5e805a96410ee509a0093cbd0232abf8be272ee013519f7e3"
+        },
+        {
+          "page": 2,
+          "width": 612,
+          "height": 792,
+          "png": "005/page-0002.png",
+          "pixel_sha256": "2ff24eed2bc11b83cb818703b26ebefa09e02e01556be531df2fdb6934daf4d3"
+        }
+      ]
+    }
+  ]
+}

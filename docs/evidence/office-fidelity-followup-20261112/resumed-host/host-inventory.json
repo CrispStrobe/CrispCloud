@@ -1,0 +1,380 @@
+{
+  "expected": 62,
+  "verified": 62,
+  "manifest_sha256": "2636351bc0d151e7d4f0dcbc6b4284d59562371a3e3637a8c14d9e3a7515668f",
+  "files": [
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-1.docx",
+      "file": "build/fidelity-custom-tabs/host-tabs-1.docx",
+      "bytes": 5367,
+      "sha256": "03256eb8f218f362a52eebb6082d9bfdab4faf90ffc67fe90e806155c04174e1"
+    },
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-2.docx",
+      "file": "build/fidelity-custom-tabs/host-tabs-2.docx",
+      "bytes": 5402,
+      "sha256": "c4fe959175c6005353c90cbaf56434e2f326250388b2ec10f225ab1ef4d04785"
+    },
+    {
+      "path": "build/fidelity-custom-tabs/host-tabs-3.docx",
+      "file": "build/fidelity-custom-tabs/host-tabs-3.docx",
+      "bytes": 5402,
+      "sha256": "e6431d2bb0deeb6d83a6f8cb21eb79ede09c8a6328e66e5627c16967bcc2a25d"
+    },
+    {
+      "path": "build/fidelity-host/after-late-edits.docx",
+      "file": "build/fidelity-host/after-late-edits.docx",
+      "bytes": 8637,
+      "sha256": "b08d5699378c006d2c65751145f5c56ed7ece65c17a4ed387e43adaeb9598b0a"
+    },
+    {
+      "path": "build/fidelity-host/before-late-edits.docx",
+      "file": "build/fidelity-host/before-late-edits.docx",
+      "bytes": 8261,
+      "sha256": "20ff21e4022000e61eb734706c05860ccc28b39326400d4e54841f6e74e2cc1a"
+    },
+    {
+      "path": "build/fidelity-host/close-after-late-edit.docx",
+      "file": "build/fidelity-host/close-after-late-edit.docx",
+      "bytes": 8554,
+      "sha256": "2029615d5063659e6c03012329c0175bf726cc4dfb710eae27643e07a77f11b4"
+    },
+    {
+      "path": "build/fidelity-host/close-before-late-edit.docx",
+      "file": "build/fidelity-host/close-before-late-edit.docx",
+      "bytes": 8259,
+      "sha256": "8fd3b8a51ff94e394688b3faa4586bd9a00846b12607b921895986d2f57911a5"
+    },
+    {
+      "path": "build/fidelity-host/comment-action-1.docx",
+      "file": "build/fidelity-host/comment-action-1.docx",
+      "bytes": 6453,
+      "sha256": "345ef4592f45c57374b66dccc3dd00d9a2292ee4fc6f862ccc35d13b73271ead"
+    },
+    {
+      "path": "build/fidelity-host/comment-action-2.docx",
+      "file": "build/fidelity-host/comment-action-2.docx",
+      "bytes": 6488,
+      "sha256": "99491c2a387eae2fbc3bbe1b33e5cf896ce6eb66d001e8e91dd7f8d2069657cb"
+    },
+    {
+      "path": "build/fidelity-host/comment-action-3.docx",
+      "file": "build/fidelity-host/comment-action-3.docx",
+      "bytes": 6487,
+      "sha256": "e96305a94a9d1b95bb27a11bcb78234774581fa1c73a9b77d885305dc0376b1f"
+    },
+    {
+      "path": "build/fidelity-host/failed-upload-attempt.docx",
+      "file": "build/fidelity-host/failed-upload-attempt.docx",
+      "bytes": 8258,
+      "sha256": "2c31caac5f29529bfa9843c6e383bed26a62958292175ecc6a955ff80a55b105"
+    },
+    {
+      "path": "build/fidelity-host/header-paragraph-edit-1.docx",
+      "file": "build/fidelity-host/header-paragraph-edit-1.docx",
+      "bytes": 5372,
+      "sha256": "8a05dedbd21b5376794d8f6d979c336d9a3b29dd023d52d118f477300fa06b78"
+    },
+    {
+      "path": "build/fidelity-host/header-paragraph-edit-2.docx",
+      "file": "build/fidelity-host/header-paragraph-edit-2.docx",
+      "bytes": 5407,
+      "sha256": "70ad66cc7cb53f44d86d7e6409c4ac35eb53fed89ef648a86c1e2e1070f86b0c"
+    },
+    {
+      "path": "build/fidelity-host/header-paragraph-edit-3.docx",
+      "file": "build/fidelity-host/header-paragraph-edit-3.docx",
+      "bytes": 5407,
+      "sha256": "fd68de022732fdb1cba1e27d76aa69ad3e90ad84141e46679e9111182712b1e2"
+    },
+    {
+      "path": "build/fidelity-host/hyperlink-selection-1.docx",
+      "file": "build/fidelity-host/hyperlink-selection-1.docx",
+      "bytes": 5465,
+      "sha256": "9f46181cb316d47553e2d7be6dc66b6f69f08fe31e616857e125f88dcfcc68e1"
+    },
+    {
+      "path": "build/fidelity-host/hyperlink-selection-2.docx",
+      "file": "build/fidelity-host/hyperlink-selection-2.docx",
+      "bytes": 5501,
+      "sha256": "279f7d862f4bb1b661a2c8a489e02ba3a62d029ddf2e638a3bacf191b782dfbc"
+    },
+    {
+      "path": "build/fidelity-host/hyperlink-selection-3.docx",
+      "file": "build/fidelity-host/hyperlink-selection-3.docx",
+      "bytes": 5501,
+      "sha256": "0d8066552ce37ab5fc87d2f245a83fd41686b2a9f0fdcb6fac16fc89ccc48be8"
+    },
+    {
+      "path": "build/fidelity-host/margins-edit-1.docx",
+      "file": "build/fidelity-host/margins-edit-1.docx",
+      "bytes": 5354,
+      "sha256": "09795ed2e352392e19005f92ffe9b40771cf4a5b8d5d74222e7b45537477a638"
+    },
+    {
+      "path": "build/fidelity-host/margins-edit-2.docx",
+      "file": "build/fidelity-host/margins-edit-2.docx",
+      "bytes": 5388,
+      "sha256": "04034eab6d40ab982e89d68e87ad1d9bb40317012bfb9d871722c21d55c5fc87"
+    },
+    {
+      "path": "build/fidelity-host/margins-edit-3.docx",
+      "file": "build/fidelity-host/margins-edit-3.docx",
+      "bytes": 5388,
+      "sha256": "d9ba07567d83468663355faa7b953ff731c2317590cb0cbd0f6d2c95b7182e59"
+    },
+    {
+      "path": "build/fidelity-host/margins-noop-1.docx",
+      "file": "build/fidelity-host/margins-noop-1.docx",
+      "bytes": 5351,
+      "sha256": "53dc831a5ec53bc08916e9617009136b1a54a2b8385629aa81a9506cad11f600"
+    },
+    {
+      "path": "build/fidelity-host/margins-noop-2.docx",
+      "file": "build/fidelity-host/margins-noop-2.docx",
+      "bytes": 5386,
+      "sha256": "d8d92a7a8cb0c939e4042bda490dd1651f87c976b2ab8fc8c69edef797e0c18d"
+    },
+    {
+      "path": "build/fidelity-host/margins-noop-3.docx",
+      "file": "build/fidelity-host/margins-noop-3.docx",
+      "bytes": 5386,
+      "sha256": "c95b04877ba4e6f73ccbb5d9b9220dec2c530ec0659d1b8c5c636ac472cca5f0"
+    },
+    {
+      "path": "build/fidelity-host/paragraph-edit-1.docx",
+      "file": "build/fidelity-host/paragraph-edit-1.docx",
+      "bytes": 5345,
+      "sha256": "2f990fc2875d11be0826909245c2eb462f3b63dd13a6eff9b69ad26aea03a4c4"
+    },
+    {
+      "path": "build/fidelity-host/paragraph-edit-2.docx",
+      "file": "build/fidelity-host/paragraph-edit-2.docx",
+      "bytes": 5379,
+      "sha256": "dbf091f78bec5da060389ed1f2e1ffa0c6f61bc6c57119756a9ce542177d37c3"
+    },
+    {
+      "path": "build/fidelity-host/paragraph-edit-3.docx",
+      "file": "build/fidelity-host/paragraph-edit-3.docx",
+      "bytes": 5379,
+      "sha256": "655e04f8931ab21ccadb98372dd35fa192c57906c685964895d1ec28ef15b963"
+    },
+    {
+      "path": "build/fidelity-host/paragraph-noop-1.docx",
+      "file": "build/fidelity-host/paragraph-noop-1.docx",
+      "bytes": 5351,
+      "sha256": "4e436e6c5e59bea657e69fc1dd4070382ba8ac13fbe5f557a5ac2c5cfe67936d"
+    },
+    {
+      "path": "build/fidelity-host/paragraph-noop-2.docx",
+      "file": "build/fidelity-host/paragraph-noop-2.docx",
+      "bytes": 5386,
+      "sha256": "10c94d0e683c1f6907a843966895ea3e6bda74764064c069f9fe5977dd0d0ca5"
+    },
+    {
+      "path": "build/fidelity-host/paragraph-noop-3.docx",
+      "file": "build/fidelity-host/paragraph-noop-3.docx",
+      "bytes": 5387,
+      "sha256": "a1c46070b35fdcb07b4def437d8fddb77d47fd2f86247935553c2e8f9c1114aa"
+    },
+    {
+      "path": "build/fidelity-host/pending-cell-after-save.xlsx",
+      "file": "build/fidelity-host/pending-cell-after-save.xlsx",
+      "bytes": 15038,
+      "sha256": "604a8748056f76ecf00a7ee9174327bd41a08e7618e194fdea54c93afba6b056"
+    },
+    {
+      "path": "build/fidelity-host/pending-cell-before-save.xlsx",
+      "file": "build/fidelity-host/pending-cell-before-save.xlsx",
+      "bytes": 15025,
+      "sha256": "bc7f0972e01ffb9ac3b49a2c6edb422f22a29eba866d968506102f1a5e7e0c7a"
+    },
+    {
+      "path": "build/fidelity-host/pending-cell-close-after-save.xlsx",
+      "file": "build/fidelity-host/pending-cell-close-after-save.xlsx",
+      "bytes": 15038,
+      "sha256": "71ad04822ef6f61026dffe99fcb2815aabc13ef14a77061877ceeccd0fb87cf7"
+    },
+    {
+      "path": "build/fidelity-host/pending-cell-close-before-save.xlsx",
+      "file": "build/fidelity-host/pending-cell-close-before-save.xlsx",
+      "bytes": 15027,
+      "sha256": "afdfb6f87986be8e35f384cbbe63304951f0fdff2859fb7a6064d066393078d0"
+    },
+    {
+      "path": "build/fidelity-host/pending-note-after-save.docx",
+      "file": "build/fidelity-host/pending-note-after-save.docx",
+      "bytes": 8288,
+      "sha256": "4c6b88bc0320f39cd6fc8ab2a643777942a7e63cad5f3f6ec9f5e5c71f95929a"
+    },
+    {
+      "path": "build/fidelity-host/pending-note-before-save.docx",
+      "file": "build/fidelity-host/pending-note-before-save.docx",
+      "bytes": 8265,
+      "sha256": "4e7b03c47b6d3caab717842eda18179a7ca82eeccb76b59ff43a1a8ab8de2b76"
+    },
+    {
+      "path": "build/fidelity-host/pending-note-close-after-save.docx",
+      "file": "build/fidelity-host/pending-note-close-after-save.docx",
+      "bytes": 8288,
+      "sha256": "8069e811a9837248520ee8d70641ce7bbbae5605e652728e3c1d76e75cb24b9a"
+    },
+    {
+      "path": "build/fidelity-host/pending-note-close-before-save.docx",
+      "file": "build/fidelity-host/pending-note-close-before-save.docx",
+      "bytes": 8265,
+      "sha256": "a1579f451a7306e615607e276e2cf0b6436775c3ba1f51625a5e0465faffb4d7"
+    },
+    {
+      "path": "build/fidelity-host/pending-slide-after-save.pptx",
+      "file": "build/fidelity-host/pending-slide-after-save.pptx",
+      "bytes": 55584,
+      "sha256": "1649de65723ae6261fe3d2d7602a8400d5b2263bc8cbbba875b6aafd77da8303"
+    },
+    {
+      "path": "build/fidelity-host/pending-slide-before-save.pptx",
+      "file": "build/fidelity-host/pending-slide-before-save.pptx",
+      "bytes": 55575,
+      "sha256": "a6364f23b594bcc77f679a961f05287b2fd262a788b88b00201241084427b384"
+    },
+    {
+      "path": "build/fidelity-host/pending-slide-close-after-save.pptx",
+      "file": "build/fidelity-host/pending-slide-close-after-save.pptx",
+      "bytes": 55585,
+      "sha256": "c32c92f668b84473e5fbbc8670e51cfd238c3887bcec2b5b8873926be5d7ed42"
+    },
+    {
+      "path": "build/fidelity-host/pending-slide-close-before-save.pptx",
+      "file": "build/fidelity-host/pending-slide-close-before-save.pptx",
+      "bytes": 55574,
+      "sha256": "c2c01d87b194a1941f7c6749757f8461b6c8532067b4de6355fa31c7d93da9d4"
+    },
+    {
+      "path": "build/fidelity-host/retry-after-failure.docx",
+      "file": "build/fidelity-host/retry-after-failure.docx",
+      "bytes": 8258,
+      "sha256": "563f271b293d6deb4d3bfb5b6a39e2be116299290a01a890fc7a668d0036397c"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-1.docx",
+      "file": "build/fidelity-host/ribbon-edits-1.docx",
+      "bytes": 9291,
+      "sha256": "08d800ffc7126bd4db61fb2020ce66e65cdf2c56859fc677cd9f5e6db0449947"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-2.docx",
+      "file": "build/fidelity-host/ribbon-edits-2.docx",
+      "bytes": 9354,
+      "sha256": "bf8ca1db477cc31493920e198ba2f2d5469d7be96adec4466e034756e8ba54f0"
+    },
+    {
+      "path": "build/fidelity-host/ribbon-edits-3.docx",
+      "file": "build/fidelity-host/ribbon-edits-3.docx",
+      "bytes": 9353,
+      "sha256": "54c4734ae9b4f06dfa0e11b4da85c757f8a4b73e4aa10c55f650bf62d1897a0a"
+    },
+    {
+      "path": "build/fidelity-host/sections-1.docx",
+      "file": "build/fidelity-host/sections-1.docx",
+      "bytes": 13274,
+      "sha256": "219215c003bea5edd5319157205b2a2df965f863e715f48670ec3f63f2724df3"
+    },
+    {
+      "path": "build/fidelity-host/sections-2.docx",
+      "file": "build/fidelity-host/sections-2.docx",
+      "bytes": 13988,
+      "sha256": "9ea9335840fcca13865aef9636fede6a0166135762265c5812dd9438ff370a77"
+    },
+    {
+      "path": "build/fidelity-host/sections-3.docx",
+      "file": "build/fidelity-host/sections-3.docx",
+      "bytes": 13988,
+      "sha256": "06d80222594ea64bf551c68e13f0488548449e4158235b6e1ea46a6ecd459c96"
+    },
+    {
+      "path": "build/fidelity-host/selection-save.docx",
+      "file": "build/fidelity-host/selection-save.docx",
+      "bytes": 8259,
+      "sha256": "bdded5f4ee477491a66504cd5a578ed5a5ca2335b04ce1caf0b0131cca19f0ab"
+    },
+    {
+      "path": "build/fidelity-host/table-action-1.docx",
+      "file": "build/fidelity-host/table-action-1.docx",
+      "bytes": 5642,
+      "sha256": "2e9ffc2b1524c84f623486f9b6a0374f1428b208af0824f46f231fdf628c231b"
+    },
+    {
+      "path": "build/fidelity-host/table-action-2.docx",
+      "file": "build/fidelity-host/table-action-2.docx",
+      "bytes": 5582,
+      "sha256": "acbe2d103a4066d963753b1c4ab85393fa86c57526b9a57f9d727efdac9087a4"
+    },
+    {
+      "path": "build/fidelity-host/table-action-3.docx",
+      "file": "build/fidelity-host/table-action-3.docx",
+      "bytes": 5582,
+      "sha256": "b8d4b5fdd19373ebfe083a66cc299bca42dc819718e5670b67de3c58b33e58e4"
+    },
+    {
+      "path": "build/fidelity-host/text-breaks-1.docx",
+      "file": "build/fidelity-host/text-breaks-1.docx",
+      "bytes": 7729,
+      "sha256": "882753ae3fd812122c7439f9065ad39e37f14384d91913180260315df80281a2"
+    },
+    {
+      "path": "build/fidelity-host/text-breaks-2.docx",
+      "file": "build/fidelity-host/text-breaks-2.docx",
+      "bytes": 7784,
+      "sha256": "40e58eebce6673f9b538eba70c7ce00525f5729c0d2a916f754c2087aa483ef1"
+    },
+    {
+      "path": "build/fidelity-host/text-breaks-3.docx",
+      "file": "build/fidelity-host/text-breaks-3.docx",
+      "bytes": 7783,
+      "sha256": "593674eed2a300eb6d4c90f44c23b09d944351353b136a2b06a88ba0998e47f2"
+    },
+    {
+      "path": "build/fidelity-host/toc-action-1.docx",
+      "file": "build/fidelity-host/toc-action-1.docx",
+      "bytes": 5837,
+      "sha256": "cc8591c8227bf8754700432f76d4f9b90d6194f0d687de5c5a2db89b516593f7"
+    },
+    {
+      "path": "build/fidelity-host/toc-action-2.docx",
+      "file": "build/fidelity-host/toc-action-2.docx",
+      "bytes": 5883,
+      "sha256": "6d7f5c35afdd0de404c932fd95172dfa6f73175664cd861065889d8a0fd5bd25"
+    },
+    {
+      "path": "build/fidelity-host/toc-action-3.docx",
+      "file": "build/fidelity-host/toc-action-3.docx",
+      "bytes": 5882,
+      "sha256": "6c52e72227987262d6a411bb9678d6c9b2065888bfd9f22f19f7493fa08be52e"
+    },
+    {
+      "path": "build/fidelity-host/word-docm-save.docm",
+      "file": "build/fidelity-host/word-docm-save.docm",
+      "bytes": 5992,
+      "sha256": "dfea2efdce22d886e46fe67af9eab18eb77b44e90e717d220599a88c97e97124"
+    },
+    {
+      "path": "build/fidelity-host/word-dotm-save.dotm",
+      "file": "build/fidelity-host/word-dotm-save.dotm",
+      "bytes": 5999,
+      "sha256": "51ef170f7fb8f466b0a3026eef2d650a7d1659f072822b76ae5fbe824df3d8b6"
+    },
+    {
+      "path": "build/fidelity-host/word-dotx-save.dotx",
+      "file": "build/fidelity-host/word-dotx-save.dotx",
+      "bytes": 5119,
+      "sha256": "1e4aae812f7cbfb2bf82d03b489801e8a7de2e0d48de7f54638ed11bcc437a38"
+    },
+    {
+      "path": "build/fidelity/unchanged-controller.docx",
+      "file": "build/fidelity/unchanged-controller.docx",
+      "bytes": 8248,
+      "sha256": "9ca16bd66ea81348aba9e5ab69f55783fcfa3d0fbc6134c5845ece1aacbe6024"
+    }
+  ],
+  "failures": []
+}

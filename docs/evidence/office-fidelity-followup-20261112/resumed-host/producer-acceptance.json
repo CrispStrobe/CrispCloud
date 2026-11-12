@@ -1,0 +1,97 @@
+{
+  "status": "passed",
+  "started_utc": "2026-11-12T13:51:47.844601+00:00",
+  "app_commit": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+  "source_commit": "7641d9cfa167987216134ebfc4772918cc945d97",
+  "source_before": {
+    "head": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+    "tree": "c927181f80d8237134752482dfbc1a92d09914cb",
+    "dirty": "",
+    "tracked_files": 4732,
+    "sha256": "d8b9b6f87b33d3b8fdc431f77e848db838529e1ea72be213b38400eb5e0b62c8"
+  },
+  "managed_source_files": 366,
+  "runtime": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8"
+  },
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "tool/with_ci_system_sqlite.py",
+    "bash",
+    "tool/check_office_fidelity.sh"
+  ],
+  "cwd": "/workspace/scratch/07eb2580faa9/CrispCloud",
+  "runner_sha256": "56cf89606621953a3f706dda8bef6d69558df167c8a4288f3c94cc7de4e09d32",
+  "expected_engine_outputs": 296,
+  "expected_host_outputs": 62,
+  "artifacts": {
+    "engine-inventory.json": "979fe58ad58e82e8fa3f61ed284f0a034893e3028d4bdd3a9a4804ca8468e85f",
+    "host-inventory.json": "d52fb5e83f83dfa1173dbca8fea89d842f62ff384037fc5c66fec53968276d5a",
+    "host-coverage.json": "f0797c05b76efd3acd6265db92a3cb1cf53bdcd555e4b48e7c9f336c3923c322",
+    "host-lcov.info": "5f7d698f2aee6483d1ff42a0fc212654d4d8319576c927f56a074cc3e51a5e37",
+    "host-gate.log": "9ce0362be218c6b9f3a2ed8fee8ec4729b5cd56002dbf9e32e36f5851584471a"
+  },
+  "exit_code": 0,
+  "source_after": {
+    "head": "b7edb919def85ef78d6d34ba6eb7c74d61e0bd4d",
+    "tree": "c927181f80d8237134752482dfbc1a92d09914cb",
+    "dirty": "",
+    "tracked_files": 4732,
+    "sha256": "d8b9b6f87b33d3b8fdc431f77e848db838529e1ea72be213b38400eb5e0b62c8"
+  },
+  "tests": {
+    "mandatory_engine": {
+      "passed": 921,
+      "skipped": 0,
+      "completion": "00:23 +921: All tests passed!"
+    },
+    "host": {
+      "passed": 143,
+      "skipped": 0,
+      "completion": "01:24 +143: All tests passed!"
+    }
+  },
+  "python_test_cohorts": [
+    7,
+    344,
+    10,
+    9
+  ],
+  "inventory": {
+    "engine": 296,
+    "host": 62,
+    "all_hashes_match": true
+  },
+  "coverage": {
+    "covered_lines": 2216,
+    "instrumented_lines": 3549,
+    "uninstrumented_files": [],
+    "source_tree_sha256": "549fe4fde85cfe6c17ef64cab0922a531759b1fe51edb62f5e7c6db7ce702922",
+    "source_sha256": {
+      "lib/services/legacy_word_copy_target.dart": "370151dffb8e30ba9bddfe2e9cd470850206c7fba0ac9eb727b7cdf01bf069b5",
+      "lib/services/office_document_service.dart": "a52e365f4fa41856168a250b78247480cf6393bba77b0f3e67674ce88b37ffed",
+      "lib/services/office_editor_menu.dart": "0a68abf5215f3c26630757fbc4f91eec0ca384f731450cdffd8dc17d604550d2",
+      "lib/services/office_pdf_service.dart": "a406c87e95508e934a16be55a6b9028a5c2f73287d8025e656597b86725c2ad2",
+      "lib/widgets/legacy_word_conversion_action.dart": "cb7b832bb1d5366f5642da1c030b41c3004b5538513b4d4f1d4ded996c6984df",
+      "lib/widgets/legacy_word_conversion_dialog.dart": "baed5578a780713d6dd19b4666db9babe188c792f4c7f0942d39fd06887c029e",
+      "lib/widgets/office_editor_dialog.dart": "a0cf4acb895010d5ff0b7d1b1e1ec6ce9dea1f96c3720ed39bcdb55f62c30ca0",
+      "lib/widgets/office_editor_dialogs.dart": "27ebb100f3391e9027c8114731c248a0cf199d62486ae777c2e07532df2d86e6",
+      "lib/widgets/office_editor_find_bar.dart": "fc6c9ed90f13cc16448d4b07ff527c80f9f4a4f458d57cb9c34da10943b0db08",
+      "lib/widgets/office_editor_ribbon.dart": "f6181e458942b37a09612cec897c62d8f01737fda35ba923664685b603c83a40"
+    }
+  },
+  "finished_utc": "2026-11-12T13:56:35.158895+00:00",
+  "elapsed_seconds": 287.31363832499846
+}
