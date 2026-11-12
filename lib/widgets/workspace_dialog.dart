@@ -264,6 +264,7 @@ class _WorkspaceDialogState extends ConsumerState<WorkspaceDialog> {
               side: bookmark.side,
               storage: bookmark.storage,
               collectionId: bookmark.collectionId,
+              group: bookmark.group,
             ),
           ),
     );
