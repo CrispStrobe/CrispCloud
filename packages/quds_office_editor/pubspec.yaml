@@ -1,4 +1,5 @@
 name: quds_office_editor
+publish_to: none
 description: >-
   Flutter Office surfaces on custom RenderBox: Word, Excel, PowerPoint, PDF
   viewer/editor, and a visual band-report designer with inspector and preview.
@@ -51,9 +52,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  quds_office_engine: ^1.5.0
+  quds_office_engine:
+    path: ../quds_office_engine
   quds_reports: ^1.5.0
-  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_lints: ^6.0.0

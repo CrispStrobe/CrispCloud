@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/word-package-guards-20261112",
-  "source_commit": "5fd39b8dc22237878ab0a22ad9973b4cddba6304",
+  "source_commit": "4e4fe73beeea9d5f47ddc34758465285078fb485",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "7290a134a6f9a039cb68584b5f5f0296a0dd7d7ffe9f215bdbdfa0efef6619d5",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",
@@ -388,7 +388,7 @@
     "packages/quds_office_engine/tool/fidelity/test_table_grid_oracle.py": "26833a22fd4e21727084e33ff99287c055b9fa0f1de5e8849fe7a869beeadbfd",
     "packages/legacy_doc_parser/CHANGELOG.md": "10b53578d56856a0daf4ca29325a07931262f8cdf56539e8f2ffcaef06113e68",
     "packages/legacy_doc_parser/lib/legacy_doc_parser.dart": "e27eb404190d170ea89f3a3221390907f371d0228fb094db4ba26529eadbf809",
-    "packages/legacy_doc_parser/lib/src/bounded_cfb_reader.dart": "10af0075bd6b292a902b59e269881544ebf4bb5829a4dec8175f9f06c10981f3",
+    "packages/legacy_doc_parser/lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
     "packages/legacy_doc_parser/lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
@@ -415,7 +415,7 @@
     "packages/legacy_doc_parser/test/fixtures/word_native/formatting.doc": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
     "packages/legacy_doc_parser/test/legacy_word_lists_test.dart": "7dbf15e7e65844abc9d4bf52a04018dfcffd61f5bd303eee02b816a41ade502f",
     "packages/legacy_doc_parser/test/legacy_word_media_test.dart": "f90ebf1d7846d1d2b7d726b780baf913883210840f619f3f29cda389ad693b08",
-    "packages/legacy_doc_parser/test/legacy_word_sprm_regression_test.dart": "4feb12e7d00aa4d7ecb416589d6f3eda74a732ed4bbfbe141349d17b7103f6dc",
+    "packages/legacy_doc_parser/test/legacy_word_sprm_regression_test.dart": "0cff36a42b9e18f55a9bfc8e7236083b2c91d620811928c8db0286be21ece5cb",
     "packages/legacy_doc_parser/test/legacy_word_stories_fields_test.dart": "dede367f331612a54f1bc456be5b9c7abc69fa616738ab48825696706d0e00a6",
     "packages/legacy_doc_parser/test/legacy_word_structured_bounds_test.dart": "5c731412699a60dce13925f8fdb90a27f7af6f4751c04f2dea0c9df536a9745e",
     "packages/legacy_doc_parser/test/legacy_word_structured_conversion_test.dart": "cd88225c9bd0b2059fe2c3356715b96ef42927a8246eb89358bb23e894a2f5e8",

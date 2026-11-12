@@ -5,8 +5,7 @@ import 'dart:typed_data';
 import 'compound/cfbf_reader.dart'
     show CfbfDirectoryEntry, CfbfFile, CfbfObjectType;
 
-export 'compound/cfbf_reader.dart'
-    show CfbfDirectoryEntry, CfbfObjectType;
+export 'compound/cfbf_reader.dart' show CfbfDirectoryEntry, CfbfObjectType;
 
 /// Resource-bounded access to the MIT office engine's compound-file reader.
 ///

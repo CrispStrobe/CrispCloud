@@ -979,3 +979,10 @@ fingerprint is `30d89e6ff313698a76f2ffa25ac4fbd3eeb5f91fb88b4e4cbfcdf9091a6eb19b
 passed. These bind this dependency update while retaining the current
 policy's documentation status, declaration, France/TestFlight decisions
 and artifact/live evidence controls. No Apple API call or filing was made.
+
+
+## Final integration binding
+
+The maintained MPL-2.0 legacy DOC parser is pinned in its own upstream record and consumed through Quds compatibility exports. Its only runtime package dependency is archive. It parses existing signature markers and can retain signature bytes as inert evidence; it does not verify signatures, decrypt protected Word files, execute VBA, or claim signature validity for a converted copy. DOCM output is an explicit reviewed choice. The native parser and JavaScript acceptance checks remain separate from native Word visual certification.
+
+Retained external-tool drafts, conditional Dropbox publication, archive publication/recovery, source unlink checks, and viewer spooling reuse existing content digests and private staging. Their exact inputs are included in the merged source binding. Existing Apple/store decisions retain their original dated evidence. The new technical hashes do not constitute a new distribution approval.

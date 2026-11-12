@@ -1,4 +1,5 @@
 name: quds_office_engine
+publish_to: none
 description: >-
   Pure Dart Office, PDF, and report engine: DOCX/XLSX/PPTX, formulas, BiDi/RTL,
   PdfFile, pdf_widgets, and .qrep band reports exported to PDF, XLSX, and DOCX.
@@ -48,7 +49,8 @@ environment:
   sdk: ^3.12.0
 
 dependencies:
-  legacy_doc_parser: ^0.1.0-dev.1
+  legacy_doc_parser:
+    path: ../legacy_doc_parser
   characters: ^1.4.1
   crypto: ^3.0.7
 

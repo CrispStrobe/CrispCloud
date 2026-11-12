@@ -46,55 +46,58 @@ void main() {
     expect(run.style.fontSizeHalfPoints, 20);
   });
 
-  test('CIstd resets earlier direct formatting but preserves later formatting and exemptions', () {
-    final document = parseLegacyWordDocument(
-      StructuredWordFixture(
-        pieces: const [WordFixturePiece('AB\r')],
-        styles: {
-          0: const WordFixtureStyle(name: 'Normal', builtinId: 0),
-          20: WordFixtureStyle(
-            name: 'Emphasis',
-            character: true,
-            characterProperties: [
-              ...wordSprm(0x0836, [1]),
-              ...wordSprm(0x4a43, wordU16(32)),
-            ],
-          ),
-        },
-        characterRuns: [
-          WordFixtureFkpRun(
-            8192,
-            8193,
-            properties: [
-              ...wordSprm(0x0835, [1]),
-              ...wordSprm(0x4a43, wordU16(40)),
-              ...wordSprm(0x2a0c, [7]),
-              ...wordSprm(0x0800, [1]),
-              ...wordSprm(0x4a30, wordU16(20)),
-            ],
-          ),
-          WordFixtureFkpRun(
-            8193,
-            8195,
-            properties: [
-              ...wordSprm(0x4a30, wordU16(20)),
-              ...wordSprm(0x0835, [1]),
-            ],
-          ),
-        ],
-      ).build(),
-    );
-    final runs = _paragraph(document).runs;
-    final first = runs.singleWhere((run) => run.text == 'A');
-    expect(first.style.bold, isFalse);
-    expect(first.style.italic, isTrue);
-    expect(first.style.fontSizeHalfPoints, 32);
-    expect(first.style.highlightHex, 'FFFF00');
-    expect(first.deleted, isTrue);
-    final second = runs.singleWhere((run) => run.text == 'B');
-    expect(second.style.bold, isTrue);
-    expect(second.style.italic, isTrue);
-  });
+  test(
+    'CIstd resets earlier direct formatting but preserves later formatting and exemptions',
+    () {
+      final document = parseLegacyWordDocument(
+        StructuredWordFixture(
+          pieces: const [WordFixturePiece('AB\r')],
+          styles: {
+            0: const WordFixtureStyle(name: 'Normal', builtinId: 0),
+            20: WordFixtureStyle(
+              name: 'Emphasis',
+              character: true,
+              characterProperties: [
+                ...wordSprm(0x0836, [1]),
+                ...wordSprm(0x4a43, wordU16(32)),
+              ],
+            ),
+          },
+          characterRuns: [
+            WordFixtureFkpRun(
+              8192,
+              8193,
+              properties: [
+                ...wordSprm(0x0835, [1]),
+                ...wordSprm(0x4a43, wordU16(40)),
+                ...wordSprm(0x2a0c, [7]),
+                ...wordSprm(0x0800, [1]),
+                ...wordSprm(0x4a30, wordU16(20)),
+              ],
+            ),
+            WordFixtureFkpRun(
+              8193,
+              8195,
+              properties: [
+                ...wordSprm(0x4a30, wordU16(20)),
+                ...wordSprm(0x0835, [1]),
+              ],
+            ),
+          ],
+        ).build(),
+      );
+      final runs = _paragraph(document).runs;
+      final first = runs.singleWhere((run) => run.text == 'A');
+      expect(first.style.bold, isFalse);
+      expect(first.style.italic, isTrue);
+      expect(first.style.fontSizeHalfPoints, 32);
+      expect(first.style.highlightHex, 'FFFF00');
+      expect(first.deleted, isTrue);
+      final second = runs.singleWhere((run) => run.text == 'B');
+      expect(second.style.bold, isTrue);
+      expect(second.style.italic, isTrue);
+    },
+  );
 
   test('double strikethrough toggles resolve against the underlying style', () {
     for (final enabled in [false, true]) {

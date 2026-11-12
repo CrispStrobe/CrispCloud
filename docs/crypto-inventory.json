@@ -407,6 +407,37 @@
         "packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc"
       ],
       "note": "The added SHA-256 uses bind data to exact content and renderer versions, detect stale import previews, and derive catalog IDs; they are not signatures, MACs, encryption or access grants. Reading-data exports are plain UTF-8 JSON without source paths, account metadata or credentials. Local sidecars and the library index use SharedPreferences; the index can retain exact persistent account/root/file references but resolves authentication separately. In-process locks and stale-instance checks do not establish cross-process or browser-tab transactions. Shared appearance controls accept bounded numbers and allowlisted choices, not arbitrary CSS or scripts. The Linux CMake target links system GTK3/gmodule and optional epoxy, dynamically loads libwebkit2gtk-4.1.so.0 at version 2.48.4 or newer, and copies no WebKit runtime into the bundle. Its ephemeral host requires the WebKit process sandbox and uses the existing session loopback assets, CSP and sanitized book frames. No new production Dart dependency, cipher implementation, KDF or credential store is added by this increment. Installed system WebKit and transitive TLS/crypto implementations, finished binaries and distribution decisions remain outside this bounded technical source review. The shared search controller serializes Foliate iterators and suppresses canceled search overlays; section resource cleanup and explicit reading-state discard add no cryptographic or network capability. The optional Linux host now installs a separate, system-WebKit-linked readiness executable. The application/plugin remain dynamically linked only to their prior system host libraries, while the helper loads a fixed no-network document under the enabled WebKit sandbox before any publication view is created. The host bounds startup, closes inherited descriptors, suppresses helper output/core dumps and cleans the owned child group before reaping; no source path, publication data or credentials are passed as helper arguments. No runner policy or sandbox setting is relaxed."
+    },
+    {
+      "name": "Legacy Word conversion and retained signature evidence",
+      "algorithms": [
+        "ZIP format CRC checks through the existing archive dependency; no signature validation or decryption implementation"
+      ],
+      "sources": [
+        "packages/legacy_doc_parser/UPSTREAM.json",
+        "packages/legacy_doc_parser/lib/src/conversion.dart",
+        "packages/legacy_doc_parser/lib/src/word_media_writer.dart"
+      ],
+      "note": "Bounded DOC/DOT parsing and separate DOCX/DOCM output. Original signature bytes are inert evidence; converted output does not claim the original signature validity. The parser never executes VBA or embedded objects."
+    },
+    {
+      "name": "Retained tool staging and conditional publication",
+      "algorithms": [
+        "Existing SHA-256 content fingerprints and OS-backed private staging identifiers"
+      ],
+      "sources": [
+        "lib/services/conditional_file_publication.dart",
+        "lib/services/dropbox_file_publication.dart",
+        "lib/services/private_tool_staging_io.dart",
+        "lib/services/external_remote_editing_service.dart",
+        "lib/services/external_editor_service.dart",
+        "lib/services/archive_container_publisher.dart",
+        "lib/services/archive_publication_cleanup_io.dart",
+        "lib/services/archive_source_cleanup_io.dart",
+        "lib/services/viewer_spool_io.dart",
+        "lib/utils/system_links.dart"
+      ],
+      "note": "Digests bind retained copies and reviewed publication/recovery inputs. No new cipher, password decryption path or distribution decision is introduced."
     }
   ],
   "reviewed_files": [
@@ -701,6 +732,42 @@
     "packages/crisp_ebook_reader/assets/reader_search.js",
     "packages/crisp_ebook_reader/linux/reader_runtime_probe.h",
     "packages/crisp_ebook_reader/linux/reader_webkit_settings.h",
-    "packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc"
+    "packages/crisp_ebook_reader/linux/webkit_runtime_probe.cc",
+    "packages/legacy_doc_parser/pubspec.yaml",
+    "packages/legacy_doc_parser/UPSTREAM.json",
+    "lib/services/conditional_file_publication.dart",
+    "lib/services/dropbox_file_publication.dart",
+    "lib/services/private_tool_staging_io.dart",
+    "lib/services/external_remote_editing_service.dart",
+    "lib/services/external_editor_service.dart",
+    "lib/services/archive_container_publisher.dart",
+    "lib/services/archive_publication_cleanup_io.dart",
+    "lib/services/archive_source_cleanup_io.dart",
+    "lib/services/viewer_spool_io.dart",
+    "lib/utils/system_links.dart",
+    "packages/legacy_doc_parser/lib/legacy_doc_parser.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_conversion.dart",
+    "packages/legacy_doc_parser/lib/src/conversion.dart",
+    "packages/legacy_doc_parser/lib/src/opc_package_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_decoration_writer.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_render.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_format_tables.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_fields.dart",
+    "packages/legacy_doc_parser/lib/src/bounded_cfb_reader.dart",
+    "packages/legacy_doc_parser/lib/src/word_media_writer.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_lists.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_model.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_media_parser.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_decorations.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_media_model.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_sprms.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_document.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_parser.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_binary_source.dart",
+    "packages/legacy_doc_parser/lib/src/word_story_writer.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_stories.dart",
+    "packages/legacy_doc_parser/lib/src/compound/byte_source.dart",
+    "packages/legacy_doc_parser/lib/src/compound/cfbf_writer.dart",
+    "packages/legacy_doc_parser/lib/src/compound/cfbf_reader.dart"
   ]
 }
