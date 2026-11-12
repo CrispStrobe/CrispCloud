@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import '../l10n/commander_strings.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/rename_mask_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/rename_batch.dart';
@@ -776,15 +777,16 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
             child: _optionPicker<RenameMaskDialect>(
               context.commanderTr("Mask dialect"),
               _dialect,
-              {
-                RenameMaskDialect.crispCloud: context.commanderTr("CrispCloud"),
-                RenameMaskDialect.totalCommander: context.commanderTr(
-                  "Total Commander",
-                ),
-                RenameMaskDialect.doubleCommander: context.commanderTr(
-                  "Double Commander",
-                ),
-              },
+              // Labels follow the stable preset-variant order. Display names
+              // are independent of the serialized keys in existing presets.
+              Map<RenameMaskDialect, String>.fromIterables(
+                RenameMaskDialect.values,
+                [
+                  context.commanderTr("CrispCloud"),
+                  renameMaskVariantLabel(context, extended: false),
+                  renameMaskVariantLabel(context, extended: true),
+                ],
+              ),
               (value) => _dialect = value,
             ),
           ),
@@ -1558,6 +1560,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     final history = ref.read(actionHistoryProvider.notifier);
     final service = _batchService;
     final options = _options.toJson();
+    final rememberSelection = _panel.captureSelectionMemoryForOperation(_files);
     setState(() {
       _processing = true;
       _executionPlan = plan;
@@ -1611,6 +1614,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         // A stopped or partially failed batch still owns completed physical
         // steps. Its one Undo entry restores exactly the journalled work.
         if (record.canRestore) {
+          rememberSelection?.call();
           _recordBatchUndo(record, origin, storage, history, service);
         }
         if (mounted) setState(() => _result = _resultFor(plan, record));

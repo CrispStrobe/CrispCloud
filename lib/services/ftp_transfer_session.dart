@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'bounded_transfer_stream.dart';
+import 'ftp_security_mode.dart';
 
-/// One FTP/implicit-FTPS data transfer per control connection. This deliberately
+/// One FTP/FTPS/FTPES data transfer per control connection. This deliberately
 /// avoids sharing navigation commands or a library's unbounded sink.add loop.
 /// Reply sequencing and passive data channels follow RFC 959/2428; TLS data
 /// protection follows RFC 4217, with normal certificate validation.
@@ -14,15 +15,24 @@ class FtpTransferSession {
     required this.port,
     required this.username,
     required this.password,
-    required this.secure,
+    bool? secure,
+    FtpSecurityMode? securityMode,
     required this.isCurrent,
+    this.securityContext,
     this.timeout = const Duration(seconds: 30),
-  });
+  }) : assert(secure == null || securityMode == null),
+       securityMode =
+           securityMode ??
+           (secure == true
+               ? FtpSecurityMode.implicitTls
+               : FtpSecurityMode.plain);
   final String host;
   final int port;
   final String username;
   final String password;
-  final bool secure;
+  final FtpSecurityMode securityMode;
+  bool get secure => securityMode.isSecure;
+  final SecurityContext? securityContext;
   final bool Function() isCurrent;
   final Duration timeout;
   Socket? _control;
@@ -39,8 +49,13 @@ class FtpTransferSession {
   Future<void> connect() async {
     _check();
     try {
-      final connection = secure
-          ? await SecureSocket.connect(host, port, timeout: timeout)
+      final connection = securityMode == FtpSecurityMode.implicitTls
+          ? await SecureSocket.connect(
+              host,
+              port,
+              timeout: timeout,
+              context: securityContext,
+            )
           : await Socket.connect(host, port, timeout: timeout);
       if (_closed || !isCurrent()) {
         connection.destroy();
@@ -49,6 +64,27 @@ class FtpTransferSession {
       _control = connection;
       _lines = StreamIterator(_replyLines(_control!));
       _expect(await _reply(), {220}, 'greeting');
+      if (securityMode == FtpSecurityMode.explicitTls) {
+        // Never send credentials or fall back to plaintext after a TLS refusal.
+        _expect(await _command('AUTH TLS'), {234}, 'TLS upgrade');
+        final oldLines = _lines!;
+        final secured = await SecureSocket.secure(
+          _control!,
+          host: host,
+          context: securityContext,
+        ).timeout(timeout);
+        if (_closed || !isCurrent()) {
+          secured.destroy();
+          throw StateError(
+            'The original FTP connection is no longer available.',
+          );
+        }
+        _control = secured;
+        _lines = StreamIterator(_replyLines(secured));
+        // The old iterator paused at the AUTH reply. TLS detached its socket;
+        // cancelling it now cannot consume any encrypted response bytes.
+        await oldLines.cancel();
+      }
       final user = await _command('USER $username');
       if (user.$1 == 331) {
         _expect(await _command('PASS $password'), {230}, 'login');
@@ -174,7 +210,11 @@ class FtpTransferSession {
     final response = await _command(command);
     _expect(response, {125, 150, 226, 250}, 'data transfer');
     if (secure) {
-      _data = await SecureSocket.secure(_data!, host: host).timeout(timeout);
+      _data = await SecureSocket.secure(
+        _data!,
+        host: host,
+        context: securityContext,
+      ).timeout(timeout);
     }
     return response.$1 == 226 || response.$1 == 250;
   }

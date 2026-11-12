@@ -546,6 +546,60 @@ void main() {
     );
   }
 
+  testWidgets(
+    'a cancelled transfer preview preserves the preceding selection memory',
+    (tester) async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      panel.toggleSelection(
+        files.singleWhere((file) => file.path == '/one.txt'),
+      );
+      panel.rememberSelection();
+      panel.clearSelection();
+      panel.toggleSelection(
+        files.singleWhere((file) => file.path == '/two.bin'),
+      );
+      files = panel.selection.toList();
+      await open(tester, inRoute: true);
+      await useCloudDestination(tester);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      panel.clearSelection();
+      expect(panel.restoreSelection(), 1);
+      expect(panel.selection.single.path, '/one.txt');
+      expect(cloud.uploads, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'an accepted transfer remembers the marks captured before its review',
+    (tester) async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      panel.toggleSelection(
+        files.singleWhere((file) => file.path == '/one.txt'),
+      );
+      panel.rememberSelection();
+      panel.clearSelection();
+      panel.toggleSelection(
+        files.singleWhere((file) => file.path == '/two.bin'),
+      );
+      files = panel.selection.toList();
+      await open(tester);
+      await useCloudDestination(tester);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+      await tester.pumpAndSettle();
+      // Changes to the live marks while reviewing cannot alter the captured set.
+      panel.clearSelection();
+      await runOperation(tester, FileOperationKind.copy);
+      panel.clearSelection();
+      expect(panel.restoreSelection(), 1);
+      expect(panel.selection.single.path, '/two.bin');
+      expect(cloud.files['/target/two.bin'], [0, 1, 2, 3]);
+      expect(cloud.files.containsKey('/target/one.txt'), isFalse);
+    },
+  );
+
   testWidgets('snapshot source copies through the captured read backend', (
     tester,
   ) async {
@@ -901,6 +955,12 @@ void main() {
   testWidgets('background dialog stays open if saving the queued plan fails', (
     tester,
   ) async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    panel.toggleSelection(files.singleWhere((file) => file.path == '/one.txt'));
+    panel.rememberSelection();
+    panel.clearSelection();
+    panel.toggleSelection(files.singleWhere((file) => file.path == '/two.bin'));
+    files = panel.selection.toList();
     await open(tester, inRoute: true);
     await useCloudDestination(tester);
     await tester.tap(find.text('Preview'));
@@ -915,6 +975,9 @@ void main() {
     );
     expect(cloud.uploads, isEmpty);
     expect(container.read(transferProvider).operations, isEmpty);
+    panel.clearSelection();
+    expect(panel.restoreSelection(), 1);
+    expect(panel.selection.single.path, '/one.txt');
     expect(tester.takeException(), isNull);
   });
 

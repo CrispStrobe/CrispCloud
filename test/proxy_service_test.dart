@@ -102,48 +102,31 @@ void main() {
     });
 
     test('noProxy bypass list parsing splits by comma and trims', () {
-      // Verify the proxy service noProxy parsing logic directly
-      const noProxyString = 'localhost, .example.com , internal.corp.com';
-      final hosts = noProxyString
-          .split(',')
-          .map((h) => h.trim().toLowerCase())
-          .where((h) => h.isNotEmpty)
-          .toSet();
-      expect(hosts, {'localhost', '.example.com', 'internal.corp.com'});
+      const config = ProxyConfig(
+        noProxy: 'localhost, .example.com , internal.corp.com',
+      );
+      for (final host in ['localhost', 'example.com', 'internal.corp.com']) {
+        expect(config.bypassesHost(host), isTrue, reason: host);
+      }
     });
 
     test('noProxy bypass matching: exact host match', () {
-      const noProxyHosts = {'localhost', '.example.com'};
-      const host = 'localhost';
-      final bypassed = noProxyHosts.any((bypass) =>
-          host == bypass || host.endsWith('.$bypass'));
-      expect(bypassed, true);
+      const config = ProxyConfig(noProxy: 'localhost,.example.com');
+      expect(config.bypassesHost('localhost'), isTrue);
     });
 
     test('noProxy bypass matching: subdomain match', () {
-      const noProxyHosts = {'localhost', '.example.com'};
-      const host = 'app.example.com';
-      final bypassed = noProxyHosts.any((bypass) =>
-          host == bypass || host.endsWith('.$bypass'));
-      // host ends with '..example.com'? No, it ends with '.example.com'
-      // The check is host.endsWith('.$bypass'), so for bypass='.example.com' it's
-      // host.endsWith('..example.com') which is false.
-      // For bypass='example.com', host.endsWith('.example.com') is true.
-      // This matches the proxy_service.dart logic.
-      expect(bypassed, false);
-      // With bypass='example.com':
-      const noProxyHosts2 = {'localhost', 'example.com'};
-      final bypassed2 = noProxyHosts2.any((bypass) =>
-          host == bypass || host.endsWith('.$bypass'));
-      expect(bypassed2, true);
+      for (final pattern in ['.example.com', 'example.com']) {
+        expect(
+          ProxyConfig(noProxy: pattern).bypassesHost('app.example.com'),
+          isTrue,
+        );
+      }
     });
 
     test('noProxy bypass matching: non-matching host goes through proxy', () {
-      const noProxyHosts = {'localhost', 'internal.corp.com'};
-      const host = 'google.com';
-      final bypassed = noProxyHosts.any((bypass) =>
-          host == bypass || host.endsWith('.$bypass'));
-      expect(bypassed, false);
+      const config = ProxyConfig(noProxy: 'localhost,internal.corp.com');
+      expect(config.bypassesHost('example.com'), isFalse);
     });
   });
 

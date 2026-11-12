@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/file_search_query.dart';
 import 'package:crisp_cloud/services/internal_viewer_service.dart';
+import 'package:crisp_cloud/services/legacy_text_encoding.dart';
 import 'package:crisp_cloud/services/search_content_matcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,6 +16,7 @@ Stream<List<int>> chunks(List<int> bytes, int size) async* {
 List<int> encode(String text, String encoding) {
   if (encoding == 'utf8') return utf8.encode(text);
   if (encoding == 'latin1') return latin1.encode(text);
+  if (isLegacyTextEncoding(encoding)) return encodeLegacyText(text, encoding);
   final unit = encoding.startsWith('utf32') ? 4 : 2;
   final values = unit == 4 ? text.runes : text.codeUnits;
   return [
@@ -25,68 +27,81 @@ List<int> encode(String text, String encoding) {
 }
 
 void main() {
-  test('literal streaming matches complete decoded text across every byte boundary', () async {
-    for (final encoding in FileSearchQuery.contentEncodings.where(
-      (e) => e != 'auto',
-    )) {
-      final needle = encoding == 'latin1' ? 'Grüße' : 'Grüße 東京 😀';
-      final content = '${'x' * 1073}$needle${'y' * 120}';
-      final bytes = encode(content, encoding);
-      final query = FileSearchQuery(
-        contentPattern: needle,
-        contentEncoding: encoding,
-      );
-      final expected = matchSearchText(
-        InternalViewerService.decodeTextForView(
-          Uint8List.fromList(bytes),
-          encoding: encoding,
-        ).text,
-        query,
-      );
-      for (final size in [1, 3, 127, 1023, 1024, 32768]) {
-        expect(
-          await searchLiteralContent(chunks(bytes, size), query, check: () {}),
-          expected,
-          reason: '$encoding / chunk $size',
+  test(
+    'literal streaming matches complete decoded text across every byte boundary',
+    () async {
+      for (final encoding in FileSearchQuery.contentEncodings.where(
+        (e) => e != 'auto',
+      )) {
+        final needle = encoding == 'latin1' || isLegacyTextEncoding(encoding)
+            ? 'Grüße'
+            : 'Grüße 東京 😀';
+        final content = '${'x' * 1073}$needle${'y' * 120}';
+        final bytes = encode(content, encoding);
+        final query = FileSearchQuery(
+          contentPattern: needle,
+          contentEncoding: encoding,
         );
-      }
-    }
-  });
-
-  test('auto encoding agrees with full decoding for BOMs, sniffing and late invalid UTF-8', () async {
-    final data = <List<int>>[
-      [0xef, 0xbb, 0xbf, ...utf8.encode('café needle 東京')],
-      [0xff, 0xfe, ...encode('needle ${'text ' * 210}東京', 'utf16le')],
-      [0xfe, 0xff, ...encode('needle ${'text ' * 210}東京', 'utf16be')],
-      [0xff, 0xfe, 0, 0, ...encode('needle 東京 😀', 'utf32le')],
-      [0, 0, 0xfe, 0xff, ...encode('needle 東京 😀', 'utf32be')],
-      encode('${'words ' * 200}needle', 'utf16le'),
-      encode('${'words ' * 200}needle', 'utf16be'),
-      [...utf8.encode('café ${'x' * 1500}'), 0xff],
-      [0xef, 0xbb, 0xbf, ...utf8.encode('café ${'x' * 1500}'), 0xff],
-      latin1.encode('café needle'),
-    ];
-    for (final bytes in data) {
-      for (final needle in ['needle', 'café', 'cafÃ©']) {
-        for (final negated in [false, true]) {
-          final query = FileSearchQuery(
-            contentPattern: needle,
-            contentNegated: negated,
-          );
-          final expected = matchSearchText(
-            InternalViewerService.decodeTextForView(Uint8List.fromList(bytes))
-                .text,
-            query,
-          );
+        final expected = matchSearchText(
+          InternalViewerService.decodeTextForView(
+            Uint8List.fromList(bytes),
+            encoding: encoding,
+          ).text,
+          query,
+        );
+        for (final size in [1, 3, 127, 1023, 1024, 32768]) {
           expect(
-            await searchLiteralContent(chunks(bytes, 3), query, check: () {}),
+            await searchLiteralContent(
+              chunks(bytes, size),
+              query,
+              check: () {},
+            ),
             expected,
-            reason: '$needle / negated=$negated / ${bytes.take(8)}',
+            reason: '$encoding / chunk $size',
           );
         }
       }
-    }
-  });
+    },
+  );
+
+  test(
+    'auto encoding agrees with full decoding for BOMs, sniffing and late invalid UTF-8',
+    () async {
+      final data = <List<int>>[
+        [0xef, 0xbb, 0xbf, ...utf8.encode('café needle 東京')],
+        [0xff, 0xfe, ...encode('needle ${'text ' * 210}東京', 'utf16le')],
+        [0xfe, 0xff, ...encode('needle ${'text ' * 210}東京', 'utf16be')],
+        [0xff, 0xfe, 0, 0, ...encode('needle 東京 😀', 'utf32le')],
+        [0, 0, 0xfe, 0xff, ...encode('needle 東京 😀', 'utf32be')],
+        encode('${'words ' * 200}needle', 'utf16le'),
+        encode('${'words ' * 200}needle', 'utf16be'),
+        [...utf8.encode('café ${'x' * 1500}'), 0xff],
+        [0xef, 0xbb, 0xbf, ...utf8.encode('café ${'x' * 1500}'), 0xff],
+        latin1.encode('café needle'),
+      ];
+      for (final bytes in data) {
+        for (final needle in ['needle', 'café', 'cafÃ©']) {
+          for (final negated in [false, true]) {
+            final query = FileSearchQuery(
+              contentPattern: needle,
+              contentNegated: negated,
+            );
+            final expected = matchSearchText(
+              InternalViewerService.decodeTextForView(
+                Uint8List.fromList(bytes),
+              ).text,
+              query,
+            );
+            expect(
+              await searchLiteralContent(chunks(bytes, 3), query, check: () {}),
+              expected,
+              reason: '$needle / negated=$negated / ${bytes.take(8)}',
+            );
+          }
+        }
+      }
+    },
+  );
 
   test(
     'matches, snippet context, and case-insensitivity cross decode chunks',

@@ -89,6 +89,9 @@ import '../services/log_service.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/browser_menu_shortcut.dart';
 import '../l10n/navigation_strings.dart';
+import '../l10n/synchronized_browsing_strings.dart';
+import '../providers/synchronized_browsing_provider.dart';
+import '../widgets/synchronized_browsing_controls.dart';
 
 class FileBrowserScreen extends ConsumerStatefulWidget {
   const FileBrowserScreen({super.key});
@@ -193,6 +196,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     final TerminalMenuActions? terminal = ref.watch(terminalMenuProvider);
     final auth = ref.watch(authProvider);
     final showPreview = ref.watch(showPreviewProvider);
+    ref.watch(synchronizedBrowsingProvider);
     // layoutPresetProvider kept for persistence but no longer drives layout.
     // Layout is now controlled by showDualPanelProvider + showTreeSidebarProvider.
 
@@ -227,6 +231,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         onKeyEvent: (node, event) => handleKeyEvent(context, ref, event),
         child: Column(
           children: [
+            const SynchronizedBrowsingStatus(),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -637,9 +642,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         label: context.commanderTr("Remember Selection"),
         onSelected: () => _activePanel(ref).rememberSelection(),
       ),
-      PlatformMenuItem(
-        label: context.commanderTr("Restore Selection"),
-        onSelected: () => _activePanel(ref).restoreSelection(),
+      _browserMenuCommand(
+        context,
+        ref,
+        ShortcutAction.restoreSelection,
+        context.commanderTr("Restore Selection"),
       ),
 
       _browserMenuCommand(
@@ -967,6 +974,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     ];
 
     final List<PlatformMenuItem> browserToolsMenus = <PlatformMenuItem>[
+      PlatformMenuItem(
+        label: SynchronizedBrowsingStrings(context).text(
+          ref.read(synchronizedBrowsingProvider).enabled ? 'stop' : 'start',
+        ),
+        onSelected: () => toggleSynchronizedBrowsing(ref),
+      ),
       _browserMenuCommand(
         context,
         ref,
@@ -1907,6 +1920,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         tooltip: context.commanderTr("{0} (Ctrl+U)", [l.swapPanels]),
         onPressed: () => _swapPanels(),
       ),
+      const SynchronizedBrowsingButton(),
       // Browsers use an explicit WebSocket gateway for SSH.
       Consumer(
         builder: (ctx, cref, _) {
@@ -2036,6 +2050,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       tooltip: l.moreActions,
       onSelected: (value) {
         switch (value) {
+          case 'synchronized_browsing':
+            toggleSynchronizedBrowsing(ref);
           case 'workspaces':
             showWorkspaceDialog(context, ref, ref.read(activePanelProvider));
           case 'columns':
@@ -2323,6 +2339,15 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.playlist_play,
             context.commanderTr("Export file list"),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'synchronized_browsing',
+          child: _overflowItem(
+            Icons.link,
+            SynchronizedBrowsingStrings(context).text(
+              ref.read(synchronizedBrowsingProvider).enabled ? 'stop' : 'start',
+            ),
           ),
         ),
         PopupMenuItem(

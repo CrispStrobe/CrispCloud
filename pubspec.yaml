@@ -127,7 +127,9 @@ dependencies:
   dynamic_color: ^1.7.0
 
   # FTP/FTPS
-  ftpconnect: ^2.0.5
+  # MIT 2.0.10 runtime with verified TLS on control and data connections.
+  ftpconnect:
+    path: packages/ftpconnect
 
   # SFTP
   dartssh2: ^4.1.0

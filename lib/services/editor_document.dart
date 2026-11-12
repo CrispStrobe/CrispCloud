@@ -3,6 +3,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'legacy_text_encoding.dart';
+
 enum EditorEncoding {
   utf8('UTF-8'),
   utf8Bom('UTF-8 BOM'),
@@ -10,10 +12,15 @@ enum EditorEncoding {
   utf16be('UTF-16 BE'),
   utf32le('UTF-32 LE'),
   utf32be('UTF-32 BE'),
-  latin1('Latin-1');
+  latin1('Latin-1'),
+  cp437('DOS (CP437)'),
+  windows1252('Windows-1252');
 
   const EditorEncoding(this.label);
   final String label;
+
+  bool get supportsBom =>
+      this != latin1 && this != cp437 && this != windows1252;
 }
 
 enum EditorLineEnding {
@@ -69,11 +76,10 @@ class EditorDocument {
 
   bool get hasFinalNewline => text.endsWith('\n');
   bool get writesBom =>
-      writeBom ??
-      (encoding == EditorEncoding.utf8Bom ||
-          (encoding != EditorEncoding.utf8 &&
-              encoding != EditorEncoding.latin1 &&
-              hadBom));
+      encoding.supportsBom &&
+      (writeBom ??
+          (encoding == EditorEncoding.utf8Bom ||
+              (encoding != EditorEncoding.utf8 && hadBom)));
   List<EditorLineEnding> get lineEndings =>
       originalLineEndings ??
       List.filled(_newlines(text), lineEnding, growable: false);
@@ -151,7 +157,7 @@ class EditorDocument {
           (nextEncoding == EditorEncoding.utf8Bom
               ? true
               : nextEncoding == EditorEncoding.utf8 ||
-                    nextEncoding == EditorEncoding.latin1
+                    !nextEncoding.supportsBom
               ? false
               : this.hadBom),
       originalNormalizedText: nextText,
@@ -256,6 +262,16 @@ class EditorDocument {
           );
         }
         return Uint8List.fromList(latin1.encode(value));
+      case EditorEncoding.cp437:
+      case EditorEncoding.windows1252:
+        try {
+          return encodeLegacyText(value, encoding.name);
+        } on FormatException {
+          throw EditorEncodingException(
+            encoding,
+            'The file is ${encoding.label}, but the text contains characters that encoding cannot represent. Switch to UTF-8 to save it.',
+          );
+        }
       case EditorEncoding.utf16le:
       case EditorEncoding.utf16be:
       case EditorEncoding.utf32le:
@@ -424,7 +440,9 @@ int _explicitBomLength(Uint8List data, EditorEncoding encoding) {
     EditorEncoding.utf16be => [0xfe, 0xff],
     EditorEncoding.utf32le => [0xff, 0xfe, 0, 0],
     EditorEncoding.utf32be => [0, 0, 0xfe, 0xff],
-    EditorEncoding.latin1 => <int>[],
+    EditorEncoding.latin1 ||
+    EditorEncoding.cp437 ||
+    EditorEncoding.windows1252 => <int>[],
   };
   if (prefix.isEmpty || data.length < prefix.length) return 0;
   for (var i = 0; i < prefix.length; i++) {
@@ -452,7 +470,9 @@ _EncodingDetection _explicitEncoding(Uint8List bytes, EditorEncoding encoding) {
     EditorEncoding.utf16be => const [0xFE, 0xFF],
     EditorEncoding.utf32le => const [0xFF, 0xFE, 0, 0],
     EditorEncoding.utf32be => const [0, 0, 0xFE, 0xFF],
-    EditorEncoding.latin1 => const <int>[],
+    EditorEncoding.latin1 ||
+    EditorEncoding.cp437 ||
+    EditorEncoding.windows1252 => const <int>[],
   };
   final length = bom.isNotEmpty && _startsWith(bytes, bom) ? bom.length : 0;
   return _EncodingDetection(
@@ -484,6 +504,8 @@ _EncodingDetection _explicitEncoding(Uint8List bytes, EditorEncoding encoding) {
         bomLength: length,
       ),
       EditorEncoding.latin1 => latin1.decode(data),
+      EditorEncoding.cp437 ||
+      EditorEncoding.windows1252 => decodeLegacyText(data, encoding.name),
     },
   );
 }

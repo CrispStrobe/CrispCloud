@@ -799,6 +799,28 @@ void main() {
     },
   );
 
+  test(
+    'accepted operation remembers prepared marks from every collection page',
+    () async {
+      final panel = await open();
+      final files = await panel.prepareOperationFiles(panel.selection);
+      expect(files, hasLength(3));
+      final accepted = panel.captureSelectionMemoryForOperation(files);
+      expect(accepted, isNotNull);
+      panel.clearSelection();
+      expect(panel.rememberedSelectionCount, 0);
+      accepted!();
+      expect(panel.rememberedSelectionCount, 3);
+      expect(await panel.restoreCollectionSelection(), 3);
+      expect(panel.selection.map((row) => row.path).toSet(), {
+        '/file-00000.txt',
+        '/file-00700.txt',
+        '/file-01799.txt',
+      });
+      expect(panel.retainedSavedCollectionRows, lessThanOrEqualTo(500));
+    },
+  );
+
   test('remembered selection restore rejects an off-page replaced original as a whole', () async {
     final panel = await open();
     await panel.rememberCollectionSelection();

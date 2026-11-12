@@ -46,6 +46,9 @@ import 'extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../l10n/navigation_strings.dart';
 import '../l10n/workspace_ux_strings.dart';
+import '../l10n/synchronized_browsing_strings.dart';
+import '../providers/synchronized_browsing_provider.dart';
+import 'synchronized_browsing_controls.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../services/command_search.dart';
 import 'keyboard_shortcut_dialog.dart';
@@ -128,6 +131,14 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
     return [
       // Navigation
+      _Command(
+        name: SynchronizedBrowsingStrings(context).text(
+          ref.read(synchronizedBrowsingProvider).enabled ? 'stop' : 'start',
+        ),
+        icon: Icons.link,
+        keywords: 'linked panes folders navigation synchronized browsing',
+        action: () => toggleSynchronizedBrowsing(ref),
+      ),
       _Command(
         name: WorkspaceUxStrings(context).text('back'),
         binding: ShortcutAction.back,
@@ -419,7 +430,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       ),
       _Command(
         name: context.commanderTr("Restore Selection"),
+        binding: ShortcutAction.restoreSelection,
         icon: Icons.restore,
+        enabled: panel.restorableSelectionCount > 0,
         action: () => panel.restoreSelection(),
       ),
       if (panel.showingSearchResults)

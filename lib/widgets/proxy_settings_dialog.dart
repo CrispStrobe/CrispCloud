@@ -59,6 +59,15 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (ref.read(proxyServiceProvider).config.isInvalid) ...[
+              Text(
+                strings.text(
+                  'Saved proxy settings are invalid. Correct them or choose No Proxy to reconnect.',
+                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              const SizedBox(height: 12),
+            ],
             DropdownButtonFormField<ProxyType>(
               isExpanded: true,
               initialValue: _type,
@@ -83,6 +92,22 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               onChanged: (v) => setState(() => _type = v ?? ProxyType.none),
             ),
             if (_type != ProxyType.none) ...[
+              const SizedBox(height: 8),
+              Text(
+                strings.text(
+                  'Applies to native HTTP/HTTPS connections. FTP, SFTP, SMB and browser connections use their own network settings.',
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (_type == ProxyType.socks5) ...[
+                const SizedBox(height: 8),
+                Text(
+                  strings.text(
+                    'SOCKS5 resolves destination names at the proxy. For password authentication, enter both a username and password.',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,7 +369,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     final strings = ProxySettingsStrings(context);
     final port = int.tryParse(_portController.text) ?? 0;
     if (_type != ProxyType.none &&
-        (_hostController.text.isEmpty || port <= 0)) {
+        (_hostController.text.trim().isEmpty || port <= 0 || port > 65535)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(strings.text('Host and valid port are required')),
@@ -366,6 +391,20 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
       noProxy: _noProxyController.text.trim(),
     );
 
+    try {
+      config.validate();
+    } on FormatException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            strings.text(
+              'SOCKS5 needs both a username and password (up to 255 UTF-8 bytes each).',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
     await ref.read(proxyServiceProvider).save(config);
 
     // Clear the unsupported legacy pinning preference and apply TLS settings.
@@ -377,8 +416,9 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     if (mounted) {
       Navigator.pop(context, true);
       final parts = <String>[];
-      if (config.isEnabled)
+      if (config.isEnabled) {
         parts.add(strings.proxy(config.type.name, config.host, config.port));
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

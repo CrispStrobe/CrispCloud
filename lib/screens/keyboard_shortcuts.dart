@@ -381,6 +381,8 @@ KeyEventResult executeBrowserShortcut(
       showPanelFilterDialog(context, panel);
     case ShortcutAction.selectAll:
       panel.selectAll();
+    case ShortcutAction.restoreSelection:
+      panel.restoreSelection();
     case ShortcutAction.delete:
       confirmDeleteSelected(context, ref);
     case ShortcutAction.rename:

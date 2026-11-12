@@ -181,6 +181,12 @@ class PanelNotifier extends ChangeNotifier {
   // Each tab owns its source-aware history. The revision rejects completions
   // from navigation that has been superseded by a tab or source change.
   int _navigationRevision = 0;
+
+  /// Changes when a navigation intent starts, before access checks or visible
+  /// path changes. Background followers can reject an older pending request
+  /// even while a newer interactive navigation is still waiting for access.
+  int get navigationIntentRevision => _navigationRevision;
+
   final List<_ClosedPanelTab> _closedTabs = [];
   static const maxClosedTabs = 20;
   bool _reopeningClosedTab = false;
@@ -1021,7 +1027,7 @@ class PanelNotifier extends ChangeNotifier {
   }
 
   /// Quick-select: make every match the selection and put the cursor on the
-  /// first one. This is the Total Commander "select" flavor of type-ahead.
+  /// first matching entry as the user types.
   void _selectTypeaheadMatches() {
     final matches = _typeaheadMatches();
     if (matches.isEmpty) return;
@@ -4554,6 +4560,86 @@ class PanelNotifier extends ChangeNotifier {
       ? _collectionSelectionMemories[_activeTabId]?.rows.length ?? 0
       : _selectionMemories[_activeTabId]?.length ?? 0;
 
+  /// Capture marked operation rows now, but publish their memory only after
+  /// the operation is accepted. Cancelled reviews and failed preflight leave
+  /// the preceding memory intact. The callback is idempotent and cannot write
+  /// into another tab, listing, collection, account or access grant.
+  ///
+  /// [files] must be the original verified rows returned by operation
+  /// preparation. Cursor-only and external clipboard operations do not replace
+  /// the user's preceding marked selection with unrelated files.
+  VoidCallback? captureSelectionMemoryForOperation(Iterable<FileItem> files) {
+    if (!_canUseSelectionMemory || _activeTabId.isEmpty) return null;
+    final tab = _activeTabId;
+    final current = captureOperationSession();
+    final ordinary = <(StorageReference, String), _SelectionMemoryEntry>{};
+    final rows = <String, CollectionRememberedRow>{};
+    final guards = <String, bool Function()>{};
+    final collection = isPagedCollection;
+    var bytes = 0;
+    for (final file in files) {
+      final key = collection ? collectionRowKey(file) : null;
+      final marked = collection
+          ? _collectionMarks?.desired.containsKey(key) == true
+          : _selection.contains(file);
+      if (!marked) continue;
+      final origin = originForOperation(file);
+      if (origin == null || !origin.isCurrent) return null;
+      if (collection) {
+        final objectId = FileCollectionService.objectIdentity(file);
+        bytes +=
+            utf8.encode(key!).length + utf8.encode(objectId ?? '').length + 32;
+        rows[key] = CollectionRememberedRow(
+          objectId: objectId,
+          isFolder: file.isFolder,
+          isSymlink: file.isSymlink,
+          storageId: origin.storageId,
+        );
+      } else {
+        final location = _selectionMemoryKey(file, origin);
+        if (location == null) return null;
+        bytes +=
+            utf8.encode(location.$2).length +
+            utf8.encode(file.uuid ?? '').length +
+            32;
+        ordinary[location] = _SelectionMemoryEntry(
+          origin: origin,
+          objectId: file.uuid,
+          isFolder: file.isFolder,
+        );
+      }
+      guards.putIfAbsent(
+        origin.storageId,
+        () =>
+            () => origin.isCurrent,
+      );
+      if (bytes > 4 * 1024 * 1024 || rows.length + ordinary.length > 100000) {
+        return null;
+      }
+    }
+    if (rows.isEmpty && ordinary.isEmpty) return null;
+    var published = false;
+    return () {
+      if (published || !current() || guards.values.any((guard) => !guard())) {
+        return;
+      }
+      published = true;
+      if (collection) {
+        _storeCollectionSelectionMemory(
+          tab,
+          CollectionSelectionMemory(
+            rows: Map.unmodifiable(rows),
+            sourceGuards: Map.unmodifiable(guards),
+            bytes: bytes,
+          ),
+        );
+      } else {
+        _selectionMemories[tab] = ordinary;
+      }
+      notifyListeners();
+    };
+  }
+
   Future<int> rememberCollectionSelection() async {
     if (!isPagedCollection) return rememberSelection();
     final tab = _activeTabId;
@@ -4596,12 +4682,28 @@ class PanelNotifier extends ChangeNotifier {
         storageId: origin.storageId,
       );
     }
+    _storeCollectionSelectionMemory(
+      tab,
+      CollectionSelectionMemory(
+        rows: Map.unmodifiable(rows),
+        sourceGuards: Map.unmodifiable(guards),
+        bytes: bytes,
+      ),
+    );
+    notifyListeners();
+    return rows.length;
+  }
+
+  void _storeCollectionSelectionMemory(
+    String tab,
+    CollectionSelectionMemory memory,
+  ) {
     final previous = _collectionSelectionMemories.remove(tab);
     if (previous != null) _collectionSelectionMemoryBytes -= previous.bytes;
     while (_collectionSelectionMemories.isNotEmpty &&
-        (_collectionSelectionMemoryBytes + bytes > 4 * 1024 * 1024 ||
+        (_collectionSelectionMemoryBytes + memory.bytes > 4 * 1024 * 1024 ||
             _collectionSelectionMemories.values.fold<int>(
-                  rows.length,
+                  memory.rows.length,
                   (sum, memory) => sum + memory.rows.length,
                 ) >
                 100000)) {
@@ -4609,14 +4711,8 @@ class PanelNotifier extends ChangeNotifier {
           .remove(_collectionSelectionMemories.keys.first)!
           .bytes;
     }
-    _collectionSelectionMemories[tab] = CollectionSelectionMemory(
-      rows: Map.unmodifiable(rows),
-      sourceGuards: Map.unmodifiable(guards),
-      bytes: bytes,
-    );
-    _collectionSelectionMemoryBytes += bytes;
-    notifyListeners();
-    return rows.length;
+    _collectionSelectionMemories[tab] = memory;
+    _collectionSelectionMemoryBytes += memory.bytes;
   }
 
   Future<int> restoreCollectionSelection() async {
@@ -5738,13 +5834,21 @@ class PanelNotifier extends ChangeNotifier {
     return path;
   }
 
+  /// Open a path in its captured source. Background followers set
+  /// [allowAccessRequests] to false: local reads then use existing access only,
+  /// and failure leaves the prior view in place. [canContinue] is checked before
+  /// accepting the intent and after every asynchronous navigation/loading step.
+  /// It must allow this call's own navigation-intent increment and path change.
   Future<void> navigateToPath(
     String path, {
     FileItem? selectItem,
     PanelFileOrigin? origin,
     bool recordHistory = true,
     bool bypassTabLock = false,
+    bool allowAccessRequests = true,
+    bool Function()? canContinue,
   }) async {
+    if (_isDisposed || !(canContinue?.call() ?? true)) return;
     _log.info('navigateToPath: $path (side=$side, web=$kIsWeb)');
     _rememberNavigationCursor();
     final navigation = ++_navigationRevision;
@@ -5784,20 +5888,16 @@ class PanelNotifier extends ChangeNotifier {
                   ? null
                   : storageReferenceForSource(_remoteSourceForListing()!))
             : storageReferenceForSource(LocalPanelSource(path)));
+    if (!(canContinue?.call() ?? true)) return;
     if (!bypassTabLock && !_allowTabNavigation(path, requestedStorage)) return;
     final targetTabId = _activeTabId;
     bool stillNavigating() =>
         !_isDisposed &&
         navigation == _navigationRevision &&
         targetTabId == _activeTabId &&
-        (sourceOrigin?.isCurrent ?? true);
-    _leaveFileList();
-    // Any explicit path navigation leaves archive mode. Previously the stale
-    // ArchivePanelSource kept currentPath virtual and Home/breadcrumbs tried
-    // to list "archive.zip:/inner/".
-    if (isInArchive) {
-      _clearArchiveState();
-    }
+        (sourceOrigin?.isCurrent ?? true) &&
+        (canContinue?.call() ?? true);
+    if (!stillNavigating()) return;
     if (_isArchiveVirtualPath(path)) {
       final archive = path.split(':/').first;
       path = !isRemote
@@ -5806,6 +5906,27 @@ class PanelNotifier extends ChangeNotifier {
                 : (kIsWeb ? '/' : (Platform.environment['HOME'] ?? '/')))
           : p.posix.dirname(archive);
     }
+    List<FileSystemEntity>? directorySnapshot;
+    if (!isRemote && !allowAccessRequests) {
+      // A linked/background navigation must never open a folder picker or
+      // change the current view before its existing access has been proven.
+      try {
+        directorySnapshot = await _localFileService.listDirectorySnapshot(path);
+      } catch (_) {
+        if (!stillNavigating()) return;
+        rethrow;
+      }
+      if (!stillNavigating()) return;
+      if (directorySnapshot == null) {
+        throw UnsupportedError(
+          'Noninteractive directory access is unavailable.',
+        );
+      }
+    }
+    if (!stillNavigating()) return;
+    _leaveFileList();
+    // Explicit path navigation leaves archive mode before loading a real path.
+    if (isInArchive) _clearArchiveState();
     _selection.clear();
     _lastSelected = null;
     if (_isTypeahead) {
@@ -5813,7 +5934,8 @@ class PanelNotifier extends ChangeNotifier {
       _isTypeahead = false;
     }
     if (!isRemote) {
-      final hasAccess = await _localFileService.hasAccessToPath(path);
+      final hasAccess =
+          !allowAccessRequests || await _localFileService.hasAccessToPath(path);
       if (!stillNavigating()) return;
       if (!hasAccess) {
         if (kIsWeb) return;
@@ -5858,13 +5980,16 @@ class PanelNotifier extends ChangeNotifier {
           _settingSwapSource = false;
         }
       }
+      if (!stillNavigating()) return;
       _localPath = path;
       await _loadLocalFiles(
-        sourceIsCurrent: sourceOrigin == null
-            ? null
-            : () => sourceOrigin.isCurrent,
+        sourceIsCurrent: stillNavigating,
+        allowAccessRequests: allowAccessRequests,
+        fallbackOnMissing: allowAccessRequests,
+        directorySnapshot: directorySnapshot,
       );
     } else {
+      if (!stillNavigating()) return;
       _remotePath = path;
       if (sourceOrigin?.source case final RemotePanelSource requested) {
         final selected = _ref.read(panelSourceProvider(side));
@@ -5884,7 +6009,8 @@ class PanelNotifier extends ChangeNotifier {
           (sourceOrigin != null && !sourceOrigin.isCurrent)) {
         throw StateError('The cloud account is no longer connected.');
       }
-      await _loadRemoteFiles();
+      if (!stillNavigating()) return;
+      await _loadRemoteFiles(sourceIsCurrent: stillNavigating);
     }
     if (!stillNavigating()) return;
 
@@ -6106,11 +6232,13 @@ class PanelNotifier extends ChangeNotifier {
           'Trash is unavailable for one or more original sources. Choose Delete without restore explicitly.',
         );
       }
+      final rememberSelection = captureSelectionMemoryForOperation(files);
       for (final group in groups.entries) {
         deleted += await _deleteCapturedFiles(
           group.value,
           group.key,
           permanently: permanently,
+          onDeleted: rememberSelection,
         );
       }
     } catch (error) {
@@ -6126,6 +6254,7 @@ class PanelNotifier extends ChangeNotifier {
     List<FileItem> files,
     PanelFileOrigin origin, {
     required bool permanently,
+    VoidCallback? onDeleted,
   }) async {
     final audit = _ref.read(auditServiceProvider);
     final history = _ref.read(actionHistoryProvider.notifier);
@@ -6238,6 +6367,7 @@ class PanelNotifier extends ChangeNotifier {
         } else {
           throw UnsupportedError('This source cannot be deleted from here.');
         }
+        onDeleted?.call();
         removed[path] = null;
         deletedCount++;
         if (file.isFolder && file.isSymlink != true) {
@@ -6397,6 +6527,7 @@ class PanelNotifier extends ChangeNotifier {
     PanelFileOrigin? origin;
     SourceRenameBatchStorage? storage;
     RenameBatchRecord? record;
+    final rememberSelection = captureSelectionMemoryForOperation([file]);
     try {
       if (newName == file.name) return;
       final problem = MultiRenameService.validateName(newName);
@@ -6457,6 +6588,7 @@ class PanelNotifier extends ChangeNotifier {
       final captured = origin;
       final capturedStorage = storage;
       if (completed != null && captured != null && capturedStorage != null) {
+        if (completed.canRestore) rememberSelection?.call();
         if (recordHistory && completed.canRestore) {
           history.record(
             type: ActionType.rename,
@@ -7631,8 +7763,10 @@ class PanelNotifier extends ChangeNotifier {
   Future<void> _loadLocalFiles({
     bool fallbackOnMissing = true,
     bool Function()? sourceIsCurrent,
+    bool allowAccessRequests = true,
+    List<FileSystemEntity>? directorySnapshot,
   }) async {
-    if (_showingSearchResults) return;
+    if (_showingSearchResults || !(sourceIsCurrent?.call() ?? true)) return;
     final generation = ++_listingGeneration;
     // This loader must never receive an archive's virtual path. If an archive
     // failed to open or a stale tab restored one, leave archive mode first.
@@ -7700,10 +7834,14 @@ class PanelNotifier extends ChangeNotifier {
     try {
       List<FileSystemEntity>? entities;
       try {
-        entities = await _localFileService.listDirectory(listingPath);
+        entities =
+            directorySnapshot ??
+            await (allowAccessRequests
+                ? _localFileService.listDirectory(listingPath)
+                : _localFileService.listDirectorySnapshot(listingPath));
       } on FileSystemException catch (e) {
         if (!stillCurrent()) return;
-        if (!_isPermissionDenied(e)) rethrow;
+        if (!allowAccessRequests || !_isPermissionDenied(e)) rethrow;
         // A symlinked folder may point outside the granted root, or a saved
         // bookmark may no longer resolve after a rebuild. Ask for the target
         // folder and retry once.
@@ -7836,10 +7974,10 @@ class PanelNotifier extends ChangeNotifier {
       ) {
         final end = (batchStart + batchSize).clamp(0, items.length);
         final indices = List.generate(end - batchStart, (j) => batchStart + j);
-        await Future.wait(
+        final metadata = await Future.wait<FileItem?>(
           indices.map((idx) async {
             final item = items[idx];
-            if (item.name == '..') return;
+            if (item.name == '..') return null;
             try {
               final stat = await FileStat.stat(item.path!);
               final linkType = await FileSystemEntity.type(
@@ -7854,7 +7992,7 @@ class PanelNotifier extends ChangeNotifier {
                 } catch (_) {}
               }
               final isFolder = stat.type == FileSystemEntityType.directory;
-              items[idx] = FileItem(
+              return FileItem(
                 name: item.name,
                 path: item.path,
                 isFolder: isFolder,
@@ -7865,13 +8003,18 @@ class PanelNotifier extends ChangeNotifier {
               );
             } catch (e) {
               _log.warn('operation failed', e);
+              return null;
             }
           }),
         );
         if (!stillCurrent()) return;
-        // _files is the same mutable list, so notifyListeners() is enough for
-        // the ListView.builder to refresh visible rows. Re-stamp origins
-        // because metadata replaced the FileItem instances.
+        // Do not mutate the visible list from delayed stat futures. A newer
+        // navigation may own it before a batch finishes.
+        for (var offset = 0; offset < indices.length; offset++) {
+          final updated = metadata[offset];
+          if (updated != null) items[indices[offset]] = updated;
+        }
+        // Re-stamp origins because metadata replaced the FileItem instances.
         _recordOrigins(items, origin);
         notifyListeners();
       }
@@ -7903,7 +8046,11 @@ class PanelNotifier extends ChangeNotifier {
         if (!stillCurrent()) return;
         if (fallback != _localPath) {
           _localPath = fallback;
-          await _loadLocalFiles(fallbackOnMissing: false);
+          await _loadLocalFiles(
+            fallbackOnMissing: false,
+            sourceIsCurrent: sourceIsCurrent,
+            allowAccessRequests: allowAccessRequests,
+          );
           if (_isDisposed) return;
           _syncTabPath();
           _ref
@@ -8007,10 +8154,10 @@ class PanelNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadRemoteFiles() async {
+  Future<void> _loadRemoteFiles({bool Function()? sourceIsCurrent}) async {
     // When the panel is showing search results, skip the normal directory
     // listing unless clearSearchResults() has already reset the flag.
-    if (_showingSearchResults) {
+    if (_showingSearchResults || !(sourceIsCurrent?.call() ?? true)) {
       _log.debug('Skipping _loadRemoteFiles — panel is showing search results');
       return;
     }
@@ -8022,11 +8169,20 @@ class PanelNotifier extends ChangeNotifier {
     final providerName = selected?.providerName ?? auth.providerName;
     final listingPath = _remotePath;
     final origin = _remoteOrigin(client, providerName, listingPath);
+    bool stillCurrent() {
+      if (_isDisposed || generation != _listingGeneration) return false;
+      if (origin.isCurrent && (sourceIsCurrent?.call() ?? true)) return true;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+
     _requestedListingSource = origin.source;
     _beginDirectoryPresentation(generation, origin);
 
     _isLoading = true;
     notifyListeners();
+    if (sourceIsCurrent != null && !stillCurrent()) return;
     try {
       if (!_isConnectedClient(client)) {
         _files = [];
@@ -8061,12 +8217,7 @@ class PanelNotifier extends ChangeNotifier {
 
       // Fetch fresh listing from remote.
       final result = await client.listPath(listingPath);
-      if (_isDisposed || generation != _listingGeneration) return;
-      if (!origin.isCurrent) {
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
+      if (!stillCurrent()) return;
 
       final folders =
           (result['folders'] as List<dynamic>?)?.map((item) {
@@ -8186,7 +8337,7 @@ class PanelNotifier extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      if (_isDisposed || generation != _listingGeneration) return;
+      if (!stillCurrent()) return;
       _log.error('Refresh error', e);
       _isLoading = false;
       // On error, keep cached files if available instead of clearing.
