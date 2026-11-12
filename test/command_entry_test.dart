@@ -846,16 +846,16 @@ void main() {
       );
       await service.setBinding(
         ShortcutAction.insertCommandFilename,
-        const ShortcutBinding(key: 'F9'),
+        const ShortcutBinding(key: 'F10'),
       );
-      const f9 = KeyDownEvent(
-        physicalKey: PhysicalKeyboardKey.f9,
-        logicalKey: LogicalKeyboardKey.f9,
+      const f10 = KeyDownEvent(
+        physicalKey: PhysicalKeyboardKey.f10,
+        logicalKey: LogicalKeyboardKey.f10,
         timeStamp: Duration.zero,
       );
       expect(
         service.resolveCommandEntry(
-          f9,
+          f10,
           isCtrl: false,
           isShift: false,
           isAlt: false,
@@ -865,7 +865,7 @@ void main() {
       );
       expect(
         service.resolveBrowser(
-          f9,
+          f10,
           isCtrl: false,
           isShift: false,
           isAlt: false,
@@ -897,19 +897,19 @@ void main() {
       await restored.load();
       expect(
         restored.getBinding(ShortcutAction.insertCommandFilename).key,
-        'F9',
+        'F10',
       );
       expect(
         service.shortcutConflicts(
           ShortcutAction.refresh,
-          const ShortcutBinding(key: 'F9'),
+          const ShortcutBinding(key: 'F10'),
         ),
         isEmpty,
       );
       expect(
         service.shortcutConflicts(
           ShortcutAction.insertCommandPath,
-          const ShortcutBinding(key: 'F9'),
+          const ShortcutBinding(key: 'F10'),
         ),
         [ShortcutAction.insertCommandFilename],
       );

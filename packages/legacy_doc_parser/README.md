@@ -187,3 +187,5 @@ renderer; all strict structural comparisons still report differences. The
 historical checkpoint, including the import failure corrected subsequently.
 
 The current preservation increment also retains supported Word compatibility flags and OfficeArt text-box layout and supplies bounded vector previews. Unsupported drawing records remain explicit retained evidence; the parser does not claim exact native layout for every legacy drawing.
+
+Integration refresh: solid OfficeArt context, exact textbox content boundaries, bounded native metafile arcs, paragraph-mark property changes and OLE schema validity are covered by the current portable suites. The combined source checkpoint passes 697 Dart tests, 115 Python oracle controls and the document/media JavaScript acceptance probes. Native evidence remains scoped to its authored cases and recorded renderer versions.

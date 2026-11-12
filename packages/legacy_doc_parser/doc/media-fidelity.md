@@ -108,7 +108,9 @@ observed arc. Fixed interior and outline samples distinguish sweep direction,
 the chord's secant from the pie's radial closure, and unfilled arcs from filled
 regions. The two ArcTo cases additionally require the following line to begin
 at the projected ellipse endpoint, rather than the original radial input.
-All fifteen native and SVG controls pass on the recorded LibreOffice build.
+All fifteen native and SVG controls pass on the recorded LibreOffice build;
+the [complete receipt and retained artifacts](evidence/metafile-arcs-24580b0/README.md)
+preserve the clean-checkpoint measurements.
 The geometric tolerance is 2.1 source units on a 200 by 100 canvas, accounting
 for native inclusive-edge/device quantization; these are not pixel goldens.
 The probe retains exact input/output hashes, native PDF/text/raster evidence,

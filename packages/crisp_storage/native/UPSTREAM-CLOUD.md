@@ -8,7 +8,7 @@
 Pinned commit: CrispSorter `45c748d4` (merge of PR #45, 11 November 2026),
 exported with `git archive 45c748d4 crates/crisp-<provider>-native`.
 
-## CrispCloud patches (manifest/test only, no protocol code changes)
+## CrispCloud integration patches
 
 1. `Cargo.toml`: `clap` is optional behind a new `cli` feature and the
    test binary has `required-features = ["cli"]`, so the app bridge does not
@@ -19,7 +19,7 @@ exported with `git archive 45c748d4 crates/crisp-<provider>-native`.
    `RUSTFLAGS="--cfg crisp_internxt_core_reference"` (declared in
    `[lints.rust]`), which is how CrispSorter keeps running it.
 
-Every other file is byte-identical to the pinned export. To advance the pin,
+The historical export also has maintained host transport/proxy integration patches; these directories are an app consumer fork. They are not claimed to be a byte-identical copy of the latest standalone repository. To advance the baseline,
 re-export both directories at the new commit, re-apply the three patches,
 then run `cargo test --locked` here, the bridge tests in `../../rust_cloud`,
 `python3 tool/check_rust_licenses.py --bridge cloud` and the live suites.

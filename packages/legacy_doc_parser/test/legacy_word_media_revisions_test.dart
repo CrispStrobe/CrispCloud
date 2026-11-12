@@ -12,6 +12,10 @@ import 'support/media_word_fixture.dart';
 import 'support/structured_word_fixture.dart';
 
 const _w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+const _v = 'urn:schemas-microsoft-com:vml';
+const _o = 'urn:schemas-microsoft-com:office:office';
+const _r =
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 Map<String, Uint8List> _parts(Uint8List bytes) => {
   for (final file in ZipDecoder().decodeBytes(bytes))
@@ -220,6 +224,54 @@ void main() {
                   .singleWhere((entry) => entry.key.endsWith('.png'))
                   .value,
               orderedEquals(mediaFixturePng()),
+            );
+          }
+          if (kind == 'embedded-object') {
+            final ole = target
+                .findAllElements('OLEObject', namespace: _o)
+                .single;
+            final shape = target.findAllElements('shape', namespace: _v).single;
+            expect(ole.getAttribute('ShapeID'), shape.getAttribute('id'));
+            final objectId = ole.getAttribute('ObjectID')!;
+            expect(objectId, matches(RegExp(r'^_[0-9]+$')));
+            expect(
+              int.parse(objectId.substring(1)),
+              inInclusiveRange(0, 0x7fffffff),
+            );
+            expect(ole.getAttribute('DrawAspect'), 'Icon');
+            expect(
+              ole.getAttribute('ProgID'),
+              document.media.embeddedObjects.single.progId,
+            );
+            expect(shape.getAttribute('ole', namespace: _o), 't');
+            expect(shape.getAttribute('oleicon', namespace: _o), 't');
+            expect(shape.getAttribute('path'), isNotEmpty);
+            expect(shape.getAttribute('alt'), contains('preview unavailable'));
+            expect(_elements(shape, 't').map((e) => e.innerText), [
+              'Embedded object',
+              'Preview unavailable',
+            ]);
+            expect(target.findAllElements('imagedata', namespace: _v), isEmpty);
+            final relationships = XmlDocument.parse(
+              utf8.decode(parts['word/_rels/document.xml.rels']!),
+            );
+            final relation = relationships
+                .findAllElements('Relationship')
+                .singleWhere(
+                  (node) =>
+                      node.getAttribute('Id') ==
+                      ole.getAttribute('id', namespace: _r),
+                );
+            expect(relation.getAttribute('Type'), '$_r/oleObject');
+            expect(
+              parts['word/${relation.getAttribute('Target')}'],
+              orderedEquals(
+                document.media.embeddedObjects.single.storage.bytes,
+              ),
+            );
+            expect(
+              result.limitations,
+              contains(LegacyWordConversionLimitation.partialFormatting),
             );
           }
           if (kind == 'footnote-picture') {

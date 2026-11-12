@@ -1,0 +1,1895 @@
+{
+  "schema": "legacy-doc-parser/metafile-arcs",
+  "version": 1,
+  "method": "Native embedded EMF/WMF and generated SVG against independent reference frame and authored color samples.",
+  "cases": {
+    "emf-arc-clockwise": {
+      "sourceHashes": {
+        "emf": "6a3ae68e258d20b4c3ce79b5d66956daaf5df21d59222bc29d9d8c49c09e78fc",
+        "doc": "a5e7db3e145ca9653ec8d2066f51573a4d3dc5853628d2577211b57d662a0bc1",
+        "docx": "b41dee6c80dc8e1dec18f5fc039454eaa4f0ed8dd8e47a42ced0cfa8f8ab7cf3",
+        "svg": "6b3a226b8d18683d0483f962f5adf5d22deeaa446c0ee496f0ea855a48525c39"
+      },
+      "nativeRender": {
+        "pdfSha256": "b1ab84e7b2e4c398945013a275c2f1f9c759540d2d4db6979d5ac344d07a97cb",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "17151e1395fd0467b776831ae28b2e59a3c2450634d3161f6a00a7d3041252ca"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.000016483259014,
+            9.999962324006013,
+            178.05554764097485,
+            88.0555607883325
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-arc-counterclockwise": {
+      "sourceHashes": {
+        "emf": "5174fab1ebba05eacef433cc153a534e43df056fc15f4c3591c16d57b8bb9644",
+        "doc": "409fa2e2ab99cd50929cfc75d683eab79ada24dfeb723d8f5f8128b5b4d5228f",
+        "docx": "2edc258014cef2d5bacbd375bae2e7719b0872e3beb780ed2b1fa03dbd02947e",
+        "svg": "fcabc318c1f2e035ae8a978c39c2faf502dfc8f5554090873c693b8c3092ab3e"
+      },
+      "nativeRender": {
+        "pdfSha256": "9c16a012433d1076886b38dacb861324f8a6dc4816c6653b6c95b3823743a938",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "e3d0e0cf2da910e456f3cbdfa916742ca25ad54fbb941b8605cd7ecb226d5cba"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            99.02778206211693,
+            9.999962324006013,
+            178.05554764097485,
+            49.02784632715573
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-arc-full": {
+      "sourceHashes": {
+        "emf": "53a72be54b3a395ef17eac6672ab33467360a9ed61ca3e381470b4c442ea4d44",
+        "doc": "19e061e76ea1a2c8290fc4c4163187a9e5b3bddfed8d7a9fff176d372fa6633b",
+        "docx": "eed8b25a94c651d083a4c07c0007a8231119809a857d07f5fce59dc43b311ebc",
+        "svg": "d6dbe6fb01013bcd8d2b5cae7ba514495a128797fc9d9fd28243044cda280444"
+      },
+      "nativeRender": {
+        "pdfSha256": "98740175f92f2de20e434dc6f0d3fb691555bcb7cbd141c017d156bf981bc5f8",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "ba71a9df797bc803ba5d33ef01971a52dd5616f3d9ee403e194af9edb6b9b6ca"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.000016483259014,
+            9.999962324006013,
+            178.05554764097485,
+            88.0555607883325
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-arcto-clockwise": {
+      "sourceHashes": {
+        "emf": "41a730f71ec8d13ab553cdacb39560618ef03c74097e15cef7daa104e4041322",
+        "doc": "da396c53e5803751607f9a4ae0e468c4de05041c0c4609ebfe07593aeabc40fd",
+        "docx": "b6e4e3795d4585955836b040304ac8fc079a3b32e96d8e08e9485b77ac8de534",
+        "svg": "5213a27f61bf3b573cb0c5b4e8f0725599ce76d82a40e7c2b51018fa42b48a5b"
+      },
+      "nativeRender": {
+        "pdfSha256": "0bda193ea68c629c209a7d5f137dd739af34eb08bc2a575d28c974240ca94200",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "db9b0e4c21f86d1eb3445114f5748a98537748e65c2c6035d72f1fddf5f0dc6d"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.000016483259014,
+            9.999962324006013,
+            178.05554764097485,
+            95.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            95
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        },
+        "followingLine": {
+          "passes": true,
+          "logicalEndpoints": [
+            99.02778206211693,
+            9.999962324006013,
+            20.000016483259014,
+            79.99994348600902
+          ],
+          "expectedLogicalEndpoints": [
+            100,
+            10,
+            20,
+            80
+          ],
+          "maximumLogicalError": 0.9722179378830731,
+          "toleranceLogicalUnits": 2.1
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            95.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            95
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        },
+        "followingLine": {
+          "passes": true,
+          "logicalEndpoints": [
+            100.0,
+            10.0,
+            20.0,
+            80.0
+          ],
+          "expectedLogicalEndpoints": [
+            100,
+            10,
+            20,
+            80
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-arcto-counterclockwise": {
+      "sourceHashes": {
+        "emf": "ed29ed894f95330aff3b8a629cc4ef15081b4e538ecca867aada93190775074e",
+        "doc": "b1c17d296da3420dfe326995474bbec79d1d2ab4274b04ec71b5ad7515eb91de",
+        "docx": "d9327d697095069538b573c1406fa9a666f62bf274274c626eb7ef94eced3167",
+        "svg": "c09d7deda3c8c890a473e4f98e5eca1169ddebcb14f4c065dd0194e667f95d40"
+      },
+      "nativeRender": {
+        "pdfSha256": "233b69e638a73b658e4e2a18125ce98123d36bde0f9853879258e8c7f84a3a55",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "5244dc4b9e0e66887445d2de8eb68ba39632801965f67a5e9c0fc0001b461eb2"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            99.02778206211693,
+            9.999962324006013,
+            178.05554764097485,
+            95.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            95
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        },
+        "followingLine": {
+          "passes": true,
+          "logicalEndpoints": [
+            99.02778206211693,
+            9.999962324006013,
+            20.000016483259014,
+            79.99994348600902
+          ],
+          "expectedLogicalEndpoints": [
+            100,
+            10,
+            20,
+            80
+          ],
+          "maximumLogicalError": 0.9722179378830731,
+          "toleranceLogicalUnits": 2.1
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            95.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            95
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        },
+        "followingLine": {
+          "passes": true,
+          "logicalEndpoints": [
+            100.0,
+            10.0,
+            20.0,
+            80.0
+          ],
+          "expectedLogicalEndpoints": [
+            100,
+            10,
+            20,
+            80
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-chord-clockwise": {
+      "sourceHashes": {
+        "emf": "39e8801007fa5ac28a65c6b3033a1be8a8b1d11a50b77df8907474e435253444",
+        "doc": "8e41cd56a44ce841aeab504f994d9e7ef1ff2a9bf9056915294c24fe9614b1f3",
+        "docx": "3fea67c4155ee99e6d44fbe78d21aab23ea610a389b39f77b9dca29fc0e71668",
+        "svg": "dc033387deb0c0f45714ae539db19b98426fbe34c90a3d9baa0d16e006779c30"
+      },
+      "nativeRender": {
+        "pdfSha256": "9560a6efd74891980b36df843c10f9fb7e12c69e6e98d0aa6b4e0afcb333a239",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "6f150567dd0f50c6a598b3966b83b5b40ad73354ec702d2bd85f147a6ce4fde9"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.000016483259014,
+            9.999962324006013,
+            178.05554764097485,
+            88.0555607883325
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "black",
+            "innerLower": "black",
+            "chordClosure": "red",
+            "radialClosure": "black"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "black",
+            "innerLower": "black",
+            "chordClosure": "red",
+            "radialClosure": "black"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-chord-counterclockwise": {
+      "sourceHashes": {
+        "emf": "8735c3080853b2c5f7ac1c9a728aa25a275b39c9542c7f4db7664f4f6ce7c73b",
+        "doc": "4818e22db72052cb385dbfe5824d0f62246ec6acaae184ed33c8d62e462bcd0b",
+        "docx": "3b5aa7e5ab3a283ace032a3fcd20e5f1fa56d44599982e7c64ecacf8e0e589e9",
+        "svg": "8dc07fbe61301dc84411937ea8bca91ec513a3caa7ea40189800b9d9d73808ef"
+      },
+      "nativeRender": {
+        "pdfSha256": "dcb22ce633e722a6c6fed28e4a3f460476b4d818563f4dc7af985b5964e830db",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "f1669a242156d89889811907be9e11709305e6826d862a303a31a319650805a4"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            99.02778206211693,
+            9.999962324006013,
+            178.05554764097485,
+            49.02784632715573
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "red",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "red",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-chord-full": {
+      "sourceHashes": {
+        "emf": "3e242c36c1704807526bff86f91c84ce3d55f2b4931ef9c4637bb55860f4d6e7",
+        "doc": "7313989f11864f6191c2a22f8e6579ddf8ca1efed5c4b421c692903b5db4c84c",
+        "docx": "1e5d1d81a67811c0867b1d86184239dc774172d04cb27e702cf1d79a3c37c30e",
+        "svg": "5b9a0331d7dc7c0d098dac982aa1232136c8a5db4824501cc783198487693d88"
+      },
+      "nativeRender": {
+        "pdfSha256": "cee97e9d3d4a399e61a1fe89df74d512b569642508b6d54b346b3da78b1eec32",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "8a24ddd79d27455662a02d33625af7fd0dee701c14519561e59663b2128443ea"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.000016483259014,
+            9.999962324006013,
+            178.05554764097485,
+            88.0555607883325
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "black",
+            "innerLower": "black",
+            "chordClosure": "black",
+            "radialClosure": "black"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "black",
+            "innerLower": "black",
+            "chordClosure": "black",
+            "radialClosure": "black"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-pie-clockwise": {
+      "sourceHashes": {
+        "emf": "961c95a86af9b612cdbe8e1971dda2a6aea85f76d6ebecbfe0724e45fb0a815f",
+        "doc": "bde65b5fe2061c28fd9223220fc1a8ab1a7e8623547adaa772ee05e625dedeec",
+        "docx": "aa246aadc7991567c6ba8932fa655788c1ac7e9018f6f7bb3db07fdbe15a49db",
+        "svg": "7c19899a2e75b2e721f41ab310bb4a6c8b934cd23adba4a063ee13d77e9d32b2"
+      },
+      "nativeRender": {
+        "pdfSha256": "67152aa5fb5cf7b665ae953f77b281a9b2b84b43883f9344ff7f1f6bc3b74a6f",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "10ed221e3cfbd4cbe72e052a0b39997ef069cf1a394c6b1583f8cb2e8399530d"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.000016483259014,
+            9.999962324006013,
+            178.05554764097485,
+            88.0555607883325
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "black",
+            "chordClosure": "white",
+            "radialClosure": "red"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "white",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "black",
+            "chordClosure": "white",
+            "radialClosure": "red"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "emf-pie-counterclockwise": {
+      "sourceHashes": {
+        "emf": "c5a14f24b8fa510284f0643e0cada393548d0c86237c700d04ed899c3a4a6659",
+        "doc": "4ed32b99cd4c1d0525e2453422e69c8f80ccf63e01aafc730407278f001fed09",
+        "docx": "a2407b0651ba9f4cb953fc85e39f63b0ef08b6563ae1acbd01e33564ef9eaf7e",
+        "svg": "4a8d627791123eeb3c901c41954bf634e81de2a5625bb84cf3f635f0c3767b9a"
+      },
+      "nativeRender": {
+        "pdfSha256": "cd1818bc9535c602c3bbf8a340162527bba6bd9e43fe9df659ad74f192672633",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "e5a3c1261d9cd2ef3fb3a436972fe5b67b72aae6891fc6b9ddc926588ef38462"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          81.94999694824219,
+          73.79998779296875,
+          146.75,
+          106.20001220703125
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            99.02778206211693,
+            9.999962324006013,
+            178.05554764097485,
+            49.02784632715573
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 1.9444523590251492,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "black",
+            "innerLower": "white",
+            "chordClosure": "black",
+            "radialClosure": "red"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "black",
+            "innerLower": "white",
+            "chordClosure": "black",
+            "radialClosure": "red"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "wmf-arc-counterclockwise": {
+      "sourceHashes": {
+        "wmf": "d2b5b6e70f3a497f258cc79f4126653a11e4cf7fb8d78d1c6acd172e4ae02903",
+        "doc": "8d8e204e17b5f65a40114b018d12a679fd5b34dfb63aa48f65a66c8a13abd554",
+        "docx": "463b5547f9c6fd9e31e4285764dfe30891c8fc464a462316962352bd246917ea",
+        "svg": "fcabc318c1f2e035ae8a978c39c2faf502dfc8f5554090873c693b8c3092ab3e"
+      },
+      "nativeRender": {
+        "pdfSha256": "ef40ae8a8de625db530e0f32a61fd38414643712b7156daa5f07773bb3a76505",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "82b97f6e44b8448f3f09e1545468b475d249ee6a355dcb9d723a4a3c3d4ffc6a"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          78.3499984741211,
+          72.0,
+          150.35000610351562,
+          108.0
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.24998662207004,
+            10.124969482421875,
+            180.37498576111415,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.3749857611141465,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "wmf-arc-full": {
+      "sourceHashes": {
+        "wmf": "1097f311c569a2b784db8de8124fbc2bf5ccad06229dc42f4e05e63a2219c33c",
+        "doc": "af5a99dc9d6fae8921aa110f3602dbcd3a311f9690e59c346c7ffd60665e3e6d",
+        "docx": "67f69daf51409b3600e0e6d260d0a3fee17250493856f974a61d878f20acb8a5",
+        "svg": "d6dbe6fb01013bcd8d2b5cae7ba514495a128797fc9d9fd28243044cda280444"
+      },
+      "nativeRender": {
+        "pdfSha256": "9367d74031fe6432bbfccce7b085cf4f9711c876ebe8a094ed84ec7a9032e358",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "029ac8a33018a8c6b2022afa2c2b7661194c6c3c4f1d2aa617fc7ee00a760f0c"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          78.3499984741211,
+          72.0,
+          150.35000610351562,
+          108.0
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.24999509917417,
+            10.124969482421875,
+            180.37498576111415,
+            89.87503051757812
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.3749857611141465,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "white",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "wmf-chord-counterclockwise": {
+      "sourceHashes": {
+        "wmf": "a92a1c6245cd7ee1e55867c3a510637494bff0f82c8b5c3da47322afe3223c80",
+        "doc": "0e3a3fd3aeb95912c3768ed28ffa41ffe2d24b38c99d02f3afc9eac1e6861ab6",
+        "docx": "fb15224ee3b3ac99ed017a63b86305ecb33c0ae90c66f376620613af676baac2",
+        "svg": "8dc07fbe61301dc84411937ea8bca91ec513a3caa7ea40189800b9d9d73808ef"
+      },
+      "nativeRender": {
+        "pdfSha256": "32e2ed7ed642fcafdb84fd4c2c92d55233256965f880a7fcaadcd0aaee6556ac",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "66323d676c8f55c5d8a7c469b9806d9d6eb5c7ab8d1bf408320d5b9309161fb1"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          78.3499984741211,
+          72.0,
+          150.35000610351562,
+          108.0
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.24998662207004,
+            10.124969482421875,
+            180.37498576111415,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.3749857611141465,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "red",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "white",
+            "innerLower": "white",
+            "chordClosure": "red",
+            "radialClosure": "white"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "wmf-chord-full": {
+      "sourceHashes": {
+        "wmf": "d6861bebf4aefce8be5d173872d3f479bf653e0800e9057a74eb3b7ed40242da",
+        "doc": "0e07d0a7863a932bc61d3cc7413a7a1fff49d3b14c7f80d33bc24b7403371919",
+        "docx": "effd2935ad983a201fa230e40f6f699e06c8f698ed3c2c5360a29b80aa8825a6",
+        "svg": "5b9a0331d7dc7c0d098dac982aa1232136c8a5db4824501cc783198487693d88"
+      },
+      "nativeRender": {
+        "pdfSha256": "b4af10450b95948a8565904b24094674e37c83945c5dc02b7cf35120737e87f7",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "82f9b8d2acfaed859d6ac5c001c922c406d027bc4bc3f475fa9b8386a964c793"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          78.3499984741211,
+          72.0,
+          150.35000610351562,
+          108.0
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.24999509917417,
+            10.124969482421875,
+            180.37498576111415,
+            89.87503051757812
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.3749857611141465,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "black",
+            "innerLower": "black",
+            "chordClosure": "black",
+            "radialClosure": "black"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            20.0,
+            10.0,
+            180.0,
+            90.0
+          ],
+          "expectedLogicalBounds": [
+            20,
+            10,
+            180,
+            90
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "red",
+            "innerUpper": "black",
+            "innerLower": "black",
+            "chordClosure": "black",
+            "radialClosure": "black"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    },
+    "wmf-pie-counterclockwise": {
+      "sourceHashes": {
+        "wmf": "24df797d9a14742d2756af66e8e31a78b82bd3aa35482de0c58c253005db0bdc",
+        "doc": "94eddf67dc33b5112cf3eea3e7cdc5b4ddbffe1706462370db6103ae0657a681",
+        "docx": "fdc046766f1cd9baf6569b210d76d7ce7668b0b27296c80077b5ce7d184c1eb9",
+        "svg": "4a8d627791123eeb3c901c41954bf634e81de2a5625bb84cf3f635f0c3767b9a"
+      },
+      "nativeRender": {
+        "pdfSha256": "53daafa9c221a001ca3b20c976fb19a0f2ed3343cfb4d6dfd3b78e5b94e97979",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "A",
+                "box": [
+                  72.1,
+                  99.75,
+                  78.458,
+                  110.75
+                ]
+              },
+              {
+                "text": "B",
+                "box": [
+                  150.45,
+                  99.75,
+                  156.423,
+                  110.75
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "A   B\n\f",
+        "rasterSha256": [
+          "771d2e08a11d2131c60a3128c9679449e3ebdd2d2dd518fbddae0a28aa50027c"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "native": {
+        "referenceFrame": [
+          78.3499984741211,
+          72.0,
+          150.35000610351562,
+          108.0
+        ],
+        "native": true,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.24998662207004,
+            10.124969482421875,
+            180.37498576111415,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.3749857611141465,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "black",
+            "innerLower": "white",
+            "chordClosure": "black",
+            "radialClosure": "red"
+          }
+        }
+      },
+      "preview": {
+        "referenceFrame": [
+          10.0,
+          5.0,
+          190.0,
+          95.0
+        ],
+        "native": false,
+        "geometry": {
+          "passes": true,
+          "logicalBounds": [
+            100.0,
+            10.0,
+            180.0,
+            50.0
+          ],
+          "expectedLogicalBounds": [
+            100,
+            10,
+            180,
+            50
+          ],
+          "maximumLogicalError": 0.0,
+          "toleranceLogicalUnits": 2.1
+        },
+        "paint": {
+          "passes": true,
+          "samples": {
+            "upperCurve": "red",
+            "lowerCurve": "white",
+            "innerUpper": "black",
+            "innerLower": "white",
+            "chordClosure": "black",
+            "radialClosure": "red"
+          }
+        }
+      },
+      "sourceUnchanged": true,
+      "passes": true
+    }
+  },
+  "errors": [],
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "pdfSvgInspectorVersion": "1.26.6",
+  "parserCommit": "24580b024979093bec85a7876b8d4f3768e05a08",
+  "parserWorktreeDirty": false
+}

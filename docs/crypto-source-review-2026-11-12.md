@@ -1087,3 +1087,6 @@ The root lockfile is unchanged. The 99 Word workflow tests, 74 Python harness te
 }
 ```
 
+
+
+The 1.2.4 source refresh binds the canonical DOC parser, its executable-mode-aware mirror guard, bounded package readers, attached-content Word inspection and the minimal Internxt trash-name backport. Source tests and local HTTP endpoint controls verify these contracts; no added cryptographic primitive, credential persistence or account destination is introduced. Source fingerprints are refreshed without changing the existing classification or distribution-policy values.

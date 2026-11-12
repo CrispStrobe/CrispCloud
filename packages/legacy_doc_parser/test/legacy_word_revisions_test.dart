@@ -321,6 +321,53 @@ void main() {
     },
   );
 
+  for (final (inserted, deleted) in [
+    (true, false),
+    (false, true),
+    (true, true),
+  ]) {
+    test(
+      'styled paragraph mark orders insertion=$inserted deletion=$deleted before current properties',
+      () {
+        final document = parseLegacyWordDocument(
+          _source(
+            character: [
+              ..._property(0x0835, 1),
+              ..._property(0x2a83, 1),
+              ..._property(0x083c, 1),
+              ..._mark(0xca89),
+              ..._property(0x0801, inserted ? 1 : 0),
+              ..._property(0x0800, deleted ? 1 : 0),
+              ...wordSprm(0x4804, wordU16(1)),
+              ...wordSprm(0x6805, wordU32(_date)),
+              ...wordSprm(0x4863, wordU16(2)),
+              ...wordSprm(0x6864, wordU32(_date2)),
+            ],
+          ),
+        );
+        final xml = _xml(convertLegacyWordDocument(document).bytes);
+        final mark = _elements(
+          xml,
+          'pPr',
+        ).single.getElement('rPr', namespace: _w)!;
+        final names = mark.childElements.map((e) => e.name.local).toList();
+        final revisions = [if (inserted) 'ins', if (deleted) 'del'];
+        expect(names.take(revisions.length), revisions);
+        expect(names.last, 'rPrChange');
+        expect(_attr(mark.getElement('b', namespace: _w)!, 'val'), '1');
+        expect(_attr(mark.getElement('vanish', namespace: _w)!, 'val'), '1');
+        final previous = mark
+            .getElement('rPrChange', namespace: _w)!
+            .getElement('rPr', namespace: _w)!;
+        expect(_attr(previous.getElement('b', namespace: _w)!, 'val'), '1');
+        expect(
+          _attr(previous.getElement('vanish', namespace: _w)!, 'val'),
+          '0',
+        );
+      },
+    );
+  }
+
   test('preview does not reveal old or current hidden revision text', () {
     final document = parseLegacyWordDocument(
       _source(

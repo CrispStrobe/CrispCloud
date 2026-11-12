@@ -21,7 +21,10 @@ Word revision fidelity.
 - A paragraph mark has its own formatting and insertion/deletion state.
   `w:pPr/w:rPr/w:ins` or `w:del` represents that state independently of the
   paragraph text. The HTML preview shows a marked paragraph symbol; plain text
-  keeps its existing content and paragraph boundaries.
+  keeps its existing content and paragraph boundaries. The native
+  [paragraph-mark property sequence](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.paragraphmarkrunproperties)
+  places insertion/deletion markers before current formatting and its
+  `rPrChange` snapshot last, including hidden and styled paragraph marks.
 
 The binary timestamp has no time zone. DOCX dates omit a zone instead of
 asserting UTC. Missing authors or invalid dates stay missing and produce the
@@ -53,6 +56,20 @@ The independent schema corpus includes all 24 object/reference and review-state
 combinations; its SDK result is a separate validity gate. Shared-image and
 private-field controls retain distinct occurrence metadata without exposing
 private payloads.
+
+Embedded OLE payloads with no recovered preview use an explicit generic icon
+labelled "Embedded object / Preview unavailable". The original storage bytes
+remain the relationship target and `partialFormatting` remains disclosed.
+This is a converter placeholder, not an inferred rendering of the source
+object. Its self-contained [VML shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.shape)
+has an explicit rectangular path, and the OLE `ShapeID` resolves to that
+`v:shape`. `DrawAspect="Icon"` distinguishes it from a content snapshot;
+`ObjectID` uses the underscore-plus-int32 form required by
+[MS-OI29500 2.1.1834](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c9af80fa-3ee4-4a79-ace6-4fd46ff83957).
+`ProgID` is retained only when present in the source; no application identity is
+invented. Schema validity does not establish a native application's ability to
+activate every embedded payload or render its unavailable original preview.
+
 These checks do not reconstruct moved objects, formatting histories of objects,
 comment range editing, automatic cleanup of unreferenced stories, or arbitrary
 cross-story revision topology. The converter never accepts or rejects the
