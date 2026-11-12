@@ -146,3 +146,6 @@ Package test counts, independent JavaScript CFB metadata checks and their
 scope are recorded in the conversion guide and the package pull request.
 These results do not certify arbitrary Word pagination, full OOXML schema
 conformance, Windows Word behavior or a complete Flutter browser build.
+
+
+The final sibling audit also retains the independently authored parser-53a7f0d host receipts under `docs/evidence/legacy-doc-parser-20261112/parser-53a7f0d/`. These preserve their original source attribution. The current consumer remains at canonical parser f689b4c (a descendant with CI-only fixes), and its exact source inventory remains independently verified. No runtime parser file or dependency pin is rolled back by this evidence merge.

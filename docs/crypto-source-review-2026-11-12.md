@@ -1066,3 +1066,6 @@ combined tree. Source bindings after restoring the test configuration:
 
 
 Current extracted-book integration: `1.2.3` resolves the facade and its three internal packages from the same immutable Git checkout, independently verifies all tracked source bytes and records them in `docs/ebook-source-manifest.json`. The compressed browser converter and memory-only WASI worker are now present and enabled for bounded supported Kindle export; the earlier pending-runtime note describes the previous checkpoint. Native/Wasm parity, malformed-input and budget controls pass. The shim retains its published random fallback, which is not claimed as a secure RNG. Local platform speech does not introduce a remote text destination. Existing classification and distribution policy fields are unchanged.
+
+
+The final sibling audit also retains the independently authored parser-53a7f0d host receipts under `docs/evidence/legacy-doc-parser-20261112/parser-53a7f0d/`. These preserve their original source attribution. The current consumer remains at canonical parser f689b4c (a descendant with CI-only fixes), and its exact source inventory remains independently verified. No runtime parser file or dependency pin is rolled back by this evidence merge.
