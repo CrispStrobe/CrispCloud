@@ -38,6 +38,9 @@ TableCellSelection logicalTableCell(WmlTable table, int row, int gridColumn) {
 }
 
 void _validateMerges(WmlTable table) {
+  if (!WordTable.supportsGridAddressing(table)) {
+    throw ArgumentError('Table does not have a supported rectangular grid');
+  }
   for (var row = 0; row < table.rows.length; row++) {
     for (var column = 0; column < table.rows[row].cells.length; column++) {
       final cell = table.rows[row].cells[column];

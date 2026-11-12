@@ -138,8 +138,9 @@ def collect(directory, root=ENGINE, dart='dart', test_arguments=(), *, runner=su
     root = root.resolve()
     directory = directory.absolute()
     for parent in (directory, *directory.parents):
-        if parent.is_symlink():
+        if parent.is_symlink() and not (os.name != 'nt' and parent.parent == Path(parent.anchor)):
             raise CollectionError(f'Symlink in coverage destination: {parent}')
+    directory = directory.resolve()
     for folder in ('lib', 'test', 'tool', 'example'):
         if directory.is_relative_to(root / folder):
             raise CollectionError('Coverage destination must be outside source/input directories')

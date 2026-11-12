@@ -62,7 +62,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Interactive terminal:** desktop PTY/Windows ConPTY, a built-in shell for sandboxed macOS, and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
 - **Office editing:** DOCX/XLSX/PPTX editing through the patched Quds engine, with independent Word round-trip verification and archive members kept view-only
 - **PDF editor:** annotate, fill standard PDF forms, edit page content, and organize pages from F4, the file menu, or the preview pane. Includes conflict checks, save-copy/export recovery, and password-protected input; see [PDF editing](docs/pdf-editor.md) for supported behavior and limits.
-- **Ebooks:** EPUB editing that preserves inline formatting, enhanced Kindle/FictionBook/comic reading and EPUB import, portable Linux search and bookmarks, offline browser Kindle metadata updates, native Kindle export, and a retained text fallback. See [ebook reading and editing](docs/ebooks.md) for controls, platform differences and limits.
+- **Ebooks:** EPUB editing that preserves inline formatting, enhanced Kindle/FictionBook/comic reading and EPUB import, portable Linux search and bookmarks, offline browser Kindle metadata updates, native Kindle export, validated separate FictionBook FB2/FBZ export, and a retained text fallback. See [ebook reading and editing](docs/ebooks.md) for controls, platform differences and limits.
 - **Web support:** full file operations (open folder, copy, move, delete, download) via File System Access API with Safari/Firefox fallback
 - **CLI companion** (`crisp`): headless S3/SFTP/SMB/WebDAV operations, PDF tools and shell completions; see [CLI capabilities](cli/README.md). Filen/Internxt CLI adapters are planned.
 - **Plugin system** with local REST API and automation rules
@@ -73,7 +73,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 
 ## Shared components and validation
 
-Office editing consumes the [Quds fork](https://github.com/CrispStrobe/quds_office_suite), while legacy binary Word parsing is maintained in [legacy-doc-parser](https://github.com/CrispStrobe/legacy-doc-parser). `tool/office_fidelity_manifest.json` and `packages/legacy_doc_parser/UPSTREAM.json` bind the managed files and parser source. Historical native rendering reports identify their original source snapshots; they do not automatically certify later edits.
+Office editing consumes the [Quds fork](https://github.com/CrispStrobe/quds_office_suite), while legacy binary Word parsing is maintained in [legacy-doc-parser](https://github.com/CrispStrobe/legacy-doc-parser). `tool/office_fidelity_manifest.json` and `packages/legacy_doc_parser/UPSTREAM.json` bind the managed files and parser source. The integrated source includes both November Office follow-up checkpoints and the completed worksheet-local-name, bookmark-copy and slide-arrangement expansion. Historical native rendering reports identify their original source snapshots; they do not automatically certify later edits.
 
 Use the Flutter version in `.fvmrc`. Run `flutter analyze --no-fatal-warnings --no-fatal-infos`, `flutter test`, and `bash tool/check_office_fidelity.sh` after shared-source changes. The Office gate includes package inventories, independent validators and coverage collection receipts. See [Office fidelity](docs/office-fidelity.md) for scope and limits, [external editing](docs/external-remote-editing.md) for retained drafts and conditional publication, and [archive endpoints](docs/archive-endpoints.md) for supported archive operations.
 
@@ -207,3 +207,5 @@ The launcher refuses CI execution. Its live test creates a UUID-named folder,
 checks renamed downloads and SDK path aliases, then moves only its owned folder
 to trash. Existing files and personal-account credentials are unused. On
 19 October 2026, all eleven isolated checks and the live account check passed.
+
+For local Mac testing, `bash tool/build_macos_release.sh --no-pub` embeds the current source revision; `bash tool/sign_macos_local.sh` uses the installed development profile and `bash tool/macos_startup_smoke.sh build/macos/Build/Products/Release/CrispCloud.app 10` checks startup. The alternate Linux reader parity/canary branches remain separate pending native focus/selection acceptance; this integration retains the guarded isolated host and its runtime assertions.

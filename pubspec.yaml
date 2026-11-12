@@ -89,7 +89,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser.git
-      ref: a343140d02564e6e67c957c91e12fbf90ab40af0
+      ref: d66b1683837417fa388ba8a9fd7ca33cd34651c4
 
   # File Handling
   cross_file: ^0.3.3+8

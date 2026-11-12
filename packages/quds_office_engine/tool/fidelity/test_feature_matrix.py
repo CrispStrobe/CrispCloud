@@ -139,7 +139,7 @@ class FeatureMatrixControls(unittest.TestCase):
 
     def successful(self, argv, **kwargs):
         self.calls.append(argv)
-        self.assertEqual(kwargs, {'cwd': self.root, 'check': False})
+        self.assertEqual(kwargs, {'cwd': self.root.resolve(), 'check': False})
         self.assertNotIn('--update-goldens', argv)
         self.assertNotIn('seed', argv)
         if argv[1] == 'test':
