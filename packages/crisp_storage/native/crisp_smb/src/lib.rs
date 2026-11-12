@@ -10,7 +10,7 @@ use std::io::Write;
 use std::{
     collections::HashMap,
     path::Path,
-    sync::atomic::{AtomicU64, Ordering},
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
     time::Duration,
 };
 use tokio::sync::Mutex;
@@ -96,6 +96,8 @@ pub struct Session {
     live: Mutex<Option<Live>>,
     cancel: CancellationToken,
     progress: AtomicU64,
+    /// Set once a download knows its starting offset (0 or the resume point).
+    progress_started: AtomicBool,
 }
 impl Session {
     pub fn new(config: Config) -> Result<Self> {
@@ -115,6 +117,7 @@ impl Session {
             live: Mutex::new(None),
             cancel: CancellationToken::new(),
             progress: AtomicU64::new(0),
+            progress_started: AtomicBool::new(false),
         })
     }
     pub fn cancel(&self) {
@@ -122,6 +125,10 @@ impl Session {
     }
     pub fn progress(&self) -> u64 {
         self.progress.load(Ordering::Relaxed)
+    }
+    /// False from the start of a download until its starting offset is known.
+    pub fn progress_started(&self) -> bool {
+        self.progress_started.load(Ordering::Acquire)
     }
     pub async fn close(&self) {
         self.cancel();
@@ -272,6 +279,7 @@ impl Session {
         limit: u64,
     ) -> Result<u64> {
         let path = self.path(path)?;
+        self.progress_started.store(false, Ordering::Release);
         self.progress.store(0, Ordering::Relaxed);
         self.guarded(async {
             let mut guard = self.live.lock().await;
@@ -328,6 +336,7 @@ impl Session {
             .await?;
             let mut received = offset;
             self.progress.store(received, Ordering::Relaxed);
+            self.progress_started.store(true, Ordering::Release);
             while let Some(chunk) = download.next_chunk().await {
                 let bytes = chunk?;
                 if bytes.is_empty() || received + bytes.len() as u64 > version.size {
