@@ -182,6 +182,7 @@ dependencies:
   cryptography_flutter: ^2.3.4
   ffi: ^2.2.0
   koni_archive: ^0.9.0
+  koni_codecs: ^0.9.0
   package_info_plus: ^9.0.1
   flutter_widget_from_html_core: ^0.17.4
   quds_office_engine: ^1.5.0
