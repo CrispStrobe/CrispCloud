@@ -2222,7 +2222,7 @@ class WordDeserializer {
   }
 
   void _readNotes(WmlDocument document, OpcPackage package, String docUri) {
-    _readNotesPart(
+    document.sourceFootnoteSeparatorsPresent = _readNotesPart(
       document.footnotes,
       package,
       docUri,
@@ -2242,7 +2242,7 @@ class WordDeserializer {
     );
   }
 
-  void _readNotesPart(
+  bool? _readNotesPart(
     List<WmlNote> bucket,
     OpcPackage package,
     String docUri,
@@ -2259,8 +2259,9 @@ class WordDeserializer {
         : package.relationshipsFor(docUri).resolve(rel);
     final PackagePart? part = package.getPart(uri);
     if (part == null) {
-      return;
+      return null;
     }
+    var separatorsPresent = false;
     bucket.clear();
     final XmlPullReader reader = WordMarkupCompatibilityReader(part.readText());
     while (reader.next()) {
@@ -2272,11 +2273,12 @@ class WordDeserializer {
         'type',
         namespaceUri: OfficeNamespaces.w,
       );
-      // Word always ships separator / continuationSeparator notes (ids -1, 0).
-      // They are chrome, not document content — skip them.
+      // Native separator definitions are optional and may be customized. They
+      // remain in their owning package part rather than the editable note list.
       if (noteType == 'separator' ||
           noteType == 'continuationSeparator' ||
           noteType == 'continuationNotice') {
+        separatorsPresent = true;
         if (!reader.isEmptyElement) {
           final int skipDepth = reader.depth;
           while (reader.next() && reader.depth >= skipDepth) {}
@@ -2323,6 +2325,7 @@ class WordDeserializer {
       }
       bucket.add(note);
     }
+    return separatorsPresent;
   }
 
   void _readStyles(WmlDocument document, OpcPackage package, String docUri) {

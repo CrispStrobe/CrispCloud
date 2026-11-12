@@ -61,9 +61,10 @@ or accept replacement expectations. These semantic cases complement the
 reviewed pixel goldens maintained in the source repository under its pinned
 Flutter version.
 
-All 27 new exports are listed in
+At that checkpoint, all 27 new exports were listed in
 [`tool/office_host_evidence.json`](../tool/office_host_evidence.json), alongside
-the existing 14 host exports. The inventory checks exact paths and package
+the existing 14 host exports. The current manifest also includes the later
+consolidation outputs. The inventory checks exact paths and package
 integrity before the independent schema job runs. A control deletes each
 declared export in turn and requires rejection, so a future added scenario
 cannot silently disappear from schema evidence.
@@ -91,7 +92,59 @@ previously outside this selected cohort. Coverage is written to
 `--require-all-sources` rejects an absent source while preserving the report.
 It does not require every line to be hit or claim full branch coverage.
 
-Execution results belong to the corresponding commit's local output or Actions
-artifact. The historical 54.9% report is not a measurement of these changed
-sources; a new full run must produce the replacement report. A passing semantic
-oracle or Open XML SDK check does not establish pixel identity with Word.
+## Earlier coverage-branch checkpoint
+
+The coverage branch's full host gate passed locally at app commit
+[`9bf04566`](https://github.com/CrispStrobe/CrispCloud/commit/9bf04566434318ad199971d1071ca0ca02c81905),
+using the app's pinned **Flutter 3.47.8 / Dart 3.13.7**. Its 278 shared file hashes
+match suite
+[`31add779`](https://github.com/CrispStrobe/quds_office_suite/commit/31add77938bb1242d510ab544dbe886d87ebdf75).
+The following evidence-only commit on that branch did not change those tested
+source bytes. These measurements are historical; the
+[consolidation report](office-fidelity-consolidation-20261112.md) records the
+current combined acceptance evidence.
+
+| Check | Result |
+| --- | --- |
+| Actual Flutter host tests | 115 passed |
+| Required actual saved host exports | 41/41 verified |
+| Shared engine acceptance tests | 530 passed |
+| Required shared engine exports | 217/217 verified |
+| Shared Python semantic/corruption controls | 264 passed |
+| Host Office coverage | 2,282/3,661 instrumented lines (62.3%) |
+| Scoped Office source files | All nine instrumented and source-hash matched |
+| Shared vendor pins | 278/278 matched |
+| Independent Open XML SDK validation | 258/258 packages; all 41 actual host saves and all 217 shared exports pass |
+
+The [coverage inventory](office-host-coverage-gaps.json) records source commit,
+all nine source hashes, uncovered lines and absent files (none in this scope).
+Coverage measures executed instrumented lines, not branches or correctness.
+
+The [SDK evidence](office-schema-evidence.json) contains every package hash
+and zero validation errors; its input paths and bytes were independently matched
+before and after validation. Native prerequisites were provided without altering
+the tests or application sources, and the CI SQLite helper restored
+`pubspec.yaml` exactly. That checkpoint's Actions run is
+[43183465694](https://github.com/CrispStrobe/CrispCloud/actions/runs/43183465694);
+its queue/execution status is separate from the completed local evidence.
+
+That source checkpoint preserves native note-separator definitions and
+their absence, prevents inserted notes from reusing special-definition IDs,
+checks native paragraph-property order in retained parts, and carries the
+reviewed story-page correction through three actual save/reopen cycles. Full
+suite support boundaries and the independent native-render evidence are in the
+[suite coverage guide](https://github.com/CrispStrobe/quds_office_suite/blob/feature/office-fidelity-coverage-20261112/docs/office-fidelity-coverage-20261112.md).
+
+## Historical evidence
+
+[Actions run 43177469270](https://github.com/CrispStrobe/CrispCloud/actions/runs/43177469270)
+tested app `86338bd` with suite `adcccb4`. Its 115 host tests, all 41 saved host
+exports and all 41 host SDK validations passed, but the overall schema job
+failed on 14 shared auxiliary fixtures because their authored paragraph
+properties were ordered incorrectly. The `c19e90d` source checkpoint corrected
+that fixture and strengthened the oracle. These prior results are retained as
+counterexamples and do not certify later source changes.
+
+The earlier **54.9%** coverage report measured an older source revision. It is a
+separate historical observation. A passing semantic oracle or Open XML SDK
+check does not establish pixel identity with Microsoft Word.

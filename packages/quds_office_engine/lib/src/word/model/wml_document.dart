@@ -1047,6 +1047,7 @@ class WmlDocument {
     this.mailMergePreview = 0,
     this.sourceFileName = '',
     this.sourceByteLength,
+    this.sourceFootnoteSeparatorsPresent,
   }) : sections = sections ?? <WmlSection>[WmlSection()],
        comments = comments ?? <WmlComment>[],
        footnotes = footnotes ?? <WmlNote>[],
@@ -1066,6 +1067,11 @@ class WmlDocument {
 
   /// footnotes API.
   List<WmlNote> footnotes;
+
+  /// Whether an imported footnote part declares any separator/continuation
+  /// definitions. Null keeps the conventional rule for a newly authored part;
+  /// false preserves explicit native absence in the editor preview.
+  bool? sourceFootnoteSeparatorsPresent;
 
   /// endnotes API.
   List<WmlNote> endnotes;

@@ -7,7 +7,7 @@ the newer Office coverage branch at
 
 The corresponding source history combines current suite `main` and the newer
 native fidelity work. The app now pins **309 shared source files** to
-`256402fc7d15029e78981a59dfd94a32565d00c4`. The guarded synchronization verified
+`7bd56f609d5ec63e44e0393560b3ec1055c3bf7e`. The guarded synchronization verified
 the previous vendor baseline, copied committed source bytes, and checked every
 pinned hash against the consolidated suite.
 
@@ -70,9 +70,25 @@ schema, and render reports remain historical; the source run at `adcccb4` had
 14 schema failures and 15 rendering-gate failures. This continuation regenerates
 those outputs and receipts after the fixes instead of reusing the old evidence.
 
-## Other remote work
+## Additional remote consolidation
 
-The earlier Office completion/oracle branches and file-manager/SMB work are
-already represented in `main`. No open PRs were found in the initial audit.
-The separate ebook feature and explicitly unfinished Rust cloud-engine branch
-were inspected and remain outside this Office consolidation.
+The refreshed source pin includes coverage head
+`31add77938bb1242d510ab544dbe886d87ebdf75`: native note IDs now reserve retained
+separator/continuation definitions through their actual owning relationships,
+and Quds preview suppresses a separator when none was imported. The reviewed
+story is now exported and reopened through three cycles. The final source
+external inventory is 241 engine packages plus 22 editor packages.
+
+This app branch also merges main at
+`d32191c3af8d74c9ec59be20d3183e323dea532f`, carrying the Rust-SMB starting-offset
+and progress-frame fixes, and coverage at
+`389a2fd2b9acb6d6213b9bbf2b5b6808534195f0`, carrying the corresponding source
+syncs and historical evidence. Every managed file is then synchronized from the
+combined source checkpoint, retaining both corpora and the host save fixes.
+
+The earlier Office completion/oracle work is represented in the combined
+histories. Two independent draft PRs are open: [#53 for ebooks](https://github.com/CrispStrobe/CrispCloud/pull/53)
+and [#54 for file-manager capabilities](https://github.com/CrispStrobe/CrispCloud/pull/54).
+They and the unfinished Rust cloud-engine branch remain outside this Office
+consolidation. The format-viewers/path-favorites branch has no changes beyond
+current main.

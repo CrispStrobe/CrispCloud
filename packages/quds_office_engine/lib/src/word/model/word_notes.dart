@@ -1,5 +1,9 @@
 import 'dart:collection';
 
+import '../../opc/package_part.dart';
+import '../../opc/relationships.dart';
+import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
@@ -158,6 +162,13 @@ abstract final class WordNotes {
         id = note.id + 1;
       }
     }
+    // Special native definitions remain in the owning package part rather than
+    // the editable bucket. Their positive IDs share the same namespace as
+    // normal notes, so reserve them before changing either the model or anchor.
+    final reservedIds = _retainedDefinitionIds(document, endnote: endnote);
+    while (reservedIds.contains(id)) {
+      id++;
+    }
     final WmlNote note = WmlNote(id: id, endnote: endnote)..text = text;
     bucket.add(note);
     paragraph.properties.noteId = id;
@@ -174,6 +185,63 @@ abstract final class WordNotes {
       ),
     );
     return note;
+  }
+
+  static Set<int> _retainedDefinitionIds(
+    WmlDocument document, {
+    required bool endnote,
+  }) {
+    final package = document.package;
+    if (package == null) return const <int>{};
+    final office = package.packageRelationships.firstByType(
+      RelationshipTypes.officeDocument,
+    );
+    if (office?.targetMode == RelationshipTargetMode.external) {
+      throw const FormatException(
+        'The Word main part must be inside its package',
+      );
+    }
+    final mainUri = office == null
+        ? '/word/document.xml'
+        : package.packageRelationships.resolve(office);
+    final kind = endnote ? 'endnote' : 'footnote';
+    final relationships = package.relationshipsFor(mainUri);
+    final relationship = relationships.firstByType(
+      endnote ? RelationshipTypes.endnotes : RelationshipTypes.footnotes,
+    );
+    if (relationship?.targetMode == RelationshipTargetMode.external) {
+      throw FormatException(
+        'The Word ${kind}s part must be inside its package',
+      );
+    }
+    // Match the serializer's legacy fallback when a native part has no owner.
+    final uri = relationship == null
+        ? OpcUris.resolve(mainUri, '${kind}s.xml')
+        : relationships.resolve(relationship);
+    final part = package.getPart(uri);
+    if (part == null) return const <int>{};
+    final root = XmlDocument.parse(part.readText()).root;
+    final reserved = <int>{};
+    if (root == null) return reserved;
+    for (final definition in root.childrenNamed(
+      kind,
+      namespaceUri: OfficeNamespaces.w,
+    )) {
+      if (!const {
+        'separator',
+        'continuationSeparator',
+        'continuationNotice',
+      }.contains(
+        definition.getAttribute('type', namespaceUri: OfficeNamespaces.w),
+      )) {
+        continue;
+      }
+      final id = int.tryParse(
+        definition.getAttribute('id', namespaceUri: OfficeNamespaces.w) ?? '',
+      );
+      if (id != null) reserved.add(id);
+    }
+    return reserved;
   }
 
   /// byId API.

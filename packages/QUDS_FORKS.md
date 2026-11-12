@@ -219,7 +219,7 @@ goldens simply to accept changed output.
 
 `feature/office-fidelity-consolidation-20261112` combines current app main with
 the newer Office coverage branch. The vendor manifest now pins 309 shared files
-to suite commit `256402fc7d15029e78981a59dfd94a32565d00c4` on the same feature
+to suite commit `7bd56f609d5ec63e44e0393560b3ec1055c3bf7e` on the same feature
 branch. This retains both source histories and their independent regression
 corpora, and integrates the monotonic content revision used to protect pending
 Word note, spreadsheet cell, and slide text drafts during uploads.
