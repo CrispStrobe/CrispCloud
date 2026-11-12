@@ -240,3 +240,8 @@ The Linux workflow has three explicitly different jobs: required complete enhanc
 The startup guard is saved at `e2231a963ae3e5bad6e5164a38bd8006f53b8619`; `04429947003f44d9066906b340195526df8efd36` corrects the new test to use its intended Linux platform. All 22 editor-dialog tests, all 8 reader-package tests, focused/package analysis, seven actual native startup scenarios and complete enhanced-plugin/helper real-header syntax compilation passed before the next integration. The complete earlier application selection passed its 154 existing cases; the new test initially used Flutter's Android default and then passed after the platform fixture correction.
 
 Concurrent repository integration advanced main to `02be67fe`, including absent-platform-plugin recovery and macOS browser dependency fixes. The feature branch now retains those changes plus the full startup guard and shared-reader corrections. Three documentation conflicts were reconciled, retaining all inventoried paths and unchanged distribution decisions. The merged application and web build are being revalidated. Intermediate queued CI runs canceled by later checkpoints are not counted as passes.
+
+
+## Integration of parallel readiness candidates
+
+The integration retains the newer production isolated-startup path from `e2231a96` and its runtime/helper tests. The alternative readiness candidate in `0ba63f3f` and `13667db4` is superseded for the active build; its original code and evidence remain in Git history and its recent remote branches. The two helper protocols and their CMake targets must not be mixed. This resolution does not extend Linux renderer certification beyond the documented runtime and platform limits.
