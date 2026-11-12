@@ -112,7 +112,23 @@ bool _exists(String path) => File(path).existsSync();
 List<String> bundledRustLibraryCandidates({
   required String os,
   required String executable,
-}) {
+  String? workingDirectory,
+}) => [
+  ..._appCandidates(os: os, executable: executable),
+  // `flutter test` runs hooks too and places code assets here.
+  if (workingDirectory != null)
+    for (final name in switch (os) {
+      'macos' => ['libcrisp_smb_bridge.dylib'],
+      'linux' => ['libcrisp_smb_bridge.so'],
+      'windows' => ['crisp_smb_bridge.dll'],
+      _ => const <String>[],
+    })
+      os == 'windows'
+          ? '$workingDirectory\\build\\native_assets\\windows\\$name'
+          : '$workingDirectory/build/native_assets/$os/$name',
+];
+
+List<String> _appCandidates({required String os, required String executable}) {
   final slash = os == 'windows' ? r'\' : '/';
   final cut = executable.lastIndexOf(slash);
   final dir = cut < 0 ? '.' : executable.substring(0, cut);

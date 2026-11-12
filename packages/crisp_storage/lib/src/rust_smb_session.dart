@@ -32,6 +32,7 @@ class RustSmbSession implements SmbTransport {
       for (final candidate in bundledRustLibraryCandidates(
         os: Platform.operatingSystem,
         executable: Platform.resolvedExecutable,
+        workingDirectory: Directory.current.path,
       )) {
         final ExternalLibrary library;
         try {
