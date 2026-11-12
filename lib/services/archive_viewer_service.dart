@@ -609,71 +609,85 @@ Future<ViewerArchive> _openWithKoni(
     );
   }
 
+  Stream<List<int>> readChunks(
+    ViewerArchiveMember member,
+    int requestedCap,
+  ) async* {
+    final limit = requestedCap < maxMemberBytes ? requestedCap : maxMemberBytes;
+    final entry = entries[member.index];
+    if (entry.isEncrypted && password == null) {
+      throw const ArchivePasswordRequiredException('This entry is encrypted.');
+    }
+    var received = 0;
+    try {
+      final stream = reader.openRead(entry); // may throw synchronously
+      await for (final chunk in stream) {
+        if (chunk.length > limit - received) {
+          throw ArchiveViewException(
+            'The entry is larger than the ${_mb(limit)} safety limit.',
+            code: ArchiveMessageCode.entryLimit,
+            arguments: {'limit': _mb(limit)},
+          );
+        }
+        received += chunk.length;
+        yield chunk;
+      }
+    } on ArchiveViewException {
+      rethrow;
+    } on koni.EncryptedArchiveException catch (e) {
+      throw ArchivePasswordRequiredException(
+        'This entry is encrypted.',
+        code: ArchiveMessageCode.entryEncrypted,
+        wrongPassword: password != null || e is koni.InvalidPasswordException,
+      );
+    } on koni.SizeLimitExceededException catch (e) {
+      throw ArchiveViewException(
+        'The entry is larger than the ${_mb(limit)} safety limit '
+        '(${e.message}).',
+        code: ArchiveMessageCode.entryLimitDetail,
+        arguments: {'limit': _mb(limit), 'detail': e.message},
+      );
+    } on koni.ArchiveException catch (e) {
+      if (entry.isEncrypted) {
+        // 7z has no password check: a wrong password shows up as corrupt
+        // data or a checksum mismatch.
+        throw const ArchivePasswordRequiredException(
+          'The password is wrong or the entry is corrupt.',
+          code: ArchiveMessageCode.wrongOrCorrupt,
+          wrongPassword: true,
+        );
+      }
+      throw ArchiveViewException(
+        'Could not read entry: ${e.message}',
+        code: ArchiveMessageCode.readEntry,
+        arguments: {'detail': e.message},
+      );
+    } catch (e) {
+      throw ArchiveViewException(
+        'Could not read entry: $e',
+        code: ArchiveMessageCode.readEntry,
+        arguments: {'detail': e},
+      );
+    }
+  }
+
   return ViewerArchive.reader(
     formatName: reader.format.name,
     members: List<ViewerArchiveMember>.unmodifiable(members),
     read: (member, requestedCap) async {
-      final limit = requestedCap < maxMemberBytes
-          ? requestedCap
-          : maxMemberBytes;
-      final entry = entries[member.index];
-      if (entry.isEncrypted && password == null) {
-        throw const ArchivePasswordRequiredException(
-          'This entry is encrypted.',
-        );
-      }
       final builder = BytesBuilder(copy: false);
-      try {
-        final stream = reader.openRead(entry); // may throw synchronously
-        await for (final chunk in stream) {
-          if (builder.length + chunk.length > limit) {
-            throw ArchiveViewException(
-              'The entry is larger than the ${_mb(limit)} safety limit.',
-              code: ArchiveMessageCode.entryLimit,
-              arguments: {'limit': _mb(limit)},
-            );
-          }
-          builder.add(chunk);
-        }
-      } on ArchiveViewException {
-        rethrow;
-      } on koni.EncryptedArchiveException catch (e) {
-        throw ArchivePasswordRequiredException(
-          'This entry is encrypted.',
-          code: ArchiveMessageCode.entryEncrypted,
-          wrongPassword: password != null || e is koni.InvalidPasswordException,
-        );
-      } on koni.SizeLimitExceededException catch (e) {
-        throw ArchiveViewException(
-          'The entry is larger than the ${_mb(limit)} safety limit '
-          '(${e.message}).',
-          code: ArchiveMessageCode.entryLimitDetail,
-          arguments: {'limit': _mb(limit), 'detail': e.message},
-        );
-      } on koni.ArchiveException catch (e) {
-        if (entry.isEncrypted) {
-          // 7z has no password check: a wrong password shows up as corrupt
-          // data or a checksum mismatch.
-          throw const ArchivePasswordRequiredException(
-            'The password is wrong or the entry is corrupt.',
-            code: ArchiveMessageCode.wrongOrCorrupt,
-            wrongPassword: true,
-          );
-        }
-        throw ArchiveViewException(
-          'Could not read entry: ${e.message}',
-          code: ArchiveMessageCode.readEntry,
-          arguments: {'detail': e.message},
-        );
-      } catch (e) {
-        throw ArchiveViewException(
-          'Could not read entry: $e',
-          code: ArchiveMessageCode.readEntry,
-          arguments: {'detail': e},
-        );
+      await for (final chunk in readChunks(member, requestedCap)) {
+        builder.add(chunk);
       }
       return builder.takeBytes();
     },
+    // The pinned TAR reader indexes headers and reads file ranges in 64 KiB
+    // chunks. Other Koni readers retain their bounded buffered adapter. Any
+    // compression wrapper was already decoded under its separate container
+    // limit; this does not increase that allowance or readMember's default.
+    streamReader: reader.format.name == 'tar'
+        ? (member, chunkSize) => readChunks(member, maxMemberBytes)
+        : null,
     close: () async {
       try {
         await reader.close();

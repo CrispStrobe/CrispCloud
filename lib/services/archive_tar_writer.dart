@@ -8,6 +8,10 @@ import 'archive_write_model.dart';
 
 const _block = 512;
 const _maxOutput = 256 * 1024 * 1024;
+
+/// Explicit ceiling for a fresh TAR written to a bounded streaming sink.
+/// Existing-archive rewrites and callers using the default retain 256 MiB.
+const kArchiveFreshTarOutputLimit = 2 * 1024 * 1024 * 1024;
 const _maxMetadata = 1024 * 1024;
 const _maxAllMetadata = 16 * 1024 * 1024;
 const _maxExact = 0x1fffffffffffff;
@@ -85,6 +89,8 @@ Future<ArchiveRewriteInspection> inspectTarRewrite(
 /// Streams a regular-file TAR to an unpublished sink. Wrapping compression and
 /// publication remain the caller's responsibility. Metadata unknown to this
 /// profile is refused rather than discarded; failure can leave partial output.
+/// Fresh creation may explicitly request [kArchiveFreshTarOutputLimit], with
+/// headers, extension records and padding included in the output limit.
 Future<void> writeTarArchive(
   List<ArchiveWriteEntry> entries, {
   required Future<void> Function(List<int>) sink,
@@ -92,7 +98,9 @@ Future<void> writeTarArchive(
   int maxOutputBytes = _maxOutput,
   bool Function()? isCancelled,
 }) async {
-  if (maxOutputBytes <= 0 || maxOutputBytes > _maxOutput) {
+  if (maxOutputBytes <= 0 ||
+      maxOutputBytes >
+          (source == null ? kArchiveFreshTarOutputLimit : _maxOutput)) {
     throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
   }
   void check() {
@@ -162,6 +170,10 @@ Future<void> writeTarArchive(
       total += plan.extension.length + _block + _aligned(entry.size);
       if (total > maxOutputBytes) _refuse('TAR output exceeds its size limit.');
       plans.add(plan);
+      if (maxOutputBytes > _maxOutput && plans.length % 512 == 0) {
+        await Future<void>.delayed(Duration.zero);
+        check();
+      }
     }
     if (total > maxOutputBytes) _refuse('TAR output exceeds its size limit.');
     var written = 0;
