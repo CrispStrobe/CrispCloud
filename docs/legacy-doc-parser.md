@@ -61,20 +61,36 @@ provenance. CrispCloud's existing application license is unchanged.
 
 The package includes a changelog, command-line example, standalone regression
 tests, JavaScript/Node acceptance and CI checks for formatting, analysis, tests
-and a publication dry run. Package publishing remains a separate release step.
+and a publication dry run. The dry run passed with zero warnings at the current
+pin. Package publishing remains a separate release step.
 The app's existing crypto evidence tracks the changed manifest and lockfile;
 the parser extraction introduces no encryption implementation or new crypto
 dependency, and does not change the recorded Apple questionnaire status.
 
 ## Verified integration
 
-- **54 app tests passed** across conversion, binary preview, source/name guards,
-  localized controls, structured/native dialogs and viewer integration.
+- **100 app tests passed across 16 suites** after reconciling current main:
+  binary parsing/rendering, actual DOC/DOT routing, source/name guards,
+  captured create-only saves, localized controls, structured/native dialogs
+  and viewer/editor handoffs. A heavy-dotted-underline regression distinguishes
+  the standalone parser from the older shared-engine implementation.
 - **13 installed-LibreOffice acceptance checks passed** for the built-in
   converter's real DOC fixture, including PDF text and a rendered image,
   actual headers/footers/footnote, and unchanged source/prepared bytes.
 - The app's production portable DOC/RTF/PPT/MSG code compiled to JavaScript and
   passed its Node regression after the dependency switch.
+
+The focused Flutter run used the existing system-SQLite test helper and the
+ebook package's documented `enabled: false` hook setting because this local
+environment lacks its Rust toolchain. The app manifest was restored byte for
+byte afterward. This tests Word behavior with optional ebook conversion
+unavailable; it is not validation of the native ebook engine. Normal release
+configuration and native CI remain enabled. The exact locked package source
+is also checked by the app's standalone-parser CI contract step.
+
+Current follow-ups are [CrispCloud PR #82](https://github.com/CrispStrobe/CrispCloud/pull/82)
+and [package PR #2](https://github.com/CrispStrobe/legacy-doc-parser/pull/2);
+the earlier PRs merged before these continuation commits.
 
 Package test counts, independent JavaScript CFB metadata checks and their
 scope are recorded in the conversion guide and the package pull request.

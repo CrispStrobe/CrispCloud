@@ -416,7 +416,7 @@ source commit `80e9683c0d60553f7198ca89a64aa927d619c684` through its Git depende
 the old private implementation and temporary in-app package copy were removed.
 See [package integration](legacy-doc-parser.md) for API ownership and licensing.
 
-The final app integration run passed **54 tests** across eight suites, including
+The first app integration run passed **54 tests** across eight suites, including
 structured DOCM selection, exact VBA/evidence bytes, extension validation,
 mandatory review, collision retries, native dialogs, all nine UI languages and
 the existing viewer routes. All 13 changed Dart files passed formatting and
@@ -445,3 +445,18 @@ Office JavaScript regression passed after the package integration. The former
 also checks actual image/story parts plus reconstructed OLE/VBA stream bytes,
 CLSID/state metadata and raw FILETIME values under Node. These checks do not
 replace a full Flutter browser build or platform-specific application testing.
+
+After reconciling main at `02be67fecad5be2a040e6dcd1579a2a54fa51933`, the final
+consumer run passed **100 tests across 16 suites**. It includes a DOC/DOT
+heavy-dotted-underline case that confirms dispatch to the standalone parser,
+and main's captured create-only target/integrity checks with the app-owned copy
+model. The 13 native acceptance checks and portable JavaScript regression
+passed again against the final package pin. The focused Flutter run uses the
+documented optional-ebook-engine-unavailable configuration described in
+[package integration](legacy-doc-parser.md); the original app manifest was
+restored exactly and production build settings remain unchanged.
+
+The standalone package's publication dry run passed with **zero warnings**.
+All 46 package Dart files passed both the local formatter and the exact
+formatter revision used by hosted Dart 3.14.0; analysis was clean. Publishing
+to pub.dev remains a later release action.
