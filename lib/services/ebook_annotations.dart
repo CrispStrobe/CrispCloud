@@ -5,6 +5,7 @@ import 'package:crisp_ebook_reader/crisp_ebook_reader.dart';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/async_lock.dart';
 import 'ebook_reading_data.dart';
 
 export 'ebook_reading_data.dart';
@@ -21,8 +22,13 @@ class EbookAnnotations {
     this.contentByteLength,
     this.renderer,
     this._writePreference,
-  );
+  ) : _writeLock = _writeLocks[_preferences] ??= AsyncLock(),
+      _storedValue = _preferences.get(key);
+  static final _writeLocks = Expando<AsyncLock>('ebook annotation writes');
   final SharedPreferences _preferences;
+  final AsyncLock _writeLock;
+  Object? _storedValue;
+  EbookReadingDataError? _storedBindingError;
   final String key;
   final String contentSha256;
   final int contentByteLength;
@@ -78,6 +84,11 @@ class EbookAnnotations {
               json['renderer'] != result.renderer.wireName ||
               json['contentSha256'] != result.contentSha256 ||
               json['contentByteLength'] != result.contentByteLength)) {
+        result._storedBindingError = json['readerDataVersion'] != 1
+            ? EbookReadingDataError.unsupportedVersion
+            : json['renderer'] != result.renderer.wireName
+            ? EbookReadingDataError.rendererMismatch
+            : EbookReadingDataError.contentMismatch;
         return result;
       }
       if (json['location'] case final Map value) {
@@ -125,7 +136,12 @@ class EbookAnnotations {
     } on Object catch (error, stack) {
       return Future.error(error, stack);
     }
-    final next = _pending.then((_) => _persist(encoded));
+    final next = _pending.then(
+      (_) => _writeLock.synchronized(() async {
+        _ensureStoredCurrent();
+        await _persist(encoded);
+      }),
+    );
     _pending = next.catchError((Object _) {});
     return next;
   }
@@ -162,6 +178,7 @@ class EbookAnnotations {
           _preferences.setString(key, encoded))) {
         throw StateError('Could not save reading progress on this device.');
       }
+      _storedValue = encoded;
     } on Object {
       // SharedPreferences updates its cache before the platform confirms a
       // write. Reload it after failure so reopening cannot see an unsaved draft.
@@ -171,6 +188,21 @@ class EbookAnnotations {
         /* Keep the write error. */
       }
       rethrow;
+    }
+  }
+
+  void _ensureStoredCurrent() {
+    if (_storedBindingError case final error?) {
+      throw EbookReadingDataException(
+        error,
+        'The saved reading data has a different version or reader binding. Reopen the correct book.',
+      );
+    }
+    if (_preferences.get(key) != _storedValue) {
+      throw const EbookReadingDataException(
+        EbookReadingDataError.stale,
+        'Another reader changed the saved reading data. Reopen this book before saving or importing.',
+      );
     }
   }
 
@@ -201,44 +233,47 @@ class EbookAnnotations {
   /// publish it together. A failed write leaves the live annotation lists alone.
   /// The host pauses passive relocation while [isApplyingReadingData] is true.
   Future<void> applyReadingDataImport(EbookReadingDataImportPlan plan) {
-    final next = _pending.then((_) async {
-      final current = snapshotReadingData();
-      current.requireCompatible(plan.result);
-      if (plan.bindingKey != key ||
-          plan.localFingerprint != current.fingerprint) {
-        throw const EbookReadingDataException(
-          EbookReadingDataError.stale,
-          'Reading data changed after the import preview. Review it again.',
-        );
-      }
-      if (!plan.hasChanges) return;
-      final before = _encodeState();
-      final encoded = _encodeState(replacement: plan.result);
-      _applyingReadingData = true;
-      try {
-        await _persist(encoded);
-        // Existing UI consumers expose mutable lists. Never overwrite a newer
-        // local edit if one arrived while the platform write was outstanding.
-        final latest = _encodeState();
-        if (latest != before) {
-          await _persist(latest);
+    final next = _pending.then(
+      (_) => _writeLock.synchronized(() async {
+        _ensureStoredCurrent();
+        final current = snapshotReadingData();
+        current.requireCompatible(plan.result);
+        if (plan.bindingKey != key ||
+            plan.localFingerprint != current.fingerprint) {
           throw const EbookReadingDataException(
             EbookReadingDataError.stale,
-            'Reading data changed while importing. Review the import again.',
+            'Reading data changed after the import preview. Review it again.',
           );
         }
-        location = plan.result.location;
-        appearance = plan.result.appearance;
-        bookmarks
-          ..clear()
-          ..addAll(plan.result.bookmarks);
-        highlights
-          ..clear()
-          ..addAll(plan.result.highlights);
-      } finally {
-        _applyingReadingData = false;
-      }
-    });
+        if (!plan.hasChanges) return;
+        final before = _encodeState();
+        final encoded = _encodeState(replacement: plan.result);
+        _applyingReadingData = true;
+        try {
+          await _persist(encoded);
+          // Existing UI consumers expose mutable lists. Never overwrite a newer
+          // local edit if one arrived while the platform write was outstanding.
+          final latest = _encodeState();
+          if (latest != before) {
+            await _persist(latest);
+            throw const EbookReadingDataException(
+              EbookReadingDataError.stale,
+              'Reading data changed while importing. Review the import again.',
+            );
+          }
+          location = plan.result.location;
+          appearance = plan.result.appearance;
+          bookmarks
+            ..clear()
+            ..addAll(plan.result.bookmarks);
+          highlights
+            ..clear()
+            ..addAll(plan.result.highlights);
+        } finally {
+          _applyingReadingData = false;
+        }
+      }),
+    );
     _pending = next.catchError((Object _) {});
     return next;
   }

@@ -450,4 +450,52 @@ void main() {
       expect(preferences.getString(EbookLibrary.preferencesKey), raw);
     },
   );
+
+  test(
+    'clearing a replaced position preserves status and checks both bindings',
+    () async {
+      final library = await EbookLibrary.open();
+      final row = await _open(library, source: _source());
+      await library.update(
+        row.id,
+        favorite: true,
+        status: EbookReadingStatus.completed,
+      );
+      final readAt = DateTime.utc(2026, 11, 12, 12);
+      await library.recordProgress(
+        row.id,
+        contentSha256: _hash,
+        renderer: EbookReaderRenderer.foliate,
+        fraction: .8,
+        readAt: readAt,
+      );
+      await expectLater(
+        library.clearProgress(
+          row.id,
+          contentSha256: _otherHash,
+          renderer: EbookReaderRenderer.foliate,
+        ),
+        throwsStateError,
+      );
+      await expectLater(
+        library.clearProgress(
+          row.id,
+          contentSha256: _hash,
+          renderer: EbookReaderRenderer.portable,
+        ),
+        throwsStateError,
+      );
+      expect(library.get(row.id)!.progress, .8);
+      await library.clearProgress(
+        row.id,
+        contentSha256: _hash,
+        renderer: EbookReaderRenderer.foliate,
+      );
+      final restored = (await EbookLibrary.open()).get(row.id)!;
+      expect(restored.progress, isNull);
+      expect(restored.status, EbookReadingStatus.completed);
+      expect(restored.favorite, isTrue);
+      expect(restored.lastReadAt, readAt);
+    },
+  );
 }

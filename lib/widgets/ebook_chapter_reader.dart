@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:crisp_ebook/crisp_ebook.dart';
 import 'package:crisp_ebook_reader/crisp_ebook_reader.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
 import '../l10n/ebook_strings.dart';
@@ -204,6 +205,10 @@ class _EbookChapterReaderState extends State<EbookChapterReader> {
         sectionCount: widget.document.chapters.length,
         sourceFormat: 'epub',
         fixedLayout: widget.document.fixedLayout,
+        supportsProgressSeeking: false,
+        supportsNavigationHistory: false,
+        supportsLayout: false,
+        supportsPublisherStyles: false,
       ),
     );
   }
@@ -290,41 +295,14 @@ class _EbookChapterReaderState extends State<EbookChapterReader> {
   }
 
   void _changeFont(double delta) => _setAppearance(
-    EbookAppearance(
-      fontSize: _appearance.fontSize + delta,
-      lineHeight: _appearance.lineHeight,
-      fontFamily: _appearance.fontFamily,
-      theme: _appearance.theme,
-      flow: _appearance.flow,
-    ),
+    _appearance.copyWith(fontSize: _appearance.fontSize + delta),
   );
 
   static EbookAppearance _boundedAppearance(EbookAppearance value) =>
-      EbookAppearance(
-        fontSize: value.fontSize.isFinite ? value.fontSize.clamp(10, 48) : 18,
-        lineHeight: value.lineHeight.isFinite
-            ? value.lineHeight.clamp(1, 2.5)
-            : 1.6,
-        theme: const {'light', 'sepia', 'dark'}.contains(value.theme)
-            ? value.theme
-            : 'light',
-        fontFamily:
-            const {
-              'serif',
-              'sans-serif',
-              'monospace',
-            }.contains(value.fontFamily)
-            ? value.fontFamily
-            : 'serif',
-        flow: 'scrolled',
-      );
+      value.normalized.copyWith(flow: 'scrolled');
 
   static bool _sameAppearance(EbookAppearance a, EbookAppearance b) =>
-      a.fontSize == b.fontSize &&
-      a.lineHeight == b.lineHeight &&
-      a.theme == b.theme &&
-      a.fontFamily == b.fontFamily &&
-      a.flow == b.flow;
+      mapEquals(a.toJson(), b.toJson());
 
   @override
   void dispose() {

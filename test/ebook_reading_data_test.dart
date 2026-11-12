@@ -504,4 +504,58 @@ void main() {
       expect(reopened.bookmarks, isEmpty);
     },
   );
+
+  test('a second open reader cannot overwrite newly saved notes', () async {
+    final first = await EbookAnnotations.open('shared-source', _bytes());
+    final second = await EbookAnnotations.open('shared-source', _bytes());
+    first.highlights.add(
+      _highlight('keep-new-note', note: 'Saved by the other reader'),
+    );
+    await first.save();
+    second.location = _location(3);
+    await expectLater(
+      second.save(),
+      throwsA(_code(EbookReadingDataError.stale)),
+    );
+    final restored = await EbookAnnotations.open('shared-source', _bytes());
+    expect(restored.highlights.single.id, 'keep-new-note');
+    expect(restored.location, isNull);
+    expect(second.location!.cfi, _cfi(3));
+  });
+
+  test(
+    'an import preview rejects changes saved by another reader instance',
+    () async {
+      final first = await EbookAnnotations.open('shared-source', _bytes());
+      final second = await EbookAnnotations.open('shared-source', _bytes());
+      final incoming = await _filled('incoming');
+      final plan = first.previewReadingDataImport(incoming.exportReadingData());
+      second.highlights.add(_highlight('new-local-note'));
+      await second.save();
+      await expectLater(
+        first.applyReadingDataImport(plan),
+        throwsA(_code(EbookReadingDataError.stale)),
+      );
+      expect(first.highlights, isEmpty);
+      final restored = await EbookAnnotations.open('shared-source', _bytes());
+      expect(restored.highlights.single.id, 'new-local-note');
+      expect(restored.bookmarks, isEmpty);
+    },
+  );
+
+  test(
+    'queued saves from this instance do not invalidate its own import plan',
+    () async {
+      final local = await EbookAnnotations.open('source', _bytes());
+      local.bookmarks.add(_location(1));
+      final pendingSave = local.save();
+      final incoming = await _filled('incoming');
+      final plan = local.previewReadingDataImport(incoming.exportReadingData());
+      final applying = local.applyReadingDataImport(plan);
+      await Future.wait([pendingSave, applying]);
+      final restored = await EbookAnnotations.open('source', _bytes());
+      expect(restored.bookmarks, hasLength(3));
+      expect(restored.highlights, hasLength(1));
+    },
+  );
 }

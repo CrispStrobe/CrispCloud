@@ -45,14 +45,21 @@ class _EbookReadingDataDialogState extends State<EbookReadingDataDialog> {
   }
 
   String _label(EbookReadingDataMergeMode mode) => _tr(switch (mode) {
-    EbookReadingDataMergeMode.mergeKeepExisting => 'Merge, keep local conflicts',
-    EbookReadingDataMergeMode.mergePreferImported => 'Merge, use imported conflicts',
+    EbookReadingDataMergeMode.mergeKeepExisting =>
+      'Merge, keep local conflicts',
+    EbookReadingDataMergeMode.mergePreferImported =>
+      'Merge, use imported conflicts',
     EbookReadingDataMergeMode.replace => 'Replace local reading data',
   });
 
   Widget _count(String label, int value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(children: [Expanded(child: Text(_tr(label))), Text('$value')]),
+    child: Row(
+      children: [
+        Expanded(child: Text(_tr(label))),
+        Text('$value'),
+      ],
+    ),
   );
 
   @override
@@ -65,22 +72,36 @@ class _EbookReadingDataDialogState extends State<EbookReadingDataDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_tr('Reading data contains positions, bookmarks, highlights and appearance settings for this exact book.')),
+            Text(
+              _tr(
+                'Reading data contains positions, bookmarks, highlights and appearance settings for this exact book.',
+              ),
+            ),
             const SizedBox(height: 16),
             DropdownButtonFormField<EbookReadingDataMergeMode>(
               key: const ValueKey('ebook-reading-data-merge-mode'),
               initialValue: _mode,
               isExpanded: true,
               decoration: InputDecoration(labelText: _tr('Import behavior')),
-              items: [for (final mode in EbookReadingDataMergeMode.values)
-                DropdownMenuItem(value: mode, child: Text(_label(mode)))],
+              items: [
+                for (final mode in EbookReadingDataMergeMode.values)
+                  DropdownMenuItem(value: mode, child: Text(_label(mode))),
+              ],
               onChanged: (mode) {
-                if (mode != null) setState(() { _mode = mode; _preview(); });
+                if (mode != null) {
+                  setState(() {
+                    _mode = mode;
+                    _preview();
+                  });
+                }
               },
             ),
             const SizedBox(height: 16),
             if (_error != null)
-              SelectableText(_tr(_error!), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              SelectableText(
+                _tr(_error!),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             if (_plan case final plan?) ...[
               _count('New bookmarks', plan.addedBookmarks),
               _count('New highlights', plan.addedHighlights),
@@ -89,25 +110,49 @@ class _EbookReadingDataDialogState extends State<EbookReadingDataDialog> {
               const Divider(),
               _count('Resulting bookmarks', plan.result.bookmarks.length),
               _count('Resulting highlights', plan.result.highlights.length),
-              Text(_tr(plan.progressChanged ? 'Reading position will change.' : 'Reading position will stay the same.')),
-              Text(_tr(plan.appearanceChanged ? 'Appearance settings will change.' : 'Appearance settings will stay the same.')),
+              Text(
+                _tr(
+                  plan.progressChanged
+                      ? 'Reading position will change.'
+                      : 'Reading position will stay the same.',
+                ),
+              ),
+              Text(
+                _tr(
+                  plan.appearanceChanged
+                      ? 'Appearance settings will change.'
+                      : 'Appearance settings will stay the same.',
+                ),
+              ),
               if (_mode == EbookReadingDataMergeMode.replace)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: Text(_tr('Local bookmarks and highlights absent from the imported file will be removed.')),
+                  child: Text(
+                    _tr(
+                      'Local bookmarks and highlights absent from the imported file will be removed.',
+                    ),
+                  ),
                 ),
               if (!plan.hasChanges)
-                Padding(padding: const EdgeInsets.only(top: 12), child: Text(_tr('This import makes no changes.'))),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(_tr('This import makes no changes.')),
+                ),
             ],
           ],
         ),
       ),
     ),
     actions: [
-      TextButton(onPressed: () => Navigator.pop(context), child: Text(_tr('Cancel'))),
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(_tr('Cancel')),
+      ),
       FilledButton(
         key: const ValueKey('ebook-apply-reading-data'),
-        onPressed: _plan?.hasChanges == true ? () => Navigator.pop(context, _plan) : null,
+        onPressed: _plan?.hasChanges == true
+            ? () => Navigator.pop(context, _plan)
+            : null,
         child: Text(_tr('Apply import')),
       ),
     ],

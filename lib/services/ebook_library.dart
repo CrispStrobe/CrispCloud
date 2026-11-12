@@ -349,6 +349,30 @@ class EbookLibrary extends ChangeNotifier {
     entries.remove(id);
   });
 
+  /// A replacement sidecar may intentionally have no current location. Clear
+  /// only its displayed fraction; retain the user's status and reading history.
+  Future<EbookLibraryEntry> clearProgress(
+    String id, {
+    required String contentSha256,
+    required EbookReaderRenderer renderer,
+  }) {
+    _hash(contentSha256);
+    return _change((entries) {
+      final old = _require(entries, id);
+      if (old.contentSha256 != contentSha256 || old.renderer != renderer) {
+        throw StateError(
+          'The library book version or reader changed. Reopen the book before saving progress.',
+        );
+      }
+      final row = EbookLibraryEntry.fromJson({
+        ...old.toJson(),
+        'progress': null,
+      });
+      entries[id] = row;
+      return row;
+    });
+  }
+
   List<EbookLibraryEntry> query({
     String text = '',
     bool favoritesOnly = false,

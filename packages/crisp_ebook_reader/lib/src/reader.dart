@@ -20,6 +20,7 @@ class CrispEbookReader extends StatefulWidget {
     this.initialLocation,
     this.onReady,
     this.onLocationChanged,
+    this.onHistoryChanged,
     this.onSelection,
     this.onError,
     this.onExternalLink,
@@ -32,6 +33,7 @@ class CrispEbookReader extends StatefulWidget {
   final EbookAppearance appearance;
   final void Function(EbookBookInfo)? onReady;
   final void Function(EbookLocation)? onLocationChanged;
+  final void Function(EbookNavigationHistory)? onHistoryChanged;
   final void Function(EbookSelection)? onSelection;
   final void Function(String)? onError;
   final void Function(String)? onExternalLink;
@@ -87,6 +89,19 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
       _send = null;
       _error = null;
       _prepare();
+    } else if (widget.controller.isReady &&
+        jsonEncode(oldWidget.appearance.toJson()) !=
+            jsonEncode(widget.appearance.toJson())) {
+      unawaited(_updateAppearance());
+    }
+  }
+
+  Future<void> _updateAppearance() async {
+    try {
+      await _command('appearance', widget.appearance.toJson());
+    } catch (error) {
+      // A failed preference update must not obscure an already opened book.
+      if (mounted) widget.onError?.call(error.toString());
     }
   }
 
@@ -138,6 +153,7 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
     _startupTimer?.cancel();
     final session = _session;
     _opening = true;
+    final appearance = widget.appearance.toJson();
     try {
       if (widget.bytes.length > EbookReaderCapabilities.maximumInputBytes) {
         throw const FormatException(
@@ -148,8 +164,13 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
         'data': base64Encode(widget.bytes),
         'filename': widget.filename,
         'initialLocation': widget.initialLocation,
-        'appearance': widget.appearance.toJson(),
+        'appearance': appearance,
       });
+      if (mounted &&
+          _session == session &&
+          jsonEncode(appearance) != jsonEncode(widget.appearance.toJson())) {
+        await _updateAppearance();
+      }
     } catch (error) {
       if (mounted && _session == session) _fail(error.toString());
     }
@@ -196,6 +217,12 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
         );
         widget.controller.updateSelection(selection);
         widget.onSelection?.call(selection);
+      case 'history':
+        final history = EbookNavigationHistory.fromJson(
+          Map<String, dynamic>.from(data as Map),
+        );
+        widget.controller.updateHistory(history);
+        widget.onHistoryChanged?.call(history);
       case 'externalLink':
         widget.onExternalLink?.call('$data');
       case 'error':

@@ -5,7 +5,10 @@ import 'package:universal_html/html.dart' as html;
 
 import 'ebook_edit_session.dart';
 
-Future<EbookSaveOutcome?> exportReadingData(Uint8List bytes, String name) async {
+Future<EbookSaveOutcome?> exportReadingData(
+  Uint8List bytes,
+  String name,
+) async {
   final url = html.Url.createObjectUrlFromBlob(
     html.Blob([bytes], 'application/json;charset=utf-8'),
   );

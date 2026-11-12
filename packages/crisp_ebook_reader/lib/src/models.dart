@@ -327,8 +327,9 @@ class EbookImportPayload {
 
 /// Explicit capabilities, including scope limits that the host should expose.
 class EbookReaderCapabilities {
-  /// Linux uses the application's Flutter chapter reader. An embedded browser
-  /// runtime is deliberately not bundled by this permissively licensed package.
+  /// Platforms with an immediately available embedded-browser integration.
+  /// Linux requires a separate runtime probe and otherwise uses the chapter
+  /// reader; this synchronous flag does not replace that probe's result.
   static bool get supportsEmbeddedReader =>
       kIsWeb ||
       {

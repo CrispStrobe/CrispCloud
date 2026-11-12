@@ -83,5 +83,8 @@ Future<EbookSaveOutcome?> exportEbookReadingDataFile(
   if (name.isEmpty) name = 'book.reading.json';
   if (name.length > 180) name = name.substring(0, 180);
   if (!name.toLowerCase().endsWith('.json')) name = '$name.json';
-  return platform.exportReadingData(Uint8List.fromList(utf8.encode(json)), name);
+  return platform.exportReadingData(
+    Uint8List.fromList(utf8.encode(json)),
+    name,
+  );
 }

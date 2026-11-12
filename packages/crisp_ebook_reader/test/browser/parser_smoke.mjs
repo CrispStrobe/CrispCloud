@@ -17,7 +17,9 @@ Object.defineProperty(dom.window.HTMLElement.prototype,'innerText',{
 })
 for (const name of ['document','HTMLElement','customElements','DOMParser','XMLSerializer','Node','NodeFilter','Range','EventTarget','Event','CustomEvent','ProcessingInstruction']) globalThis[name] = dom.window[name]
 globalThis.CSS = {escape:value => String(value).replace(/[^a-z0-9_-]/gi, char => `\\${char}`)}
-const {makeBook} = await import('../../assets/foliate/view.js')
+const {makeBook, View} = await import('../../assets/foliate/view.js')
+const {checkReadingControls} = await import('./reader_controls.mjs')
+await checkReadingControls(View)
 const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument,serializeDocument,sanitizeCss} = await import('../../assets/security.js')
 const {exportPublication} = await import('../../assets/normalize.js')
 const {imageDimensions} = await import('../../assets/image_dimensions.js')

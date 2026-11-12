@@ -8,6 +8,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../models.dart';
 import 'asset_server.dart';
 import 'host.dart' show EbookHostSender;
+import 'host_linux.dart';
 
 Widget buildEbookHost({
   required String session,
@@ -15,12 +16,19 @@ Widget buildEbookHost({
   required void Function(EbookJson message) onMessage,
   required void Function(String message) onError,
 }) =>
-    _NativeHost(
-      session: session,
-      onConnected: onConnected,
-      onMessage: onMessage,
-      onError: onError,
-    );
+    Platform.isLinux
+        ? buildLinuxEbookHost(
+            session: session,
+            onConnected: onConnected,
+            onMessage: onMessage,
+            onError: onError,
+          )
+        : _NativeHost(
+            session: session,
+            onConnected: onConnected,
+            onMessage: onMessage,
+            onError: onError,
+          );
 
 class _NativeHost extends StatefulWidget {
   const _NativeHost({
@@ -45,12 +53,7 @@ class _NativeHostState extends State<_NativeHost> {
   void initState() {
     super.initState();
     _server = EbookAssetServer(widget.session);
-    if (Platform.isLinux) {
-      _error =
-          'The enhanced ebook reader is unavailable on Linux. Use the app’s chapter reader and EPUB editor.';
-    } else {
-      unawaited(_start());
-    }
+    unawaited(_start());
   }
 
   bool _isHostUrl(String value) {
