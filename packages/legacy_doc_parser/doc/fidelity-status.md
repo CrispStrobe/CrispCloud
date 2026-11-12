@@ -18,6 +18,17 @@ every Word document or every renderer.
 
 ## Evidence is versioned
 
+The [clean 6b2b611 checkpoint](evidence/6b2b611/README.md), identical in source
+tree to pushed `34e1484`, retains all 22 original inputs and all 66 requested
+repeat imports without execution/import errors. Every initial page count
+matches, six initial RGB/text/geometry comparisons are exact, and both reviewed
+source goldens reproduce. Every strict structural comparison still reports
+differences. All source and cycle-input bytes remain unchanged. The independent
+schema gate accepts all 129 required outputs with zero errors; portable checks
+pass 616 Dart and 104 Python tests, plus JavaScript acceptance. The complete
+161 MB native JSON is retained losslessly as XZ, alongside the schema report and
+portable log. These measurements do not establish universal fidelity.
+
 The [clean 8060ac1 checkpoint](evidence/8060ac1/README.md) retains all 22
 native cases, three requested round trips, the complete compressed reports and
 portable-check log. All initial imports retained page count; six initial page
@@ -51,6 +62,9 @@ LibreOffice discards the section revision history in the dedicated native
 probe. Matching that discarded native history is not accepted as correctness:
 the probe separately requires the authored previous section values, authors,
 dates and unique revision identities in the parser output.
+The [raw-byte review audit](review-loss-attribution.md) separately attributes
+the sealed corpus's missing reply and section history to the native bridge,
+using retained exact inputs rather than structural counts alone.
 
 ## Repeatable checks
 

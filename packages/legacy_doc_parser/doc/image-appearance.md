@@ -24,8 +24,10 @@ continue through the existing bounded media path.
 The quarter-turn mapping applies only to ungrouped picture frames with
 absolute positions on both axes and supported origins. Inline rotations,
 arbitrary angles, aligned-anchor rotation, unknown origin/override semantics
-and other shape contexts remain explicit limitations. An omitted rotation
-also produces an `unrenderedImageRotation` evidence record. Adjusted position
+and other shape contexts remain explicit limitations. For a supported picture
+context, an omitted rotation also produces an `unrenderedImageRotation` evidence
+record; unsupported contexts retain the broader source OfficeArt evidence.
+Adjusted position
 offsets must fit DrawingML's signed offset range. No page-margin constant is
 added or subtracted; the receiving layout engine resolves the preserved
 origin.

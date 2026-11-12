@@ -26,7 +26,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser
-      ref: 77b6b1d6b3edc52e314b64043fc2e6d7585fe4d7
+      ref: 34e14841ef679c6b480673ef5be354286dbd67dc
 ```
 
 The example pins a tested development checkpoint. When updating, choose a
@@ -180,7 +180,10 @@ oracles, and a freshly built independent Open XML SDK validation gate. The SDK
 corpus has an exact, deterministic inventory and positive/negative controls.
 Native rendering additionally requires an installed Office application and
 records its version, fonts, source hashes and successive round trips.
-[The clean 8060ac1 receipt](doc/evidence/8060ac1/README.md) is a reproducible
-historical checkpoint; later fixes do not overwrite its original findings.
+[The clean 6b2b611 receipt](doc/evidence/6b2b611/README.md) retains 22 inputs
+and all 66 requested repeat imports. Six initial renders are exact on that
+renderer; all strict structural comparisons still report differences. The
+[earlier 8060ac1 receipt](doc/evidence/8060ac1/README.md) remains a reproducible
+historical checkpoint, including the import failure corrected subsequently.
 
 The current preservation increment also retains supported Word compatibility flags and OfficeArt text-box layout and supplies bounded vector previews. Unsupported drawing records remain explicit retained evidence; the parser does not claim exact native layout for every legacy drawing.

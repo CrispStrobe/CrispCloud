@@ -439,6 +439,7 @@
   ],
   "reviewed_files": [
     ".github/workflows/smb-rust.yml",
+    ".github/workflows/testflight-external.yml",
     "cli/lib/adapters/cli_adapter_factory.dart",
     "cli/lib/adapters/cli_storage_client.dart",
     "cli/lib/adapters/smb_adapter.dart",

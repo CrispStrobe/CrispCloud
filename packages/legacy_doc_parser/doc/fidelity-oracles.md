@@ -10,6 +10,7 @@ under `test/fixtures/fidelity/quds-expectations`; they describe original OOXML,
 not a promise that a native DOC bridge can carry every newer OOXML feature.
 
 ```
+python3 -m pip install -r tool/fidelity/requirements-test.txt
 python3 tool/fidelity/oracle.py
 python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
 python3 tool/fidelity/run.py --office /path/to/installed/soffice \
@@ -22,6 +23,11 @@ No Office application is installed or downloaded. Normal unit tests do not
 require native Office. The opt-in runner uses an isolated profile and creates
 a new output directory. Source fixtures are hashed again after every run.
 Package XML and relationships are inspected without fetching external targets.
+
+The portable Python suite requires Python 3.11 or newer and the pinned Pillow
+test dependency for independent colored-border masks. CI installs that declared
+dependency in Python 3.12; a preinstalled local imaging library is not assumed.
+Optional image-appearance native probes additionally use NumPy and PyMuPDF.
 
 For each original DOCX the runner retains its structural snapshot and renders
 the original package before creating a DOC using installed LibreOffice. It
