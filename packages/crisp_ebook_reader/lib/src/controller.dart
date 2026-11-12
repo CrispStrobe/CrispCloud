@@ -16,6 +16,8 @@ class CrispEbookController extends ChangeNotifier {
   EbookLocation? location;
   EbookSelection? selection;
   EbookNavigationHistory history = const EbookNavigationHistory();
+  EbookSpeechState speech = const EbookSpeechState();
+  int _speechRequest = 0;
   bool get isReady => bookInfo != null && _sender != null;
   bool get canGoBack => history.canGoBack;
   bool get canGoForward => history.canGoForward;
@@ -27,6 +29,8 @@ class CrispEbookController extends ChangeNotifier {
       location = null;
       selection = null;
       history = const EbookNavigationHistory();
+      speech = const EbookSpeechState();
+      ++_speechRequest;
     }
     _sender = sender;
   }
@@ -40,6 +44,8 @@ class CrispEbookController extends ChangeNotifier {
     location = null;
     selection = null;
     history = const EbookNavigationHistory();
+    speech = const EbookSpeechState();
+    ++_speechRequest;
   }
 
   void updateBookInfo(EbookBookInfo value) {
@@ -64,6 +70,48 @@ class CrispEbookController extends ChangeNotifier {
     }
     history = value;
     notifyListeners();
+  }
+
+  void updateSpeech(EbookSpeechState value) {
+    if (value.revision < speech.revision) return;
+    speech = value;
+    notifyListeners();
+  }
+
+  Future<EbookSpeechState> _speechCommand(String method,
+      [EbookJson args = const {}]) async {
+    final sender = _sender;
+    final request = ++_speechRequest;
+    final result = await _command(method, args);
+    final value =
+        EbookSpeechState.fromJson(Map<String, dynamic>.from(result as Map));
+    if (_sender == sender && request == _speechRequest) updateSpeech(value);
+    return value;
+  }
+
+  Future<EbookSpeechState> refreshSpeech() => _speechCommand('speechStatus');
+
+  /// Invoke directly from the user's button callback. Some embedded browsers
+  /// additionally require the in-reader Continue reading activation button.
+  Future<EbookSpeechState> startSpeech({String? voiceUri, double? rate}) =>
+      _speechCommand('speechStart', _speechOptions(voiceUri, rate));
+
+  Future<EbookSpeechState> pauseSpeech() => _speechCommand('speechPause');
+  Future<EbookSpeechState> resumeSpeech() => _speechCommand('speechResume');
+  Future<EbookSpeechState> stopSpeech() => _speechCommand('speechStop');
+
+  /// Changing an active voice/rate pauses speech. Resume explicitly afterward.
+  Future<EbookSpeechState> setSpeechOptions({String? voiceUri, double? rate}) =>
+      _speechCommand('speechOptions', _speechOptions(voiceUri, rate));
+
+  static EbookJson _speechOptions(String? voiceUri, double? rate) {
+    if (rate != null && !rate.isFinite) {
+      throw ArgumentError.value(rate, 'rate', 'Speech rate must be finite');
+    }
+    return {
+      if (voiceUri != null) 'voiceUri': voiceUri,
+      if (rate != null) 'rate': rate.clamp(0.5, 2),
+    };
   }
 
   Future<dynamic> _command(String method, [EbookJson args = const {}]) {

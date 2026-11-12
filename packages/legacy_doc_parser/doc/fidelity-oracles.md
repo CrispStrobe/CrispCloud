@@ -46,3 +46,45 @@ additionally rejects every semantic, round-trip, or exact-render difference.
 It never regenerates or blesses goldens. Reports and rasters stay in the
 requested output directory for inspection. Exact results apply only to the
 recorded fixture, Office build and fonts; they do not certify all documents.
+
+## Structure beyond element counts
+
+`structure.py` independently reads the emitted OOXML. Its snapshots include
+direct table/row/cell properties, table grids and merge controls, referenced
+table-style inheritance and conditional regions, every used numbering level
+and override, and the numbering-instance graph. Renumbering identifiers does
+not hide the collapse of two restart instances into one. Unequal section-column
+widths, compatibility settings and explicit disabled values are inspected too.
+Historical `sectPr` children belong to revision evidence and do not increase the
+number of current sections.
+
+Comment parent links join the final paragraph of each comment, including
+relocated parts, case-insensitive hexadecimal paragraph IDs, replies preceding
+their parents, and the resolved flag. VML textbox chains are validated for
+dangling links, conflicting successors, multiple predecessors and cycles.
+Box dimensions, margins, text flow, paint and DrawingML sequence metadata are
+measured separately from their count. Ink elements are recorded as source
+properties, not interpreted as rendered strokes.
+
+Revision facts include the changed span, its location, author/date and previous
+property state. Independent accepted/rejected **text projections** cover inline
+insertions/deletions, move text, paragraph-mark merging and row visibility.
+They are measurement views only: the runner does not accept or reject any change
+in the source, and these projections are not a complete implementation of Word's
+table topology, numbering history or editing rules.
+
+The richer snapshot is deliberately strict about structural changes. A
+semantically equivalent native rewrite may still be reported; such a finding
+requires inspection and is never automatically accepted as a new expectation.
+This prevents visually identical, flattened tables or review data from passing
+as preserved editable structure. `test_structure.py` uses independently authored
+OOXML and count-preserving mutations, rather than converter-generated goldens.
+
+Primary references:
+
+- [Conditional table-style properties](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.tablestyleproperties)
+- [Numbering level overrides](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.leveloverride)
+  and [restart semantics](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.levelrestart)
+- [CommentEx paragraph join](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.office2013.word.commentex)
+- [VML next-textbox reference](https://learn.microsoft.com/en-us/windows/win32/vml/msdn-online-vml-mso-next-textbox-attribute)
+- [WordprocessingML revision structure](https://learn.microsoft.com/en-us/office/open-xml/word/how-to-accept-all-revisions-in-a-word-processing-document)

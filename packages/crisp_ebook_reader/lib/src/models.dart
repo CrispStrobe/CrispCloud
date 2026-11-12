@@ -140,6 +140,86 @@ class EbookNavigationHistory {
       };
 }
 
+/// Foreground read-aloud. Availability depends on locally installed platform
+/// voices; remote voices are never offered publication text.
+enum EbookSpeechStatus { unavailable, stopped, starting, speaking, paused }
+
+class EbookSpeechVoice {
+  const EbookSpeechVoice({
+    required this.uri,
+    required this.name,
+    required this.language,
+    this.isDefault = false,
+  });
+  final String uri;
+  final String name;
+  final String language;
+  final bool isDefault;
+
+  factory EbookSpeechVoice.fromJson(EbookJson json) => EbookSpeechVoice(
+        uri: json['uri'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        language: json['language'] as String? ?? '',
+        isDefault: json['isDefault'] == true,
+      );
+}
+
+class EbookSpeechState {
+  const EbookSpeechState({
+    this.status = EbookSpeechStatus.unavailable,
+    this.voices = const [],
+    this.voiceUri = '',
+    this.rate = 1,
+    this.reason = '',
+    this.requiresGesture = false,
+    this.sectionIndex = -1,
+    this.chunkIndex = 0,
+    this.revision = -1,
+  });
+  final EbookSpeechStatus status;
+  final List<EbookSpeechVoice> voices;
+  final String voiceUri;
+  final double rate;
+  final String reason;
+  final bool requiresGesture;
+  final int sectionIndex;
+  final int chunkIndex;
+
+  /// Increasing within one reader host. It prevents delayed command replies
+  /// from overwriting newer stop/pause events. A new attachment resets it.
+  final int revision;
+
+  bool get isAvailable =>
+      status != EbookSpeechStatus.unavailable && voices.isNotEmpty;
+  bool get isActive =>
+      status == EbookSpeechStatus.starting ||
+      status == EbookSpeechStatus.speaking;
+  bool get isPaused => status == EbookSpeechStatus.paused;
+
+  factory EbookSpeechState.fromJson(EbookJson json) {
+    final rawRate = json['rate'];
+    return EbookSpeechState(
+      status: EbookSpeechStatus.values.firstWhere(
+        (value) => value.name == json['status'],
+        orElse: () => EbookSpeechStatus.unavailable,
+      ),
+      voices: List.unmodifiable((json['voices'] as List? ?? const [])
+          .whereType<Map>()
+          .map((value) =>
+              EbookSpeechVoice.fromJson(Map<String, dynamic>.from(value)))),
+      voiceUri: json['voiceUri'] as String? ?? '',
+      rate: rawRate is num && rawRate.isFinite
+          ? rawRate.toDouble().clamp(0.5, 2)
+          : 1,
+      reason: json['reason'] as String? ?? '',
+      requiresGesture: json['requiresGesture'] == true,
+      sectionIndex: (json['sectionIndex'] as num?)?.toInt() ?? -1,
+      chunkIndex: (json['chunkIndex'] as num?)?.toInt() ?? 0,
+      revision: (json['revision'] as num?)?.toInt() ?? -1,
+    );
+  }
+}
+
 class EbookSelection {
   const EbookSelection({
     required this.text,

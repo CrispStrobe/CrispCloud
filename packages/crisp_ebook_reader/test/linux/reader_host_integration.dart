@@ -21,7 +21,27 @@ Future<void> until(WidgetTester tester, Future<bool> Function() condition,
     await tester.pump(const Duration(milliseconds: 100));
     if (await condition()) return;
   } while (DateTime.now().isBefore(deadline));
+  // Counts and focus flags identify a Flutter-to-native transport failure
+  // without logging publication text or evaluating arbitrary page scripts.
+  try {
+    debugPrint('linux-host test: last native status ${jsonEncode(await stats())}');
+  } catch (_) {
+    debugPrint('linux-host test: native status unavailable after failure');
+  }
   fail(reason);
+}
+
+Future<void> focusReader(WidgetTester tester, Finder texture, Offset point) async {
+  final focus = Focus.of(tester.element(texture));
+  final textureId = tester.widget<Texture>(texture).textureId;
+  await tester.tapAt(tester.getRect(texture).topLeft + point,
+      kind: PointerDeviceKind.mouse);
+  await until(tester, () async {
+    final items = (await stats())['items'] as List;
+    return focus.hasPrimaryFocus &&
+        items.any((item) =>
+            item['textureId'] == textureId && item['focused'] == true);
+  }, 'Clicking the publication did not focus its Flutter and native surfaces.');
 }
 
 void main() {
@@ -179,11 +199,14 @@ void main() {
     expect(overlayClicks, 1);
 
     final content = tester.getRect(find.byType(Texture));
-    await tester.tapAt(content.topLeft + const Offset(200, 100),
-        kind: PointerDeviceKind.mouse);
+    await focusReader(tester, find.byType(Texture), const Offset(200, 100));
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await until(tester, () async {
+      final items = (await stats())['items'] as List;
+      return items.single['keyEvents'] >= 2;
+    }, 'The selection shortcut did not reach native keyboard dispatch.');
     await until(tester, () async => selection?.text.contains('Library') == true,
         'Native keyboard selection did not produce a Foliate CFI.');
     expect(selection!.cfi, startsWith('epubcfi('));
@@ -223,9 +246,7 @@ void main() {
     // The first link returns to chapter one and the second remains here. Tab,
     // Tab, Shift+Tab, Enter must activate the first link using actual WebKit
     // keyboard focus, rather than simulating the controller's navigation API.
-    await tester.tapAt(
-        tester.getRect(find.byType(Texture)).topLeft + const Offset(550, 20),
-        kind: PointerDeviceKind.mouse);
+    await focusReader(tester, find.byType(Texture), const Offset(550, 20));
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
@@ -328,8 +349,7 @@ void main() {
       final texture = find.descendant(
           of: find.byKey(ValueKey('reader-$focused')),
           matching: find.byType(Texture));
-      await tester.tapAt(tester.getRect(texture).topLeft + const Offset(80, 80),
-          kind: PointerDeviceKind.mouse);
+      await focusReader(tester, texture, const Offset(80, 80));
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await until(
           tester,

@@ -143,8 +143,12 @@ jobs:
           python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
           python3 tool/crypto_release_evidence.py --check
 
+      - name: Verify CrisperBooks consumer source
+        run: python3 tool/verify_crisperbooks.py
+
       - name: Resolve vendored analyzer dependencies
         run: |
+          (cd packages/crisperbooks && flutter pub get)
           (cd packages/quds_office_engine && dart pub get)
           (cd packages/quds_office_editor && flutter pub get)
           (cd packages/legacy_doc_parser && dart pub get)

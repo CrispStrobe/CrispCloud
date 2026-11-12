@@ -4,3 +4,6 @@ body { font: 16px system-ui, sans-serif; color: #25364b; }
 #status { position: absolute; inset: 0; display: grid; place-items: center; padding: 2rem; text-align: center; }
 #status[hidden] { display: none; }
 foliate-view::part(filter) { background: transparent; }
+
+#speech-gesture { position: fixed; z-index: 20; left: 50%; bottom: 1rem; transform: translateX(-50%); padding: .75rem 1.25rem; border: 1px solid #245f9f; border-radius: .5rem; background: #fff; color: #183f70; font: inherit; cursor: pointer; }
+#speech-gesture[hidden] { display: none; }

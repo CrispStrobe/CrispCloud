@@ -1,0 +1,7 @@
+.dart_tool/
+build/
+coverage/
+node_modules/
+native/target/
+wasm/target/
+pubspec.lock

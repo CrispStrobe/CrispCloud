@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "fix/word-package-guards-20261112",
-  "source_commit": "a9a8459939b4068bc357eda71067e8f402579bf3",
+  "source_commit": "35230d3862fbfc268ac7b5fa2a243e9f6a347057",
   "files": {
     "packages/quds_office_editor/CHANGELOG.md": "7290a134a6f9a039cb68584b5f5f0296a0dd7d7ffe9f215bdbdfa0efef6619d5",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",
@@ -274,7 +274,7 @@
     "packages/quds_office_engine/test/word_tree_test.dart": "761103a75d2692a378a136f59f0e4776aa1a3d707c612ab6c6ee52fb9adc9f0a",
     "packages/quds_office_engine/test/xml_whitespace_fidelity_test.dart": "f9541bc7b08f0bee825caf7ced3377372e87d0800f6c91fb065307f96fb0b48e",
     "packages/quds_office_engine/test/zip_bounded_read_test.dart": "ae33b7e3eca89abbcbe27c70f7f7ea2a42abb15bf17e3bb67fef9e03895e9ddf",
-    "packages/quds_office_engine/tool/fidelity/README.md": "12e6b8ece4f47c138f9bfd416bdbacf253f5f782ffa3f7fdaff179473b054adb",
+    "packages/quds_office_engine/tool/fidelity/README.md": "5829d7a00cfee68130cced0379b93ecb8394fd1356f3e4aa54aa135e56838827",
     "packages/quds_office_engine/tool/fidelity/altchunk_oracle.py": "f0c35b0960e8e28e84695e7ce61362c6d60dbb7fdd6564c20664ab53aadf5304",
     "packages/quds_office_engine/tool/fidelity/audit_operations.py": "44c2821d062bd2b0ce221db63d41c3cce26b68d6d9dbff05ccc977c162e58d88",
     "packages/quds_office_engine/tool/fidelity/auxiliary_content_control_oracle.py": "27b040f269c52baf71ba85164d92c5c65103ee76e3714d9bb3c667dab3945139",
@@ -352,9 +352,9 @@
     "packages/quds_office_engine/tool/fidelity/word_structure_steps.dart": "c1be2b878fc14edc3607e1f2afc81b63ee1b8a084ceb717a57cbabf0c3ad42f4",
     "tool/office-validation/OfficeValidation.csproj": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
     "tool/office-validation/Program.cs": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
-    "tool/office-validation/render.py": "968d1a2af857ed6acf85e9d2b67d23b6efb68966e8811d45ff23a6fcc72745ff",
+    "tool/office-validation/render.py": "89652d0ecc8a9f96940d8375fd2f537989f34cee62c52db7fc7d1e717df69740",
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
-    "tool/office-validation/test_render.py": "0862c07a1a77c78c48e6fac9a460b587f3d5a321ec29d93850339bc227343a20",
+    "tool/office-validation/test_render.py": "224448f1d1f9c954666a2286d15ab900950cef98b7069bfa9b4fceb3b68d1081",
     "packages/quds_office_editor/lib/quds_office_editor.dart": "aeaf43f56fae1d83eaa2a1044ece9760e5834482b5f8fdfc49d0ddf3bf64c681",
     "packages/quds_office_editor/lib/src/embed/word_tab_stops_editor.dart": "7af38384bd4abec5163b257506a87fa889313acb911d1bcf0e2622710e7d05d5",
     "packages/quds_office_editor/test/word_tab_stops_editor_test.dart": "78c66bc45eb49b0d202df59f03912b4e0c5b4e79bfe7d3ded916d12173c81aba",
@@ -486,7 +486,7 @@
     "packages/legacy_doc_parser/test/support/table_word_fixture.dart": "6bbce21810c7e56e6132d9eff30704e5260475c4a6e48baad91c92d763beb3f6",
     "packages/legacy_doc_parser/tool/fidelity/convert.dart": "4c8eefede4babfc2179f701b49055a5a416638d11fef05393c60f665fe1c8018",
     "packages/legacy_doc_parser/tool/fidelity/corpus.json": "027a1a981e9eaec42399227ee816fca1339c95bd5c56917ca101f8c46a84564e",
-    "packages/legacy_doc_parser/tool/fidelity/oracle.py": "ccb55c0113516b116513a54d432a68abea534b64e8233aafeef05af3b6c50441",
+    "packages/legacy_doc_parser/tool/fidelity/oracle.py": "a672665699097f0fa01b14e22275930d41971a5b100a34aa9ab35721d5b65d2b",
     "packages/legacy_doc_parser/tool/fidelity/run.py": "1ea21b9e7002c3b34abb561669f8e8d9afb2e19c70ee79b77ae4995860658bbc",
     "packages/legacy_doc_parser/tool/fidelity/test_oracle.py": "ca6dc683208b780772e015f09dd86b2d11c574c39f305ed32a3d99d9cb672810",
     "packages/quds_office_editor/test/word_bookmark_copy_test.dart": "e473d96ea7c4d8c15d314486648b7ce91a83cb986327be54ebd55c4fd220ce86",
@@ -521,6 +521,8 @@
     "packages/legacy_doc_parser/test/legacy_word_metafile_render_test.dart": "62a9882df24c42022aaf0604f804ccbe2a617b03c87db96788c70829a053520b",
     "packages/legacy_doc_parser/test/legacy_word_officeart_test.dart": "88067448d9241093df24281bad60b348a129274ca7d4ba9d63e07e9516b20549",
     "packages/legacy_doc_parser/test/legacy_word_textbox_layout_test.dart": "e1d4423f75ff0225319b0d32291677e3ae4b17e782e7f999f4ec5f780a06eaa2",
-    "packages/legacy_doc_parser/test/support/officeart_shape_fixture.dart": "f8af0dc4e2dd0a9d598996dc64f835a7ab6be12dfb922bd70fbd80d9c0c7c9d7"
+    "packages/legacy_doc_parser/test/support/officeart_shape_fixture.dart": "f8af0dc4e2dd0a9d598996dc64f835a7ab6be12dfb922bd70fbd80d9c0c7c9d7",
+    "packages/legacy_doc_parser/tool/fidelity/structure.py": "ef00de02f51fb354ced121bab65dbe57342d0a1585059ae5c1a78c471763c283",
+    "packages/legacy_doc_parser/tool/fidelity/test_structure.py": "1089696339c59fa64c33403848e495c4128d8cd31e60a07ecf22a8f6fc22cfcd"
   }
 }

@@ -36,6 +36,19 @@ try {
     // Exercise the production compatibility import in a real document before
     // any EPUB is parsed, as on WebKit versions without standard grouping.
     await page.addInitScript(() => { delete Object.groupBy; delete Map.groupBy })
+    // The integration test supplies a deterministic local-voice implementation.
+    // It verifies the real DOM/bridge/overlay path, not OS voice installation.
+    await page.addInitScript(() => {
+        const local = {voiceURI:'test-local', name:'Test local', lang:'en-US', localService:true, default:true}
+        class Speech extends EventTarget {
+            getVoices() { return [local, {voiceURI:'test-remote', name:'Remote', lang:'en', localService:false}] }
+            speak(value) { window.__speechUtterances.push(value); value.onstart?.() }
+            cancel() { ++window.__speechCancellations }
+        }
+        window.__speechUtterances = []; window.__speechCancellations = 0
+        Object.defineProperty(window, 'speechSynthesis', {value:new Speech()})
+        Object.defineProperty(window, 'SpeechSynthesisUtterance', {value:class { constructor(text) { this.text = text } }})
+    })
     const unexpectedRequests = []
     const errors = []
     let currentCommand = 'startup'
@@ -117,6 +130,23 @@ try {
         return view.getCFI(index, range)
     })
     const anchorBeforeStyle = await headingCfi()
+    const speechState = await command('speechStatus')
+    assert.deepEqual(speechState.voices.map(voice => voice.uri), ['test-local'])
+    assert.equal((await command('speechStart')).status, 'speaking')
+    assert.equal(await headingCfi(), anchorBeforeStyle, 'Speech overlays preserve publication CFI nodes')
+    assert(await page.evaluate(() => document.querySelector('foliate-view').renderer
+        .getContents().some(item => item.overlayer?.element.childElementCount > 0)),
+        'Read-aloud draws a range on the actual rendered chapter')
+    assert.equal((await command('speechPause')).status, 'paused')
+    assert.equal((await command('speechResume')).status, 'speaking')
+    await page.evaluate(() => window.__speechUtterances.at(-1).onerror({error:'not-allowed'}))
+    await page.locator('#speech-gesture').waitFor({state:'visible'})
+    await page.locator('#speech-gesture').click()
+    assert.equal((await lastEvent('speech')).status, 'speaking')
+    await command('goTo', {target:secondChapter.href})
+    assert.equal((await lastEvent('speech')).status, 'stopped', 'Manual navigation stops local speech')
+    assert.equal(await page.evaluate(() => document.getElementById('speech-gesture').hidden), true)
+
     const publisher = await command('appearance', {fontFamily:'monospace', usePublisherStyles:true,
         maxColumnCount:1, pageMargin:40, pageWidth:900})
     assert.equal(publisher.pageMargin, 40)

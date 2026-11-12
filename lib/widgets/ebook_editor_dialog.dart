@@ -2029,6 +2029,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     }
     final Widget reader = _usesChapterReader
         ? EbookChapterReader(
+            translate: context.ebookTr,
             key: ValueKey(_readerVersion),
             document: document!,
             controller: _chapterReader,
