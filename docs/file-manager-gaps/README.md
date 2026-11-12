@@ -28,6 +28,20 @@ may run in parallel. Push the scope first, then each coherent implementation/fix
 checkpoint, then its validation and status update. Use leased fast-forward updates;
 preserve earlier feature branches and do not rewrite or merge the main branch.
 
+## Current progress
+
+Eight implementation increments are preserved on remote feature branches:
+**five closed scopes** (G02, G03, G13, G27, G37) and **three implemented features
+with target-runtime acceptance pending** (G01, G04, G12). The remaining 43 items
+comprise **31 scoped implementation gaps, 10 research prerequisites and two
+cross-cutting acceptance items**. The acceptance work also applies to delivered
+features where their specific boundary names a target-runtime check.
+
+The [12 November validation record](validation-20261112.md) separates passing
+unit/widget/native-loopback evidence, static analysis, JavaScript compilation,
+the unsuccessful optional WebAssembly dry run and outstanding native/live checks.
+The current stack contains the original scope and every incremental checkpoint.
+
 ## Lane index
 
 | Lane | Scope | Items |
@@ -97,10 +111,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Execution order
 
-1. G01 incoming-drop identity, G02 direct Quick Open actions and G03 conflict previews form the first batch. Preserve each verified increment separately as it becomes ready.
-2. G04 menu configuration, G05 gathering stack, G09 command entry, G12 external terminal, and G13 file conversion.
-3. G18 archive endpoints, followed by G19–G24; run G25/G27/G29/G37 transport increments as their prerequisites are ready.
-4. Remaining provider, native, localization and release lanes, with required target-specific evidence recorded independently.
+1. Continue workspace interactions with G05 gathering stack, then G09 command entry using the delivered G01/G04 foundations.
+2. Add G10 external remote editing before G11 external comparison/merge-back staging; implement G14–G17 within their stated resource and platform boundaries.
+3. Add G18 writable archive endpoints before G19/G20 transfer and synchronization integration; preserve the separate G21–G24 format, worker and adapter boundaries.
+4. Continue G25 FTP resume, G26 server-to-server transfer, G28 direct-protocol proxies and G29 global bandwidth allocation, then remaining provider work as its prerequisites become available.
+5. Complete localization/help and native/release lanes with their required target-specific evidence. G50/G51 stay open until their actual acceptance checks pass.
 
 Numbering is stable traceability, not a claim that later independent work must
 wait for unavailable legacy hardware or a platform-specific entitlement.
@@ -117,7 +132,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G37 FTP transport lifetime | `feature/ftp-transport-lifetime-20261112` · `c8f4561` · PR #64 | 145 tests passed across nine FTP/SOCKS/TLS suites, including 24 native lifetime cases | Closed for owned transport cleanup; queue API boundary documented |
 | G04 configurable menus | `feature/configurable-menus-20261112` · `55dd210` · PR #65 | 96 tests passed across 11 menu, screen, keyboard, navigation and SQLite-runtime suites | Implemented; native presentation and keyboard acceptance pending |
 | G27 SOCKS4/4a HTTP routing | `feature/socks4-http-routing-20261112` · `42ae79c` · PR #66 | 197 tests passed across six proxy/security/TLS suites including the final host-validation delta; focused analysis and independent review clean | Closed for native HTTP/HTTPS routing |
-| G13 file encoding/decoding | `feature/file-conversion-20261112` | 80 tests passed across codec, service/native-filesystem and dialog suites; no analyzer findings in new files | Closed for documented UUE/XXE and single-part MIME formats on supported exclusive-output backends |
+| G13 file encoding/decoding | `feature/file-conversion-20261112` · implementation `ebede8d` · PR #67 | 80 tests passed across codec, service/native-filesystem and dialog suites; no analyzer findings in new files | Closed for documented UUE/XXE and single-part MIME formats on supported exclusive-output backends |
+| Integrated validation | `feature/file-conversion-20261112` · code checkpoint `ebede8d` | Full analysis: 0 errors, 96 warnings, 1,038 infos; JavaScript release web build passed with version/hash; optional WebAssembly dry run exited 247 | [Detailed evidence and limits](validation-20261112.md) |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.
