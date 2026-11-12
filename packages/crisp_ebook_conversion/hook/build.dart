@@ -50,11 +50,14 @@ void main(List<String> arguments) async {
         if (input.userDefines.path('rustup_home') case final Uri directory)
           'RUSTUP_HOME': directory.toFilePath(),
         if (code.targetOS == OS.iOS)
-          // ignore: deprecated_member_use
-          'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
+          'IPHONEOS_DEPLOYMENT_TARGET':
+              KindlingBuildTarget.appleDeploymentTarget(
+                code.iOS.deploymentVersion,
+              ),
         if (code.targetOS == OS.macOS)
-          // ignore: deprecated_member_use
-          'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0',
+          'MACOSX_DEPLOYMENT_TARGET': KindlingBuildTarget.appleDeploymentTarget(
+            code.macOS.deploymentVersion,
+          ),
       };
       if (code.targetOS == OS.iOS || code.targetOS == OS.macOS) {
         final sdk = code.targetOS == OS.macOS

@@ -132,6 +132,10 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
 
   Future<void> _open() async {
     if (_opening || _send == null) return;
+    // The host has started. Parsing now uses the open command's 90-second
+    // deadline; the shorter WebView-startup timer must not hide a slow book
+    // permanently before that command has had its documented time to finish.
+    _startupTimer?.cancel();
     final session = _session;
     _opening = true;
     try {

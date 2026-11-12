@@ -20,6 +20,7 @@ globalThis.CSS = {escape:value => String(value).replace(/[^a-z0-9_-]/gi, char =>
 const {makeBook} = await import('../../assets/foliate/view.js')
 const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument,sanitizeCss} = await import('../../assets/security.js')
 const {exportPublication} = await import('../../assets/normalize.js')
+const {imageDimensions} = await import('../../assets/image_dimensions.js')
 const here = dirname(fileURLToPath(import.meta.url))
 const temporary = mkdtempSync(join(here,'.tmp-'))
 const generated = spawnSync('python3',[join(here,'make_fixtures.py'),temporary],{encoding:'utf8'})
@@ -30,6 +31,9 @@ const open = async path => {
     return {book,cleanup:secureSections(book)}
 }
 try {
+    // A truncated JPEG marker run must not abort normalization of the whole
+    // book. Keep the resource and let the platform display its broken image.
+    assert.equal(await imageDimensions(Uint8Array.from([0xff,0xd8,...Array(14).fill(0xff)]),'image/jpeg'),null)
     const safe = sanitizeDocument(parseDocument('<html><body><script>alert(1)</script><p onclick="evil()">Hello</p><img src="https://invalid.test/pixel"/><iframe srcdoc="x"/></body></html>','text/html'))
     assert.equal(safe.querySelectorAll('script,iframe,[onclick],img[src]').length,0)
     assert(safe.querySelector('meta[http-equiv="Content-Security-Policy"]').getAttribute('content').includes("script-src 'none'"))
@@ -94,8 +98,11 @@ try {
                 assert(!Buffer.from(resource.data,'base64').toString().includes('blob:'),resource.href)
             }
             if (path.includes('crisp_ebook_conversion/test/fixtures/generated/')) {
-                assert.equal(payload.metadata.title,'Crisp Conversion Fixture')
-                assert.deepEqual(payload.metadata.authors,['Test Author'])
+                const rewritten = path.split('/').pop().startsWith('updated.')
+                assert.equal(payload.metadata.title, rewritten
+                    ? 'Updated café $(touch should-not-exist); literal' : 'Crisp Conversion Fixture')
+                assert.deepEqual(payload.metadata.authors, rewritten
+                    ? ['First Author','Second Author'] : ['Test Author'])
                 const prose = payload.resources.filter(item => /xhtml/.test(item.mediaType))
                     .map(item => Buffer.from(item.data,'base64').toString()).join('\n')
                 for (const phrase of ['First Chapter','Second Chapter','silver heron','café','Ωμέγα','日本語','forty-two'])
@@ -103,6 +110,9 @@ try {
                 assert(payload.resources.some(item => item.mediaType === 'image/png'))
                 const labels = items => items.flatMap(item => [item.label,...labels(item.children)])
                 assert(labels(payload.toc).includes('The Answer'),`Kindling nested TOC anchor: ${JSON.stringify(payload.toc)}`)
+                const entries = items => items.flatMap(item => [item,...entries(item.children)])
+                const parent = entries(payload.toc).find(item => item.label === 'First Chapter')
+                assert(parent && labels(parent.children).includes('The Answer'),`Kindling TOC hierarchy: ${JSON.stringify(payload.toc)}`)
                 assert(/href="\d+\.xhtml#/.test(prose),'Kindling cross-chapter link')
             }
             console.log(`PASS ${path}: ${payload.readingOrder.length} chapters, ${payload.resources.length} resources; ${payload.warnings.length} warnings`)

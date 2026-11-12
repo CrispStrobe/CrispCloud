@@ -6,6 +6,7 @@ of Kindling; reader package tests additionally use the foliate-js parser.
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import struct
 import subprocess
@@ -78,6 +79,19 @@ def inspect(data, expected_version):
     text = b"".join(bodies)
     assert b"First Chapter" in text and b"Second Chapter" in text, text[:400]
     assert "café".encode() in text
+    if expected_version == 6:
+        guide = re.search(rb'<reference type="toc" title="Contents" filepos=(\d+)', text)
+        assert guide, "The legacy MOBI half must retain a discoverable table of contents"
+        toc = text[int(guide[1]):]
+        assert toc.startswith(b"<h1>Contents</h1>"), "TOC guide has the wrong byte offset"
+        links = {label: int(offset) for offset, label in re.findall(
+            rb"<a filepos=(\d+)>(.*?)</a>", toc)}
+        assert set(links) == {b"First Chapter", b"The Answer", b"Second Chapter"}
+        for label, anchor in ((b"First Chapter", b'<h1 id="first">'),
+                              (b"The Answer", b'<p id="answer">'),
+                              (b"Second Chapter", b'<h1 id="second">')):
+            assert text[links[label]:].startswith(anchor), (label, links[label])
+        assert re.search(rb"<blockquote><p><a filepos=\d+>The Answer</a></p></blockquote>", toc)
     header_length = struct.unpack_from(">I", first, 20)[0]
     start = 16 + header_length
     assert first[start:start + 4] == b"EXTH"
@@ -183,6 +197,8 @@ def main():
                                    patch={"title": "Must not update"})
         assert not response["ok"] and response["code"] == "drmProtected" and blocked is None, response
         report["tests"].append(f"{extension}: text/Unicode/metadata/no-op/source-preservation/DRM")
+        if extension == "mobi":
+            report["tests"].append("legacy MOBI: TOC guide/nested hierarchy/exact navigation offsets")
         report["outputs"][extension] = {"path": str(path), "bytes": len(data),
                                        "sha256": hashlib.sha256(data).hexdigest()}
     for fixture, expected in (("traversal.epub", "invalidInput"),

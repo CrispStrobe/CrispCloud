@@ -35,6 +35,10 @@ Native builds use a Dart code-assets build hook to compile and bundle the Rust
 library. Install Rust 1.88 or newer and the target needed by the build. The
 checked-in Cargo lockfile is always used with `--locked`.
 
+Apple builds forward the complete minimum OS version supplied by Flutter,
+including minor and patch components. The hook requires code_assets 2.2 or
+newer so a deployment target such as macOS 10.15 is not truncated to 10.0.
+
 | Platform | Build mapping |
 | --- | --- |
 | Linux | x64 and arm64; a cross linker/sysroot is required when not building for the host. |
@@ -68,6 +72,11 @@ hooks:
       # rustup_home: /absolute/path/rustup-home
 ```
 
+Dart runs hooks with a filtered environment. A nonstandard Rust installation
+must use the user-defines above for its Cargo/Rustup homes; shell variables
+`CARGO_HOME` and `RUSTUP_HOME` are not forwarded to hooks. Standard tool
+discovery uses the permitted PATH and home-directory locations.
+
 `KindlingConverter.capabilities()` reports whether the bundled runtime is
 available. Native operations run on one worker thread and support cooperative
 cancellation: the caller receives cancellation immediately, output is discarded,
@@ -98,6 +107,10 @@ original test MOBI/AZW3 fixtures under ignored `test/fixtures/generated/` for
 the reader's independent import/reading smoke tests. These small fixtures
 exercise the integration; they are not a representative compatibility corpus
 for every publisher's ebooks.
+
+Legacy MOBI verification also checks its TOC guide, nested labels, and exact
+byte-offset navigation targets. The independent Foliate suite reads both the
+modern KF8 and legacy KF7 streams and imports each into EPUB.
 
 ## Source and licenses
 

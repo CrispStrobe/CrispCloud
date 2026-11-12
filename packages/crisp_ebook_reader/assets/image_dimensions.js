@@ -14,12 +14,14 @@ export async function imageDimensions(bytes, type) {
         while (i + 9 < bytes.length) {
             if (bytes[i++] !== 0xff) break
             while (bytes[i] === 0xff) i++
+            if (i >= bytes.length) break
             const marker = bytes[i++]
             if (marker === 0xd9 || marker === 0xda) break
             if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue
+            if (i + 2 > bytes.length) break
             const length = view.getUint16(i)
             if (length < 2 || i + length > bytes.length) break
-            if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker))
+            if (length >= 8 && [0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker))
                 return valid(view.getUint16(i + 5), view.getUint16(i + 3))
             i += length
         }

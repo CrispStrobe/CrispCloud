@@ -238,6 +238,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   });
 
   void _performMenu(EbookEditorMenuAction action) {
+    if (ModalRoute.of(context)?.isCurrent == false) return;
     switch (action) {
       case EbookEditorMenuAction.save:
         unawaited(_save());
@@ -320,11 +321,13 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       // open an incomplete EPUB. The legacy extractor has its own archive caps.
       _bytes = Uint8List.fromList(bytes).asUnmodifiableView();
       final document = _name.toLowerCase().endsWith('.epub')
-          ? await (widget.documentLoaderOverride?.call(bytes) ?? compute(_openEpub, bytes))
+          ? await (widget.documentLoaderOverride?.call(bytes) ??
+                compute(_openEpub, bytes))
           : null;
       if (!mounted) return;
       if (document != null) _installDocument(document);
-      _annotationIdentity = _store?.documentId ??
+      _annotationIdentity =
+          _store?.documentId ??
           '${origin?.storageId ?? 'attachment'}:${widget.file.path ?? _name}';
       if (!EbookReaderCapabilities.supportsEmbeddedReader) {
         _annotationIdentity += ':chapter-reader';
@@ -386,7 +389,9 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     // Source. Refresh clean buffers so a later keystroke cannot restore stale
     // OPF/nav bytes and silently undo those changes. Pending drafts stay intact.
     if (!_sourceDraft && _resource != null) {
-      final resource = _document?.resources.where((e) => e.path == _resource).firstOrNull;
+      final resource = _document?.resources
+          .where((e) => e.path == _resource)
+          .firstOrNull;
       if (resource?.isText == true) {
         final canonical = _document!.readText(_resource!);
         if (_source.text != canonical) {
@@ -523,8 +528,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
     }
     if (!_applyDrafts()) return;
     final session = _session;
+    setState(() => _working = true);
+    _scheduleMenu();
     try {
       if (session != null && (_previewState != session.stateId || _converted)) {
+        final state = session.stateId;
         final bytes = session.exportBytes();
         _annotationTimer?.cancel();
         await _annotations?.save();
@@ -533,9 +541,18 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
           bytes,
         );
         if (!mounted) return;
+        if (!identical(session, _session) ||
+            state != session.stateId ||
+            _sourceDraft ||
+            _metadataDraft) {
+          _snack(
+            'Your edits changed while preparing the preview. Open Read again to refresh.',
+          );
+          return;
+        }
         _bytes = bytes;
         _annotations = annotations;
-        _previewState = session.stateId;
+        _previewState = state;
         _readerVersion++;
         _location = null;
         _selection = null;
@@ -552,6 +569,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       }
     } catch (error) {
       _snack(_message(error));
+    } finally {
+      if (mounted) {
+        setState(() => _working = false);
+        _scheduleMenu();
+      }
     }
   }
 
@@ -615,9 +637,37 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
 
   Future<void> _openTextFallback() async {
     if (_busy || !_canOpenTextFallback) return;
-    if (_session != null && !_applyDrafts()) return;
     try {
-      final bytes = _session?.exportBytes() ?? _bytes!;
+      var bytes = _bytes!;
+      var previousPreview = false;
+      final snapshot = _document?.snapshot();
+      if (snapshot != null) {
+        try {
+          // Preview drafts on an isolated package. Entering a read-only fallback
+          // must not mutate undo history or require an invalid draft to save.
+          if (_sourceDraft && _resource != null) {
+            snapshot.updateText(_resource!, _source.text);
+          }
+          if (_metadataDraft) {
+            snapshot.updateMetadata(
+              title: _title.text.trim(),
+              authors: _authors.text
+                  .split('\n')
+                  .map((value) => value.trim())
+                  .where((value) => value.isNotEmpty)
+                  .toList(),
+              language: _language.text.trim(),
+              description: _description.text,
+            );
+          }
+          // An unchanged package returns its original bytes even when editing
+          // validation finds a pre-existing defect. The legacy extractor can
+          // still recover text from such books without repairing the source.
+          bytes = snapshot.toBytes();
+        } catch (_) {
+          previousPreview = true;
+        }
+      }
       // Open the legacy widget directly: showInternalViewer routes EPUB files
       // back to this editor. A snapshot also preserves the captured source and
       // all unsaved drafts while the fallback is on screen.
@@ -625,11 +675,24 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         context: context,
         barrierDismissible: false,
         builder: (_) => Dialog.fullscreen(
-          child: InternalViewerDialog(
-            file: widget.file,
-            side: widget.side,
-            bytesOverride: bytes,
-            displayName: _converted ? _epubName : _name,
+          child: Column(
+            children: [
+              if (previousPreview)
+                SafeArea(
+                  bottom: false,
+                  child: _banner(
+                    'Showing the last readable version. Your edits are still kept in the editor.',
+                  ),
+                ),
+              Expanded(
+                child: InternalViewerDialog(
+                  file: widget.file,
+                  side: widget.side,
+                  bytesOverride: bytes,
+                  displayName: _converted ? _epubName : _name,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -650,7 +713,8 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
   });
 
   Future<void> _requestClose({VoidCallback? navigate}) async {
-    if (_closing || _busy) return;
+    final route = ModalRoute.of(context);
+    if (_closing || _busy || route?.isCurrent == false) return;
     _closing = true;
     try {
       if (_dirty || (_converted && !_copyDelivered)) {
@@ -703,7 +767,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       } catch (error) {
         _snack(_message(error));
       }
-      if (!mounted) return;
+      if (!mounted || route?.isCurrent == false) return;
       if (navigate != null) {
         navigate();
         return;
@@ -1700,10 +1764,14 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                     right: 16,
                   ),
                   title: Text(item.label),
-                  onTap: item.href.isEmpty ? null : () {
-                    Navigator.pop(context);
-                    unawaited(_readerCommand(() => _reader.goTo(item.href)));
-                  },
+                  onTap: item.href.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          unawaited(
+                            _readerCommand(() => _reader.goTo(item.href)),
+                          );
+                        },
                 ),
               );
               if (depth < 32) toc(item.children, depth + 1);
@@ -1884,15 +1952,11 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_document?.coverBytes case final cover?)
+            if (_document?.coverPath case final coverPath?)
               Center(
                 child: SizedBox(
                   height: 160,
-                  child: Image.memory(
-                    cover,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
-                  ),
+                  child: _imageResourcePreview(coverPath),
                 ),
               ),
             Align(
@@ -1926,6 +1990,30 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
       ),
     ),
   );
+
+  Widget _imageResourcePreview(String path) {
+    Widget failed(Object error) => Center(
+      child: Tooltip(
+        message: _message(error),
+        child: const Icon(Icons.broken_image_outlined, size: 48),
+      ),
+    );
+    try {
+      final bytes = _document!.readBytes(path);
+      if (isEditableImageFileName(path)) {
+        inspectEditableImage(bytes, fileName: path);
+      }
+      return Image.memory(
+        bytes,
+        fit: BoxFit.contain,
+        errorBuilder: (_, error, _) => failed(error),
+      );
+    } catch (error) {
+      // CRC, inflation and resource validation happen lazily. A damaged image
+      // must leave the rest of the editor available for inspection or repair.
+      return failed(error);
+    }
+  }
 
   Widget _field(
     TextEditingController controller,
@@ -2115,13 +2203,7 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
               children: [
                 Expanded(
                   child: resource.mediaType.startsWith('image/')
-                      ? Image.memory(
-                          _document!.readBytes(resource.path),
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, _, _) => const Center(
-                            child: Icon(Icons.insert_drive_file, size: 72),
-                          ),
-                        )
+                      ? _imageResourcePreview(resource.path)
                       : const Center(
                           child: Icon(Icons.insert_drive_file, size: 72),
                         ),

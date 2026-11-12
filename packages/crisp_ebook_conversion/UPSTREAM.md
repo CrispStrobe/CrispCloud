@@ -23,6 +23,7 @@ the local file set and hashes with `python3 tool/check_vendor.py`.
 | `src/lib.rs` | Exclude the unused EPUB writer module. CrispCloud's package-preserving EPUB writer owns that operation. |
 | `src/extracted.rs` | Remove only the unused scraper HTML cache. Retain upstream lightningcss grammar checking and the existing Kindle rule extraction. |
 | `src/fonts.rs` | Stop an absent-encryption search at the EPUB container root so it does not inspect unrelated ancestor directories. |
+| `src/mobi.rs` | Preserve the source TOC in the legacy KF7 half of dual MOBI exports. Append a nested HTML TOC, insert its `type="toc"` guide reference, and resolve all navigation targets through the final byte-offset pass. |
 
 The original checkpoint replaced lightningcss with a local delimiter-only
 checker to avoid MPL dependencies. That replacement has been removed now that

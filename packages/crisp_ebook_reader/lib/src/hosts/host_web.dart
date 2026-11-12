@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:js_interop';
-import 'dart:ui_web' as ui_web;
 
 import 'package:flutter/widgets.dart';
 import 'package:web/web.dart' as web;
@@ -36,28 +35,21 @@ class _WebHost extends StatefulWidget {
 }
 
 class _WebHostState extends State<_WebHost> {
-  late final web.HTMLIFrameElement _frame;
+  web.HTMLIFrameElement? _frame;
   late final JSFunction _listener;
-  late final String _viewType;
+  late final Uri _uri;
   late final String _origin;
   @override
   void initState() {
     super.initState();
-    _viewType = 'crisp-ebook-${widget.session}';
-    final uri = Uri.parse(web.document.baseURI)
+    _uri = Uri.parse(web.document.baseURI)
         .resolve('assets/packages/crisp_ebook_reader/assets/index.html');
-    _origin = uri.origin;
-    _frame = web.HTMLIFrameElement()
-      ..src = uri.replace(fragment: widget.session).toString()
-      ..title = 'Ebook content';
-    _frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
-    _frame.setAttribute('referrerpolicy', 'no-referrer');
-    _frame.style.setProperty('border', '0');
-    _frame.style.setProperty('width', '100%');
-    _frame.style.setProperty('height', '100%');
+    _origin = _uri.origin;
     _listener = ((web.MessageEvent event) {
+      final frame = _frame;
       if (!mounted ||
-          event.source != _frame.contentWindow ||
+          frame == null ||
+          event.source != frame.contentWindow ||
           event.origin != _origin) {
         return;
       }
@@ -72,22 +64,44 @@ class _WebHostState extends State<_WebHost> {
       }
     }).toJS;
     web.window.addEventListener('message', _listener);
-    ui_web.platformViewRegistry.registerViewFactory(_viewType, (_) => _frame);
+  }
+
+  void _createElement(Object element) {
+    final frame = element as web.HTMLIFrameElement;
+    if (!mounted) {
+      frame.remove();
+      return;
+    }
+    _frame = frame;
+    frame.title = 'Ebook content';
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    frame.setAttribute('referrerpolicy', 'no-referrer');
+    frame.style.setProperty('border', '0');
+    frame.style.setProperty('width', '100%');
+    frame.style.setProperty('height', '100%');
     widget.onConnected((message) async {
       if (mounted) {
-        _frame.contentWindow?.postMessage(jsonEncode(message).toJS, _origin.toJS);
+        frame.contentWindow?.postMessage(jsonEncode(message).toJS, _origin.toJS);
       }
     });
+    frame.src = _uri.replace(fragment: widget.session).toString();
   }
 
   @override
   void dispose() {
     web.window.removeEventListener('message', _listener);
-    _frame.src = 'about:blank';
-    _frame.remove();
+    _frame?.src = 'about:blank';
+    _frame?.remove();
+    _frame = null;
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => HtmlElementView(viewType: _viewType);
+  // Flutter's shared tag factory is disposed with the view. Registering a
+  // session-specific global factory here would retain closed reader states
+  // and their book buffers for the rest of the browser application's lifetime.
+  Widget build(BuildContext context) => HtmlElementView.fromTagName(
+    tagName: 'iframe',
+    onElementCreated: _createElement,
+  );
 }

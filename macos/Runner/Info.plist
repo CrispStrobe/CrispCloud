@@ -40,6 +40,18 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- The ebook WebView's bundled assets are served only on loopback. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>127.0.0.1</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 	<!-- URL scheme used by the Finder Sync extension to open the app
 	     with a list of paths to upload:
 	     crispcloud://upload?paths=<percent-encoded,comma-joined paths> -->

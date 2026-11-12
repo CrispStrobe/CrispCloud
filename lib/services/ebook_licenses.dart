@@ -10,6 +10,8 @@ void registerEbookLicenses() {
           'packages/crisp_ebook_reader/assets/licenses/foliate-js-LICENSE.txt',
       'zip.js':
           'packages/crisp_ebook_reader/assets/licenses/zip-js-LICENSE.txt',
+      'SJCL (bundled in zip.js)':
+          'packages/crisp_ebook_reader/assets/licenses/sjcl-LICENSE.txt',
       'fflate':
           'packages/crisp_ebook_reader/assets/licenses/fflate-LICENSE.txt',
       'Kindling and native dependencies':

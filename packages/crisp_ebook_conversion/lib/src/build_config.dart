@@ -1,9 +1,17 @@
+import 'package:code_assets/code_assets.dart';
+
 /// Native targets supported by the bundled Kindling source build. A mapping is
 /// not a claim that a target has passed a runtime smoke test.
 class KindlingBuildTarget {
   const KindlingBuildTarget(this.triple, this.library);
   final String triple;
   final String library;
+
+  /// Preserve the exact minimum Apple OS version selected by Flutter. The
+  /// deprecated code-assets targetVersion contains only the major component.
+  static String appleDeploymentTarget(AppleVersion version) =>
+      '${version.major}.${version.minor}.${version.patch}';
+
   static KindlingBuildTarget? forPlatform(
     String os,
     String architecture, {

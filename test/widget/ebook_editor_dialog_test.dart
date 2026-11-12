@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/ebook_device_export.dart';
@@ -13,6 +15,7 @@ import 'package:crisp_ebook/crisp_ebook.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:re_editor/re_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Store implements PdfFileStore {
@@ -40,8 +43,9 @@ class _Store implements PdfFileStore {
     final outcome =
         await (writer?.call(bytes) ??
             Future.value(PdfSaveOutcome.savedOriginal));
-    if (outcome == PdfSaveOutcome.savedOriginal)
+    if (outcome == PdfSaveOutcome.savedOriginal) {
       input = Uint8List.fromList(bytes);
+    }
     return outcome;
   }
 
@@ -80,7 +84,8 @@ Future<ProviderContainer> _open(
                     startEditing: true,
                     storeOverride: EbookFileStore(store),
                     deviceExporterOverride: exporter,
-                    documentLoaderOverride: documentLoader ??
+                    documentLoaderOverride:
+                        documentLoader ??
                         (bytes) async => EpubDocument.open(bytes),
                     readerBuilderOverride: (_, _, _, _) =>
                         const Text('Reader preview'),
@@ -248,15 +253,19 @@ void main() {
       find.byType(InternalViewerDialog),
     );
     expect(fallback.displayName, 'original.epub');
-    expect(EpubDocument.open(fallback.bytesOverride!).title,
-        'Unsaved fallback title');
+    expect(
+      EpubDocument.open(fallback.bytesOverride!).title,
+      'Unsaved fallback title',
+    );
     expect(store.writes, isEmpty);
     Navigator.of(tester.element(find.byType(InternalViewerDialog))).pop();
     await tester.pumpAndSettle();
     expect(find.byType(InternalViewerDialog), findsNothing);
     expect(find.text('* original.epub'), findsOneWidget);
-    expect(tester.widget<TextField>(_titleField).controller!.text,
-        'Unsaved fallback title');
+    expect(
+      tester.widget<TextField>(_titleField).controller!.text,
+      'Unsaved fallback title',
+    );
   });
 
   testWidgets('strict package load failure keeps the text fallback available', (
@@ -278,5 +287,125 @@ void main() {
     expect(fallback.bytesOverride, orderedEquals(store.input));
     expect(store.writes, isEmpty);
     expect(find.text('Strict package failure'), findsNothing);
+  });
+
+  testWidgets('existing chapter defects do not block legacy text extraction', (
+    tester,
+  ) async {
+    final store = _Store();
+    final chapter = EpubDocument.open(store.input).chapters.first.path;
+    final archive = Archive();
+    for (final entry in ZipDecoder().decodeBytes(store.input).files) {
+      archive.addFile(
+        entry.name == chapter
+            ? ArchiveFile.bytes(
+                chapter,
+                utf8.encode('<html><body><p>Recoverable legacy text'),
+              )
+            : entry,
+      );
+    }
+    store.input = Uint8List.fromList(ZipEncoder().encode(archive));
+    await _open(tester, store);
+    await tester.tap(find.byType(PopupMenuButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('ebook-text-fallback-menu')));
+    await tester.pumpAndSettle();
+    final fallback = tester.widget<InternalViewerDialog>(
+      find.byType(InternalViewerDialog),
+    );
+    expect(fallback.bytesOverride, orderedEquals(store.input));
+    expect(store.writes, isEmpty);
+  });
+
+  testWidgets(
+    'invalid source drafts survive fallback to the last readable copy',
+    (tester) async {
+      final store = _Store();
+      await _open(tester, store);
+      await tester.tap(find.text('Resources'));
+      await tester.pumpAndSettle();
+      final controller = tester
+          .widget<CodeEditor>(find.byType(CodeEditor))
+          .controller!;
+      const draft = '<html><body><p>Still writing this chapter';
+      controller.text = draft;
+      await tester.pump();
+      await tester.tap(find.byType(PopupMenuButton<String>).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('ebook-text-fallback-menu')));
+      await tester.pumpAndSettle();
+      final fallback = tester.widget<InternalViewerDialog>(
+        find.byType(InternalViewerDialog),
+      );
+      expect(fallback.bytesOverride, orderedEquals(store.input));
+      expect(
+        find.text(
+          'Showing the last readable version. Your edits are still kept in the editor.',
+        ),
+        findsOneWidget,
+      );
+      Navigator.of(tester.element(find.byType(InternalViewerDialog))).pop();
+      await tester.pumpAndSettle();
+      expect(controller.text, draft);
+      expect(find.text('* original.epub'), findsOneWidget);
+      expect(store.writes, isEmpty);
+    },
+  );
+
+  testWidgets('native close cannot target a child route or bypass dirty Back', (
+    tester,
+  ) async {
+    final store = _Store();
+    final container = await _open(tester, store);
+    await tester.tap(find.byType(PopupMenuButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('ebook-text-fallback-menu')));
+    await tester.pumpAndSettle();
+    container
+        .read(ebookEditorMenuProvider)!
+        .perform(EbookEditorMenuAction.close);
+    await tester.pumpAndSettle();
+    expect(find.byType(InternalViewerDialog), findsOneWidget);
+    Navigator.of(tester.element(find.byType(InternalViewerDialog))).pop();
+    await tester.pumpAndSettle();
+    await tester.enterText(_titleField, 'Do not discard this edit');
+    await tester.pump();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('ebook-unsaved-dialog')), findsOneWidget);
+    expect(store.writes, isEmpty);
+  });
+
+  testWidgets('a corrupt cover does not replace the editor with an error', (
+    tester,
+  ) async {
+    final store = _Store();
+    final document = EpubDocument.open(store.input)
+      ..replaceCover(Uint8List.fromList([1, 2, 3]), mediaType: 'image/png');
+    final bytes = document.toBytes();
+    final data = ByteData.sublistView(bytes);
+    var corrupted = false;
+    for (var offset = 0; offset + 46 < bytes.length; offset++) {
+      if (data.getUint32(offset, Endian.little) != 0x02014b50) continue;
+      final nameLength = data.getUint16(offset + 28, Endian.little);
+      final name = utf8.decode(
+        bytes.sublist(offset + 46, offset + 46 + nameLength),
+      );
+      if (name != document.coverPath) continue;
+      final local = data.getUint32(offset + 42, Endian.little);
+      final crc = data.getUint32(offset + 16, Endian.little) ^ 1;
+      data.setUint32(offset + 16, crc, Endian.little);
+      data.setUint32(local + 14, crc, Endian.little);
+      corrupted = true;
+      break;
+    }
+    expect(corrupted, isTrue);
+    store.input = bytes;
+    await _open(tester, store);
+    expect(tester.takeException(), isNull);
+    expect(find.byIcon(Icons.broken_image_outlined), findsOneWidget);
+    expect(_titleField, findsOneWidget);
+    expect(_close, findsOneWidget);
   });
 }

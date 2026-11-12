@@ -124,3 +124,11 @@ created because the execution environment denied `socket()` with
 `Operation not permitted` in `process_singleton_posix.cc`. That result is an
 environment limitation, not a passing renderer check. Run the browser suite in
 CI or an ordinary development environment before claiming browser verification.
+
+The forced fflate decompression variant, reader controller tests (3 tests),
+`flutter analyze`, and the vendor integrity check also passed locally. Independent
+foliate parsing of Kindling-generated AZW3, dual MOBI, legacy MOBI6 and
+metadata-rewritten AZW3/MOBI verified Unicode, authors/title, images, cross-chapter
+links and nested TOC targets. These are conversion/parser checks, not native
+rendering checks. On Apple targets, explicitly exercise text selection and links
+with the script-disabled publication sandbox during the device smoke test.

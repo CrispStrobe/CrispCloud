@@ -37,6 +37,22 @@ class _EbookChapterReaderState extends State<EbookChapterReader> {
   }
 
   @override
+  void didUpdateWidget(covariant EbookChapterReader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final chapters = widget.document.chapters;
+    final requested =
+        !identical(oldWidget.document, widget.document) ||
+            oldWidget.initialSection != widget.initialSection
+        ? widget.initialSection
+        : _index;
+    final next = chapters.isEmpty ? 0 : requested.clamp(0, chapters.length - 1);
+    if (next != _index || !identical(oldWidget.document, widget.document)) {
+      if (_scroll.hasClients) _scroll.jumpTo(0);
+    }
+    _index = next;
+  }
+
+  @override
   void dispose() {
     _scroll.dispose();
     super.dispose();
@@ -60,10 +76,17 @@ class _EbookChapterReaderState extends State<EbookChapterReader> {
   @override
   Widget build(BuildContext context) {
     final chapters = widget.document.chapters;
-    if (chapters.isEmpty)
+    if (chapters.isEmpty) {
       return const Center(child: Text('This book has no readable chapters.'));
+    }
+    // EpubDocument is mutable: its reading order can also shrink before a
+    // local font-size rebuild, without didUpdateWidget having been called.
+    _index = _index.clamp(0, chapters.length - 1);
     final chapter = chapters[_index];
-    final base = Uri(scheme: 'epub', path: '/${chapter.path}');
+    final base = Uri(
+      scheme: 'epub',
+      pathSegments: ['', ...chapter.path.split('/')],
+    );
     String source;
     try {
       source = widget.document.readText(chapter.path);
@@ -150,16 +173,22 @@ class _EbookChapterReaderState extends State<EbookChapterReader> {
                     textStyle: TextStyle(fontSize: _fontSize, height: 1.6),
                     factoryBuilder: () => _LocalEbookImages(widget.document),
                     onTapUrl: (url) {
-                      final uri = base.resolve(url);
-                      if (uri.scheme != 'epub') return false;
-                      final path = Uri.decodeComponent(uri.path)
-                          .replaceFirst(RegExp(r'^/'), '');
-                      final index = chapters.indexWhere(
-                        (item) => item.path == path,
-                      );
-                      if (index < 0) return false;
-                      _go(index);
-                      return true;
+                      try {
+                        final uri = base.resolve(url);
+                        if (uri.scheme != 'epub' || uri.hasAuthority) {
+                          return false;
+                        }
+                        final path = uri.pathSegments.join('/');
+                        final index = widget.document.chapters.indexWhere(
+                          (item) => item.path == path,
+                        );
+                        if (index < 0) return false;
+                        _go(index);
+                        return true;
+                      } on FormatException {
+                        // A malformed link must not break the fallback reader.
+                        return false;
+                      }
                     },
                   ),
                 ),

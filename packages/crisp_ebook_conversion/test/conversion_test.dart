@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:code_assets/code_assets.dart';
 import 'package:crisp_ebook_conversion/crisp_ebook_conversion.dart';
 import 'package:crisp_ebook_conversion/src/build_config.dart';
 import 'package:test/test.dart';
@@ -202,6 +203,19 @@ void main() {
       'crisp_kindling_bridge.dll',
     );
     expect(KindlingBuildTarget.forPlatform('web', 'wasm'), isNull);
+  });
+
+  test('Apple deployment targets retain minor and patch versions', () {
+    expect(
+      KindlingBuildTarget.appleDeploymentTarget(AppleVersion(10, minor: 15)),
+      '10.15.0',
+    );
+    expect(
+      KindlingBuildTarget.appleDeploymentTarget(
+        AppleVersion(17, minor: 2, patch: 1),
+      ),
+      '17.2.1',
+    );
   });
 
   final helper = File(

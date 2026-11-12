@@ -11,6 +11,8 @@ abstract final class EbookStrings {
     'Edit': 'Bearbeiten',
     'Read ebook': 'E-Book lesen',
     'Open text fallback': 'Einfache Textansicht öffnen',
+    'Your edits changed while preparing the preview. Open Read again to refresh.': 'Während der Vorschauvorbereitung gab es neue Änderungen. Öffnen Sie Lesen erneut, um sie anzuzeigen.',
+    'Showing the last readable version. Your edits are still kept in the editor.': 'Die letzte lesbare Fassung wird angezeigt. Ihre Änderungen bleiben im Editor erhalten.',
     'Edit ebook': 'E-Book bearbeiten',
     'Save': 'Speichern',
     'Save a copy': 'Kopie speichern',
