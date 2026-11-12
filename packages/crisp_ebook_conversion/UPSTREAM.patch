@@ -1,0 +1,240 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,4 +1,5 @@
+ [package]
++autobins = false
+ name = "kindling-mobi"
+ version = "0.46.2"
+ edition = "2024"
+@@ -15,27 +16,21 @@
+ name = "kindling"
+ path = "src/lib.rs"
+ 
+-[[bin]]
+-name = "kindling-cli"
+-path = "src/main.rs"
+-
+ [dependencies]
+ clap = { version = "4", features = ["derive"] }
+-# ego-tree is scraper's tree backing store; depended on directly so the EPUB
+-# entry-body XHTML serializer can walk `NodeRef<Node>` nodes by name. Pinned to
+-# the version scraper already resolves so no extra crate is pulled in.
+-ego-tree = "0.11"
+ # zlib for KF8 FONT resource records (already in the tree via zip's deflate
+ # feature, so this adds no new crates).
+ flate2 = "1"
+-image = "0.25"
++image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+ memchr = "2"
+ quick-xml = "0.41"
+ rayon = "1.10"
+ regex = "1"
+-scraper = "0.26"
+-# Kindling parses CSS without the bundler or source map support.
+-lightningcss = { version = "1.0.0-alpha.71", default-features = false }
++# Keep upstream CSS grammar checks; its MPL-2.0 selector dependency is approved.
++lightningcss = { version = "=1.0.0-alpha.71", default-features = false }
++# Match Kindling v0.46.2's lockfile. 0.28.3 switched to cssparser 0.37,
++# which is incompatible with this lightningcss release's cssparser 0.33.
++parcel_selectors = "=0.28.2"
+ zip = { version = "9.3.0", default-features = false, features = ["deflate-flate2", "deflate-zopfli"] }
+ ttf-parser = { version = "0.25.1", default-features = false, features = ["std"] }
+ 
+@@ -47,7 +42,7 @@
+ [dev-dependencies]
+ # Same version the library already pulls in, so this adds no crate to the
+ # build; integration tests are separate crates and cannot borrow it otherwise.
+-image = "0.25"
++image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+ 
+ [profile.release]
+ opt-level = 3
+--- a/src/extracted.rs
++++ b/src/extracted.rs
+@@ -15,10 +15,7 @@
+ // CssSummary: lifetime-free digest of a parsed CSS stylesheet
+ // ---------------------------------------------------------------------------
+ 
+-/// A lightweight, owned summary of a parsed CSS file. This avoids the lifetime
+-/// issues with storing `lightningcss::stylesheet::StyleSheet<'i, 'o>` in a
+-/// cache: we parse once, extract everything the check modules need, and discard
+-/// the AST.
++/// Owned CSS summary using upstream lightningcss parsing and Kindle rules.
+ #[derive(Clone, Debug)]
+ pub struct CssSummary {
+     /// `None` if lightningcss parsed the file successfully; `Some(msg)` with
+@@ -73,7 +70,6 @@
+     _temp_dir: Option<PathBuf>,
+ 
+     raw_cache: RefCell<HashMap<String, Option<String>>>,
+-    html_cache: RefCell<HashMap<String, scraper::Html>>,
+     css_text_cache: RefCell<HashMap<String, String>>,
+     css_summary_cache: RefCell<HashMap<String, CssSummary>>,
+     ids_cache: RefCell<HashMap<String, HashSet<String>>>,
+@@ -92,7 +88,6 @@
+             profile,
+             _temp_dir: None,
+             raw_cache: RefCell::new(HashMap::new()),
+-            html_cache: RefCell::new(HashMap::new()),
+             css_text_cache: RefCell::new(HashMap::new()),
+             css_summary_cache: RefCell::new(HashMap::new()),
+             ids_cache: RefCell::new(HashMap::new()),
+@@ -120,17 +115,6 @@
+             .borrow_mut()
+             .insert(href.to_string(), content.clone());
+         content
+-    }
+-
+-    /// Parsed HTML for `href`, if the file exists and is readable.
+-    #[allow(dead_code)]
+-    pub fn html(&self, href: &str) -> Option<Ref<'_, scraper::Html>> {
+-        if !self.html_cache.borrow().contains_key(href) {
+-            let text = self.read(href)?;
+-            let doc = scraper::Html::parse_document(&text);
+-            self.html_cache.borrow_mut().insert(href.to_string(), doc);
+-        }
+-        Some(Ref::map(self.html_cache.borrow(), |m| m.get(href).unwrap()))
+     }
+ 
+     /// Raw CSS text for `href`. Callers that only need text scanning can use
+@@ -216,14 +200,15 @@
+ // ---------------------------------------------------------------------------
+ 
+ /// Build a `CssSummary` from raw CSS text. Strips a leading BOM and @charset
+-/// before parsing so lightningcss gets a clean input.
++/// before parsing so lightningcss receives the stylesheet without its prologue.
+ fn build_css_summary(raw_text: &str) -> CssSummary {
+     let text = strip_css_prologue(raw_text);
+ 
+-    // R6.13: try parsing with lightningcss.
++    // Keep the upstream parser so balanced but invalid selectors/declarations
++    // are caught before a converted Kindle book is written.
+     let parse_error = match StyleSheet::parse(text, ParserOptions::default()) {
+         Ok(_) => None,
+-        Err(e) => Some(format!("{}", e)),
++        Err(error) => Some(error.to_string()),
+     };
+ 
+     let imports = find_imports(text);
+--- a/src/fonts.rs
++++ b/src/fonts.rs
+@@ -352,6 +352,10 @@
+                 .into_iter()
+                 .map(|(uri, algorithm)| (dir.join(percent_decode_str(&uri)), algorithm))
+                 .collect();
++        }
++        // CrispCloud: absent encryption.xml must not read unrelated ancestors.
++        if dir.join("META-INF").join("container.xml").is_file() {
++            break;
+         }
+         match dir.parent() {
+             Some(parent) => dir = parent.to_path_buf(),
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -9,7 +9,8 @@
+ // Public API
+ pub mod comic;
+ pub mod epub;
+-pub mod epub_build;
++// CrispCloud runtime: EPUB writing belongs to crisp_ebook, not this converter.
++// The unused upstream EPUB writer and its HTML model are not part of this bridge.
+ pub mod extracted;
+ pub mod font_injection;
+ pub mod huffcdic;
+--- a/src/mobi.rs
++++ b/src/mobi.rs
+@@ -2524,7 +2524,25 @@
+         body_contents.push(body);
+     }
+ 
+-    let head = first_head.unwrap_or_else(|| "<head><guide></guide></head>".to_string());
++    let mut head = first_head.unwrap_or_else(|| "<head><guide></guide></head>".to_string());
++    // CrispCloud: the KF8 half has a logical NCX, but the legacy half also
++    // needs a discoverable HTML TOC. Build it before measuring byte offsets,
++    // and resolve its links through the same final-offset pass as prose links.
++    let mut toc_guide = None;
++    if !strip_idx {
++        let (toc, pending) = build_legacy_toc(opf, &documents, &body_anchors, &wrapper_anchors);
++        if !pending.is_empty() {
++            let toc_index = body_contents.len();
++            body_contents.push(toc);
++            body_anchors.push(Vec::new());
++            wrapper_anchors.push(std::collections::HashSet::new());
++            body_links.push(pending);
++            const PREFIX: &str = "<guide><reference type=\"toc\" title=\"Contents\" filepos=";
++            let insertion = head.find('>').map(|offset| offset + 1).unwrap_or(0);
++            head.insert_str(insertion, &format!("{}XXXXXXXXXX /></guide>", PREFIX));
++            toc_guide = Some(("<html>".len() + insertion + PREFIX.len(), toc_index));
++        }
++    }
+     const SEPARATOR: &str = "<mbp:pagebreak/>";
+     let merged_body = body_contents.join(SEPARATOR);
+     let combined = format!(
+@@ -2553,6 +2571,10 @@
+         .collect();
+ 
+     let mut bytes = combined.into_bytes();
++    if let Some((at, index)) = toc_guide {
++        let digits = format!("{:0width$}", doc_start[index], width = FILEPOS_DIGITS);
++        bytes[at..at + FILEPOS_DIGITS].copy_from_slice(digits.as_bytes());
++    }
+     let mut unresolved = 0usize;
+     for (i, pending) in body_links.iter().enumerate() {
+         for link in pending {
+@@ -2588,6 +2610,56 @@
+         );
+     }
+     bytes
++}
++
++/// Generate only navigation targets that exist in the merged legacy stream.
++/// Blockquotes preserve EPUB nesting for MOBI6 readers that infer TOC levels
++/// from indentation. Labels remain plain text even if they contain markup.
++fn build_legacy_toc(
++    opf: &OPFData,
++    documents: &std::collections::HashMap<String, usize>,
++    anchors: &[Vec<links::Anchor>],
++    wrapper_anchors: &[std::collections::HashSet<String>],
++) -> (String, Vec<PendingFilepos>) {
++    let mut html = String::from("<h1>Contents</h1>");
++    let mut pending = Vec::new();
++    let mut depth = 0usize;
++    for point in crate::nav::parse_nav_points(opf) {
++        let Some(&file) = documents.get(&point.file_href) else {
++            continue;
++        };
++        if let Some(fragment) = &point.fragment {
++            if !anchors[file].iter().any(|anchor| &anchor.name == fragment)
++                && !wrapper_anchors[file].contains(fragment)
++            {
++                continue;
++            }
++        }
++        // Navigation must not allocate unbounded indentation for malformed
++        // input. This still covers ordinary, deeply nested book outlines.
++        let next_depth = point.depth.min(32);
++        while depth < next_depth {
++            html.push_str("<blockquote>");
++            depth += 1;
++        }
++        while depth > next_depth {
++            html.push_str("</blockquote>");
++            depth -= 1;
++        }
++        html.push_str("<p><a filepos=");
++        pending.push(PendingFilepos {
++            digits: html.len(),
++            target: Some((file, point.fragment)),
++        });
++        html.push_str("XXXXXXXXXX>");
++        html.push_str(&point.label.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;"));
++        html.push_str("</a></p>");
++    }
++    while depth > 0 {
++        html.push_str("</blockquote>");
++        depth -= 1;
++    }
++    (html, pending)
+ }
+ 
+ /// Replace every internal `<a href>` in one document's body with a

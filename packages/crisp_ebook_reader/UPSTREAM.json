@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "foliate_js": {
+    "repository": "https://github.com/johnfactotum/foliate-js",
+    "revision": "78914aef4466eb960965702401634c2cb348e9b1",
+    "license": "MIT",
+    "local_patch": "patches/foliate.patch",
+    "files": [
+      {
+        "path": "assets/foliate/comic-book.js",
+        "source_path": "comic-book.js",
+        "upstream_sha256": "7f3bf77561ca77300d5244015fcb1f73805787db246928074dc49fb56c88762e",
+        "sha256": "7f3bf77561ca77300d5244015fcb1f73805787db246928074dc49fb56c88762e",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/epub.js",
+        "source_path": "epub.js",
+        "upstream_sha256": "dfe347495039e9b5991478986ec6b7713cf9efbcd8f475a77ef7b967c5176298",
+        "sha256": "56697dd2cff1661753f098ae6ffc930aa300e006c683807a06dd2f5c44269c6b",
+        "modified": true
+      },
+      {
+        "path": "assets/foliate/epubcfi.js",
+        "source_path": "epubcfi.js",
+        "upstream_sha256": "e1a688ad5c84bf31f33cef467f92c7a6d060a0f17ec37c1d3c048e9c7b1cf645",
+        "sha256": "e1a688ad5c84bf31f33cef467f92c7a6d060a0f17ec37c1d3c048e9c7b1cf645",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/fb2.js",
+        "source_path": "fb2.js",
+        "upstream_sha256": "09a7890bf191f1b6c6dd435fae2868b86c75e73e00731b0051c02f2a998a180a",
+        "sha256": "09a7890bf191f1b6c6dd435fae2868b86c75e73e00731b0051c02f2a998a180a",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/fixed-layout.js",
+        "source_path": "fixed-layout.js",
+        "upstream_sha256": "7aee1d15d8e0479b8a6c59a20304b250dafc4c7dc158147a2b2c6bed9e180b4c",
+        "sha256": "f3bddf42cea386e22ae5d942cd79ca8cb0a74bd0f0a5824860f967bd5eb45411",
+        "modified": true
+      },
+      {
+        "path": "assets/foliate/footnotes.js",
+        "source_path": "footnotes.js",
+        "upstream_sha256": "d377b45d2ac05290c42873612ec0a92e640938e8be8ed850a467133a883388de",
+        "sha256": "d377b45d2ac05290c42873612ec0a92e640938e8be8ed850a467133a883388de",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/mobi.js",
+        "source_path": "mobi.js",
+        "upstream_sha256": "016526df13a9f11ee6671a8c74346e1cf41fe6bdfe50165fdcbf744f015694f3",
+        "sha256": "ce11749facac2d5ab95bcefa145c18e132a493f76dbd644d58f699e554dd5de9",
+        "modified": true
+      },
+      {
+        "path": "assets/foliate/overlayer.js",
+        "source_path": "overlayer.js",
+        "upstream_sha256": "d3d3396e3083277ccbd4f17c407621159b22a407107e43ce75ca3014578094fb",
+        "sha256": "d3d3396e3083277ccbd4f17c407621159b22a407107e43ce75ca3014578094fb",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/paginator.js",
+        "source_path": "paginator.js",
+        "upstream_sha256": "51cec81572d5d182e231fe68ce9c3b5489a0976b36172060516336ba893565ea",
+        "sha256": "a9a2e7e7c12b1420201b48df526e679e4375e66fe03021320baeaf1328139ca0",
+        "modified": true
+      },
+      {
+        "path": "assets/foliate/progress.js",
+        "source_path": "progress.js",
+        "upstream_sha256": "544f5e90babc0cb31c5caf971a5f06dd6249ec06600cb62f672fa7179811fde1",
+        "sha256": "544f5e90babc0cb31c5caf971a5f06dd6249ec06600cb62f672fa7179811fde1",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/search.js",
+        "source_path": "search.js",
+        "upstream_sha256": "31e846bdc095a645de0e94f7baa2c9e136561a363a2f774d4032e72cfa1fb0ef",
+        "sha256": "31e846bdc095a645de0e94f7baa2c9e136561a363a2f774d4032e72cfa1fb0ef",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/text-walker.js",
+        "source_path": "text-walker.js",
+        "upstream_sha256": "4ad740ab6142b5be428700ef4d270253cef6649cf6e047ae7d2698a7aec65e92",
+        "sha256": "4ad740ab6142b5be428700ef4d270253cef6649cf6e047ae7d2698a7aec65e92",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/tts.js",
+        "source_path": "tts.js",
+        "upstream_sha256": "530d34605b758a5e2260438964a85bb9909bcb49e8848e303fe22cac63859026",
+        "sha256": "530d34605b758a5e2260438964a85bb9909bcb49e8848e303fe22cac63859026",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/vendor/zip.js",
+        "source_path": "vendor/zip.js",
+        "upstream_sha256": "2a0d43157e4a447c6e43351225758795b75a33e8dfec10c6767248df2182949a",
+        "sha256": "2a0d43157e4a447c6e43351225758795b75a33e8dfec10c6767248df2182949a",
+        "modified": false
+      },
+      {
+        "path": "assets/foliate/view.js",
+        "source_path": "view.js",
+        "upstream_sha256": "e0093af921feb03bb58fb51aeedc321fa108a4158d215f6913ecf7925415c945",
+        "sha256": "ce8992c357254347b3f318c7ff8c4872eef8f8d16fef292705021d8ff94939b5",
+        "modified": true
+      }
+    ]
+  },
+  "zip_js": {
+    "path": "assets/foliate/vendor/zip.js",
+    "source": "vendored bundle from the pinned foliate-js revision",
+    "version_in_upstream_lockfile": "2.8.22",
+    "license": "BSD-3-Clause",
+    "bundled_sjcl_license_choice": "BSD-2-Clause"
+  },
+  "fflate": {
+    "version": "0.8.2",
+    "repository": "https://github.com/101arrowz/fflate",
+    "source_url": "https://registry.npmjs.org/fflate/-/fflate-0.8.2.tgz",
+    "source_path": "package/esm/browser.js",
+    "source_archive_sha256": "61fd5061e2fc8e5e3e3129f7f2fec7bd78a313e1bf4becbf1cc1cc9998d141dc",
+    "path": "assets/foliate/vendor/fflate.js",
+    "sha256": "8cc1f687e0159e977addb6b85e274dbd11e622cf151f4fcb7b85d49622ea43e7",
+    "modified": false,
+    "license": "MIT"
+  },
+  "native_host": {
+    "package": "flutter_inappwebview",
+    "version": "6.1.5",
+    "source_url": "https://pub.dev/packages/flutter_inappwebview/versions/6.1.5",
+    "license": "Apache-2.0",
+    "vendored": false
+  },
+  "license_files": [
+    {
+      "path": "assets/licenses/fflate-LICENSE.txt",
+      "sha256": "805f6cb28bb8b6d3a0badd83c93bccd9671fa01a3b4b92b7042b0743325ac243"
+    },
+    {
+      "path": "assets/licenses/flutter-inappwebview-LICENSE.txt",
+      "sha256": "23d164b37c82a2c2e1061bbc367c609f718951ddb70de7e0ac5fe9058c91844a"
+    },
+    {
+      "path": "assets/licenses/foliate-js-LICENSE.txt",
+      "sha256": "b621ffc351fe263bc9b09dd0bc1c9332fda9c462a3904c1e4f0b4d3236b9c28c"
+    },
+    {
+      "path": "assets/licenses/sjcl-LICENSE.txt",
+      "sha256": "ef430277d3cca1d3e7cdb6d4a61d7ff1eb208c4c2058602d2b361aaab60cd9c0"
+    },
+    {
+      "path": "assets/licenses/zip-js-LICENSE.txt",
+      "sha256": "1b7ebc8d7889ed25491484ab2b102370742ca6c0b26650a0c62cc2269b579b84"
+    }
+  ]
+}

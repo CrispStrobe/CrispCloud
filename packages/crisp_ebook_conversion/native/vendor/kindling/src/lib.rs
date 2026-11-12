@@ -1,0 +1,140 @@
+//! kindling: Kindle MOBI/AZW3 builder library.
+//!
+//! This crate provides EPUB-to-MOBI/AZW3 conversion, EPUB2/EPUB3 and StarDict
+//! output builders, a comic pipeline, KDP pre-flight validation, and
+//! post-build MOBI readback checks.
+//! The same functionality is exposed through the `kindling-cli` binary,
+//! which is a thin wrapper around these modules.
+
+// Public API
+pub mod comic;
+pub mod epub;
+// CrispCloud runtime: EPUB writing belongs to crisp_ebook, not this converter.
+// The unused upstream EPUB writer and its HTML model are not part of this bridge.
+pub mod extracted;
+pub mod font_injection;
+pub mod huffcdic;
+pub mod kdp_rules;
+pub mod lookup;
+pub mod mobi;
+pub mod mobi_check;
+pub mod mobi_dump;
+pub mod mobi_rewrite;
+pub mod nav;
+pub mod opf;
+pub mod ordt;
+pub mod profile;
+pub mod repair;
+pub mod stardict;
+pub mod thumbnail;
+pub mod validate;
+
+// Internal implementation modules, visible inside the crate only.
+pub(crate) mod cbr;
+pub(crate) mod checks;
+pub(crate) mod cncx;
+pub(crate) mod dict_css;
+pub(crate) mod exth;
+pub(crate) mod fonts;
+pub(crate) mod html_check;
+pub(crate) mod huffdic_encode;
+pub(crate) mod indx;
+pub(crate) mod kf8;
+pub(crate) mod links;
+pub(crate) mod moire;
+pub(crate) mod palmdoc;
+pub(crate) mod vwi;
+pub(crate) mod xml_text;
+
+#[cfg(test)]
+mod tests;
+
+use std::path::Path;
+
+use crate::extracted::ExtractedEpub;
+
+/// Fallback author written to EXTH 100 when the input OPF or ComicInfo.xml
+/// does not supply a creator. Used anywhere kindling needs a non-empty author
+/// string: dictionary EXTH, book EXTH, and the comic pipeline. Kept as a
+/// single crate-wide constant so the displayed author on a Kindle home screen
+/// is consistent regardless of which entry point produced the file.
+pub const DEFAULT_AUTHOR: &str = "kindling";
+
+/// Pre-flight KDP validation used by `do_build`. Returns `Err(error_count)`.
+///
+/// Path-based entry point: parses the OPF into an [`ExtractedEpub`] and
+/// then delegates to [`run_preflight_validation_on_extracted`]. Callers
+/// that already have an `ExtractedEpub` (e.g. the CLI build flow that
+/// then hands the same instance to `mobi::build_mobi_from_extracted`)
+/// should use the `_on_extracted` variant directly so the OPF is not
+/// parsed twice.
+pub fn run_preflight_validation(opf_path: &Path, no_validate: bool) -> Result<(), usize> {
+    if no_validate {
+        println!("Skipping KDP validation (--no-validate)");
+        return Ok(());
+    }
+
+    let epub = match ExtractedEpub::from_opf_path(opf_path) {
+        Ok(e) => e,
+        Err(e) => {
+            // Match the original "couldn't parse" warning path exactly:
+            // print the path-aware warning and treat as a soft pass so the
+            // build can proceed and surface a more useful error itself.
+            println!(
+                "Validating {} against Kindle Publishing Guidelines v{}",
+                opf_path.display(),
+                kdp_rules::KPG_VERSION
+            );
+            eprintln!(
+                "Warning: could not parse OPF for pre-flight validation ({}): {}",
+                opf_path.display(),
+                e
+            );
+            return Ok(());
+        }
+    };
+
+    run_preflight_validation_on_extracted(&epub, no_validate)
+}
+
+/// Pre-flight KDP validation against an already-parsed [`ExtractedEpub`].
+///
+/// Identical behavior to [`run_preflight_validation`] (including the
+/// header line, per-finding output, summary line, error/warning return
+/// semantics, and `--no-validate` short-circuit), but does not re-parse
+/// the OPF. Use this whenever the caller has already constructed an
+/// `ExtractedEpub` it intends to reuse for the subsequent build.
+pub fn run_preflight_validation_on_extracted(
+    epub: &ExtractedEpub,
+    no_validate: bool,
+) -> Result<(), usize> {
+    if no_validate {
+        println!("Skipping KDP validation (--no-validate)");
+        return Ok(());
+    }
+
+    println!(
+        "Validating {} against Kindle Publishing Guidelines v{}",
+        epub.opf_path.display(),
+        kdp_rules::KPG_VERSION
+    );
+
+    let report = validate::validate(epub);
+
+    for finding in &report.findings {
+        println!("{}", finding);
+    }
+
+    let errors = report.error_count();
+    let warnings = report.warning_count();
+    let infos = report.info_count();
+    println!("{} errors, {} warnings, {} info", errors, warnings, infos);
+
+    if errors > 0 {
+        return Err(errors);
+    }
+    if warnings > 0 {
+        println!("Validation passed with {} warnings", warnings);
+    }
+    Ok(())
+}

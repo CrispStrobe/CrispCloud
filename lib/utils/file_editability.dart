@@ -42,6 +42,9 @@ const Set<String> textEditableExtensions = <String>{
   'cs',
   'php',
   'html',
+  'xhtml',
+  'opf',
+  'ncx',
   'css',
   'scss',
   'less',
@@ -167,6 +170,7 @@ bool isTextEditableName(String name) {
 bool isEditableInBuiltInEditor(String name) {
   final lower = name.toLowerCase();
   if (lower.endsWith('.pdf')) return true;
+  if (lower.endsWith('.epub')) return true;
   if (isImageEditorFileName(lower)) return true;
   final mediaKind = mediaKindForFileName(lower);
   if (mediaKind != null) return MediaCapabilities.canEdit(mediaKind);

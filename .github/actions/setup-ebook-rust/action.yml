@@ -1,0 +1,51 @@
+name: Set up the bundled ebook converter
+description: Install Rust targets and the Android NDK required by the Kindling native-assets hook.
+inputs:
+  targets:
+    description: Comma-separated extra Rust targets; the runner host is always installed.
+    required: false
+    default: ''
+  android:
+    description: Install the same Android NDK version as the app.
+    required: false
+    default: 'false'
+  ndk-version:
+    description: Must match android/app/build.gradle.kts.
+    required: false
+    default: '28.2.13676358'
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ inputs.targets }}
+    - name: Locate the Android native toolchain
+      if: inputs.android == 'true'
+      shell: bash
+      env:
+        EBOOK_NDK_VERSION: ${{ inputs.ndk-version }}
+      run: |
+        set -euo pipefail
+        EBOOK_ANDROID_SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+        if [ -z "$EBOOK_ANDROID_SDK" ]; then
+          echo "Android SDK is required for the bundled ebook converter." >&2
+          exit 1
+        fi
+        EBOOK_SDKMANAGER="$EBOOK_ANDROID_SDK/cmdline-tools/latest/bin/sdkmanager"
+        if [ ! -x "$EBOOK_SDKMANAGER" ]; then
+          EBOOK_SDKMANAGER="$(command -v sdkmanager)"
+        fi
+        EBOOK_NDK="$EBOOK_ANDROID_SDK/ndk/$EBOOK_NDK_VERSION"
+        if [ ! -d "$EBOOK_NDK/toolchains/llvm" ]; then
+          "$EBOOK_SDKMANAGER" --install "ndk;$EBOOK_NDK_VERSION"
+        fi
+        test -d "$EBOOK_NDK/toolchains/llvm"
+        echo "ANDROID_HOME=$EBOOK_ANDROID_SDK" >> "$GITHUB_ENV"
+        echo "ANDROID_NDK_HOME=$EBOOK_NDK" >> "$GITHUB_ENV"
+    - name: Cache pinned native dependencies
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ebook-rust-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/crisp_ebook_conversion/native/Cargo.lock') }}

@@ -57,6 +57,7 @@ abstract class PdfFileStore {
     required FileItem file,
     int inputLimitBytes,
     int outputLimitBytes,
+    String? copyExtension,
   }) = _LocalPdfFileStore;
 
   factory PdfFileStore.remote({
@@ -67,6 +68,7 @@ abstract class PdfFileStore {
     bool Function()? isCurrentAccount,
     int inputLimitBytes,
     int outputLimitBytes,
+    String? copyExtension,
   }) = _RemotePdfFileStore;
 
   String get documentId;
@@ -95,12 +97,17 @@ abstract class _PdfFileStoreBase implements PdfFileStore {
     this.path, {
     required this.inputLimitBytes,
     required this.outputLimitBytes,
+    this.copyExtension = 'pdf',
   });
   final FileItem file;
   // Other host editors can reuse the conflict/account/write contract without
   // inheriting the PDF memory budget. PDF callers retain the original defaults.
   final int inputLimitBytes;
   final int outputLimitBytes;
+
+  /// Other package editors reuse this store without forcing a PDF suffix.
+  /// Null retains the exact validated filename supplied by that editor.
+  final String? copyExtension;
   @override
   final String path;
 
@@ -149,7 +156,10 @@ abstract class _PdfFileStoreBase implements PdfFileStore {
         'Enter a filename without directories or separators.',
       );
     }
-    if (!fileName.toLowerCase().endsWith('.pdf')) fileName = '$fileName.pdf';
+    final extension = copyExtension;
+    if (extension != null && !fileName.toLowerCase().endsWith('.$extension')) {
+      fileName = '$fileName.$extension';
+    }
     final context = isRemote || kIsWeb ? p.posix : p.context;
     final target = context.join(context.dirname(path), fileName);
     if (context.equals(target, path)) {
@@ -178,11 +188,13 @@ class _LocalPdfFileStore extends _PdfFileStoreBase {
     required FileItem file,
     int inputLimitBytes = kPdfEditorInputLimitBytes,
     int outputLimitBytes = kPdfEditorOutputLimitBytes,
+    String? copyExtension = 'pdf',
   }) : super(
          file,
          file.path ?? file.xFile?.path ?? file.name,
          inputLimitBytes: inputLimitBytes,
          outputLimitBytes: outputLimitBytes,
+         copyExtension: copyExtension,
        );
 
   final LocalFileService service;
@@ -278,6 +290,7 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
     this.isCurrentAccount,
     int inputLimitBytes = kPdfEditorInputLimitBytes,
     int outputLimitBytes = kPdfEditorOutputLimitBytes,
+    String? copyExtension = 'pdf',
   }) : _userId = client.userId,
        _bucketId = client.bucketId,
        super(
@@ -285,6 +298,7 @@ class _RemotePdfFileStore extends _PdfFileStoreBase {
          file.path ?? p.posix.join('/', file.name),
          inputLimitBytes: inputLimitBytes,
          outputLimitBytes: outputLimitBytes,
+         copyExtension: copyExtension,
        );
 
   static const _log = Log('PdfFileStore');

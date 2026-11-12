@@ -47,6 +47,8 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/file_bytes_loader.dart';
+import '../services/ebook_file_store.dart' show isEbookFileName;
+import 'ebook_editor_dialog.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/viewer_spool.dart';
@@ -195,19 +197,37 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
   }
 
   @override
-  Widget build(BuildContext context) => InternalViewerDialog(
-    key: ValueKey(_index),
-    file: _items[_index].file,
-    side: widget.side,
-    origin: _items[_index].origin,
-    bytesOverride: widget.bytesOverride,
-    displayName: widget.displayName,
-    onPrevious: _index > 0 ? () => _go(-1) : null,
-    onNext: _index + 1 < _items.length ? () => _go(1) : null,
-    positionLabel: _items.length > 1
-        ? '${_index + 1} / ${_items.length}'
-        : null,
-  );
+  Widget build(BuildContext context) {
+    final item = _items[_index];
+    if (isEbookFileName(widget.displayName ?? item.file.name)) {
+      return EbookEditorDialog(
+        key: ValueKey(_index),
+        file: item.file,
+        side: widget.side,
+        origin: item.origin,
+        bytesOverride: widget.bytesOverride,
+        displayName: widget.displayName,
+        onPrevious: _index > 0 ? () => _go(-1) : null,
+        onNext: _index + 1 < _items.length ? () => _go(1) : null,
+        positionLabel: _items.length > 1
+            ? '${_index + 1} / ${_items.length}'
+            : null,
+      );
+    }
+    return InternalViewerDialog(
+      key: ValueKey(_index),
+      file: _items[_index].file,
+      side: widget.side,
+      origin: _items[_index].origin,
+      bytesOverride: widget.bytesOverride,
+      displayName: widget.displayName,
+      onPrevious: _index > 0 ? () => _go(-1) : null,
+      onNext: _index + 1 < _items.length ? () => _go(1) : null,
+      positionLabel: _items.length > 1
+          ? '${_index + 1} / ${_items.length}'
+          : null,
+    );
+  }
 }
 
 class InternalViewerDialog extends ConsumerStatefulWidget {

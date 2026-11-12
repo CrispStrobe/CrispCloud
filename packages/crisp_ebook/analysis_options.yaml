@@ -1,0 +1,10 @@
+analyzer:
+  errors:
+    dead_code: error
+    unused_import: error
+
+linter:
+  rules:
+    - avoid_print
+    - prefer_final_locals
+    - unawaited_futures
