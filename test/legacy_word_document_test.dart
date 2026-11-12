@@ -75,14 +75,15 @@ Uint8List _document({
   final writer = CfbfWriter();
   final prefix = nestedOnly ? 'Embedded/' : '';
   writer.addStream('${prefix}WordDocument', word);
-  if (includeTable)
+  if (includeTable) {
     writer.addStream(
-      '${prefix}${flags & 0x0200 != 0 ? '1Table' : '0Table'}',
+      '$prefix${flags & 0x0200 != 0 ? '1Table' : '0Table'}',
       table,
     );
+  }
   // A stale table must never be used instead of the selected FIB table.
   writer.addStream(
-    '${prefix}${flags & 0x0200 != 0 ? '0Table' : '1Table'}',
+    '$prefix${flags & 0x0200 != 0 ? '0Table' : '1Table'}',
     Uint8List(0),
   );
   return writer.build();

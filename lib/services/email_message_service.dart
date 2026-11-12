@@ -64,17 +64,17 @@ class EmailMessageDocument {
   final List<EmailPreviewWarning> warnings;
 
   String get searchText => [
-        if (subject.isNotEmpty) 'Subject: $subject',
-        if (from.isNotEmpty) 'From: $from',
-        if (to.isNotEmpty) 'To: $to',
-        if (cc.isNotEmpty) 'Cc: $cc',
-        if (bcc.isNotEmpty) 'Bcc: $bcc',
-        if (date.isNotEmpty) 'Date: $date',
-        '',
-        plainText,
-        if (attachments.isNotEmpty) '',
-        ...attachments.map((attachment) => attachment.name),
-      ].join('\n');
+    if (subject.isNotEmpty) 'Subject: $subject',
+    if (from.isNotEmpty) 'From: $from',
+    if (to.isNotEmpty) 'To: $to',
+    if (cc.isNotEmpty) 'Cc: $cc',
+    if (bcc.isNotEmpty) 'Bcc: $bcc',
+    if (date.isNotEmpty) 'Date: $date',
+    '',
+    plainText,
+    if (attachments.isNotEmpty) '',
+    ...attachments.map((attachment) => attachment.name),
+  ].join('\n');
 }
 
 /// Reads saved email without fetching remote content or invoking a mail client.
@@ -106,6 +106,10 @@ class _EmailParser {
       throw const FormatException('This file has no email headers');
     }
     final content = _parsePart(root, 0);
+    if ((content.text?.length ?? 0) > _maxBodyBytes ||
+        (content.html?.length ?? 0) > _maxBodyBytes) {
+      throw const FormatException('Email body exceeds the 8 MiB preview limit');
+    }
     final html = content.html == null ? null : _safeHtml(content.html!);
     return EmailMessageDocument(
       subject: _header(root.headers['subject'] ?? ''),
@@ -131,8 +135,8 @@ class _EmailParser {
     }
     final type = _parameters(part.headers['content-type'] ?? defaultType);
     final disposition = _parameters(part.headers['content-disposition'] ?? '');
-    final name = _parameter(disposition.$2, 'filename') ??
-        _parameter(type.$2, 'name');
+    final name =
+        _parameter(disposition.$2, 'filename') ?? _parameter(type.$2, 'name');
     final isAttachment = disposition.$1 == 'attachment' || name != null;
     if (type.$1.startsWith('multipart/') && !isAttachment) {
       final boundary = type.$2['boundary'];
@@ -181,25 +185,54 @@ class _EmailParser {
       if (contents.isEmpty) {
         throw const FormatException('Multipart email has no readable parts');
       }
-      final texts = contents.map((body) => body.text).whereType<String>();
-      final htmls = contents.map((body) => body.html).whereType<String>();
       // Alternatives are different representations of the same body. Other
       // multipart containers may have several distinct text body sections.
-      return type.$1 == 'multipart/alternative'
-          ? _EmailBody(texts.lastOrNull, htmls.lastOrNull)
-          : _EmailBody(
-              texts.isEmpty ? null : texts.join('\n\n'),
-              htmls.isEmpty ? null : htmls.join('<hr>'),
-            );
+      if (type.$1 == 'multipart/alternative') {
+        return _EmailBody(
+          contents.map((body) => body.text).whereType<String>().lastOrNull,
+          contents.map((body) => body.html).whereType<String>().lastOrNull,
+        );
+      }
+      final texts = contents
+          .map(
+            (body) =>
+                body.text ??
+                (body.html == null ? null : _htmlText(_safeHtml(body.html!))),
+          )
+          .whereType<String>()
+          .toList();
+      final hasHtml = contents.any((body) => body.html != null);
+      final htmls = hasHtml
+          ? contents
+                .map(
+                  (body) =>
+                      body.html ??
+                      (body.text == null
+                          ? null
+                          : '<pre>${const HtmlEscape().convert(body.text!)}</pre>'),
+                )
+                .whereType<String>()
+                .toList()
+          : const <String>[];
+      return _EmailBody(
+        texts.isEmpty ? null : texts.join('\n\n'),
+        htmls.isEmpty ? null : htmls.join('<hr>'),
+      );
     }
 
-    final decoded = _transferDecode(part.body, part.headers['content-transfer-encoding']);
-    final contentId = part.headers['content-id']?.replaceAll(RegExp(r'[<>]'), '').trim();
-    if (isAttachment ||
-        (type.$1 != 'text/plain' && type.$1 != 'text/html')) {
+    final decoded = _transferDecode(
+      part.body,
+      part.headers['content-transfer-encoding'],
+    );
+    final contentId = part.headers['content-id']
+        ?.replaceAll(RegExp(r'[<>]'), '')
+        .trim();
+    if (isAttachment || (type.$1 != 'text/plain' && type.$1 != 'text/html')) {
       _addAttachment(
         EmailAttachment(
-          name: _safeName(name ?? _defaultAttachmentName(type.$1, _attachments.length + 1)),
+          name: _safeName(
+            name ?? _defaultAttachmentName(type.$1, _attachments.length + 1),
+          ),
           contentType: type.$1,
           bytes: decoded,
           isInline: disposition.$1 == 'inline' || contentId != null,
@@ -226,20 +259,61 @@ class _EmailParser {
     );
     final root = cfb.root;
     final children = cfb.childrenOf(root);
-    if (!children.any((entry) => entry.name.toLowerCase() == '__properties_version1.0')) {
-      throw const FormatException('This compound document is not an Outlook message');
+    if (children
+            .where(
+              (entry) =>
+                  entry.isStorage &&
+                  entry.name.toLowerCase().startsWith('__recip_version1.0_'),
+            )
+            .length >
+        512) {
+      throw const FormatException(
+        'Email has too many recipients for a preview',
+      );
+    }
+    if (!children.any(
+      (entry) => entry.name.toLowerCase() == '__properties_version1.0',
+    )) {
+      throw const FormatException(
+        'This compound document is not an Outlook message',
+      );
     }
     final properties = _msgProperties(cfb, root, 32);
-    final charset = _codePage(properties[0x3ffd0003] ?? properties[0x3fde0003]);
-    String text(CfbfDirectoryEntry parent, int id) {
-      final stem = '__substg1.0_${id.toRadixString(16).padLeft(4, '0').toUpperCase()}';
+    final charset = _codePage(properties[0x3ffd0003]);
+    final bodyCharset = _codePage(
+      properties[0x3fde0003] ?? properties[0x3ffd0003],
+    );
+    String text(
+      CfbfDirectoryEntry parent,
+      int id, {
+      int maxBytes = _maxHeaderBytes,
+      String? encoding,
+    }) {
+      final stem =
+          '__substg1.0_${id.toRadixString(16).padLeft(4, '0').toUpperCase()}';
       final unicode = cfb.child(parent, '${stem}001F');
       if (unicode?.isStream ?? false) {
-        return _charset(cfb.readEntry(unicode!), 'utf-16le').replaceAll(RegExp(r'\x00+$'), '');
+        if (unicode!.streamSize > maxBytes) {
+          throw const FormatException(
+            'Outlook text exceeds the preview size limit',
+          );
+        }
+        return _charset(
+          cfb.readEntry(unicode),
+          'utf-16le',
+        ).replaceAll(RegExp(r'\x00+$'), '');
       }
       final ansi = cfb.child(parent, '${stem}001E');
       if (ansi?.isStream ?? false) {
-        return _charset(cfb.readEntry(ansi!), charset).replaceAll(RegExp(r'\x00+$'), '');
+        if (ansi!.streamSize > maxBytes) {
+          throw const FormatException(
+            'Outlook text exceeds the preview size limit',
+          );
+        }
+        return _charset(
+          cfb.readEntry(ansi),
+          encoding ?? charset,
+        ).replaceAll(RegExp(r'\x00+$'), '');
       }
       return '';
     }
@@ -247,7 +321,8 @@ class _EmailParser {
     final rawHeaders = text(root, 0x007d);
     final headers = rawHeaders.isEmpty
         ? const <String, String>{}
-        : _splitPart('${latin1.decode(utf8.encode(rawHeaders))}\r\n\r\n').headers;
+        : _splitPart('${latin1.decode(utf8.encode(rawHeaders))}\r\n\r\n')
+              .headers;
     final recipients = <int, List<String>>{1: [], 2: [], 3: []};
     for (final storage in children.where((entry) => entry.isStorage)) {
       final lower = storage.name.toLowerCase();
@@ -267,13 +342,23 @@ class _EmailParser {
         final contentId = text(storage, 0x3712);
         final data = cfb.child(storage, '__substg1.0_37010102');
         final embedded = cfb.child(storage, '__substg1.0_3701000D');
-        if (embedded != null) _warnings.add(EmailPreviewWarning.embeddedOutlookAttachment);
+        if (embedded != null) {
+          _warnings.add(EmailPreviewWarning.embeddedOutlookAttachment);
+        }
         _addAttachment(
           EmailAttachment(
-            name: _safeName(longName.isNotEmpty ? longName : shortName.isNotEmpty
-                ? shortName : 'attachment-${_attachments.length + 1}${embedded == null ? '.bin' : '.msg'}'),
-            contentType: contentType.isNotEmpty ? contentType
-                : embedded == null ? 'application/octet-stream' : 'application/vnd.ms-outlook',
+            name: _safeName(
+              longName.isNotEmpty
+                  ? longName
+                  : shortName.isNotEmpty
+                  ? shortName
+                  : 'attachment-${_attachments.length + 1}${embedded == null ? '.bin' : '.msg'}',
+            ),
+            contentType: contentType.isNotEmpty
+                ? contentType
+                : embedded == null
+                ? 'application/octet-stream'
+                : 'application/vnd.ms-outlook',
             bytes: data?.isStream == true ? cfb.readEntry(data!) : null,
             isInline: contentId.isNotEmpty,
             contentId: contentId.isEmpty ? null : contentId,
@@ -281,11 +366,26 @@ class _EmailParser {
         );
       }
     }
-    var body = text(root, 0x1000);
-    var html = text(root, 0x1013);
+    var body = text(
+      root,
+      0x1000,
+      maxBytes: _maxBodyBytes,
+      encoding: bodyCharset,
+    );
+    var html = text(
+      root,
+      0x1013,
+      maxBytes: _maxBodyBytes,
+      encoding: bodyCharset,
+    );
     final htmlEntry = cfb.child(root, '__substg1.0_10130102');
     if (html.isEmpty && htmlEntry?.isStream == true) {
-      html = _charset(cfb.readEntry(htmlEntry!), charset);
+      if (htmlEntry!.streamSize > _maxBodyBytes) {
+        throw const FormatException(
+          'Outlook HTML exceeds the preview size limit',
+        );
+      }
+      html = _charset(cfb.readEntry(htmlEntry), bodyCharset);
     }
     if (body.length > _maxBodyBytes || html.length > _maxBodyBytes) {
       throw const FormatException('Email body exceeds the preview size limit');
@@ -300,9 +400,12 @@ class _EmailParser {
       final display = text(root, property);
       return display.isNotEmpty ? display : _header(headers[header] ?? '');
     }
+
     final senderName = text(root, 0x0c1a);
     final senderSmtp = text(root, 0x5d01);
-    final senderAddress = senderSmtp.isNotEmpty ? senderSmtp : text(root, 0x0c1f);
+    final senderAddress = senderSmtp.isNotEmpty
+        ? senderSmtp
+        : text(root, 0x0c1f);
     final from = _address(senderName, senderAddress);
     return EmailMessageDocument(
       subject: text(root, 0x0037),
@@ -310,7 +413,7 @@ class _EmailParser {
       to: recipientHeader(1, 0x0e04, 'to'),
       cc: recipientHeader(2, 0x0e03, 'cc'),
       bcc: recipientHeader(3, 0x0e02, 'bcc'),
-      date: _header(headers['date'] ?? '') .trim().isNotEmpty
+      date: _header(headers['date'] ?? '').trim().isNotEmpty
           ? _header(headers['date']!)
           : _msgDate(cfb, root),
       plainText: body,
@@ -320,15 +423,26 @@ class _EmailParser {
     );
   }
 
-  Map<int, int> _msgProperties(BoundedCfbReader cfb, CfbfDirectoryEntry parent, int headerSize) {
+  Map<int, int> _msgProperties(
+    BoundedCfbReader cfb,
+    CfbfDirectoryEntry parent,
+    int headerSize,
+  ) {
     final entry = cfb.child(parent, '__properties_version1.0');
     if (entry == null || !entry.isStream) return {};
+    if (entry.streamSize > _maxHeaderBytes) {
+      throw const FormatException(
+        'Outlook properties exceed the preview size limit',
+      );
+    }
     final bytes = cfb.readEntry(entry);
     final view = ByteData.sublistView(bytes);
     final values = <int, int>{};
     for (var offset = headerSize; offset + 16 <= bytes.length; offset += 16) {
       final tag = view.getUint32(offset, Endian.little);
-      if ((tag & 0xffff) == 3) values[tag] = view.getUint32(offset + 8, Endian.little);
+      if ((tag & 0xffff) == 3) {
+        values[tag] = view.getUint32(offset + 8, Endian.little);
+      }
     }
     return values;
   }
@@ -342,28 +456,35 @@ class _EmailParser {
       final tag = view.getUint32(offset, Endian.little);
       if (tag != 0x00390040 && tag != 0x0e060040) continue;
       // Splitting the 64-bit FILETIME also works on Dart's web runtime.
-      final ticks = view.getUint32(offset + 8, Endian.little) +
+      final ticks =
+          view.getUint32(offset + 8, Endian.little) +
           view.getUint32(offset + 12, Endian.little) * 4294967296;
       final micros = ticks ~/ 10 - 11644473600000000;
       if (micros.abs() > 8640000000000000000) return '';
-      return DateTime.fromMicrosecondsSinceEpoch(micros, isUtc: true).toIso8601String();
+      return DateTime.fromMicrosecondsSinceEpoch(
+        micros,
+        isUtc: true,
+      ).toIso8601String();
     }
     return '';
   }
 
   String? _codePage(int? codePage) => switch (codePage) {
-        null || 0 || 1252 => 'windows-1252',
-        65001 => 'utf-8',
-        1200 => 'utf-16le',
-        1201 => 'utf-16be',
-        20127 => 'us-ascii',
-        28591 => 'iso-8859-1',
-        _ => 'windows-$codePage',
-      };
+    null || 0 || 1252 => 'windows-1252',
+    65001 => 'utf-8',
+    1200 => 'utf-16le',
+    1201 => 'utf-16be',
+    20127 => 'us-ascii',
+    28591 => 'iso-8859-1',
+    _ => 'windows-$codePage',
+  };
 
   void _addAttachment(EmailAttachment attachment) {
-    if (_attachments.length >= 128 || (attachment.bytes?.length ?? 0) > _maxAttachmentBytes) {
-      throw const FormatException('Email attachments exceed the preview limits');
+    if (_attachments.length >= 128 ||
+        (attachment.bytes?.length ?? 0) > _maxAttachmentBytes) {
+      throw const FormatException(
+        'Email attachments exceed the preview limits',
+      );
     }
     _attachments.add(attachment);
   }
@@ -382,7 +503,9 @@ class _EmailParser {
     if (headerEnd > _maxHeaderBytes) {
       throw const FormatException('Email headers exceed the preview limit');
     }
-    final headerSource = source.substring(0, headerEnd).replaceAll(RegExp(r'\r?\n[ \t]+'), ' ');
+    final headerSource = source
+        .substring(0, headerEnd)
+        .replaceAll(RegExp(r'\r?\n[ \t]+'), ' ');
     final headers = <String, String>{};
     for (final line in headerSource.split(RegExp(r'\r?\n'))) {
       final colon = line.indexOf(':');
@@ -390,19 +513,35 @@ class _EmailParser {
       final name = line.substring(0, colon).toLowerCase().trim();
       if (!RegExp(r'^[a-z0-9-]+$').hasMatch(name)) continue;
       final value = line.substring(colon + 1).trim();
-      if ((name == 'to' || name == 'cc' || name == 'bcc') && headers.containsKey(name)) {
+      if ((name == 'to' || name == 'cc' || name == 'bcc') &&
+          headers.containsKey(name)) {
         headers[name] = '${headers[name]}, $value';
       } else {
         headers.putIfAbsent(name, () => value);
       }
     }
-    return _MimePart(headers, separator == null ? '' : source.substring(separator.end));
+    return _MimePart(
+      headers,
+      separator == null ? '' : source.substring(separator.end),
+    );
   }
 
   Uint8List _transferDecode(String value, String? encoding) {
+    final normalized = encoding?.toLowerCase().trim();
+    if (!const {
+      null,
+      '',
+      '7bit',
+      '8bit',
+      'binary',
+      'base64',
+      'quoted-printable',
+    }.contains(normalized)) {
+      throw const FormatException('Unsupported email transfer encoding');
+    }
     Uint8List bytes;
     try {
-      bytes = switch (encoding?.toLowerCase().trim()) {
+      bytes = switch (normalized) {
         'base64' => base64.decode(value.replaceAll(RegExp(r'\s'), '')),
         'quoted-printable' => _quotedPrintable(value),
         _ => Uint8List.fromList(value.codeUnits),
@@ -440,7 +579,9 @@ class _EmailParser {
       offset = match.end;
       previousEncoded = true;
     }
-    out.write(_charset(Uint8List.fromList(source.substring(offset).codeUnits), null));
+    out.write(
+      _charset(Uint8List.fromList(source.substring(offset).codeUnits), null),
+    );
     return out.toString();
   }
 
@@ -469,43 +610,47 @@ class _EmailParser {
     for (final value in parts.skip(1)) {
       final equal = value.indexOf('=');
       if (equal <= 0) continue;
-      params[value.substring(0, equal).trim().toLowerCase()] = value.substring(equal + 1).trim();
+      params[value.substring(0, equal).trim().toLowerCase()] = value
+          .substring(equal + 1)
+          .trim();
     }
     return (parts.first.toLowerCase(), params);
   }
 
   String? _parameter(Map<String, String> parameters, String name) {
-    var extended = parameters['$name*'];
-    if (extended == null && (parameters.containsKey('$name*0*') || parameters.containsKey('$name*0'))) {
-      final value = StringBuffer();
-      var encoded = false;
+    final extended = parameters['$name*'];
+    if (extended == null &&
+        (parameters.containsKey('$name*0*') ||
+            parameters.containsKey('$name*0'))) {
+      final segments = <(String, bool)>[];
       for (var index = 0; index < 100; index++) {
-        final segment = parameters['$name*$index*'] ?? parameters['$name*$index'];
+        final segment =
+            parameters['$name*$index*'] ?? parameters['$name*$index'];
         if (segment == null) break;
-        encoded |= parameters.containsKey('$name*$index*');
-        value.write(segment);
+        segments.add((segment, parameters.containsKey('$name*$index*')));
       }
-      if (!encoded) return _header(value.toString());
-      extended = value.toString();
-    }
-    if (extended != null) {
-      final firstQuote = extended.indexOf("'");
-      final secondQuote = firstQuote < 0 ? -1 : extended.indexOf("'", firstQuote + 1);
-      final charset = firstQuote < 0 ? 'utf-8' : extended.substring(0, firstQuote);
-      final encoded = secondQuote < 0 ? extended : extended.substring(secondQuote + 1);
+      if (!segments.any((segment) => segment.$2)) {
+        return _header(segments.map((segment) => segment.$1).join());
+      }
       final bytes = <int>[];
-      for (var index = 0; index < encoded.length; index++) {
-        if (encoded.codeUnitAt(index) == 37 && index + 2 < encoded.length) {
-          final byte = int.tryParse(encoded.substring(index + 1, index + 3), radix: 16);
-          if (byte != null) {
-            bytes.add(byte);
-            index += 2;
-            continue;
-          }
+      var charset = 'utf-8';
+      for (var index = 0; index < segments.length; index++) {
+        var (segment, encoded) = segments[index];
+        if (index == 0 && encoded) {
+          final prefix = _extendedPrefix(segment);
+          charset = prefix.$1;
+          segment = prefix.$2;
         }
-        bytes.add(encoded.codeUnitAt(index));
+        // RFC 2231 permits a mixture of encoded and literal continuations.
+        // Decode each starred part only, then decode the combined byte string
+        // once, because a multibyte character can span continuation segments.
+        bytes.addAll(encoded ? _percentBytes(segment) : segment.codeUnits);
       }
       return _charset(Uint8List.fromList(bytes), charset);
+    }
+    if (extended != null) {
+      final prefix = _extendedPrefix(extended);
+      return _charset(Uint8List.fromList(_percentBytes(prefix.$2)), prefix.$1);
     }
     final value = parameters[name];
     return value == null ? null : _header(value);
@@ -514,12 +659,22 @@ class _EmailParser {
   String _charset(Uint8List bytes, String? label) {
     final name = label?.toLowerCase().replaceAll('_', '-').trim();
     if (name == 'utf-16' || name == 'utf-16le' || name == 'utf-16be') {
-      final big = name == 'utf-16be' || (bytes.length >= 2 && bytes[0] == 0xfe && bytes[1] == 0xff);
+      final big =
+          name == 'utf-16be' ||
+          (bytes.length >= 2 && bytes[0] == 0xfe && bytes[1] == 0xff);
       var start = 0;
-      if (bytes.length >= 2 && ((bytes[0] == 0xff && bytes[1] == 0xfe) || (bytes[0] == 0xfe && bytes[1] == 0xff))) start = 2;
+      if (bytes.length >= 2 &&
+          ((bytes[0] == 0xff && bytes[1] == 0xfe) ||
+              (bytes[0] == 0xfe && bytes[1] == 0xff))) {
+        start = 2;
+      }
       final units = <int>[];
       for (var index = start; index + 1 < bytes.length; index += 2) {
-        units.add(big ? bytes[index] * 256 + bytes[index + 1] : bytes[index] + bytes[index + 1] * 256);
+        units.add(
+          big
+              ? bytes[index] * 256 + bytes[index + 1]
+              : bytes[index] + bytes[index + 1] * 256,
+        );
       }
       if ((bytes.length - start).isOdd) {
         units.add(0xfffd);
@@ -527,9 +682,13 @@ class _EmailParser {
       }
       return String.fromCharCodes(units);
     }
-    if (name == 'iso-8859-1' || name == 'latin1' || name == 'latin-1') return latin1.decode(bytes);
+    if (name == 'iso-8859-1' || name == 'latin1' || name == 'latin-1') {
+      return latin1.decode(bytes);
+    }
     if (name == 'windows-1252' || name == 'cp1252') return _windows1252(bytes);
-    if (name == 'us-ascii' || name == 'ascii') return ascii.decode(bytes, allowInvalid: true);
+    if (name == 'us-ascii' || name == 'ascii') {
+      return ascii.decode(bytes, allowInvalid: true);
+    }
     if (name != null && name.isNotEmpty && name != 'utf-8' && name != 'utf8') {
       _warnings.add(EmailPreviewWarning.unsupportedCharset);
       return _windows1252(bytes);
@@ -538,7 +697,9 @@ class _EmailParser {
       return utf8.decode(bytes);
     } on FormatException {
       if (name != null) _warnings.add(EmailPreviewWarning.malformedEncoding);
-      return name == null ? _windows1252(bytes) : utf8.decode(bytes, allowMalformed: true);
+      return name == null
+          ? _windows1252(bytes)
+          : utf8.decode(bytes, allowMalformed: true);
     }
   }
 }
@@ -555,6 +716,33 @@ class _EmailBody {
   final String? html;
 }
 
+(String, String) _extendedPrefix(String value) {
+  final firstQuote = value.indexOf("'");
+  final secondQuote = firstQuote < 0 ? -1 : value.indexOf("'", firstQuote + 1);
+  return secondQuote < 0
+      ? ('utf-8', value)
+      : (value.substring(0, firstQuote), value.substring(secondQuote + 1));
+}
+
+List<int> _percentBytes(String value) {
+  final bytes = <int>[];
+  for (var index = 0; index < value.length; index++) {
+    if (value.codeUnitAt(index) == 37 && index + 2 < value.length) {
+      final byte = int.tryParse(
+        value.substring(index + 1, index + 3),
+        radix: 16,
+      );
+      if (byte != null) {
+        bytes.add(byte);
+        index += 2;
+        continue;
+      }
+    }
+    bytes.add(value.codeUnitAt(index));
+  }
+  return bytes;
+}
+
 Uint8List _quotedPrintable(String value) {
   final bytes = BytesBuilder(copy: false);
   for (var index = 0; index < value.length; index++) {
@@ -564,12 +752,16 @@ Uint8List _quotedPrintable(String value) {
         index++;
         continue;
       }
-      if (index + 2 < value.length && value.substring(index + 1, index + 3) == '\r\n') {
+      if (index + 2 < value.length &&
+          value.substring(index + 1, index + 3) == '\r\n') {
         index += 2;
         continue;
       }
       if (index + 2 < value.length) {
-        final byte = int.tryParse(value.substring(index + 1, index + 3), radix: 16);
+        final byte = int.tryParse(
+          value.substring(index + 1, index + 3),
+          radix: 16,
+        );
         if (byte != null) {
           bytes.addByte(byte);
           index += 2;
@@ -584,27 +776,70 @@ Uint8List _quotedPrintable(String value) {
 
 String _windows1252(Uint8List bytes) {
   const replacements = [
-    0x20ac, 0x81, 0x201a, 0x192, 0x201e, 0x2026, 0x2020, 0x2021,
-    0x2c6, 0x2030, 0x160, 0x2039, 0x152, 0x8d, 0x17d, 0x8f,
-    0x90, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014,
-    0x2dc, 0x2122, 0x161, 0x203a, 0x153, 0x9d, 0x17e, 0x178,
+    0x20ac,
+    0x81,
+    0x201a,
+    0x192,
+    0x201e,
+    0x2026,
+    0x2020,
+    0x2021,
+    0x2c6,
+    0x2030,
+    0x160,
+    0x2039,
+    0x152,
+    0x8d,
+    0x17d,
+    0x8f,
+    0x90,
+    0x2018,
+    0x2019,
+    0x201c,
+    0x201d,
+    0x2022,
+    0x2013,
+    0x2014,
+    0x2dc,
+    0x2122,
+    0x161,
+    0x203a,
+    0x153,
+    0x9d,
+    0x17e,
+    0x178,
   ];
-  return String.fromCharCodes(bytes.map((byte) => byte >= 0x80 && byte <= 0x9f ? replacements[byte - 0x80] : byte));
+  return String.fromCharCodes(
+    bytes.map(
+      (byte) => byte >= 0x80 && byte <= 0x9f ? replacements[byte - 0x80] : byte,
+    ),
+  );
 }
 
 String _address(String name, String address) => name.isEmpty
-    ? address : address.isEmpty || name == address ? name : '$name <$address>';
+    ? address
+    : address.isEmpty || name == address
+    ? name
+    : '$name <$address>';
 
 String _safeName(String name) {
-  final basename = name.replaceAll('\\', '/').split('/').last
-      .replaceAll(RegExp(r'[\x00-\x1f\x7f]'), '').trim();
-  if (basename.isEmpty || basename == '.' || basename == '..') return 'attachment.bin';
+  final basename = name
+      .replaceAll('\\', '/')
+      .split('/')
+      .last
+      .replaceAll(RegExp(r'[\x00-\x1f\x7f]'), '')
+      .trim();
+  if (basename.isEmpty || basename == '.' || basename == '..') {
+    return 'attachment.bin';
+  }
   return basename.length > 240 ? basename.substring(0, 240) : basename;
 }
 
 String _defaultAttachmentName(String type, int index) =>
     'attachment-$index${switch (type) {
       'message/rfc822' => '.eml',
+      'text/plain' => '.txt',
+      'text/html' => '.html',
       'image/png' => '.png',
       'image/jpeg' => '.jpg',
       'image/gif' => '.gif',
@@ -615,12 +850,50 @@ String _defaultAttachmentName(String type, int index) =>
 String _safeHtml(String source) {
   final fragment = html_parser.parseFragment(source);
   const allowed = {
-    'p', 'div', 'span', 'br', 'hr', 'blockquote', 'pre', 'code',
-    'b', 'strong', 'i', 'em', 'u', 's', 'del', 'h1', 'h2', 'h3',
-    'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'thead', 'tbody',
-    'tfoot', 'tr', 'th', 'td',
+    'p',
+    'div',
+    'span',
+    'br',
+    'hr',
+    'blockquote',
+    'pre',
+    'code',
+    'b',
+    'strong',
+    'i',
+    'em',
+    'u',
+    's',
+    'del',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'li',
+    'table',
+    'thead',
+    'tbody',
+    'tfoot',
+    'tr',
+    'th',
+    'td',
   };
-  const discarded = {'script', 'style', 'head', 'iframe', 'object', 'embed', 'form', 'svg', 'math', 'template'};
+  const discarded = {
+    'script',
+    'style',
+    'head',
+    'iframe',
+    'object',
+    'embed',
+    'form',
+    'svg',
+    'math',
+    'template',
+  };
   final out = StringBuffer();
   void visit(dom.Node node, int depth) {
     if (depth > 64) return;
@@ -637,6 +910,7 @@ String _safeHtml(String source) {
     }
     if (keep && tag != 'br' && tag != 'hr') out.write('</$tag>');
   }
+
   visit(fragment, 0);
   return out.toString();
 }
@@ -644,7 +918,22 @@ String _safeHtml(String source) {
 String _htmlText(String safeHtml) {
   final fragment = html_parser.parseFragment(safeHtml);
   final out = StringBuffer();
-  const blocks = {'p', 'div', 'br', 'hr', 'blockquote', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'tr'};
+  const blocks = {
+    'p',
+    'div',
+    'br',
+    'hr',
+    'blockquote',
+    'pre',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'li',
+    'tr',
+  };
   void visit(dom.Node node) {
     if (node is dom.Text) {
       out.write(node.data);
@@ -658,6 +947,7 @@ String _htmlText(String safeHtml) {
     if (blocks.contains(tag)) out.write('\n');
     if (tag == 'td' || tag == 'th') out.write('\t');
   }
+
   visit(fragment);
   return out.toString().replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
 }

@@ -81,6 +81,7 @@ Future<void> showOfficeEditorDialog(
   FileItem file,
   PanelSide side, {
   Uint8List? bytesOverride,
+  CapturedFileTarget? targetOverride,
 }) {
   return showDialog<void>(
     context: context,
@@ -90,6 +91,7 @@ Future<void> showOfficeEditorDialog(
         file: file,
         side: side,
         bytesOverride: bytesOverride,
+        targetOverride: targetOverride,
       ),
     ),
   );
@@ -102,11 +104,16 @@ class OfficeEditorDialog extends ConsumerStatefulWidget {
   /// Test/embedded hook: use these bytes instead of reading [file].
   final Uint8List? bytesOverride;
 
+  /// Verified newly created document; keeps conversion/editor handoff bound
+  /// to its original storage even if the invoking pane has changed.
+  final CapturedFileTarget? targetOverride;
+
   const OfficeEditorDialog({
     super.key,
     required this.file,
     required this.side,
     this.bytesOverride,
+    this.targetOverride,
   });
 
   @override
@@ -138,6 +145,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   @override
   void initState() {
     super.initState();
+    _target = widget.targetOverride;
     unawaited(_load());
   }
 

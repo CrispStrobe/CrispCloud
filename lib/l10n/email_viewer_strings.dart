@@ -28,6 +28,7 @@ class EmailViewerStrings {
       'emptyBody': 'This message has no readable body.',
       'embedded': 'Embedded Outlook message',
       'safeHtml': 'External images and links are disabled in this preview.',
+      'searchLimit': 'Search is limited to 200,000 lines or 8 MiB of decoded UTF-8 text. The message preview remains available.',
       'unsupportedCharset': 'An unsupported character encoding was approximated; some characters may differ.',
       'malformedEncoding': 'Some message text uses malformed encoding.',
       'incompleteMultipart': 'The message has an incomplete MIME boundary; available parts are shown.',
@@ -51,6 +52,7 @@ class EmailViewerStrings {
       'embedded': 'Eingebettete Outlook-Nachricht',
       'safeHtml':
           'Externe Bilder und Links sind in dieser Vorschau deaktiviert.',
+      'searchLimit': 'Die Suche ist auf 200.000 Zeilen oder 8 MiB dekodierten UTF-8-Text begrenzt. Die Nachrichtenvorschau bleibt verfügbar.',
       'unsupportedCharset': 'Eine nicht unterstützte Zeichenkodierung wurde angenähert; einige Zeichen können abweichen.',
       'malformedEncoding':
           'Teile des Nachrichtentexts sind fehlerhaft kodiert.',
@@ -75,6 +77,7 @@ class EmailViewerStrings {
       'embedded': 'Message Outlook intégré',
       'safeHtml':
           'Les images et liens externes sont désactivés dans cet aperçu.',
+      'searchLimit': 'La recherche est limitée à 200 000 lignes ou 8 Mio de texte UTF-8 décodé. L’aperçu du message reste disponible.',
       'unsupportedCharset': 'Un encodage non pris en charge a été approximé ; certains caractères peuvent différer.',
       'malformedEncoding':
           'Une partie du message utilise un encodage incorrect.',
@@ -98,6 +101,7 @@ class EmailViewerStrings {
       'emptyBody': 'Este mensaje no contiene texto legible.',
       'embedded': 'Mensaje de Outlook incrustado',
       'safeHtml': 'Las imágenes y los enlaces externos están desactivados en esta vista previa.',
+      'searchLimit': 'La búsqueda se limita a 200.000 líneas u 8 MiB de texto UTF-8 decodificado. La vista previa del mensaje sigue disponible.',
       'unsupportedCharset': 'Se aproximó una codificación no compatible; algunos caracteres pueden ser distintos.',
       'malformedEncoding':
           'Parte del mensaje tiene una codificación incorrecta.',
@@ -121,6 +125,7 @@ class EmailViewerStrings {
       'emptyBody': 'Esta mensagem não contém texto legível.',
       'embedded': 'Mensagem Outlook incorporada',
       'safeHtml': 'As imagens e ligações externas estão desativadas nesta pré-visualização.',
+      'searchLimit': 'A pesquisa está limitada a 200.000 linhas ou 8 MiB de texto UTF-8 descodificado. A pré-visualização da mensagem continua disponível.',
       'unsupportedCharset': 'Foi aproximada uma codificação não suportada; alguns caracteres podem diferir.',
       'malformedEncoding': 'Parte da mensagem tem uma codificação incorreta.',
       'incompleteMultipart': 'A mensagem tem um limite MIME incompleto; são mostradas as partes disponíveis.',
@@ -143,6 +148,7 @@ class EmailViewerStrings {
       'emptyBody': '此邮件没有可读的正文。',
       'embedded': '嵌入的 Outlook 邮件',
       'safeHtml': '此预览已禁用外部图片和链接。',
+      'searchLimit': '搜索最多支持 200,000 行或 8 MiB 解码后的 UTF-8 文本。仍可预览邮件。',
       'unsupportedCharset': '已近似转换不支持的字符编码；部分字符可能有误。',
       'malformedEncoding': '部分邮件文本的编码不正确。',
       'incompleteMultipart': '邮件的 MIME 分隔符不完整；显示可用的部分。',
@@ -165,6 +171,8 @@ class EmailViewerStrings {
       'emptyBody': 'このメールには表示できる本文がありません。',
       'embedded': '埋め込み Outlook メール',
       'safeHtml': 'このプレビューでは外部画像とリンクは無効です。',
+      'searchLimit':
+          '検索はデコード後の UTF-8 テキストで 200,000 行または 8 MiB までです。メールのプレビューは引き続き利用できます。',
       'unsupportedCharset': '未対応の文字コードを近似変換しました。一部の文字が異なる場合があります。',
       'malformedEncoding': 'メールの一部に不正な文字コードがあります。',
       'incompleteMultipart': 'MIME 境界が不完全です。利用可能な部分を表示しています。',
@@ -187,6 +195,7 @@ class EmailViewerStrings {
       'emptyBody': '이 메시지에는 읽을 수 있는 본문이 없습니다.',
       'embedded': '포함된 Outlook 메시지',
       'safeHtml': '이 미리 보기에서는 외부 이미지와 링크가 비활성화됩니다.',
+      'searchLimit': '검색은 디코딩된 UTF-8 텍스트 200,000줄 또는 8 MiB로 제한됩니다. 메시지 미리 보기는 계속 사용할 수 있습니다.',
       'unsupportedCharset': '지원하지 않는 문자 인코딩을 근사 변환했습니다. 일부 문자가 다를 수 있습니다.',
       'malformedEncoding': '메시지 일부의 인코딩이 잘못되었습니다.',
       'incompleteMultipart': 'MIME 경계가 불완전합니다. 사용 가능한 부분을 표시합니다.',
@@ -209,6 +218,7 @@ class EmailViewerStrings {
       'emptyBody': 'لا تحتوي هذه الرسالة على نص قابل للقراءة.',
       'embedded': 'رسالة Outlook مضمنة',
       'safeHtml': 'الصور والروابط الخارجية معطلة في هذه المعاينة.',
+      'searchLimit': 'يقتصر البحث على 200,000 سطر أو 8 MiB من نص UTF-8 بعد فك الترميز. تظل معاينة الرسالة متاحة.',
       'unsupportedCharset': 'تم تقريب ترميز غير مدعوم؛ قد تختلف بعض الأحرف.',
       'malformedEncoding': 'يستخدم جزء من الرسالة ترميزًا غير صحيح.',
       'incompleteMultipart':

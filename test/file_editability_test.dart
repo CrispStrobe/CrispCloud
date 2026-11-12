@@ -33,6 +33,9 @@ void main() {
       'movie.avi',
       'archive.zip',
       'legacy.doc',
+      'legacy.dot',
+      'message.msg',
+      'passwords.kdbx',
       'legacy.xls',
       'legacy.ppt',
       'font.ttf',
@@ -40,6 +43,25 @@ void main() {
       expect(isEditableInBuiltInEditor(name), isFalse, reason: name);
     }
   });
+
+  test(
+    'saved MIME source, keyboard XML and protected Word variants are editable',
+    () {
+      for (final name in [
+        'message.eml',
+        'shortcuts.kbdx',
+        'template.dotm',
+        'template.dotx',
+        'report.DOCM',
+      ]) {
+        expect(isEditableInBuiltInEditor(name), isTrue, reason: name);
+      }
+      expect(isTextEditableName('message.eml'), isTrue);
+      expect(isTextEditableName('shortcuts.kbdx'), isTrue);
+      expect(isTextEditableName('message.msg'), isFalse);
+      expect(isTextEditableName('template.dotm'), isFalse);
+    },
+  );
 
   test('image names must end in a supported image extension', () {
     expect(isEditableInBuiltInEditor('photo.jpg.zip'), isFalse);
@@ -63,7 +85,13 @@ void main() {
   });
 
   test('PEM certificates, requests and armored keys open as text', () {
-    for (final name in ['server.crt', 'ca.pem', 'root.cer', 'req.csr', 'key.asc']) {
+    for (final name in [
+      'server.crt',
+      'ca.pem',
+      'root.cer',
+      'req.csr',
+      'key.asc',
+    ]) {
       expect(isTextEditableName(name), isTrue, reason: name);
       expect(isEditableInBuiltInEditor(name), isTrue, reason: name);
     }
