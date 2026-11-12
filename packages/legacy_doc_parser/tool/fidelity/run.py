@@ -9,6 +9,7 @@ DOCX interpretation is not a complete fidelity oracle. Completed stages remain
 inspectable if a later stage fails.
 """
 import argparse
+import gzip
 import hashlib
 import json
 import os
@@ -18,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import time
+import zlib
 
 from oracle import ROOT, bbox_snapshot, compare_semantics, digest, load_corpus, snapshot
 from goldens import MANIFEST as GOLDEN_MANIFEST, compare_golden, compare_render, load_goldens
@@ -56,16 +58,126 @@ def office_convert(office, source, target_dir, kind):
     return output
 
 
-def render(office, source, output, dpi):
+def stream_hash(stream):
+    """Hash large raster streams without holding a whole page in memory."""
+    sha256 = hashlib.sha256()
+    size = 0
+    for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+        sha256.update(chunk)
+        size += len(chunk)
+    return sha256.hexdigest(), size
+
+
+def gzip_raster(source):
+    """Publish a verified gzip, retaining the raw page until its receipt is saved."""
+    target = source.with_suffix(source.suffix + '.gz')
+    temporary = target.with_suffix(target.suffix + '.tmp')
+    if target.exists() or target.is_symlink():
+        raise FileExistsError(target)
+    with source.open('rb') as raw:
+        raw_hash, raw_size = stream_hash(raw)
+    if not raw_size:
+        raise ValueError('Native raster is empty: ' + source.name)
+    # Exclusive creation avoids replacing an earlier recovery artifact. Open it
+    # outside the try so a pre-existing temporary file is never removed below.
+    stored = temporary.open('xb')
+    try:
+        with stored:
+            # Empty filename and zero mtime make equal PPM bytes reproducible
+            # within the same Python/zlib implementation.
+            with source.open('rb') as raw, gzip.GzipFile(
+                    filename='', mode='wb', fileobj=stored, mtime=0,
+                    compresslevel=6) as compressed:
+                shutil.copyfileobj(raw, compressed, length=1024 * 1024)
+        # Read to EOF: this checks gzip's CRC/size trailer as well as our exact
+        # PPM hash, so a completed but damaged archive cannot replace the page.
+        with gzip.open(temporary, 'rb') as restored:
+            restored_hash, restored_size = stream_hash(restored)
+        with source.open('rb') as raw:
+            current_hash, current_size = stream_hash(raw)
+        if ((restored_hash, restored_size) != (raw_hash, raw_size)
+                or (current_hash, current_size) != (raw_hash, raw_size)):
+            raise ValueError('Compressed raster does not reproduce unchanged PPM bytes: ' + source.name)
+        with temporary.open('rb') as compressed:
+            stored_hash, stored_size = stream_hash(compressed)
+        # This directory belongs to a new measurement. Refuse collisions rather
+        # than overwriting an earlier artifact, including a dangling symlink.
+        if target.exists() or target.is_symlink():
+            raise FileExistsError(target)
+        temporary.replace(target)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+    return {'path': target.name, 'compression': 'gzip',
+            'sha256': stored_hash, 'sizeBytes': stored_size,
+            'uncompressedSha256': raw_hash, 'uncompressedSizeBytes': raw_size}
+
+
+def compressed_rasters(pdf, output, dpi, page_count):
+    """Retain each completed page before creating the next uncompressed page."""
+    manifest_path = output / 'raster-manifest.json'
+    manifest = {'schema': 'legacy-doc-parser/raster-storage', 'version': 1,
+                'storage': 'gzip', 'status': 'running', 'pdfSha256': digest(pdf),
+                'rasterDpi': dpi, 'rasterColorSpace': 'RGB',
+                'compressionLevel': 6, 'pythonVersion': platform.python_version(),
+                'zlibVersion': zlib.ZLIB_RUNTIME_VERSION,
+                'expectedPages': page_count, 'pages': []}
+    write_json(manifest_path, manifest)
+    try:
+        info = command(['pdfinfo', pdf])
+        info_path = output / 'pdfinfo.txt'
+        info_path.write_text(info)
+        manifest['pdfInfo'] = {'path': info_path.name, 'sha256': digest(info_path)}
+        counts = [line.split(':', 1)[1].strip() for line in info.splitlines()
+                  if line.startswith('Pages:')]
+        if len(counts) != 1 or not counts[0].isdigit() or int(counts[0]) <= 0:
+            raise RuntimeError('Cannot determine native PDF page count')
+        manifest['pdfPageCount'] = int(counts[0])
+        if manifest['pdfPageCount'] != page_count:
+            raise RuntimeError('Native PDF/bbox page count disagrees')
+        for index in range(1, page_count + 1):
+            manifest['activePage'] = index
+            write_json(manifest_path, manifest)
+            prefix = output / f'page-{index:04d}'
+            raw = prefix.with_suffix('.ppm')
+            # Rendering one page bounds uncompressed scratch to one page,
+            # including long documents. Pixel format and DPI remain unchanged.
+            command(['pdftoppm', '-r', str(dpi), '-f', str(index), '-l', str(index),
+                     '-singlefile', pdf, prefix])
+            receipt = {'page': index, **gzip_raster(raw)}
+            manifest['pages'].append(receipt)
+            write_json(manifest_path, manifest)
+            # Receipt and independently verified compressed bytes exist first.
+            # On a failed write, leave the raw page and previous checkpoint.
+            raw.unlink()
+        manifest.pop('activePage', None)
+        manifest['status'] = 'complete'
+    except Exception as error:
+        manifest.update(status='error', error=str(error), errorType=type(error).__name__)
+        raise
+    finally:
+        write_json(manifest_path, manifest)
+    return manifest['pages'], {'path': manifest_path.name, 'sha256': digest(manifest_path)}
+
+
+def render(office, source, output, dpi, *, raster_storage='ppm'):
+    if raster_storage not in ('ppm', 'gzip'):
+        raise ValueError('Unknown raster storage: ' + str(raster_storage))
     pdf = office_convert(office, source, output, 'pdf')
     bbox = output / 'pages.xhtml'
     command(['pdftotext', '-bbox-layout', '-enc', 'UTF-8', pdf, bbox])
     text = command(['pdftotext', '-layout', '-enc', 'UTF-8', pdf, '-'])
     (output / 'pages.txt').write_text(text)
+    pages = bbox_snapshot(bbox)
     # RGB detects color changes that can disappear in a luminance-only raster.
+    if raster_storage == 'gzip':
+        artifacts, manifest = compressed_rasters(pdf, output, dpi, len(pages))
+        return {'pdfSha256': digest(pdf), 'pages': pages, 'text': text,
+                'rasterSha256': [item['uncompressedSha256'] for item in artifacts],
+                'rasterDpi': dpi, 'rasterColorSpace': 'RGB', 'rasterStorage': 'gzip',
+                'rasterArtifacts': artifacts, 'rasterManifest': manifest}
     command(['pdftoppm', '-r', str(dpi), pdf, output / 'page'])
     rasters = sorted(output.glob('page-*.ppm'), key=lambda path: int(path.stem.rsplit('-', 1)[-1]))
-    pages = bbox_snapshot(bbox)
     if len(pages) != len(rasters):
         raise RuntimeError('Native raster/page count disagrees')
     return {'pdfSha256': digest(pdf), 'pages': pages, 'text': text,
@@ -197,6 +309,7 @@ def measure_case(case, args, executable, output, *, golden_catalog=None, environ
     original_hash = None
     result = {'id': case['id'], 'features': case['features'], 'sourceSha256': None,
               'sourceFormat': source_format,
+              'rasterStorage': getattr(args, 'raster_storage', 'ppm'),
               'status': 'running', 'roundtripCyclesRequested': requested_roundtrips(args),
               'roundtripCycles': [], 'snapshots': {}, 'renders': {},
               'sourceGolden': {'status': 'not-recorded'},
@@ -236,7 +349,8 @@ def measure_case(case, args, executable, output, *, golden_catalog=None, environ
         return value
 
     def render_snapshot(name, document):
-        value = render(args.office, document, output / ('render-' + name), args.dpi)
+        value = render(args.office, document, output / ('render-' + name), args.dpi,
+                       raster_storage=getattr(args, 'raster_storage', 'ppm'))
         target = output / (name + '-render.json')
         write_json(target, value)
         result['renders'][name] = {'path': target.name, 'sha256': digest(target),
@@ -351,6 +465,8 @@ def main():
     parser.add_argument('--output', required=True, type=Path, help='New output directory; existing results are never overwritten')
     parser.add_argument('--case', action='append', default=[])
     parser.add_argument('--dpi', type=int, default=72, choices=(72, 96, 144))
+    parser.add_argument('--raster-storage', choices=('ppm', 'gzip'), default='ppm',
+                        help='Keep RGB PPM pages (default), or lossless gzip with one raw page at a time')
     parser.add_argument('--no-roundtrip', action='store_true')
     parser.add_argument('--roundtrip-cycles', type=int, default=1, choices=range(0, 11),
                         help='Successive DOCX -> native DOC -> parser imports (default: 1; 0 disables)')
@@ -373,6 +489,7 @@ def main():
         git_head, dirty = None, None
     report = {'schema': 'legacy-doc-parser/fidelity-report', 'version': 4,
               'status': 'running', 'roundtripCyclesRequested': requested_roundtrips(args),
+              'rasterStorage': args.raster_storage,
               'parserCommit': git_head, 'parserWorktreeDirty': dirty,
               'corpusSha256': digest(ROOT / 'tool/fidelity/corpus.json'),
               'method': 'Original DOCX render -> independent native DOC bridge render -> native DOCX and parser DOCX -> successive binary imports. Original-to-binary visual changes measured before parser import; each stage retained; no automatic golden update.',
@@ -384,7 +501,8 @@ def main():
         report['build']['compiler'] = stage('compiler-version', lambda: tool_receipt(args.dart))
         report['build']['office'] = stage('office-version', lambda: tool_receipt(args.office))
         report['renderer'] = report['build']['office']['version']
-        for name in ('pdftotext', 'pdftoppm'):
+        pdf_tools = ('pdftotext', 'pdftoppm') + (('pdfinfo',) if args.raster_storage == 'gzip' else ())
+        for name in pdf_tools:
             report['build'][name] = stage(name + '-version', lambda name=name: tool_receipt(name, ('-v',)))
         golden_catalog = stage('source-golden-integrity', load_goldens)
         report['sourceGoldens'] = {'manifestSha256': digest(ROOT / GOLDEN_MANIFEST),

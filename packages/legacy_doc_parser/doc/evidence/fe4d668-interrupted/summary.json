@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "sourceCommit": "fe4d6687a06567ec3cec2fcebb0b4cfdb4810a1a",
+  "identicalRemoteCommit": "713973fb27330d190281cbe66193f6b22ec722f8",
+  "sourceTree": "a16bf1c9d3ddab00009c58dfcf8eaf706f1178d4",
+  "status": "interrupted-by-enospc",
+  "nativeExitCode": 1,
+  "rawReportStatus": "running",
+  "rawReportUnchanged": true,
+  "counts": {
+    "expectedCases": 22,
+    "recordedCases": 20,
+    "completedCases": 18,
+    "completedCycleImports": 55,
+    "initialImports": 20,
+    "casesWithRecordedErrors": 2
+  },
+  "unstartedCases": [
+    "word16-page-origin",
+    "poi-simple-table2"
+  ],
+  "failure": "Overlay filesystem exhausted bytes during concurrent full-engine and native gates; process finally failed creating the Word16 case directory. This is not a completed corpus or a parser assertion result.",
+  "packageChecks": {
+    "dartTests": 647,
+    "pythonTests": 109,
+    "analysis": "clean",
+    "format": "clean",
+    "javascriptAcceptance": "passed",
+    "publishDryRunWarnings": 0
+  },
+  "schemaValidation": {
+    "errors": 0,
+    "files": 144,
+    "hashesVerified": true,
+    "inputsUnchanged": true,
+    "report": "schema-validation.json",
+    "reportSha256": "9c569c30544901453cde33e8f36ed8ae4245e79919dedda08edc905401ae8057"
+  },
+  "archives": {
+    "native.log.gz": {
+      "sha256": "2646eb2cd3ea2a83de76f8841aafd71942f8ff7a5d00f78d709e5ff87566a9c0",
+      "bytes": 687,
+      "uncompressedSha256": "abde3f6efb325d5517683d7975ccc99cb8ec91d7d47323d8f11fc2a37c02b44a",
+      "uncompressedBytes": 3138
+    },
+    "package-checks.log.gz": {
+      "sha256": "55f0de41921416a4da05c7c1f751aa0706536e418441220958352d22ac1147fc",
+      "bytes": 10915,
+      "uncompressedSha256": "ec115cb4a1203eb2f0ea1a18689b8ea8f504316ead19435818c6aea9b228a1fc",
+      "uncompressedBytes": 100462
+    },
+    "schema-report.json.gz": {
+      "sha256": "16d906bc4e074b2c4187f70bd4842b6756c0f557382c4f4404e7c931aa478aa3",
+      "bytes": 46374,
+      "uncompressedSha256": "173707e4d3c05be1e864bbf9207c0b2a6126b77dc17a7846119274d5f3b3da30",
+      "uncompressedBytes": 185790
+    }
+  },
+  "nativeFilesManifest": "native-files.manifest.json",
+  "nativeReportSha256": "de12e6f8319ac83bca708652a4143b66c200fcd8bf7eb32cbe63d640ba008937"
+}

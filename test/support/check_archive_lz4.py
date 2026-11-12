@@ -37,6 +37,13 @@ class Preferences(c.Structure):
 class ReferenceLz4:
     def __init__(self):
         name = ctypes.util.find_library("lz4")
+        # Flutter's test process can remove the loader search environment that
+        # ctypes uses on macOS. Resolve the standard Homebrew locations directly.
+        if name is None and sys.platform == "darwin":
+            name = next((str(p) for p in (
+                Path("/opt/homebrew/lib/liblz4.dylib"),
+                Path("/usr/local/lib/liblz4.dylib"),
+            ) if p.is_file()), None)
         if name is None:
             raise RuntimeError("Independent verification requires liblz4")
         self.lib = lib = c.CDLL(name)

@@ -1,0 +1,4619 @@
+{
+  "version": 1,
+  "sourceCommit": "8367ce004f2a40d99fbae1eabc00d0053ceb1dab",
+  "sourceTree": "9cf883d7829627051a2f1068235dfe20d2e37383",
+  "identicalRemoteCommit": "d28be0a173415ebb392a8309aacdbe2bb1a50da7",
+  "parserWorktreeDirty": false,
+  "nativeExitCode": 1,
+  "nativeStatus": "error",
+  "roundtripCyclesRequested": 3,
+  "counts": {
+    "inputs": 24,
+    "initialImports": 24,
+    "sameInitialPageCount": 24,
+    "exactInitialRenders": 6,
+    "completedRequestedCycles": 23,
+    "completedCycleImports": 69,
+    "casesWithErrors": 1,
+    "initialStrictSemanticMatches": 0,
+    "matchedReviewedSourceGoldens": 2
+  },
+  "allSourceInputsUnchanged": true,
+  "allCycleInputsUnchanged": true,
+  "packageChecks": {
+    "dartTests": 761,
+    "pythonTests": 129,
+    "analyze": "clean",
+    "format": "clean",
+    "javascriptDocAcceptance": "passed",
+    "javascriptMediaChecks": 51,
+    "publishDryRunWarnings": 0
+  },
+  "schemaValidation": {
+    "errors": 0,
+    "files": 193,
+    "hashesVerified": true,
+    "inputsUnchanged": true,
+    "report": "schema-validation.json",
+    "reportSha256": "859d791337c398a5597c4edc807e3f6b3bf327e3fe4ae56042dfb570db429f23"
+  },
+  "schemaDeterminism": {
+    "cases": 193,
+    "files": 413,
+    "passed": true
+  },
+  "archives": {
+    "native-report.json.xz": {
+      "sha256": "6f34a72da6ecc507451091c22bfb21a5c5904feb6b686e9bcd3390c375965bc0",
+      "bytes": 231344,
+      "uncompressedSha256": "c3248c0e45c7bef585a72afa36f3936adf94523474fabd9a015a50bb19178e29",
+      "uncompressedBytes": 154577872
+    },
+    "schema-report.json.gz": {
+      "sha256": "9460b219f81033392e3647e080abec139dac35da670fdc0ce741d12c1572f7a3",
+      "bytes": 62901,
+      "uncompressedSha256": "9ca2acf1c0b8de5f305efdb871d8a3bb22109afcc3bce598948e162094b46082",
+      "uncompressedBytes": 232393
+    },
+    "package-checks.log.gz": {
+      "sha256": "a255f203fb63f8e2e72f0c2dcd9841c0612bfd48e138f024b105e0308aeb6000",
+      "bytes": 11211,
+      "uncompressedSha256": "ef8014d018dead14fb01c6efa4608246410e11b58608bb71a84f3cfba03c118b",
+      "uncompressedBytes": 117457
+    }
+  },
+  "nativeDocuments": {
+    "files": 281,
+    "bytes": 2947179,
+    "manifest": "native-files.manifest.json",
+    "archiveSha256": "e10442d583e38a0e6ac546efd72c630657a027fba81383944486f2f5d7f755a1"
+  },
+  "cases": [
+    {
+      "id": "formatting",
+      "status": "measured",
+      "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "binaryDocSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 11.901999999999987,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "matched",
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 12.351999999999975,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 12.351999999999975,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 12.351999999999975,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "word",
+      "status": "measured",
+      "sourceSha256": "501bdd2f897b9a0d417988903b3a378bac958cacbcba5f842736802a5d47af1b",
+      "binaryDocSha256": "2d2943d799d3a48430a90bff0bee68d7ab30fc2e5c26666d793160439e1f483d",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 18.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "externalLinks",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 2.453000000000003,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 2.453000000000003,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 2.453000000000003,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "word-compatibility",
+      "status": "measured",
+      "sourceSha256": "8fccf5c41ac4f51136635322933065ecc786e1365709a7a10edb8734024049fe",
+      "binaryDocSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+      "initialPagination": {
+        "referencePages": 2,
+        "actualPages": 2,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 2,
+        "actualPages": 2,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "table-borders",
+      "status": "measured",
+      "sourceSha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83",
+      "binaryDocSha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 74.42699999999999,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 74.42699999999999,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.tbl",
+        "counts.tc",
+        "counts.tr"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 74.42699999999999,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 74.42699999999999,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 74.42699999999999,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "story-media",
+      "status": "measured",
+      "sourceSha256": "3267ee707daac2a409e9bd1d796572949fb9e7e7891ac71ec14dcdefb59cb219",
+      "binaryDocSha256": "563e9bd799cf413d6324b86320b2e719ecc23df6f2d172ba594b03dfe121aa0c",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "comment-threads",
+      "status": "measured",
+      "sourceSha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "binaryDocSha256": "705bb49428dc44e09f80ac53748f7597bc3d46f5447d0daca066a4f44c8d6874",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "comments",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "note-markers",
+      "status": "measured",
+      "sourceSha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "binaryDocSha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.tbl",
+        "counts.tc",
+        "counts.tr",
+        "counts.txbxContent"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 13.450000000000045,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 13.450000000000045,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 26.90000000000009,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 13.450000000000045,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 40.35000000000002,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 13.450000000000045,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "bookmarks",
+      "status": "measured",
+      "sourceSha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "binaryDocSha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 3.0500000000000114,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.018000000000000682,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 3.0500000000000114,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 3.0500000000000114,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 3.0500000000000114,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "content-controls",
+      "status": "measured",
+      "sourceSha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "binaryDocSha256": "02ffc92fa910622066deabe1fbc1676ebcbe07034ad8f410484cf83908f78ab8",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.09000000000000341,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "content-controls-legacy",
+      "status": "measured",
+      "sourceSha256": "2833e0d3ef3e00ba626177fb2f40ddf51744611be1a324a3a6aabdb01926aaab",
+      "binaryDocSha256": "69481e76b39ad83411ff018be3b30914723d23d90a728159053608422c30bea3",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.09000000000000341,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "word-altchunk",
+      "status": "measured",
+      "sourceSha256": "f623604dfab5865907c70d7e2e933970bca4f1e6e892187025c083f32784b05b",
+      "binaryDocSha256": "4b5d31bb21b87c311242c6dc17c84515749e37ed8baf9af20541c2504a0ac496",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "linked-textboxes",
+      "status": "measured",
+      "sourceSha256": "e1032597da63f7dce5a956d7296d5817b17e76c03ee73c77a37b6304da190148",
+      "binaryDocSha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "officeart-shapes",
+      "status": "measured",
+      "sourceSha256": "f95be8f8d4283f7d2fd4cfc178cbd108300ea99b1be9a14ab1dd56bf1897f53b",
+      "binaryDocSha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure",
+            "counts.pict"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure",
+            "counts.pict"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure",
+            "counts.pict"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "linked-textboxes-native",
+      "status": "measured",
+      "sourceSha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "binaryDocSha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "matched",
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": true,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": true
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "emf-vectors",
+      "status": "measured",
+      "sourceSha256": "68c1368568e8a5664e5aa0bc770d14b8da64b6c436747c647d24a1757f7fbe59",
+      "binaryDocSha256": "f4e274400fefc5428d473aa14132d832fcc80d7e57bbdc60a55eaf1d31a466d8",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.049999999999954525,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.049999999999954525,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.049999999999954525,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.049999999999954525,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "wmf-vectors",
+      "status": "measured",
+      "sourceSha256": "fcf94d85aa01ce7f30b0c7551535e264a329af2f8e7ab57adc6c098040c0112f",
+      "binaryDocSha256": "da2cc5f74733278364c7d52dc8cf83ac4e6cc4615a3d4a855b3722bd7e2ecc67",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "linked-textboxes-compact",
+      "status": "measured",
+      "sourceSha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "binaryDocSha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": true,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "list-continue",
+      "status": "measured",
+      "sourceSha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "binaryDocSha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 24.909236000000007,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "numbering",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "numbering",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "numbering",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "list-restart",
+      "status": "measured",
+      "sourceSha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "binaryDocSha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 26.809235999999984,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "numbering",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "numbering",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "numbering",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "word14-margin-origin",
+      "status": "measured",
+      "sourceSha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+      "binaryDocSha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": false,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "imageDigests",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "stories",
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "word16-page-origin",
+      "status": "measured",
+      "sourceSha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "binaryDocSha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 56.400000000000006,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.tc"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure",
+            "counts.tc"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure",
+            "counts.tc"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure",
+            "counts.tc"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "poi-simple-table2",
+      "status": "measured",
+      "sourceSha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc",
+      "binaryDocSha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.30000000000001137,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.30000000000001137,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.30000000000001137,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.30000000000001137,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.30000000000001137,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": true,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": true,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": true
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "tables",
+            "compatibility",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "header-textbox-alias",
+      "status": "measured",
+      "sourceSha256": "4e8a4388d0a509836760d84c8ef28158ee90018518928a93f4c01980e5387624",
+      "binaryDocSha256": "4e8a4388d0a509836760d84c8ef28158ee90018518928a93f4c01980e5387624",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3500000000000085,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3500000000000085,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3500000000000085,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3500000000000085,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.7000000000000028,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3500000000000085,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": true,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "paginationFromBinaryDoc": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3499999999999943,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromFirstImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.0499999999999972,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "paginationFromPreviousImport": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.3499999999999943,
+            "tolerancePoints": 0.25,
+            "matchesWithinTolerance": false,
+            "rasterSettingsMatch": true,
+            "rasterExactlyMatches": false,
+            "layoutTextExactlyMatches": false,
+            "exactOnThisRenderer": false
+          },
+          "semanticDifferencePropertiesFromFirstImport": [
+            "sections",
+            "paragraphs",
+            "textboxes",
+            "compatibility",
+            "sectionStories",
+            "structure"
+          ]
+        }
+      ],
+      "failedStages": []
+    },
+    {
+      "id": "header-textbox-first-enabled",
+      "status": "error",
+      "sourceSha256": "587d2223311f734c768e88473eccba829dfb048afd9a471a1f2c3ea20071afd1",
+      "binaryDocSha256": "587d2223311f734c768e88473eccba829dfb048afd9a471a1f2c3ea20071afd1",
+      "initialPagination": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "bridgePagination": null,
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "initialSemanticDifferenceProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict"
+      ],
+      "cycles": [
+        {
+          "index": 1,
+          "status": "error",
+          "paginationFromBinaryDoc": null,
+          "paginationFromFirstImport": null,
+          "paginationFromPreviousImport": null,
+          "semanticDifferencePropertiesFromFirstImport": []
+        }
+      ],
+      "failedStages": [
+        {
+          "name": "roundtrip-01-parser-import",
+          "status": "error",
+          "error": "convert exited 255: Unhandled exception:\nFormatException: Ambiguous Word shape anchor.\n#0      _WordStories._readTextboxes (package:legacy_doc_parser/src/legacy_word_stories.dart:424)\n#1      _WordStories._readAuxiliaryStories (package:legacy_doc_parser/src/legacy_word_stories.dart:99)\n#2      _StructuredWordParser.parse (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:138)\n#3      readStructuredLegacyWord (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:37)\n#4      parseLegacyWordDocument (package:legacy_doc_parser/src/legacy_word_document.dart:14)\n#5      main (file:///workspace/scratch/143959eed1a1/validation-18/tool/fidelity/convert.dart:21)\n#6      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311)\n#7      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)\n",
+          "errorType": "RuntimeError",
+          "durationSeconds": 0.0
+        }
+      ]
+    }
+  ]
+}

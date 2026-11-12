@@ -508,6 +508,7 @@ extension _WordMedia on _StructuredWordWriter {
       }
     }
     final ids = <(bool, int)>{};
+    WordHeaderTextboxAliases? headerAliases;
     for (final reference in document.textboxReferences) {
       if (!ids.add((reference.inHeaderFooter, reference.id))) {
         throw const FormatException('Duplicate Word textbox identity.');
@@ -517,6 +518,38 @@ extension _WordMedia on _StructuredWordWriter {
           (story.kind != LegacyWordStoryKind.textbox &&
               story.kind != LegacyWordStoryKind.headerTextbox)) {
         throw const FormatException('Invalid Word textbox story.');
+      }
+      WordHeaderTextboxAliasPair? aliasPair;
+      if (reference.headerAliases.isNotEmpty) {
+        if (reference.anchors.length != 1 ||
+            reference.headerAliases.length != 1) {
+          throw const FormatException('Invalid Word header textbox alias.');
+        }
+        headerAliases ??= WordHeaderTextboxAliases(
+          stories: document.stories,
+          media: document.media,
+          fields: document.fields,
+          bookmarks: document.bookmarks,
+          notes: document.noteReferences,
+          comments: document.commentReferences,
+        );
+        aliasPair = headerAliases.resolve(reference, [
+          ...reference.anchors,
+          ...reference.headerAliases,
+        ]);
+        if (aliasPair == null ||
+            aliasPair.primary != reference.anchors.single ||
+            aliasPair.alias != reference.headerAliases.single) {
+          throw const FormatException('Invalid Word header textbox alias.');
+        }
+        for (final occurrence in [aliasPair.primary, aliasPair.alias]) {
+          final shape = drawings[(true, occurrence.shapeId)]!;
+          if (!_displayPosition(occurrence.anchorCp) || !_validDrawing(shape)) {
+            throw const FormatException(
+              'Unsupported Word header textbox alias placement.',
+            );
+          }
+        }
       }
       final drawing =
           drawings[(reference.inHeaderFooter, reference.shapeId)] ??
@@ -580,6 +613,41 @@ extension _WordMedia on _StructuredWordWriter {
             nextShape: nextShape,
           ),
         );
+      }
+      if (aliasPair != null) {
+        final alias = aliasPair.alias;
+        final aliasShape = drawings[(true, alias.shapeId)]!;
+        _event(
+          aliasPair.aliasOwner.id,
+          alias.anchorCp,
+          60,
+          () => _textbox(reference, story, aliasShape, first: true),
+        );
+        _evidenceRecords.add({
+          'kind': 'headerTextboxAlias',
+          'id': reference.id,
+          'story': reference.storyId,
+          'startCp': story.startCp,
+          'endCp': story.endCp,
+          'chainLength': reference.chainLength,
+          'occurrences': [
+            for (final (anchor, owner) in [
+              (aliasPair.primary, aliasPair.primaryOwner),
+              (aliasPair.alias, aliasPair.aliasOwner),
+            ])
+              {
+                'shapeId': anchor.shapeId,
+                'anchorCp': anchor.anchorCp,
+                'chainIndex': anchor.chainIndex,
+                'headerStory': owner.id,
+                'headerType': owner.headerFooterType!.name,
+                'sectionIndex': owner.sectionIndex,
+              },
+          ],
+          'reason':
+              'recovered separate normal/first header occurrences of one '
+              'single-frame source text range; no text-flow link inferred',
+        });
       }
       if (reference.chainLength > 1) {
         _evidenceRecords.add({

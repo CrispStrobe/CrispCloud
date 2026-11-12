@@ -1113,3 +1113,5 @@ all non-digest policy decisions remain unchanged. No release or filing is perfor
 
 
 The 1.2.4 source refresh binds the canonical DOC parser, its executable-mode-aware mirror guard, bounded package readers, attached-content Word inspection and the minimal Internxt trash-name backport. Source tests and local HTTP endpoint controls verify these contracts; no added cryptographic primitive, credential persistence or account destination is introduced. Source fingerprints are refreshed without changing the existing classification or distribution-policy values.
+
+The 1.2.5 archive additions use SHA-256 for user-requested integrity reports and existing archive checksums for format verification. Portable LZ4, LZMA, Lzip and UNIX compress code introduces no encryption or credential transport. Internxt one-shot receipt APIs reuse the existing authenticated HTTP policy, with retries and redirects disabled for those mutations.

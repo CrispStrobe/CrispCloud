@@ -683,7 +683,7 @@ extension _WordStories on _StructuredWordWriter {
             matches.single,
             path,
             xml,
-            () => _blocks(matches.single.blocks),
+            () => _blocks(matches.single.blocks, paragraphAfterTable: false),
           );
         } else {
           xml.add('<w:p><w:r><w:$type/></w:r></w:p>');
@@ -696,7 +696,12 @@ extension _WordStories on _StructuredWordWriter {
         }
         final story = _stories[reference.storyId]!;
         xml.add('<w:$singular w:id="${reference.id}">');
-        _withStory(story, path, xml, () => _blocks(story.blocks));
+        _withStory(
+          story,
+          path,
+          xml,
+          () => _blocks(story.blocks, paragraphAfterTable: false),
+        );
         xml.add('</w:$singular>');
         _count(plural);
       }
@@ -798,9 +803,14 @@ extension _WordStories on _StructuredWordWriter {
       throw const FormatException('Recursive Word story reference.');
     }
     final oldXml = _xml, oldPart = _part, oldStory = _storyId;
+    final oldTableDepth = _tableDepth;
     _xml = xml;
     _part = part;
     _storyId = story.id;
+    // A textbox is a separate story even when its shape is anchored in a
+    // table cell. Its first table keeps top-level indentation; only tables
+    // nested inside that story use the nested-table origin rule.
+    _tableDepth = 0;
     try {
       action();
       _finishStoryEvents();
@@ -808,11 +818,15 @@ extension _WordStories on _StructuredWordWriter {
       _xml = oldXml;
       _part = oldPart;
       _storyId = oldStory;
+      _tableDepth = oldTableDepth;
       _renderingStories.remove(story.id);
     }
   }
 
-  void _blocks(List<LegacyWordBlock> blocks) {
+  void _blocks(
+    List<LegacyWordBlock> blocks, {
+    bool paragraphAfterTable = true,
+  }) {
     for (final block in blocks) {
       switch (block) {
         case LegacyWordParagraph():
@@ -821,7 +835,11 @@ extension _WordStories on _StructuredWordWriter {
           _table(block);
       }
     }
-    if (blocks.isEmpty || blocks.last is LegacyWordTable) {
+    // CT_FtnEdn permits a table as its final block. A synthesized paragraph
+    // changes note height and becomes real content on a subsequent DOC import.
+    // Preserve every parsed paragraph; this option changes only the fallback.
+    if (blocks.isEmpty ||
+        (paragraphAfterTable && blocks.last is LegacyWordTable)) {
       _xml.add('<w:p');
       _commentParagraphAttribute();
       _xml.add('/>');
@@ -840,6 +858,7 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.recoveredTextboxChainLength:
         case LegacyWordWarning.terminalMarkFormattingUnavailable:
         case LegacyWordWarning.recoveredGlobalTextboxSentinel:
+        case LegacyWordWarning.recoveredHeaderTextboxAlias:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

@@ -99,7 +99,7 @@ jobs:
         run: flutter --version
 
       - name: Install trusted distro SQLite for tests
-        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev liblz4-1
 
       - name: Verify CI SQLite wrapper restoration
         run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py
@@ -264,7 +264,7 @@ jobs:
 
       - name: Install trusted distro SQLite (Linux tests only)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev liblz4-1
 
       - name: Verify CI SQLite wrapper restoration
         run: python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py

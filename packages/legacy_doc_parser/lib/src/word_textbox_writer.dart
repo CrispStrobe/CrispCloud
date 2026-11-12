@@ -9,7 +9,11 @@ extension _WordTextboxes on _StructuredWordWriter {
     required bool first,
     int? nextShape,
   }) {
-    if (first && !_renderedTextboxes.add(story.id)) return;
+    final occurrence = (
+      story.id,
+      reference.headerAliases.isEmpty ? null : _storyId,
+    );
+    if (first && !_renderedTextboxes.add(occurrence)) return;
     final shape = drawing.shape, text = shape?.text;
     final width = (drawing.rightTwips - drawing.leftTwips) / 20;
     final height = (drawing.bottomTwips - drawing.topTwips) / 20;

@@ -1,0 +1,57 @@
+{
+  "schema": "legacy-doc-parser/oracle-text-context-inputs",
+  "version": 1,
+  "beforeCommit": "d28be0a173415ebb392a8309aacdbe2bb1a50da7",
+  "archiveSha256": "981091697a71784a67034d4857f70d9d94f11fe18376d4377d463302a1cfcc52",
+  "inputs": {
+    "list-continue-cycle1.docx": {
+      "sha256": "f0629debcf34e00e00d3b0b2e740f8328280aef9a685dd36003ffc2de3814a1c",
+      "bytes": 5689
+    },
+    "revision-offsets.docx": {
+      "sha256": "0aff37539caa79ccc3a091b0ff562000bf8156980fa935577507fa3031cedd3e",
+      "bytes": 1511
+    },
+    "run-tabs.docx": {
+      "sha256": "75df47360f33156ebc601bfee47431487545f8e1cd2c783da85de0b0108e1898",
+      "bytes": 860
+    }
+  },
+  "provenance": {
+    "list-continue-cycle1.docx": "Exact list-continue/roundtrip-01/import.docx from sealed doc/evidence/6b2b611/native-files.tar.xz; hash checked against its manifest.",
+    "run-tabs.docx": "Independently authored OOXML: two property stops and three real run tabs, including leading/trailing tabs.",
+    "revision-offsets.docx": "Independently authored OOXML: current and prior property stops, paragraph-mark and run/paragraph-property revisions, plus point comment."
+  },
+  "expected": {
+    "list-continue-cycle1.docx": {
+      "mainText": "P1\nP2\nP3\nP4\nP5",
+      "paragraphTexts": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5"
+      ]
+    },
+    "run-tabs.docx": {
+      "mainText": "\tA\tB\t",
+      "paragraphTexts": [
+        "\tA\tB\t"
+      ]
+    },
+    "revision-offsets.docx": {
+      "mainText": "AB",
+      "paragraphTexts": [
+        "AB"
+      ],
+      "revisionOffsets": {
+        "del": 2,
+        "pPrChange": 0,
+        "rPrChange": 1
+      },
+      "commentOffsets": [
+        2
+      ]
+    }
+  }
+}

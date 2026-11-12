@@ -26,7 +26,7 @@ import re
 import zipfile
 import xml.etree.ElementTree as ET
 
-from structure import StructureOracle
+from structure import StructureOracle, content_nodes, run_text
 
 ROOT = Path(__file__).resolve().parents[2]
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
@@ -439,20 +439,20 @@ def relationships(parts, owner):
 
 
 def text_content(node, *, deleted=False):
-    result = []
-    for child in node.iter():
-        kind = child.tag.rsplit('}', 1)[-1]
-        if child.tag == f'{{{W}}}t' or (deleted and child.tag == f'{{{W}}}delText'):
-            result.append(child.text or '')
-        elif child.tag == f'{{{W}}}tab':
-            result.append('\t')
-        elif child.tag == f'{{{W}}}br':
-            result.append({'page': '\f', 'column': '\x0e'}.get(child.get(f'{{{W}}}type'), '\n'))
-        elif child.tag == f'{{{W}}}cr':
+    result, content_end = [], 0
+    for child, parent, in_properties in content_nodes(node):
+        if in_properties:
+            continue
+        value = run_text(child, parent, deleted=deleted)
+        if value is not None:
+            if value:
+                result.append(value)
+                content_end = len(result)
+        elif child.tag == '{' + W + '}p' and result:
             result.append('\n')
-        elif kind == 'p' and result:
-            result.append('\n')
-    return ''.join(result).strip()
+    # Drop only trailing paragraph separators synthesized by this summary.
+    # str.strip() would also erase genuine run tabs, breaks and preserved spaces.
+    return ''.join(result[:content_end])
 
 
 def local_attrs(node):
@@ -470,38 +470,16 @@ def _direct_blocks(node, tag):
 
 
 def _inline_text(node):
-    result = []
-    def visit(item):
-        if item is not node and item.tag in ('{' + W + '}txbxContent', '{' + W + '}tbl'):
-            return
-        if item.tag in ('{' + W + '}t', '{' + W + '}delText'):
-            result.append(item.text or '')
-        elif item.tag == '{' + W + '}tab':
-            result.append('\t')
-        elif item.tag == '{' + W + '}br':
-            result.append({'page': '\f', 'column': '\x0e'}.get(item.get('{' + W + '}type'), '\n'))
-        elif item.tag == '{' + W + '}cr':
-            result.append('\n')
-        for child in item:
-            visit(child)
-    visit(node)
-    return ''.join(result)
+    return ''.join(value for item, parent, in_properties in content_nodes(node, inline=True)
+                   if not in_properties and (value := run_text(item, parent)) is not None)
 
 
 def _inline_offsets(node):
     offsets, position = {}, 0
-    def visit(item):
-        nonlocal position
+    for item, parent, in_properties in content_nodes(node, inline=True):
         offsets[item] = position
-        if item is not node and item.tag in ('{' + W + '}txbxContent', '{' + W + '}tbl'):
-            return
-        if item.tag in ('{' + W + '}t', '{' + W + '}delText'):
-            position += len(item.text or '')
-        elif item.tag in ('{' + W + '}tab', '{' + W + '}br', '{' + W + '}cr'):
-            position += 1
-        for child in item:
-            visit(child)
-    visit(node)
+        if not in_properties and (value := run_text(item, parent)) is not None:
+            position += len(value)
     return offsets
 
 
@@ -572,9 +550,8 @@ def _revision_snapshot(tree, context, parents, paragraph_ids):
 
 def _paragraph_profile(node, context):
     runs = []
-    parents = {child: parent for parent in node.iter() for child in parent}
-    for run in node.iter('{' + W + '}r'):
-        if _nearest(run, parents, '{' + W + '}txbxContent') is not None:
+    for run, _, in_properties in content_nodes(node, inline=True):
+        if in_properties or run.tag != '{' + W + '}r':
             continue
         text = _inline_text(run)
         properties = context.property(run.find('w:rPr', NS), current=True)
@@ -943,8 +920,10 @@ def snapshot(path):
             if tag in ('footnote', 'endnote'):
                 elements = [e for e in elements if e.get(f'{{{W}}}type', 'normal') == 'normal']
             counts[tag] += len(elements)
-        for node in tree.iter(f'{{{W}}}br'):
-            counts['break:' + node.get(f'{{{W}}}type', 'textWrapping')] += 1
+        for node, parent, in_properties in content_nodes(tree):
+            if (not in_properties and node.tag == '{' + W + '}br'
+                    and run_text(node, parent) is not None):
+                counts['break:' + node.get(f'{{{W}}}type', 'textWrapping')] += 1
         used_ids = {value for node in tree.iter() for attr, value in node.attrib.items()
                     if attr.startswith('{' + R + '}')}
         for rel in context.relationships(owner):
@@ -982,7 +961,7 @@ def snapshot(path):
             continue
         sections.append({child.tag.rsplit('}', 1)[-1]: local_attrs(child)
                          for child in section if child.tag.rsplit('}', 1)[-1] not in ('headerReference', 'footerReference')})
-    result = {'oracleSchemaVersion': 3,
+    result = {'oracleSchemaVersion': 4,
             'stories': sorted(stories, key=lambda item: (item['kind'], item['text'])),
             'counts': dict(sorted(counts.items())), 'sections': sections,
             'imageDigests': sorted(media), 'externalLinks': sorted(links, key=str),

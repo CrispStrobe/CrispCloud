@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "sourceCommit": "ba5f5b0cdd540bd0c03f62aabc88faadd8660e0b",
+  "worktreeDirty": false,
+  "dartTests": 666,
+  "pythonTests": 110,
+  "javaScriptMediaChecks": 47,
+  "schemaOutputs": 153,
+  "schemaErrors": 0,
+  "schemaPassed": true,
+  "files": {
+    "schema-report.json.gz": {
+      "sha256": "f18d06e6d6c4ec74da5d886069a81003813ca7915f75a027215f1b38d769f2ce",
+      "uncompressedSha256": "9f72f84e0f216ee67575f6b166d30d48a3f89318ff6dfadbd82af8817bf02be9",
+      "uncompressedBytes": 193977
+    },
+    "schema-validation.json.gz": {
+      "sha256": "89333f18c010a9aa210a0caed44f3e133607136947e7a9e758caa3d9ddf55722",
+      "uncompressedSha256": "96df83ecc49977293fe367f0519fb0b808ead11ec44f775639ee7555cf00aa4d",
+      "uncompressedBytes": 38588
+    },
+    "portable.log.gz": {
+      "sha256": "c7f41f9c2da445c212a006c8818a55a957463c2bec613ca6e4ea5c67e459b262",
+      "uncompressedSha256": "13cf74acd45798333c9abfe82c610f70a672d9b91bd260b698fb55be7e723587",
+      "uncompressedBytes": 81978
+    }
+  }
+}

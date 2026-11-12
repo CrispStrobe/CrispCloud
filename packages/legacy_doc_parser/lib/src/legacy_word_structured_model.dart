@@ -47,6 +47,10 @@ enum LegacyWordWarning {
   /// Every real range remained bounded by the textbox story length.
   recoveredGlobalTextboxSentinel,
 
+  /// A single-frame header text range is shared by separate normal/first
+  /// header occurrences, corroborated by their stored shapes and CPs.
+  recoveredHeaderTextboxAlias,
+
   /// A note format is unknown or requires a disclosed decimal fallback.
   /// The original MSONFC code remains available on the note numbering model.
   unsupportedNoteNumberFormat,
@@ -243,6 +247,7 @@ class LegacyWordTextboxReference {
     this.chainLength = 1,
     this.declaredChainLength,
     this.anchors = const [],
+    this.headerAliases = const [],
   });
   final int id;
   final String storyId;
@@ -259,6 +264,11 @@ class LegacyWordTextboxReference {
   /// Actual OfficeArtClientTextbox chain indices, when available. A story is
   /// not duplicated for each shape and the library does not invent reflow.
   final List<LegacyWordTextboxAnchor> anchors;
+
+  /// Corroborated, separate header occurrences of a single-frame text range.
+  /// These retain their source chain index zero and are not text-flow links.
+  /// The converter revalidates the bounded normal/first-header recovery.
+  final List<LegacyWordTextboxAnchor> headerAliases;
 }
 
 class LegacyWordTextboxAnchor {

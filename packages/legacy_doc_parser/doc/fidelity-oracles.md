@@ -99,6 +99,65 @@ recorded fixture, Office build and fonts; they do not certify all documents.
 bridge loss from parser loss, and injects late conversion/render/build failures.
 It does not substitute those mocks for a native rendering result.
 
+## Optional compressed raster retention
+
+For long or repeated corpora, opt into lossless gzip storage:
+
+```sh
+python3 tool/fidelity/run.py --office /path/to/installed/soffice \
+  --dart /path/to/dart --roundtrip-cycles 3 --raster-storage gzip \
+  --output build/fidelity-three-cycles-compressed
+```
+
+The default remains `--raster-storage ppm`, including the existing uncompressed
+page files. Gzip mode first requires the installed Poppler `pdfinfo` page count
+to match the extracted geometry's page count, then renders one page at a time
+with the same RGB format and DPI. It verifies a streaming decompression against
+that page's original PPM hash and size, and writes its receipt before removing
+the raw page. Successful rendering keeps one active uncompressed page; failed
+page remnants remain available for diagnosis. All completed compressed pages,
+PDFs, source documents, text and geometry remain retained. Total storage still
+grows with the corpus, and a large page or poorly compressible image can require
+substantial space. Compression adds CPU and per-page rasterizer startup time.
+
+The main and case reports record `rasterStorage`. Each successful compressed
+render keeps its existing `rasterSha256` list as **uncompressed PPM hashes**, so
+the render comparisons and reviewed source goldens use the same bytes as before.
+Additional `rasterArtifacts` entries record page number, relative `.ppm.gz`
+path, compressed SHA-256 and byte count, and uncompressed SHA-256 and byte count.
+Paths are relative to that render's directory. `rasterManifest` identifies and
+hashes `raster-manifest.json` in the same directory. That manifest also records
+the PDF hash and independent page count, `pdfinfo.txt` receipt, DPI/color space,
+compression level, Python version and runtime zlib version. The main report
+also pins the `pdfinfo` executable and version when gzip mode is selected.
+Compressed hashes identify stored files; they are not substituted for the page
+hashes used by the rendering oracle.
+
+The raster manifest is checkpointed before and after each page. A failed later
+page leaves earlier completed page receipts and compressed files available. A
+compression, verification or receipt-write failure retains the current raw page
+if rasterization produced it. A failed render is still a failed stage, even
+when some page artifacts survive. Atomic report replacement preserves the prior
+complete checkpoint if a later write fails; this is not a promise that a
+filesystem with no free space can write a new failure report.
+
+Standard gzip and tar tools can read the artifacts. Existing report/golden
+comparisons need no changes; a review tool that previously globbed `*.ppm` must
+read the manifest and decompress the selected `.ppm.gz` file instead. For
+example, materialize one page for an image viewer without changing its archive:
+
+```sh
+gzip -dc CASE/render-binary/page-0001.ppm.gz > /path/to/review/page-0001.ppm
+```
+
+Check the archive against its `sha256` receipt and the decompressed page against
+`uncompressedSha256`; those are different hashes. Gzip needs no Pillow or new
+Python package. `test_run.py` checks exact byte recovery, ordered multi-page
+storage, compatibility with source-golden comparisons and tar archives,
+corrupted/interrupted compression, changed raw inputs, missing pages and failed
+receipt publication. These controls verify storage behavior; native corpus
+rendering remains a separate acceptance run.
+
 ## Structure beyond element counts
 
 `structure.py` independently reads the emitted OOXML. Its snapshots include

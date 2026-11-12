@@ -205,6 +205,31 @@ class SchemaGateTest(unittest.TestCase):
         self.assertEqual(required, {name for name in schema.EXPECTED_CASES
                                     if name.startswith("textbox-boundary/")})
 
+    def test_required_note_boundaries_preserve_table_tails_and_intentional_blanks(self):
+        fixture = (schema.ROOT / "test/support/note_boundary_fixture.dart").read_text()
+        declaration = re.search(r"const noteBoundaryCases = .*?\{(.*?)\n\};", fixture, re.S)
+        self.assertIsNotNone(declaration)
+        names = re.findall(r"^\s*'([^']+)':", declaration.group(1), re.M)
+        self.assertEqual(8, len(names))
+        self.assertEqual(8, len(set(names)))
+        required = {f"note-boundary/{story}-{name}"
+                    for story in ("footnote", "endnote") for name in names}
+        self.assertEqual(required, {name for name in schema.EXPECTED_CASES
+                                    if name.startswith("note-boundary/")})
+
+    def test_required_header_aliases_include_blank_controls_and_native_regression(self):
+        fixture = (schema.ROOT / "test/support/textbox_boundary_fixture.dart").read_text()
+        declaration = re.search(r"const textboxBoundaryCases = .*?\{(.*?)\n\};", fixture, re.S)
+        self.assertIsNotNone(declaration)
+        names = re.findall(r"^\s*'([^']+)':", declaration.group(1), re.M)
+        self.assertEqual(7, len(names))
+        self.assertEqual(7, len(set(names)))
+        required = {f"header-alias/header-alias-{name}" for name in names}
+        self.assertEqual(required, {name for name in schema.EXPECTED_CASES
+                                    if name.startswith("header-alias/")})
+        self.assertIn("native-inputs/header-textbox-duplicate-chain", schema.EXPECTED_CASES)
+        self.assertIn("native-inputs/header-textbox-first-enabled", schema.EXPECTED_CASES)
+
     def test_corpus_rejects_unregistered_inputs_aliases_and_escape(self):
         directory, manifest = self.make_corpus()
         shutil.copyfile(directory / "case.docx", directory / "extra.DOCX")

@@ -478,7 +478,7 @@ extension _WordStories on _StructuredWordParser {
       final reference = textboxReferences[i];
       references[(reference.inHeaderFooter, reference.id)] = i;
     }
-    final used = <(bool, int, int)>{};
+    final usedShapes = <(bool, int)>{};
     for (final drawing in media.drawings) {
       final encoded = drawing.textboxId;
       if (encoded == null || encoded == 0) continue;
@@ -487,15 +487,9 @@ extension _WordStories on _StructuredWordParser {
       final index = references[key];
       if (index == null ||
           chainIndex >= 4096 ||
-          !used.add((drawing.headerStory, id, chainIndex))) {
+          !usedShapes.add((drawing.headerStory, drawing.shapeId))) {
         throw const FormatException(
           'Invalid Word drawing-to-textbox reference.',
-        );
-      }
-      final reference = textboxReferences[index];
-      if (chainIndex == 0 && reference.shapeId != drawing.shapeId) {
-        throw const FormatException(
-          'Word textbox first-shape references do not agree.',
         );
       }
       links
@@ -509,13 +503,48 @@ extension _WordStories on _StructuredWordParser {
             ),
           );
     }
+    WordHeaderTextboxAliases? headerAliases;
     for (final entry in links.entries) {
       final index = references[entry.key]!;
       final reference = textboxReferences[index];
       final anchors = entry.value
         ..sort((a, b) => a.chainIndex.compareTo(b.chainIndex));
+      if (anchors.length == 2 &&
+          anchors.every((anchor) => anchor.chainIndex == 0)) {
+        headerAliases ??= WordHeaderTextboxAliases(
+          stories: stories,
+          media: media,
+          fields: fields,
+          bookmarks: bookmarks,
+          notes: noteReferences,
+          comments: commentReferences,
+        );
+        final pair = headerAliases.resolve(reference, anchors);
+        if (pair != null) {
+          textboxReferences[index] = LegacyWordTextboxReference(
+            id: reference.id,
+            storyId: reference.storyId,
+            inHeaderFooter: true,
+            anchorCp: reference.anchorCp,
+            shapeId: reference.shapeId,
+            anchors: List.unmodifiable([pair.primary]),
+            headerAliases: List.unmodifiable([pair.alias]),
+          );
+          warnings.add(LegacyWordWarning.recoveredHeaderTextboxAlias);
+          warnings.add(LegacyWordWarning.unsupportedFormatting);
+          continue;
+        }
+        throw const FormatException(
+          'Invalid Word drawing-to-textbox reference.',
+        );
+      }
       if (anchors.length > 4096 || anchors.first.chainIndex != 0) {
         throw const FormatException('Incomplete Word textbox shape chain.');
+      }
+      if (anchors.first.shapeId != reference.shapeId) {
+        throw const FormatException(
+          'Word textbox first-shape references do not agree.',
+        );
       }
       final recoverDeclaredOne =
           reference.chainLength == 1 && anchors.length > 1;

@@ -9,6 +9,7 @@ import 'package:archive/archive.dart';
 import 'legacy_word_document.dart';
 import 'legacy_word_number_formats.dart';
 import 'legacy_word_numbering.dart';
+import 'legacy_word_textbox_alias.dart';
 
 part 'legacy_word_structured_conversion.dart';
 part 'opc_package_writer.dart';

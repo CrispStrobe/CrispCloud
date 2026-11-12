@@ -1,0 +1,39 @@
+{
+  "schema": "legacy-doc-parser/oracle-text-context-receipt",
+  "version": 1,
+  "files": {
+    "replay-report.json.xz": {
+      "bytes": 2660,
+      "sha256": "0046103159766f2f22eafafe0022f86a8812dd8b639523ddb4483c6bb4e64ebb",
+      "uncompressedBytes": 424916,
+      "uncompressedSha256": "3ff308fd240a83e82b74811f53cb19475a42b59b00d1b1e1421b768b830b9ae7"
+    },
+    "schema-report.json.xz": {
+      "bytes": 376,
+      "sha256": "1eab4de79604aaf6294b3f6c7682af7c5afdc553d5d954ff3ad444d081d1dd5f",
+      "uncompressedBytes": 633,
+      "uncompressedSha256": "edbb7f24f3c979f6f33b3a90dfa8c1e3c92cceb5511afe454d3e9bbdd83d2298"
+    },
+    "python-tests.log.xz": {
+      "bytes": 324,
+      "sha256": "7b5cd52b9612cff993201a389e1f847bfac30eb6b8e7df3441e2fcee6f93bf05",
+      "uncompressedBytes": 505,
+      "uncompressedSha256": "5eefea30616e9daae3fd607934f09d853498f296dcc205c95b090c060a2e5835"
+    }
+  },
+  "inputsArchiveSha256": "981091697a71784a67034d4857f70d9d94f11fe18376d4377d463302a1cfcc52",
+  "inputsManifestSha256": "0fe6373e4e621888d68e5a272501c53b7d4d7bb8830cd42491943b9cbae80f95",
+  "replayToolSha256": "afb46a587cad92e485639fa1741e02e862816332e0b93e13364d7a4c664ddce5",
+  "schemaValidation": {
+    "files": 3,
+    "errors": 0,
+    "hashesVerified": true
+  },
+  "nativeRendererRun": false,
+  "retainedReportsModified": false,
+  "pythonTests": 139,
+  "regressionTestsAdded": 10,
+  "corpusSourceHashesVerified": 24,
+  "oracleSchemaBefore": 3,
+  "oracleSchemaAfter": 4
+}

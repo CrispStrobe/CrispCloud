@@ -40,6 +40,17 @@ missing leading or trailing cells through `w:gridBefore`/`w:gridAfter` and
 grid without inventing content cells. This is property preservation; exact
 placement still needs an independently rendered comparison.
 
+Table nesting is scoped to the content story. A textbox anchored in a body or
+header table has its own top-level table origin; it does not inherit the
+anchor cell's nesting depth. Entering the textbox and returning to its anchor
+preserves both contexts, including genuinely nested tables in either story.
+`test/legacy_word_textbox_table_test.dart` compares identical textbox content
+anchored in a paragraph and in a table, across body/header placement,
+default/zero/explicit margins and nested content. The independent binary
+fixtures and converted packages can be produced with
+`tool/fidelity/textbox_table_fixture.dart`. These controls verify the emitted
+indentation and content without claiming arbitrary textbox pagination.
+
 The authored native-origin probe checks zero and nonzero default margins,
 per-cell overrides, negative and positive origins, an independent half-gap,
 and nested tables. On LibreOfficeDev 26.8.0.0.alpha0
@@ -180,9 +191,11 @@ overlapping conditional contexts cannot be represented by one context-free
 native toggle rule. This limitation does not apply to the ordinary CHPX toggles
 whose resolved runs remain explicit native text.
 Differently styled adjacent rows become separate tables, each retaining its own
-native style reference and resolved cell/text formatting. Floating tables,
-cell-spacing geometry, preferred percentage widths, and additional incremental
-row operators still require further work. This is not a claim of complete
+native style reference and resolved cell/text formatting. Bounded preferred
+cell widths retain their percentage and other source units independently of
+the physical grid. Floating tables, cell-spacing geometry, table-wide preferred
+widths, complete automatic-layout behavior and additional incremental row
+operators still require further work. This is not a claim of complete
 conditional-style equivalence.
 
 Primary references:

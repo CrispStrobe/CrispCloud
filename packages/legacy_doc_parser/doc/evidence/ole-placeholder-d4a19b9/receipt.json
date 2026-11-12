@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "writerCommit": "d4a19b9edef51fef3d96ed8399cbd5586479d0dd",
+  "scope": "One independently authored inserted-OLE fixture; schema validity and generic-placeholder rendering only, not source-preview recovery or embedded-handler activation.",
+  "sourceFilesSha256": {
+    "lib/src/word_media_writer.dart": "be51dc0483ecb9006452c3465817f89f83e71228e19dc5f4c96ca78ee38b0e65",
+    "lib/src/word_revision_writer.dart": "065aaa1b4cea36a318eb7e02b34b4b30ce552e1a1aa10b477aa6cb11caf150d6",
+    "tool/fidelity/media_review_fixture.dart": "a1109bfb06c074a2a728f77c29b1cc22311b66dc37277faa6ff99f04b6ad94dc",
+    "test/support/media_revision_fixture.dart": "09e2f8a70c9ce2b4b6ef2ab0745a763ca2b2b85aef10da51e584d85156916818",
+    "test/support/media_word_fixture.dart": "e7fb94598a433016dfcfcee0824beb68436264edb138b0fc3807d240c5506851",
+    "test/support/structured_word_fixture.dart": "fe5f214598c04a977b744705724d79f9102df1cee954b6b2b443f8f9a77a584f"
+  },
+  "nativeHelperSha256": "d028edce0250c01241e382c4897e897a29e87805d58193e0217bb5b7164e24b2",
+  "sourceDocSha256": "935edaa1bcd2776ebe319e238301c373bed7760c2761eb1a24d10f12579ef29f",
+  "convertedDocxSha256": "0c1af9142af55a51a05700375c1c26a65bdba634518a71c6848a72ab5250cb82",
+  "convertedDocxUnchangedAfterNativeRenders": true,
+  "convertedDocxUnchangedAtEvidenceCapture": true,
+  "acceptedDerivative": {
+    "sha256": "31ba35fc2d9fab029e2d3d0823b733ce65b0362a40f18572e0705ce35d8e3bde",
+    "projection": "Copy each ZIP member with its original ZipInfo; in word/document.xml only, lxml.etree unwraps each .//w:ins in document order by moving its element children into the parent at the original index, then removing w:ins. Serialize UTF-8 with XML declaration. No deletion filtering or other projection.",
+    "unwrappedInsertions": 1,
+    "changedPackageMembers": [
+      "word/document.xml"
+    ],
+    "xmlProjectionReproducedExactly": true,
+    "allOtherMembersByteIdentical": true,
+    "embeddedPayloadsSha256": {
+      "word/embeddings/oleObject1.bin": "084937f7a5a65cc3ceeb6c16171420643f091d93c70935049c260f36f51cbc0d"
+    },
+    "embeddedPayloadsByteIdentical": true
+  },
+  "renderer": {
+    "version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "wrapper": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+    "wrapperSha256": "35c5a2736f68e6370a7b9fe5082e66bc438c1a8de11261d6c4bc847073ced45b",
+    "binary": "/opt/codex/runtimes/codex-primary-runtime/dependencies/native/libreoffice-headless/libreoffice/program/soffice.bin",
+    "binarySha256": "d905a74dc92eaccb22481ba2de1345666a074a5f0d48322aaad1b6dc8a9e1e40",
+    "command": "soffice -env:UserInstallation=<separate-output>/profile --headless --norestore --nodefault --convert-to pdf:writer_pdf_Export --outdir <separate-output> <input.docx>",
+    "profile": {
+      "MacroSecurityLevel": 3,
+      "DisableMacrosExecution": true,
+      "BlockUntrustedRefererLinks": true,
+      "WriterLink": 0,
+      "FieldUpdate": false,
+      "ChartUpdate": false
+    },
+    "handlerActivationAttempted": false
+  },
+  "nativeObservations": {
+    "reviewed": {
+      "pageText": [
+        "X\n"
+      ],
+      "words": [
+        [
+          [
+            162.10000610351562,
+            99.75,
+            167.8090057373047,
+            110.75,
+            "X",
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "drawings": [
+        [
+          {
+            "rect": [
+              80.94999694824219,
+              71.95001220703125,
+              152.9499969482422,
+              107.95001220703125
+            ],
+            "fill": [
+              0.9333333373069763,
+              0.9333333373069763,
+              0.9333333373069763
+            ],
+            "color": null
+          }
+        ]
+      ],
+      "labelLinesVisible": false
+    },
+    "accepted": {
+      "pageText": [
+        "X\n"
+      ],
+      "words": [
+        [
+          [
+            162.10000610351562,
+            99.75,
+            167.8090057373047,
+            110.75,
+            "X",
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "drawings": [
+        [
+          {
+            "rect": [
+              80.94999694824219,
+              71.95001220703125,
+              152.9499969482422,
+              107.95001220703125
+            ],
+            "fill": [
+              0.9333333373069763,
+              0.9333333373069763,
+              0.9333333373069763
+            ],
+            "color": null
+          }
+        ]
+      ],
+      "labelLinesVisible": false
+    }
+  },
+  "schema": {
+    "files": 24,
+    "errors": 0,
+    "originalFixtureSha256Matched": true,
+    "reportArtifact": "schema-24.json"
+  },
+  "remainingLimitations": [
+    "This LibreOffice build suppresses both VML textbox label lines while rendering the generic rectangle, with or without insertion wrappers.",
+    "No claim of Word rendering, original-preview fidelity or embedded application activation.",
+    "partialFormatting remains disclosed. A portable visible placeholder is followup work; no raster substitute was added."
+  ],
+  "artifacts": {
+    "accepted-conversion.log": {
+      "bytes": 251,
+      "sha256": "723da451bda804e0a25678b0fd9c2249f1275f5be50f7dfdfb4b8dee82591829"
+    },
+    "accepted-placeholder.png": {
+      "bytes": 878,
+      "sha256": "8fbed63ab3a0b711e96eb94b2a01f63ed647725f5790a129698f562ba882303c"
+    },
+    "accepted.docx": {
+      "bytes": 3736,
+      "sha256": "31ba35fc2d9fab029e2d3d0823b733ce65b0362a40f18572e0705ce35d8e3bde"
+    },
+    "accepted.pdf": {
+      "bytes": 11436,
+      "sha256": "8f39876bee3b0065b06a8e48ab39f4412b0908f353b0ba9b63fa51495cdad351"
+    },
+    "accepted.txt": {
+      "bytes": 2,
+      "sha256": "7058299627365fc7a3dd7840fd3d56f29306cd30c0f2c13cb500fe79617290ff"
+    },
+    "converted.docx": {
+      "bytes": 3804,
+      "sha256": "0c1af9142af55a51a05700375c1c26a65bdba634518a71c6848a72ab5250cb82"
+    },
+    "reviewed-conversion.log": {
+      "bytes": 272,
+      "sha256": "e288de299b4e282eeafafc09c6379815d8ff8afc7a7f670d12350a8ad7a21864"
+    },
+    "reviewed-native.json": {
+      "bytes": 766,
+      "sha256": "f0acbac2f35083ce42ff5fa7adbe59a2152761e4e8fc402cab7ad830f54b211e"
+    },
+    "reviewed.pdf": {
+      "bytes": 11436,
+      "sha256": "59ac48ff067f3b99e2089b3db1b5952d9583db5867b09b47efbf2eac2787ed5a"
+    },
+    "reviewed.txt": {
+      "bytes": 2,
+      "sha256": "7058299627365fc7a3dd7840fd3d56f29306cd30c0f2c13cb500fe79617290ff"
+    },
+    "schema-24.json": {
+      "bytes": 4599,
+      "sha256": "6f374b536d06ab2d1245ce9e949dca6b5020ec7532cb27779a60be71bedc4a25"
+    },
+    "source.doc": {
+      "bytes": 40448,
+      "sha256": "935edaa1bcd2776ebe319e238301c373bed7760c2761eb1a24d10f12579ef29f"
+    }
+  },
+  "archive": {
+    "path": "artifacts.tar.xz",
+    "bytes": 14140,
+    "sha256": "61567923adb2b3bc806e560e0044922e6f80b0b110e422eee94be02cc2736f52",
+    "allMemberHashesVerifiedAfterArchiving": true
+  }
+}

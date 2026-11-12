@@ -1,5 +1,12 @@
 ## 0.1.0-dev.1
 
+- Recover corroborated single-frame textbox occurrences in normal and first
+  headers while retaining real shape identities and a one-frame flow chain.
+  Reject identity-bearing shared content and revision-bearing frame occurrences;
+  preserve intentional blank paragraphs and diagnose every recovered alias.
+- Preserve final-table footnote/endnote block sequences without synthesizing
+  a trailing paragraph. Keep every source paragraph, including intentional
+  blanks, and distinguish later native bridge additions from parser output.
 - Preserve bounded solid-shape background-color context, independent OfficeArt
   group use bits and explicit layout-in-cell settings. Retain zero-count
   symmetric-curve editing hints without claiming native tangent editing.

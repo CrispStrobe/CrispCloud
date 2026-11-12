@@ -31,3 +31,5 @@ made available in source form. See `docs/STORAGE_ENGINE_ARCHITECTURE.md`.
 ## Reviewed trash-name backport
 
 The gateway trash-name correction from `CrispStrobe/crisp-cloud-rs` commit `6b61faa8228e3be2eb71d0710975babbc03e5f8e` and its endpoint regressions are applied to the app consumer. Files retain their extension and exact UUID across pagination; folders and extensionless files preserve their names. Existing host transport and dependency patches are retained. This is a protocol metadata backport beyond the historical manifest-only patch list above.
+
+The host also backports the 9b57bee one-shot Internxt trash/restore API and its reference tests. Receipt mutations disable protocol retries and redirects, retain the host proxy/TLS policy, and invalidate stale local overlays even when the remote outcome is uncertain.

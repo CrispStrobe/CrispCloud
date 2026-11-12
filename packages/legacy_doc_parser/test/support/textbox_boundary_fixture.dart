@@ -13,6 +13,7 @@ Uint8List textboxBoundaryFixture(
   bool header = false,
   Set<int> reusable = const {},
   int chainLength = 1,
+  String? anchorText,
   List<WordFixtureFkpRun> characterRuns = const [],
   List<WordFixtureFkpRun> paragraphRuns = const [],
 }) {
@@ -26,7 +27,8 @@ Uint8List textboxBoundaryFixture(
       shapes.add((1025 + index * chainLength + chain, index, chain));
     }
   }
-  final anchorStory = 'M${List.filled(shapes.length, '\x08').join()}\r';
+  final anchorStory =
+      anchorText ?? 'M${List.filled(shapes.length, '\x08').join()}\r';
   final headerRange = '$anchorStory\r';
   final offsets = [0];
   for (final range in ranges) {

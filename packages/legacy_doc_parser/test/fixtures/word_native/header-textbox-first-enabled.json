@@ -1,0 +1,25 @@
+{
+  "schema": "legacy-doc-parser/header-textbox-first-enabled",
+  "version": 1,
+  "source": "test/fixtures/word_native/header-textbox-duplicate-chain.doc",
+  "sourceSha256": "4e8a4388d0a509836760d84c8ef28158ee90018518928a93f4c01980e5387624",
+  "output": "test/fixtures/word_native/header-textbox-first-enabled.doc",
+  "outputSha256": "587d2223311f734c768e88473eccba829dfb048afd9a471a1f2c3ea20071afd1",
+  "archive": "doc/evidence/header-textbox-alias-inputs.tar.xz",
+  "archiveMember": "results/content/first-enabled.doc",
+  "generator": "tool/fidelity/header_textbox_titlepage.dart",
+  "method": "Enable only sprmSFTitlePage by copying the single section SEPX and updating its stream offset/length when needed; retain header ranges, FSPA, OfficeArt and FTXBXS bytes.",
+  "purpose": "Independent native activation control. Production conversion preserves the actual source title-page setting.",
+  "expectedStoredHeaders": [
+    "normal",
+    "first"
+  ],
+  "expectedTextboxParagraphsPerOccurrence": [
+    "ALPHA"
+  ],
+  "realFlowChainLength": 1,
+  "shapeIds": [
+    1025,
+    1026
+  ]
+}

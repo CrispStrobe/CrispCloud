@@ -20,7 +20,11 @@ W15 = 'http://schemas.microsoft.com/office/word/2012/wordml'
 WPS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape'
 R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 NS = {'w': W, 'v': V, 'o': O, 'w14': W14, 'w15': W15, 'wps': WPS}
-PROPERTY_TAGS = {'pPr', 'rPr', 'tblPr', 'tblPrEx', 'trPr', 'tcPr', 'sectPr'}
+PROPERTY_TAGS = {'pPr', 'rPr', 'tblPr', 'tblPrEx', 'trPr', 'tcPr', 'sectPr',
+                 'sdtPr', 'sdtEndPr', 'customXmlPr', 'smartTagPr'}
+PROPERTY_QNAMES = frozenset('{' + W + '}' + name for name in PROPERTY_TAGS)
+RUN_QNAMES = frozenset(('{' + W + '}r',
+                       '{http://schemas.openxmlformats.org/officeDocument/2006/math}r'))
 CHANGE_TAGS = {'ins', 'del', 'moveFrom', 'moveTo', 'rPrChange', 'pPrChange',
                'tblPrChange', 'tblPrExChange', 'trPrChange', 'tcPrChange',
                'sectPrChange', 'numberingChange', 'cellIns', 'cellDel',
@@ -61,9 +65,47 @@ def properties(node, *, exclude=(), omit_attributes=()):
     return result
 
 
+def content_nodes(node, *, inline=False):
+    """Visit nodes with their parent and property scope, retaining zero-width metadata.
+
+    The offset oracle still needs property-revision nodes, but their descendants
+    must never advance text positions. Inline views exclude nested story/table
+    text while a whole-story view continues to visit those separate blocks.
+    """
+    def visit(element, parent=None, in_properties=False):
+        in_properties = in_properties or element.tag in PROPERTY_QNAMES
+        yield element, parent, in_properties
+        if inline and element is not node and element.tag in (tag('txbxContent'), tag('tbl')):
+            return
+        for child in element:
+            yield from visit(child, element, in_properties)
+    yield from visit(node)
+
+
+def run_text(element, parent, *, deleted=True):
+    """Read a recognized run child, not a same-named formatting property.
+
+    ISO/IEC 29500-1 17.3.3.31 TabChar is run content; 17.3.1.37
+    TabStop is a child of w:tabs. Both serialize as w:tab. The SDK's
+    TabChar/Break/CarriageReturn parent tables also permit an OMML m:r.
+    None means this node is not a text/control character.
+    """
+    if parent is None or parent.tag not in RUN_QNAMES:
+        return None
+    if element.tag == tag('t') or (deleted and element.tag == tag('delText')):
+        return element.text or ''
+    if element.tag == tag('tab'):
+        return '\t'
+    if element.tag == tag('br'):
+        return {'page': '\f', 'column': '\x0e'}.get(attr(element, 'type'), '\n')
+    if element.tag == tag('cr'):
+        return '\n'
+    return None
+
+
 def ordinary_text(node):
-    return ''.join(child.text or '' for child in node.iter()
-                   if child.tag in (tag('t'), tag('delText')))
+    return ''.join(value for element, parent, in_properties in content_nodes(node)
+                   if not in_properties and (value := run_text(element, parent)) is not None)
 
 
 def review_text(node, view):
@@ -72,7 +114,7 @@ def review_text(node, view):
         raise ValueError('Unknown review text view')
     accepted = view == 'accepted'
 
-    def visit(element):
+    def visit(element, parent=None):
         local = element.tag.split('}')[-1]
         if element.tag.startswith('{' + W + '}'):
             if local in PROPERTY_TAGS:
@@ -85,15 +127,10 @@ def review_text(node, view):
                 props = element.find(tag('trPr'))
                 if props is not None and props.find(tag('del' if accepted else 'ins')) is not None:
                     return ''
-            if local in ('t', 'delText'):
-                return element.text or ''
-            if local == 'tab':
-                return '\t'
-            if local == 'br':
-                return {'page': '\f', 'column': '\x0e'}.get(attr(element, 'type'), '\n')
-            if local == 'cr':
-                return '\n'
-        value = ''.join(visit(child) for child in element)
+        value = run_text(element, parent)
+        if value is not None:
+            return value
+        value = ''.join(visit(child, element) for child in element)
         if element.tag == tag('p'):
             mark = element.find('w:pPr/w:rPr', NS)
             removed = mark is not None and mark.find(tag('del' if accepted else 'ins')) is not None

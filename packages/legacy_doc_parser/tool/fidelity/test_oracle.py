@@ -3,8 +3,11 @@ import copy
 import tempfile
 import unittest
 import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
-from oracle import ROOT, NS, W, compare_layout, compare_semantics, load_corpus, snapshot
+from oracle import (ROOT, NS, W, _inline_offsets, _inline_text, compare_layout,
+                    compare_semantics, load_corpus, snapshot, text_content)
+from structure import ordinary_text, review_text
 
 
 class OracleRegressionTest(unittest.TestCase):
@@ -392,6 +395,154 @@ class StructuralOracleTest(unittest.TestCase):
         self.assertEqual(1, len(result['structure']['comments']))
         self.assertEqual('Selected comment\n', result['structure']['comments'][0]['text'])
         self.assertFalse(any('Unselected' in story['text'] for story in result['stories']))
+
+    def test_property_tab_stops_change_formatting_without_inventing_text(self):
+        first = self.paragraph('P1')
+        stops = '<w:tabs>' + ''.join('<w:tab w:val="' + kind + '" w:pos="720"/>'
+                                   for kind in ('left', 'right', 'decimal', 'num', 'clear')) + '</w:tabs>'
+        plain = self.package(first + self.paragraph('P2'))
+        with_stops = self.package(first + self.paragraph('P2', stops))
+        self.assertEqual(plain['stories'], with_stops['stories'])
+        self.assertEqual('P1\nP2', with_stops['stories'][0]['text'])
+        self.assertEqual('P2', with_stops['paragraphs'][0]['items'][1]['text'])
+        self.assertIn('paragraphs', self.changes(plain, with_stops))
+        moved = self.package(first + self.paragraph('P2', stops.replace('720', '1440')))
+        self.assertEqual(with_stops['stories'], moved['stories'])
+        self.assertIn('paragraphs', self.changes(with_stops, moved))
+
+    def test_actual_tabs_keep_boundaries_and_revision_comment_offsets(self):
+        body = ('<w:p><w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs></w:pPr>'
+                '<w:r><w:tab/><w:t>A</w:t><w:tab/></w:r>'
+                '<w:ins w:id="7" w:author="A"><w:r><w:t>B</w:t><w:tab/></w:r></w:ins>'
+                '<w:r><w:commentReference w:id="10"/></w:r></w:p>')
+        measured = self.package(body, extra=self.comment_anchor_fixture())
+        main = next(story for story in measured['stories'] if story['kind'] == 'main')
+        self.assertEqual('\tA\tB\t', main['text'])
+        self.assertEqual('\tA\tB\t', measured['paragraphs'][0]['items'][0]['text'])
+        self.assertEqual(3, measured['revisions'][0]['items'][0]['offsetInParagraph'])
+        self.assertEqual(5, measured['commentAnchors'][0]['items'][0]['offsetInParagraph'])
+        missing = self.package(body.replace('<w:tab/>', '', 1), extra=self.comment_anchor_fixture())
+        self.assertIn('stories', self.changes(measured, missing))
+        self.assertIn('commentAnchors', self.changes(measured, missing))
+        self.assertIn('revisions', self.changes(measured, missing))
+
+    def test_prior_properties_do_not_shift_format_or_paragraph_mark_revisions(self):
+        stops = '<w:tabs><w:tab w:val="left" w:pos="720"/><w:tab w:val="clear" w:pos="1440"/></w:tabs>'
+        body = ('<w:p><w:pPr>' + stops + '<w:rPr><w:del w:id="1"/></w:rPr>'
+                '<w:pPrChange w:id="2"><w:pPr>' + stops + '</w:pPr></w:pPrChange></w:pPr>'
+                '<w:r><w:t>A</w:t></w:r><w:r><w:rPr><w:rPrChange w:id="3">'
+                '<w:rPr><w:b/></w:rPr></w:rPrChange></w:rPr><w:t>B</w:t></w:r></w:p>')
+        measured = self.package(body)
+        entries = {item['kind']: item for item in measured['revisions'][0]['items']}
+        self.assertEqual(0, entries['pPrChange']['offsetInParagraph'])
+        self.assertEqual(1, entries['rPrChange']['offsetInParagraph'])
+        self.assertEqual(2, entries['del']['offsetInParagraph'])
+        self.assertEqual('AB', entries['pPrChange']['affectedText']['excerpt'])
+        self.assertEqual('B', entries['rPrChange']['affectedText']['excerpt'])
+        self.assertTrue(entries['pPrChange']['previousProperties'])
+
+    def test_foreign_paragraph_names_do_not_insert_word_separators(self):
+        body = ('<w:p><w:r><w:t>Alpha</w:t><w:drawing><a:p><a:r>'
+                '<a:t>Drawing text is separate</a:t></a:r></a:p></w:drawing>'
+                '<w:t>Beta</w:t></w:r></w:p>')
+        measured = self.package(body)
+        self.assertEqual('AlphaBeta', measured['stories'][0]['text'])
+        self.assertEqual('AlphaBeta', measured['paragraphs'][0]['items'][0]['text'])
+
+    def test_property_context_cannot_inject_run_content_or_break_counts(self):
+        # Deliberately malformed property content is not upgraded to a real
+        # story character merely because its descendant has a familiar name.
+        body = ('<w:p><w:pPr><w:r><w:t>Not content</w:t><w:tab/><w:br w:type="page"/>'
+                '<w:cr/></w:r></w:pPr><w:r><w:t>Safe</w:t></w:r></w:p>')
+        measured = self.package(body)
+        self.assertEqual('Safe', measured['stories'][0]['text'])
+        paragraph = measured['paragraphs'][0]['items'][0]
+        self.assertEqual('Safe', paragraph['text'])
+        self.assertEqual(['Safe'], [run['text'] for run in paragraph['runs']])
+        self.assertNotIn('break:page', measured['counts'])
+        self.assertIsNotNone(paragraph['properties'])
+
+    def test_inline_controls_keep_math_run_context_and_exact_offsets(self):
+        math = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
+        body = (f'<w:p xmlns:w="{W}" xmlns:m="{math}">'
+                '<w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs></w:pPr>'
+                '<w:hyperlink><w:r><w:t>A</w:t><w:tab/><w:br w:type="page"/></w:r></w:hyperlink>'
+                '<m:oMath><m:r><w:cr/><w:br w:type="column"/><w:tab/></m:r></m:oMath>'
+                '<w:r><w:t>B</w:t><w:commentReference w:id="1"/></w:r></w:p>')
+        node = ET.fromstring(body)
+        expected = 'A\t\f\n\x0e\tB'
+        self.assertEqual(expected, _inline_text(node))
+        self.assertEqual(expected, ordinary_text(node))
+        self.assertEqual(expected, text_content(node))
+        reference = node.find('.//w:commentReference', NS)
+        self.assertEqual(len(expected), _inline_offsets(node)[reference])
+
+    def test_nested_textbox_does_not_shift_outer_inline_anchors(self):
+        body = (f'<w:p xmlns:w="{W}" xmlns:v="{NS["v"]}"><w:r><w:t>A</w:t><w:pict>'
+                '<v:rect><v:textbox><w:txbxContent><w:p><w:pPr><w:tabs>'
+                '<w:tab w:val="left" w:pos="720"/></w:tabs></w:pPr>'
+                '<w:r><w:tab/><w:t>Inner</w:t></w:r></w:p></w:txbxContent>'
+                '</v:textbox></v:rect></w:pict><w:t>B</w:t><w:commentReference w:id="1"/></w:r></w:p>')
+        node = ET.fromstring(body)
+        self.assertEqual('AB', _inline_text(node))
+        self.assertEqual(2, _inline_offsets(node)[node.find('./w:r/w:commentReference', NS)])
+        inner = node.find('.//w:txbxContent/w:p', NS)
+        self.assertEqual('\tInner', _inline_text(inner))
+
+    def test_review_views_keep_actual_tabs_but_ignore_current_and_prior_stops(self):
+        body = (f'<w:p xmlns:w="{W}"><w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs>'
+                '<w:pPrChange w:id="4"><w:pPr><w:tabs><w:tab w:val="clear" w:pos="360"/>'
+                '</w:tabs></w:pPr></w:pPrChange></w:pPr><w:r><w:t>A</w:t></w:r>'
+                '<w:ins w:id="1"><w:r><w:tab/><w:t>New</w:t></w:r></w:ins>'
+                '<w:del w:id="2"><w:r><w:tab/><w:delText>Old</w:delText></w:r></w:del></w:p>')
+        node = ET.fromstring(body)
+        self.assertEqual('A\tNew\n', review_text(node, 'accepted'))
+        self.assertEqual('A\tOld\n', review_text(node, 'rejected'))
+
+    def test_selected_alternate_run_tab_is_counted_once(self):
+        body = ('<w:p><w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/></w:tabs></w:pPr>'
+                '<w:r><w:t>A</w:t><mc:AlternateContent><mc:Choice Requires="wps"><w:tab/>'
+                '</mc:Choice><mc:Fallback><w:tab/><w:tab/></mc:Fallback></mc:AlternateContent>'
+                '<w:t>B</w:t><w:commentReference w:id="10"/></w:r></w:p>')
+        measured = self.package(body, extra=self.comment_anchor_fixture())
+        self.assertEqual('A\tB', next(story['text'] for story in measured['stories'] if story['kind'] == 'main'))
+        self.assertEqual(3, measured['commentAnchors'][0]['items'][0]['offsetInParagraph'])
+
+    def test_boundary_run_breaks_and_preserved_spaces_are_not_stripped(self):
+        body = ('<w:p><w:r><w:tab/><w:br w:type="page"/>'
+                '<w:t xml:space="preserve"> A </w:t><w:cr/><w:tab/></w:r></w:p><w:p/>')
+        measured = self.package(body)
+        self.assertEqual('\t\f A \n\t', measured['stories'][0]['text'])
+        self.assertEqual('\t\f A \n\t', measured['paragraphs'][0]['items'][0]['text'])
+        self.assertEqual(1, measured['counts']['break:page'])
+
+    def _assert_empty_paragraph_summary(self, empty):
+        for before, after, expected in (
+                ('', self.paragraph('A'), 'A'),
+                (self.paragraph('A'), '', 'A'),
+                (self.paragraph('A'), self.paragraph('B'), 'A\n\nB'),
+                ('', '', '')):
+            node = ET.fromstring(f'<w:body xmlns:w="{W}">' + before + empty + after + '</w:body>')
+            for deleted in (False, True):
+                with self.subTest(empty=empty, before=before, after=after, deleted=deleted):
+                    self.assertEqual(expected, text_content(node, deleted=deleted))
+
+    def test_empty_text_tokens_match_empty_paragraphs(self):
+        for empty in ('<w:p/>', '<w:p><w:r/></w:p>',
+                      '<w:p><w:r><w:t/></w:r></w:p>',
+                      '<w:p><w:r><w:t></w:t></w:r></w:p>',
+                      '<w:p><w:r><w:t xml:space="preserve"/></w:r></w:p>'):
+            self._assert_empty_paragraph_summary(empty)
+        space = ET.fromstring(f'<w:body xmlns:w="{W}"><w:p><w:r>'
+                              '<w:t xml:space="preserve"> </w:t></w:r></w:p>'
+                              + self.paragraph('A') + '</w:body>')
+        self.assertEqual(' \nA', text_content(space))
+
+    def test_empty_deleted_text_tokens_match_empty_paragraphs(self):
+        for token in ('<w:delText/>', '<w:delText></w:delText>',
+                      '<w:delText xml:space="preserve"/>'):
+            self._assert_empty_paragraph_summary(
+                '<w:p><w:del w:id="1"><w:r>' + token + '</w:r></w:del></w:p>')
 
 
 if __name__ == '__main__':

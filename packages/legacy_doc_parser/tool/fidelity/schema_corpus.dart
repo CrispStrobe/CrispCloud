@@ -5,10 +5,12 @@ import 'dart:io';
 
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 
+import 'header_textbox_alias_fixture.dart' as header_aliases;
 import 'image_appearance_probe.dart' as image_appearance;
 import 'list_sequence_fixture.dart' as list_sequences;
 import 'metafile_probe.dart' as metafiles;
 import 'media_review_fixture.dart' as media_reviews;
+import 'note_boundary_fixture.dart' as note_boundaries;
 import 'note_format_fixture.dart' as note_formats;
 import 'packed_shape_probe.dart' as packed_shapes;
 import 'review_schema_fixture.dart' as reviews;
@@ -22,6 +24,7 @@ import 'table_review_fixture.dart' as table_reviews;
 import 'table_text_fixture.dart' as table_text;
 import 'table_width_fixture.dart' as table_width;
 import 'textbox_boundary_fixture.dart' as textbox_boundary;
+import 'textbox_table_fixture.dart' as textbox_tables;
 
 void main(List<String> arguments) {
   if (arguments.length != 1) {
@@ -259,6 +262,27 @@ void main(List<String> arguments) {
       );
     }
   }
+  note_boundaries.main(['${root.path}/note-boundary']);
+  for (final story in ['footnote', 'endnote']) {
+    for (final kind in [
+      'plain',
+      'empty',
+      'trailing-blank',
+      'two-trailing-blanks',
+      'table',
+      'table-blank',
+      'table-two-blanks',
+      'table-text',
+    ]) {
+      final name = '$story-$kind';
+      record(
+        'note-boundary/$name',
+        'note-boundary/$name.doc',
+        'note-boundary/$name.docx',
+        'tool/fidelity/note_boundary_fixture.dart',
+      );
+    }
+  }
   note_formats.main(['${root.path}/note-formats']);
   for (final name in [
     'note-formats-east-asian-sepx',
@@ -344,6 +368,40 @@ void main(List<String> arguments) {
       );
     }
   }
+  header_aliases.main(['${root.path}/header-alias']);
+  for (final kind in [
+    'content',
+    'empty',
+    'leading-blank',
+    'interior-blank',
+    'trailing-blank',
+    'two-trailing-blanks',
+    'two-content-paragraphs',
+  ]) {
+    final name = 'header-alias-$kind';
+    record(
+      'header-alias/$name',
+      'header-alias/$name.doc',
+      'header-alias/$name.docx',
+      'tool/fidelity/header_textbox_alias_fixture.dart',
+    );
+  }
+  textbox_tables.main(['${root.path}/textbox-tables']);
+  for (final story in ['main', 'header']) {
+    for (final margin in ['default', 'zero', 'wide']) {
+      for (final nesting in ['flat', 'nested']) {
+        for (final anchor in ['paragraph', 'table']) {
+          final name = 'textbox-$story-$margin-$nesting-$anchor';
+          record(
+            'textbox-tables/$name',
+            'textbox-tables/$name.doc',
+            'textbox-tables/$name.docx',
+            'tool/fidelity/textbox_table_fixture.dart',
+          );
+        }
+      }
+    }
+  }
   Directory('${root.path}/native-inputs').createSync();
   void nativeInput(String name, String relativeSource) {
     final source = File('${repository.path}/$relativeSource');
@@ -366,6 +424,8 @@ void main(List<String> arguments) {
     'word16-page-origin',
     'word16-page-origin-lo-blip-count',
     'poi-simple-table2',
+    'header-textbox-duplicate-chain',
+    'header-textbox-first-enabled',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }
