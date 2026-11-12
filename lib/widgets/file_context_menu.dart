@@ -1,4 +1,6 @@
 import '../l10n/commander_strings.dart';
+import '../l10n/archive_creation_strings.dart';
+import 'archive_creation_dialog.dart';
 import 'file_delete_dialog.dart';
 // widgets/file_context_menu.dart
 
@@ -1300,8 +1302,7 @@ void showFileContextMenu(
       );
     }
 
-    // Create zip: show when files are selected
-    if (files.isNotEmpty && files.any((f) => f.path != null)) {
+    if (files.isNotEmpty && files.every((file) => file.path != null)) {
       items.add(
         PopupMenuItem(
           child: Row(
@@ -1309,68 +1310,19 @@ void showFileContextMenu(
               const Icon(Icons.archive),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  context.commanderTr("Create Zip{0}", [
-                    isMultiSelect ? ' (${files.length})' : '',
-                  ]),
-                ),
+                child: Text(archiveCreationText(context, 'Create archive…')),
               ),
             ],
           ),
-          onTap: () => Future.delayed(Duration.zero, () async {
-            try {
-              final paths = files
-                  .where((f) => f.path != null)
-                  .map((f) => f.path!)
-                  .toList();
-              if (paths.isEmpty) {
-                return;
-              }
-              final basePath = p.dirname(paths.first);
-              final zipBytes = await withNativeFileAction(
+          onTap: () => Future<void>.delayed(Duration.zero, () async {
+            if (context.mounted) {
+              await showArchiveCreationDialog(
+                context,
                 ref,
-                origin,
-                paths,
-                () => ArchiveService.createZip(paths, basePath: basePath),
+                side,
+                files,
+                sourceOrigin: origin,
               );
-              final zipName = isMultiSelect
-                  ? 'archive.zip'
-                  : '${p.basenameWithoutExtension(files.first.name)}.zip';
-              var zipPath = p.join(basePath, zipName);
-              var suffix = 2;
-              while (await FileSystemEntity.type(zipPath, followLinks: false) !=
-                  FileSystemEntityType.notFound) {
-                zipPath = p.join(
-                  basePath,
-                  '${p.basenameWithoutExtension(zipName)} ($suffix).zip',
-                );
-                suffix++;
-              }
-              await withNativeFileAction(ref, origin, [basePath], () async {
-                await File(zipPath).create(exclusive: true);
-                await File(zipPath).writeAsBytes(zipBytes, flush: true);
-              });
-              ref.read(panelProvider(side)).refresh();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      context.commanderTr("Created {0}", [zipName]),
-                    ),
-                  ),
-                );
-              }
-            } catch (e) {
-              _log.warn('operation failed', e);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      context.commanderTr("Zip creation failed: {0}", [e]),
-                    ),
-                  ),
-                );
-              }
             }
           }),
         ),
