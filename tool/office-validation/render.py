@@ -64,7 +64,7 @@ HOST_PICTURE_GEOMETRY = {
     'landscape': ((720, 405), (72, 40.5, 360, 180)),
     'portrait': ((720, 405), (72, 40.5, 120, 240)),
     'square': ((720, 405), (72, 40.5, 240, 240)),
-    'bounds': ((100, 60), (10, 6, 90, 45)),
+    'bounds': ((100, 72), (10, 7.2, 90, 45)),
 }
 HOST_PICTURE_ORACLE = 'host-slide-black-picture-v1'
 
@@ -257,7 +257,7 @@ def picture_raster_size(case, page_points):
                    or abs(value - target) > 0.03 for value, target in zip(page_points, expected))):
         raise FidelityError('Host picture PDF page size differs from the authored slide')
     # Poppler rounds the physical page up to whole pixels at 72 dpi. For
-    # example, LibreOffice's 100.006 x 60.0094 pt page yields 101 x 61 pixels.
+    # example, LibreOffice's 100.006 x 72 pt page yields 101 x 72 pixels.
     return [math.ceil(value) for value in page_points]
 
 

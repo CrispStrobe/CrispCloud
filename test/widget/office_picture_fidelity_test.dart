@@ -403,7 +403,8 @@ void main() {
     final picture = _png(800, 400);
     FilePicker.platform = _Picker(() async => _result(picture));
     final controller = SlideEditorController(
-      presentation: PmlPresentation(slideWidth: 1270000, slideHeight: 762000),
+      // Native slide dimensions must be at least 72 points on each side.
+      presentation: PmlPresentation(slideWidth: 1270000, slideHeight: 914400),
       config: _config,
     );
     final key = await _host(tester, controller);
@@ -418,7 +419,7 @@ void main() {
         width: 90,
         height: 45,
         x: 127000,
-        y: 76200,
+        y: 91440,
       ),
     );
     await tester.pumpWidget(const SizedBox.shrink());
