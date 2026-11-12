@@ -156,6 +156,73 @@ void main() {
     );
   });
 
+  for (final tail in <List<int>>[
+    [0],
+    utf8.encode('opaque trailing metadata'),
+  ]) {
+    test('bzip2 refuses a ${tail.length}-byte ignored trailing region', () {
+      final packed = encodeArchiveCompression(
+        repeated,
+        ArchiveCompressionKind.bzip2,
+      );
+      final withTail = Uint8List.fromList([...packed, ...tail]);
+      // This is a valid readable payload: the upstream decoder intentionally
+      // ignores the suffix. Editing must explicitly refuse that lossy rewrite.
+      expect(
+        codecs.BZip2Decoder().decodeBytes(withTail, verify: true),
+        repeated,
+      );
+      expect(
+        () => validateArchiveCompressionRewrite(
+          withTail,
+          ArchiveCompressionKind.bzip2,
+        ),
+        throwsA(isA<ArchiveViewException>()),
+      );
+    });
+  }
+
+  test('bzip2 refuses a truncated following stream header', () {
+    final packed = encodeArchiveCompression(
+      repeated,
+      ArchiveCompressionKind.bzip2,
+    );
+    final truncated = Uint8List.fromList([...packed, 0x42, 0x5a]);
+    expect(
+      () => validateArchiveCompressionRewrite(
+        truncated,
+        ArchiveCompressionKind.bzip2,
+      ),
+      throwsA(anything),
+    );
+  });
+
+  test('bzip2 checks for trailing bytes after every concatenated payload', () {
+    final first = encodeArchiveCompression(
+      Uint8List.fromList([1, 2, 3]),
+      ArchiveCompressionKind.bzip2,
+    );
+    final second = encodeArchiveCompression(
+      Uint8List.fromList([4, 5]),
+      ArchiveCompressionKind.bzip2,
+    );
+    final withTail = Uint8List.fromList([...first, ...second, 0x7f]);
+    expect(codecs.BZip2Decoder().decodeBytes(withTail, verify: true), [
+      1,
+      2,
+      3,
+      4,
+      5,
+    ]);
+    expect(
+      () => validateArchiveCompressionRewrite(
+        withTail,
+        ArchiveCompressionKind.bzip2,
+      ),
+      throwsA(isA<ArchiveViewException>()),
+    );
+  });
+
   for (final kind in [
     ArchiveCompressionKind.gzip,
     ArchiveCompressionKind.xz,

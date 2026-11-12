@@ -115,6 +115,7 @@ void validateArchiveWriteEntries(
     final components = path.split('/');
     nameBytes += utf8.encode(path).length;
     if (path.isEmpty ||
+        !_validUnicode(path) ||
         path.contains('\\') ||
         RegExp(r'[\x00-\x1f\x7f]').hasMatch(path) ||
         RegExp(r'^[A-Za-z]:').hasMatch(path) ||
@@ -144,6 +145,20 @@ void validateArchiveWriteEntries(
       }
     }
   }
+}
+
+bool _validUnicode(String value) {
+  for (var index = 0; index < value.length; index++) {
+    final unit = value.codeUnitAt(index);
+    if (unit >= 0xd800 && unit <= 0xdbff) {
+      if (++index >= value.length) return false;
+      final low = value.codeUnitAt(index);
+      if (low < 0xdc00 || low > 0xdfff) return false;
+    } else if (unit >= 0xdc00 && unit <= 0xdfff) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /// Collects a bounded writer result for the existing reviewed workspace path.

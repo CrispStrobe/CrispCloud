@@ -227,7 +227,7 @@ void main() {
       );
     }
     expect(
-      () => ArchiveCreationOptions(
+      () => const ArchiveCreationOptions(
         name: 'file.xz',
         format: ArchiveCreationFormat.xz,
         compression: ArchiveCreationCompression.none,

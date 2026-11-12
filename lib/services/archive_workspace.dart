@@ -67,18 +67,25 @@ class ArchiveWorkspace {
         reason: canUpdate ? null : updateSupport,
       );
   bool get canUpdate {
+    if (_parentWorkspace?._policy.packageKind == 'deb') return false;
     if (_parentWorkspace?.canUpdate == false) return false;
     return _policy.reason == null &&
         _policy.format != ArchiveEndpointFormat.readOnly &&
         ArchiveContainerPublisher.unsupportedReason(outermost.source) == null;
   }
 
-  String get updateSupport => _parentWorkspace?.canUpdate == false
+  String get updateSupport => _parentWorkspace?._policy.packageKind == 'deb'
+      ? 'Debian payloads require an external package build workflow. Replace the prepared control and data archives together in the outer package.'
+      : _parentWorkspace?.canUpdate == false
       ? 'The enclosing archive cannot be repacked. Browsing and extraction are available.'
       : _policy.reason ??
             ArchiveContainerPublisher.unsupportedReason(outermost.source) ??
             (canUpdate
-                ? 'Edit, add, rename and delete members; save repacks the archive.'
+                ? _policy.packageKind == 'deb'
+                      ? 'Replace prepared control and data archives together. Save verifies the wrapper and present checksums; package metadata must be rebuilt externally.'
+                      : _policy.singlePayload
+                      ? 'Replace the one decompressed payload; its name comes from the compressed filename.'
+                      : 'Edit, add, rename and delete members; save repacks the archive.'
                 : 'This format supports browsing and extraction. Repacking is unavailable.');
 
   static Future<Uint8List> _read(
@@ -326,6 +333,17 @@ class ArchiveWorkspace {
       );
     }
     _validateEntries(entries);
+    for (final entry in entries.values) {
+      final privilege = (entry.mode ?? 0) & 0xc00;
+      if (privilege != 0 &&
+          (entry.member == null ||
+              _policy.inspection == null ||
+              ((entry.member!.posixMode ?? 0) & 0xc00) != privilege)) {
+        throw const ArchiveViewException(
+          'Adding setuid or setgid permissions requires an ownership-preserving workflow. Existing inspected ownership and privilege bits can be retained.',
+        );
+      }
+    }
     if (_policy.singlePayload &&
         (entries.length != 1 ||
             entries.values.single.isFolder ||
@@ -656,7 +674,11 @@ class ArchiveWorkspace {
         staged[name] = _ArchiveEntry(
           name,
           true,
-          modified: _policy.normalizeImportedTime(file.updatedAt),
+          member: _entries[name]?.member,
+          modified:
+              _entries[name]?.modified ??
+              _policy.normalizeImportedTime(file.updatedAt),
+          mode: _entries[name]?.mode,
         );
         for (final child in await input.list(file.path!)) {
           if (child.path == null ||
@@ -681,8 +703,10 @@ class ArchiveWorkspace {
         staged[name] = _ArchiveEntry(
           name,
           false,
+          member: _entries[name]?.member,
           bytes: bytes,
           modified: _policy.normalizeImportedTime(file.updatedAt),
+          mode: _entries[name]?.mode,
         );
       }
     }
@@ -706,6 +730,21 @@ class ArchiveWorkspace {
     }
 
     checkPacking();
+    if (_policy.packageKind == 'deb') {
+      final payloads = _entries.values
+          .where(
+            (entry) =>
+                entry.name.startsWith('control.tar') ||
+                entry.name.startsWith('data.tar'),
+          )
+          .toList();
+      if (payloads.any((entry) => entry.bytes != null) &&
+          payloads.any((entry) => entry.bytes == null)) {
+        throw const ArchiveViewException(
+          'Replace the externally prepared control and data archives together so package metadata can be rebuilt consistently.',
+        );
+      }
+    }
     if (encrypted &&
         !encryptNames &&
         !_entries.values.any(

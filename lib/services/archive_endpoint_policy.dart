@@ -7,6 +7,7 @@ import 'archive_compression_writer.dart';
 import 'archive_format_registry.dart';
 import 'archive_iso_writer.dart';
 import 'archive_package_writers.dart';
+import 'archive_tar_writer.dart';
 import 'archive_write_model.dart';
 import 'archive_zip_package_policy.dart';
 
@@ -152,6 +153,16 @@ class ArchiveEndpointPolicy {
             ),
         ]);
       }
+    }
+    if (reason == null &&
+        (format == ArchiveEndpointFormat.zip ||
+            format == ArchiveEndpointFormat.sevenZip) &&
+        archive.members.any((member) => (member.posixMode ?? 0) & 0xc00 != 0)) {
+      reason = 'This writer cannot preserve ownership associated with setuid or setgid archive members.';
+    }
+    if (reason == null && expectedFormat == 'tar') {
+      inspection = await inspectTarRewrite(bytes, archive);
+      reason = inspection.reason;
     }
     if (reason == null &&
         const {

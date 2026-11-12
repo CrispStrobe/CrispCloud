@@ -88,6 +88,22 @@ void main() {
     );
   });
 
+  test(
+    'names reject unpaired surrogates before UTF-8 can alias another path',
+    () {
+      for (final path in ['bad\ud800', 'bad\udc00', '\ud800x\udc00']) {
+        expect(
+          () => validateArchiveWriteEntries([file(path), file('bad�')]),
+          throwsA(isA<ArchiveViewException>()),
+        );
+      }
+      expect(
+        () => validateArchiveWriteEntries([file('valid-🌍'), file('bad�')]),
+        returnsNormally,
+      );
+    },
+  );
+
   test('bounded output copies producer buffers and refuses overflow', () async {
     final chunk = Uint8List.fromList([1, 2, 3]);
     final output = await collectArchiveWrite((sink) async {

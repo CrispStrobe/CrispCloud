@@ -260,7 +260,10 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   ),
                   items: [
                     for (final value in ArchiveCreationFormat.values)
-                      DropdownMenuItem(value: value, child: Text(value.label)),
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(tr(value.label)),
+                      ),
                   ],
                   onChanged: enabled
                       ? (value) {

@@ -121,6 +121,7 @@ class ViewerArchive {
        _read = read,
        // ignore: prefer_initializing_formals
        _close = close,
+       // ignore: prefer_initializing_formals
        _streamReader = streamReader;
 
   /// A one-member archive over already-decompressed bytes.

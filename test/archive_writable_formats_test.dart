@@ -442,7 +442,7 @@ void main() {
       );
       expect(
         () => fixture.workspace.replace('new.txt', Uint8List.fromList([1])),
-          throwsUnsupportedError,
+        throwsUnsupportedError,
       );
       expect(fixture.workspace.dirty, isFalse);
       expect(fixture.client.writes, isEmpty);

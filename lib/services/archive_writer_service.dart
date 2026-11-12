@@ -6,6 +6,7 @@ import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
 import 'archive_iso_writer.dart';
 import 'archive_package_writers.dart';
+import 'archive_tar_writer.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
 import 'archive_zip_metadata.dart';
@@ -35,6 +36,34 @@ Future<void> writeArchiveEntries(
 
   check();
   validateArchiveWriteEntries(entries);
+  if (maxOutputBytes <= 0 || maxOutputBytes > 2 * 1024 * 1024 * 1024) {
+    throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
+  }
+  final compressedLimit = maxOutputBytes < kArchiveReadLimit
+      ? maxOutputBytes
+      : kArchiveReadLimit;
+  final expectedCompression = switch (format) {
+    ArchiveEndpointFormat.tarGzip ||
+    ArchiveEndpointFormat.gzip => ArchiveCompressionKind.gzip,
+    ArchiveEndpointFormat.tarBzip2 ||
+    ArchiveEndpointFormat.bzip2 => ArchiveCompressionKind.bzip2,
+    ArchiveEndpointFormat.tarXz ||
+    ArchiveEndpointFormat.xz => ArchiveCompressionKind.xz,
+    ArchiveEndpointFormat.tarZstd ||
+    ArchiveEndpointFormat.zstd => ArchiveCompressionKind.zstd,
+    _ => null,
+  };
+  final expectedSingle = const {
+    ArchiveEndpointFormat.gzip,
+    ArchiveEndpointFormat.bzip2,
+    ArchiveEndpointFormat.xz,
+    ArchiveEndpointFormat.zstd,
+  }.contains(format);
+  if (compression != expectedCompression || singlePayload != expectedSingle) {
+    throw const ArchiveViewException(
+      'The requested writer and compression wrapper do not match.',
+    );
+  }
   if (format == ArchiveEndpointFormat.readOnly || source?.supported == false) {
     throw ArchiveViewException(source?.reason ?? 'No writer is available.');
   }
@@ -105,29 +134,61 @@ Future<void> writeArchiveEntries(
         bytes,
         compression,
         level: level,
-        maxOutputBytes: maxOutputBytes,
+        maxOutputBytes: compressedLimit,
         gzipHeader: gzipHeader,
         xzCheck: xzCheck,
       ),
     );
     return;
   }
+  if (const {
+    ArchiveEndpointFormat.tar,
+    ArchiveEndpointFormat.tarGzip,
+    ArchiveEndpointFormat.tarBzip2,
+    ArchiveEndpointFormat.tarXz,
+    ArchiveEndpointFormat.tarZstd,
+  }.contains(format)) {
+    if (compression == null) {
+      await writeTarArchive(
+        entries,
+        sink: emit,
+        source: source,
+        maxOutputBytes: maxOutputBytes,
+        isCancelled: isCancelled,
+      );
+    } else {
+      final tar = await collectArchiveWrite(
+        (sink) => writeTarArchive(
+          entries,
+          sink: sink,
+          source: source,
+          maxOutputBytes: kArchiveReadLimit,
+          isCancelled: isCancelled,
+        ),
+        maxBytes: kArchiveReadLimit,
+      );
+      check();
+      await emit(
+        encodeArchiveCompression(
+          tar,
+          compression,
+          level: level,
+          maxOutputBytes: compressedLimit,
+          gzipHeader: gzipHeader,
+          xzCheck: xzCheck,
+        ),
+      );
+    }
+    return;
+  }
   final writerFormat = switch (format) {
     ArchiveEndpointFormat.zip => const koni.ZipWriteFormat(),
     ArchiveEndpointFormat.sevenZip => const koni.SevenZWriteFormat(),
-    ArchiveEndpointFormat.tar ||
-    ArchiveEndpointFormat.tarGzip ||
-    ArchiveEndpointFormat.tarBzip2 ||
-    ArchiveEndpointFormat.tarXz ||
-    ArchiveEndpointFormat.tarZstd => const koni.TarWriteFormat(),
     _ => throw const ArchiveViewException(
       'Unsupported archive writer dispatch.',
     ),
   };
-  final output = _WriterSink(
-    compression == null ? maxOutputBytes : kArchiveReadLimit,
-    check,
-  );
+  final output = _WriterSink(maxOutputBytes, check);
   final writer = koni.Archive.create(
     output,
     format: writerFormat,
@@ -165,16 +226,6 @@ Future<void> writeArchiveEntries(
       bytes = preserveArchiveZipTimes(bytes, {
         for (final entry in entries) entry.path: entry.modified,
       });
-    }
-    if (compression != null) {
-      bytes = encodeArchiveCompression(
-        bytes,
-        compression,
-        level: level,
-        maxOutputBytes: maxOutputBytes,
-        gzipHeader: gzipHeader,
-        xzCheck: xzCheck,
-      );
     }
     await emit(bytes);
   } finally {

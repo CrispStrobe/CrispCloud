@@ -221,6 +221,7 @@ class ArchiveCreationOptions {
         RegExp(r'[<>:"/\\|?*\x00-\x1f]').hasMatch(name) ||
         name.endsWith('.') ||
         utf8.encode(name).length > 240 ||
+        format.singlePayload && name.length == format.extension.length ||
         !name.toLowerCase().endsWith(format.extension)) {
       throw const ArchiveCreationException(ArchiveCreationError.invalidName);
     }
@@ -421,6 +422,11 @@ class ArchiveCreationService {
           path,
         );
       }
+      if (mode & 0xc00 != 0) {
+        throw const ArchiveViewException(
+          'Creating archives from setuid or setgid entries requires an ownership-preserving workflow. Source ownership is not captured by this creator.',
+        );
+      }
       return mode & 0xfff;
     }
 
@@ -599,13 +605,17 @@ class ArchiveCreationService {
           modified: entry.file.updatedAt == null || options.format.singlePayload
               ? null
               : DateTime.fromMillisecondsSinceEpoch(
-                  entry.file.updatedAt!.millisecondsSinceEpoch -
-                      entry.file.updatedAt!.millisecondsSinceEpoch % 1000,
+                  options.format.endpointFormat ==
+                          ArchiveEndpointFormat.sevenZip
+                      ? entry.file.updatedAt!.millisecondsSinceEpoch
+                      : entry.file.updatedAt!.millisecondsSinceEpoch -
+                            entry.file.updatedAt!.millisecondsSinceEpoch % 1000,
                   isUtc: true,
                 ),
           readChunks: entry.file.isFolder ? null : () => readEntryChunks(entry),
         ),
     ];
+    final capturedByName = {for (final entry in captured) entry.path: entry};
     validateArchiveWriteEntries(
       captured,
       allowDirectories: options.format.supportsDirectories,
@@ -659,6 +669,11 @@ class ArchiveCreationService {
             ArchiveEndpointFormat.ar,
             ArchiveEndpointFormat.cpio,
             ArchiveEndpointFormat.xar,
+            ArchiveEndpointFormat.tar,
+            ArchiveEndpointFormat.tarGzip,
+            ArchiveEndpointFormat.tarBzip2,
+            ArchiveEndpointFormat.tarXz,
+            ArchiveEndpointFormat.tarZstd,
           }.contains(options.format.endpointFormat) ||
           options.format.singlePayload) {
         await writeArchiveEntries(
@@ -672,27 +687,22 @@ class ArchiveCreationService {
           isCancelled: isCancelled,
         );
       } else {
-        final memory = _BoundedArchiveMemory(
-          check,
-          // GZIP-backed browsing buffers the decoded container. Produce archives
-          // that the normal viewer can open, including TAR header overhead.
-          limit: options.format.wrapper != null
-              ? kArchiveReadLimit
-              : ArchiveService.maxArchiveBytes,
-        );
+        final memory = _BoundedArchiveMemory(check);
         final sink = _CreationSink(memory);
         final zip = options.format.endpointFormat == ArchiveEndpointFormat.zip
             ? codecs.ZipEncoder(password: options.password, streamed: true)
             : null;
+        if (zip == null &&
+            options.format.endpointFormat != ArchiveEndpointFormat.sevenZip) {
+          throw const ArchiveCreationException(
+            ArchiveCreationError.unsupportedOptions,
+          );
+        }
         final writer = zip != null
             ? null
             : koni.Archive.create(
                 sink,
-                format:
-                    options.format.endpointFormat ==
-                        ArchiveEndpointFormat.sevenZip
-                    ? const koni.SevenZWriteFormat()
-                    : const koni.TarWriteFormat(),
+                format: const koni.SevenZWriteFormat(),
                 options: koni.ArchiveWriteOptions(
                   compression:
                       options.format.endpointFormat ==
@@ -726,7 +736,10 @@ class ArchiveCreationService {
                 : codecs.ArchiveFile.bytes(entry.name, bytes);
             if (entry.file.updatedAt != null) {
               file.lastModTime =
-                  entry.file.updatedAt!.millisecondsSinceEpoch ~/ 1000;
+                  capturedByName[entry.name]!
+                      .modified!
+                      .millisecondsSinceEpoch ~/
+                  1000;
             }
             if (entry.mode != null) file.mode = entry.mode!;
             file.compression =
@@ -752,7 +765,7 @@ class ArchiveCreationService {
               type: bytes == null
                   ? koni.ArchiveEntryType.directory
                   : koni.ArchiveEntryType.file,
-              modified: entry.file.updatedAt?.toUtc(),
+              modified: capturedByName[entry.name]!.modified,
               posixMode: entry.mode,
             );
             if (bytes == null) {
@@ -771,15 +784,7 @@ class ArchiveCreationService {
           await writer!.close();
         }
         await sink.close();
-        var packed = memory.getBytes();
-        if (options.format.wrapper != null) {
-          packed = encodeArchiveCompression(
-            packed,
-            options.format.wrapper!,
-            level: options.compression.deflateLevel,
-            maxOutputBytes: spool.maxBytes,
-          );
-        }
+        final packed = memory.getBytes();
         await emit(packed);
       }
       await spool.finish();
@@ -840,13 +845,17 @@ class ArchiveCreationService {
             check();
             final name = member.name.replaceFirst(RegExp(r'/+$'), '');
             final entry = expected.remove(name);
+            final expectedTime = capturedByName[name]?.modified;
             if (entry == null ||
                 member.pathEscapedRoot ||
                 member.isSpecial ||
                 member.isFile == entry.file.isFolder ||
                 entry.mode != null &&
                     (member.posixMode == null ||
-                        (member.posixMode! & 0xfff) != entry.mode)) {
+                        (member.posixMode! & 0xfff) != entry.mode) ||
+                expectedTime != null &&
+                    (member.modified == null ||
+                        !member.modified!.isAtSameMomentAs(expectedTime))) {
               throw const ArchiveCreationException(
                 ArchiveCreationError.verificationFailed,
               );
@@ -980,12 +989,9 @@ class ArchiveCreationService {
 }
 
 class _BoundedArchiveMemory extends codecs.OutputMemoryStream {
-  _BoundedArchiveMemory(
-    this.check, {
-    this.limit = ArchiveService.maxArchiveBytes,
-  });
+  _BoundedArchiveMemory(this.check);
   final void Function() check;
-  final int limit;
+  static const int limit = ArchiveService.maxArchiveBytes;
   void _allow(int count) {
     check();
     if (count < 0 || length + count > limit) {

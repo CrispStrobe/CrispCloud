@@ -290,6 +290,41 @@ void main() {
     );
   });
 
+  for (final special in [
+    ('setuid file', '/input/folder/run.sh', 0x800),
+    ('setgid directory', '/input/folder', 0x400),
+  ]) {
+    test('creation refuses ${special.$1} without captured ownership', () async {
+      for (final format in [
+        ArchiveCreationFormat.hfsx,
+        ArchiveCreationFormat.dmg,
+      ]) {
+        final backend = _PermissionBackend()
+          ..put('/input/folder/run.sh', [1, 2, 3])
+          ..modes.addAll({
+            '/input/folder': 0x1c0,
+            '/input/folder/run.sh': 0x1ed,
+          });
+        backend.modes[special.$2] = backend.modes[special.$2]! | special.$3;
+        await expectLater(
+          create(backend, format),
+          throwsA(
+            isA<ArchiveViewException>().having(
+              (error) => error.message,
+              'reason',
+              contains('ownership'),
+            ),
+          ),
+        );
+        expect(backend.writes, isEmpty);
+        expect(
+          backend.contents.keys.where((path) => path.startsWith('/output/')),
+          isEmpty,
+        );
+      }
+    });
+  }
+
   test(
     'native executable and directory permissions survive HFSX and DMG creation',
     () async {

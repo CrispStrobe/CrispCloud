@@ -198,6 +198,20 @@ void validateArchiveCompressionRewrite(
     case ArchiveCompressionKind.bzip2:
       // Bzip2 streams carry no per-file names, dates or opaque extension data.
       if (bytes.length < 4 || bytes[3] < 0x31 || bytes[3] > 0x39) refuse();
+      // The reader deliberately accepts trailing garbage after the final
+      // stream. A rewrite must not silently discard those unmodeled bytes.
+      // Keep this independent decode bounded even when called without a reader.
+      final input = codecs.InputMemoryStream(bytes);
+      final output = _CompressionOutput(kArchiveReadLimit);
+      if (!codecs.BZip2Decoder().decodeStream(
+            input,
+            output,
+            verify: true,
+            throwOnError: true,
+          ) ||
+          !input.isEOS) {
+        refuse();
+      }
   }
 }
 
