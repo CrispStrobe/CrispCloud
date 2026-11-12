@@ -1,11 +1,12 @@
 // lib/services/proxy_service.dart
 //
-// HTTP/SOCKS5 proxy configuration service.
+// HTTP and SOCKS proxy configuration service.
 //
 // Provides a proxy-aware http.Client that can be injected into cloud adapters.
 // Supports:
 //   - HTTP/HTTPS proxy (CONNECT tunneling for HTTPS targets)
 //   - SOCKS5 CONNECT with optional password authentication and remote DNS
+//   - SOCKS4 IPv4 CONNECT and explicit SOCKS4a remote DNS
 //   - No-proxy bypass list (comma-separated hostnames)
 //   - Environment variable auto-detection (HTTP_PROXY, HTTPS_PROXY, NO_PROXY)
 //   - Manual configuration via ProxyConfig model
@@ -20,10 +21,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cert_pinning_service.dart';
 import 'log_service.dart';
-import 'socks5_connector.dart';
+import 'socks_connector.dart';
 
 /// Proxy type.
-enum ProxyType { none, http, socks5 }
+enum ProxyType {
+  none,
+  http,
+  socks5,
+  socks4,
+  socks4a;
+
+  bool get isSocks4 => this == socks4 || this == socks4a;
+  bool get isSocks => this == socks5 || isSocks4;
+}
 
 /// Proxy configuration model.
 class ProxyConfig {
@@ -61,10 +71,31 @@ class ProxyConfig {
   bool get requiresRouting => isInvalid || type != ProxyType.none;
 
   bool get isEnabled =>
-      type != ProxyType.none &&
-      host.trim().isNotEmpty &&
-      port > 0 &&
-      port <= 65535;
+      type != ProxyType.none && isValidHost(host) && port > 0 && port <= 65535;
+
+  /// Keep host data out of the native HTTP proxy directive grammar. Accept a
+  /// DNS/IDNA name or a literal address, not a URL, credentials or a directive.
+  static bool isValidHost(String host) {
+    if (host.isEmpty || host != host.trim()) return false;
+    // Native address parsers can stop at a NUL while preserving the original
+    // String. Reject every non-host character before either literal parser so
+    // a valid address prefix cannot hide proxy directives or credentials.
+    if (RegExp(r'[^A-Za-z0-9.:\[\]-]').hasMatch(host)) return false;
+    if (host.startsWith('[') && host.endsWith(']')) {
+      return InternetAddress.tryParse(host.substring(1, host.length - 1))
+              ?.type ==
+          InternetAddressType.IPv6;
+    }
+    if (InternetAddress.tryParse(host) != null) return true;
+    final name = host.endsWith('.') ? host.substring(0, host.length - 1) : host;
+    if (name.isEmpty || name.length > 253) return false;
+    final label = RegExp(r'^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$');
+    return name.split('.').every(label.hasMatch);
+  }
+
+  String get _connectionHost => host.startsWith('[') && host.endsWith(']')
+      ? host.substring(1, host.length - 1)
+      : host;
 
   void validate() {
     if (isInvalid) {
@@ -80,10 +111,20 @@ class ProxyConfig {
     }
     if (type == ProxyType.socks5) {
       Socks5Connector(
-        host: host,
+        host: _connectionHost,
         port: port,
         username: username,
         password: password,
+      ).validate();
+    } else if (type.isSocks4) {
+      if (password != null) {
+        throw const FormatException('SOCKS4 does not support passwords.');
+      }
+      Socks4Connector(
+        host: _connectionHost,
+        port: port,
+        userId: username ?? '',
+        remoteDns: type == ProxyType.socks4a,
       ).validate();
     }
   }
@@ -131,12 +172,17 @@ class ProxyConfig {
   String toProxyString() {
     validate();
     if (type == ProxyType.none) return 'DIRECT';
-    if (type == ProxyType.socks5) {
+    if (type.isSocks) {
       throw UnsupportedError(
-        'SOCKS5 requires the socket connector, not an HTTP proxy directive.',
+        'SOCKS requires the socket connector, not an HTTP proxy directive.',
       );
     }
-    return 'PROXY $host:$port';
+    final directiveHost =
+        InternetAddress.tryParse(_connectionHost)?.type ==
+            InternetAddressType.IPv6
+        ? '[$_connectionHost]'
+        : _connectionHost;
+    return 'PROXY $directiveHost:$port';
   }
 
   Map<String, dynamic> toJson() => {
@@ -182,20 +228,31 @@ class ProxyConfig {
 
     try {
       final uri = Uri.parse(proxyUrl);
-      final isSocks =
-          uri.scheme == 'socks5' ||
-          uri.scheme == 'socks5h' ||
-          uri.scheme == 'socks';
-      if (!isSocks && uri.scheme != 'http') {
+      final type = switch (uri.scheme) {
+        'http' => ProxyType.http,
+        'socks5' || 'socks5h' || 'socks' => ProxyType.socks5,
+        'socks4' => ProxyType.socks4,
+        'socks4a' => ProxyType.socks4a,
+        _ => null,
+      };
+      if (type == null) {
         // Native PROXY directives connect to an HTTP proxy. A TLS connection
-        // to the proxy itself and other SOCKS versions are not implemented.
+        // to the proxy itself is not implemented.
+        return const ProxyConfig.invalid();
+      }
+      // Uri normalizes an explicit :0 to the default port for SOCKS schemes.
+      // Reject that malformed selection before applying a default port.
+      final authority = RegExp(r'^[^:]+://([^/?#]*)')
+          .firstMatch(proxyUrl)
+          ?.group(1);
+      if (authority == null || RegExp(r':0*$').hasMatch(authority)) {
         return const ProxyConfig.invalid();
       }
       final credentialsSeparator = uri.userInfo.indexOf(':');
       final config = ProxyConfig(
-        type: isSocks ? ProxyType.socks5 : ProxyType.http,
+        type: type,
         host: uri.host,
-        port: uri.port > 0 ? uri.port : (isSocks ? 1080 : 8080),
+        port: uri.port > 0 ? uri.port : (type.isSocks ? 1080 : 8080),
         username: credentialsSeparator >= 0
             ? Uri.decodeComponent(
                 uri.userInfo.substring(0, credentialsSeparator),
@@ -239,20 +296,27 @@ class ProxyHttpOverrides extends HttpOverrides {
     final client = super.createHttpClient(secCtx);
 
     // Proxy configuration
-    if (config.type == ProxyType.socks5) {
-      final connector = Socks5Connector(
-        host: config.host,
-        port: config.port,
-        username: config.username,
-        password: config.password,
-      );
+    if (config.type.isSocks) {
+      final SocksConnector connector = config.type.isSocks4
+          ? Socks4Connector(
+              host: config._connectionHost,
+              port: config.port,
+              userId: config.username ?? '',
+              remoteDns: config.type == ProxyType.socks4a,
+            )
+          : Socks5Connector(
+              host: config._connectionHost,
+              port: config.port,
+              username: config.username,
+              password: config.password,
+            );
       // The custom factory performs SOCKS itself. DIRECT here prevents the
       // native HTTP proxy parser from adding a second proxy or a fallback.
       client.findProxy = (_) => 'DIRECT';
       client.connectionFactory = (uri, proxyHost, proxyPort) async {
         if (proxyHost != null || proxyPort != null) {
           throw const SocketException(
-            'Cannot combine SOCKS5 with an HTTP proxy.',
+            'Cannot combine SOCKS with an HTTP proxy.',
           );
         }
         if (config.bypassesHost(uri.host)) {
@@ -276,7 +340,7 @@ class ProxyHttpOverrides extends HttpOverrides {
           config.bypassesHost(uri.host) ? 'DIRECT' : config.toProxyString();
       if (config.username != null) {
         client.addProxyCredentials(
-          config.host,
+          config._connectionHost,
           config.port,
           'Basic',
           HttpClientBasicCredentials(config.username!, config.password ?? ''),

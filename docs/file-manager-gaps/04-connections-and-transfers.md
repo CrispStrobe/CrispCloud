@@ -50,7 +50,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### SOCKS4 HTTP routing
 
-**Status:** Scoped. **Dependencies:** Existing SOCKS5 connector boundaries.
+**Status:** Implementing: final regression pending. **Dependencies:** None for native HTTP/HTTPS routing.
 
 **Scope:** Add an explicit SOCKS4/4a connector and preserve HTTPS trust and routing rules.
 
@@ -65,6 +65,19 @@ capability. Required live/device checks remain visible after code implementation
 - Invalid mode/address/authentication combinations fail before a connection is attempted.
 
 **Starting points:** socks5_connector.dart ownership pattern; proxy_service.dart.
+
+**Delivered code:** [Proxy routing](../proxy-routing.md) documents separate
+SOCKS4 local-IPv4 and SOCKS4a remote-DNS modes, optional bounded user IDs,
+strict HTTPS trust, preserved SOCKS5 behavior and physically owned transport
+cleanup. Invalid saved credentials remain blocked. A shared pre-parser host
+guard rejects proxy-directive syntax and native IP-parser NUL suffixes before
+any client or bypass route is created. No dependency was added.
+
+**Validation checkpoint:** 196 tests passed across six native proxy, security,
+settings and TLS suites. Independent review then found a native IP-parser NUL
+edge case; the guard and exact regression fixture are included in this checkpoint.
+Focused analysis and independent review are clean. The final complete regression
+run remains pending before this item is marked closed.
 
 ## G28
 

@@ -1,6 +1,6 @@
 // lib/widgets/proxy_settings_dialog.dart
 //
-// Dialog for configuring HTTP/SOCKS5 proxy settings.
+// Dialog for configuring HTTP and SOCKS proxy settings.
 
 import 'dart:typed_data';
 
@@ -88,8 +88,19 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                   value: ProxyType.socks5,
                   child: Text(strings.text('SOCKS5 Proxy')),
                 ),
+                DropdownMenuItem(
+                  value: ProxyType.socks4,
+                  child: Text(strings.text('SOCKS4 Proxy (local DNS)')),
+                ),
+                DropdownMenuItem(
+                  value: ProxyType.socks4a,
+                  child: Text(strings.text('SOCKS4a Proxy (remote DNS)')),
+                ),
               ],
-              onChanged: (v) => setState(() => _type = v ?? ProxyType.none),
+              onChanged: (value) => setState(() {
+                _type = value ?? ProxyType.none;
+                if (_type.isSocks4) _passwordController.clear();
+              }),
             ),
             if (_type != ProxyType.none) ...[
               const SizedBox(height: 8),
@@ -108,6 +119,17 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
+              if (_type.isSocks4) ...[
+                const SizedBox(height: 8),
+                Text(
+                  strings.text(
+                    _type == ProxyType.socks4
+                        ? 'SOCKS4 resolves destination names locally to IPv4. The optional user ID is not a password.'
+                        : 'SOCKS4a resolves destination names at the proxy. IPv6 destinations and password authentication are not supported.',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +140,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                       controller: _hostController,
                       decoration: InputDecoration(
                         labelText: strings.text('Proxy Host'),
-                        hintText: _type == ProxyType.socks5
+                        hintText: _type.isSocks
                             ? '127.0.0.1'
                             : 'proxy.company.com',
                         border: const OutlineInputBorder(),
@@ -131,7 +153,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
                       controller: _portController,
                       decoration: InputDecoration(
                         labelText: strings.text('Port'),
-                        hintText: _type == ProxyType.socks5 ? '1080' : '8080',
+                        hintText: _type.isSocks ? '1080' : '8080',
                         border: const OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
@@ -143,21 +165,27 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
               TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: strings.text('Username (optional)'),
+                  labelText: strings.text(
+                    _type.isSocks4
+                        ? 'User ID (optional)'
+                        : 'Username (optional)',
+                  ),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.person_outline),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: strings.text('Password (optional)'),
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.lock_outline),
+              if (!_type.isSocks4) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: strings.text('Password (optional)'),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 16),
               TextField(
                 controller: _noProxyController,
@@ -369,7 +397,9 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
     final strings = ProxySettingsStrings(context);
     final port = int.tryParse(_portController.text) ?? 0;
     if (_type != ProxyType.none &&
-        (_hostController.text.trim().isEmpty || port <= 0 || port > 65535)) {
+        (!ProxyConfig.isValidHost(_hostController.text.trim()) ||
+            port <= 0 ||
+            port > 65535)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(strings.text('Host and valid port are required')),
@@ -385,7 +415,7 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
       username: _usernameController.text.isNotEmpty
           ? _usernameController.text
           : null,
-      password: _passwordController.text.isNotEmpty
+      password: !_type.isSocks4 && _passwordController.text.isNotEmpty
           ? _passwordController.text
           : null,
       noProxy: _noProxyController.text.trim(),
@@ -398,7 +428,9 @@ class _ProxySettingsDialogState extends ConsumerState<ProxySettingsDialog> {
         SnackBar(
           content: Text(
             strings.text(
-              'SOCKS5 needs both a username and password (up to 255 UTF-8 bytes each).',
+              _type.isSocks4
+                  ? 'SOCKS4 user IDs accept up to 255 printable ASCII characters; passwords are not supported.'
+                  : 'SOCKS5 needs both a username and password (up to 255 UTF-8 bytes each).',
             ),
           ),
         ),
