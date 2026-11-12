@@ -50,7 +50,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### SOCKS4 HTTP routing
 
-**Status:** Implementing: final regression pending. **Dependencies:** None for native HTTP/HTTPS routing.
+**Status:** Closed for native HTTP/HTTPS routing. **Dependencies:** None within this scope.
 
 **Scope:** Add an explicit SOCKS4/4a connector and preserve HTTPS trust and routing rules.
 
@@ -73,11 +73,13 @@ cleanup. Invalid saved credentials remain blocked. A shared pre-parser host
 guard rejects proxy-directive syntax and native IP-parser NUL suffixes before
 any client or bypass route is created. No dependency was added.
 
-**Validation checkpoint:** 196 tests passed across six native proxy, security,
-settings and TLS suites. Independent review then found a native IP-parser NUL
-edge case; the guard and exact regression fixture are included in this checkpoint.
-Focused analysis and independent review are clean. The final complete regression
-run remains pending before this item is marked closed.
+**Observed validation:** The final run passed 197 tests across six native proxy,
+security, settings and TLS suites, including the native IP-parser NUL regression.
+Coverage includes independent wire fixtures, local versus remote DNS, strict
+TLS, fragmented/coalesced replies, 2 MiB streamed transfers, stalled-handshake
+peer closure, delayed DNS cancellation, invalid credentials and restored hosts.
+Focused analysis and independent review are clean. Direct FTP/SSH/SMB proxy
+routing remains G28; this closure does not claim live-server certification.
 
 ## G28
 

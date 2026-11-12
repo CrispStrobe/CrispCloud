@@ -106,6 +106,7 @@ closure, and delayed lookup tests prove that cancellation and timeout prevent
 late TCP connections. The existing SOCKS5 suite is the shared transport
 regression gate, including active upload cancellation and sink completion.
 
-The initial six-suite gate passed 196 tests. The subsequent embedded-NUL host
-guard and exact regression cases passed focused analysis and independent review;
-their final complete regression run is recorded in the gap checkpoint ledger.
+The final six-suite gate passed 197 tests, including the embedded-NUL host guard
+and exact regression cases. Focused analysis and independent review are clean.
+Native HTTP/HTTPS routing is the verified scope; live-server and platform
+acceptance remain separately recorded in the gap checkpoint ledger.
