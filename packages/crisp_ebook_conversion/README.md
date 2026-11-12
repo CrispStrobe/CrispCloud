@@ -112,6 +112,26 @@ Legacy MOBI verification also checks its TOC guide, nested labels, and exact
 byte-offset navigation targets. The independent Foliate suite reads both the
 modern KF8 and legacy KF7 streams and imports each into EPUB.
 
+The cross-package import gate then checks the actual result with EPUBCheck
+5.4.0. It retains metadata, Unicode, the nested TOC, cross-chapter links, and
+every non-XHTML resource byte, reopens the emitted EPUB through the core, and
+requires zero EPUBCheck errors or warnings for both the source fixture and all
+three resulting EPUBs. It also verifies that all input file hashes remain
+unchanged. Prepare the core's Dart dependencies and the reader's Node
+dependencies, then run from this package:
+
+```sh
+(cd ../crisp_ebook && dart pub get)
+(cd ../crisp_ebook_reader && npm ci --ignore-scripts --no-audit --no-fund)
+python3 tool/verify_import_chain.py --epubcheck /path/to/epubcheck-5.4.0/epubcheck.jar
+```
+
+Reports and imported EPUBs are written to ignored `build/import-chain/`.
+`--output` selects another directory. `--dart`, `--node`, and `--java` may
+select explicit toolchains. In an environment without a writable default Java
+temporary directory, supply `--java-temp-dir /writable/temporary/directory`
+so EPUBCheck's ImageIO cache can validate PNG files correctly.
+
 ## Source and licenses
 
 Kindling is MIT. Its exact upstream revision, selected files, and local patch

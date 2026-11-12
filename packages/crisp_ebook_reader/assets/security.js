@@ -29,6 +29,22 @@ export function parseDocument(text, type = 'application/xhtml+xml') {
     return doc
 }
 
+export function serializeDocument(doc) {
+    // HTML parsing treats xmlns as an ordinary attribute, while XMLSerializer
+    // also emits the element's real namespace. Bind those declarations to the
+    // XMLNS namespace first so MOBI's HTML does not become invalid duplicate-
+    // xmlns XHTML. Keep prefixed declarations and SVG namespaces intact.
+    const xmlns = 'http://www.w3.org/2000/xmlns/'
+    for (const el of doc.querySelectorAll('*')) for (const attr of [...el.attributes]) {
+        if (attr.namespaceURI !== xmlns && (attr.name === 'xmlns' || attr.name.startsWith('xmlns:'))) {
+            const {name, value} = attr
+            el.removeAttributeNode(attr)
+            el.setAttributeNS(xmlns, name, value)
+        }
+    }
+    return new XMLSerializer().serializeToString(doc)
+}
+
 export function sanitizeDocument(doc, {csp = true} = {}) {
     for (const node of doc.querySelectorAll('script, iframe, frame, frameset, object, embed, base, foreignObject, animate, animateMotion, animateTransform, set, input, button, textarea, select')) node.remove()
     for (const form of doc.querySelectorAll('form')) form.replaceWith(...form.childNodes)
@@ -80,7 +96,7 @@ export function safeResourceTransform(book) {
         event.detail.data = Promise.resolve(data).then(async value => {
             const text = value instanceof Blob ? await value.text() : String(value)
             if (/css/i.test(type)) return sanitizeCss(text)
-            return new XMLSerializer().serializeToString(sanitizeDocument(parseDocument(text, type)))
+            return serializeDocument(sanitizeDocument(parseDocument(text, type)))
         })
     })
 }
@@ -97,7 +113,7 @@ export function secureSections(book) {
             if (!String(url).startsWith('blob:')) throw new Error('Book sections must be local blobs')
             const response = await fetch(url)
             const doc = sanitizeDocument(parseDocument(await response.text(), response.headers.get('content-type') || 'text/html'))
-            const safe = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)], {type:'application/xhtml+xml'}))
+            const safe = URL.createObjectURL(new Blob([serializeDocument(doc)], {type:'application/xhtml+xml'}))
             safeUrls.set(index, safe)
             return safe
         }

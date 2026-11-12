@@ -1,4 +1,4 @@
-import { parseDocument, sanitizeDocument, sanitizeCss } from './security.js'
+import { parseDocument, serializeDocument, sanitizeDocument, sanitizeCss } from './security.js'
 import { imageDimensions } from './image_dimensions.js'
 
 const MAX_OUTPUT = 256 * 1024 * 1024
@@ -35,6 +35,35 @@ const inferType = (bytes, declared, hint) => {
     if (bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0) return 'font/ttf'
     if (/<svg[\s>]/i.test(start)) return 'image/svg+xml'
     return hint || 'application/octet-stream'
+}
+
+function normalizeKindleDocument(doc, chapterTitle) {
+    const xhtml = 'http://www.w3.org/1999/xhtml'
+    const root = doc.documentElement
+    if (root?.localName !== 'html') return
+    let head = [...root.children].find(el => el.localName === 'head')
+    if (!head) {
+        head = doc.createElementNS(xhtml, 'head')
+        root.prepend(head)
+    }
+    // These are MOBI/KF8 addressing fields, not EPUB content. All navigation
+    // and resource references have already been rewritten before this runs.
+    for (const el of doc.querySelectorAll('[aid], [filepos], [recindex], [mediarecindex]'))
+        for (const name of ['aid', 'filepos', 'recindex', 'mediarecindex']) el.removeAttribute(name)
+    // A legacy guide can push the original head into the HTML parser's body.
+    // The guide's navigation is represented by the exported TOC; restore only
+    // actual head metadata, leaving prose and SVG accessibility titles alone.
+    for (const guide of doc.querySelectorAll('guide')) guide.remove()
+    for (const el of doc.querySelectorAll('title, meta, style, link')) {
+        if (el.namespaceURI !== xhtml) continue
+        if (el.localName === 'link' && !el.hasAttribute('href')) { el.remove(); continue }
+        if (!head.contains(el)) head.append(el)
+    }
+    if (!head.querySelector('title')) {
+        const title = doc.createElementNS(xhtml, 'title')
+        title.textContent = chapterTitle
+        head.prepend(title)
+    }
 }
 
 /// Convert the parsed publication to one consistent, self-contained archive
@@ -95,6 +124,13 @@ export async function exportPublication(book, {filename, sourceFormat}) {
         return result
     }
     const toc = await mapToc(book.toc)
+    const sectionTitles = new Map()
+    const collectTitles = items => { for (const item of items) {
+        const path = item.href.split('#')[0]
+        if (path && item.label && !sectionTitles.has(path)) sectionTitles.set(path, item.label)
+        collectTitles(item.children)
+    } }
+    collectTitles(toc)
     // Establish anchor IDs before serializing any target chapter.
     for (const [i, doc] of docs.entries()) for (const anchor of doc.querySelectorAll('a[href]')) {
         const raw = anchor.getAttribute('href')
@@ -139,7 +175,7 @@ export async function exportPublication(book, {filename, sourceFormat}) {
         if (mediaType === 'image/svg+xml') {
             const doc = sanitizeDocument(parseDocument(new TextDecoder().decode(bytes), mediaType), {csp:false})
             await rewriteDocumentResources(doc, 'resources/')
-            bytes = new TextEncoder().encode(new XMLSerializer().serializeToString(doc))
+            bytes = new TextEncoder().encode(serializeDocument(doc))
         }
         if (mediaType.startsWith('image/')) {
             const size = await imageDimensions(bytes, mediaType)
@@ -181,6 +217,10 @@ export async function exportPublication(book, {filename, sourceFormat}) {
     } catch { warnings.add('The cover could not be converted.') }
     for (const [i, doc] of docs.entries()) {
         await rewriteDocumentResources(doc, 'chapters/')
+        if (['mobi', 'azw', 'azw3'].includes(sourceFormat)) {
+            normalizeKindleDocument(doc, sectionTitles.get(chapterPaths[i])
+                || doc.querySelector('h1, h2')?.textContent?.trim() || `Chapter ${i + 1}`)
+        }
         if (book.rendition?.layout === 'pre-paginated' && !doc.querySelector('meta[name="viewport"]')) {
             const image = doc.querySelector('img[src]')
             const size = dimensions.get(image?.getAttribute('src')?.replace(/^\.\.\//, ''))
@@ -194,15 +234,8 @@ export async function exportPublication(book, {filename, sourceFormat}) {
                 if (!image.hasAttribute('height')) image.setAttribute('height', size.height)
             } else warnings.add('A fixed-layout page has no viewport; review its size in the converted book.')
         }
-        add(chapterPaths[i], 'application/xhtml+xml', new TextEncoder().encode(new XMLSerializer().serializeToString(doc)))
+        add(chapterPaths[i], 'application/xhtml+xml', new TextEncoder().encode(serializeDocument(doc)))
     }
-    const sectionTitles = new Map()
-    const collectTitles = items => { for (const item of items) {
-        const path = item.href.split('#')[0]
-        if (path && item.label && !sectionTitles.has(path)) sectionTitles.set(path, item.label)
-        collectTitles(item.children)
-    } }
-    collectTitles(toc)
     const readingOrder = chapterPaths.map((href, index) => ({href,
         title: sectionTitles.get(href) || `Chapter ${index + 1}`,
         linear: book.sections[index].linear !== 'no'}))

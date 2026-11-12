@@ -43,17 +43,18 @@ def contents():
 <title>First Chapter</title><link rel="stylesheet" href="style.css"/></head><body>
 <h1 id="first">First Chapter</h1><p>The silver heron visits CrispCloud.</p>
 <p>Unicode: café, Ωμέγα, 日本語.</p><img src="cover.png" alt="Original blue test cover"/>
-<p><a href="chapter2.xhtml#answer">Continue to the answer</a>.</p></body></html>""",
+<p id="answer">The answer is forty-two.</p>
+<p><a href="chapter2.xhtml#second">Continue to the second chapter</a>.</p></body></html>""",
         "OEBPS/chapter2.xhtml": """<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <title>Second Chapter</title><link rel="stylesheet" href="style.css"/></head><body>
-<h1 id="second">Second Chapter</h1><p id="answer">The answer is forty-two.</p>
-<p><a href="chapter1.xhtml#first">Return to the beginning</a>.</p></body></html>""",
+<h1 id="second">Second Chapter</h1>
+<p><a href="chapter1.xhtml#answer">Return to the answer</a>.</p></body></html>""",
         "OEBPS/nav.xhtml": """<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head>
 <title>Contents</title></head><body><nav epub:type="toc" id="toc"><h1>Contents</h1><ol>
 <li><a href="chapter1.xhtml#first">First Chapter</a><ol>
-<li><a href="chapter2.xhtml#answer">The Answer</a></li></ol></li>
+<li><a href="chapter1.xhtml#answer">The Answer</a></li></ol></li>
 <li><a href="chapter2.xhtml#second">Second Chapter</a></li></ol></nav></body></html>""",
         "OEBPS/toc.ncx": """<?xml version="1.0" encoding="UTF-8"?>
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head>
@@ -62,7 +63,7 @@ def contents():
 <meta name="dtb:maxPageNumber" content="0"/></head><docTitle><text>Crisp Conversion Fixture</text></docTitle>
 <navMap><navPoint id="n1" playOrder="1"><navLabel><text>First Chapter</text></navLabel>
 <content src="chapter1.xhtml#first"/><navPoint id="n2" playOrder="2"><navLabel><text>The Answer</text></navLabel>
-<content src="chapter2.xhtml#answer"/></navPoint></navPoint>
+<content src="chapter1.xhtml#answer"/></navPoint></navPoint>
 <navPoint id="n3" playOrder="3"><navLabel><text>Second Chapter</text></navLabel>
 <content src="chapter2.xhtml#second"/></navPoint></navMap></ncx>""",
         "OEBPS/style.css": "body { color: #234; } h1 { font-weight: bold; } p { margin: 0.5em 0; }",

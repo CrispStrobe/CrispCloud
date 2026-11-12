@@ -32,6 +32,14 @@ and only supported offline structures. For an existing EPUB, use `crisp_ebook`
 to preserve and edit its original archive. Do not replace the original EPUB or
 Kindle file with a normalized export implicitly.
 
+Kindle addressing attributes (`aid`, `filepos`, `recindex`, `mediarecindex`)
+are consumed only after links and resources have been resolved. The converted
+copy omits those format-specific fields, moves misplaced legacy head metadata
+back into the XHTML head, and supplies missing chapter titles. Namespace-aware
+serialization preserves EPUB attributes and SVG namespaces without duplicating
+the default XHTML namespace. These are targeted Kindle/serialization changes;
+the importer does not discard unknown attributes through a blanket schema filter.
+
 ## Security boundary
 
 Publication frames allow same-origin DOM inspection but **do not allow scripts**.
@@ -132,3 +140,12 @@ metadata-rewritten AZW3/MOBI verified Unicode, authors/title, images, cross-chap
 links and nested TOC targets. These are conversion/parser checks, not native
 rendering checks. On Apple targets, explicitly exercise text selection and links
 with the script-disabled publication sandbox during the device smoke test.
+
+The conversion package's `tool/verify_import_chain.py` also exercises the actual
+Foliate normalization → `EpubDocument.fromPublication` → save/reopen → EPUBCheck
+pipeline. The source and AZW3, dual-MOBI and legacy-MOBI imported EPUBs passed
+EPUBCheck 5.4.0 with zero errors and warnings. It verifies source hashes and the
+payload hashes of unchanged non-XHTML resources, plus metadata, Unicode, nested
+navigation and cross-chapter links. Its reproducible output is under
+`packages/crisp_ebook_conversion/build/import-chain/`, including
+`verification.json`, the imported EPUBs and separate EPUBCheck JSON reports.

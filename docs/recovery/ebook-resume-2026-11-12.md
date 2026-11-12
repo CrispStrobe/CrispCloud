@@ -25,9 +25,11 @@ validation. No merge to main is requested.
 - Dart/Flutter verification is pending SDK setup. These are implementation
   checkpoints, not a declaration that all platforms have passed validation.
 
-## Work in progress
+## Recovered implementation and verification
 
-Remote checkpoints `cbb31ab` and `ffce45f` preserve the continuation work.
+Remote checkpoints `cbb31ab`, `ffce45f` and `ae25973` preserve the continuation
+work. Draft PR [#53](https://github.com/CrispStrobe/CrispCloud/pull/53) contains
+the feature branch. Keep new edits on this branch and checkpoint them remotely.
 
 Implemented since recovery:
 
@@ -45,6 +47,10 @@ Implemented since recovery:
 - Scoped native loopback transport settings and the bundled SJCL license entry.
 - Editor modal-route close protection, stale preview detection, image-read error
   handling and portable chapter-reader URL/lifecycle fixes.
+- Strict serialization of XML namespace declarations and removal of consumed
+  Kindle addressing attributes after navigation/resource resolution.
+- A complete, portable Kindle-to-editable-EPUB regression gate using actual
+  Foliate parsing, normalization, core import, serialization and reopen.
 
 Verification completed:
 
@@ -53,15 +59,22 @@ Verification completed:
 | EPUB core | 30 tests pass; Dart analyzer clean |
 | Reader Flutter package | 3 tests pass; analyzer clean |
 | Converter Dart/native assets | 17 tests pass; analyzer clean |
+| Focused application regression suite | 76 tests pass across editor, chapter reader, edit session, annotations and existing file services |
+| Focused application analyzer | No issues in the 8 changed app/session/annotation/license and widget-test files |
 | Rust bridge | 4 tests pass; release library/helper build succeeds |
 | Independent Kindle smoke | AZW3/MOBI text, Unicode, metadata, no-op/source preservation, navigation and budgets pass |
 | Independent Foliate parser | EPUB/FB2/CBZ and generated AZW3/dual-MOBI/legacy-MOBI pass; both decompression paths pass |
-| EPUBCheck 5.4.0 | New, relocated-package and edited-copy fixtures: zero errors/warnings |
+| EPUBCheck 5.4.0 | Seven fixtures (new, relocated-package, edited-copy, conversion source and three Kindle imports): zero fatal errors, errors or warnings |
+| Actual Kindle-to-EPUB import chain | AZW3, dual MOBI and legacy MOBI preserve source hashes, metadata, Unicode, nested contents, links and non-XHTML asset hashes |
 | Vendor/license checks | Reader hashes/notices and converter source/license inventory pass |
 
-App-level widget tests are now running after the first application dependency
-installation. The focused CI workflow has been added for package preservation,
-desktop native conversion, browser rendering and the app's actual web build.
+The first application web build was terminated with process exit -9 while
+app tests and analysis were also running; it emitted no Dart diagnostic. An
+isolated release build with the optional Wasm dry run disabled is in progress.
+
+The focused CI workflow covers package preservation, desktop native conversion,
+the complete import chain, browser rendering and the app's actual web build.
+GitHub runs are queued; these local results do not claim remote CI completion.
 Actual Chromium rendering cannot launch in this executor because of its socket
 restriction; the dedicated workflow exercises that path on a GitHub runner.
 

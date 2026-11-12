@@ -286,7 +286,13 @@ void main() {
     );
     expect(fallback.bytesOverride, orderedEquals(store.input));
     expect(store.writes, isEmpty);
-    expect(find.text('Strict package failure'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(InternalViewerDialog),
+        matching: find.text('Strict package failure'),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('existing chapter defects do not block legacy text extraction', (

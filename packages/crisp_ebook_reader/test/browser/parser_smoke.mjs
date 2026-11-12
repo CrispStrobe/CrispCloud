@@ -18,9 +18,15 @@ Object.defineProperty(dom.window.HTMLElement.prototype,'innerText',{
 for (const name of ['document','HTMLElement','customElements','DOMParser','XMLSerializer','Node','NodeFilter','Range','EventTarget','Event','CustomEvent','ProcessingInstruction']) globalThis[name] = dom.window[name]
 globalThis.CSS = {escape:value => String(value).replace(/[^a-z0-9_-]/gi, char => `\\${char}`)}
 const {makeBook} = await import('../../assets/foliate/view.js')
-const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument,sanitizeCss} = await import('../../assets/security.js')
+const {safeResourceTransform,secureSections,sanitizeDocument,parseDocument,serializeDocument,sanitizeCss} = await import('../../assets/security.js')
 const {exportPublication} = await import('../../assets/normalize.js')
 const {imageDimensions} = await import('../../assets/image_dimensions.js')
+const strictXhtml = (text, name = 'XHTML') => {
+    const doc = new DOMParser().parseFromString(text,'application/xhtml+xml')
+    const error = doc.querySelector('parsererror')
+    assert.equal(error,null,`${name}: ${error?.textContent}`)
+    return doc
+}
 const here = dirname(fileURLToPath(import.meta.url))
 const temporary = mkdtempSync(join(here,'.tmp-'))
 const generated = spawnSync('python3',[join(here,'make_fixtures.py'),temporary],{encoding:'utf8'})
@@ -31,6 +37,12 @@ const open = async path => {
     return {book,cleanup:secureSections(book)}
 }
 try {
+    const htmlNamespaces = parseDocument('<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Namespace fixture</title></head><body epub:type="chapter"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><title>Accessible SVG title</title><rect width="10" height="10"/></svg></body></html>','text/html')
+    const namespaced = strictXhtml(serializeDocument(htmlNamespaces),'HTML namespace serialization')
+    assert.equal(namespaced.documentElement.namespaceURI,'http://www.w3.org/1999/xhtml')
+    assert.equal(namespaced.querySelector('body').getAttributeNS('http://www.idpf.org/2007/ops','type'),'chapter')
+    assert.equal(namespaced.querySelector('svg').namespaceURI,'http://www.w3.org/2000/svg')
+    assert.equal(namespaced.querySelector('svg title').textContent,'Accessible SVG title')
     // A truncated JPEG marker run must not abort normalization of the whole
     // book. Keep the resource and let the platform display its broken image.
     assert.equal(await imageDimensions(Uint8Array.from([0xff,0xd8,...Array(14).fill(0xff)]),'image/jpeg'),null)
@@ -54,6 +66,7 @@ try {
                 const text = Buffer.from(resource.data,'base64').toString()
                 assert(!text.includes('blob:'), resource.href)
                 assert(!/<script|onerror=|<iframe/i.test(text),resource.href)
+                if (resource.mediaType === 'application/xhtml+xml') strictXhtml(text,resource.href)
             }
             if (ext === 'epub') {
                 assert.equal(payload.metadata.title,'Crisp reader fixture')
@@ -95,7 +108,16 @@ try {
             assert(payload.readingOrder.length > 0)
             assert(payload.resources.some(item => item.mediaType === 'application/xhtml+xml'))
             for (const resource of payload.resources.filter(item => /xhtml|css/.test(item.mediaType))) {
-                assert(!Buffer.from(resource.data,'base64').toString().includes('blob:'),resource.href)
+                const text = Buffer.from(resource.data,'base64').toString()
+                assert(!text.includes('blob:'),resource.href)
+                if (resource.mediaType === 'application/xhtml+xml') {
+                    const doc = strictXhtml(text,resource.href)
+                    if (/\.(mobi|azw|azw3)$/i.test(path)) {
+                        assert.equal(doc.querySelector('guide, [aid], [filepos], [recindex], [mediarecindex]'),null,'Kindle addressing fields are consumed after link rewriting')
+                        assert(doc.querySelector('head > title'),'Converted Kindle chapters need a document title')
+                        assert.equal(doc.querySelector('body > title, body > link, body > meta, link:not([href])'),null,'Legacy head metadata must not leak into prose')
+                    }
+                }
             }
             if (path.includes('crisp_ebook_conversion/test/fixtures/generated/')) {
                 const rewritten = path.split('/').pop().startsWith('updated.')

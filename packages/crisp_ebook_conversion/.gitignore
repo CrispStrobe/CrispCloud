@@ -1,4 +1,5 @@
 .dart_tool/
+build/
 native/target/
 test/fixtures/generated/
 

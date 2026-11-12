@@ -139,6 +139,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: packages/crisp_ebook_reader/package-lock.json
+      - uses: actions/setup-java@v4
+        if: runner.os == 'Linux'
+        with:
+          distribution: temurin
+          java-version: '21'
       - name: Reader controller, vendor integrity and parser checks
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_reader
@@ -153,6 +158,21 @@ jobs:
           EBOOK_WEB_PROBE_OUTPUT="$(node -e 'globalThis.self = globalThis; require("../crisp_ebook_conversion/build/web-probe/capabilities.js")')"
           printf '%s\n' "$EBOOK_WEB_PROBE_OUTPUT"
           test "$EBOOK_WEB_PROBE_OUTPUT" = 'Browser converter capability: unavailable, as designed.'
+      - name: Validate actual Kindle to EPUB imports independently
+        if: runner.os == 'Linux'
+        working-directory: packages/crisp_ebook_conversion
+        run: |
+          (cd ../crisp_ebook && dart pub get)
+          curl --fail --location --retry 3 \
+            https://github.com/w3c/epubcheck/releases/download/v5.4.0/epubcheck-5.4.0.zip \
+            --output "$RUNNER_TEMP/epubcheck-5.4.0.zip"
+          printf '%s  %s\n' \
+            33350c61038e71dfb3d45a76aed04bf5481e6d5500cb780f6e98db8bbd15a28c \
+            "$RUNNER_TEMP/epubcheck-5.4.0.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/epubcheck-5.4.0.zip" -d "$RUNNER_TEMP/epubcheck"
+          python tool/verify_import_chain.py \
+            --epubcheck "$RUNNER_TEMP/epubcheck/epubcheck-5.4.0/epubcheck.jar" \
+            --java-temp-dir "$RUNNER_TEMP/ebook-java"
       - name: Install actual browser and verify rendering and sandbox behavior
         if: runner.os == 'Linux'
         working-directory: packages/crisp_ebook_reader
@@ -164,7 +184,9 @@ jobs:
         if: always()
         with:
           name: ebook-native-${{ runner.os }}
-          path: packages/crisp_ebook_conversion/test/fixtures/generated/
+          path: |
+            packages/crisp_ebook_conversion/test/fixtures/generated/
+            packages/crisp_ebook_conversion/build/import-chain/
           retention-days: 14
 
   app-integration:
