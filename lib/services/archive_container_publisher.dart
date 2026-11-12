@@ -898,7 +898,15 @@ bool sameArchiveFile(FileItem before, FileItem? after) {
       before.updatedAt != after.updatedAt) {
     return false;
   }
-  for (final key in ['version', 'revision', 'rev', 'etag', 'eTag', 'cTag']) {
+  for (final key in [
+    'version',
+    'versionId',
+    'revision',
+    'rev',
+    'etag',
+    'eTag',
+    'cTag',
+  ]) {
     if (before.metadata?[key] != after.metadata?[key]) return false;
   }
   return true;

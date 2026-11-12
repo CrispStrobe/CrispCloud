@@ -19,6 +19,7 @@ import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:crisp_cloud/services/archive_workspace.dart';
+import 'package:crisp_cloud/services/installation_identity.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/filen_config_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
@@ -108,6 +109,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await InstallationIdentityService.instance.initialize();
     tempDir = await Directory.systemTemp.createTemp('archive_viewer_');
     zipPath = p.join(tempDir.path, 'sample.zip');
 
