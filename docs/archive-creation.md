@@ -80,6 +80,27 @@ Single-file compressors and compressed TAR also cap encoded output at 64 MiB.
 Fresh native ISO/HFSX/DMG creation has a separate streamed 2 GiB image-output
 bound; it does not increase existing-container editing limits. HFSX/DMG are
 data volumes without copied resource forks, extended attributes or symlinks.
+Fresh native uncompressed TAR/CBT creation also has a streamed **2 GiB packed
+output limit**, including headers, extended names, alignment and the trailer.
+It accepts regular files larger than 64 MiB and source totals above 256 MiB
+when the complete output fits. Both captured endpoints must provide bounded
+native-local reads; the destination must also provide bounded, verified staged
+writes. Other TAR compression choices,
+browser/fallback creation and existing TAR editing retain their ordinary limits.
+The format picker displays the larger bound only for eligible TAR/CBT endpoints.
+
+The TAR path streams source reads, temporary output, decoded member checks and
+destination readback. Packing, verification and saving report byte progress;
+verification includes another complete source read, and saving includes staged
+readback and a final source check. These phases deliberately perform more I/O
+than the final archive size. Cancellation is checked between bounded chunks and
+the event loop yields during large loops. TAR has no stored payload checksum;
+creation verifies every member against the captured source SHA-256. Temporary
+output and destination staging require additional disk space. Disk exhaustion,
+source changes and late output collisions must fail without replacing an
+existing destination. The [large TAR verification record](archive-sync-large-tar-verification.md)
+distinguishes actual measured fixtures from the configured upper bound.
+
 Large durable background jobs remain separate work. The current creation entry
 point accepts native local selections. Other archive browsing and editing
 workflows are described in [file operations](commander-file-operations.md).
@@ -99,4 +120,9 @@ checker cover preserved profiles and exact metadata/content readback.
 UNIX compress writer/workflow tests cover physical settings, independent input
 profiles and wrapper preservation; gzip/libarchive readback and actual Node
 execution independently check the produced streams.
+`test/archive_large_tar_creation_test.dart` exercises real native files above
+the former member and aggregate limits, header-inclusive preflight, bounded
+readback, phase progress, cancellation, source mutation and late collisions.
+Its optional reference output is checked by Python's TAR reader and GNU tar
+using `test/support/check_archive_large_tar.py`.
 These tests are evidence only when run against the branch being reviewed.

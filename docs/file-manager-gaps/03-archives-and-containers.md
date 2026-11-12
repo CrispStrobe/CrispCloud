@@ -58,7 +58,7 @@ continues under G50. The implementation and its observed gates are preserved in
 
 ### Directory-to-archive synchronization
 
-**Status:** Scoped. **Dependencies:** G18.
+**Status:** Partially implemented: reviewed native one-way folder-to-archive synchronization; two-way baselines, nested destinations and remote/browser publication remain. **Dependencies:** G18.
 
 **Scope:** Compare and synchronize a directory and a writable archive using reviewed plans.
 
@@ -73,6 +73,29 @@ continues under G50. The implementation and its observed gates are preserved in
 - Verified sync output reopens and matches the selected plan; two-way conflict/deletion semantics have independent fixtures before being enabled.
 
 **Starting points:** Directory comparison/sync engine; G18 archive endpoints.
+
+**Delivered native one-way increment (2026-11-12):** With a native folder in
+one pane and an eligible top-level archive directory in the other, **Compare
+directories** captures both locations and compares logical paths and complete
+file SHA-256 values. Equal, new, changed, archive-only and type-conflict rows are
+explicit. Selected updates form one private atomic draft. Removal requires a
+separate opt-in plus selected archive-only rows; a directory cannot silently
+remove unchecked children. Empty entries are included, destination protection
+is retained, and the complete candidate is decoded and reviewed before saving.
+The source folder is never mutated.
+
+The complete source namespace, captured native metadata and contents are rechecked before
+staging and publication, including unselected/equal entries. Version-3 journal
+records retain this dependency across restart and backup cleanup. Changed source
+evidence blocks finishing and preserves verified restoration when available;
+ordinary workspace Save cannot bypass the synchronization owner. Existing
+64 MiB/member and 256 MiB source/container limits remain. See the
+[endpoint contract](../archive-endpoints.md) and
+[verification record](../archive-sync-large-tar-verification.md).
+
+**Remaining:** Two-way baselines and deletion/conflict semantics, nested archive
+destinations, remote/browser publication and native release acceptance. This
+increment does not close all of G19.
 
 ## G20
 
@@ -136,7 +159,7 @@ increment does not close the broader G20 scope.
 
 ### Large background archive jobs
 
-**Status:** Scoped. **Dependencies:** G18; transfer queue.
+**Status:** Partially implemented: bounded native foreground TAR/CBT and data-image creation; durable queued packing and restart remain. **Dependencies:** G18; transfer queue.
 
 **Scope:** Add worker/streaming packing, durable recovery and bounded validation.
 
@@ -151,6 +174,21 @@ increment does not close the broader G20 scope.
 - Every advertised format reopens with independently verified member hashes and supported encryption/metadata.
 
 **Starting points:** archive_creation_service.dart; archive_workspace.dart; transfer queue and worker infrastructure.
+
+**Delivered streaming foundation (2026-11-12):** Fresh native plain TAR/CBT
+creation uses bounded source/output chunks, a private output spool, complete
+streamed member verification and verified no-overwrite destination staging up
+to 2 GiB including format overhead. Real fixtures exceed both the former
+64 MiB member and 256 MiB aggregate limits. Byte progress, event-loop yields,
+cancellation, source revalidation, late collision and cleanup have dedicated
+tests; independent readers check content and supported metadata. Native
+ISO/HFSX/DMG already have their separate streamed creation profiles. Ordinary
+buffered/compressed formats and existing archive edits retain their bounds.
+
+**Remaining:** Durable queue/job records, worker lifecycle, stop/restart and
+process-interruption recovery for packing, larger existing-container editing,
+and provider/platform acceptance. The measured foreground TAR path is a
+foundation for G21, not a claim that durable background jobs are delivered.
 
 ## G22
 
@@ -188,7 +226,8 @@ verification and verified destination staging; native disk images can exceed
 64 MiB members up to the 2 GiB output bound. Existing HFS/DMG images, signed
 packages and static-library indexes remain read-only. The creator does not
 provide durable background job restart or larger existing-container editing,
-so G21 remains scoped. Remote/browser creation UI (G23) remains scoped.
+so G21 retains the durable-job work described above. Remote/browser creation UI
+(G23) remains scoped.
 
 **Delivered package-reader continuation (2026-11-12):** Portable ASCII/odc CPIO;
 classic RPM v3/v4 newc/CRC payloads with gzip/bzip2/XZ/Zstandard/no compression;

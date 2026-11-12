@@ -143,6 +143,82 @@ can require journal recovery if best-effort restoration cannot complete. After
 a verified destination publication, cancellation/failure is reported as a partial
 outcome with retained source data or recovery evidence.
 
+## Reviewed native folder-to-archive synchronization
+
+Open a native folder in one pane and an eligible top-level archive directory in
+the other, then choose **Compare directories**. The folder supplies its contents
+regardless of which pane holds it. Both locations, navigation generations,
+storage identity and access grants are captured before opening the dialog.
+Native local storage from the same persistent installation is required. Nested
+archives, flat AR, single-payload wrappers, replacement-only package profiles
+and read-only destinations are excluded.
+
+`ArchiveDirectorySyncService.compare` snapshots the complete source tree and
+compares logical relative paths and full SHA-256 values with the archive.
+The rows distinguish equal files/directories, source-only entries, changed
+files, archive-only entries and file/directory type conflicts. Empty directories
+are explicit. Equal bytes are not rewritten merely because metadata differs;
+type conflicts block staging and require a fresh comparison after resolution.
+The initial selection keeps every entry. **Select updates** selects new/changed
+rows; each selected directory is an exact entry, not an implicit recursive
+selection. Archive-only removal requires both a separate opt-in and explicit
+row selection. Selecting an archive-only directory cannot remove any unchecked
+descendant.
+
+`stage` reads selected source files again, revalidates the complete source
+snapshot and calls `ArchiveWorkspace.applyDirectorySync` once. All additions,
+replacements and exact removals are validated against a private map before
+adopting one draft revision. Failed validation leaves the prior draft intact.
+The complete candidate is packed, decoded and verified using the existing
+writer/protection policy before review. Imported content, supported modification
+times and permissions follow the ordinary import profile; destination
+encryption remains authoritative. Ownership, ACLs, extended attributes,
+resource forks and signatures are not imported. Unsupported special entries,
+symlinks, unsafe names, setuid/setgid imports and physical aliases to the
+destination archive are refused. The destination cannot be inside the source.
+
+The source snapshot includes sorted names, file/directory types, native
+size/modification-time/change-time/mode witnesses and all regular-file hashes.
+Ownership, ACLs and extended-attribute values are not inventoried. It checks before/after read witnesses,
+re-lists every visited directory and rechecks all witnesses after traversal.
+The bounds are 64 MiB per file, 256 MiB total file content, 200,000 entries,
+200 levels and 8 MiB of relative-path text. Complete revalidation includes
+equal and unselected entries. Comparison, staging, publication and recovery
+are cancellable; each scan retains bounded read and traversal budgets.
+
+The private synchronization owner and original source-tree dependency remain
+bound to the workspace. Ordinary Save cannot publish this draft or substitute
+a new source dependency. `commit` revalidates the source and requires the exact
+current review, then delegates physical publication to the existing journal.
+Review cancellation writes neither endpoint. The source folder is never
+modified by synchronization or its recovery.
+
+Synchronization publication records use **version 3**, carrying an
+`ArchivePublicationDirectoryDependency`: persistent storage identity, filtered
+root-directory snapshot, complete-tree SHA-256, entry count and byte count.
+The journal contains no source file contents, passwords or grants. Version 1
+has no dependency; version 2 has the archive-move dependency; version 3 has only
+the directory dependency. Mixed, missing, downgraded or unknown combinations
+are refused, including by older apps that cannot understand version 3.
+
+Publication rechecks the whole directory before staging, original backup,
+installation, installed-candidate confirmation, receipt creation and original
+backup cleanup. Restart recovery performs the same scan. Missing, changed,
+aliased or unsupported source evidence blocks finishing and retains recovery
+material. When a verified original backup remains, explicit restoration can
+retain an already installed synchronization candidate at its unused recovery
+path before restoring the original. Foreign replacements are never overwritten.
+An unfinished guarded record blocks another publication at that archive path.
+Recovery displays both the destination archive and source directory.
+
+The two exclusive archive moves still have the temporary original-name absence
+window described below. Source checks observe a complete tree; they cannot
+lock unrelated processes out of both the directory and archive after the final
+observation. This is selected one-way synchronization. Two-way baseline and
+deletion semantics, nested destinations and remote/browser publication remain
+separate requirements. The [verification record](archive-sync-large-tar-verification.md)
+documents native, restart, selection and UI evidence.
+
 ## Grouped moves within one workspace
 
 `ArchiveWorkspace.moveMembers(paths, destinationDirectory, conflict: ...)`
