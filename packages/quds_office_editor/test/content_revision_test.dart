@@ -15,7 +15,7 @@ void main() {
       addTearDown(editor.dispose);
       editor.insertFootnote(text: 'Original');
       final note = editor.document.footnotes.single;
-      editor.commitNoteEdits();
+      editor.commitPendingEdits();
       final captured = editor.contentRevision;
       var commands = 0;
       editor.commands.addListener(() => commands++);
@@ -28,7 +28,7 @@ void main() {
       expect(commands, 0);
 
       // This is the host's save boundary: commit first, then capture revision.
-      editor.commitNoteEdits();
+      editor.commitPendingEdits();
       final savedRevision = editor.contentRevision;
       expect(commands, 1);
       final bytes = await editor.saveBytesAsync();

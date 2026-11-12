@@ -14,6 +14,12 @@ their original snapshots, not the current manifest.
 
 ## Current vendor revision and focused followup
 
+The [12 November consolidation report](office-fidelity-consolidation-20261112.md)
+records the exact source pin, combined branch ancestry, fresh acceptance
+results, and pending note/cell/slide save regressions. The manifest remains the
+authority for committed source bytes; measurements in the sections below retain
+their original snapshot scope.
+
 ## Host expansion on 2026-11-12
 
 The [host paragraph/style/reference/layout audit](office-host-fidelity-20261112.md)

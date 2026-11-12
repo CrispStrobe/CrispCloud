@@ -1,5 +1,10 @@
 # Host paragraph, style, reference and page-layout fidelity
 
+The [consolidation report](office-fidelity-consolidation-20261112.md) records the
+current vendor checkpoint and combined acceptance evidence, including pending
+Word, Sheet, and Slide edits during uploads. This report retains the earlier
+host expansion and its original measurements.
+
 The app imports the vendored Quds packages through `pubspec.yaml` path
 overrides. The authoritative source revision is
 [`tool/office_fidelity_manifest.json`](../tool/office_fidelity_manifest.json).

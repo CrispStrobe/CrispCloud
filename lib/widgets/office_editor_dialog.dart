@@ -274,10 +274,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       // Serialization captures this document revision. Editing remains enabled
       // while encoding/uploading, so completing this write cannot clean a newer
       // revision or dismiss it through Save and Close.
-      // Notes are visible before their undo command is committed. Commit the
-      // current edit before capturing the controller's content revision, which
-      // also advances for new note typing while this upload is in flight.
-      if (controller is WordEditorController) controller.commitNoteEdits();
+      // Inline notes, cells, and slide text can be visible before their undo
+      // command is committed. Flush them before recording the saved revision.
+      controller.commitPendingEdits();
       final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
       final target = _target;
@@ -322,7 +321,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   Future<void> _close() async {
     if (_saving) return;
-    if (!_dirty) {
+    // Pending inline drafts participate in the controller's dirty state. Keep
+    // them pending until Save so Cancel and Discard also work for invalid input.
+    if (!(_controller?.isDirty ?? _dirty)) {
       Navigator.of(context).pop();
       return;
     }

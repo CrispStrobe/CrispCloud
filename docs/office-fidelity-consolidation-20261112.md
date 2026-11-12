@@ -6,8 +6,8 @@ the newer Office coverage branch at
 `86338bdab58f46eeb68bb24d0916690874dfdca5`.
 
 The corresponding source history combines current suite `main` and the newer
-native fidelity work. The app now pins **308 shared source files** to
-`6a9d858312dffe4a408df6844aed1639348a37f7`. The guarded synchronization verified
+native fidelity work. The app now pins **309 shared source files** to
+`256402fc7d15029e78981a59dfd94a32565d00c4`. The guarded synchronization verified
 the previous vendor baseline, copied committed source bytes, and checked every
 pinned hash against the consolidated suite.
 
@@ -17,16 +17,25 @@ The app retains the newer paragraph/margin precision controls, styles, native
 note marker preservation, note pane, localized Footnote/Endnote ribbon commands,
 and actual heading/paragraph/note/image upload workflows from both branches.
 
-The save guard now uses the controller's monotonic content revision. Typing in
-the notes pane changes the model before it becomes an undo command; a counter
-based only on command notifications missed that interval. A save captures the
-revision after committing existing pending note edits. An older upload can
-clear dirty state or close the editor only if that revision still matches.
+The save guard uses the controller's monotonic content revision. Typing in the
+Word notes pane or a Sheet/Slide inline editor can precede an undo command; a
+counter based only on command notifications missed that interval. Save commits
+all active drafts before capturing the revision. An older upload can clear dirty
+state or close the editor only if that revision still matches.
 
-Two real widget regressions pause an upload, type into the notes pane, verify
-that no command notification has yet occurred, then release the upload. Both
-Save and Save and Close must preserve the newer dirty edit. The next upload
-must contain its exact note text before clearing state or closing.
+The Close prompt reads current controller dirty state without committing a
+draft, so invalid cell input can still be cancelled or discarded. Save reports
+validation errors while preserving the input. No-op edits and caret/focus
+changes stay clean; cancelling a draft preserves unrelated committed edits.
+
+Six actual widget regressions cover Save and Save and Close for Word notes,
+spreadsheet cells, and slide text. They pause an upload, type a newer value,
+verify that no new command notification has yet occurred, then release the older
+upload. The newer edit must remain dirty and open. The next successful upload
+must contain the new text before clearing state or closing. The Sheet/Slide
+cases also exercise real F2/IME input, cancellation, unchanged edits, failed
+uploads, and retries. Expected DOCX/XLSX/PPTX contents are inspected directly
+from their ZIP/XML parts without using the engine deserializer as the oracle.
 
 The shared source also retains both branches' bookmark/content-control/note
 regressions, image-cache disposal, richer native editing/history, native note
@@ -38,8 +47,9 @@ for the merge decisions and bounded support claims.
 ## Acceptance requirements
 
 The merged engine inventory requires **241 Office packages**. The app's own
-inventory requires **48 captured DOCX files**, including old/new uploads from
-both pending-note scenarios. The gate verifies the vendor pin, runs the shared
+inventory requires **56 captured Office packages**, including old/new uploads from
+both pending-note scenarios and eight XLSX/PPTX files from pending-cell and
+pending-slide scenarios. The gate verifies the vendor pin, runs the shared
 scripted corpus and independent controls, executes the full declared Office
 host test set with fresh coverage, and rejects missing or unexpected artifacts.
 

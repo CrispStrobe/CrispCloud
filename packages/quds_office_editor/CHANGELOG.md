@@ -4,6 +4,12 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Commit active Word, Sheet and Slide drafts through `commitPendingEdits()`
+  and both save APIs. Cell and slide text changes advance the content revision
+  immediately, including edits during an asynchronous save; focus, caret and
+  unchanged text stay clean. Cancel restores the draft without clearing other
+  unsaved changes, and committed drafts remain undoable.
+
 - Expose a content revision that advances immediately for pending note-pane
   edits as well as commands and history. Saves commit pending note edits before
   encoding so hosts can guard asynchronous completion against a later edit.

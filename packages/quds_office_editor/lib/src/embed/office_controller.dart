@@ -92,12 +92,17 @@ abstract class OfficeController extends ChangeNotifier {
   OfficeTheme get theme => _config.theme;
 
   /// isDirty API.
-  bool get isDirty => _dirty;
+  bool get isDirty => _dirty || _hasPendingEdits;
+
+  // Drafts contribute to dirty state without replacing the state of unrelated
+  // committed commands. Discarding a draft therefore cannot clear those edits.
+  bool get _hasPendingEdits => false;
 
   /// Monotonic revision for controller-observed document changes. Hosts can
   /// capture this after committing pending edits and compare it after an
   /// asynchronous save. Caret, viewport and layout notifications do not advance
-  /// it; immediate note-pane edits do, before their undo command is committed.
+  /// it; changed note, cell and slide text drafts do, before their undo command
+  /// is committed. Discarding a changed draft advances it as well.
   int get contentRevision => _contentRevision;
 
   /// canUndo API.
@@ -176,6 +181,13 @@ abstract class OfficeController extends ChangeNotifier {
   /// Relayout / refresh after undo/redo.
   void afterHistoryChange() {}
 
+  /// Applies active editor drafts and records their undo commands.
+  ///
+  /// Hosts should call this before capturing [contentRevision] for a save.
+  /// [isDirty] already includes changed drafts, so a close prompt can inspect it
+  /// without committing. Both byte-saving APIs also commit drafts.
+  void commitPendingEdits() {}
+
   /// saveBytes API.
   Uint8List saveBytes({String? password});
 
@@ -184,6 +196,7 @@ abstract class OfficeController extends ChangeNotifier {
   /// Unlike [saveBytes], this does not mark the controller clean — the host
   /// should call [markClean] after the bytes are written to disk.
   Future<Uint8List> saveBytesAsync({String? password}) async {
+    commitPendingEdits();
     return saveBytes(password: password);
   }
 
@@ -841,9 +854,12 @@ class WordEditorController extends OfficeController {
   }
 
   @override
+  void commitPendingEdits() => commitNoteEdits();
+
+  @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
-    commitNoteEdits();
+    commitPendingEdits();
     final Uint8List bytes = WordSerializer().writeBytes(
       document,
       password: password,
@@ -855,7 +871,7 @@ class WordEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
-    commitNoteEdits();
+    commitPendingEdits();
     return OfficeIsolateSave.word(document, password: password);
   }
 
@@ -7260,6 +7276,20 @@ class SheetEditorController extends OfficeController {
   /// cellEditor API.
   late final InlineCellEditor cellEditor;
 
+  SmlWorksheet? _cellEditSheet;
+  SmlCell? _cellEditCell;
+  String? _cellTextBeforeEdit;
+  String? _cellTextLastObserved;
+
+  @override
+  bool get _hasPendingEdits =>
+      cellEditor.editing &&
+      _cellTextBeforeEdit != null &&
+      cellEditor.formulaBar != _cellTextBeforeEdit;
+
+  @override
+  bool get canUndo => super.canUndo || _hasPendingEdits;
+
   /// selectedDrawingIndex API.
   int? selectedDrawingIndex;
   var _applyingPoint = false;
@@ -7437,6 +7467,7 @@ class SheetEditorController extends OfficeController {
   }
 
   void _acceptOpenedWorkbook(SmlWorkbook opened, {required bool recalculate}) {
+    cancelCellEdit();
     workbook = opened;
     _activeSheet = 0;
     selectedDrawingIndex = null;
@@ -7456,8 +7487,46 @@ class SheetEditorController extends OfficeController {
   }
 
   @override
+  void undo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitCellEdit();
+    super.undo();
+  }
+
+  @override
+  void redo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitCellEdit();
+    super.redo();
+  }
+
+  @override
+  void commitPendingEdits() {
+    if (_hasPendingEdits) {
+      final SmlWorksheet target = _cellEditSheet ?? sheet;
+      final SmlCell cell = _cellEditCell ?? target.cell(activeCell);
+      lastValidationError = _cellInputError(
+        target,
+        cell,
+        cellEditor.formulaBar,
+      );
+      if (lastValidationError != null) {
+        // Retain the visible draft if a save cannot apply it to the workbook.
+        notifyListeners();
+        throw StateError(lastValidationError!);
+      }
+    }
+    commitCellEdit();
+  }
+
+  @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
+    commitPendingEdits();
     final Uint8List bytes = SheetSerializer().writeBytes(
       workbook,
       password: password,
@@ -7469,11 +7538,13 @@ class SheetEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
+    commitPendingEdits();
     return OfficeIsolateSave.workbook(workbook, password: password);
   }
 
   /// setActiveSheet API.
   void setActiveSheet(int index) {
+    commitCellEdit();
     _activeSheet = index.clamp(0, workbook.sheets.length - 1);
     selectedDrawingIndex = null;
     selection.selectCell(const SmlCellRef(0, 0));
@@ -8497,20 +8568,11 @@ class SheetEditorController extends OfficeController {
   }
 
   void _replaceCellEditorSelection(String insert) {
-    final String text = cellEditor.formulaBar;
-    final int start = cellEditor.selectionStart;
-    final int end = cellEditor.selectionEnd;
-    final String next = text.replaceRange(start, end, insert);
-    cellEditor.formulaBar = next;
-    cellEditor.caretIndex = start + insert.length;
-    cellEditor.selectionBase = cellEditor.caretIndex;
-    cellEditor.bridge.setValue(
-      TextEditingValue(
-        text: next,
-        selection: TextSelection.collapsed(offset: cellEditor.caretIndex),
-      ),
+    cellEditor.replaceRange(
+      cellEditor.selectionStart,
+      cellEditor.selectionEnd,
+      insert,
     );
-    notifyListeners();
   }
 
   void _pasteSheetCells(
@@ -8712,6 +8774,7 @@ class SheetEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
+    commitCellEdit();
     final SmlCell lockedCell = sheet.cell(activeCell);
     if (sheet.protection?.enabled == true && lockedCell.locked) {
       lastValidationError = 'The sheet is protected.';
@@ -8725,8 +8788,11 @@ class SheetEditorController extends OfficeController {
     selectedDrawingIndex = null;
     _clearPoint();
     final SmlCell cell = sheet.cell(activeCell);
-    final String seed =
-        initial ?? (replace ? '' : (cell.formula ?? cell.asString));
+    _cellEditSheet = sheet;
+    _cellEditCell = cell;
+    _cellTextBeforeEdit = cell.formula ?? cell.asString;
+    _cellTextLastObserved = _cellTextBeforeEdit;
+    final String seed = initial ?? (replace ? '' : _cellTextBeforeEdit!);
     cellEditor.begin(seed, caret: caret);
     _refreshFunctionSuggestions();
     notifyListeners();
@@ -8764,6 +8830,10 @@ class SheetEditorController extends OfficeController {
   }
 
   void _onCellEditorChanged() {
+    if (cellEditor.editing && _cellTextLastObserved != cellEditor.formulaBar) {
+      _cellTextLastObserved = cellEditor.formulaBar;
+      _contentRevision++;
+    }
     if (!_applyingPoint) {
       _clearPoint();
       _suppressFunctionSuggestions = false;
@@ -8938,10 +9008,14 @@ class SheetEditorController extends OfficeController {
     if (!cellEditor.editing) {
       return;
     }
+    if (_hasPendingEdits) {
+      _contentRevision++;
+    }
     _clearPoint();
     functionSuggestions = const <FormulaFnDoc>[];
     cellEditor.editing = false;
     cellEditor.bridge.detach();
+    _clearCellEditTracking();
     notifyListeners();
   }
 
@@ -8954,13 +9028,31 @@ class SheetEditorController extends OfficeController {
   }
 
   void _commitFormula(String text) {
-    final SmlCell cell = sheet.cell(activeCell);
+    final SmlWorksheet target = _cellEditSheet ?? sheet;
+    final SmlCell cell = _cellEditCell ?? target.cell(activeCell);
+    final bool discardedDraft =
+        _cellTextBeforeEdit != null && text != _cellTextBeforeEdit;
+    _clearCellEditTracking();
+    if (text == (cell.formula ?? cell.asString)) {
+      lastValidationError = null;
+      notifyListeners();
+      return;
+    }
+    lastValidationError = _cellInputError(target, cell, text);
+    if (lastValidationError != null) {
+      if (discardedDraft) {
+        _contentRevision++;
+      }
+      notifyListeners();
+      return;
+    }
     final Object? prevValue = cell.value;
     final String? prevFormula = cell.formula;
     final SmlCellType prevType = cell.type;
     commands.commit(
       _CallbackCommand(
-        executeFn: () => _applyCellText(cell, text),
+        executeFn: () =>
+            FormulaEvaluator.applyInput(workbook, target, cell, text),
         undoFn: () {
           cell.value = prevValue;
           cell.formula = prevFormula;
@@ -8972,12 +9064,22 @@ class SheetEditorController extends OfficeController {
     notifyListeners();
   }
 
-  void _applyCellText(SmlCell cell, String text) {
-    if (sheet.protection != null && sheet.protection!.enabled && cell.locked) {
-      lastValidationError = 'The sheet is protected.';
-      return;
+  void _clearCellEditTracking() {
+    _cellEditSheet = null;
+    _cellEditCell = null;
+    _cellTextBeforeEdit = null;
+    _cellTextLastObserved = null;
+  }
+
+  String? _cellInputError(SmlWorksheet target, SmlCell cell, String text) {
+    if (target.protection?.enabled == true && cell.locked) {
+      return 'The sheet is protected.';
     }
-    lastValidationError = SmlAnalysis.validateInput(sheet, cell.ref, text);
+    return SmlAnalysis.validateInput(target, cell.ref, text);
+  }
+
+  void _applyCellText(SmlCell cell, String text) {
+    lastValidationError = _cellInputError(sheet, cell, text);
     if (lastValidationError != null) {
       return;
     }
@@ -9381,6 +9483,17 @@ class SlideEditorController extends OfficeController {
   int? _selectedAnimationIndex;
   PmlSlideShow? _show;
   String? _textBeforeEdit;
+  PmlShape? _textEditShape;
+  PmlTableCell? _textEditCell;
+
+  @override
+  bool get _hasPendingEdits =>
+      textEditor.editing &&
+      _textBeforeEdit != null &&
+      textEditor.formulaBar != _textBeforeEdit;
+
+  @override
+  bool get canUndo => super.canUndo || _hasPendingEdits;
 
   /// textEditor API.
   late final InlineCellEditor textEditor = InlineCellEditor(
@@ -9445,8 +9558,30 @@ class SlideEditorController extends OfficeController {
   }
 
   @override
+  void commitPendingEdits() => commitTextEdit();
+
+  @override
+  void undo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitTextEdit();
+    super.undo();
+  }
+
+  @override
+  void redo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitTextEdit();
+    super.redo();
+  }
+
+  @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
+    commitPendingEdits();
     final Uint8List bytes = SlideSerializer().writeBytes(
       presentation,
       password: password,
@@ -9458,6 +9593,7 @@ class SlideEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
+    commitPendingEdits();
     return OfficeIsolateSave.presentation(presentation, password: password);
   }
 
@@ -10060,7 +10196,10 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsSelection) {
       return;
     }
-    if (textEditor.editing && !identical(selected, shape)) {
+    if (textEditor.editing &&
+        (!identical(selected, shape) ||
+            selectedTableRow != row ||
+            selectedTableCol != col)) {
       commitTextEdit();
     }
     selectShape(shape);
@@ -10297,21 +10436,22 @@ class SlideEditorController extends OfficeController {
     if (shape == null || shape.visual != null || !config.allowsMutation) {
       return;
     }
+    commitTextEdit();
+    _textEditShape = shape;
     if (shape.table != null) {
       final PmlTableCell cell = shape.table!.cellAt(
         selectedTableRow,
         selectedTableCol,
       );
+      _textEditCell = cell;
       _textBeforeEdit = cell.text;
       final String seed = initial ?? (replace ? '' : cell.text);
-      cell.text = seed;
       textEditor.begin(seed, caret: caret, multiline: true);
       notifyListeners();
       return;
     }
     _textBeforeEdit = shape.text;
     final String seed = initial ?? (replace ? '' : shape.text);
-    shape.text = seed;
     textEditor.begin(seed, caret: caret, multiline: true);
     notifyListeners();
   }
@@ -10432,23 +10572,11 @@ class SlideEditorController extends OfficeController {
   }
 
   void _replaceSlideEditorSelection(String insert) {
-    final String text = textEditor.formulaBar;
-    final int start = textEditor.selectionStart;
-    final int end = textEditor.selectionEnd;
-    final String next = text.replaceRange(start, end, insert);
-    textEditor.formulaBar = next;
-    textEditor.caretIndex = start + insert.length;
-    textEditor.selectionBase = textEditor.caretIndex;
-    if (selected != null) {
-      selected!.text = next;
-    }
-    textEditor.bridge.setValue(
-      TextEditingValue(
-        text: next,
-        selection: TextSelection.collapsed(offset: textEditor.caretIndex),
-      ),
+    textEditor.replaceRange(
+      textEditor.selectionStart,
+      textEditor.selectionEnd,
+      insert,
     );
-    notifyListeners();
   }
 
   void _pasteSlideShape(PmlShape source) {
@@ -10560,9 +10688,18 @@ class SlideEditorController extends OfficeController {
     if (!textEditor.editing) {
       return;
     }
-    final PmlShape? shape = selected;
-    if (shape != null && _textBeforeEdit != null) {
-      shape.text = _textBeforeEdit!;
+    final PmlShape? shape = _textEditShape;
+    final PmlTableCell? cell = _textEditCell;
+    final String? before = _textBeforeEdit;
+    if (shape != null && before != null) {
+      if (_hasPendingEdits || (cell?.text ?? shape.text) != before) {
+        _contentRevision++;
+      }
+      if (cell != null) {
+        cell.text = before;
+      } else {
+        shape.text = before;
+      }
     }
     _cancelTextEditSilent();
     notifyListeners();
@@ -10664,31 +10801,32 @@ class SlideEditorController extends OfficeController {
   }
 
   void _onShapeTextChanged() {
-    final PmlShape? shape = selected;
+    final PmlShape? shape = _textEditShape;
     if (shape != null && textEditor.editing) {
-      if (shape.table != null) {
-        shape.table!.cellAt(selectedTableRow, selectedTableCol).text =
-            textEditor.formulaBar;
-      } else {
-        shape.text = textEditor.formulaBar;
+      final PmlTableCell? cell = _textEditCell;
+      final String text = textEditor.formulaBar;
+      if ((cell?.text ?? shape.text) != text) {
+        if (cell != null) {
+          cell.text = text;
+        } else {
+          shape.text = text;
+        }
+        _contentRevision++;
       }
     }
     notifyListeners();
   }
 
   void _commitShapeText(String text) {
-    final PmlShape? shape = selected;
+    final PmlShape? shape = _textEditShape;
+    final PmlTableCell? cell = _textEditCell;
     final String prev = _textBeforeEdit ?? text;
-    _textBeforeEdit = null;
+    _clearShapeTextTracking();
     textEditor.editing = false;
     if (shape == null) {
       return;
     }
-    if (shape.table != null) {
-      final PmlTableCell cell = shape.table!.cellAt(
-        selectedTableRow,
-        selectedTableCol,
-      );
+    if (cell != null) {
       cell.text = text;
       if (prev == text) {
         notifyListeners();
@@ -10722,7 +10860,13 @@ class SlideEditorController extends OfficeController {
       textEditor.editing = false;
       textEditor.bridge.detach();
     }
+    _clearShapeTextTracking();
+  }
+
+  void _clearShapeTextTracking() {
     _textBeforeEdit = null;
+    _textEditShape = null;
+    _textEditCell = null;
   }
 
   /// nudgeSelected API.

@@ -4,12 +4,21 @@ import argparse
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
+from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = Path(__file__).with_suffix('.json')
 REPORT = 'build/fidelity-host/inventory.json'
 OFFICE = {'.docx', '.xlsx', '.pptx'}
+MAIN_PARTS = {
+    '.docx': ('word/document.xml',
+              '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}document'),
+    '.xlsx': ('xl/workbook.xml',
+              '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}workbook'),
+    '.pptx': ('ppt/presentation.xml',
+              '{http://schemas.openxmlformats.org/presentationml/2006/main}presentation'),
+}
 
 
 def expected_paths():
@@ -18,7 +27,7 @@ def expected_paths():
         raise ValueError('Host evidence manifest must be nonempty and unique')
     for name in paths:
         path = PurePosixPath(name)
-        if path.is_absolute() or '..' in path.parts or path.suffix != '.docx':
+        if path.is_absolute() or '..' in path.parts or path.suffix not in OFFICE:
             raise ValueError(f'Invalid host evidence path: {name}')
     return paths
 
@@ -64,15 +73,19 @@ def inspect(root):
             failures.append(f'{name}: file escapes the evidence directory')
             continue
         used_bases.add(file.parents[len(PurePosixPath(name).parts) - 1])
+        extension = PurePosixPath(name).suffix
         try:
             with ZipFile(file) as archive:
-                if 'word/document.xml' not in archive.namelist():
-                    raise ValueError('missing Word main part')
+                main_part, root_tag = MAIN_PARTS[extension]
+                if main_part not in archive.namelist():
+                    raise ValueError(f'missing main part {main_part}')
+                if ElementTree.fromstring(archive.read(main_part)).tag != root_tag:
+                    raise ValueError(f'wrong document root in {main_part}')
                 if archive.testzip() is not None:
                     raise ValueError('damaged ZIP entry')
             content = file.read_bytes()
-        except (BadZipFile, OSError, ValueError) as error:
-            failures.append(f'{name}: invalid DOCX: {error}')
+        except (BadZipFile, OSError, ValueError, ElementTree.ParseError) as error:
+            failures.append(f'{name}: invalid {extension[1:].upper()}: {error}')
             continue
         files.append({
             'path': name,
