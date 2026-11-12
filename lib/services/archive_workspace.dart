@@ -85,6 +85,15 @@ class ArchiveWorkspace {
         ArchiveContainerPublisher.unsupportedReason(outermost.source) == null;
   }
 
+  /// Whether this workspace permits moving members between its directories.
+  /// Flat AR archives and replacement-only payload/package profiles have no
+  /// supported destination for this operation.
+  bool get canMoveMembers =>
+      canUpdate &&
+      !_policy.singlePayload &&
+      _policy.packageKind != 'deb' &&
+      _policy.format != ArchiveEndpointFormat.ar;
+
   String get updateSupport => _parentWorkspace?._policy.packageKind == 'deb'
       ? 'Debian payloads require an external package build workflow. Replace the prepared control and data archives together in the outer package.'
       : _parentWorkspace?.canUpdate == false
@@ -645,6 +654,166 @@ class ArchiveWorkspace {
       );
     }
     _publish(updated);
+  }
+
+  /// Stages one atomic move of selected roots within this workspace. The
+  /// complete batch is checked before changing the draft. Existing folders
+  /// never merge or replace each other, and a skipped root keeps its full tree.
+  /// Original member identities retain inspected metadata and source ordering;
+  /// physical storage changes only after the normal review and save workflow.
+  ///
+  /// Roots are processed in canonical path order, making Keep both names
+  /// deterministic even when selections contain identical basenames.
+  ArchiveMemberMoveResult moveMembers(
+    List<String> paths,
+    String destinationDirectory, {
+    ArchiveMemberMoveConflict conflict = ArchiveMemberMoveConflict.fail,
+  }) {
+    _check(writing: true);
+    if (!canMoveMembers) {
+      throw UnsupportedError(
+        'This archive profile does not support moving members between folders.',
+      );
+    }
+    ArchiveWorkspace? level = this;
+    while (level != null) {
+      if (level._saving || level._pendingPublication != null) {
+        throw StateError(
+          'Finish or recover the current archive publication before changing its draft.',
+        );
+      }
+      level = level._parentWorkspace;
+    }
+    if (paths.isEmpty || paths.length > 200000) {
+      throw const ArchiveViewException(
+        'Select between 1 and 200,000 archive members to move.',
+      );
+    }
+    String canonical(String path) =>
+        ArchiveService.safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
+    final directory = destinationDirectory == '/'
+        ? ''
+        : canonical(destinationDirectory);
+    final names = _entries.keys.toList()..sort();
+    bool hasDescendants(String name) {
+      final prefix = '$name/';
+      var low = 0;
+      var high = names.length;
+      while (low < high) {
+        final middle = (low + high) ~/ 2;
+        if (names[middle].compareTo(prefix) < 0) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+      return low < names.length && names[low].startsWith(prefix);
+    }
+
+    bool occupied(String name) =>
+        _entries.containsKey(name) || hasDescendants(name);
+    if (directory.isNotEmpty &&
+        (_entries[directory]?.isFolder == false || !occupied(directory))) {
+      throw StateError('Choose an existing archive directory.');
+    }
+    final selected = <String>{};
+    for (final path in paths) {
+      final name = canonical(path);
+      if (!occupied(name)) {
+        throw StateError('Archive member no longer exists: $name');
+      }
+      selected.add(name);
+    }
+    final roots = selected.where((name) {
+      var parent = p.posix.dirname(name);
+      while (parent != '.') {
+        if (selected.contains(parent)) return false;
+        parent = p.posix.dirname(parent);
+      }
+      return true;
+    }).toList()..sort();
+    for (final root in roots) {
+      if (directory == root || directory.startsWith('$root/')) {
+        throw StateError('A directory cannot be moved into itself.');
+      }
+    }
+
+    final moves = <String, String>{};
+    final skipped = <String>[];
+    final unchanged = <String>[];
+    final reserved = <String>{};
+    final nextSuffix = <String, int>{};
+    for (final root in roots) {
+      final basename = p.posix.basename(root);
+      final target = directory.isEmpty ? basename : '$directory/$basename';
+      if (target == root) {
+        unchanged.add('/$root');
+        continue;
+      }
+      var destination = target;
+      if (occupied(destination) || reserved.contains(destination)) {
+        switch (conflict) {
+          case ArchiveMemberMoveConflict.fail:
+            throw StateError('Archive member exists: $destination');
+          case ArchiveMemberMoveConflict.skip:
+            skipped.add('/$root');
+            continue;
+          case ArchiveMemberMoveConflict.keepBoth:
+            final isFolder = _entries[root]?.isFolder ?? true;
+            final extension = isFolder ? '' : p.posix.extension(basename);
+            final stem = basename.substring(
+              0,
+              basename.length - extension.length,
+            );
+            var suffix = nextSuffix[target] ?? 2;
+            do {
+              final name = '$stem ($suffix)$extension';
+              destination = directory.isEmpty ? name : '$directory/$name';
+              suffix++;
+            } while (occupied(destination) || reserved.contains(destination));
+            nextSuffix[target] = suffix;
+        }
+      }
+      reserved.add(destination);
+      moves[root] = destination;
+    }
+
+    if (moves.isNotEmpty) {
+      final updated = <String, _ArchiveEntry>{};
+      for (final entry in _entries.entries) {
+        var root = entry.key;
+        String? target;
+        while (root != '.') {
+          target = moves[root];
+          if (target != null) break;
+          root = p.posix.dirname(root);
+        }
+        final name = target == null
+            ? entry.key
+            : '$target${entry.key.substring(root.length)}';
+        if (updated.containsKey(name)) {
+          throw StateError(
+            'Several archive members target the same path: $name',
+          );
+        }
+        updated[name] = target == null
+            ? entry.value
+            : _ArchiveEntry(
+                name,
+                entry.value.isFolder,
+                member: entry.value.member,
+                bytes: entry.value.bytes,
+                modified: entry.value.modified,
+                mode: entry.value.mode,
+              );
+      }
+      _publish(updated);
+    }
+    return ArchiveMemberMoveResult._(
+      {for (final move in moves.entries) '/${move.key}': '/${move.value}'},
+      skipped,
+      unchanged,
+    );
   }
 
   Future<void> addFiles(
@@ -1212,6 +1381,24 @@ enum ArchiveWorkspaceChangeKind {
   rename,
   remove,
   createDirectory,
+}
+
+enum ArchiveMemberMoveConflict { fail, keepBoth, skip }
+
+/// Canonical archive-absolute roots affected by one grouped move. Descendants
+/// of selected roots are included by that root and are not repeated here.
+class ArchiveMemberMoveResult {
+  ArchiveMemberMoveResult._(
+    Map<String, String> moved,
+    List<String> skipped,
+    List<String> unchanged,
+  ) : moved = Map.unmodifiable(moved),
+      skipped = List.unmodifiable(skipped),
+      unchanged = List.unmodifiable(unchanged);
+
+  final Map<String, String> moved;
+  final List<String> skipped;
+  final List<String> unchanged;
 }
 
 class ArchiveWorkspaceChange {
