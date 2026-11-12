@@ -3,6 +3,11 @@ import 'dart:typed_data';
 /// Maximum bytes read from a single archive member / decompressed container.
 const int kArchiveReadLimit = 64 * 1024 * 1024;
 
+/// Native streamed containers and their total expanded contents. This is an
+/// explicit resource bound, not an allocation size. Buffered previews, browser
+/// codecs, encryption and nested containers keep their separate smaller limits.
+const int kArchiveStreamingLimit = 8 * 1024 * 1024 * 1024;
+
 /// Machine-readable identifiers for app-authored archive messages.
 enum ArchiveMessageCode {
   closed,

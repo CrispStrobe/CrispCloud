@@ -1,5 +1,7 @@
 import 'package:koni_archive/koni_archive.dart' as koni;
 
+import 'archive_types.dart';
+
 import 'archive_output_spool_memory.dart'
     if (dart.library.io) 'archive_output_spool_io.dart'
     as platform;
@@ -27,7 +29,7 @@ abstract class ArchiveOutputSpool {
 }
 
 void validateArchiveSpoolLimit(int limit) {
-  if (limit <= 0 || limit > 2 * 1024 * 1024 * 1024) {
+  if (limit <= 0 || limit > kArchiveStreamingLimit) {
     throw ArgumentError.value(limit, 'maxBytes');
   }
 }

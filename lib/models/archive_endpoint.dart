@@ -316,7 +316,9 @@ class ArchivePublicationRecord {
     }
   }
 
-  static const maximumContainerBytes = 256 * 1024 * 1024;
+  // Journal and recovery validation must accept streamed native containers.
+  // Individual buffered codecs retain their own, much smaller memory limits.
+  static const maximumContainerBytes = 8 * 1024 * 1024 * 1024;
   static final _hash = RegExp(r'^[a-f0-9]{64}$');
   final String id;
   final StorageReference storage;
