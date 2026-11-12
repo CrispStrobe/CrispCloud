@@ -64,10 +64,14 @@ void main() {
     test(
       '$provider: CLI round trip in a scratch folder',
       () async {
+        final totpSecret = _env(
+          'CRISP_LIVE_${provider.toUpperCase()}_TOTP_SECRET',
+        );
         final adapter = createAdapter(provider, {
           'type': provider,
           'email': email,
           'password': password,
+          if (totpSecret != null) 'twoFactorCode': _totp(totpSecret),
         });
         final scratch =
             '/crisp-cli-live-${DateTime.now().toUtc().millisecondsSinceEpoch}';
