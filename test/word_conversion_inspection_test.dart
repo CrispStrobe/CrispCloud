@@ -28,6 +28,7 @@ Map<String, Uint8List> _parts({
   String mainType = _mainType,
   String mainPart = 'word/document.xml',
   String namespace = _w,
+  String relationshipNamespace = _office,
   String? body,
   Map<String, String> overrides = const {},
 }) => {
@@ -47,7 +48,7 @@ Map<String, Uint8List> _parts({
     ),
   ),
   mainPart: _bytes(
-    '<w:document xmlns:w="$namespace" xmlns:r="$_office">'
+    '<w:document xmlns:w="$namespace" xmlns:r="$relationshipNamespace">'
     '<w:body>${body ?? '<w:p><w:r><w:t>Example</w:t></w:r></w:p><w:sectPr/>'}</w:body>'
     '</w:document>',
   ),
@@ -75,10 +76,22 @@ Map<String, Uint8List> _reachableParts({
   String relationshipNamespace = _office,
   String mode = '',
   String? relationshipKind,
+  String? body,
 }) {
   final parts = _parts(
     mainPart: 'content/body/main.xml',
     namespace: namespace,
+    relationshipNamespace: relationshipNamespace,
+    body:
+        body ??
+        '<w:p><w:r>'
+            '<w:footnoteReference w:id="1"/><w:endnoteReference w:id="1"/>'
+            '<w:commentReference w:id="1"/>'
+            '<w:object><w:objectEmbed r:id="object"/></w:object>'
+            '</w:r></w:p><w:sectPr>'
+            '<w:headerReference w:type="default" r:id="header"/>'
+            '<w:footerReference w:type="default" r:id="footer"/>'
+            '</w:sectPr>',
     overrides: {
       for (final kind in _storyKinds)
         'content/shared/$kind.xml': '$_wordPartType.$kind+xml',
@@ -621,6 +634,274 @@ void main() {
       },
     );
 
+    test('unused relationships cannot hide missing document anchors', () async {
+      final result = await _inspect(
+        _reachableParts(body: '<w:p/><w:sectPr/>'),
+        source: _allSourceFeatures,
+      );
+      expect(result.losses, unorderedEquals(_allFeatureLosses));
+      for (final key in [
+        'headers',
+        'footers',
+        'footnotes',
+        'endnotes',
+        'comments',
+        'objects',
+      ]) {
+        expect(result.counts[key], 1, reason: 'inventory $key');
+      }
+    });
+
+    test('header/footer anchors require the matching relationship id', () async {
+      for (final attributes in [
+        'r:id="missing"',
+        'id="header"',
+        'x:id="header" xmlns:x="urn:unrelated"',
+      ]) {
+        final parts = _reachableParts(
+          body:
+              '<w:p/><w:sectPr><w:headerReference w:type="default" $attributes/></w:sectPr>',
+        );
+        expect(
+          (await _inspect(
+            parts,
+            source: const LegacyWordSourceInspection(hasHeaders: true),
+          )).losses,
+          [WordConversionLoss.headersMissing],
+          reason: attributes,
+        );
+      }
+    });
+
+    test(
+      'prior section properties do not supply current header anchors',
+      () async {
+        final parts = _reachableParts(
+          body:
+              '<w:p/><w:sectPr><w:sectPrChange w:id="0" w:author="A">'
+              '<w:sectPr><w:headerReference w:type="default" r:id="header"/>'
+              '<w:footerReference w:type="default" r:id="footer"/>'
+              '</w:sectPr></w:sectPrChange></w:sectPr>',
+        );
+        expect(
+          (await _inspect(
+            parts,
+            source: const LegacyWordSourceInspection(hasHeaders: true),
+          )).losses,
+          [WordConversionLoss.headersMissing],
+        );
+      },
+    );
+
+    test('notes and comments require matching namespaced decimal ids', () async {
+      for (final attributes in [
+        'w:id="2"',
+        'w:id="0x1"',
+        'id="1"',
+        'x:id="1" xmlns:x="urn:unrelated"',
+      ]) {
+        final parts = _reachableParts(
+          body:
+              '<w:p><w:r><w:footnoteReference $attributes/>'
+              '<w:endnoteReference $attributes/><w:commentReference $attributes/>'
+              '</w:r></w:p><w:sectPr/>',
+        );
+        expect(
+          (await _inspect(
+            parts,
+            source: const LegacyWordSourceInspection(
+              hasFootnotes: true,
+              hasEndnotes: true,
+              hasComments: true,
+            ),
+          )).losses,
+          unorderedEquals([
+            WordConversionLoss.footnotesMissing,
+            WordConversionLoss.endnotesMissing,
+            WordConversionLoss.commentsMissing,
+          ]),
+          reason: attributes,
+        );
+      }
+      final canonical = _reachableParts(
+        body:
+            '<w:p><w:r><w:footnoteReference w:id="+001"/>'
+            '<w:endnoteReference w:id="01"/><w:commentReference w:id="0001"/>'
+            '</w:r></w:p><w:sectPr/>',
+      );
+      expect(
+        (await _inspect(
+          canonical,
+          source: const LegacyWordSourceInspection(
+            hasFootnotes: true,
+            hasEndnotes: true,
+            hasComments: true,
+          ),
+        )).losses,
+        isEmpty,
+      );
+    });
+
+    test('range markers and lookalike elements do not attach comments', () async {
+      for (final body in [
+        '<w:p><w:commentRangeStart w:id="1"/>'
+            '<w:r><w:t>Text</w:t></w:r><w:commentRangeEnd w:id="1"/></w:p>',
+        '<w:p><w:r><x:commentReference xmlns:x="urn:unrelated" w:id="1"/></w:r></w:p>',
+        '<w:p><w:commentReference w:id="1"/></w:p>',
+      ]) {
+        expect(
+          (await _inspect(
+            _reachableParts(body: body),
+            source: const LegacyWordSourceInspection(hasComments: true),
+          )).losses,
+          [WordConversionLoss.commentsMissing],
+          reason: body,
+        );
+      }
+    });
+
+    test(
+      'ambiguous or foreign definition ids cannot prove attachment',
+      () async {
+        for (final definitions in [
+          '<w:comment w:id="1"><w:p/></w:comment>'
+              '<w:comment w:id="+01"><w:p/></w:comment>',
+          '<w:comment id="1"><w:p/></w:comment>',
+          '<w:comment xmlns:x="urn:unrelated" x:id="1"><w:p/></w:comment>',
+        ]) {
+          final parts = _reachableParts();
+          parts['content/shared/comments.xml'] = _bytes(
+            '<w:comments xmlns:w="$_w">$definitions</w:comments>',
+          );
+          expect(
+            (await _inspect(
+              parts,
+              source: const LegacyWordSourceInspection(hasComments: true),
+            )).losses,
+            [WordConversionLoss.commentsMissing],
+          );
+        }
+      },
+    );
+
+    test('recognizes comment references in Office Math runs', () async {
+      final parts = _reachableParts(
+        body:
+            '<w:p><m:oMath xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">'
+            '<m:r><w:commentReference w:id="1"/></m:r></m:oMath></w:p>',
+      );
+      expect(
+        (await _inspect(
+          parts,
+          source: const LegacyWordSourceInspection(hasComments: true),
+        )).losses,
+        isEmpty,
+      );
+    });
+
+    test('rejects competing document note or comment parts', () async {
+      for (final kind in ['footnotes', 'endnotes', 'comments']) {
+        final parts = _reachableParts();
+        parts['content/shared/other.xml'] = parts['content/shared/$kind.xml']!;
+        parts['[Content_Types].xml'] = _bytes(
+          utf8
+              .decode(parts['[Content_Types].xml']!)
+              .replaceFirst(
+                '</Types>',
+                '<Override PartName="/content/shared/other.xml" '
+                    'ContentType="$_wordPartType.$kind+xml"/></Types>',
+              ),
+        );
+        const rels = 'content/body/_rels/main.xml.rels';
+        parts[rels] = _bytes(
+          utf8
+              .decode(parts[rels]!)
+              .replaceFirst(
+                '</Relationships>',
+                '<Relationship Id="other" Type="$_office/$kind" '
+                    'Target="../shared/other.xml"/></Relationships>',
+              ),
+        );
+        await expectLater(
+          _inspect(parts),
+          _issue(WordConversionInspectionIssue.invalidOutput),
+          reason: kind,
+        );
+      }
+    });
+
+    test('unreferenced notes cannot lend their comments or objects', () async {
+      for (final referencedId in ['1', '2']) {
+        final parts = _reachableParts(
+          body:
+              '<w:p><w:r><w:footnoteReference w:id="$referencedId"/></w:r></w:p>',
+        );
+        parts['content/shared/footnotes.xml'] = _bytes(
+          '<w:footnotes xmlns:w="$_w" xmlns:r="$_office">'
+          '<w:footnote w:id="1"><w:p/></w:footnote>'
+          '<w:footnote w:id="2"><w:p><w:r><w:commentReference w:id="1"/>'
+          '<w:object><w:objectEmbed r:id="object"/></w:object>'
+          '</w:r></w:p></w:footnote></w:footnotes>',
+        );
+        parts['content/shared/_rels/footnotes.xml.rels'] = _bytes(
+          _relationships(
+            '<Relationship Id="object" Type="$_office/oleObject" Target="../embeddings/object.bin"/>',
+          ),
+        );
+        final result = await _inspect(
+          parts,
+          source: const LegacyWordSourceInspection(
+            hasFootnotes: true,
+            hasComments: true,
+            hasObjects: true,
+          ),
+        );
+        expect(
+          result.losses,
+          referencedId == '1'
+              ? unorderedEquals([
+                  WordConversionLoss.objectsMissing,
+                  WordConversionLoss.commentsMissing,
+                ])
+              : isEmpty,
+          reason: 'referenced note $referencedId',
+        );
+      }
+    });
+
+    test('only embedded object markup uses its relationship as evidence', () async {
+      for (final markup in [
+        '<w:drawing r:id="object"/>',
+        '<w:object><w:objectEmbed r:id="missing"/></w:object>',
+        '<w:object><w:objectEmbed id="object"/></w:object>',
+        '<w:object><x:objectEmbed xmlns:x="urn:unrelated" r:id="object"/></w:object>',
+        '<w:object><o:OLEObject xmlns:o="urn:schemas-microsoft-com:office:office" Type="Link" r:id="object"/></w:object>',
+      ]) {
+        final parts = _reachableParts(body: '<w:p><w:r>$markup</w:r></w:p>');
+        expect(
+          (await _inspect(
+            parts,
+            source: const LegacyWordSourceInspection(hasObjects: true),
+          )).losses,
+          [WordConversionLoss.objectsMissing],
+          reason: markup,
+        );
+      }
+      final legacy = _reachableParts(
+        body:
+            '<w:p><w:r><w:object><o:OLEObject '
+            'xmlns:o="urn:schemas-microsoft-com:office:office" '
+            'Type="Embed" r:id="object"/></w:object></w:r></w:p>',
+      );
+      expect(
+        (await _inspect(
+          legacy,
+          source: const LegacyWordSourceInspection(hasObjects: true),
+        )).losses,
+        isEmpty,
+      );
+    });
+
     test(
       'external and lookalike relationships cannot prove preservation',
       () async {
@@ -678,13 +959,23 @@ void main() {
           final parts = _reachableParts();
           parts['content/body/_rels/main.xml.rels'] = _bytes(
             _relationships(
-              '<Relationship Id="story" Type="$_office/$kind" Target="../shared/$kind.xml"/>',
+              '<Relationship Id="$kind" Type="$_office/$kind" Target="../shared/$kind.xml"/>',
             ),
           );
           parts['content/shared/_rels/$kind.xml.rels'] = _bytes(
             _relationships(
               '<Relationship Id="object" Type="$_office/$objectKind" Target="../embeddings/object.bin"/>',
             ),
+          );
+          final storyName = 'content/shared/$kind.xml';
+          parts[storyName] = _bytes(
+            utf8
+                .decode(parts[storyName]!)
+                .replaceFirst(
+                  '<w:p/>',
+                  '<w:p><w:r><w:object><w:objectEmbed '
+                      'xmlns:r="$_office" r:id="object"/></w:object></w:r></w:p>',
+                ),
           );
           const source = LegacyWordSourceInspection(hasObjects: true);
           expect(
@@ -855,8 +1146,13 @@ void main() {
           'application/vnd.openxmlformats-officedocument.wordprocessingml';
       final parts = _parts(
         body:
-            '<w:p><w:ins><w:r><w:t>New</w:t></w:r></w:ins><w:del><w:r/></w:del></w:p>'
-            '<w:tbl><w:tr><w:tc><w:p/></w:tc><w:tc><w:p/></w:tc></w:tr></w:tbl><w:sectPr/>',
+            '<w:p><w:ins><w:r><w:t>New</w:t></w:r></w:ins><w:del><w:r/></w:del>'
+            '<w:r><w:footnoteReference w:id="2"/><w:endnoteReference w:id="2"/>'
+            '<w:commentReference w:id="1"/><w:object>'
+            '<w:objectEmbed r:id="rembeddings_object.bin"/></w:object></w:r></w:p>'
+            '<w:tbl><w:tr><w:tc><w:p/></w:tc><w:tc><w:p/></w:tc></w:tr></w:tbl>'
+            '<w:sectPr><w:headerReference w:type="default" r:id="rheader1.xml"/>'
+            '<w:footerReference w:type="default" r:id="rfooter1.xml"/></w:sectPr>',
         overrides: {
           'word/header1.xml': '$prefix.header+xml',
           'word/footer1.xml': '$prefix.footer+xml',

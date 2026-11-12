@@ -58,8 +58,9 @@ class LegacyWordSourceInspection {
 
 /// Counts describe what the converter emitted. They are not proof of visual
 /// equivalence, complete semantic preservation, or a valid digital signature.
-/// Loss checks additionally require a matching relationship from the document
-/// or an attached story; an orphan package part cannot establish preservation.
+/// Loss checks additionally require matching document anchors and relationships;
+/// an unused package part or relationship cannot establish preservation. These
+/// presence checks do not compare source/output feature counts or contents.
 class WordConversionInspection {
   const WordConversionInspection({required this.counts, required this.losses});
   final Map<String, int> counts;
@@ -414,8 +415,8 @@ Future<WordConversionInspection> inspectConvertedWord(
     };
     final vbaProjects = <String, Map<String, String>>{};
     final internalRelationships =
-        <String, List<({String kind, String target})>>{};
-    final storyParts = <String, ({String kind, bool hasContent})>{};
+        <String, Map<String, ({String kind, String target})>>{};
+    final storyParts = <String, _WordInspectionStory>{};
     String? documentVba;
     const revisions = {
       'ins',
@@ -492,10 +493,10 @@ Future<WordConversionInspection> inspectConvertedWord(
           if (!members.containsKey(target)) throw const FormatException();
           final kind = _officeRelationshipKind(rel.getAttribute('Type')!);
           if (kind != null) {
-            internalRelationships.putIfAbsent(owner, () => []).add((
+            internalRelationships.putIfAbsent(owner, () => {})[id] = (
               kind: kind,
               target: target,
-            ));
+            );
           }
           if (isDocumentVba) {
             if (documentVba != null) throw const FormatException();
@@ -526,16 +527,26 @@ Future<WordConversionInspection> inspectConvertedWord(
           'comments' => 'comment',
           _ => null,
         };
-        storyParts[name] = (
-          kind: storyType.kind,
-          hasContent:
-              itemName == null ||
-              dom.rootElement.childElements.any(
-                (element) =>
-                    _wordNamespaces.contains(element.namespaceUri) &&
-                    element.name.local == itemName &&
-                    (itemName == 'comment' || !_isNoteSeparator(element)),
-              ),
+        final items = <String, XmlElement?>{};
+        if (itemName != null) {
+          for (final element in dom.rootElement.childElements) {
+            if (element.namespaceUri != dom.rootElement.namespaceUri ||
+                element.name.local != itemName ||
+                (itemName != 'comment' && _isNoteSeparator(element))) {
+              continue;
+            }
+            final id = _wordInspectionId(element);
+            if (id != null) {
+              // Ambiguous duplicate identifiers cannot establish which content
+              // an anchor preserves, even if a renderer chooses one definition.
+              items[id] = items.containsKey(id) ? null : element;
+            }
+          }
+        }
+        storyParts[name] = _WordInspectionStory(
+          storyType.kind,
+          dom.rootElement,
+          items,
         );
       }
       if (dom.rootElement.name.local == 'hdr') {
@@ -578,11 +589,13 @@ Future<WordConversionInspection> inspectConvertedWord(
     // when the glossary itself is reachable. 15.2.9/.10 allow objects/packages
     // to belong to main, comments, endnotes, footnotes, headers or footers.
     // https://download.microsoft.com/download/e/1/4/e14fb96f-83b8-4a2a-84db-7fa8acbe061a/Office%20Open%20XML%20Part%201%20-%20Fundamentals.pdf
-    // This is part/relationship presence, not validation of every text anchor,
-    // opaque object payload or the resulting document's visual fidelity.
-    final attachedStories = {main};
-    final reachableFeatures = <String>{};
-    for (final relationship in internalRelationships[main] ?? const []) {
+    // References, not relationships alone, attach these parts to content.
+    // ECMA-376 17.10.5/.2, 17.11.14/.3 and 17.13.4.5 define the header/footer,
+    // note and comment anchors. Unreferenced definitions remain inventory only.
+    final documentStories = <String, String>{};
+    for (final relationship
+        in internalRelationships[main]?.values ??
+            const <({String kind, String target})>[]) {
       if (!const {
         'header',
         'footer',
@@ -596,11 +609,79 @@ Future<WordConversionInspection> inspectConvertedWord(
       if (story == null || story.kind != relationship.kind) {
         throw const FormatException();
       }
-      attachedStories.add(relationship.target);
-      if (story.hasContent) reachableFeatures.add(story.kind);
+      if (const {'footnotes', 'endnotes', 'comments'}.contains(story.kind)) {
+        final previous = documentStories[story.kind];
+        if (previous != null && previous != relationship.target) {
+          throw const FormatException();
+        }
+        documentStories[story.kind] = relationship.target;
+      }
     }
-    final hasReachableObjects = attachedStories.any(
-      (owner) => (internalRelationships[owner] ?? const []).any((relationship) {
+    final reachableFeatures = <String>{};
+    final pending = <({String owner, XmlElement content})>[
+      (
+        owner: main,
+        content: document.rootElement.childElements.singleWhere(
+          (element) =>
+              element.name.local == 'body' &&
+              element.namespaceUri == document.rootElement.namespaceUri,
+        ),
+      ),
+    ];
+    final visited = {pending.single.content};
+    void attach(String owner, XmlElement content) {
+      if (visited.add(content)) pending.add((owner: owner, content: content));
+    }
+
+    var hasReachableObjects = false;
+    while (pending.isNotEmpty) {
+      final current = pending.removeLast();
+      for (final node in _wordInspectionContent(current.content)) {
+        final local = node.name.local;
+        final isWord = _wordNamespaces.contains(node.namespaceUri);
+        final relationshipId = _wordInspectionRelationshipId(node);
+        final relationship =
+            internalRelationships[current.owner]?[relationshipId];
+        if (isWord &&
+            current.owner == main &&
+            const {'headerReference', 'footerReference'}.contains(local) &&
+            _wordInspectionParent(node, 'sectPr')) {
+          final kind = local == 'headerReference' ? 'header' : 'footer';
+          if (relationship?.kind == kind) {
+            final story = storyParts[relationship!.target]!;
+            reachableFeatures.add(kind);
+            attach(relationship.target, story.root);
+          }
+        }
+        final itemKind = isWord && _wordInspectionRunParent(node)
+            ? switch (local) {
+                'footnoteReference' => 'footnotes',
+                'endnoteReference' => 'endnotes',
+                'commentReference' => 'comments',
+                _ => null,
+              }
+            : null;
+        if (itemKind != null) {
+          final id = _wordInspectionId(node);
+          final target = documentStories[itemKind];
+          final item = storyParts[target]?.items[id];
+          if (target != null && item != null) {
+            reachableFeatures.add(itemKind);
+            attach(target, item);
+          }
+        }
+        // Embedded-object relationships are explicit: the referenced data
+        // belongs to w:objectEmbed or o:OLEObject, not any arbitrary r:id.
+        final object =
+            (isWord &&
+                local == 'objectEmbed' &&
+                _wordInspectionParent(node, 'object')) ||
+            (node.namespaceUri == 'urn:schemas-microsoft-com:office:office' &&
+                local == 'OLEObject' &&
+                node.getAttribute('Type') != 'Link' &&
+                (_wordInspectionParent(node, 'object') ||
+                    _wordInspectionParent(node, 'pict')));
+        if (!object || relationship == null) continue;
         final target = relationship.target;
         final type = typeOf(target).toLowerCase();
         if (target == main ||
@@ -608,21 +689,19 @@ Future<WordConversionInspection> inspectConvertedWord(
             target.endsWith('.rels') ||
             storyParts.containsKey(target) ||
             _isOfficeStructuralPartType(type)) {
-          return false;
+          continue;
         }
-        return switch (relationship.kind) {
+        hasReachableObjects |= switch (relationship.kind) {
           'oleObject' =>
             type == 'application/vnd.openxmlformats-officedocument.oleobject',
-          // Later ECMA editions allow arbitrary package MIME types. Do not
-          // restrict embeddings to Office extensions, but a structural part
-          // of this document cannot stand in for an embedded package.
+          // Later ECMA editions allow arbitrary package MIME types.
           // MS-OI29500 3.10 describes the content-type-specific handling:
           // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/32be961f-d71a-4812-913f-b675c79aa88a
           'package' => type.isNotEmpty,
           _ => false,
         };
-      }),
-    );
+      }
+    }
     final vbaStreams = vbaProjects[documentVba];
     final losses = <WordConversionLoss>[];
     if (source.hasVba) {
@@ -664,6 +743,74 @@ Future<WordConversionInspection> inspectConvertedWord(
     );
   } finally {
     await archive?.close();
+  }
+}
+
+class _WordInspectionStory {
+  const _WordInspectionStory(this.kind, this.root, this.items);
+
+  final String kind;
+  final XmlElement root;
+  final Map<String, XmlElement?> items;
+}
+
+bool _wordInspectionParent(XmlElement element, String local) {
+  final parent = element.parent;
+  return parent is XmlElement &&
+      parent.name.local == local &&
+      _wordNamespaces.contains(parent.namespaceUri);
+}
+
+bool _wordInspectionRunParent(XmlElement element) {
+  final parent = element.parent;
+  return parent is XmlElement &&
+      parent.name.local == 'r' &&
+      (_wordNamespaces.contains(parent.namespaceUri) ||
+          const {
+            'http://schemas.openxmlformats.org/officeDocument/2006/math',
+            'http://purl.oclc.org/ooxml/officeDocument/math',
+          }.contains(parent.namespaceUri));
+}
+
+String? _wordInspectionRelationshipId(XmlElement element) {
+  final attributes = element.attributes.where(
+    (attribute) =>
+        attribute.name.local == 'id' &&
+        _officeRelationshipNamespaces.contains(attribute.namespaceUri),
+  );
+  return attributes.length == 1 ? attributes.single.value : null;
+}
+
+String? _wordInspectionId(XmlElement element) {
+  final value = element
+      .getAttribute('id', namespace: element.namespaceUri)
+      ?.trim();
+  if (value == null || !RegExp(r'^[+-]?[0-9]+$').hasMatch(value)) return null;
+  final digits = value
+      .replaceFirst(RegExp(r'^[+-]'), '')
+      .replaceFirst(RegExp(r'^0+(?=.)'), '');
+  return value.startsWith('-') && digits != '0' ? '-$digits' : digits;
+}
+
+Iterable<XmlElement> _wordInspectionContent(XmlElement root) sync* {
+  final pending = [root];
+  while (pending.isNotEmpty) {
+    final element = pending.removeLast();
+    // Old property snapshots do not attach a header to the current section.
+    if (_wordNamespaces.contains(element.namespaceUri) &&
+        const {
+          'sectPrChange',
+          'pPrChange',
+          'rPrChange',
+          'tblPrChange',
+          'tblPrExChange',
+          'trPrChange',
+          'tcPrChange',
+        }.contains(element.name.local)) {
+      continue;
+    }
+    yield element;
+    pending.addAll(element.childElements);
   }
 }
 
