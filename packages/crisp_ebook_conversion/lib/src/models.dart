@@ -9,11 +9,16 @@ enum KindleExportFormat {
   final String extension;
 }
 
-enum EbookConversionRuntime { native, process, unavailable }
+enum EbookConversionRuntime { native, process, webAssembly, unavailable }
 
 /// Native cancellation discards output and checks between library stages.
 /// A synchronous Kindling build already in progress cannot be preempted.
-enum EbookCancellationMode { cooperative, processTermination, unavailable }
+enum EbookCancellationMode {
+  cooperative,
+  processTermination,
+  workerTermination,
+  unavailable,
+}
 
 class EbookConversionCapabilities {
   const EbookConversionCapabilities({
@@ -22,16 +27,28 @@ class EbookConversionCapabilities {
     required this.cancellationMode,
     this.engineVersion,
     this.reason,
-  });
+    bool? canExportAzw3,
+    bool? canExportLegacyMobi,
+    bool? canRewriteKindleMetadata,
+    bool? canReplaceKindleCover,
+  }) : _exportAzw3 = canExportAzw3 ?? available,
+       _exportLegacyMobi = canExportLegacyMobi ?? available,
+       _rewriteMetadata = canRewriteKindleMetadata ?? available,
+       _replaceCover = canReplaceKindleCover ?? available;
 
   final bool available;
   final EbookConversionRuntime runtime;
   final EbookCancellationMode cancellationMode;
   final String? engineVersion;
   final String? reason;
-  bool get canExportAzw3 => available;
-  bool get canExportLegacyMobi => available;
-  bool get canRewriteKindleMetadata => available;
+  final bool _exportAzw3;
+  final bool _exportLegacyMobi;
+  final bool _rewriteMetadata;
+  final bool _replaceCover;
+  bool get canExportAzw3 => available && _exportAzw3;
+  bool get canExportLegacyMobi => available && _exportLegacyMobi;
+  bool get canRewriteKindleMetadata => available && _rewriteMetadata;
+  bool get canReplaceKindleCover => canRewriteKindleMetadata && _replaceCover;
 }
 
 class EbookConversionLimits {

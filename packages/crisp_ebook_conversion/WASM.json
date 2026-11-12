@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "engine": "Kindling 0.46.2 metadata byte API",
+  "abi": 1,
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "wasm_bindgen_cli": "0.2.121",
+  "target": "wasm32-unknown-unknown",
+  "max_memory_bytes": 402653184,
+  "scope": "Metadata fields only; no EPUB export, cover replacement or host imports.",
+  "asset_sha256": {
+    "assets/kindling_metadata.wasm": "2fe86ca5841869b1823998feb039adeed4f53dee59c815f9a3a3747edfb4edac",
+    "assets/metadata_runtime.js": "325956950c76e215a49b8a289aaeeeadcca996986bd46c38e9c287bda50d2947",
+    "assets/metadata_worker.js": "883c8cac2f8c5496db8969a9cc4c2518512ef6e43e523c61db3f2343523665ed"
+  },
+  "source_sha256": {
+    "wasm/Cargo.toml": "d79d852b786af1d453f6c1bfdd09bd8cf7ca3eb6282ae1a76a87481ebc0a9724",
+    "wasm/Cargo.lock": "7ee800e03c18eb43a993ced6b851b2f91f37a43146af4ee4c2532de68568194a",
+    "wasm/src/lib.rs": "1602e98cf1319166580af9462ea8e80450b21e4f724300718f02855bc81541da",
+    "tool/build_metadata_wasm.py": "c6239c231ee79283b452efed3b3f0b2ec08131de682841dd391bd54eacd7fc5a",
+    "tool/check_wasm.py": "664336e5c7a82835718dcceec361f6ac888d993b9fe9bbd2ce5d95177cfc36e8",
+    "UPSTREAM.json": "9081ffb02580975807389076f9d234ef081d818f349a61fb36cb6c25e4badafb"
+  }
+}

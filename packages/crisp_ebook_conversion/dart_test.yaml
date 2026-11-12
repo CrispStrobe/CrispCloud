@@ -1,0 +1,3 @@
+# The bundled native engine intentionally owns one job process-wide. Test
+# suites run in separate Dart isolates but share that native library instance.
+concurrency: 1

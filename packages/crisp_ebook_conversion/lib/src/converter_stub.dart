@@ -4,6 +4,7 @@ import 'models.dart';
 EbookConversionBackend createBackend({
   String? executablePath,
   String? libraryPath,
+  Uri? webWorkerUri,
   required Duration timeout,
   required EbookConversionLimits limits,
 }) => _UnavailableBackend();

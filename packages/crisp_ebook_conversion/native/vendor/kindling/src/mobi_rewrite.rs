@@ -171,6 +171,16 @@ pub struct RewriteReport {
     pub no_op: bool,
 }
 
+/// A filesystem-independent metadata rewrite. The input slice is never mutated.
+/// Native file callers and the browser worker share this exact implementation.
+#[derive(Debug, Clone)]
+pub struct RewriteBytes {
+    pub bytes: Vec<u8>,
+    pub changes: Vec<ExthChange>,
+    pub cover_updated: bool,
+    pub no_op: bool,
+}
+
 /// A single EXTH mutation. Callers can audit this to cross-check which
 /// records were actually written.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -266,7 +276,28 @@ pub fn rewrite_mobi_metadata(
     updates: &MetadataUpdates,
 ) -> Result<RewriteReport, RewriteError> {
     let input_bytes = fs::read(input)?;
-    let parsed = parse_mobi(&input_bytes)?;
+    let result = rewrite_mobi_metadata_bytes(&input_bytes, updates)?;
+    if result.no_op {
+        fs::copy(input, output)?;
+    } else {
+        fs::write(output, &result.bytes)?;
+    }
+    Ok(RewriteReport {
+        input_path: input.to_path_buf(),
+        output_path: output.to_path_buf(),
+        changes: result.changes,
+        cover_updated: result.cover_updated,
+        no_op: result.no_op,
+    })
+}
+
+/// Rewrite existing Kindle metadata in memory with the same preservation,
+/// no-op, idempotence and encryption checks as the native file wrapper.
+pub fn rewrite_mobi_metadata_bytes(
+    input_bytes: &[u8],
+    updates: &MetadataUpdates,
+) -> Result<RewriteBytes, RewriteError> {
+    let parsed = parse_mobi(input_bytes)?;
 
     // Refuse DRM files before doing any writing at all.
     if parsed.is_drm_encrypted {
@@ -280,7 +311,12 @@ pub fn rewrite_mobi_metadata(
     // A build from an EPUB embeds the source as a SRCS record, and that zip
     // still holds the OPF's dc:identifier. It is the only place a rewriter
     // can recover the real identity from bytes (issue #46).
-    let srcs_identifier = identifier_from_srcs(&input_bytes, &parsed.record_offsets);
+    // Only the optional doc-type operation consults the embedded source ZIP.
+    // Ordinary metadata edits must not inflate an unrelated SRCS archive.
+    let srcs_identifier = updates
+        .doc_type
+        .as_ref()
+        .and_then(|_| identifier_from_srcs(input_bytes, &parsed.record_offsets));
     let has_cover = parsed.cover_record_idx.is_some();
     let has_thumb =
         parsed.thumb_record_idx.is_some() && parsed.thumb_record_idx != parsed.cover_record_idx;
@@ -317,10 +353,8 @@ pub fn rewrite_mobi_metadata(
         // empty report. This also covers the idempotent case: after a
         // real run, the next call with the same updates sees matching
         // state and falls in here.
-        fs::copy(input, output)?;
-        return Ok(RewriteReport {
-            input_path: input.to_path_buf(),
-            output_path: output.to_path_buf(),
+        return Ok(RewriteBytes {
+            bytes: input_bytes.to_vec(),
             changes: Vec::new(),
             cover_updated: false,
             no_op: true,
@@ -330,7 +364,6 @@ pub fn rewrite_mobi_metadata(
     // Non-no-op path. Rebuild record 0 (and optionally the cover record),
     // shift downstream PalmDB offsets, and write the output file.
     let new_bytes = apply_plan(&input_bytes, &parsed, &plan, kf8_plan.as_ref())?;
-    fs::write(output, &new_bytes)?;
 
     // Report the KF7 changes, plus any the KF8 section needed on its own.
     // The two normally coincide; they diverge when one section was already
@@ -345,9 +378,8 @@ pub fn rewrite_mobi_metadata(
         }
     }
 
-    Ok(RewriteReport {
-        input_path: input.to_path_buf(),
-        output_path: output.to_path_buf(),
+    Ok(RewriteBytes {
+        bytes: new_bytes,
         changes,
         cover_updated: plan.new_cover_bytes.is_some(),
         no_op: false,
@@ -508,6 +540,15 @@ fn parse_mobi(data: &[u8]) -> Result<ParsedMobi, RewriteError> {
         })?;
         record_offsets.push(off);
     }
+    if record_offsets.iter().enumerate().any(|(i, &offset)| {
+        (offset as usize) < list_end
+            || (offset as usize) > data.len()
+            || (i > 0 && offset < record_offsets[i - 1])
+    }) {
+        return Err(RewriteError::MalformedHeader(
+            "PalmDB record offsets are out of bounds or unordered".into(),
+        ));
+    }
 
     let record0_start = record_offsets[0] as usize;
     let record0_end = if num_records > 1 {
@@ -565,7 +606,17 @@ fn parse_mobi(data: &[u8]) -> Result<ParsedMobi, RewriteError> {
     let has_drm_exth = exth_records.iter().any(|(t, _)| {
         *t == EXTH_DRM_SERVER_ID || *t == EXTH_DRM_COMMERCE_ID || *t == EXTH_DRM_EBOOKBASE_BOOK_ID
     });
-    let is_drm_encrypted = encryption_type != 0 || has_drm_exth;
+    let kf8_encrypted = kf8.as_ref().is_some_and(|section| {
+        let start = record_offsets[section.record_idx] as usize;
+        read_u16_be(data, start + PALMDOC_ENCRYPTION_TYPE_OFFSET).unwrap_or(0) != 0
+            || section.exth_records.iter().any(|(kind, _)| {
+                matches!(
+                    *kind,
+                    EXTH_DRM_SERVER_ID | EXTH_DRM_COMMERCE_ID | EXTH_DRM_EBOOKBASE_BOOK_ID
+                )
+            })
+    });
+    let is_drm_encrypted = encryption_type != 0 || has_drm_exth || kf8_encrypted;
 
     // Cover record lookup: EXTH 201 holds a u32 BE that is an offset
     // (0-based) relative to first_image_record (MOBI header offset 0x5C =
