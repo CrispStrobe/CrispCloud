@@ -494,8 +494,13 @@ class WmlTableCell {
 /// Class WmlTableRow.
 class WmlTableRow {
   /// WmlTableRow API.
-  WmlTableRow({List<WmlTableCell>? cells, this.cantSplit = false, this.height})
-    : cells = cells ?? <WmlTableCell>[];
+  WmlTableRow({
+    List<WmlTableCell>? cells,
+    this.cantSplit = false,
+    this.height,
+    this.gridBefore = 0,
+    this.gridAfter = 0,
+  }) : cells = cells ?? <WmlTableCell>[];
 
   /// cells API.
   List<WmlTableCell> cells;
@@ -505,6 +510,13 @@ class WmlTableRow {
 
   /// height API.
   double? height;
+
+  /// Native grid columns omitted before/after this row's physical cells.
+  ///
+  /// These are preserved without synthesizing editable cells. Grid surgery and
+  /// grid-addressed edits reject this topology until layout supports omissions.
+  int gridBefore;
+  int gridAfter;
 }
 
 /// Class WmlVisual.

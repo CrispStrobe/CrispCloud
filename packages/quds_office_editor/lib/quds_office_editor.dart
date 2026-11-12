@@ -43,6 +43,7 @@ export 'src/editor_sheet/formula_ref_style.dart';
 export 'src/editor_sheet/inline_cell_editor.dart';
 export 'src/editor_sheet/render_sheet_grid.dart';
 export 'src/editor_sheet/selection_matrix.dart';
+export 'src/editor_sheet/sheet_font_metrics.dart';
 export 'src/editor_slide/render_slide_stage.dart';
 export 'src/editor_slide/snap_guidelines.dart';
 export 'src/editor_slide/transform_handles.dart';

@@ -1,9 +1,14 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 277,
+  "expected_file_count": 296,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
+    {"pattern": "fidelity-table-grid/edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_table_grid_addressing_test.dart"},
+    {"pattern": "fidelity-table-grid/omitted-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_table_grid_addressing_test.dart"},
+    {"pattern": "fidelity-table-grid/omitted-edited-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/word_table_grid_addressing_test.dart"},
+    {"pattern": "fidelity-sheet-normal-font/unchanged-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_normal_font_metrics_test.dart"},
+    {"pattern": "fidelity-sheet-normal-font/normal-font-{cycle}.xlsx", "cycles": [1, 2, 3], "producer": "test/sheet_normal_font_metrics_test.dart"},
     {"pattern": "fidelity-slide-sections/direct/unchanged-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
     {"pattern": "fidelity-slide-sections/direct/within-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
     {"pattern": "fidelity-slide-sections/direct/forward-{cycle}.pptx", "cycles": [1, 2, 3], "producer": "test/slide_section_fidelity_test.dart"},
@@ -90,6 +95,10 @@
     {"pattern": "fidelity-content-controls-legacy/legacy-frame-{cycle}.docx", "cycles": [1, 2, 3], "producer": "test/content_control_fidelity_test.dart"}
   ],
   "standalone": [
+    {"path": "fidelity-table-grid/source.docx", "producer": "test/word_table_grid_addressing_test.dart"},
+    {"path": "fidelity-table-grid/omitted-source.docx", "producer": "test/word_table_grid_addressing_test.dart"},
+    {"path": "fidelity-table-grid/omitted-edited-expected.docx", "producer": "test/word_table_grid_addressing_test.dart"},
+    {"path": "fidelity-sheet-normal-font/source.xlsx", "producer": "test/sheet_normal_font_metrics_test.dart"},
     {"path": "fidelity-slide-sections/direct/source.pptx", "producer": "test/slide_section_fidelity_test.dart"},
     {"path": "fidelity-slide-sections/isolate/source.pptx", "producer": "test/slide_section_fidelity_test.dart"},
     {"path": "fidelity-sheet-rename/source.xlsx", "producer": "test/sheet_rename_fidelity_test.dart"},

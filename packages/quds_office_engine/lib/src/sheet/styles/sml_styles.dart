@@ -4,6 +4,44 @@ import '../../xml/xml_reader.dart';
 /// Horizontal cell alignment (`alignment/@horizontal`).
 enum SmlHAlign { general, left, center, right }
 
+/// The font used by the built-in Normal cell style for column dimensions.
+///
+/// Sizes are typographic points, while column metrics are measured at 96 dpi.
+class SmlNormalFont {
+  const SmlNormalFont({
+    required this.family,
+    required this.sizePoints,
+    this.bold = false,
+    this.italic = false,
+  });
+
+  final String family;
+  final double sizePoints;
+  final bool bold;
+  final bool italic;
+}
+
+/// A measured Normal-font digit width, including the actual face provenance.
+///
+/// [resolvedFontFamily] names the font that was measured. It can differ from
+/// the requested family when an application deliberately registers an alias.
+class SmlColumnMetrics {
+  const SmlColumnMetrics({
+    required this.maximumDigitWidthPx,
+    required this.resolvedFontFamily,
+  });
+
+  final int maximumDigitWidthPx;
+  final String resolvedFontFamily;
+
+  bool substitutes(SmlNormalFont font) =>
+      resolvedFontFamily.toLowerCase() != font.family.toLowerCase();
+}
+
+/// Return null when the requested font cannot be resolved reliably.
+typedef SmlColumnMetricsResolver =
+    SmlColumnMetrics? Function(SmlNormalFont normalFont);
+
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
   XmlDocument? _source;
@@ -22,6 +60,7 @@ class SmlStyleSheet {
     List<int>? cellXfsFillId,
     List<int>? cellXfsFontId,
     List<String>? themeColors,
+    Map<String, String>? themeFontFamilies,
   }) : numFmts = numFmts ?? Map<int, String>.from(_builtIn),
        cellXfsNumFmt = cellXfsNumFmt ?? <int>[0],
        cellXfsAlign = cellXfsAlign ?? <SmlHAlign>[SmlHAlign.general],
@@ -31,7 +70,10 @@ class SmlStyleSheet {
        fontSizes = fontSizes ?? <double>[11],
        cellXfsFillId = cellXfsFillId ?? <int>[0],
        cellXfsFontId = cellXfsFontId ?? <int>[0],
-       themeColors = themeColors ?? List<String>.from(_officeTheme);
+       themeColors = themeColors ?? List<String>.from(_officeTheme),
+       themeFontFamilies = Map<String, String>.unmodifiable(
+         themeFontFamilies ?? const <String, String>{},
+       );
 
   /// numFmts API.
   final Map<int, String> numFmts;
@@ -63,8 +105,109 @@ class SmlStyleSheet {
   /// Theme scheme colors (dk1 … folHlink).
   final List<String> themeColors;
 
+  /// Theme Latin faces keyed by `major` or `minor`.
+  final Map<String, String> themeFontFamilies;
+
+  /// Native Normal-font selection follows builtinId, not a localized name or
+  /// cellXfs[0]. Ambiguous or malformed native style links remain unresolved.
+  SmlNormalFont? get normalFont {
+    final root = _source?.root;
+    if (root == null) return null;
+    final styles = root
+        .firstChild('cellStyles', namespaceUri: root.namespaceUri)
+        ?.childrenNamed('cellStyle', namespaceUri: root.namespaceUri);
+    final normal = styles
+        ?.where(
+          (style) =>
+              int.tryParse(
+                style.getAttribute('builtinId', namespaceUri: '') ?? '',
+              ) ==
+              0,
+        )
+        .toList();
+    if (normal == null || normal.length != 1) return null;
+    final xfId = int.tryParse(
+      normal.single.getAttribute('xfId', namespaceUri: '') ?? '',
+    );
+    final xfs = root
+        .firstChild('cellStyleXfs', namespaceUri: root.namespaceUri)
+        ?.childrenNamed('xf', namespaceUri: root.namespaceUri)
+        .toList();
+    if (xfId == null || xfs == null || xfId < 0 || xfId >= xfs.length) {
+      return null;
+    }
+    final fontId = int.tryParse(
+      xfs[xfId].getAttribute('fontId', namespaceUri: '') ?? '',
+    );
+    final fonts = root
+        .firstChild('fonts', namespaceUri: root.namespaceUri)
+        ?.childrenNamed('font', namespaceUri: root.namespaceUri)
+        .toList();
+    if (fontId == null ||
+        fonts == null ||
+        fontId < 0 ||
+        fontId >= fonts.length) {
+      return null;
+    }
+    final font = fonts[fontId];
+    final scheme = font
+        .firstChild('scheme', namespaceUri: root.namespaceUri)
+        ?.getAttribute('val', namespaceUri: '');
+    final family =
+        themeFontFamilies[scheme] ??
+        font
+            .firstChild('name', namespaceUri: root.namespaceUri)
+            ?.getAttribute('val', namespaceUri: '');
+    final size = double.tryParse(
+      font
+              .firstChild('sz', namespaceUri: root.namespaceUri)
+              ?.getAttribute('val', namespaceUri: '') ??
+          '',
+    );
+    if (family == null ||
+        family.trim().isEmpty ||
+        size == null ||
+        !size.isFinite ||
+        size <= 0) {
+      return null;
+    }
+    bool enabled(String name) {
+      final element = font.firstChild(name, namespaceUri: root.namespaceUri);
+      if (element == null) return false;
+      final value = element.getAttribute('val', namespaceUri: '');
+      return value == null || value == '1' || value.toLowerCase() == 'true';
+    }
+
+    return SmlNormalFont(
+      family: family,
+      sizePoints: size,
+      bold: enabled('b'),
+      italic: enabled('i'),
+    );
+  }
+
+  /// Reads the Latin major/minor theme faces used for the ten ASCII digits.
+  static Map<String, String> parseThemeFontFamilies(String xml) {
+    final scheme = XmlDocument.parse(
+      xml,
+    ).root?.firstChild('themeElements')?.firstChild('fontScheme');
+    return <String, String>{
+      for (final kind in ['major', 'minor'])
+        if (scheme
+                ?.firstChild('${kind}Font')
+                ?.firstChild('latin')
+                ?.getAttribute('typeface')
+            case final String family)
+          if (family.trim().isNotEmpty) kind: family,
+    };
+  }
+
   /// parse API.
-  factory SmlStyleSheet.parse(String xml, {List<String>? themeColors}) {
+  factory SmlStyleSheet.parse(
+    String xml, {
+    List<String>? themeColors,
+    Map<String, String>? themeFontFamilies,
+  }) {
     final SmlStyleSheet sheet = SmlStyleSheet(
       cellXfsNumFmt: <int>[],
       cellXfsAlign: <SmlHAlign>[],
@@ -75,6 +218,7 @@ class SmlStyleSheet {
       cellXfsFillId: <int>[],
       cellXfsFontId: <int>[],
       themeColors: themeColors,
+      themeFontFamilies: themeFontFamilies,
     );
     final XmlPullReader reader = XmlPullReader(xml);
     var inCellXfs = false;

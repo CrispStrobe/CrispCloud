@@ -1260,8 +1260,25 @@ class WordSerializer {
     w.writeEndElement();
     for (final WmlTableRow row in table.rows) {
       w.writeStartElement('tr', prefix: 'w');
-      if (row.cantSplit || row.height != null) {
+      if (row.cantSplit ||
+          row.height != null ||
+          row.gridBefore != 0 ||
+          row.gridAfter != 0) {
         w.writeStartElement('trPr', prefix: 'w');
+        if (row.gridBefore != 0) {
+          w.writeEmptyElement(
+            'gridBefore',
+            prefix: 'w',
+            attributes: <String, String>{'w:val': '${row.gridBefore}'},
+          );
+        }
+        if (row.gridAfter != 0) {
+          w.writeEmptyElement(
+            'gridAfter',
+            prefix: 'w',
+            attributes: <String, String>{'w:val': '${row.gridAfter}'},
+          );
+        }
         if (row.cantSplit) {
           w.writeEmptyElement('cantSplit', prefix: 'w');
         }

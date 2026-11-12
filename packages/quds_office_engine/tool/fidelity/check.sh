@@ -18,6 +18,8 @@ dart test \
   test/sheet_rename_fidelity_test.dart \
   test/sheet_rename_adversarial_test.dart \
   test/sheet_formula_cache_fidelity_test.dart \
+  test/sheet_normal_font_metrics_test.dart \
+  test/sheet_explicit_style_fidelity_test.dart \
   test/style_cascade_test.dart test/story_media_fidelity_test.dart \
   test/word_part_routing_test.dart test/sheet_schema_fidelity_test.dart \
   test/slide_text_fidelity_test.dart test/word_compatibility_fidelity_test.dart \
@@ -32,6 +34,7 @@ dart test \
   test/bookmark_fidelity_test.dart test/content_control_fidelity_test.dart \
   test/word_edit_integrity_test.dart test/inline_field_fidelity_test.dart \
   test/word_structure_steps_test.dart test/word_structure_integrity_test.dart \
+  test/word_table_grid_addressing_test.dart \
   test/word_revision_story_test.dart test/word_step_atomicity_test.dart \
   test/word_bibliography_fidelity_test.dart test/note_marker_fidelity_test.dart \
   test/word_note_script_break_test.dart \

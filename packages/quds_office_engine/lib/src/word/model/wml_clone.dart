@@ -115,6 +115,8 @@ abstract final class WmlClone {
           WmlTableRow(
             cantSplit: row.cantSplit,
             height: row.height,
+            gridBefore: row.gridBefore,
+            gridAfter: row.gridAfter,
             cells: <WmlTableCell>[
               for (final WmlTableCell cell in row.cells) cellOf(cell),
             ],

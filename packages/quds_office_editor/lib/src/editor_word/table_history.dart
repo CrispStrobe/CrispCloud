@@ -35,17 +35,23 @@ class _RowState {
   _RowState(this.row)
     : _height = row.height,
       _cantSplit = row.cantSplit,
+      _gridBefore = row.gridBefore,
+      _gridAfter = row.gridAfter,
       _cells = [for (final cell in row.cells) _CellState(cell)];
 
   final WmlTableRow row;
   final double? _height;
   final bool _cantSplit;
+  final int _gridBefore;
+  final int _gridAfter;
   final List<_CellState> _cells;
 
   void restore() {
     row
       ..height = _height
-      ..cantSplit = _cantSplit;
+      ..cantSplit = _cantSplit
+      ..gridBefore = _gridBefore
+      ..gridAfter = _gridAfter;
     row.cells
       ..clear()
       ..addAll(_cells.map((state) => state.cell));

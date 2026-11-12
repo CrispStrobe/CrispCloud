@@ -26,9 +26,9 @@ creation, image replacement and opaque body XML (`w:altChunk` and any other
 unmodeled body element, with its relationship provenance). The editor adds
 layout exports and the async controller export.
 
-The authored manifests require **241 engine files** and **22 editor files**.
-The engine has 73 complete three-save series and 22 standalone inputs/exports;
-the editor has seven complete three-save series and one standalone export.
+The authored manifests require **296 engine files** and **25 editor files**.
+The engine has 89 complete three-save series and 29 standalone inputs/exports;
+the editor has eight complete three-save series and one standalone export.
 Exact inventory checks reject missing, extra, empty or invalid packages and
 retain SHA-256 receipts. Authored source/edited baselines also participate in
 external render comparisons; exports without a declared comparison baseline
@@ -98,17 +98,29 @@ stories use `section` (default 0); note stories require the actual `note` ID; co
 | `listClear` | `paragraph` | Remove list formatting |
 | `listRestart` | `paragraph`; optional `at` (default 1) | Restart a numbered list without mutating unrelated instances |
 | `hyperlink` | `paragraph`, `run`, `target`, story selector | Set a run hyperlink |
-| `tableCellText` | `table`, `row`, `column`, `text` | Replace the selected cell's entire story with one plain paragraph |
+| `tableCellText` | `table`, `row`, `column` or `gridColumn`, `text` | Replace the selected cell's entire story with one plain paragraph; reject orphaned bookmarks or pending revisions |
 | `headerFooterText` | `story`, `text`; optional `section`, `paragraph` | Replace/add text in one of the six header/footer variants |
 | `sectionFormat` | optional `section`, `width`, `height`, `top`, `bottom`, `left`, `right`, `header`, `footer`, `columns`, `columnSpace`, `columnSep`, `breakKind`, `differentFirstPage`, `differentOddEven` | Edit page/section geometry and flags |
 
 ### Word structure operations
 
-These 24 additional commands use body indexes shown by `inspect`. `tableMerge`
-uses logical grid columns; `tableUnmerge`, `tableCellText` and `tableCellFormat`
-use physical cell indexes within the selected row. TOC indexes follow depth-first
-body traversal, including controls, tables and frames. Exact required
-fields and accepted optional fields are available from `operations`.
+These 24 additional commands use body indexes shown by `inspect`. The existing
+`column` field keeps its original meaning: logical grid columns for `tableMerge`,
+and physical row-cell indexes for `tableUnmerge`, `tableCellText` and
+`tableCellFormat`. Those commands also accept an explicit `gridColumn` instead;
+`tableMerge` accepts `endGridColumn` instead of `endColumn`. Each pair is mutually
+exclusive. A logical slot inside a horizontal or vertical merge resolves to the
+visible master cell. `inspect` reports both coordinate systems and whether the
+table supports grid addressing.
+
+Logical addressing and merge/unmerge require a rectangular grid with matching
+vertical continuation spans. Partial merges crossing an existing vertical region
+reject before mutation. Native `gridBefore`/`gridAfter` omissions are preserved
+through clone and save; their grid edits remain guarded, while physical-cell
+text/format edits remain available. This metadata preservation does not certify
+layout of omitted row cells. TOC indexes follow depth-first body traversal,
+including controls, tables and frames. Exact required fields and accepted
+optional fields are available from `operations`.
 
 | Operations | Purpose and important fields |
 | --- | --- |
@@ -131,7 +143,7 @@ model also preserves native partial, multiple, overlapping and cross-paragraph
 bookmark ranges; `reference` uses their exact marked text. `bookmarkSet` remains
 a paragraph-wide creation operation. The editor's rich clipboard insertion
 rejects native-ID collisions. The scripted `paragraphDelete`, `tableRowDelete`,
-`tableColumnDelete` and `tocRemove` commands, plus note-pane edits that remove
+`tableColumnDelete`, `tableCellText` and `tocRemove` commands, plus note-pane edits that remove
 paragraphs, reject removal of only one native bookmark endpoint before mutation.
 These guarantees cover the named edit paths. The note-pane guard also runs before
 controller history changes. The CLI `editNote` operation intentionally replaces
