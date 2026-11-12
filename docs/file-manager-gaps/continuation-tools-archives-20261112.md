@@ -234,3 +234,8 @@ core `e32401cebba2d72874f02c111d8715e83959d28c`,
 UI/help `c74986aea4253d97ae2488b3800754941670d162`, and
 reviewed fixes `af79a894f84a1853f6e0b7b4f56c3051ebfb3fd3`.
 Review: [draft PR 81](https://github.com/CrispStrobe/CrispCloud/pull/81).
+
+The subsequent [viewer continuation's integrated validation](viewer-spool-continuation-20261112.md#integrated-validation)
+covers this entire stack. Full analysis reports zero errors, and the versioned
+JavaScript release build passes with verified packaged offline-help bytes.
+Native/live, browser-runtime and WebAssembly acceptance remain explicit.

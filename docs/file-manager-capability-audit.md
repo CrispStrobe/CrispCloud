@@ -102,7 +102,7 @@ grants. The link is transient and is not restored after restarting the app.
 
 | Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
-| Text, hex and binary viewing | Implemented with limits | `lib/services/internal_viewer_service.dart`, `lib/widgets/internal_viewer_dialog.dart`; bounded pages and full-stream search. Remote staging has a 2 GiB cap; rich renderers have smaller limits. |
+| Text, hex and binary viewing | Implemented with limits | Bounded pages and full-stream search. G14 adds deadline-bound, cancellable native temporary-copy preparation with frozen metadata and retryable cleanup. Remote staging retains its 2 GiB cap; rich renderers have smaller limits, and provider-enforced remote paging remains open. See [viewer preparation](viewer-spool-lifecycle.md). |
 | UTF-8 and Unicode | Implemented | UTF-8/16/32 plus Latin-1; encoding controls and streaming boundary handling. |
 | DOS/Windows legacy text encodings | Implemented | `lib/services/legacy_text_encoding.dart`, `editor_document.dart`, `viewer_text_decoder.dart`, `viewer_search_service.dart` and `search_content_matcher.dart` share explicit CP437/Windows-1252 behavior. Strict editing rejects unrepresentable characters; there is no code-page auto-detection. Existing [editor](code-editor.md) and [file-operation/search](commander-file-operations.md) limits remain. |
 | Adjustable viewer font/line display | Implemented | Viewer controls include text scale and line/byte display options. |
@@ -267,9 +267,10 @@ target-runtime/live-server acceptance pending (G01, G04, G09, G10, G11, G12, G25
 The remaining 37 items are 25 implementation gaps, ten research prerequisites
 and two cross-cutting acceptance items.
 
-G18 also has a delivered native local increment. It remains among the
-implementation gaps because remote access-policy contracts and browser
-operation leases have not been implemented.
+G18 also has a delivered native local archive increment, and G14 has a delivered
+native viewer-preparation lifecycle increment. They remain among the
+implementation gaps because remote/browser archive publication and verified
+remote paging/larger text comparison still require implementation.
 
 The [earlier validation record](file-manager-gaps/validation-20261112.md) and
 [continuation record](file-manager-gaps/continuation-20261112.md) contain the
@@ -313,3 +314,20 @@ and context-menu actions; nested/password-aware drafts; supported metadata
 preservation; receipt-gated source cleanup; and explicit publication recovery.
 Its native local scope is verified separately from the remaining remote/browser
 implementation and signed/native acceptance boundaries.
+
+The [viewer preparation continuation](file-manager-gaps/viewer-spool-continuation-20261112.md)
+adds cancellation during stalled metadata/stream waits, independent time
+budgets, frozen revision evidence and retryable temporary-copy cleanup. Its
+focused evidence comprises 29 lifecycle checks and 81 existing viewer, archive
+and help checks: 110 across seven suites. The helper retains the 2 GiB default
+and describes metadata consistency separately from immutable remote snapshots.
+
+At code checkpoint `dfb7978afd5f0ce80f4af7ac924cfa709c01a0aa`, full application
+analysis passed with **0 errors, 96 warnings and 1,040 informational findings**.
+The versioned JavaScript release build passed in **209.7 seconds**, with
+`APP_VERSION=1.1.0+12` and `GIT_HASH=dfb7978a`. The built three-language guides
+and help manifest match their reviewed source bytes. This JavaScript-only gate
+used `--no-wasm-dry-run`; WebAssembly, browser-runtime, native/live and complete
+hosted CI evidence remain open. The
+[integrated record](file-manager-gaps/viewer-spool-continuation-20261112.md#integrated-validation)
+contains the exact commands and scope checks.
