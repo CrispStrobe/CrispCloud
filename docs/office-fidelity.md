@@ -14,6 +14,15 @@ their original snapshots, not the current manifest.
 
 ## Current vendor revision and focused followup
 
+## Workflow follow-up on 2026-11-12
+
+The `feature/office-fidelity-workflows-20261112` branch synchronizes the newer
+source engine, scripts, oracles and reviewed goldens, and adds actual-host
+[font](office-font-fidelity-20261112.md) and
+[picture/drawing-history](office-picture-fidelity-20261112.md) regressions.
+The manifest pins the exact current suite source. Host evidence now requires
+104 DOCX/PPTX outputs. Historical counts below retain their original scope.
+
 ## Host expansion on 2026-11-12
 
 The [host paragraph/style/reference/layout audit](office-host-fidelity-20261112.md)

@@ -175,6 +175,19 @@ Future<String?> showOfficeColorPicker(
   );
 }
 
+/// Font controls explicitly used while the dialog is open.
+enum WordFontProperty {
+  family,
+  size,
+  bold,
+  italic,
+  underline,
+  strike,
+  color,
+  highlight,
+  vertAlign,
+}
+
 /// Font settings returned by [showWordFontDialog].
 typedef WordFontChoice = ({
   String family,
@@ -186,6 +199,7 @@ typedef WordFontChoice = ({
   String color,
   String? highlight,
   WmlVertAlign vertAlign,
+  Set<WordFontProperty> edited,
 });
 
 Future<WordFontChoice?> showWordFontDialog(
@@ -207,6 +221,7 @@ Future<WordFontChoice?> showWordFontDialog(
   String color = current.color;
   String? highlight = current.highlight;
   WmlVertAlign vertAlign = current.vertAlign;
+  final Set<WordFontProperty> edited = <WordFontProperty>{};
 
   return showDialog<WordFontChoice>(
     context: context,
@@ -234,8 +249,10 @@ Future<WordFontChoice?> showWordFontDialog(
                             ];
                             return PopupMenuButton<String>(
                               tooltip: ctx.tr('Family'),
-                              onSelected: (String value) =>
-                                  setState(() => family = value),
+                              onSelected: (String value) => setState(() {
+                                family = value;
+                                edited.add(WordFontProperty.family);
+                              }),
                               itemBuilder: (BuildContext context) =>
                                   <PopupMenuEntry<String>>[
                                 for (final String f in families)
@@ -297,7 +314,10 @@ Future<WordFontChoice?> showWordFontDialog(
                             ],
                             onChanged: (double? value) {
                               if (value != null) {
-                                setState(() => size = value);
+                                setState(() {
+                                  size = value;
+                                  edited.add(WordFontProperty.size);
+                                });
                               }
                             },
                           ),
@@ -311,14 +331,20 @@ Future<WordFontChoice?> showWordFontDialog(
                           label: 'B',
                           selected: bold,
                           bold: true,
-                          onTap: () => setState(() => bold = !bold),
+                          onTap: () => setState(() {
+                            bold = !bold;
+                            edited.add(WordFontProperty.bold);
+                          }),
                         ),
                         const SizedBox(width: 6),
                         _ToggleChip(
                           label: 'I',
                           selected: italic,
                           italic: true,
-                          onTap: () => setState(() => italic = !italic),
+                          onTap: () => setState(() {
+                            italic = !italic;
+                            edited.add(WordFontProperty.italic);
+                          }),
                         ),
                         const SizedBox(width: 6),
                         _ToggleChip(
@@ -329,6 +355,7 @@ Future<WordFontChoice?> showWordFontDialog(
                             underline = underline == WmlUnderline.none
                                 ? WmlUnderline.single
                                 : WmlUnderline.none;
+                            edited.add(WordFontProperty.underline);
                           }),
                         ),
                         const SizedBox(width: 6),
@@ -336,7 +363,10 @@ Future<WordFontChoice?> showWordFontDialog(
                           label: 'S',
                           selected: strike,
                           underline: true,
-                          onTap: () => setState(() => strike = !strike),
+                          onTap: () => setState(() {
+                            strike = !strike;
+                            edited.add(WordFontProperty.strike);
+                          }),
                         ),
                         const Spacer(),
                         DropdownButton<WmlVertAlign>(
@@ -358,7 +388,10 @@ Future<WordFontChoice?> showWordFontDialog(
                           ],
                           onChanged: (WmlVertAlign? value) {
                             if (value != null) {
-                              setState(() => vertAlign = value);
+                              setState(() {
+                                vertAlign = value;
+                                edited.add(WordFontProperty.vertAlign);
+                              });
                             }
                           },
                         ),
@@ -396,7 +429,10 @@ Future<WordFontChoice?> showWordFontDialog(
                       ],
                       onChanged: (WmlUnderline? value) {
                         if (value != null) {
-                          setState(() => underline = value);
+                          setState(() {
+                            underline = value;
+                            edited.add(WordFontProperty.underline);
+                          });
                         }
                       },
                     ),
@@ -407,8 +443,10 @@ Future<WordFontChoice?> showWordFontDialog(
                           child: _ColorField(
                             label: ctx.tr('Text color'),
                             color: color,
-                            onChanged: (String value) =>
-                                setState(() => color = value),
+                            onChanged: (String value) => setState(() {
+                              color = value;
+                              edited.add(WordFontProperty.color);
+                            }),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -417,9 +455,10 @@ Future<WordFontChoice?> showWordFontDialog(
                             label: ctx.tr('Highlight'),
                             color: highlight ?? '',
                             allowNone: true,
-                            onChanged: (String value) => setState(
-                              () => highlight = value.isEmpty ? null : value,
-                            ),
+                            onChanged: (String value) => setState(() {
+                              highlight = value.isEmpty ? null : value;
+                              edited.add(WordFontProperty.highlight);
+                            }),
                           ),
                         ),
                       ],
@@ -445,6 +484,7 @@ Future<WordFontChoice?> showWordFontDialog(
                     color: color,
                     highlight: highlight,
                     vertAlign: vertAlign,
+                    edited: Set<WordFontProperty>.unmodifiable(edited),
                   ));
                 },
                 child: Text(ctx.tr('Apply')),

@@ -8,18 +8,20 @@ document.
 
 The dialog and ribbon now display the exact imported size, including 10.5, 7
 and 144 point cases outside the usual preset list. An unchanged Apply creates
-no history entry and leaves the document clean. A changed control applies only
-that property to the selected runs. Existing Latin and complex-script fonts,
+no history entry and leaves the document clean. An explicitly used control
+applies only that property to the selected runs. Choosing the caret's current
+value can deliberately normalize a mixed selection. Existing Latin and complex-script fonts,
 size, color, highlight, underline, strike, bold and vertical alignment survive
 unrelated changes. An explicit family change continues to set the selected
-font family. The action checks editing mode and controller identity after the
-modal result, so a stale result cannot mutate a replacement document.
+font family. The action checks editing mode, controller identity, content revision, active
+story and selection after the modal result. A stale result cannot mutate a
+replacement document or newly selected target; paint-only refreshes remain safe.
 
 ## Executable evidence
 
 `test/widget/office_font_fidelity_test.dart` authors its source DOCX directly as
 ZIP/XML and drives the real host Font action and dialog. It inspects exported
-ZIP/XML independently of Quds deserialization. Nine widget tests cover:
+ZIP/XML independently of Quds deserialization. Seventeen widget tests cover:
 
 - Exact imported half-point and out-of-preset sizes, no-op Apply and clean
   history.
@@ -28,15 +30,17 @@ ZIP/XML independently of Quds deserialization. Nine widget tests cover:
 - The active header story while preserving body formatting.
 - Cancellation, controller replacement while the dialog is open, and viewing
   mode.
+- Explicitly choosing a displayed family, size or underline for a mixed
+  selection, and rejecting stale story/selection/content results.
 
-Seven scenarios produce three save/reopen exports each. All 21 paths are
+Ten scenarios produce three save/reopen exports each. All 30 paths are
 mandatory entries in `tool/office_host_evidence.json`, and the test is part of
 `tool/check_office_fidelity.sh`. The normal tests never regenerate expected
 formatting from the exporter. A deliberate local corruption that overwrote
 the complex-script font was rejected by the XML assertion (`Amiri` versus
 `Cambria`); the corruption was then removed.
 
-The focused nine-test run passes under the app's pinned Flutter 3.47.8.
+The focused 17-test run passes under the app's pinned Flutter 3.47.8.
 Targeted analysis reports no warnings or errors. Full host/schema acceptance
 belongs to this feature branch's final execution evidence. This semantic
 coverage does not claim complete font fallback, mixed-value dialog UI, native

@@ -3,9 +3,27 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from zipfile import ZipFile
 
 import office_host_evidence as evidence
+
+
+def package(file, extension=None, main=None):
+    extension = extension or file.suffix
+    kind, namespace, local = evidence.MAIN_TYPES[extension]
+    main = main or {'.docx': 'word/document.xml', '.xlsx': 'xl/workbook.xml',
+                    '.pptx': 'ppt/presentation.xml'}[extension]
+    file.parent.mkdir(parents=True, exist_ok=True)
+    with ZipFile(file, 'w') as archive:
+        archive.writestr('[Content_Types].xml',
+            f'<Types xmlns="{evidence.CONTENT_TYPES}"><Override PartName="/{main}" '
+            f'ContentType="application/vnd.openxmlformats-officedocument.{kind}.main+xml"/></Types>')
+        archive.writestr('_rels/.rels',
+            f'<Relationships xmlns="{evidence.PACKAGE_REL}"><Relationship Id="main" '
+            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+            f'Target="{main}"/></Relationships>')
+        archive.writestr(main, f'<{local} xmlns="http://schemas.openxmlformats.org/{namespace}/2006/main"/>')
 
 
 class HostEvidenceTest(unittest.TestCase):
@@ -18,9 +36,7 @@ class HostEvidenceTest(unittest.TestCase):
         base = base or self.root
         for name in evidence.expected_paths():
             file = base / name
-            file.parent.mkdir(parents=True, exist_ok=True)
-            with ZipFile(file, 'w') as archive:
-                archive.writestr('word/document.xml', '<document/>')
+            package(file)
         return base
 
     def test_complete_tree_has_hashes_for_every_expected_export(self):
@@ -96,6 +112,62 @@ class HostEvidenceTest(unittest.TestCase):
                 evidence.clean(self.root)
             self.assertTrue((self.root / evidence.expected_paths()[0]).exists())
             self.assertEqual(external.read_bytes(), original)
+
+    def test_each_office_format_and_relocated_main_part(self):
+        for extension in evidence.OFFICE:
+            with self.subTest(format=extension):
+                file = self.root / ('native' + extension)
+                package(file, main='documents/main.xml')
+                self.assertEqual(evidence.inspect_package(file), 'documents/main.xml')
+
+    def test_renamed_docx_cannot_satisfy_a_presentation_or_workbook(self):
+        for extension in ('.pptx', '.xlsx'):
+            with self.subTest(format=extension):
+                file = self.root / ('renamed' + extension)
+                package(file, extension='.docx')
+                with self.assertRaisesRegex(ValueError, 'content type'):
+                    evidence.inspect_package(file)
+
+    def test_missing_escaping_external_duplicate_and_wrong_root_are_rejected(self):
+        file = self.root / 'broken.pptx'
+        changes = {
+            'missing': ('_rels/.rels', lambda text: text.replace('ppt/presentation.xml', 'missing.xml')),
+            'escaping': ('_rels/.rels', lambda text: text.replace('ppt/presentation.xml', '../outside.xml')),
+            'external': ('_rels/.rels', lambda text: text.replace('Target=', 'TargetMode="External" Target=')),
+            'wrong-root': ('ppt/presentation.xml', lambda text: text.replace('presentation ', 'workbook ')),
+            'wrong-type': ('[Content_Types].xml', lambda text: text.replace('presentationml.presentation', 'spreadsheetml.sheet')),
+            'malformed': ('ppt/presentation.xml', lambda _: '<'),
+        }
+        for label, (name, corrupt) in changes.items():
+            with self.subTest(corruption=label):
+                package(file)
+                with ZipFile(file) as archive:
+                    parts = {part: archive.read(part) for part in archive.namelist()}
+                parts[name] = corrupt(parts[name].decode()).encode()
+                with ZipFile(file, 'w') as archive:
+                    for part, data in parts.items():
+                        archive.writestr(part, data)
+                with self.assertRaises((ValueError, evidence.ET.ParseError)):
+                    evidence.inspect_package(file)
+        package(file)
+        with ZipFile(file, 'a') as archive, self.assertWarns(UserWarning):
+            archive.writestr('ppt/presentation.xml', '<duplicate/>')
+        with self.assertRaisesRegex(ValueError, 'duplicate ZIP'):
+            evidence.inspect_package(file)
+
+    def test_manifest_requires_normalized_scoped_supported_paths(self):
+        manifest = self.root / 'manifest.json'
+        for invalid in ('elsewhere/file.docx', 'build/./fidelity-host/a.docx',
+                        'build/fidelity-host/../file.docx', 'build\\fidelity-host\\a.docx',
+                        'build/fidelity-host/a.zip'):
+            with self.subTest(path=invalid), patch.object(evidence, 'MANIFEST', manifest):
+                manifest.write_text(evidence.json.dumps({'version': 1, 'outputs': [invalid]}))
+                with self.assertRaises(ValueError):
+                    evidence.expected_paths()
+        with patch.object(evidence, 'MANIFEST', manifest):
+            names = [f'build/fidelity-host/valid{extension}' for extension in sorted(evidence.OFFICE)]
+            manifest.write_text(evidence.json.dumps({'version': 1, 'outputs': names}))
+            self.assertEqual(evidence.expected_paths(), names)
 
 
 if __name__ == '__main__':
