@@ -408,7 +408,15 @@ fn process(request: Request, cancel: &AtomicBool) -> Result<Value> {
             "Conversion requires a private absolute job directory.",
         ));
     }
+    #[cfg(not(target_os = "wasi"))]
     let root = root.canonicalize().map_err(io_error)?;
+    // The browser adapter preopens only this fresh memory-only directory. WASI
+    // Preview 1 cannot canonicalize paths, and there are no host files or links
+    // to resolve. Refuse any other root rather than weakening native checks.
+    #[cfg(target_os = "wasi")]
+    if root != Path::new("/job") {
+        return Err(fail("invalidInput", "Browser conversion requires its private job directory."));
+    }
     let output = root.join(format!("output.{}", request.format));
     if output.exists() || fs::symlink_metadata(&output).is_ok() {
         return Err(fail("invalidInput", "Conversion output already exists."));

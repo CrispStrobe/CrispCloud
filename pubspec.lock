@@ -1060,7 +1060,7 @@ packages:
       path: "packages/legacy_doc_parser"
       relative: true
     source: path
-    version: "0.1.0-dev.2"
+    version: "0.1.0-dev.1"
   libdbm:
     dependency: "direct overridden"
     description:

@@ -8,11 +8,15 @@ import {normalizeAppearance, appearanceStyle, readingCapabilities, progressFract
     guardRendererLifecycle} from './reader_controls.js'
 import {createReaderSearch} from './reader_search.js'
 import {createReaderSpeech} from './reader_speech.js'
+import {createReaderSelection} from './reader_selection.js'
+import {createNativeReaderInput} from './reader_native_input.js'
 
 const session = decodeURIComponent(location.hash.slice(1))
 const status = document.getElementById('status')
 let book = null, view = null, filename = '', sourceFormat = '', cleanupSections = null
 let opened = false, appearance = normalizeAppearance(), searchSession = null, speech = null
+let selectionObserver = null
+let nativeInput = null
 const highlights = new Map()
 const queueNavigation = createNavigationQueue()
 let pendingNavigation = 0
@@ -79,6 +83,10 @@ function applyAppearance(options) {
 }
 async function open(args) {
     opened = true
+    selectionObserver?.dispose()
+    selectionObserver = null
+    nativeInput?.dispose()
+    nativeInput = null
     speech?.dispose()
     speech = null
     gestureButton.hidden = true
@@ -107,6 +115,18 @@ async function open(args) {
     view = document.createElement('foliate-view')
     document.getElementById('reader').append(view)
     const currentView = view
+    const nativePrefix = globalThis.CrispEbookMessage?.nativeInputPrefix
+    if (typeof nativePrefix === 'string') {
+        nativeInput = createNativeReaderInput(currentView, book, nativePrefix, ({href, originalHref}) => {
+            if (view !== currentView) return
+            if (book?.isExternal?.(href)) {
+                if (/^(https?:|mailto:)/i.test(originalHref)) send({event:'externalLink', data:originalHref})
+                return
+            }
+            speech?.stop()
+            enqueueNavigation(() => view === currentView ? currentView.goTo(href) : null).catch(() => {})
+        })
+    }
     searchSession = createReaderSearch(currentView)
     currentView.history.addEventListener('index-change', () => {
         if (view === currentView)
@@ -116,29 +136,24 @@ async function open(args) {
         event.preventDefault()
         if (view !== currentView) return
         const href = String(event.detail.href_ ?? '')
+        if (nativeInput?.followUrl(href)) return
         if (/^(https?:|mailto:)/i.test(href)) send({event:'externalLink', data:href})
     })
     view.addEventListener('link', event => {
         event.preventDefault()
         if (view !== currentView) return
+        if (nativeInput?.followUrl(event.detail.href)) return
         speech?.stop()
         enqueueNavigation(() => view === currentView ? currentView.goTo(event.detail.href) : null)
             .catch(() => {})
     })
     view.addEventListener('load', ({detail:{doc,index}}) => {
         if (view !== currentView) return
-        let selectionTimer
-        doc.addEventListener('selectionchange', () => {
-            clearTimeout(selectionTimer)
-            selectionTimer = setTimeout(() => {
-                if (view !== currentView) return
-                const selection = doc.getSelection()
-                if (!selection?.rangeCount || selection.isCollapsed) return
-                send({event:'selection', data:{text:selection.toString().slice(0, 20000),
-                    cfi:currentView.getCFI(index, selection.getRangeAt(0)), sectionIndex:index}})
-            }, 150)
-        })
+        nativeInput?.decorate(doc, index)
         doc.addEventListener('keydown', event => {
+            // This host forwards plain page-turn keys from native GTK once.
+            // Do not handle them twice if WebKit later fixes child callbacks.
+            if (nativeInput) return
             if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
             const direction = event.key === 'ArrowRight' ? 'goRight'
                 : event.key === 'ArrowLeft' ? 'goLeft' : null
@@ -151,6 +166,7 @@ async function open(args) {
         })
     })
     view.addEventListener('relocate', ({detail}) => {
+        if (view === currentView) nativeInput?.prune()
         if (view === currentView) send({event:'location', data:{
             cfi:detail.cfi, fraction:Number.isFinite(detail.fraction) ? progressFraction(detail.fraction) : 0,
             chapterTitle:detail.tocItem?.label ?? '', sectionIndex:detail.section?.current ?? 0}})
@@ -166,6 +182,9 @@ async function open(args) {
     guardRendererLifecycle(view)
     applyAppearance(args.appearance ?? {})
     await view.init({lastLocation:args.initialLocation || undefined, showTextStart:false})
+    selectionObserver = createReaderSelection(currentView, {onSelection:data => {
+        if (view === currentView) send({event:'selection', data})
+    }})
     const speechOverlay = '__crisp_read_aloud__'
     const clearSpeechHighlight = () => {
         for (const item of currentView.renderer?.getContents?.() ?? [])
@@ -269,7 +288,16 @@ async function receive(message) {
         if (method === 'open') fail(error)
     }
 }
-Object.defineProperty(window, 'crispEbookHost', {value:Object.freeze({receive,ready}), writable:false, configurable:false})
+const nativeKey = key => {
+    if (!nativeInput || !view) return
+    const direction = key === 'Right' ? 'goRight' : key === 'Left' ? 'goLeft' : null
+    if (!direction) return
+    const currentView = view
+    speech?.stop()
+    enqueueNavigation(() => view === currentView ? currentView[direction]() : null).catch(() => {})
+}
+const nativeLink = token => nativeInput?.activate(token)
+Object.defineProperty(window, 'crispEbookHost', {value:Object.freeze({receive,ready,nativeKey,nativeLink}), writable:false, configurable:false})
 window.addEventListener('message', event => {
     if (event.source !== parent || event.origin !== expectedParent) return
     try { receive(typeof event.data === 'string' ? JSON.parse(event.data) : event.data) } catch { /* ignore unrelated frames */ }
@@ -278,6 +306,8 @@ window.addEventListener('unhandledrejection', event => {
     if (!opened) fail(event.reason)
 })
 window.addEventListener('pagehide', () => {
+    selectionObserver?.dispose()
+    nativeInput?.dispose()
     speech?.dispose()
     gestureButton.hidden = true
     searchSession?.dispose()

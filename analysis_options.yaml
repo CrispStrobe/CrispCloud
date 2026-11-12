@@ -10,6 +10,9 @@ analyzer:
     - packages/flutter_pty2/**
     # Pinned upstream text editor style; host lifecycle regressions run in CI.
     - packages/re_editor/**
+    # Matching syntax engine retains its upstream style; actual large-source
+    # lexer and editor-paint regressions exercise the local continuation patch.
+    - packages/re_highlight/**
     # The maintained image editor fork has its own analysis/test workflow.
     - packages/pro_image_editor/**
     # Pinned native video engine; host adapters and tests run in media-editor CI.

@@ -10,3 +10,4 @@ export 'src/portable_reader_controller.dart';
 export 'src/widgets/portable_reader.dart';
 export 'src/widgets/prose_editor.dart';
 export 'src/widgets/appearance_dialog.dart';
+export 'src/widgets/speech_dialog.dart';

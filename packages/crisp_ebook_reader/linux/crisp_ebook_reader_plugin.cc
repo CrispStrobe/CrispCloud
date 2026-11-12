@@ -151,7 +151,7 @@ void Error(FlMethodCall* call, const std::string& message) {
   X(webkit_settings_set_media_playback_requires_user_gesture) \
   X(webkit_settings_set_hardware_acceleration_policy) \
   X(webkit_navigation_policy_decision_get_navigation_action) \
-  X(webkit_navigation_action_get_request) X(webkit_uri_request_get_uri) \
+  X(webkit_navigation_action_get_request) X(webkit_navigation_action_get_navigation_type) X(webkit_uri_request_get_uri) \
   X(webkit_response_policy_decision_is_main_frame_main_resource) \
   X(webkit_response_policy_decision_get_request) \
   X(webkit_policy_decision_use) X(webkit_policy_decision_ignore) \
@@ -469,11 +469,12 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     }
     origin_ = "http://127.0.0.1:" + std::to_string(g_uri_get_port(uri));
     document_url_ = origin_ + path;
+    link_prefix_ = "blob:" + origin_ + "/" + session + "/__link__/";
     url_ = url;
     // The bridge is installed only in the trusted top-level document. Neither
     // book frames nor subsequent navigations receive this host capability.
     std::string source = "if(location.href==='" + url_ + "'){Object.defineProperty(window,'CrispEbookMessage',"
-        "{value:Object.freeze({postMessage:function(value){window.webkit.messageHandlers.CrispEbookMessage.postMessage(String(value));}}),"
+        "{value:Object.freeze({nativeInputPrefix:'" + link_prefix_ + "',postMessage:function(value){window.webkit.messageHandlers.CrispEbookMessage.postMessage(String(value));}}),"
         "writable:false,configurable:false});}";
     auto* script = api_.webkit_user_script_new(source.c_str(), WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
                                                WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START, nullptr, nullptr);
@@ -603,6 +604,14 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     const guint keyval = gdk_keyval_from_name(name.c_str());
     if (keyval == GDK_KEY_VoidSymbol) return;
     ++key_events_;
+    // WebKit blocks parent-installed key listeners in script-disabled child
+    // frames. Page turns belong to the trusted reader, so forward just these
+    // two unmodified native keys there. GTK still owns selection, clipboard,
+    // Tab/Shift+Tab traversal and Enter activation of the real focused link.
+    if (modifiers == 0 && (name == "Left" || name == "Right")) {
+      if (pressed) Evaluate("void window.crispEbookHost?.nativeKey('" + name + "')");
+      return;
+    }
     // Send selection/copy shortcuts through WebKit's keyboard input path too.
     // A direct editing command bypasses keyboard dispatch and its focused-frame
     // handling, especially while pointer input is entering a publication frame.
@@ -668,6 +677,17 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   }
   bool IsBookFrame(const char* uri) const {
     return uri != nullptr && !origin_.empty() && std::string(uri).rfind("blob:" + origin_ + "/", 0) == 0;
+  }
+  bool IsPublicationLink(const char* uri) const {
+    return uri != nullptr && !link_prefix_.empty() && std::string(uri).rfind(link_prefix_, 0) == 0;
+  }
+  void FollowPublicationLink(const char* uri) {
+    if (!focused_ || !loaded_ || !IsPublicationLink(uri)) return;
+    const std::string token = std::string(uri).substr(link_prefix_.size());
+    if (token.empty() || token.size() > 20 || token.find_first_not_of("0123456789") != std::string::npos) return;
+    // Only a fixed token reaches the top-level registry; native code never
+    // evaluates a publication href or lets the WebView load that local route.
+    Evaluate("void window.crispEbookHost?.nativeLink('" + token + "')");
   }
   void Emit(const char* type, const std::string& data) {
     if (closed_) return;
@@ -795,6 +815,12 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
       auto* navigation = reinterpret_cast<WebKitNavigationPolicyDecision*>(decision);
       auto* action = self->api_.webkit_navigation_policy_decision_get_navigation_action(navigation);
       const char* uri = self->api_.webkit_uri_request_get_uri(self->api_.webkit_navigation_action_get_request(action));
+      if (self->IsPublicationLink(uri)) {
+        if (self->api_.webkit_navigation_action_get_navigation_type(action) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED)
+          self->FollowPublicationLink(uri);
+        self->api_.webkit_policy_decision_ignore(decision);
+        return TRUE;
+      }
       allow = self->IsDocument(uri) || self->IsBookFrame(uri);
     } else if (!self->closed_ && type == WEBKIT_POLICY_DECISION_TYPE_RESPONSE) {
       auto* response = reinterpret_cast<WebKitResponsePolicyDecision*>(decision);
@@ -877,6 +903,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   std::string url_;
   std::string document_url_;
   std::string origin_;
+  std::string link_prefix_;
 };
 #endif  // CRISP_EBOOK_HAS_WEBKITGTK
 

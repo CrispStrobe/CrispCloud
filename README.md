@@ -157,6 +157,7 @@ to change a binding, review conflicts or restore defaults.
 | `F3` / `F4` | View / edit |
 | `F7` | New folder |
 | `F8` / `Delete` | Delete |
+| `F9` | Show / hide Terminal |
 | `Ctrl+F` | Filter the current listing |
 | `Alt+F7` | Recursive file and content search |
 | `Ctrl+R` | Refresh the active pane |
@@ -218,3 +219,5 @@ The `1.2.1` integration uses the pinned [CrisperBooks](https://github.com/CrispS
 The `1.2.2` release also vendors the matching Quds reports facade. Standalone editor resolution uses the same engine/reports source as the app, avoiding the hosted-package conflict exposed by the release gate.
 
 On macOS the browser uses a unified native title-bar toolbar beside the window controls and app title. The Find/Filter indicator reserves its own row below the file viewport. Defaults now show F8 for Delete (the Delete key remains an alias) and F9 for Terminal, including the function-key bar. NXC/NQC source uses C-family highlighting. Viewer and editor highlighting uses bounded, state-preserving chunks for large source, including generated Dart files; syntax coloring is painted only for visible viewer rows.
+
+The final `1.2.2` integration includes lazy ISO/HFS+/DMG and package-container reading, bounded streamed archive writers, the current canonical DOC parser and CrisperBooks foreground read-aloud controls. The standalone parser mirror is verified separately from Quds, with obsolete mirror files removed. The canonical Word picture gate uses its controller-default fixture and strict 94.45-point native layout; historical 12-point workflow reports keep their original source scope.

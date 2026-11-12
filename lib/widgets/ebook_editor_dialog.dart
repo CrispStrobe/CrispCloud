@@ -2049,7 +2049,6 @@ class _EbookEditorDialogState extends ConsumerState<EbookEditorDialog> {
                 _annotations?.appearance ??
                 const EbookAppearance(flow: 'scrolled'),
             showControls: false,
-            translate: context.ebookTr,
             onReady: _onReady,
             onLocationChanged: _onLocation,
             onAppearanceChanged: (appearance) {

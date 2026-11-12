@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "package": "@bjorn3/browser_wasi_shim",
+  "version": "0.4.2",
+  "source_url": "https://registry.npmjs.org/@bjorn3/browser_wasi_shim/-/browser_wasi_shim-0.4.2.tgz",
+  "repository": "https://github.com/bjorn3/browser_wasi_shim",
+  "license_expression": "MIT OR Apache-2.0",
+  "selected_grant": "MIT",
+  "tarball_sha256": "9c0281520d0e99f027ec7c1c79b4036c0f8168ed9bf98aba19db4737a1333782",
+  "scope": "Unmodified WASI Preview 1 shim with memory-only files. OPFS support is neither bundled nor imported.",
+  "files": {
+    "assets/wasi_shim/LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+    "assets/wasi_shim/debug.js": "a91848ee180529e2a60c05dfb9584cad19cd4e1c6f391fdb76a938bcae4c0328",
+    "assets/wasi_shim/fd.js": "9e82e1fc1bfd3e3573f64349dc42b4b624ed61d24e5c553f2bb4d041444f166c",
+    "assets/wasi_shim/fs_mem.js": "85dbc9e0ee784d9ff8b55452644e00bf7058e32355aab974f8b71d7d85772324",
+    "assets/wasi_shim/wasi.js": "168eb977a826f75ab0c39f9322f78cc58dbd5b233019ad1d6a7e940af8a7c4aa",
+    "assets/wasi_shim/wasi_defs.js": "0db0f42ba330749a7b05095ea1fd0ff63fd2b30e84cead30fe4c28359d15f194"
+  }
+}
