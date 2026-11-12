@@ -28,8 +28,10 @@ Branch: `feature/archive-rearrange-cpio-20261112`.
 The implementation and focused gates are complete. The combined regression
 passed **2,094 tests across 84 files**, all **23 changed Dart files** passed
 fatal-info analysis and formatting, and **33 help tests** passed separately.
-Release-build evidence is recorded in the
-[verification document](archive-sync-large-tar-verification.md).
+The standard release web build passed with source `d84c9db5` and app version
+`1.2.0+13`; compiled identifiers and all bundled guide hashes were verified.
+The [verification document](archive-sync-large-tar-verification.md) records
+commands, measured evidence and acceptance boundaries.
 
 ## Remote checkpoints
 
@@ -41,12 +43,16 @@ Release-build evidence is recorded in the
 | `f11b1cad035c9ebe5e4674475097be1139fd45ea` | Compare routing, complete review, recovery UI and nine-language guidance |
 | `6577554b29d6d0c0beec41975296f22d67546afc` | Large native TAR/CBT tests, independent checker and measured evidence |
 | `d84c9db5acf8f903ae18523266aaba84bc4a4bd0` | Reviewed contracts, partial gap status and English/German/French bundled guides |
+| `ca729ff2b9411c8b4838595bcc586f468d7d272f` | Completed 2,094-test regression, analysis/format gates and provenance clarification |
 
 Every checkpoint uses a leased fast-forward update and an exact Git tree
 comparison. Local history is reconciled to the returned remote commit without
 discarding pending work. The existing closed PR #93 is not reopened, and no
 replacement PR, merge or deployment is part of this increment. Review the
 branch or its comparison against the baseline to include the continuation.
+The final documentation checkpoint records the successful release build and
+post-build manifest/lockfile restoration. These later documentation changes do
+not alter the application or its bundled assets.
 
 ## Focused verification and review
 

@@ -202,8 +202,31 @@ flutter build web --release --no-pub --no-wasm-dry-run \
   --dart-define=APP_VERSION=1.2.0+13
 ```
 
-Release output verification is pending in this intermediate documentation
-checkpoint.
+The standard release web build **passed in 204.9 seconds**. The compiled
+`main.dart.js` contains the expected source identifier and app version. Each
+bundled English/German/French guide exactly matches its source bytes and the
+manifest SHA-256, and the bundled manifest matches the reviewed source manifest.
+Later commits contain only unbundled verification/provenance documentation;
+application code and bundled-guide bytes remain those of `d84c9db5`.
+
+After validation, `pubspec.yaml` and `pubspec.lock` exactly match baseline
+`efd6969aac4a7e9a9dccd3fbef4abee3f56bba32`. No temporary hook settings remain.
+All local links in the eight changed technical/provenance documents were
+checked, and the final diff passes whitespace validation.
+
+| Final observed gate | Result |
+| --- | --- |
+| Complete archive/viewer/affected file-operation and directory-comparison regression | 2,094 tests passed across 84 files |
+| Help service and dialog regression, separate from the combined suite | 33 tests passed |
+| Fatal-info analysis and formatting | All 23 changed Dart files clean |
+| Independent native large TAR/CBT reference readback | Both complete outputs passed Python/GNU tar checks |
+| Guide content/anchor validator | Three guides, 23 matching topics each |
+| Standard versioned Flutter release web build | Passed; source/version and all bundled guide hashes verified |
+| Dependency configuration and lockfile | Byte-identical to baseline after validation |
+
+Focused test counts above are subsets of the combined gate, not additional
+tests to add to its total. Native device/release acceptance and durable packing
+restart retain the boundaries below.
 
 ## Remaining boundaries
 
