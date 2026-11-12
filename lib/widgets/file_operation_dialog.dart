@@ -81,6 +81,9 @@ Future<FileOperationPlan?> showFileOperationDialog(
       }
     }
     if (!context.mounted) return null;
+    final rememberSelection = ref
+        .read(panelProvider(side))
+        .captureSelectionMemoryForOperation(files);
     if (groups != null && groups.length > 1) {
       if (sourceBackend != null) {
         throw ArgumentError('A snapshot copy uses one captured source.');
@@ -152,6 +155,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
             destinationPath: destinationPath ?? destination.source.currentPath,
             protectedSources: protected,
             allowBackground: false,
+            onAccepted: rememberSelection,
             reviewGroup:
                 'Account $index of ${groups!.length}: ${ref.read(panelProvider(side)).storageDisplayName(group.key.storageReference)}',
           ),
@@ -177,6 +181,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
         destinationOrigin: destinationOrigin,
         destinationPath: destinationPath,
         sourceBackend: sourceBackend,
+        onAccepted: rememberSelection,
       ),
     );
     return result;
@@ -198,6 +203,7 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     this.protectedSources = const [],
     this.allowBackground = true,
     this.reviewGroup,
+    this.onAccepted,
   });
   final PanelSide side;
   final List<FileItem> files;
@@ -212,12 +218,14 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   final List<FileReference> protectedSources;
   final bool allowBackground;
   final String? reviewGroup;
+  final VoidCallback? onAccepted;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
 }
 
 class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
+  VoidCallback? _rememberSelection;
   final _destination = TextEditingController();
   final _relativeBase = TextEditingController();
   final _mask = TextEditingController(text: '*');
@@ -282,6 +290,9 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   void initState() {
     super.initState();
     _panel = ref.read(panelProvider(widget.side));
+    _rememberSelection =
+        widget.onAccepted ??
+        _panel.captureSelectionMemoryForOperation(widget.files);
     try {
       if (widget.sourceBackend != null &&
           (widget.sourceOrigin == null ||
@@ -690,11 +701,12 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       control: _control,
       notBefore: notBefore,
       resolveDetailedConflict: background ? null : _resolve,
-      onQueued: background
-          ? () {
-              if (mounted) Navigator.pop(context);
-            }
-          : null,
+      onQueued: () {
+        if (plan.source.isCurrent && plan.destination.isCurrent) {
+          _rememberSelection?.call();
+        }
+        if (background && mounted) Navigator.pop(context);
+      },
       onProgress: (entry, bytes, total) {
         if (mounted) {
           setState(() {

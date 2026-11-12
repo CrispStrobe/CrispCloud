@@ -177,6 +177,30 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final editing in [false, true]) {
+    testWidgets(
+      'keypad restore respects ${editing ? 'text input' : 'browser'} ownership',
+      (tester) async {
+        await mount(tester, editing: editing);
+        final auth = container.read(authProvider) as _Auth;
+        auth.client.put('/remember.txt', [1]);
+        auth.connect();
+        final panel = container.read(panelProvider(PanelSide.remote));
+        await panel.refresh();
+        panel.selectAll();
+        expect(panel.rememberSelection(), 1);
+        panel.clearSelection();
+        container.read(activePanelProvider.notifier).state = PanelSide.remote;
+        container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+        await tester.sendKeyEvent(LogicalKeyboardKey.numpadDivide);
+        await tester.pumpAndSettle();
+        expect(panel.selection.length, editing ? 0 : 1);
+        if (!editing) expect(panel.selection.single.path, '/remember.txt');
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   test('saved bindings hydrate observable provider state', () async {
     SharedPreferences.setMockInitialValues({
       'keyboard_shortcuts': '{"refresh":{"key":"F9","ctrl":false,"shift":false,"alt":false,"meta":false}}',

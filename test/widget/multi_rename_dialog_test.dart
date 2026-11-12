@@ -287,6 +287,8 @@ void main() {
   testWidgets(
     'applying the dialog renames on its captured source and reports success',
     (tester) async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      panel.selectAll();
       await open(tester);
       await tester.enterText(
         find.byKey(const ValueKey('rename-name-mask')),
@@ -302,12 +304,28 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('rename-apply')), findsNothing);
+      expect(panel.rememberedSelectionCount, 2);
+      expect(panel.restoreSelection(), 0);
+      await container
+          .read(actionHistoryProvider.notifier)
+          .undoLast(const UndoContext());
+      panel.clearSelection();
+      expect(panel.restoreSelection(), 2);
+      expect(panel.selection.map((row) => row.path).toSet(), {
+        '/first.txt',
+        '/second.txt',
+      });
     },
   );
 
   testWidgets('occupied destinations leave the entire batch untouched', (
     tester,
   ) async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    panel.toggleSelection(files.first);
+    panel.rememberSelection();
+    final rememberedPath = panel.selection.single.path;
+    panel.selectAll();
     cloud.paths.add('/second_new.txt');
     await open(tester);
     await tester.enterText(
@@ -318,6 +336,9 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('rename-apply')));
     await tester.pumpAndSettle();
     expect(cloud.renames, isEmpty);
+    panel.clearSelection();
+    expect(panel.restoreSelection(), 1);
+    expect(panel.selection.single.path, rememberedPath);
     expect(cloud.paths, {'/first.txt', '/second.txt', '/second_new.txt'});
     expect(
       find.text(

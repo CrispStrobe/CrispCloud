@@ -35,6 +35,7 @@ class WorkspaceUxStrings {
       ShortcutAction.goToFolder => s.description(15),
       ShortcutAction.filter => s.description(16),
       ShortcutAction.selectAll => s.description(19),
+      ShortcutAction.restoreSelection => context.commanderTr('Restore Selection'),
       ShortcutAction.delete => s.description(9),
       ShortcutAction.rename => s.description(1),
       ShortcutAction.newFolder => s.description(8),

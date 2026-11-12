@@ -1558,6 +1558,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     final history = ref.read(actionHistoryProvider.notifier);
     final service = _batchService;
     final options = _options.toJson();
+    final rememberSelection = _panel.captureSelectionMemoryForOperation(_files);
     setState(() {
       _processing = true;
       _executionPlan = plan;
@@ -1611,6 +1612,7 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
         // A stopped or partially failed batch still owns completed physical
         // steps. Its one Undo entry restores exactly the journalled work.
         if (record.canRestore) {
+          rememberSelection?.call();
           _recordBatchUndo(record, origin, storage, history, service);
         }
         if (mounted) setState(() => _result = _resultFor(plan, record));

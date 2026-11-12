@@ -25,6 +25,7 @@ enum ShortcutAction {
   goToFolder,
   filter,
   selectAll,
+  restoreSelection,
   delete,
   rename,
   newFolder,
@@ -240,6 +241,9 @@ class KeyboardShortcutService {
     ShortcutAction.goToFolder: const ShortcutBinding(key: 'G', ctrl: true),
     ShortcutAction.filter: const ShortcutBinding(key: 'F', ctrl: true),
     ShortcutAction.selectAll: const ShortcutBinding(key: 'A', ctrl: true),
+    ShortcutAction.restoreSelection: ShortcutBinding(
+      key: LogicalKeyboardKey.numpadDivide.keyLabel,
+    ),
     ShortcutAction.delete: const ShortcutBinding(key: 'Delete'),
     ShortcutAction.rename: const ShortcutBinding(key: 'F2'),
     ShortcutAction.newFolder: const ShortcutBinding(key: 'F7'),
