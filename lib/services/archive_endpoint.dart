@@ -54,7 +54,9 @@ class ArchiveEndpointImportPlan {
     this._plan,
     this.moveSources,
     this._nativeSnapshots,
+    this._archiveSource,
   );
+  final _ArchiveCopyWitness? _archiveSource;
   final Map<String, Object> _nativeSnapshots;
   final ArchiveEndpoint _owner;
   final FileOperationPlan _plan;
@@ -121,15 +123,77 @@ class ArchiveEndpoint {
     FileConflictPolicy conflict = FileConflictPolicy.keepBoth,
     FileOperationControl? control,
   }) async {
+    if (source is ArchiveOperationBackend) {
+      throw UnsupportedError(
+        'Archive members require the reviewed archive copy workflow; archive-to-archive moves are unavailable.',
+      );
+    }
+    return _prepareImport(
+      source: source,
+      files: files,
+      directory: directory,
+      moveSources: moveSources,
+      conflict: conflict,
+      control: control,
+    );
+  }
+
+  /// Copies original members from an independently captured archive. Source
+  /// mutation is deliberately absent: publication of one destination is not a
+  /// transaction authorizing a second physical archive rewrite.
+  Future<ArchiveEndpointImportPlan> prepareArchiveCopy({
+    required ArchiveWorkspace source,
+    required List<FileItem> files,
+    String directory = '/',
+    FileConflictPolicy conflict = FileConflictPolicy.keepBoth,
+    FileOperationControl? control,
+  }) async {
+    _check();
+    final snapshot = source.captureCopySource();
+    if (snapshot.sharesContainerWith(workspace) ||
+        await native
+            .sameNativeArchiveContainer(
+              snapshot.containerBackend,
+              snapshot.containerFile,
+              workspace.outermost.source,
+              workspace.outermost.file,
+            )
+            .timeout(readInactivity)) {
+      throw UnsupportedError(
+        'Copying between members of the same physical archive requires a single-container transaction.',
+      );
+    }
+    final nativeSnapshot = await native
+        .captureNativeArchiveImportSource(
+          snapshot.containerBackend,
+          snapshot.containerFile,
+        )
+        .timeout(readInactivity);
+    snapshot.checkCurrent();
+    return _prepareImport(
+      source: snapshot.backend,
+      files: files,
+      directory: directory,
+      moveSources: false,
+      conflict: conflict,
+      control: control,
+      archiveSource: _ArchiveCopyWitness(snapshot, nativeSnapshot),
+    );
+  }
+
+  Future<ArchiveEndpointImportPlan> _prepareImport({
+    required FileOperationBackend source,
+    required List<FileItem> files,
+    required String directory,
+    required bool moveSources,
+    required FileConflictPolicy conflict,
+    FileOperationControl? control,
+    _ArchiveCopyWitness? archiveSource,
+  }) async {
     _check();
     if (_busy || _staged != null || workspace.pendingPublication != null) {
       throw StateError(
         'Finish the current archive transaction before importing again.',
-      );
-    }
-    if (source is ArchiveOperationBackend) {
-      throw UnsupportedError(
-        'Archive-to-archive imports require a separate transaction workflow.',
       );
     }
     if (![
@@ -143,9 +207,10 @@ class ArchiveEndpoint {
     }
     final outer = workspace.outermost;
     final sameStorage =
-        source.identity == outer.source.identity ||
-        source.storageReference != null &&
-            source.storageReference == outer.source.storageReference;
+        archiveSource == null &&
+        (source.identity == outer.source.identity ||
+            source.storageReference != null &&
+                source.storageReference == outer.source.storageReference);
     for (final file in files) {
       if (file.path == null ||
           file.isSymlink == true ||
@@ -206,11 +271,13 @@ class ArchiveEndpoint {
       if (snapshot != null) nativeSnapshots[entry.source.path!] = snapshot;
     }
     _check();
+    archiveSource?.snapshot.checkCurrent();
     return ArchiveEndpointImportPlan._(
       this,
       plan,
       moveSources,
       Map.unmodifiable(nativeSnapshots),
+      archiveSource,
     );
   }
 
@@ -235,6 +302,7 @@ class ArchiveEndpoint {
     (plan.source as _ArchiveImportSource).control = control;
     final deadline = Timer(importDeadline, control.cancel);
     try {
+      await _verifyArchiveSource(import._archiveSource, control: control);
       for (final entry in plan.entries.where(
         (entry) => import._nativeSnapshots.containsKey(entry.source.path),
       )) {
@@ -285,7 +353,8 @@ class ArchiveEndpoint {
           }
         }
         int? mode;
-        if (plan.source.capabilities.permissions) {
+        if (plan.source.capabilities.permissions ||
+            import._archiveSource != null) {
           mode = (await plan.source.readMetadataFields(
             current.path!,
             modified: false,
@@ -296,12 +365,12 @@ class ArchiveEndpoint {
             acl: false,
             windowsAttributes: false,
           )).mode;
-          if (mode == null) {
+          if (mode == null && import._archiveSource == null) {
             throw StateError(
               'Source permissions could not be read: ${current.path}',
             );
           }
-          if (mode & 0xc00 != 0) {
+          if ((mode ?? 0) & 0xc00 != 0) {
             throw const ArchiveViewException(
               'Importing setuid or setgid entries requires an ownership-preserving workflow. Source ownership is not captured by this importer.',
             );
@@ -330,6 +399,7 @@ class ArchiveEndpoint {
       }
       await control.checkpoint();
       overlay._check();
+      import._archiveSource?.snapshot.checkCurrent();
       workspace.applyImport([
         for (final witness in witnesses)
           ArchiveWorkspaceImport(
@@ -350,7 +420,10 @@ class ArchiveEndpoint {
       _witnesses.addAll(witnesses);
       _staged = import;
       _review = await workspace.review(
-        isCancelled: () => control.isCancelled || _closed,
+        isCancelled: () {
+          import._archiveSource?.snapshot.checkCurrent();
+          return control.isCancelled || _closed;
+        },
       );
       return _review!;
     } finally {
@@ -362,7 +435,14 @@ class ArchiveEndpoint {
 
   Future<ArchiveWorkspaceReview> review({bool Function()? isCancelled}) async {
     _check();
-    return _review = await workspace.review(isCancelled: isCancelled);
+    final source = _staged?._archiveSource;
+    source?.snapshot.checkCurrent();
+    return _review = await workspace.review(
+      isCancelled: () {
+        source?.snapshot.checkCurrent();
+        return isCancelled?.call() ?? false;
+      },
+    );
   }
 
   Future<ArchiveEndpointTransferResult> commit({
@@ -376,9 +456,17 @@ class ArchiveEndpoint {
     }
     _busy = true;
     try {
+      final source = _staged?._archiveSource;
+      source?.snapshot.checkCurrent();
       final receipt = await workspace.save(
         reviewed: reviewed,
-        isCancelled: () => _closed || (isCancelled?.call() ?? false),
+        isCancelled: () {
+          source?.snapshot.checkCurrent();
+          return _closed || (isCancelled?.call() ?? false);
+        },
+        beforePublication: source == null
+            ? null
+            : () => _verifyArchiveSource(source, isCancelled: isCancelled),
         onPhase: onPhase,
       );
       if (receipt == null) {
@@ -537,11 +625,62 @@ class ArchiveEndpoint {
     return found;
   }
 
+  Future<void> _verifyArchiveSource(
+    _ArchiveCopyWitness? witness, {
+    FileOperationControl? control,
+    bool Function()? isCancelled,
+  }) async {
+    if (witness == null) return;
+    final snapshot = witness.snapshot;
+    Future<void> checkpoint() async {
+      _check();
+      snapshot.checkCurrent();
+      await control?.checkpoint();
+      if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    }
+
+    await checkpoint();
+    await native
+        .verifyNativeArchiveImportSource(
+          snapshot.containerBackend,
+          snapshot.containerFile,
+          witness.nativeSnapshot,
+        )
+        .timeout(readInactivity);
+    final hash = await _digest(
+      snapshot.containerBackend,
+      snapshot.containerFile,
+      checkpoint,
+      control: control,
+      inactivity: readInactivity,
+      maxBytes: ArchiveService.maxArchiveBytes,
+    );
+    if (hash != snapshot.fingerprint) {
+      throw StateError(
+        'The source archive contents changed. Reopen the copy preview.',
+      );
+    }
+    await native
+        .verifyNativeArchiveImportSource(
+          snapshot.containerBackend,
+          snapshot.containerFile,
+          witness.nativeSnapshot,
+        )
+        .timeout(readInactivity);
+    await checkpoint();
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
     if (ownsWorkspace) await workspace.close();
   }
+}
+
+class _ArchiveCopyWitness {
+  const _ArchiveCopyWitness(this.snapshot, this.nativeSnapshot);
+  final ArchiveWorkspaceSourceSnapshot snapshot;
+  final Object? nativeSnapshot;
 }
 
 class _ImportWitness {
@@ -574,9 +713,10 @@ Future<String> _digest(
   TransferCheckpoint checkpoint, {
   FileOperationControl? control,
   Duration inactivity = const Duration(seconds: 30),
+  int maxBytes = kArchiveReadLimit,
 }) async {
   if (expected.size == null ||
-      expected.size! > kArchiveReadLimit ||
+      expected.size! > maxBytes ||
       expected.size! < 0 ||
       expected.isFolder ||
       expected.isSymlink == true) {

@@ -179,6 +179,7 @@ class ArchiveContainerPublisher {
     ArchivePublicationRecord? retry,
     bool Function()? isCancelled,
     void Function(ArchivePublicationPhase)? onPhase,
+    TransferCheckpoint? beforePublication,
   }) async {
     if (_running) {
       throw StateError('An archive publication is already running.');
@@ -251,7 +252,11 @@ class ArchiveContainerPublisher {
       if (_active!.candidate == null) {
         await _stage(bytes, isCancelled: isCancelled, onPhase: onPhase);
       }
-      return await _finish(isCancelled: isCancelled, onPhase: onPhase);
+      return await _finish(
+        isCancelled: isCancelled,
+        onPhase: onPhase,
+        beforePublication: beforePublication,
+      );
     } catch (error) {
       if (_active != null) {
         await _restoreVacantOriginal();
@@ -374,6 +379,7 @@ class ArchiveContainerPublisher {
   Future<ArchivePublicationReceipt> _finish({
     bool Function()? isCancelled,
     void Function(ArchivePublicationPhase)? onPhase,
+    TransferCheckpoint? beforePublication,
   }) async {
     var record = _active!;
     await _guardPaths(record);
@@ -455,6 +461,13 @@ class ArchiveContainerPublisher {
     }
     record = _active!;
     await _intent(ArchivePublicationPhase.installing, onPhase: onPhase);
+    // Cross-container copies revalidate their separate immutable source after
+    // staging. Keep the final candidate/backup checks below this potentially
+    // long read, so a source check cannot weaken destination verification.
+    // Failure restores a vacant original and retains a reviewable recovery
+    // record. An already installed candidate is confirmed above without
+    // replaying this guard; source files are never part of recovery deletion.
+    await beforePublication?.call();
     await _guardPaths(_active!);
     _check(isCancelled: isCancelled);
     final checkedCandidate = await _inspect(
