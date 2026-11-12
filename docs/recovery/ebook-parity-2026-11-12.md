@@ -349,8 +349,12 @@ same two skips, all 37 preflight cases passed, and source-bound checking passed.
 The dependency manifest and lock remain byte-for-byte identical to `e2231a9`.
 Policy decisions and validation rules are unchanged.
 
-The incoming focused regression `explicit reading-data discard does not retry a
-transient write failure` reached Flutter locally but failed before its discard
-assertions: its setup could not find `EbookChapterReader`. The test setup is
-being investigated; this checkpoint does not claim that regression passed.
+The consolidated runtime and both parent histories are saved at `3773e8e7` on
+`feature/ebook-parity-canary-20261112`. The incoming focused regression
+`explicit reading-data discard does not retry a transient write failure`
+initially failed before its discard assertions because the test supplied a
+Linux probe without selecting Flutter's Linux platform variant. The follow-up
+adds that missing test variant and the same single regression passes. It keeps
+all write-count, saved-state, late-location and explicit-discard assertions
+unchanged. No production source or source-review binding changes are needed.
 The temporary local native-hook configuration was restored byte for byte.
