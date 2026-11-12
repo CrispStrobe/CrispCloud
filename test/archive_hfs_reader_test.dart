@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' as ar;
 import 'package:crisp_cloud/services/archive_hfs_reader.dart';
 import 'package:crisp_cloud/services/archive_types.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +16,37 @@ void main() {
         koni.MemoryByteSource(fixture.bytes),
         maxMemberBytes: limit,
       );
+
+  test('reads a native-created HFS+ catalog with multiple leaves and an index root', () async {
+    final bytes = ar.GZipDecoder().decodeBytes(
+      File('test/fixtures/archives/native-hfsplus.hfs.gz').readAsBytesSync(),
+      verify: true,
+      maxOutputSize: 8 * 1024 * 1024,
+    );
+    final archive = await openHfsArchive(
+      koni.MemoryByteSource(bytes),
+      maxMemberBytes: 1024,
+    );
+    addTearDown(archive.close);
+    expect(archive.members, hasLength(44));
+    expect(
+      archive.members.singleWhere((m) => m.name == 'Applications').isSpecial,
+      isTrue,
+    );
+    expect(
+      archive.members.singleWhere((m) => m.name == 'docs').isFile,
+      isFalse,
+    );
+    final files = archive.members.where((m) => m.isFile && !m.isSpecial);
+    expect(files, hasLength(42));
+    for (final member in files) {
+      expect(
+        utf8.decode(await archive.readMember(member)),
+        'CrispCloud independently created HFS+ fixture\n',
+        reason: member.name,
+      );
+    }
+  });
 
   for (final hfsx in [false, true]) {
     test(

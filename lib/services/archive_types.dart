@@ -92,6 +92,9 @@ class ViewerArchive {
   final String formatName;
   final List<ViewerArchiveMember> members;
 
+  /// Format-specific limits or unverified protections shown beside the listing.
+  final List<String> notices;
+
   final Future<Uint8List> Function(ViewerArchiveMember member, int maxBytes)
   _read;
   final Future<void> Function() _close;
@@ -100,6 +103,7 @@ class ViewerArchive {
   ViewerArchive.reader({
     required this.formatName,
     required List<ViewerArchiveMember> members,
+    List<String> notices = const [],
     required Future<Uint8List> Function(
       ViewerArchiveMember member,
       int maxBytes,
@@ -107,7 +111,11 @@ class ViewerArchive {
     read,
     required Future<void> Function() close,
   }) : members = List<ViewerArchiveMember>.unmodifiable(members),
+       notices = List<String>.unmodifiable(notices),
+       // Keep public callback names while storing them privately.
+       // ignore: prefer_initializing_formals
        _read = read,
+       // ignore: prefer_initializing_formals
        _close = close;
 
   /// A one-member archive over already-decompressed bytes.
@@ -152,7 +160,12 @@ class ViewerArchive {
         'This member belongs to another archive.',
       );
     }
-    if (member.size > maxBytes) {
+    if (!member.isFile || member.isSpecial || member.pathEscapedRoot) {
+      throw const ArchiveViewException(
+        'Only safe regular archive members can be read.',
+      );
+    }
+    if (member.size < 0 || member.size > maxBytes) {
       throw ArchiveViewException(
         'The entry is larger than the ${_mb(maxBytes)} safety limit.',
       );
@@ -161,6 +174,17 @@ class ViewerArchive {
     if (data.length > maxBytes) {
       throw ArchiveViewException(
         'The entry is larger than the ${_mb(maxBytes)} safety limit.',
+      );
+    }
+    if (_closed) {
+      throw const ArchiveViewException(
+        'This archive has been closed.',
+        code: ArchiveMessageCode.closed,
+      );
+    }
+    if (data.length != member.size) {
+      throw const ArchiveViewException(
+        'Archive member size does not match its metadata.',
       );
     }
     return data;

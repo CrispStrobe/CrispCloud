@@ -219,7 +219,7 @@ void main() {
       'enforces the directory depth budget before reading descendants',
       () async {
         final fixture = IsoFixture();
-        final nested = IsoFixture.childSector * 2048 + 68;
+        const nested = IsoFixture.childSector * 2048 + 68;
         fixture.bytes[nested + 25] = 2;
         isoBoth32(fixture.bytes, nested + 2, IsoFixture.emptySector);
         isoBoth32(fixture.bytes, nested + 10, 2048);

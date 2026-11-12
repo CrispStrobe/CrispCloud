@@ -6,6 +6,7 @@
 
 import '../models/file_item.dart';
 import 'archive_service.dart';
+import 'archive_format_registry.dart';
 import 'cloud_storage_interface.dart';
 
 // ---------------------------------------------------------------------------
@@ -253,18 +254,6 @@ class ContainerPanelSource extends PanelSource {
 // Archive / container extension detection
 // ---------------------------------------------------------------------------
 
-/// Extensions treated as browsable compressed archives.
-const _archiveExtensions = {
-  '.zip',
-  '.tar',
-  '.tar.gz',
-  '.tgz',
-  '.tar.bz2',
-  '.tbz2',
-  '.7z',
-  '.rar',
-};
-
 /// Filenames / extensions treated as encrypted containers.
 const _containerExtensions = {'.vc', '.hc'};
 const _containerFilenames = {'vault.cryptomator'};
@@ -403,14 +392,7 @@ class PanelSourceService {
   // ---- Extension helpers ----------------------------------------------------
 
   /// Returns true when [filename] has a known archive extension.
-  bool isArchive(String filename) {
-    final lower = filename.toLowerCase();
-    // Check multi-part extensions first (.tar.gz, .tar.bz2, etc.)
-    for (final ext in _archiveExtensions) {
-      if (lower.endsWith(ext)) return true;
-    }
-    return false;
-  }
+  bool isArchive(String filename) => isArchiveFilename(filename);
 
   /// Returns true when [filename] is a known encrypted container.
   bool isEncryptedContainer(String filename) {

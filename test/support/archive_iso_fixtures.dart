@@ -273,7 +273,7 @@ void isoBoth32(Uint8List bytes, int at, int value) {
 /// requires a Rock Ridge CE continuation. Zlib stores the sparse 382976-byte
 /// image compactly in source. Original SHA-256:
 /// 7d256df92fd7ecb38be1d7051b6918d62b17ffd87c9497a042aa22aa3fce1df3.
-Uint8List independentLibarchiveIso() => ar.ZLibDecoder().decodeBytes(
+Uint8List independentLibarchiveIso() => const ar.ZLibDecoder().decodeBytes(
   base64.decode(_libarchiveIso),
   verify: true,
   maxOutputSize: 382976,

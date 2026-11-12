@@ -33,7 +33,6 @@ Future<ViewerArchive> openArArchive(
   if (ascii.decode(magic, allowInvalid: true) != '!<arch>\n') {
     throw const ArchiveViewException(
       'Only ordinary AR archives are supported; thin archives are unavailable.',
-      code: ArchiveMessageCode.unsupported,
     );
   }
   final members = <ViewerArchiveMember>[];
@@ -168,7 +167,6 @@ Future<ViewerArchive> openCpioArchive(
     if (magic != '070701' && magic != '070702') {
       throw const ArchiveViewException(
         'This CPIO variant is unavailable. Supported variants are newc and CRC.',
-        code: ArchiveMessageCode.unsupported,
       );
     }
     final values = <int>[];
@@ -281,7 +279,6 @@ Future<ViewerArchive> openXarArchive(
     4 => 'sha512',
     _ => throw const ArchiveViewException(
       'This XAR table-of-contents checksum is unavailable.',
-      code: ArchiveMessageCode.unsupported,
     ),
   };
   final compressed = await input.metadata(headerSize, compressedSize);
@@ -456,7 +453,9 @@ Future<ViewerArchive> openXarArchive(
         switch (payload.encoding) {
           case 'application/octet-stream':
             if (payload.length != payload.size) {
-              throw _corrupt('Stored XAR member size does not match its metadata.');
+              throw _corrupt(
+                'Stored XAR member size does not match its metadata.',
+              );
             }
             unpacked = Uint8List.fromList(packed);
           case 'application/x-gzip':
@@ -482,7 +481,6 @@ Future<ViewerArchive> openXarArchive(
           default:
             throw ArchiveViewException(
               'This XAR member compression is unavailable: ${payload.encoding}',
-              code: ArchiveMessageCode.unsupported,
             );
         }
         if (unpacked.length != payload.size || unpacked.length > limit) {
@@ -552,9 +550,10 @@ void _checkReadable(ViewerArchiveMember member, int limit) {
     throw _corrupt('This archive member is not a safe regular file.');
   }
   if (member.size > limit) {
-    throw const ArchiveViewException(
+    throw ArchiveViewException(
       'The archive member exceeds the read safety limit.',
       code: ArchiveMessageCode.entryLimit,
+      arguments: {'limit': '$limit bytes'},
     );
   }
 }
@@ -693,8 +692,11 @@ void _checkCount(int count) {
   }
 }
 
-ArchiveViewException _corrupt(String message) =>
-    ArchiveViewException(message, code: ArchiveMessageCode.corrupt);
+ArchiveViewException _corrupt(String message) => ArchiveViewException(
+  message,
+  code: ArchiveMessageCode.corrupt,
+  arguments: {'detail': message},
+);
 
 XmlElement? _child(XmlElement parent, String name, {bool required = false}) {
   final children = parent.childElements
@@ -717,10 +719,7 @@ crypto.Hash _hash(String style) => switch (style.toLowerCase()) {
   'md5' => crypto.md5,
   'sha256' => crypto.sha256,
   'sha512' => crypto.sha512,
-  _ => throw ArchiveViewException(
-    'This XAR checksum is unavailable: $style',
-    code: ArchiveMessageCode.unsupported,
-  ),
+  _ => throw ArchiveViewException('This XAR checksum is unavailable: $style'),
 };
 ({String style, String hex})? _checksum(XmlElement parent, String name) {
   final element = _child(parent, name);

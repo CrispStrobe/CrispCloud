@@ -77,8 +77,6 @@ import 'legacy_word_conversion_action.dart';
 import '../l10n/legacy_word_conversion_strings.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
-import '../l10n/legacy_word_conversion_strings.dart';
-import 'legacy_word_conversion_action.dart';
 import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/archive_viewer_error_strings.dart';
 import '../l10n/native_preview_error_strings.dart';
@@ -3365,7 +3363,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         theme,
       );
     }
-    return ListView.builder(
+    final list = ListView.builder(
       itemCount: files.length,
       itemBuilder: (context, index) {
         final member = files[index];
@@ -3416,9 +3414,34 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   ),
                 )
               : null,
-          onTap: isFile ? () => unawaited(_openArchiveMember(member)) : null,
+          enabled: isFile && !member.isSpecial && !member.pathEscapedRoot,
+          onTap: isFile && !member.isSpecial && !member.pathEscapedRoot
+              ? () => unawaited(_openArchiveMember(member)) : null,
         );
       },
+    );
+    final notices = _archive?.notices ?? const <String>[];
+    if (notices.isEmpty) return list;
+    return Column(
+      children: [
+        ExpansionTile(
+          key: const ValueKey('archive-format-notices'),
+          leading: const Icon(Icons.info_outline),
+          title: Text(context.commanderTr('Container details')),
+          initiallyExpanded: notices.any((notice) => notice.contains('unavailable') || notice.contains('No supported filesystem')),
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 160),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Text(notices.join('\n\n'),
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+              ),
+            ),
+          ],
+        ),
+        Expanded(child: list),
+      ],
     );
   }
 
