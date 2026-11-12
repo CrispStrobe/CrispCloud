@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,8 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/file_operation_service.dart';
 import '../services/folder_drop_service.dart';
+import '../services/native_file_drag.dart';
+import '../services/file_pointer_modifiers.dart';
 import 'file_operation_dialog.dart';
 
 FileOperationKind folderDropKind() =>
@@ -216,7 +220,7 @@ class _FolderDropTargetState extends ConsumerState<FolderDropTarget> {
 }
 
 /// Native mouse dragging and touch hold-drag share the same captured payload.
-class PanelFileDragSource extends ConsumerWidget {
+class PanelFileDragSource extends ConsumerStatefulWidget {
   const PanelFileDragSource({
     super.key,
     required this.side,
@@ -228,14 +232,65 @@ class PanelFileDragSource extends ConsumerWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PanelFileDragSource> createState() =>
+      _PanelFileDragSourceState();
+}
+
+class _PanelFileDragSourceState extends ConsumerState<PanelFileDragSource> {
+  int? _pointer;
+  PanelDragData? _activeDrag;
+  bool _handingOff = false;
+
+  void _updateDrag(DragUpdateDetails details) {
+    if (kIsWeb ||
+        !const [
+          TargetPlatform.macOS,
+          TargetPlatform.windows,
+          TargetPlatform.linux,
+        ].contains(defaultTargetPlatform) ||
+        _handingOff) {
+      return;
+    }
+    final data = _activeDrag;
+    final pointer = _pointer;
+    if (data == null || pointer == null) return;
+    final view = View.of(context);
+    final size = view.physicalSize / view.devicePixelRatio;
+    if ((Offset.zero & size).contains(details.globalPosition)) return;
+    _handingOff = true;
+    // The native desktop shell takes ownership of the held button. Cancel Flutter's
+    // internal avatar so a later mouse-up cannot publish a second pane drop.
+    GestureBinding.instance.cancelPointer(pointer);
+    unawaited(_exportDrag(data));
+  }
+
+  Future<void> _exportDrag(PanelDragData data) async {
+    try {
+      await startNativeFileDrag(data, ref.read(localFileServiceProvider));
+    } catch (error) {
+      if (mounted) {
+        ref
+            .read(errorProvider)
+            .addError(FolderDropStrings(context).failure(error));
+      }
+    } finally {
+      _handingOff = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final side = widget.side, file = widget.file, child = widget.child;
     // Display-only rows still expose their localized semantics and callbacks.
     // A row without a path cannot authorize a drag or initialize its source.
     if (file.name == '..' ||
         file.name == '.' ||
         file.path == null ||
         file.path!.isEmpty) {
-      return child;
+      return Listener(
+        onPointerDown: (_) => FilePointerModifiers.capture(file),
+        child: child,
+      );
     }
     final panel = ref.watch(panelProvider(side));
     final files = panel.isSelected(file) ? panel.selection.toList() : [file];
@@ -243,7 +298,10 @@ class PanelFileDragSource extends ConsumerWidget {
       try {
         panel.captureOperationGroups([file]);
       } catch (_) {
-        return child;
+        return Listener(
+          onPointerDown: (_) => FilePointerModifiers.capture(file),
+          child: child,
+        );
       }
     }
     final data = PanelDragData(sourceSide: side, files: files);
@@ -269,24 +327,36 @@ class PanelFileDragSource extends ConsumerWidget {
     );
     if (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS) {
-      return LongPressDraggable<PanelDragData>(
+      return Listener(
+        onPointerDown: (_) => FilePointerModifiers.capture(file),
+        child: LongPressDraggable<PanelDragData>(
+          data: data,
+          delay: const Duration(milliseconds: 250),
+          maxSimultaneousDrags: 1,
+          dragAnchorStrategy: anchor,
+          feedback: feedback,
+          childWhenDragging: Opacity(opacity: 0.35, child: child),
+          child: child,
+        ),
+      );
+    }
+    return Listener(
+      onPointerDown: (event) {
+        _pointer = event.pointer;
+        FilePointerModifiers.capture(file);
+      },
+      child: Draggable<PanelDragData>(
         data: data,
-        delay: const Duration(milliseconds: 250),
         maxSimultaneousDrags: 1,
+        allowedButtonsFilter: (buttons) => buttons == kPrimaryMouseButton,
         dragAnchorStrategy: anchor,
+        onDragStarted: () => _activeDrag = data,
+        onDragUpdate: _updateDrag,
+        onDragEnd: (_) => _activeDrag = null,
         feedback: feedback,
         childWhenDragging: Opacity(opacity: 0.35, child: child),
         child: child,
-      );
-    }
-    return Draggable<PanelDragData>(
-      data: data,
-      maxSimultaneousDrags: 1,
-      allowedButtonsFilter: (buttons) => buttons == kPrimaryMouseButton,
-      dragAnchorStrategy: anchor,
-      feedback: feedback,
-      childWhenDragging: Opacity(opacity: 0.35, child: child),
-      child: child,
+      ),
     );
   }
 }

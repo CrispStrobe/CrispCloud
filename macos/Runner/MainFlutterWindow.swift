@@ -3,7 +3,60 @@ import FlutterMacOS
 import PDFKit
 import Quartz
 
-class MainFlutterWindow: NSWindow, NSToolbarDelegate {
+class MainFlutterWindow: NSWindow, NSToolbarDelegate, NSDraggingSource {
+  private var fileDragMouseDown: NSEvent?
+  private var fileDragMonitor: Any?
+  private var fileDragResult: FlutterResult?
+
+  func draggingSession(_ session: NSDraggingSession,
+                       sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+    return .copy
+  }
+
+  func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint,
+                       operation: NSDragOperation) {
+    let completion = fileDragResult
+    fileDragResult = nil
+    completion?(!operation.isEmpty)
+  }
+
+  private func startFileDrag(paths: [String], result: @escaping FlutterResult) throws {
+    guard fileDragResult == nil, !paths.isEmpty,
+          paths.allSatisfy({ $0.hasPrefix("/") && !$0.contains("\0") }) else {
+      throw NSError(domain: "CrispCloud", code: 6,
+                    userInfo: [NSLocalizedDescriptionKey: "The file drag cannot start."])
+    }
+    guard NSEvent.pressedMouseButtons & 1 != 0,
+          let event = fileDragMouseDown, let view = contentView else {
+      result(false)
+      return
+    }
+    // Validate the complete selection before offering any URLs. Attribute reads
+    // also recognize symbolic links whose targets are currently unavailable.
+    for path in paths { _ = try FileManager.default.attributesOfItem(atPath: path) }
+    let image = paths.count == 1
+      ? NSWorkspace.shared.icon(forFile: paths[0])
+      : NSImage(named: NSImage.multipleDocumentsName) ?? NSWorkspace.shared.icon(forFile: paths[0])
+    let point = view.convert(event.locationInWindow, from: nil)
+    let items = paths.map { path -> NSDraggingItem in
+      let item = NSDraggingItem(pasteboardWriter: URL(fileURLWithPath: path) as NSURL)
+      item.setDraggingFrame(NSRect(x: point.x - 16, y: point.y - 16, width: 32, height: 32), contents: image)
+      return item
+    }
+    fileDragResult = result
+    let session = view.beginDraggingSession(with: items, event: event, source: self)
+    session.draggingFormation = .pile
+    session.animatesToStartingPositionsOnCancelOrFail = true
+  }
+
+  override func close() {
+    if let monitor = fileDragMonitor { NSEvent.removeMonitor(monitor) }
+    fileDragMonitor = nil
+    let completion = fileDragResult
+    fileDragResult = nil
+    completion?(false)
+    super.close()
+  }
   private var systemPreviewWindow: NSWindow?
   private var systemPreviewView: QLPreviewView?
   private var systemPreviewChannel: FlutterMethodChannel?
@@ -192,11 +245,21 @@ class MainFlutterWindow: NSWindow, NSToolbarDelegate {
       name: "crispcloud/files",
       binaryMessenger: flutterViewController.engine.binaryMessenger
     )
-    files.setMethodCallHandler { call, result in
+    fileDragMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+      if event.window === self { self?.fileDragMouseDown = event }
+      return event
+    }
+    files.setMethodCallHandler { [weak self] call, result in
       let args = call.arguments as? [String: Any] ?? [:]
       let manager = FileManager.default
       do {
         switch call.method {
+        case "startFileDrag":
+          guard let self = self, let paths = args["paths"] as? [String] else {
+            throw NSError(domain: "CrispCloud", code: 7,
+                          userInfo: [NSLocalizedDescriptionKey: "Select files to drag."])
+          }
+          try self.startFileDrag(paths: paths, result: result)
         case "trash":
           guard let path = args["path"] as? String, path.hasPrefix("/") else {
             throw NSError(domain: "CrispCloud", code: 1,

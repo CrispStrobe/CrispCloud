@@ -73,7 +73,7 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
-  register_file_operations(fl_engine_get_binary_messenger(fl_view_get_engine(view)));
+  register_file_operations(fl_engine_get_binary_messenger(fl_view_get_engine(view)), GTK_WIDGET(view));
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

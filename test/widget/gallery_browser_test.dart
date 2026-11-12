@@ -167,9 +167,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
       await tester.tap(find.text('photo3.raw'));
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
       expect(panel.selection.map((f) => f.name).toSet(), {
         'photo2.raw',
         'photo3.raw',
@@ -206,6 +206,34 @@ void main() {
         expect(panel.renamingItem, isNull);
       }
       expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'gallery clicks preserve marked files and Shift arrows can remove marks',
+    (tester) async {
+      await mount(tester);
+      final rows = {for (final file in panel.files!) file.name: file};
+      panel.selectVisibleItems([
+        rows['photo2.raw']!,
+        rows['photo10.raw']!,
+      ], cursor: rows['photo2.raw']);
+      await tester.pump();
+      await tester.tap(find.text('photo3.raw'));
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(panel.selection.map((file) => file.name).toSet(), {
+        'photo2.raw',
+        'photo10.raw',
+      });
+      await tester.tap(find.text('photo2.raw'));
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(panel.selection.map((file) => file.name).toSet(), {'photo10.raw'});
+      expect(panel.cursorItem!.name, 'photo3.raw');
       await tester.pumpWidget(const SizedBox());
     },
   );

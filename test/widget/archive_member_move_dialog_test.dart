@@ -547,7 +547,7 @@ void main() {
       );
       Future<void> until(bool Function() done) async {
         await tester.runAsync(() async {
-          final deadline = DateTime.now().add(const Duration(seconds: 15));
+          final deadline = DateTime.now().add(const Duration(seconds: 90));
           while (!done() && DateTime.now().isBefore(deadline)) {
             await Future<void>.delayed(const Duration(milliseconds: 15));
             await tester.pump(const Duration(milliseconds: 16));

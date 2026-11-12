@@ -17,6 +17,16 @@ class NativeFileOperations {
   });
   final MethodChannel channel;
 
+  /// Returns after the receiving app accepts the files or the drag is cancelled.
+  /// The native drag offers file URLs and copy semantics, never source deletion.
+  Future<bool> startFileDrag(List<String> paths) async {
+    if (paths.isEmpty) throw ArgumentError('Select files to drag.');
+    return await channel.invokeMethod<bool>('startFileDrag', {
+          'paths': paths,
+        }) ??
+        false;
+  }
+
   static bool get supported =>
       !kIsWeb &&
       const [

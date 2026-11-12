@@ -4048,6 +4048,7 @@ class PanelNotifier extends ChangeNotifier {
     );
     final files = _files;
     if (files == null || !_containsIdentical(files, item)) return;
+    final rangeAnchor = _lastSelected ?? cursorItem;
     // Ensure this panel is the active panel (drives F-key context).
     if (_ref.read(activePanelProvider) != side) {
       _ref.read(activePanelProvider.notifier).state = side;
@@ -4063,9 +4064,9 @@ class PanelNotifier extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (shiftKey && _lastSelected != null) {
+    if (shiftKey && rangeAnchor != null) {
       final displayed = displayedFiles ?? const <FileItem>[];
-      final startIdx = _indexOfIdentical(displayed, _lastSelected!);
+      final startIdx = _indexOfIdentical(displayed, rangeAnchor);
       final endIdx = _indexOfIdentical(displayed, item);
       if (startIdx != -1 && endIdx != -1) {
         final start = startIdx < endIdx ? startIdx : endIdx;
@@ -4089,7 +4090,7 @@ class PanelNotifier extends ChangeNotifier {
       _selection.clear();
       _selection.add(item);
     }
-    _lastSelected = item;
+    if (!shiftKey || rangeAnchor == null) _lastSelected = item;
     notifyListeners();
   }
 
@@ -4828,8 +4829,8 @@ class PanelNotifier extends ChangeNotifier {
 
   // --- Cursor (keyboard focus, separate from selection marks) ---
 
-  /// Plain click moves the cursor and clears marks without marking the row.
-  /// Ctrl/Shift clicks still select.
+  /// Plain click moves the cursor and establishes a range anchor. Existing
+  /// marks remain the operation selection until explicitly toggled or cleared.
   void setCursorOnly(FileItem item) {
     if (_files == null) return;
     final index = _indexOfIdentical(_files!, item);
@@ -4837,8 +4838,7 @@ class PanelNotifier extends ChangeNotifier {
     if (_ref.read(activePanelProvider) != side) {
       _ref.read(activePanelProvider.notifier).state = side;
     }
-    _selection.clear();
-    _lastSelected = null;
+    _lastSelected = item.name == '..' || item.name == '.' ? null : item;
     _cursorIndex = index;
     _itemToScrollTo = item;
     notifyListeners();
@@ -4857,7 +4857,21 @@ class PanelNotifier extends ChangeNotifier {
 
   /// Move cursor by [delta] rows within the displayed (filtered) list.
   void moveCursor(int delta) {
-    final displayed = filteredFiles;
+    if (_isTypeahead && delta.abs() == 1) {
+      if (_ref.read(quickSearchSettingsProvider).arrowNavigation) {
+        if (_typeaheadMode != QuickSearchMode.filter) {
+          cycleTypeahead(delta);
+          return;
+        }
+        _scheduleTypeaheadReset(_ref.read(quickSearchSettingsProvider));
+      } else {
+        clearTypeahead();
+      }
+    }
+    final displayed = _isTypeahead && delta.abs() == 1 &&
+            _ref.read(quickSearchSettingsProvider).arrowNavigation
+        ? _typeaheadMatches()
+        : filteredFiles;
     if (displayed == null || displayed.isEmpty) return;
     final current = cursorItem;
     var position = current == null ? -1 : _indexOfIdentical(displayed, current);
@@ -5106,23 +5120,33 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  /// Shift+Arrow: move cursor AND extend/shrink selection range.
-  void shiftMoveCursor(int delta) {
-    final displayed = filteredFiles;
+  /// Commander Shift+Arrow toggles the rows being left and moves the cursor.
+  /// Existing marks can therefore be removed using the same gesture.
+  void shiftMoveCursor(int delta, {List<FileItem>? visibleFiles}) {
+    final displayed = visibleFiles ??
+        (_isTypeahead && _ref.read(quickSearchSettingsProvider).arrowNavigation
+            ? _typeaheadMatches()
+            : filteredFiles);
     if (displayed == null || displayed.isEmpty) return;
+    if (visibleFiles != null) {
+      final listed = Set<FileItem>.identity()..addAll(_files ?? const []);
+      if (visibleFiles.any((file) => !listed.contains(file))) return;
+    }
     final current = cursorItem;
     var cur = current == null ? 0 : _indexOfIdentical(displayed, current);
     if (cur < 0) cur = 0;
     final next = (cur + delta).clamp(0, displayed.length - 1);
     if (next == cur) return;
-    // Add items swept over to selection
-    final start = cur < next ? cur : next;
-    final end = cur < next ? next : cur;
-    for (var i = start; i <= end; i++) {
-      if (displayed[i].name != '..') _selection.add(displayed[i]);
+    final direction = next > cur ? 1 : -1;
+    for (var i = cur; i != next; i += direction) {
+      final item = displayed[i];
+      if (item.name != '..' && item.name != '.') {
+        if (!_selection.remove(item)) _selection.add(item);
+      }
     }
     _lastSelected = displayed[next].name == '..' ? null : displayed[next];
     _setCursorToItem(displayed[next]);
+    if (_isTypeahead) _scheduleTypeaheadReset(_ref.read(quickSearchSettingsProvider));
     notifyListeners();
   }
 

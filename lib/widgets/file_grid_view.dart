@@ -20,6 +20,7 @@ import '../services/gallery_catalog_service.dart';
 import '../services/gallery_media_service.dart';
 import '../services/panel_source_service.dart';
 import '../services/keyboard_shortcut_service.dart';
+import '../services/file_pointer_modifiers.dart';
 import '../utils/formatters.dart';
 import 'batch_rename_dialog.dart';
 import 'file_context_menu.dart';
@@ -233,13 +234,18 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
 
   void _select(FileItem file, {bool shift = false, bool toggle = false}) {
     final panel = ref.read(panelProvider(widget.side));
+    if (!shift && !toggle && panel.selection.isNotEmpty) {
+      _anchor = file;
+      panel.setCursorOnly(file);
+      return;
+    }
     if (shift && _anchor != null) {
       final a = _visible.indexWhere((item) => identical(item, _anchor));
       final b = _visible.indexWhere((item) => identical(item, file));
       if (a >= 0 && b >= 0) {
         final range = _visible.sublist(math.min(a, b), math.max(a, b) + 1);
         panel.selectVisibleItems(
-          [...(toggle ? panel.selection : <FileItem>[]), ...range],
+          [...panel.selection, ...range],
           cursor: file,
           anchor: _anchor,
         );
@@ -479,6 +485,13 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
       return KeyEventResult.handled;
     }
     if (_visible.isEmpty) return KeyEventResult.ignored;
+    if (panel.isTypeahead &&
+        !keyboard.isShiftPressed &&
+        (key == LogicalKeyboardKey.arrowDown ||
+            key == LogicalKeyboardKey.arrowUp)) {
+      panel.moveCursor(key == LogicalKeyboardKey.arrowDown ? 1 : -1);
+      return KeyEventResult.handled;
+    }
     var index = _visible.indexWhere(
       (item) => identical(item, panel.cursorItem),
     );
@@ -506,12 +519,12 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
     if (key == LogicalKeyboardKey.pageUp) next = index - columns * pageRows;
     if (next != null) {
       if (absent && key != LogicalKeyboardKey.end) next = 0;
-      final file = _visible[next.clamp(0, _visible.length - 1)];
-      if (modifier && !keyboard.isShiftPressed) {
-        panel.setCursorToItem(file);
+      final target = next.clamp(0, _visible.length - 1);
+      final file = _visible[target];
+      if (keyboard.isShiftPressed) {
+        panel.shiftMoveCursor(target - index, visibleFiles: _visible);
       } else {
-        _anchor ??= panel.cursorItem;
-        _select(file, shift: keyboard.isShiftPressed, toggle: modifier);
+        panel.setCursorToItem(file);
       }
       return KeyEventResult.handled;
     }
@@ -1311,10 +1324,8 @@ class _FileGridViewState extends ConsumerState<FileGridView> {
               panel.listFocusNode.requestFocus();
               _select(
                 file,
-                shift: HardwareKeyboard.instance.isShiftPressed,
-                toggle:
-                    HardwareKeyboard.instance.isControlPressed ||
-                    HardwareKeyboard.instance.isMetaPressed,
+                shift: FilePointerModifiers.forFile(file).shift,
+                toggle: FilePointerModifiers.forFile(file).toggle,
               );
             },
             onDoubleTap: () => _open(file),

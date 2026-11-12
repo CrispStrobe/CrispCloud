@@ -623,9 +623,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       final delta = key == LogicalKeyboardKey.arrowDown ? 1 : -1;
       if (keyboard.isShiftPressed) {
         panel.shiftMoveCursor(delta);
-      } else if (!panel.isTypeahead ||
-          !ref.read(quickSearchSettingsProvider).arrowNavigation ||
-          !panel.cycleTypeahead(delta)) {
+      } else {
         panel.moveCursor(delta);
       }
       return KeyEventResult.handled;

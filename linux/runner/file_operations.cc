@@ -4,10 +4,109 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace {
 std::vector<std::string> clipboard_uris;
 bool clipboard_cut = false;
+
+struct FileDragState {
+  std::vector<std::string> uris;
+  FlMethodCall* pending = nullptr;
+  GdkDragContext* context = nullptr;
+  GdkEvent* mouse_down = nullptr;
+  void finish(bool accepted) {
+    auto* call = pending;
+    pending = nullptr;
+    context = nullptr;
+    uris.clear();
+    if (call) {
+      g_autoptr(FlValue) value = fl_value_new_bool(accepted);
+      fl_method_call_respond_success(call, value, nullptr);
+      g_object_unref(call);
+    }
+  }
+  ~FileDragState() {
+    finish(false);
+    if (mouse_down) gdk_event_free(mouse_down);
+  }
+};
+
+void drag_data_get(GtkWidget*, GdkDragContext* context,
+                   GtkSelectionData* selection, guint, guint, gpointer user_data) {
+  auto* state = static_cast<FileDragState*>(user_data);
+  if (!state->pending || state->context != context ||
+      gtk_selection_data_get_target(selection) != gdk_atom_intern_static_string("text/uri-list")) return;
+  std::vector<gchar*> uris;
+  for (const auto& uri : state->uris) uris.push_back(const_cast<gchar*>(uri.c_str()));
+  uris.push_back(nullptr);
+  gtk_selection_data_set_uris(selection, uris.data());
+}
+
+void drag_end(GtkWidget*, GdkDragContext* context, gpointer user_data) {
+  auto* state = static_cast<FileDragState*>(user_data);
+  if (state->context == context) {
+    state->finish((gdk_drag_context_get_selected_action(context) & GDK_ACTION_COPY) != 0);
+  }
+}
+
+gboolean drag_failed(GtkWidget*, GdkDragContext* context, GtkDragResult, gpointer user_data) {
+  auto* state = static_cast<FileDragState*>(user_data);
+  if (state->context == context) state->finish(false);
+  return FALSE;
+}
+
+gboolean file_drag_mouse_down(GtkWidget*, GdkEventButton* event, gpointer user_data) {
+  auto* state = static_cast<FileDragState*>(user_data);
+  if (event->button == 1) {
+    if (state->mouse_down) gdk_event_free(state->mouse_down);
+    state->mouse_down = gdk_event_copy(reinterpret_cast<GdkEvent*>(event));
+  }
+  return FALSE;
+}
+
+void start_file_drag(GtkWidget* view, FlMethodCall* call, FlValue* args) {
+  auto* state = static_cast<FileDragState*>(g_object_get_data(G_OBJECT(view), "crisp-file-drag"));
+  auto* paths = args && fl_value_get_type(args) == FL_VALUE_TYPE_MAP
+      ? fl_value_lookup_string(args, "paths") : nullptr;
+  if (!state || state->pending || !paths || fl_value_get_type(paths) != FL_VALUE_TYPE_LIST || !fl_value_get_length(paths)) {
+    fl_method_call_respond_error(call, "invalid_file_drag", "Select local files to drag.", nullptr, nullptr);
+    return;
+  }
+  std::vector<std::string> uris;
+  g_autoptr(GError) error = nullptr;
+  for (size_t i = 0; i < fl_value_get_length(paths); ++i) {
+    auto* value = fl_value_get_list_value(paths, i);
+    const char* path = fl_value_get_type(value) == FL_VALUE_TYPE_STRING ? fl_value_get_string(value) : nullptr;
+    if (!path || !g_path_is_absolute(path) || !g_file_test(path, static_cast<GFileTest>(G_FILE_TEST_EXISTS | G_FILE_TEST_IS_SYMLINK))) {
+      fl_method_call_respond_error(call, "invalid_file_drag", "An original file is unavailable.", nullptr, nullptr);
+      return;
+    }
+    g_autofree char* uri = g_filename_to_uri(path, nullptr, &error);
+    if (!uri) {
+      fl_method_call_respond_error(call, "invalid_file_drag", error->message, nullptr, nullptr);
+      return;
+    }
+    uris.emplace_back(uri);
+  }
+  GdkWindow* window = gtk_widget_get_window(view);
+  auto* pointer = gdk_seat_get_pointer(gdk_display_get_default_seat(gtk_widget_get_display(view)));
+  GdkModifierType buttons = static_cast<GdkModifierType>(0);
+  if (window && pointer) gdk_window_get_device_position(window, pointer, nullptr, nullptr, &buttons);
+  if (!window || !pointer || !(buttons & GDK_BUTTON1_MASK)) {
+    g_autoptr(FlValue) accepted = fl_value_new_bool(false);
+    fl_method_call_respond_success(call, accepted, nullptr);
+    return;
+  }
+  state->uris = std::move(uris);
+  state->pending = FL_METHOD_CALL(g_object_ref(call));
+  GtkTargetEntry target = {const_cast<gchar*>("text/uri-list"), 0, 0};
+  GtkTargetList* targets = gtk_target_list_new(&target, 1);
+  state->context = gtk_drag_begin_with_coordinates(view, targets, GDK_ACTION_COPY, 1, state->mouse_down, -1, -1);
+  gtk_target_list_unref(targets);
+  if (!state->context) state->finish(false);
+  else gtk_drag_set_icon_name(state->context, state->uris.size() > 1 ? "edit-copy" : "text-x-generic", 0, 0);
+}
 
 const char* string_arg(FlValue* args, const char* key) {
   if (!args || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) return nullptr;
@@ -52,9 +151,13 @@ bool trash_items(std::set<std::string>* all, const char* original,
   return !error || !*error;
 }
 
-void handle(FlMethodChannel*, FlMethodCall* call, gpointer) {
+void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
   const char* method = fl_method_call_get_name(call);
   FlValue* args = fl_method_call_get_args(call);
+  if (g_strcmp0(method, "startFileDrag") == 0) {
+    start_file_drag(GTK_WIDGET(user_data), call, args);
+    return;
+  }
   g_autoptr(GError) error = nullptr;
   g_autoptr(FlValue) response = nullptr;
   bool known = true;
@@ -151,8 +254,14 @@ void handle(FlMethodChannel*, FlMethodCall* call, gpointer) {
 }
 }  // namespace
 
-void register_file_operations(FlBinaryMessenger* messenger) {
+void register_file_operations(FlBinaryMessenger* messenger, GtkWidget* view) {
+  auto* drag = new FileDragState();
+  g_object_set_data_full(G_OBJECT(view), "crisp-file-drag", drag, [](gpointer data) { delete static_cast<FileDragState*>(data); });
+  g_signal_connect(view, "button-press-event", G_CALLBACK(file_drag_mouse_down), drag);
+  g_signal_connect(view, "drag-data-get", G_CALLBACK(drag_data_get), drag);
+  g_signal_connect(view, "drag-end", G_CALLBACK(drag_end), drag);
+  g_signal_connect(view, "drag-failed", G_CALLBACK(drag_failed), drag);
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   g_autoptr(FlMethodChannel) channel = fl_method_channel_new(messenger, "crispcloud/files", FL_METHOD_CODEC(codec));
-  fl_method_channel_set_method_call_handler(channel, handle, nullptr, nullptr);
+  fl_method_channel_set_method_call_handler(channel, handle, view, nullptr);
 }

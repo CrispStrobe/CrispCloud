@@ -18,6 +18,7 @@ import '../providers/providers.dart';
 import '../providers/toolbar_provider.dart'
     show columnWidthsProvider, panelViewModeProvider, fileColumnsProvider;
 import '../services/log_service.dart';
+import '../services/file_pointer_modifiers.dart';
 import '../services/panel_view_mode_service.dart' show PanelViewMode;
 import '../services/keyboard_shortcut_service.dart';
 import '../utils/formatters.dart';
@@ -65,25 +66,6 @@ Widget _collectionStatus(BuildContext context, FileItem file) {
       ),
     ),
   );
-}
-
-/// Tracks modifier keys from the most recent pointer-down event.
-/// Captured at pointer-down time (before GestureDetector.onTap fires),
-/// which is more reliable on web than checking HardwareKeyboard in onTap.
-class _PointerModifiers {
-  static const _log = Log('PointerMod');
-  static bool shiftPressed = false;
-  static bool ctrlOrMetaPressed = false;
-
-  static void update(PointerDownEvent event) {
-    shiftPressed = HardwareKeyboard.instance.isShiftPressed;
-    ctrlOrMetaPressed =
-        HardwareKeyboard.instance.isControlPressed ||
-        HardwareKeyboard.instance.isMetaPressed;
-    if (shiftPressed || ctrlOrMetaPressed) {
-      _log.debug('shift=$shiftPressed ctrl/meta=$ctrlOrMetaPressed');
-    }
-  }
 }
 
 class FileListView extends ConsumerWidget {
@@ -267,7 +249,6 @@ class FileListView extends ConsumerWidget {
       // listing refresh must leave same-route path and filter fields alone.
       return Listener(
         onPointerDown: (event) {
-          _PointerModifiers.update(event);
           panel.listFocusNode.requestFocus();
         },
         child: Focus(
@@ -345,14 +326,6 @@ class FileListView extends ConsumerWidget {
               if (isShift) {
                 p.shiftMoveCursor(direction);
                 return KeyEventResult.handled;
-              }
-              if (p.isTypeahead) {
-                final settings = ref.read(quickSearchSettingsProvider);
-                if (settings.arrowNavigation && p.cycleTypeahead(direction)) {
-                  return KeyEventResult.handled;
-                }
-                // Arrows end the search when cycling is disabled.
-                if (!settings.arrowNavigation) p.clearTypeahead();
               }
               p.moveCursor(direction);
               return KeyEventResult.handled;
@@ -688,8 +661,8 @@ class FileListTile extends ConsumerWidget {
                 onTap: () {
                   // Use _PointerModifiers captured at pointer-down time (more reliable on web).
                   onTap(
-                    _PointerModifiers.shiftPressed,
-                    _PointerModifiers.ctrlOrMetaPressed,
+                    FilePointerModifiers.forFile(file).shift,
+                    FilePointerModifiers.forFile(file).toggle,
                   );
                 },
                 onLongPress: onDoubleTap,
@@ -808,11 +781,10 @@ class CompactFileTile extends ConsumerWidget {
           button: true,
           child: GestureDetector(
             onTap: () {
-              final shiftPressed = HardwareKeyboard.instance.isShiftPressed;
-              final ctrlPressed =
-                  HardwareKeyboard.instance.isControlPressed ||
-                  HardwareKeyboard.instance.isMetaPressed;
-              onTap(shiftPressed, ctrlPressed);
+              onTap(
+                FilePointerModifiers.forFile(file).shift,
+                FilePointerModifiers.forFile(file).toggle,
+              );
             },
             onDoubleTap: onDoubleTap,
             onSecondaryTapDown: onSecondaryTap,

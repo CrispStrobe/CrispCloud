@@ -13,10 +13,18 @@ import 'package:crisp_cloud/screens/keyboard_shortcuts.dart';
 import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/file_selection_pattern.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
+import 'package:crisp_cloud/services/native_file_drag.dart';
+import 'package:crisp_cloud/services/native_file_operations.dart';
+import 'package:crisp_cloud/providers/toolbar_provider.dart'
+    show panelViewModeProvider;
+import 'package:crisp_cloud/services/panel_view_mode_service.dart';
 import 'package:crisp_cloud/services/multi_rename_service.dart';
 import 'package:crisp_cloud/services/native_file_primitives.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:crisp_cloud/widgets/folder_drop_target.dart';
 import 'package:flutter/services.dart';
 import 'package:crisp_cloud/widgets/file_list_view.dart';
 import 'package:crisp_cloud/widgets/file_collections_dialog.dart';
@@ -153,13 +161,18 @@ class _Local extends Fake
   }
 
   Future<void> Function(String)? onAccess;
+  void Function(String)? onAccessEnded;
   @override
   Future<T> withFileOperationAccess<T>(
     String path,
     Future<T> Function() operation,
   ) async {
     await onAccess?.call(path);
-    return operation();
+    try {
+      return await operation();
+    } finally {
+      onAccessEnded?.call(path);
+    }
   }
 }
 
@@ -386,6 +399,396 @@ void main() {
       );
     },
   );
+
+  Future<PanelNotifier> selectionPanel() async {
+    final panel = await remote();
+    panel.showSearchResults([
+      for (final name in ['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt'])
+        item('/$name'),
+    ], origin: panel.captureRemoteSearchOrigin());
+    return panel;
+  }
+
+  test('plain click anchors Shift ranges and preserves noncontiguous operation marks', () async {
+    final panel = await selectionPanel();
+    final rows = panel.files!;
+    panel.toggleSelection(rows[4], ctrlKey: true);
+    panel.setCursorOnly(rows[0]);
+    panel.toggleSelection(rows[2], shiftKey: true);
+    expect(panel.selection.map((file) => file.name).toSet(), {
+      'a.txt',
+      'b.txt',
+      'c.txt',
+      'e.txt',
+    });
+    expect(panel.lastSelected, same(rows[0]));
+    panel.setCursorOnly(rows[3]);
+    expect(panel.selection.map((file) => file.name).toSet(), {
+      'a.txt',
+      'b.txt',
+      'c.txt',
+      'e.txt',
+    });
+    expect(panel.cursorItem, same(rows[3]));
+    final data = PanelDragData(sourceSide: PanelSide.remote, files: const []);
+    data.captureFrom(panel, primary: rows[1]);
+    final groups = await data.prepareForDrop();
+    expect(
+      groups.values.expand((files) => files).map((file) => file.name).toSet(),
+      {'a.txt', 'b.txt', 'c.txt', 'e.txt'},
+    );
+  });
+
+  test('Shift arrows toggle departed rows, including existing marks', () async {
+    final panel = await selectionPanel();
+    final rows = panel.files!;
+    panel.selectVisibleItems(rows.take(3), cursor: rows[1]);
+    panel.shiftMoveCursor(1);
+    expect(panel.cursorItem, same(rows[2]));
+    expect(panel.selection.map((file) => file.name).toSet(), {
+      'a.txt',
+      'c.txt',
+    });
+    panel.shiftMoveCursor(1);
+    expect(panel.cursorItem, same(rows[3]));
+    expect(panel.selection.map((file) => file.name), ['a.txt']);
+    panel.shiftMoveCursor(-1);
+    expect(panel.cursorItem, same(rows[2]));
+    expect(panel.selection.map((file) => file.name).toSet(), {
+      'a.txt',
+      'd.txt',
+    });
+  });
+
+  for (final mode in [PanelViewMode.full, PanelViewMode.brief]) {
+    testWidgets(
+      'pointer-down modifiers survive release before delayed $mode taps',
+      (tester) async {
+        final panel = await selectionPanel();
+        container.read(activePanelProvider.notifier).state = PanelSide.remote;
+        container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+        container.read(panelViewModeProvider(PanelSide.remote).notifier).state =
+            mode;
+        final scroll = ScrollController();
+        addTearDown(scroll.dispose);
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              home: Scaffold(
+                body: Consumer(
+                  builder: (context, ref, _) => Focus(
+                    onKeyEvent: (node, event) =>
+                        handleKeyEvent(context, ref, event),
+                    child: FileListView(
+                      side: PanelSide.remote,
+                      files: ref
+                          .watch(panelProvider(PanelSide.remote))
+                          .displayedFiles!,
+                      scrollController: scroll,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byWidgetPredicate(
+            (widget) =>
+                (widget is CompactFileTile && widget.file.name == 'a.txt') ||
+                (widget is FileListTile && widget.file.name == 'a.txt'),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.tap(
+          find.byWidgetPredicate(
+            (widget) =>
+                (widget is CompactFileTile && widget.file.name == 'c.txt') ||
+                (widget is FileListTile && widget.file.name == 'c.txt'),
+          ),
+        );
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(panel.selection.map((file) => file.name).toSet(), {
+          'a.txt',
+          'b.txt',
+          'c.txt',
+        });
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+        await tester.tap(
+          find.byWidgetPredicate(
+            (widget) =>
+                (widget is CompactFileTile && widget.file.name == 'e.txt') ||
+                (widget is FileListTile && widget.file.name == 'e.txt'),
+          ),
+        );
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(
+          find.byWidgetPredicate(
+            (widget) =>
+                (widget is CompactFileTile && widget.file.name == 'b.txt') ||
+                (widget is FileListTile && widget.file.name == 'b.txt'),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(panel.selection.map((file) => file.name).toSet(), {
+          'a.txt',
+          'b.txt',
+          'c.txt',
+          'e.txt',
+        });
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.pump();
+        expect(panel.cursorItem!.name, 'c.txt');
+        expect(panel.selection.map((file) => file.name).toSet(), {
+          'a.txt',
+          'c.txt',
+          'e.txt',
+        });
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
+  for (final mode in [
+    QuickSearchMode.jump,
+    QuickSearchMode.select,
+    QuickSearchMode.filter,
+  ]) {
+    testWidgets('browser arrows stay within active $mode Find matches', (
+      tester,
+    ) async {
+      final panel = await remote();
+      panel.showSearchResults([
+        for (final name in ['a-match.txt', 'b.txt', 'c-match.txt', 'd.txt'])
+          item('/$name'),
+      ], origin: panel.captureRemoteSearchOrigin());
+      container.read(activePanelProvider.notifier).state = PanelSide.remote;
+      container.read(focusAreaProvider.notifier).state = FocusArea.remote;
+      final settings = container.read(quickSearchSettingsProvider.notifier);
+      await settings.setMode(mode);
+      await settings.setMatchFromStart(false);
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) => Focus(
+                  onKeyEvent: (node, event) =>
+                      handleKeyEvent(context, ref, event),
+                  child: FileListView(
+                    side: PanelSide.remote,
+                    files: ref
+                        .watch(panelProvider(PanelSide.remote))
+                        .displayedFiles!,
+                    scrollController: scroll,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      panel.setCursorOnly(panel.files!.first);
+      panel.focusList();
+      await tester.pump();
+      panel.typeaheadAppend('match');
+      panel.setCursorToItem(
+        panel.files!.firstWhere((file) => file.name == 'a-match.txt'),
+      );
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(panel.cursorItem!.name, 'c-match.txt');
+      expect(panel.filterQuery, 'match');
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(
+        panel.cursorItem!.name,
+        mode == QuickSearchMode.filter ? 'c-match.txt' : 'a-match.txt',
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pump();
+      expect(
+        panel.cursorItem!.name,
+        mode == QuickSearchMode.filter ? 'a-match.txt' : 'c-match.txt',
+      );
+      panel.clearTypeahead();
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
+  test('native drag offers the whole captured local selection and retains grants until cancellation', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'crisp-external-drag-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    for (final name in ['a.txt', 'b.txt', 'c.txt']) {
+      await File('${directory.path}/$name').writeAsString(name);
+    }
+    local.directory = directory.path;
+    final panel = await readyLocalPanel();
+    await panel.navigateToPath(directory.path);
+    final rows = panel.files!.where((file) => file.name != '..').toList();
+    panel.toggleSelection(rows.first, ctrlKey: true);
+    panel.toggleSelection(rows.last, ctrlKey: true);
+    final data = PanelDragData(sourceSide: PanelSide.local, files: const []);
+    data.captureFrom(panel, primary: rows.first);
+    final scopes = <String>{};
+    local.onAccess = (path) async {
+      scopes.add(path);
+    };
+    local.onAccessEnded = scopes.remove;
+    const channel = MethodChannel('test/crisp-external-file-drag');
+    final offered = Completer<MethodCall>();
+    final dropped = Completer<bool>();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          offered.complete(call);
+          return dropped.future;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+    final pending = startNativeFileDrag(
+      data,
+      local,
+      native: const NativeFileOperations(channel: channel),
+    );
+    final call = await offered.future;
+    expect(call.method, 'startFileDrag');
+    final expected = {rows.first.path, rows.last.path};
+    expect((call.arguments['paths'] as List).toSet(), expected);
+    expect(scopes, expected);
+    panel.clearSelection();
+    dropped.complete(false);
+    expect(await pending, isFalse);
+    expect(scopes, isEmpty);
+    expect(await File(rows.first.path!).readAsString(), rows.first.name);
+    expect(await File(rows.last.path!).readAsString(), rows.last.name);
+  });
+
+  for (final platform in [
+    TargetPlatform.macOS,
+    TargetPlatform.windows,
+    TargetPlatform.linux,
+  ]) {
+    testWidgets(
+      'leaving the desktop window hands the full marked selection to $platform',
+      (tester) async {
+        late Directory directory;
+        late PanelNotifier panel;
+        late List<FileItem> rows;
+        await tester.runAsync(() async {
+          directory = await Directory.systemTemp.createTemp(
+            'crisp-drag-window-',
+          );
+          for (final name in ['a.txt', 'b.txt', 'c.txt']) {
+            await File('${directory.path}/$name').writeAsString(name);
+          }
+          local.directory = directory.path;
+          panel = await readyLocalPanel();
+          await panel.navigateToPath(directory.path);
+          rows = panel.files!.where((file) => file.name != '..').toList();
+        });
+        addTearDown(() => directory.delete(recursive: true));
+        panel.toggleSelection(rows.first, ctrlKey: true);
+        panel.toggleSelection(rows.last, ctrlKey: true);
+        const channel = MethodChannel('crispcloud/files');
+        final offered = Completer<MethodCall>();
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+              offered.complete(call);
+              return false;
+            });
+        addTearDown(
+          () => TestDefaultBinaryMessengerBinding
+              .instance
+              .defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null),
+        );
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              home: Scaffold(
+                body: Align(
+                  alignment: Alignment.topLeft,
+                  child: PanelFileDragSource(
+                    side: PanelSide.local,
+                    file: rows.first,
+                    child: const SizedBox(
+                      key: ValueKey('external-drag-source'),
+                      width: 180,
+                      height: 48,
+                      child: ColoredBox(
+                        color: Colors.blue,
+                        child: Text('Drag selection'),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(const ValueKey('external-drag-source'))),
+          kind: PointerDeviceKind.mouse,
+        );
+        await gesture.moveBy(const Offset(24, 0));
+        await tester.pump();
+        final payload = tester
+            .widget<Draggable<PanelDragData>>(
+              find.byType(Draggable<PanelDragData>),
+            )
+            .data!;
+        expect(
+          payload.hasCapturedSource,
+          isTrue,
+          reason: 'The mouse gesture must start the actual Flutter drag.',
+        );
+        expect(payload.isCurrent, isTrue);
+        final width =
+            tester.view.physicalSize.width / tester.view.devicePixelRatio;
+        await gesture.moveTo(Offset(width + 40, 24));
+        await tester.pumpAndSettle();
+        expect(
+          offered.isCompleted,
+          isTrue,
+          reason: container.read(errorProvider).errors.join('\n'),
+        );
+        final call = await offered.future;
+        expect(call.method, 'startFileDrag');
+        expect((call.arguments['paths'] as List).toSet(), {
+          rows.first.path,
+          rows.last.path,
+        });
+        await tester.pump();
+        await gesture.up();
+        expect(panel.selection.map((file) => file.path).toSet(), {
+          rows.first.path,
+          rows.last.path,
+        });
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+      },
+      variant: TargetPlatformVariant.only(platform),
+    );
+  }
 
   test('select all, invert and shift-click change only visible rows', () async {
     final panel = await remote();
