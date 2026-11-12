@@ -86,33 +86,56 @@ previously outside this selected cohort. Coverage is written to
 `--require-all-sources` rejects an absent source while preserving the report.
 It does not require every line to be hit or claim full branch coverage.
 
-Execution results belong to the corresponding commit's local output or Actions
-artifact. The last completed host run,
-[Actions run 43177469270](https://github.com/CrispStrobe/CrispCloud/actions/runs/43177469270),
-tested app commit
-[`86338bd`](https://github.com/CrispStrobe/CrispCloud/commit/86338bdab58f46eeb68bb24d0916690874dfdca5)
-with suite revision `adcccb405b0e11ac407fabaaaf7d0ebbb1a48f10`. It passed all
-**115 host tests**, verified **41/41 actual saved host exports**, and measured
-**2,282/3,661 instrumented host lines (62.3%)**, with **all nine scoped Office
-source files instrumented**. These are executed line counts, not branch coverage.
+## Verified functional checkpoint
 
-In that same run, **all 41 actual host exports passed Open XML SDK validation**.
-The overall schema job failed only on **14 shared auxiliary-control fixtures**:
-the authored source and six export cycles in each of `fidelity-aux-controls`
-and `fidelity-aux-header-footer`. Their paragraph-property element order was
-incorrect. The earlier synchronized checkpoint
-[`c19e90d`](https://github.com/CrispStrobe/quds_office_suite/commit/c19e90d60002ff088acfcfcd3b2d34633cb4cb72)
-corrected that fixture order and the native note-separator and render-gate
-counterexamples. The current sync pins
-[`31add779`](https://github.com/CrispStrobe/quds_office_suite/commit/31add77938bb1242d510ab544dbe886d87ebdf75),
-which also prevents newly inserted footnotes and endnotes from reusing IDs held
-by retained native note definitions. It includes the reviewed story-page
-separator correction and extends that source-derived golden scenario through
-three actual asynchronous save/reopen cycles. **The full host gate for this
-current checkpoint is pending**;
-the previous run's results do not certify the synchronized changes.
+The unchanged full host gate passed locally at app commit
+[`9bf04566`](https://github.com/CrispStrobe/CrispCloud/commit/9bf04566434318ad199971d1071ca0ca02c81905),
+using the app's pinned **Flutter 3.47.8 / Dart 3.13.7**. Its 278 shared file hashes
+match suite
+[`31add779`](https://github.com/CrispStrobe/quds_office_suite/commit/31add77938bb1242d510ab544dbe886d87ebdf75).
+Later evidence-only commits do not change these tested source bytes.
 
-For historical comparison, the earlier **54.9%** report measured an older source
-revision. It remains a separate historical observation and is not the current
-coverage measurement. A passing semantic oracle or Open XML SDK check does not
-establish pixel identity with Word.
+| Check | Result |
+| --- | --- |
+| Actual Flutter host tests | 115 passed |
+| Required actual saved host exports | 41/41 verified |
+| Shared engine acceptance tests | 530 passed |
+| Required shared engine exports | 217/217 verified |
+| Shared Python semantic/corruption controls | 264 passed |
+| Host Office coverage | 2,282/3,661 instrumented lines (62.3%) |
+| Scoped Office source files | All nine instrumented and source-hash matched |
+| Shared vendor pins | 278/278 matched |
+| Independent Open XML SDK validation | 258/258 packages; all 41 actual host saves and all 217 shared exports pass |
+
+The [coverage inventory](office-host-coverage-gaps.json) records source commit,
+all nine source hashes, uncovered lines and absent files (none in this scope).
+Coverage measures executed instrumented lines, not branches or correctness.
+
+The [SDK evidence](office-schema-evidence.json) contains every package hash
+and zero validation errors; its input paths and bytes were independently matched
+before and after validation. Native prerequisites were provided without altering
+the tests or application sources, and the CI SQLite helper restored
+`pubspec.yaml` exactly. The current Actions run is
+[43183465694](https://github.com/CrispStrobe/CrispCloud/actions/runs/43183465694);
+its queue/execution status is separate from the completed local evidence.
+
+The synchronized source now preserves native note-separator definitions and
+their absence, prevents inserted notes from reusing special-definition IDs,
+checks native paragraph-property order in retained parts, and carries the
+reviewed story-page correction through three actual save/reopen cycles. Full
+suite support boundaries and the independent native-render evidence are in the
+[suite coverage guide](https://github.com/CrispStrobe/quds_office_suite/blob/feature/office-fidelity-coverage-20261112/docs/office-fidelity-coverage-20261112.md).
+
+## Historical evidence
+
+[Actions run 43177469270](https://github.com/CrispStrobe/CrispCloud/actions/runs/43177469270)
+tested app `86338bd` with suite `adcccb4`. Its 115 host tests, all 41 saved host
+exports and all 41 host SDK validations passed, but the overall schema job
+failed on 14 shared auxiliary fixtures because their authored paragraph
+properties were ordered incorrectly. The `c19e90d` source checkpoint corrected
+that fixture and strengthened the oracle. These prior results are retained as
+counterexamples and do not certify later source changes.
+
+The earlier **54.9%** coverage report measured an older source revision. It is a
+separate historical observation. A passing semantic oracle or Open XML SDK
+check does not establish pixel identity with Microsoft Word.
