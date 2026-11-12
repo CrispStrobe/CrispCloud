@@ -4,17 +4,17 @@
   "guides": {
     "en": {
       "asset": "docs/USER_GUIDE.md",
-      "sha256": "612fe76401b6ba4ab250dc2df9a704ec0ab24da442985aea245a666cb1dab886"
+      "sha256": "71ef44562d9aa699d997b83abe7ee5b4e5b7379205ae3a8a131ece77cb79d387"
     },
     "de": {
       "asset": "docs/help/USER_GUIDE.de.md",
-      "sha256": "adc0ca85994fd67247ee510b517ace80151425f412619bcbe45235a0b1728b63",
-      "sourceSha256": "612fe76401b6ba4ab250dc2df9a704ec0ab24da442985aea245a666cb1dab886"
+      "sha256": "768e222f9cce45188ec66140e71771c18101d032b72f58177bed4c776dbda1ff",
+      "sourceSha256": "71ef44562d9aa699d997b83abe7ee5b4e5b7379205ae3a8a131ece77cb79d387"
     },
     "fr": {
       "asset": "docs/help/USER_GUIDE.fr.md",
-      "sha256": "547de4436f149b08e10c6a0a601c7d55689424c5def274e6e32ab9d465b188d1",
-      "sourceSha256": "612fe76401b6ba4ab250dc2df9a704ec0ab24da442985aea245a666cb1dab886"
+      "sha256": "e8c342aeb22a334dc3fa85ba9a3f3c99427ba177f5cd3f47e922c951af3859ad",
+      "sourceSha256": "71ef44562d9aa699d997b83abe7ee5b4e5b7379205ae3a8a131ece77cb79d387"
     }
   }
 }
