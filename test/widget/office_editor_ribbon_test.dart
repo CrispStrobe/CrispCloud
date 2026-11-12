@@ -14,10 +14,10 @@ import 'package:crisp_cloud/widgets/office_editor_find_bar.dart';
 import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 
 OfficeSurfaceConfig _config() => const OfficeSurfaceConfig(
-      mode: OfficeInteractionMode.editing,
-      autofocus: false,
-      adaptiveChrome: false,
-    );
+  mode: OfficeInteractionMode.editing,
+  autofocus: false,
+  adaptiveChrome: false,
+);
 
 Widget _host(
   OfficeController controller,
@@ -43,17 +43,17 @@ Widget _host(
           Expanded(
             child: switch (kind) {
               OfficeEditorKind.word => QudsWordEditor(
-                  controller: controller as WordEditorController,
-                  config: controller.config,
-                ),
+                controller: controller as WordEditorController,
+                config: controller.config,
+              ),
               OfficeEditorKind.sheet => QudsSheetEditor(
-                  controller: controller as SheetEditorController,
-                  config: controller.config,
-                ),
+                controller: controller as SheetEditorController,
+                config: controller.config,
+              ),
               OfficeEditorKind.slides => QudsSlideEditor(
-                  controller: controller as SlideEditorController,
-                  config: controller.config,
-                ),
+                controller: controller as SlideEditorController,
+                config: controller.config,
+              ),
               OfficeEditorKind.unsupported => const SizedBox.shrink(),
             },
           ),
@@ -70,9 +70,106 @@ void _widen(WidgetTester tester) {
   addTearDown(tester.view.resetDevicePixelRatio);
 }
 
+Future<void> _settleRoute(WidgetTester tester) async {
+  // The document caret blinks continuously; only wait for the menu/dialog's
+  // finite route transition rather than for the whole editor to stop painting.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 void main() {
-  testWidgets('Word ribbon applies bold and paragraph alignment',
-      (WidgetTester tester) async {
+  testWidgets('note commands cancel without edits and respect viewing mode', (
+    WidgetTester tester,
+  ) async {
+    _widen(tester);
+    final controller = WordEditorController(
+      document: WmlDocument.empty(text: 'Body text'),
+      config: _config(),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_host(controller, OfficeEditorKind.word));
+    await tester.tap(find.text('Insert').last);
+    await tester.pump();
+    await tester.tap(find.text('Footnote'));
+    await _settleRoute(tester);
+    expect(find.text('Insert footnote'), findsOneWidget);
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      ),
+      'Canceled note',
+    );
+    await tester.tap(find.text('Cancel'));
+    await _settleRoute(tester);
+    expect(controller.document.footnotes, isEmpty);
+    expect(controller.document.endnotes, isEmpty);
+    expect(controller.isDirty, isFalse);
+
+    final viewing = WordEditorController(
+      document: WmlDocument.empty(text: 'Read only'),
+      config: const OfficeSurfaceConfig(
+        mode: OfficeInteractionMode.viewing,
+        autofocus: false,
+        adaptiveChrome: false,
+      ),
+    );
+    addTearDown(viewing.dispose);
+    await tester.pumpWidget(_host(viewing, OfficeEditorKind.word));
+    await tester.pump();
+    // The reused ribbon remains on its Insert tab.
+    for (final label in ['Footnote', 'Endnote']) {
+      final button = find
+          .ancestor(of: find.text(label), matching: find.byType(InkWell))
+          .first;
+      expect(tester.widget<InkWell>(button).onTap, isNull);
+    }
+    expect(viewing.document.footnotes, isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('German menu exposes localized footnote and endnote dialogs', (
+    WidgetTester tester,
+  ) async {
+    _widen(tester);
+    final controller = WordEditorController(
+      document: WmlDocument.empty(text: 'Text'),
+      config: _config(),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _host(controller, OfficeEditorKind.word, locale: const Locale('de')),
+    );
+    await tester.tap(find.text('Einfügen').first);
+    await _settleRoute(tester);
+    expect(find.text('Fußnote …'), findsOneWidget);
+    expect(find.text('Endnote …'), findsOneWidget);
+    await tester.tap(find.text('Endnote …'));
+    await _settleRoute(tester);
+    expect(find.text('Endnote einfügen'), findsOneWidget);
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      ),
+      'Deutsche Endnote',
+    );
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Einfügen'));
+    await _settleRoute(tester);
+    expect(controller.document.footnotes, isEmpty);
+    expect(controller.document.endnotes.single.text, 'Deutsche Endnote');
+    controller.undo();
+    await tester.pump();
+    expect(controller.document.endnotes, isEmpty);
+    controller.redo();
+    await tester.pump();
+    expect(controller.document.endnotes.single.text, 'Deutsche Endnote');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Word ribbon applies bold and paragraph alignment', (
+    WidgetTester tester,
+  ) async {
     _widen(tester);
     final WordEditorController controller = WordEditorController(
       document: WmlDocument.empty(text: 'Hello ribbon'),
@@ -80,9 +177,7 @@ void main() {
     );
     addTearDown(controller.dispose);
 
-    await tester.pumpWidget(
-      _host(controller, OfficeEditorKind.word),
-    );
+    await tester.pumpWidget(_host(controller, OfficeEditorKind.word));
     await tester.pump();
 
     expect(find.text('Home'), findsOneWidget);
@@ -130,17 +225,16 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('Sheet ribbon applies bold to the active cell',
-      (WidgetTester tester) async {
+  testWidgets('Sheet ribbon applies bold to the active cell', (
+    WidgetTester tester,
+  ) async {
     _widen(tester);
     final SheetEditorController controller = SheetEditorController(
       config: _config(),
     );
     addTearDown(controller.dispose);
 
-    await tester.pumpWidget(
-      _host(controller, OfficeEditorKind.sheet),
-    );
+    await tester.pumpWidget(_host(controller, OfficeEditorKind.sheet));
     await tester.pump();
 
     expect(controller.sheet.cell(controller.activeCell).fontBold, isFalse);
@@ -164,9 +258,7 @@ void main() {
     );
     addTearDown(controller.dispose);
 
-    await tester.pumpWidget(
-      _host(controller, OfficeEditorKind.slides),
-    );
+    await tester.pumpWidget(_host(controller, OfficeEditorKind.slides));
     await tester.pump();
 
     expect(controller.presentation.slides.length, 1);
@@ -177,8 +269,9 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('German locale localizes ribbon and menus',
-      (WidgetTester tester) async {
+  testWidgets('German locale localizes ribbon and menus', (
+    WidgetTester tester,
+  ) async {
     _widen(tester);
     final WordEditorController controller = WordEditorController(
       document: WmlDocument.empty(text: 'Hallo'),
@@ -197,8 +290,9 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('macOS uses the native menu bar and a compact ribbon',
-      (WidgetTester tester) async {
+  testWidgets('macOS uses the native menu bar and a compact ribbon', (
+    WidgetTester tester,
+  ) async {
     _widen(tester);
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
@@ -209,9 +303,7 @@ void main() {
     );
     addTearDown(controller.dispose);
 
-    await tester.pumpWidget(
-      _host(controller, OfficeEditorKind.word),
-    );
+    await tester.pumpWidget(_host(controller, OfficeEditorKind.word));
     await tester.pump();
 
     // The in-window File menu row is gone on macOS.
@@ -234,9 +326,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: OfficeFindBar(controller: controller),
-        ),
+        home: Scaffold(body: OfficeFindBar(controller: controller)),
       ),
     );
     await tester.pump();

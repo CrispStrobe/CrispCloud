@@ -182,16 +182,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _c.config.allowsMutation ? _insertComment : null,
             icon: Icons.comment_outlined,
           ),
-          _menuItem(
-            'Footnote',
-            _c.config.allowsMutation ? () => _insertNote(endnote: false) : null,
-            icon: Icons.short_text,
-          ),
-          _menuItem(
-            'Endnote',
-            _c.config.allowsMutation ? () => _insertNote(endnote: true) : null,
-            icon: Icons.notes,
-          ),
+          _menuItem('Footnote…',
+              _canMutate ? () => _insertNote(endnote: false) : null,
+              icon: Icons.format_list_numbered),
+          _menuItem('Endnote…',
+              _canMutate ? () => _insertNote(endnote: true) : null,
+              icon: Icons.notes),
           const Divider(height: 1),
           _menuItem('Page break', _pageBreak, icon: Icons.insert_page_break),
           _menuItem('Section break', _sectionBreak, icon: Icons.horizontal_split),
@@ -713,14 +709,6 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
             _bigButton(Icons.horizontal_split, 'Section break', _sectionBreak),
             _bigButton(Icons.vertical_split, 'Column break', _columnBreak),
           ]),
-          _group('Footnotes', <Widget>[
-            _bigButton(
-              Icons.short_text,
-              'Footnote',
-              () => _insertNote(endnote: false),
-            ),
-            _bigButton(Icons.notes, 'Endnote', () => _insertNote(endnote: true)),
-          ]),
           _group('Tables', <Widget>[
             _bigButton(Icons.table_chart, 'Table', _insertTable),
             _iconButton(
@@ -780,6 +768,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           ]),
           _group('Illustrations', <Widget>[
             _bigButton(Icons.image_outlined, 'Picture', _wordInsertPicture),
+          ]),
+          _group('Notes', <Widget>[
+            _bigButton(Icons.format_list_numbered, 'Footnote',
+                () => _insertNote(endnote: false), enabled: _canMutate),
+            _bigButton(Icons.notes, 'Endnote',
+                () => _insertNote(endnote: true), enabled: _canMutate),
           ]),
           _group('Links', <Widget>[
             _bigButton(Icons.link, 'Hyperlink', _insertHyperlink),
@@ -2568,16 +2562,29 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
     _word.insertComment(text: result.text, author: result.author);
   }
 
-  void _pageBreak() => _word.insertPageBreak();
-
-  /// Inserts a footnote or endnote at the caret and opens the notes pane,
-  /// where its text is typed.
-  void _insertNote({required bool endnote}) {
-    _word.insertFootnote(endnote: endnote);
+  Future<void> _insertNote({required bool endnote}) async {
+    if (!_canMutate) return;
+    final WordEditorController controller = _word;
+    final String? text = await showOfficePromptDialog(
+      context,
+      title: context.tr(endnote ? 'Insert endnote' : 'Insert footnote'),
+      label: context.tr('Text'),
+      multiline: true,
+      trimResult: false,
+      confirmLabel: context.tr('Insert'),
+    );
+    if (!mounted || text == null || !_canMutate ||
+        !identical(controller, widget.controller)) {
+      return;
+    }
+    controller.insertFootnote(text: text, endnote: endnote);
+    // Show the notes pane, where the new note can be edited further.
     if (!widget.config.showNotesPane) {
       _setConfig(showNotesPane: true);
     }
   }
+
+  void _pageBreak() => _word.insertPageBreak();
 
   void _sectionBreak() => _word.insertSectionBreak();
 
