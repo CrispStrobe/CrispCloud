@@ -250,6 +250,7 @@ Future<ArchiveEndpointTransferResult?> showCapturedArchiveWorkspaceCopy(
       expectedOuterFingerprint: destination.location.fingerprint,
       isCopyCurrent: current,
       onSourceInvalidated: onSourceInvalidated,
+      journal: source.journal,
     );
     if (context.mounted && destination.isCurrent) {
       await destination.panel.refresh();

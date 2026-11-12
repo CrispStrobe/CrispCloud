@@ -412,11 +412,15 @@ void main() {
         await tester.runAsync(prepareFixture);
         final source = (await tester.runAsync(prepareArchiveSource))!;
         left.toggleSelection(sourceFile());
+        final journal = ArchivePublicationJournal(
+          storage: MemoryFileCollectionStorage(),
+        );
         await mount(tester, () async {
           await showCurrentArchiveWorkspaceDialog(
             widgetRef.context,
             widgetRef,
             PanelSide.local,
+            journal: journal,
           );
         });
         await tester.tap(find.text('Transfer'));
@@ -439,7 +443,6 @@ void main() {
           local: container.read(localFileServiceProvider),
           isCurrent: () => origin.isCurrent,
         );
-        final journal = ArchivePublicationJournal();
         final recovered = Uint8List.fromList(
           ZipEncoder().encode(
             Archive()

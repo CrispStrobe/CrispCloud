@@ -649,256 +649,282 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && !_busy) _close();
       },
-      child: AlertDialog(
-        title: Text(
-          widget.isArchiveMove
-              ? m(_moveReview != null ? 'review' : 'title')
-              : t(
-                  _review != null
-                      ? 'reviewTitle'
-                      : widget.isArchiveCopy
-                      ? 'copyTitle'
-                      : 'importTitle',
-                ),
-        ),
-        content: SizedBox(
-          width: 720,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.isArchiveCopy) ...[
-                  Text(t('sourceArchive')),
-                  SelectableText(
-                    [
-                      widget.sourceContainerFile!.path,
-                      ...widget.sourceNestedMembers,
-                    ].join('!/'),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(t('destinationArchive')),
-                ],
-                SelectableText(
-                  [
-                    widget.containerFile.path,
-                    ...widget.nestedMembers,
-                  ].join('!/'),
-                ),
-                if (widget.source != null)
-                  Text('${widget.source!.label} → ${widget.directory}'),
-                if (widget.isArchiveCopy) Text('→ ${widget.directory}'),
-                const SizedBox(height: 12),
-                if (_busy) ...[
-                  const LinearProgressIndicator(),
-                  Text(
-                    _activity == 'destinationPublishing' ||
-                            _activity == 'sourcePublishing'
-                        ? m(_activity)
-                        : t(_activity),
-                  ),
-                ],
-                if (_error != null)
-                  SelectableText(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+      child: Actions(
+        actions: {
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (_) {
+              if (!_busy) _close();
+              return null;
+            },
+          ),
+        },
+        child: Focus(
+          autofocus: true,
+          child: AlertDialog(
+            title: Text(
+              widget.isArchiveMove
+                  ? m(_moveReview != null ? 'review' : 'title')
+                  : t(
+                      _review != null
+                          ? 'reviewTitle'
+                          : widget.isArchiveCopy
+                          ? 'copyTitle'
+                          : 'importTitle',
                     ),
-                  ),
-                if (_result != null) ...[
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      moveResult == null
-                          ? t('published')
-                          : m(switch (moveResult.disposition) {
-                              ArchiveMoveDisposition.moved => 'published',
-                              ArchiveMoveDisposition.destinationOnly =>
-                                'retained',
-                              ArchiveMoveDisposition.sourceRecoveryRequired =>
-                                'recovery',
-                            }),
-                    ),
-                  ),
-                  if (moveResult != null) ...[
-                    if (moveResult.sourceReceipt != null)
-                      Text(
-                        m('removedCount', [
-                          _moveReview!.removedSourcePaths.length,
-                        ]),
+            ),
+            content: SizedBox(
+              width: 720,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.isArchiveCopy) ...[
+                      Text(t('sourceArchive')),
+                      SelectableText(
+                        [
+                          widget.sourceContainerFile!.path,
+                          ...widget.sourceNestedMembers,
+                        ].join('!/'),
                       ),
-                    if (moveResult.disposition != ArchiveMoveDisposition.moved)
-                      Text(m('recoveryDetail')),
-                  ],
-                  if (_result!.receipt.cleanupPending ||
-                      moveResult?.sourceReceipt?.cleanupPending == true)
-                    Text(t('cleanupPending')),
-                  if (_result!.retainedSources.isNotEmpty &&
-                      moveResult?.disposition !=
-                          ArchiveMoveDisposition.sourceRecoveryRequired)
-                    Text(
-                      moveResult == null
-                          ? t('retained', [_result!.retainedSources.length])
-                          : m('retainedCount', [
-                              _result!.retainedSources.length,
-                            ]),
-                    ),
-                  for (final warning in _result!.warnings)
-                    SelectableText(warning),
-                ] else ...[
-                  if (workspace != null && !workspace.canUpdate)
-                    Text(workspace.updateSupport),
-                  if (workspace != null) ...[
-                    Text(
-                      t('protection', [
-                        workspace.encrypted
-                            ? t(
-                                workspace.encryptNames
-                                    ? 'namesProtected'
-                                    : 'dataProtected',
-                              )
-                            : t('unencrypted'),
-                      ]),
-                    ),
-                    Text(t('metadata')),
-                  ],
-                  Text(t('publicationSafety')),
-                  if (widget.isArchiveCopy) ...[
-                    if (widget.isArchiveMove) ...[
-                      Text(m('scope')),
-                      Text(m('policy')),
-                      Text(m('skipped')),
-                    ] else
-                      Text(t('archiveCopySnapshot')),
-                    Text(t('archiveCopyProtection')),
-                    Text(t('archiveCopyMetadata')),
-                  ] else
-                    Text(t(widget.moveSources ? 'movePolicy' : 'copyPolicy')),
-                  if (widget.moveSources && !widget.isArchiveMove)
-                    Text(t('directoriesRemain')),
-                  if (workspace?.pendingPublication != null)
-                    Text(t('recoveryClose')),
-                  Text(t('bounds')),
-                  if (_review == null &&
-                      (widget.source != null || widget.isArchiveCopy) &&
-                      _endpoint != null) ...[
-                    DropdownButtonFormField<FileConflictPolicy>(
-                      initialValue: _conflict,
-                      isExpanded: true,
-                      itemHeight: null,
-                      decoration: InputDecoration(labelText: t('collision')),
-                      items: [
-                        for (final value in [
-                          FileConflictPolicy.keepBoth,
-                          FileConflictPolicy.skip,
-                          FileConflictPolicy.replace,
-                        ])
-                          DropdownMenuItem(
-                            value: value,
-                            child: Text(
-                              t(value.name),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                      onChanged: _busy
-                          ? null
-                          : (value) {
-                              if (value != null) {
-                                setState(() => _conflict = value);
-                                unawaited(_run(_prepare, 'preparing'));
-                              }
-                            },
-                    ),
-                    if (_plan != null) ...[
-                      for (final error in _plan!.errors)
-                        Text(
-                          error,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      Text(t('entries', [_plan!.entries.length])),
-                      for (final entry in _plan!.entries.take(100))
-                        Text(
-                          '${entry.source.path} → ${entry.destination}${entry.existing == null ? '' : ' • ${t('collision')}'}',
-                        ),
+                      const SizedBox(height: 8),
+                      Text(t('destinationArchive')),
                     ],
-                  ],
-                  if (_review != null) ...[
-                    reviewSummary(
-                      _review!,
-                      title: widget.isArchiveMove
-                          ? m('destinationReview')
-                          : null,
+                    SelectableText(
+                      [
+                        widget.containerFile.path,
+                        ...widget.nestedMembers,
+                      ].join('!/'),
                     ),
-                    if (_moveReview != null) ...[
-                      reviewSummary(
-                        _moveReview!.sourceReview,
-                        title: m('sourceReview'),
+                    if (widget.source != null)
+                      Text('${widget.source!.label} → ${widget.directory}'),
+                    if (widget.isArchiveCopy) Text('→ ${widget.directory}'),
+                    const SizedBox(height: 12),
+                    if (_busy) ...[
+                      const LinearProgressIndicator(),
+                      Text(
+                        _activity == 'destinationPublishing' ||
+                                _activity == 'sourcePublishing'
+                            ? m(_activity)
+                            : t(_activity),
                       ),
-                      if (_moveReview!.retainedSourcePaths.isNotEmpty) ...[
+                    ],
+                    if (_error != null)
+                      SelectableText(
+                        _error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    if (_result != null) ...[
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          moveResult == null
+                              ? t('published')
+                              : m(switch (moveResult.disposition) {
+                                  ArchiveMoveDisposition.moved => 'published',
+                                  ArchiveMoveDisposition.destinationOnly =>
+                                    'retained',
+                                  ArchiveMoveDisposition
+                                      .sourceRecoveryRequired =>
+                                    'recovery',
+                                }),
+                        ),
+                      ),
+                      if (moveResult != null) ...[
+                        if (moveResult.sourceReceipt != null)
+                          Text(
+                            m('removedCount', [
+                              _moveReview!.removedSourcePaths.length,
+                            ]),
+                          ),
+                        if (moveResult.disposition !=
+                            ArchiveMoveDisposition.moved)
+                          Text(m('recoveryDetail')),
+                      ],
+                      if (_result!.receipt.cleanupPending ||
+                          moveResult?.sourceReceipt?.cleanupPending == true)
+                        Text(t('cleanupPending')),
+                      if (_result!.retainedSources.isNotEmpty &&
+                          moveResult?.disposition !=
+                              ArchiveMoveDisposition.sourceRecoveryRequired)
                         Text(
-                          m('retainedCount', [
-                            _moveReview!.retainedSourcePaths.length,
+                          moveResult == null
+                              ? t('retained', [_result!.retainedSources.length])
+                              : m('retainedCount', [
+                                  _result!.retainedSources.length,
+                                ]),
+                        ),
+                      for (final warning in _result!.warnings)
+                        SelectableText(warning),
+                    ] else ...[
+                      if (workspace != null && !workspace.canUpdate)
+                        Text(workspace.updateSupport),
+                      if (workspace != null) ...[
+                        Text(
+                          t('protection', [
+                            workspace.encrypted
+                                ? t(
+                                    workspace.encryptNames
+                                        ? 'namesProtected'
+                                        : 'dataProtected',
+                                  )
+                                : t('unencrypted'),
                           ]),
                         ),
-                        for (final path
-                            in _moveReview!.retainedSourcePaths.take(100))
-                          Text(path),
-                        if (_moveReview!.retainedSourcePaths.length > 100)
-                          Text(
-                            t('moreEntries', [
-                              _moveReview!.retainedSourcePaths.length - 100,
-                            ]),
-                          ),
+                        Text(t('metadata')),
                       ],
+                      Text(t('publicationSafety')),
+                      if (widget.isArchiveCopy) ...[
+                        if (widget.isArchiveMove) ...[
+                          Text(m('scope')),
+                          Text(m('policy')),
+                          Text(m('skipped')),
+                        ] else
+                          Text(t('archiveCopySnapshot')),
+                        Text(t('archiveCopyProtection')),
+                        Text(t('archiveCopyMetadata')),
+                      ] else
+                        Text(
+                          t(widget.moveSources ? 'movePolicy' : 'copyPolicy'),
+                        ),
+                      if (widget.moveSources && !widget.isArchiveMove)
+                        Text(t('directoriesRemain')),
+                      if (workspace?.pendingPublication != null)
+                        Text(t('recoveryClose')),
+                      Text(t('bounds')),
+                      if (_review == null &&
+                          (widget.source != null || widget.isArchiveCopy) &&
+                          _endpoint != null) ...[
+                        DropdownButtonFormField<FileConflictPolicy>(
+                          initialValue: _conflict,
+                          isExpanded: true,
+                          itemHeight: null,
+                          decoration: InputDecoration(
+                            labelText: t('collision'),
+                          ),
+                          items: [
+                            for (final value in [
+                              FileConflictPolicy.keepBoth,
+                              FileConflictPolicy.skip,
+                              FileConflictPolicy.replace,
+                            ])
+                              DropdownMenuItem(
+                                value: value,
+                                child: Text(
+                                  t(value.name),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                          onChanged: _busy
+                              ? null
+                              : (value) {
+                                  if (value != null) {
+                                    setState(() => _conflict = value);
+                                    unawaited(_run(_prepare, 'preparing'));
+                                  }
+                                },
+                        ),
+                        if (_plan != null) ...[
+                          for (final error in _plan!.errors)
+                            Text(
+                              error,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          Text(t('entries', [_plan!.entries.length])),
+                          for (final entry in _plan!.entries.take(100))
+                            Text(
+                              '${entry.source.path} → ${entry.destination}${entry.existing == null ? '' : ' • ${t('collision')}'}',
+                            ),
+                        ],
+                      ],
+                      if (_review != null) ...[
+                        reviewSummary(
+                          _review!,
+                          title: widget.isArchiveMove
+                              ? m('destinationReview')
+                              : null,
+                        ),
+                        if (_moveReview != null) ...[
+                          reviewSummary(
+                            _moveReview!.sourceReview,
+                            title: m('sourceReview'),
+                          ),
+                          if (_moveReview!.retainedSourcePaths.isNotEmpty) ...[
+                            Text(
+                              m('retainedCount', [
+                                _moveReview!.retainedSourcePaths.length,
+                              ]),
+                            ),
+                            for (final path
+                                in _moveReview!.retainedSourcePaths.take(100))
+                              Text(path),
+                            if (_moveReview!.retainedSourcePaths.length > 100)
+                              Text(
+                                t('moreEntries', [
+                                  _moveReview!.retainedSourcePaths.length - 100,
+                                ]),
+                              ),
+                          ],
+                        ],
+                      ],
+                      Text(
+                        widget.isArchiveMove ? m('draftOnly') : t('draftOnly'),
+                      ),
                     ],
                   ],
-                  Text(widget.isArchiveMove ? m('draftOnly') : t('draftOnly')),
-                ],
-              ],
+                ),
+              ),
             ),
+            actions: [
+              if (_busy)
+                TextButton(
+                  onPressed: () {
+                    setState(() => _cancelled = true);
+                    _control.cancel();
+                  },
+                  child: Text(context.commanderTr('Cancel')),
+                ),
+              if (!_busy)
+                TextButton(
+                  onPressed: _close,
+                  child: Text(context.commanderTr('Close')),
+                ),
+              if (!_busy &&
+                  _result == null &&
+                  _review == null &&
+                  !widget.isArchiveMove &&
+                  _endpoint?.workspace.dirty == true)
+                TextButton(
+                  onPressed: _reviewAgain,
+                  child: Text(t('reviewTitle')),
+                ),
+              if (!_busy &&
+                  _result == null &&
+                  _review == null &&
+                  _plan?.canStage == true)
+                FilledButton(
+                  onPressed: _stage,
+                  child: Text(widget.isArchiveMove ? m('stage') : t('stage')),
+                ),
+              if (!_busy &&
+                  _result == null &&
+                  _review != null &&
+                  (!widget.isArchiveMove || _moveReview != null))
+                FilledButton(
+                  onPressed: _publish,
+                  child: Text(
+                    widget.isArchiveMove ? m('publish') : t('publish'),
+                  ),
+                ),
+            ],
           ),
         ),
-        actions: [
-          if (_busy)
-            TextButton(
-              onPressed: () {
-                setState(() => _cancelled = true);
-                _control.cancel();
-              },
-              child: Text(context.commanderTr('Cancel')),
-            ),
-          if (!_busy)
-            TextButton(
-              onPressed: _close,
-              child: Text(context.commanderTr('Close')),
-            ),
-          if (!_busy &&
-              _result == null &&
-              _review == null &&
-              !widget.isArchiveMove &&
-              _endpoint?.workspace.dirty == true)
-            TextButton(onPressed: _reviewAgain, child: Text(t('reviewTitle'))),
-          if (!_busy &&
-              _result == null &&
-              _review == null &&
-              _plan?.canStage == true)
-            FilledButton(
-              onPressed: _stage,
-              child: Text(widget.isArchiveMove ? m('stage') : t('stage')),
-            ),
-          if (!_busy &&
-              _result == null &&
-              _review != null &&
-              (!widget.isArchiveMove || _moveReview != null))
-            FilledButton(
-              onPressed: _publish,
-              child: Text(widget.isArchiveMove ? m('publish') : t('publish')),
-            ),
-        ],
       ),
     );
   }

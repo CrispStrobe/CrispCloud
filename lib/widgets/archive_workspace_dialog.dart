@@ -36,6 +36,7 @@ Future<void> showCurrentArchiveWorkspaceDialog(
   PanelSide side, {
   ArchiveWorkspaceAction action = ArchiveWorkspaceAction.browse,
   FileItem? focusedMember,
+  ArchivePublicationJournal? journal,
 }) async {
   try {
     final panel = ref.read(panelProvider(side));
@@ -69,6 +70,7 @@ Future<void> showCurrentArchiveWorkspaceDialog(
           .map((file) => memberPath(file.path!))
           .toSet(),
       initialAction: action,
+      journal: journal,
     );
   } catch (error) {
     if (context.mounted) {
@@ -88,6 +90,7 @@ Future<void> showArchiveWorkspaceDialog(
   String initialDirectory = '/',
   Set<String> initialSelectedPaths = const {},
   ArchiveWorkspaceAction initialAction = ArchiveWorkspaceAction.browse,
+  ArchivePublicationJournal? journal,
 }) async {
   try {
     final origin =
@@ -104,6 +107,7 @@ Future<void> showArchiveWorkspaceDialog(
         initialDirectory: initialDirectory,
         initialSelectedPaths: initialSelectedPaths,
         initialAction: initialAction,
+        journal: journal,
       ),
     );
     if (context.mounted) await ref.read(panelProvider(side)).refresh();
@@ -124,6 +128,7 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
     required this.initialDirectory,
     required this.initialSelectedPaths,
     required this.initialAction,
+    this.journal,
   });
   final PanelSide side;
   final FileItem file;
@@ -132,6 +137,7 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
   final String initialDirectory;
   final Set<String> initialSelectedPaths;
   final ArchiveWorkspaceAction initialAction;
+  final ArchivePublicationJournal? journal;
   @override
   ConsumerState<_ArchiveWorkspaceDialog> createState() =>
       _ArchiveWorkspaceDialogState();
@@ -225,7 +231,7 @@ class _ArchiveWorkspaceDialogState
             widget.origin.isCurrent &&
             (widget.location?.isCurrent() ?? true),
       );
-      final journal = ArchivePublicationJournal();
+      final journal = widget.journal ?? ArchivePublicationJournal();
       await journal.initialize();
       if (journal.records.any(
         (record) =>
