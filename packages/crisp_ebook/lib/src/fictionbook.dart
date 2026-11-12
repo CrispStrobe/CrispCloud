@@ -246,9 +246,8 @@ class _FictionBookWriter {
         collectNotes: true,
       );
       if (_isNote(chapter.body) ||
-          _tokens(
-            chapter.body.getAttribute('class'),
-          ).contains('notesBodyType')) {
+          _tokens(chapter.body.getAttribute('class'))
+              .contains('notesBodyType')) {
         _notes.add(section);
       } else {
         if (!chapter.chapter.linear) {
@@ -283,13 +282,20 @@ class _FictionBookWriter {
       XmlProcessing('xml', 'version="1.0" encoding="UTF-8"'),
       root,
     ]);
-    final exportedIds = root.descendants.whereType<XmlElement>()
-        .map((element) => element.getAttribute('id')).whereType<String>().toSet();
+    final exportedIds = root.descendants
+        .whereType<XmlElement>()
+        .map((element) => element.getAttribute('id'))
+        .whereType<String>()
+        .toSet();
     for (final element in root.descendants.whereType<XmlElement>()) {
       final href = element.getAttribute('href', namespace: _fbXlink);
-      if (href != null && href.startsWith('#') && !exportedIds.contains(href.substring(1))) {
-        throw const EpubException('fb2_unrepresentable_anchor',
-            'A link target belongs to structure that FictionBook cannot retain. Simplify the linked structure before export.');
+      if (href != null &&
+          href.startsWith('#') &&
+          !exportedIds.contains(href.substring(1))) {
+        throw const EpubException(
+          'fb2_unrepresentable_anchor',
+          'A link target belongs to structure that FictionBook cannot retain. Simplify the linked structure before export.',
+        );
       }
     }
     final bytes = Uint8List.fromList(utf8.encode(document.toXmlString()));

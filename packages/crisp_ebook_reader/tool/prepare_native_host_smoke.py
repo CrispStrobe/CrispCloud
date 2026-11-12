@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 
 def prepare(output: Path, platform: str) -> None:
     package = Path(__file__).resolve().parents[1]
-    repository = package.parents[1]
+    platform_fixtures = package / "test/native/platform"
     output = output.resolve()
     manifest = output / "pubspec.yaml"
     if (not manifest.is_file() or
@@ -70,9 +70,9 @@ flutter:
         tree.write(android_manifest, encoding="utf-8", xml_declaration=True)
         resources = output / "android/app/src/main/res/xml"
         resources.mkdir(exist_ok=True)
-        # Exercise the application's exact loopback-only exception, not a
-        # permissive testing policy that could hide a release configuration bug.
-        shutil.copyfile(repository / "android/app/src/main/res/xml/ebook_network_security_config.xml",
+        # This package-owned setup is also the integration contract for apps:
+        # permit the private asset server only, never arbitrary cleartext.
+        shutil.copyfile(platform_fixtures / "ebook_network_security_config.xml",
                         resources / "ebook_network_security_config.xml")
         gradle = output / "android/app/build.gradle.kts"
         text = gradle.read_text(encoding="utf-8")
@@ -88,9 +88,9 @@ flutter:
         target = output / platform / "Runner/Info.plist"
         with target.open("rb") as file:
             info = plistlib.load(file)
-        with (repository / platform / "Runner/Info.plist").open("rb") as file:
-            production = plistlib.load(file)
-        info["NSAppTransportSecurity"] = production["NSAppTransportSecurity"]
+        with (platform_fixtures / "AppTransportSecurity.plist").open("rb") as file:
+            transport_security = plistlib.load(file)
+        info["NSAppTransportSecurity"] = transport_security
         with target.open("wb") as file:
             plistlib.dump(info, file, sort_keys=False)
         minimum = "15.0" if platform == "ios" else "12.0"
