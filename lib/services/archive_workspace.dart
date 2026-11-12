@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart' as codecs;
 import 'package:crypto/crypto.dart';
-import 'package:koni_archive/koni_archive.dart' as koni;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_container_publisher.dart';
 import 'archive_endpoint_policy.dart';
-import 'archive_zip_metadata.dart';
+import 'archive_write_model.dart';
+import 'archive_writer_service.dart';
+import 'archive_zip_package_policy.dart';
 import 'archive_publication_journal.dart';
 import 'archive_browser_session.dart';
 import 'archive_member_index.dart';
@@ -36,7 +36,7 @@ class ArchiveWorkspace {
   ViewerArchive _archive;
   String _fingerprint;
   final String? password;
-  final ArchiveEndpointPolicy _policy;
+  ArchiveEndpointPolicy _policy;
   final ArchivePublicationJournal journal;
   final _entries = <String, _ArchiveEntry>{};
   bool _closed = false;
@@ -326,6 +326,32 @@ class ArchiveWorkspace {
       );
     }
     _validateEntries(entries);
+    if (_policy.singlePayload &&
+        (entries.length != 1 ||
+            entries.values.single.isFolder ||
+            entries.keys.single != _policy.singleMemberName ||
+            entries.values.single.mode != null)) {
+      throw const ArchiveViewException(
+        'A compressed file supports replacing its one payload. Its member name, count and filesystem permissions cannot be changed.',
+      );
+    }
+    if (_policy.format == ArchiveEndpointFormat.ar &&
+        entries.values.any(
+          (entry) => entry.isFolder || entry.name.contains('/'),
+        )) {
+      throw const ArchiveViewException(
+        'AR archives contain flat regular files only.',
+      );
+    }
+    if (_policy.packageKind == 'deb') {
+      final required = _policy.inspection!.container['requiredMembers'] as List;
+      if (entries.length != required.length ||
+          !required.every(entries.containsKey)) {
+        throw const ArchiveViewException(
+          'Debian packages require their original ordered control and data members. Only validated payload replacements are supported.',
+        );
+      }
+    }
     _entries
       ..clear()
       ..addAll(entries);
@@ -672,12 +698,14 @@ class ArchiveWorkspace {
 
   Future<Uint8List> repack({bool Function()? isCancelled}) async {
     _check(writing: true);
-    final lower = file.name.toLowerCase();
-    final koni.ArchiveWriteFormat writerFormat = lower.endsWith('.zip')
-        ? const koni.ZipWriteFormat()
-        : lower.endsWith('.7z')
-        ? const koni.SevenZWriteFormat()
-        : const koni.TarWriteFormat();
+    void checkPacking() {
+      _check(writing: true);
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Archive update cancelled.');
+      }
+    }
+
+    checkPacking();
     if (encrypted &&
         !encryptNames &&
         !_entries.values.any(
@@ -689,68 +717,66 @@ class ArchiveWorkspace {
         'Removing all protected file data would erase the archive encryption policy. Keep a protected member or use an explicit new archive.',
       );
     }
-    final sink = _BoundedArchiveSink(
-      limit: _policy.format == ArchiveEndpointFormat.tarGzip
-          ? kArchiveReadLimit
-          : ArchiveService.maxArchiveBytes,
-    );
-    final writer = koni.Archive.create(
-      sink,
-      format: writerFormat,
-      options: koni.ArchiveWriteOptions(
-        password: encrypted ? password : null,
-        encryptHeader: encryptNames,
-      ),
-    );
-    try {
-      var total = 0;
-      final entries = _entries.values.toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
-      for (final entry in entries) {
-        _check(writing: true);
-        if (isCancelled?.call() ?? false) {
-          throw StateError('Archive update cancelled.');
-        }
-        final spec = koni.ArchiveEntrySpec(
+    // Retained members keep their original order, including after a rename.
+    // This matters for comic page ordering and package metadata precedence.
+    final originalOrder = _entries.values.toList();
+    final ranks = {
+      for (var index = 0; index < originalOrder.length; index++)
+        originalOrder[index]: index,
+    };
+    final ordered = List<_ArchiveEntry>.of(originalOrder)
+      ..sort(
+        (a, b) => (a.member?.index ?? (200000 + ranks[a]!)).compareTo(
+          b.member?.index ?? (200000 + ranks[b]!),
+        ),
+      );
+    final entries = [
+      for (final entry in ordered)
+        ArchiveWriteEntry(
           path: entry.name,
-          type: entry.isFolder
-              ? koni.ArchiveEntryType.directory
-              : koni.ArchiveEntryType.file,
-          modified: entry.modified?.toUtc(),
-          posixMode: entry.mode,
-        );
-        if (entry.isFolder) {
-          await writer.addEntry(spec);
-        } else {
-          final bytes = await read('/${entry.name}');
-          total += bytes.length;
-          if (total > ArchiveService.maxExtractedBytes) {
-            throw const ArchiveViewException(
-              'Archive contents exceed 256 MiB.',
-            );
-          }
-          await writer.addBytes(spec, bytes);
-        }
-      }
-      await writer.close();
-      await sink.close();
-      var bytes = sink.takeBytes();
-      if (_policy.format == ArchiveEndpointFormat.zip) {
-        bytes = preserveArchiveZipTimes(bytes, {
-          for (final entry in _entries.values) entry.name: entry.modified,
-        });
-      }
-      final result = lower.endsWith('.tar.gz') || lower.endsWith('.tgz')
-          ? Uint8List.fromList(const codecs.GZipEncoder().encode(bytes))
-          : bytes;
-      if (result.length > ArchiveService.maxArchiveBytes) {
-        throw const ArchiveViewException('Packed archive exceeds 256 MiB.');
-      }
-      return result;
-    } catch (_) {
-      await sink.close();
-      rethrow;
-    }
+          isDirectory: entry.isFolder,
+          size: entry.isFolder ? 0 : entry.size,
+          modified: entry.modified,
+          mode: entry.mode,
+          attributes: entry.member == null
+              ? const {}
+              : _policy.inspection?.attributes[entry.member!.name] ??
+                    _policy
+                        .inspection
+                        ?.attributes[ArchiveService.safeMemberPath(
+                      entry.member!.name,
+                    )] ??
+                    const {},
+          readChunks: entry.isFolder
+              ? null
+              : () async* {
+                  checkPacking();
+                  yield await read('/${entry.name}');
+                },
+        ),
+    ];
+    final packageIssue = await archiveZipPackageIssue(file.name, entries);
+    if (packageIssue != null) throw ArchiveViewException(packageIssue);
+    return collectArchiveWrite(
+      (sink) => writeArchiveEntries(
+        _policy.format,
+        entries,
+        sink: sink,
+        source: _policy.inspection,
+        compression: _policy.compression,
+        singlePayload: _policy.singlePayload,
+        gzipHeader: _policy.gzipHeader,
+        xzCheck: _policy.xzCheck,
+        password: encrypted ? password : null,
+        encryptNames: encryptNames,
+        maxOutputBytes: ArchiveService.maxArchiveBytes,
+        isCancelled: () {
+          checkPacking();
+          return false;
+        },
+      ),
+      maxBytes: ArchiveService.maxArchiveBytes,
+    );
   }
 
   /// Packs and verifies a concrete review snapshot. Later edits invalidate it.
@@ -897,6 +923,7 @@ class ArchiveWorkspace {
         password,
       );
       if (policy.reason != null ||
+          policy.format != _policy.format ||
           policy.encrypted != encrypted ||
           policy.encryptNames != encryptNames) {
         throw const ArchiveViewException(
@@ -938,6 +965,12 @@ class ArchiveWorkspace {
       replacement = await _verifyPacked(
         selected.bytes,
         isCancelled: isCancelled,
+      );
+      final replacementPolicy = await ArchiveEndpointPolicy.inspect(
+        selected.bytes,
+        file.name,
+        replacement,
+        password,
       );
       _validateReview(selected);
       if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
@@ -982,6 +1015,7 @@ class ArchiveWorkspace {
       }
       final previous = _archive;
       _archive = replacement;
+      _policy = replacementPolicy;
       replacement = null;
       _fingerprint = sha256.convert(selected.bytes).toString();
       _loadEntries();
@@ -1098,25 +1132,6 @@ class _ArchiveEntry {
   DateTime? get modified => _modified ?? member?.modified;
   int? get mode => _mode ?? member?.posixMode;
   int get size => bytes?.length ?? member?.size ?? 0;
-}
-
-class _BoundedArchiveSink implements koni.ByteSink {
-  _BoundedArchiveSink({this.limit = ArchiveService.maxArchiveBytes});
-  final int limit;
-  final _sink = koni.BytesBuilderSink();
-  @override
-  int get length => _sink.length;
-  @override
-  Future<void> add(Uint8List bytes) {
-    if (length + bytes.length > limit) {
-      throw const ArchiveViewException('Packed archive exceeds 256 MiB.');
-    }
-    return _sink.add(bytes);
-  }
-
-  @override
-  Future<void> close() => _sink.close();
-  Uint8List takeBytes() => _sink.takeBytes();
 }
 
 enum ArchiveWorkspaceChangeKind {

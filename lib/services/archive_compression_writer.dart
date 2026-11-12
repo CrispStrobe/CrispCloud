@@ -102,6 +102,11 @@ void validateArchiveCompressionRewrite(
   switch (kind) {
     case ArchiveCompressionKind.gzip:
       final header = _gzipHeaderLength(bytes);
+      if (bytes[3] & 4 != 0) {
+        throw const ArchiveViewException(
+          'Gzip extra fields require a format-specific writer; they may contain payload offsets or checksums.',
+        );
+      }
       final input = codecs.InputMemoryStream(
         Uint8List.sublistView(bytes, header),
       );

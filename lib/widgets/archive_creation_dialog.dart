@@ -121,8 +121,14 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
     setState(() {
       final old = _format.extension;
       if (_name.text.toLowerCase().endsWith(old)) {
-        _name.text =
-            '${_name.text.substring(0, _name.text.length - old.length)}${format.extension}';
+        var stem = _name.text.substring(0, _name.text.length - old.length);
+        if (format.singlePayload &&
+            widget.files.length == 1 &&
+            !widget.files.single.isFolder &&
+            stem == p.basenameWithoutExtension(widget.files.single.name)) {
+          stem = widget.files.single.name;
+        }
+        _name.text = '$stem${format.extension}';
       }
       _format = format;
       _compression = format.defaultCompression;
@@ -154,8 +160,7 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
       format: _format,
       compression: _compression,
       password: _protect ? _password.text : null,
-      encryptNames:
-          _protect && _format == ArchiveCreationFormat.sevenZip && _hideNames,
+      encryptNames: _protect && _format.supportsHiddenNames && _hideNames,
     );
     try {
       options.validate();
@@ -247,6 +252,8 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                 DropdownButtonFormField<ArchiveCreationFormat>(
                   key: const ValueKey('archive-create-format'),
                   initialValue: _format,
+                  isExpanded: true,
+                  menuMaxHeight: 400,
                   decoration: InputDecoration(
                     labelText: tr('Format'),
                     border: const OutlineInputBorder(),
@@ -327,7 +334,7 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                         border: const OutlineInputBorder(),
                       ),
                     ),
-                    if (_format == ArchiveCreationFormat.sevenZip)
+                    if (_format.supportsHiddenNames)
                       CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(tr('Hide filenames')),
@@ -340,7 +347,7 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                     const SizedBox(height: 8),
                     Text(
                       tr(
-                        _format == ArchiveCreationFormat.zip
+                        !_format.supportsHiddenNames
                             ? 'AES-256. ZIP filenames remain visible.'
                             : 'AES-256. Passwords are not saved.',
                       ),
@@ -350,14 +357,35 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                 const SizedBox(height: 12),
                 Text(
                   tr(
-                    'Local files only. Up to 64 MiB per file and 256 MiB total. Existing files are never replaced.',
+                    _format.diskImage
+                        ? 'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.'
+                        : _format.singlePayload
+                        ? 'Select one local file, up to 64 MiB. Its name after decompression comes from the output filename.'
+                        : _format == ArchiveCreationFormat.ar
+                        ? 'Select regular local files without folders. Up to 64 MiB per file and 256 MiB total.'
+                        : 'Local files only. Up to 64 MiB per file and 256 MiB total. Existing files are never replaced.',
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                if (_format == ArchiveCreationFormat.tarGzip)
+                if (_format.wrapper != null && !_format.singlePayload)
                   Text(
                     tr(
-                      'TAR.GZ is limited to 64 MiB after decompression, including archive headers.',
+                      'Compressed TAR is limited to 64 MiB after decompression, including archive headers.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (_format == ArchiveCreationFormat.hfsx ||
+                    _format == ArchiveCreationFormat.dmg)
+                  Text(
+                    tr(
+                      'Creates a case-sensitive HFSX data volume. Names use HFS Unicode normalization. Resource forks, extended attributes and symbolic links are not copied.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (_format == ArchiveCreationFormat.iso)
+                  Text(
+                    tr(
+                      'Creates a data-only ISO with Rock Ridge and Joliet names. Boot records and UDF filesystems are not created.',
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
