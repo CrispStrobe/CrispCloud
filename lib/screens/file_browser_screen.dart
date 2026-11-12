@@ -86,6 +86,8 @@ import '../widgets/gathering_stack_dialog.dart';
 import '../l10n/gathering_stack_strings.dart';
 import '../widgets/external_comparison_dialog.dart';
 import '../l10n/external_comparison_strings.dart';
+import '../l10n/external_editing_strings.dart';
+import '../widgets/external_editing_actions.dart';
 import '../services/command_entry_service.dart' show NativeCommandEntryHost;
 import '../widgets/help_guide_dialog.dart';
 import '../l10n/help_guide_strings.dart';
@@ -565,6 +567,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       'externalComparisonTools',
       ExternalComparisonStrings(context).text('title'),
       () => showExternalComparisonDialog(context, ref),
+      available: () => const NativeCommandEntryHost().platform != null,
+    );
+    add(
+      'externalEdit',
+      ExternalEditingStrings(context).text('openAction'),
+      () => showExternalEditingForSelection(context, ref),
+      available: () => const NativeCommandEntryHost().platform != null,
+    );
+    add(
+      'externalEditingSessions',
+      ExternalEditingStrings(context).text('title'),
+      () => showExternalEditingSessions(context, ref),
       available: () => const NativeCommandEntryHost().platform != null,
     );
     add(
@@ -2047,6 +2061,14 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         if (const NativeCommandEntryHost().platform != null) {
           showExternalComparisonDialog(context, ref);
         }
+      case 'external_edit':
+        if (const NativeCommandEntryHost().platform != null) {
+          showExternalEditingForSelection(context, ref);
+        }
+      case 'external_editing_sessions':
+        if (const NativeCommandEntryHost().platform != null) {
+          showExternalEditingSessions(context, ref);
+        }
       case 'gather_selection':
         addPanelSelectionToGatheringStack(
           context,
@@ -2253,6 +2275,22 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           child: _overflowItem(
             Icons.tune,
             ExternalComparisonStrings(context).text('title'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'external_edit',
+          enabled: const NativeCommandEntryHost().platform != null,
+          child: _overflowItem(
+            Icons.edit_note,
+            ExternalEditingStrings(context).text('openAction'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'external_editing_sessions',
+          enabled: const NativeCommandEntryHost().platform != null,
+          child: _overflowItem(
+            Icons.edit_note_outlined,
+            ExternalEditingStrings(context).text('title'),
           ),
         ),
         PopupMenuItem(

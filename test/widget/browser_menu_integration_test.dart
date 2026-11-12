@@ -6,6 +6,7 @@ import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/browser_menu_provider.dart';
 import 'package:crisp_cloud/providers/custom_command_provider.dart';
 import 'package:crisp_cloud/providers/external_comparison_provider.dart';
+import 'package:crisp_cloud/providers/external_remote_editing_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
 import 'package:crisp_cloud/screens/screen_dialogs.dart';
@@ -13,6 +14,7 @@ import 'package:crisp_cloud/services/browser_menu_store.dart';
 import 'package:crisp_cloud/services/code_editor_menu.dart';
 import 'package:crisp_cloud/services/custom_toolbar_command_service.dart';
 import 'package:crisp_cloud/services/external_comparison_service.dart';
+import 'package:crisp_cloud/services/external_remote_editing_service.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/sync_database.dart';
@@ -24,6 +26,7 @@ import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/widgets/configurable_browser_menu.dart';
 import 'package:crisp_cloud/widgets/help_guide_dialog.dart';
 import 'package:crisp_cloud/widgets/external_comparison_dialog.dart';
+import 'package:crisp_cloud/widgets/external_editing_dialog.dart';
 import 'package:crisp_cloud/widgets/drive_bar.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +39,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../support/browser_menu_storage.dart';
 import '../support/external_drop_fixture.dart';
 import '../support/external_comparison_fixture.dart';
+import '../support/external_edit_fakes.dart';
 
 class _Local extends Fake implements LocalFileService {
   @override
@@ -97,6 +101,9 @@ void main() {
             host: ComparisonHost(),
             staging: ComparisonMemoryStages(),
           ),
+        ),
+        externalRemoteEditingServiceProvider.overrideWith(
+          (_) => ExternalRemoteEditingService(staging: FakeEditStagingStore()),
         ),
         transferJournalProvider.overrideWithValue(
           TransferJournal(MemoryTransferJournalStorage()),
@@ -248,6 +255,45 @@ void main() {
       expect(dialog.initialError, isA<ExternalComparisonException>());
       expect((service.host as ComparisonHost).launches, isEmpty);
       expect(service.sessions, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'external editing settings own the modal and missing sources cannot stage or publish',
+    (tester) async {
+      final service = container.read(externalRemoteEditingServiceProvider);
+      await mount(tester);
+      final menu = tester.widget<ConfigurableBrowserMenu>(
+        find.byType(ConfigurableBrowserMenu),
+      );
+      final openSettings =
+          menu.commands['workflow:externalEditingSessions']!.onSelected!;
+      openSettings();
+      await tester.pumpAndSettle();
+      expect(find.byType(ExternalEditingDialog), findsOneWidget);
+      expect(
+        tester
+            .widget<ExternalEditingDialog>(find.byType(ExternalEditingDialog))
+            .source,
+        isNull,
+      );
+      openSettings();
+      await tester.pumpAndSettle();
+      expect(find.byType(ExternalEditingDialog), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('external-editing-close')));
+      await tester.pumpAndSettle();
+      final refreshed = tester.widget<ConfigurableBrowserMenu>(
+        find.byType(ConfigurableBrowserMenu),
+      );
+      refreshed.commands['workflow:externalEdit']!.onSelected!();
+      await tester.pumpAndSettle();
+      final dialog = tester.widget<ExternalEditingDialog>(
+        find.byType(ExternalEditingDialog),
+      );
+      expect(dialog.source, isNull);
+      expect(dialog.initialError, isA<ExternalEditException>());
+      expect(service.sessions, isEmpty);
+      expect((service.staging as FakeEditStagingStore).bundles, isEmpty);
     },
   );
 

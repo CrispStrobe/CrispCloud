@@ -498,16 +498,24 @@ class _NativePrivateToolStage implements PrivateToolStage {
   });
 
   @override
-  Stream<void> watch(String name) async* {
+  Stream<void> watch(String name) {
     final path = _path(name);
-    await _check();
-    await for (final event in Directory(directoryPath).watch()) {
-      if (_closing || _closed) return;
-      if (event.path == path ||
-          event is FileSystemMoveEvent && event.destination == path) {
-        yield null;
-      }
-    }
+    // Forward cancellation to the native subscription immediately. An async*
+    // await-for filter can otherwise wait for the next matching event before
+    // completing cancellation, leaving a quiet editor's shutdown blocked.
+    return Stream<void>.fromFuture(_check()).asyncExpand((_) {
+      if (_closing || _closed) return const Stream<void>.empty();
+      return Directory(directoryPath)
+          .watch()
+          .where(
+            (event) =>
+                !_closing &&
+                !_closed &&
+                (event.path == path ||
+                    event is FileSystemMoveEvent && event.destination == path),
+          )
+          .map<void>((_) {});
+    });
   }
 
   @override

@@ -12,13 +12,26 @@ import 'conditional_file_publication.dart';
 /// Every operation captures one token and verifies its immutable account ID.
 /// No retry can silently switch the credentials of an in-flight publication.
 class DropboxFilePublication implements ConditionalFilePublication {
-  const DropboxFilePublication({required this.accessToken});
+  const DropboxFilePublication({required this.accessToken, this.now});
   final Future<String> Function() accessToken;
+  final DateTime Function()? now;
   static const _block = 4 * 1024 * 1024;
   static const _timeout = Duration(seconds: 30);
 
   static Never _fail(FilePublicationFailure failure) =>
       throw FilePublicationException(failure);
+
+  void Function() _bounded(void Function() checkCurrent) {
+    final deadline = (now?.call() ?? DateTime.now()).add(
+      const Duration(minutes: 2),
+    );
+    return () {
+      checkCurrent();
+      if (!(now?.call() ?? DateTime.now()).isBefore(deadline)) {
+        _fail(FilePublicationFailure.unavailable);
+      }
+    };
+  }
 
   static String _path(String value) {
     if (!p.posix.isAbsolute(value) ||
@@ -181,6 +194,7 @@ class DropboxFilePublication implements ConditionalFilePublication {
     String path, {
     required void Function() checkCurrent,
   }) async {
+    checkCurrent = _bounded(checkCurrent);
     _path(path);
     final token = await _token(checkCurrent);
     final client = http.Client();
@@ -197,6 +211,7 @@ class DropboxFilePublication implements ConditionalFilePublication {
     FilePublicationVersion version, {
     required void Function() checkCurrent,
   }) async* {
+    checkCurrent = _bounded(checkCurrent);
     version.validate();
     final token = await _token(checkCurrent);
     final client = http.Client();
@@ -252,6 +267,7 @@ class DropboxFilePublication implements ConditionalFilePublication {
     required void Function() checkCurrent,
     required Future<void> Function(String contentHash) prepareCommit,
   }) async {
+    checkCurrent = _bounded(checkCurrent);
     expected.validate();
     if (length < 0 || length > conditionalFilePublicationLimit) {
       _fail(FilePublicationFailure.invalid);
@@ -314,7 +330,12 @@ class DropboxFilePublication implements ConditionalFilePublication {
       final hashes = <int>[];
       var offset = 0;
       await for (final part in validatedTransferParts(
-        contents.timeout(_timeout),
+        contents
+            .map((chunk) {
+              checkCurrent();
+              return chunk;
+            })
+            .timeout(_timeout),
         length,
         _block,
       )) {

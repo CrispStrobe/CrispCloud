@@ -30,11 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Thirteen implementation increments are preserved on remote feature branches:
-**seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **six implemented features
-with target-runtime/live-server acceptance pending** (G01, G04, G09, G11, G12, G25).
-The remaining 38 items
-comprise **26 implementation gaps, 10 research prerequisites and two
+Fourteen implementation increments are preserved on remote feature branches:
+**seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **seven implemented features
+with target-runtime/live-server acceptance pending** (G01, G04, G09, G10, G11, G12, G25).
+The remaining 37 items
+comprise **25 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -50,9 +50,11 @@ G05's reviewed reference workflow and G49's maintained three-language offline
 help are closed with their separate regression evidence and remote checkpoints.
 
 The [external tools and archive continuation](continuation-tools-archives-20261112.md)
-starts from `d76fe9b`. G11's reviewed external comparison workflow is implemented
-with native acceptance pending. G10 and G18 remain implementing; shared retained
-staging and conditional publication have separate verified foundation checkpoints.
+starts from `d76fe9b`. G10's retained remote editor sessions and G11's reviewed
+external comparison workflow are implemented with native/live acceptance pending.
+G10 conditionally publishes Dropbox revisions; other bounded-download sources
+support independent copies only. G18 remains implementing; shared retained
+staging and archive publication have separate verified foundation checkpoints.
 
 ## Lane index
 
@@ -78,7 +80,7 @@ staging and conditional publication have separate verified foundation checkpoint
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
 | [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implemented / native acceptance pending | Captured local commands and scoped insertion verified; actual OS behavior under G50 |
-| [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Implementing | Captured editor session; conflict review |
+| [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Implemented / native and live acceptance pending | Retained sessions and Dropbox revision-guarded publication; further provider contracts remain explicit |
 | [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Implemented / native acceptance pending | Private-copy workflow verified; installed GUI tools under G50 |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
 | [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Closed: documented streaming formats | Single-part Base64 MIME; verified exclusive-output backends only |
@@ -152,6 +154,12 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G05 gathering stack | `feature/gathering-stack-20261112` · `8f117e7` · PR #72 | 56 service/widget/operation-dialog tests passed; focused analysis clean | Closed for the reviewed reference workflow |
 | G49 localized help | `feature/localized-help-20261112` · code `e475032` · PR #73 | 35 guide/reader/real-screen integration tests passed; all three guides and revision-update workflow verified | Closed for maintained English/German/French offline help |
 | Continuation integrated validation | `feature/localized-help-20261112` · compiled code `e475032` | 55 menu regressions passed; full analysis gate: 0 errors, 96 warnings, 1,039 infos; versioned JavaScript release build passed; optional WebAssembly probe exited 247 | [Continuation evidence and remaining acceptance](continuation-20261112.md#integrated-validation) |
+| External tools/archive scope | `feature/external-tools-archive-scope-20261112` · `e473083` · PR #74 | G10/G11/G18 implementation and acceptance boundaries | Scope preserved remotely |
+| Private tool staging | `feature/private-tool-staging-20261112` · `47b7c57` · PR #75 | 10 native staging/lifetime tests; narrow analysis clean | Shared retained-directory and lease foundation |
+| Conditional remote publication | `feature/conditional-remote-publication-20261112` · `2297f8e` · PR #76 | 17 provider fixtures; narrow analysis clean | Initial Dropbox revision-guarded contract; broader providers not implied |
+| G11 external comparison | `feature/external-comparison-tools-20261112` · `77af994` · PR #77 | 119 checks across nine focused suites; source capture, menus and help verified | Implemented; installed GUI-tool acceptance pending |
+| Archive publication/recovery | `feature/archive-publication-recovery-20261112` · `005771b` · PR #78 | 24 verified-publication/recovery tests; narrow analysis clean | Native local foundation; remote/browser prerequisites remain implementation work |
+| G10 external remote editing | `feature/external-remote-editing-20261112` · `c5ddfff` · PR #80 | 125 distinct checks across 11 suites, including final five lifecycle cases; three current offline guides | Implemented; native editor/live Dropbox acceptance pending |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

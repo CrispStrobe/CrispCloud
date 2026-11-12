@@ -104,6 +104,39 @@ class Transport {
 
 void main() {
   test(
+    'whole publication deadline stops a source that continues to drip bytes',
+    () async {
+      final transport = Transport();
+      var now = DateTime.utc(2026);
+      Stream<List<int>> contents() async* {
+        yield [3];
+        now = now.add(const Duration(minutes: 3));
+        yield [4];
+      }
+
+      await transport.run((_) async {
+        final publisher = DropboxFilePublication(
+          accessToken: () async => 'captured-token',
+          now: () => now,
+        );
+        await expectLater(
+          publisher.publishFileVersion(
+            version(),
+            contents(),
+            length: 2,
+            checkCurrent: () {},
+            prepareCommit: (_) async {
+              fail('Deadline must precede durable commit');
+            },
+          ),
+          throwsA(failure(FilePublicationFailure.unavailable)),
+        );
+      });
+      expect(transport.finishes, 0);
+    },
+  );
+
+  test(
     'fresh version binds immutable account, exact path, object and revision',
     () async {
       final transport = Transport();

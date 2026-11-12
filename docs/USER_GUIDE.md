@@ -78,7 +78,13 @@ Saving stays bound to the originally opened account and file. If that source cha
 
 Saving a character that the selected legacy encoding cannot represent fails instead of silently substituting it. Choose Unicode when necessary. Text comparison and merge have their own size limits; binary comparison reads complete streams.
 
-External editor launch is limited to verified native local files. An external application does not automatically upload edits to a remote account. Use the built-in remote editor for guarded remote saves.
+On supported native desktop builds, select one verified remote file and choose **Edit with external editor**. **External remote editing** in Tools stores the editor preference and lists retained sessions. Use an installed executable's absolute path and include `{file}` once as a complete argument. Prepare the private local copy, then review the original source, executable and actual arguments before launching. External process launch is unavailable in browser/mobile builds and the Mac App Store build.
+
+Each remote editing file is limited to 64 MiB. Automatic upload is initially off and requires explicit consent in the launch review. It is currently available for Dropbox files with a verified account, file ID and revision. Other providers with bounded download support can supply an editable copy for independent export; they do not gain an original-file upload action. A save in the external editor changes the local copy first. CrispCloud reports the original saved only after a confirmed revision-guarded upload, and keeps any newer local save pending.
+
+You may browse elsewhere or close the dialog while a consented watcher remains active. Use Pause to stop it. Disconnecting or replacing the original account blocks further uploads. A remote conflict requires reviewing the current remote revision before replacement; an uncertain response requires reconciliation, without an unconditional retry. Export creates an independent local copy and never marks the original saved.
+
+Retained sessions and unsent edits survive dialog closure and app restart. Recovered sessions start paused: select the original remote file and explicitly reconnect that session before publishing again. Recovery does not relaunch an editor or restore automatic-upload consent. Close every external window using the local copy before confirming its deletion from the retained-session list.
 
 On a native desktop, select two files in one pane, or one file in each pane, and choose **Compare with external tool**. A file's context menu also offers this action when exactly one file with the same name exists in the other pane. **External comparison tools** stores separate text and image tool settings. Choose an installed executable by its absolute path and use `{left}` and `{right}` once each as complete arguments; no shell expansion is performed. Review the captured sources and actual arguments before launching.
 

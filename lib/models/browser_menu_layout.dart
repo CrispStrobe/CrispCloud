@@ -354,6 +354,8 @@ class BrowserMenuLayout {
           'customCommands',
           'externalCompare',
           'externalComparisonTools',
+          'externalEdit',
+          'externalEditingSessions',
           'gatherSelection',
           'gatheringStack',
           'extensions',
