@@ -455,7 +455,7 @@ class SFTPClientAdapter extends CloudStorageClient
 
       return {
         'type': stat.isDirectory ? 'folder' : 'file',
-        'name': p.basename(path),
+        'name': p.posix.basename(path),
         'path': path,
         'size': stat.size,
         'updatedAt': updatedAt,
@@ -671,7 +671,7 @@ class SFTPClientAdapter extends CloudStorageClient
   @override
   Future<void> renamePath(String path, String newName) async {
     await _ensureConnection();
-    final newPath = p.posix.join(p.dirname(path), newName);
+    final newPath = p.posix.join(p.posix.dirname(path), newName);
     await _sftp!.rename(path, newPath);
   }
 
