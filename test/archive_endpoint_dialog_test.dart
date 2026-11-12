@@ -143,14 +143,19 @@ void main() {
           throw StateError('Interrupted install');
         }
       };
-      await expectLater(
-        ArchiveContainerPublisher(backend, firstJournal).publish(
-          original: (await backend.stat('/out/work.zip'))!,
-          originalSha256: sha256.convert(original).toString(),
-          bytes: candidate,
-        ),
-        throwsA(anything),
-      );
+      // Native publication leases must make progress in the real async zone,
+      // including when another widget-test file briefly owns the same fixture
+      // archive identity.
+      await tester.runAsync(() async {
+        await expectLater(
+          ArchiveContainerPublisher(backend, firstJournal).publish(
+            original: (await backend.stat('/out/work.zip'))!,
+            originalSha256: sha256.convert(original).toString(),
+            bytes: candidate,
+          ),
+          throwsA(anything),
+        );
+      });
       backend.before = null;
       var changed = false;
       final restarted = ArchivePublicationJournal(storage: storage);
@@ -172,19 +177,21 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Recover'));
-      await tester.pumpAndSettle();
+      await _activateAndWaitForText(tester, 'Recover', '/out/work.zip');
       expect(find.text('/out/work.zip'), findsOneWidget);
       await tester.ensureVisible(find.text('Finish publication'));
-      await tester.tap(find.text('Finish publication'));
-      await tester.pumpAndSettle();
+      await _activateAndWaitForText(
+        tester,
+        'Finish publication',
+        'No unfinished archive publication for this account.',
+      );
       expect(backend.files['/out/work.zip'], candidate);
       expect(restarted.records.single.phase, ArchivePublicationPhase.complete);
       expect(
         find.text('No unfinished archive publication for this account.'),
         findsOneWidget,
       );
-      await tester.tap(find.text('Close'));
+      await tester.runAsync(() => tester.tap(find.text('Close')));
       await tester.pumpAndSettle();
       expect(changed, isTrue);
       expect(tester.takeException(), isNull);

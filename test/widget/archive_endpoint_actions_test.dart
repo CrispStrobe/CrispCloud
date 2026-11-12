@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/archive_endpoint_strings.dart';
+import 'package:crisp_cloud/l10n/archive_transfer_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/archive_endpoint.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/file_clipboard_provider.dart';
 import 'package:crisp_cloud/providers/native_file_operations_provider.dart';
@@ -13,6 +15,7 @@ import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/file_operation_backend.dart';
 import 'package:crisp_cloud/services/archive_publication_journal.dart';
+import 'package:crisp_cloud/services/archive_container_publisher.dart';
 import 'package:crisp_cloud/services/archive_workspace.dart';
 import 'package:crisp_cloud/services/file_collection_storage.dart';
 import 'package:crisp_cloud/services/installation_identity.dart';
@@ -185,13 +188,26 @@ void main() {
   }
 
   Future<void> until(WidgetTester tester, bool Function() done) async {
-    for (var index = 0; index < 250 && !done(); index++) {
+    for (var index = 0; index < 1000 && !done(); index++) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );
       await tester.pump(const Duration(milliseconds: 20));
     }
-    expect(done(), isTrue);
+    expect(
+      done(),
+      isTrue,
+      reason: [
+        ...tester.widgetList<Text>(find.byType(Text)).map((text) => text.data),
+        ...tester
+            .widgetList<SelectableText>(find.byType(SelectableText))
+            .map((text) => text.data),
+      ].join('\n'),
+    );
+    // A workspace may keep its own progress animation running under the
+    // transfer route. Settle the route/layout transition without waiting for
+    // that deliberately active underlying indicator.
+    await tester.pump(const Duration(milliseconds: 300));
   }
 
   bool canClose() => find
@@ -305,7 +321,7 @@ void main() {
   }
 
   testWidgets(
-    'workspace Move out refuses an archive destination before showing copy review',
+    'workspace Move out returns its completed result through Escape and closes the stale source',
     (tester) async {
       await tester.runAsync(prepareFixture);
       final source = (await tester.runAsync(prepareArchiveSource))!;
@@ -319,17 +335,21 @@ void main() {
         );
       });
       await tester.tap(find.text('Transfer'));
+      await until(tester, canClose);
+      expect(find.text('Move between archives'), findsOneWidget);
+      expect(find.text('Move members out of this archive?'), findsNothing);
+      await tester.ensureVisible(find.text('Prepare both reviews'));
+      await tester.runAsync(
+        () => tester.tap(find.text('Prepare both reviews')),
+      );
       await until(
         tester,
-        () => find
-            .textContaining(
-              archiveEndpointText(widgetRef.context, 'archiveMoveUnsupported'),
-            )
-            .evaluate()
-            .isNotEmpty,
+        () =>
+            find.text('Review both archives').evaluate().isNotEmpty &&
+            canClose(),
       );
-      expect(find.text('Copy between archives'), findsNothing);
-      expect(find.text('Move members out of this archive?'), findsNothing);
+      expect(find.text('Destination archive: copied members'), findsOneWidget);
+      expect(find.text('Source archive: member removals'), findsOneWidget);
       expect(
         await tester.runAsync(() => File(archivePath).readAsBytes()),
         original,
@@ -338,12 +358,182 @@ void main() {
         await tester.runAsync(() => File(source.$1).readAsBytes()),
         source.$2,
       );
-      await tester.tap(find.byTooltip('Close archive'));
-      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Publish reviewed move'));
+      await tester.runAsync(
+        () => tester.tap(find.text('Publish reviewed move')),
+      );
+      await until(
+        tester,
+        () =>
+            find
+                .text(
+                  'Move completed. Both archives were published and verified.',
+                )
+                .evaluate()
+                .isNotEmpty &&
+            canClose(),
+      );
+      await tester.runAsync(
+        () => tester.sendKeyEvent(LogicalKeyboardKey.escape),
+      );
+      await until(
+        tester,
+        () =>
+            find.byType(AlertDialog).evaluate().isEmpty &&
+            !left.isLoading &&
+            !right.isLoading,
+      );
+      expect(find.byTooltip('Close archive'), findsNothing);
+      final sourceWritten = (await tester.runAsync(
+        () => File(source.$1).readAsBytes(),
+      ))!;
+      final destinationWritten = (await tester.runAsync(
+        () => File(archivePath).readAsBytes(),
+      ))!;
+      final sourceArchive = ZipDecoder().decodeBytes(sourceWritten);
+      expect(sourceArchive.findFile('members/new.txt'), isNull);
+      expect(sourceArchive.findFile('members/other.txt')?.content, [10]);
+      final destinationArchive = ZipDecoder().decodeBytes(destinationWritten);
+      expect(destinationArchive.findFile('folder/new.txt')?.content, [7, 8, 9]);
+      expect(destinationArchive.findFile('folder/keep.txt')?.content, [
+        1,
+        2,
+        3,
+      ]);
       expect(tester.takeException(), isNull);
     },
     variant: desktop,
   );
+
+  for (final finishRecovery in [false, true]) {
+    testWidgets(
+      'pending source recovery closes a borrowed Move out host even without a new move receipt (finish: $finishRecovery)',
+      (tester) async {
+        await tester.runAsync(prepareFixture);
+        final source = (await tester.runAsync(prepareArchiveSource))!;
+        left.toggleSelection(sourceFile());
+        await mount(tester, () async {
+          await showCurrentArchiveWorkspaceDialog(
+            widgetRef.context,
+            widgetRef,
+            PanelSide.local,
+          );
+        });
+        await tester.tap(find.text('Transfer'));
+        await until(
+          tester,
+          () => find
+              .ancestor(
+                of: find.text('Move out with options…'),
+                matching: find.byWidgetPredicate(
+                  (widget) => widget is TextButton && widget.onPressed != null,
+                ),
+              )
+              .evaluate()
+              .isNotEmpty,
+        );
+        final origin = left.captureArchiveOrigin();
+        final location = left.captureArchiveWorkspaceLocation();
+        final backend = fileOperationBackend(
+          source: origin.source,
+          local: container.read(localFileServiceProvider),
+          isCurrent: () => origin.isCurrent,
+        );
+        final journal = ArchivePublicationJournal();
+        final recovered = Uint8List.fromList(
+          ZipEncoder().encode(
+            Archive()
+              ..addFile(ArchiveFile.bytes('members/recovered.txt', [22]))
+              ..addFile(ArchiveFile.bytes('members/other.txt', [10])),
+          ),
+        );
+        await tester.runAsync(() async {
+          await expectLater(
+            ArchiveContainerPublisher(backend, journal).publish(
+              original: location.file,
+              originalSha256: location.fingerprint,
+              bytes: recovered,
+              onPhase: (phase) {
+                if (phase == ArchivePublicationPhase.candidateWritten) {
+                  throw StateError(
+                    'Another session stopped after preparing its candidate.',
+                  );
+                }
+              },
+            ),
+            throwsA(isA<ArchivePublicationException>()),
+          );
+        });
+        await tester.ensureVisible(find.text('Move out with options…'));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.runAsync(
+          () => tester.tap(find.text('Move out with options…')),
+        );
+        await until(
+          tester,
+          () =>
+              find.text('Archive publication recovery').evaluate().isNotEmpty &&
+              canClose(),
+        );
+        if (finishRecovery) {
+          await tester.ensureVisible(find.text('Finish publication'));
+          await tester.runAsync(
+            () => tester.tap(find.text('Finish publication')),
+          );
+          await until(
+            tester,
+            () => find
+                .text('No unfinished archive publication for this account.')
+                .evaluate()
+                .isNotEmpty,
+          );
+        }
+        // The first Close belongs to the disabled underlying workspace.
+        await tester.runAsync(() => tester.tap(find.text('Close').last));
+        await until(
+          tester,
+          () => find
+              .textContaining(archiveEndpointText(widgetRef.context, 'reopen'))
+              .evaluate()
+              .isNotEmpty,
+        );
+        expect(find.text('Publish reviewed move'), findsNothing);
+        await tester.runAsync(() => tester.tap(find.text('Close').last));
+        await until(
+          tester,
+          () =>
+              find.byTooltip('Close archive').evaluate().isEmpty &&
+              !left.isLoading &&
+              !right.isLoading,
+        );
+        await tester.runAsync(() async {
+          expect(
+            await File(source.$1).readAsBytes(),
+            finishRecovery ? recovered : source.$2,
+          );
+          expect(await File(archivePath).readAsBytes(), original);
+          if (!finishRecovery) {
+            // Remove only this deliberately interrupted fixture's candidate.
+            await journal.initialize();
+            final record = journal.records.singleWhere(
+              (record) =>
+                  !record.isFinished && record.original.path == source.$1,
+            );
+            await ArchiveContainerPublisher(
+              backend,
+              journal,
+            ).recover(record, ArchiveRecoveryAction.restoreOriginal);
+          }
+        });
+        expect(
+          left.files!.any((file) => file.name == 'recovered.txt'),
+          finishRecovery,
+        );
+        expect(tester.takeException(), isNull);
+      },
+      variant: desktop,
+    );
+  }
 
   testWidgets(
     'F5 copies the captured archive selection through review and physical publication',
@@ -412,7 +602,7 @@ void main() {
   );
 
   testWidgets(
-    'F6 between archive panes explicitly refuses move without opening a copy',
+    'F6 between archive panes reviews and publishes the captured move',
     (tester) async {
       await tester.runAsync(prepareFixture);
       final source = (await tester.runAsync(prepareArchiveSource))!;
@@ -421,120 +611,184 @@ void main() {
         showMoveDialogFromSelection(widgetRef.context, widgetRef);
       });
       await tester.tap(find.text('Transfer'));
-      await until(tester, () => find.byType(SnackBar).evaluate().isNotEmpty);
-      expect(
-        find.textContaining(
-          archiveEndpointText(widgetRef.context, 'archiveMoveUnsupported'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.byType(AlertDialog), findsNothing);
-      expect(
-        await tester.runAsync(() => File(source.$1).readAsBytes()),
-        source.$2,
-      );
-      expect(
-        await tester.runAsync(() => File(archivePath).readAsBytes()),
-        original,
-      );
-      expect(tester.takeException(), isNull);
-    },
-    variant: desktop,
-  );
-
-  testWidgets(
-    'archive context-menu copy keeps the original member selection while the popup is open',
-    (tester) async {
-      await tester.runAsync(prepareFixture);
-      await tester.runAsync(prepareArchiveSource);
-      final selected = sourceFile();
-      left.toggleSelection(selected);
-      await mount(tester, () async {
-        showFileContextMenu(
-          widgetRef.context,
-          widgetRef,
-          PanelSide.local,
-          selected,
-          const Offset(24, 24),
-        );
-      });
-      await tester.tap(find.text('Transfer'));
-      await tester.pumpAndSettle();
-      final copy = find.text('Copy to the other archive…');
-      expect(copy, findsOneWidget);
-      left.clearSelection();
-      left.toggleSelection(
-        left.files!.firstWhere((file) => file.name == 'other.txt'),
-      );
-      await tester.tap(copy);
       await until(tester, canClose);
-      expect(find.text('Copy between archives'), findsOneWidget);
+      expect(find.text('Move between archives'), findsOneWidget);
+      expect(find.byType(FileOperationDialog), findsNothing);
       expect(find.text('/members/new.txt → /folder/new.txt'), findsOneWidget);
-      expect(find.textContaining('/folder/other.txt'), findsNothing);
-      await tester.tap(find.text('Close'));
-      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Prepare both reviews'));
+      await tester.runAsync(
+        () => tester.tap(find.text('Prepare both reviews')),
+      );
+      await until(
+        tester,
+        () =>
+            find.text('Review both archives').evaluate().isNotEmpty &&
+            canClose(),
+      );
+      expect(find.text('Destination archive: copied members'), findsOneWidget);
+      expect(find.text('Source archive: member removals'), findsOneWidget);
+      expect(
+        await tester.runAsync(() => File(source.$1).readAsBytes()),
+        source.$2,
+      );
       expect(
         await tester.runAsync(() => File(archivePath).readAsBytes()),
         original,
+      );
+      await tester.ensureVisible(find.text('Publish reviewed move'));
+      await tester.runAsync(
+        () => tester.tap(find.text('Publish reviewed move')),
+      );
+      await until(
+        tester,
+        () =>
+            find
+                .text(
+                  'Move completed. Both archives were published and verified.',
+                )
+                .evaluate()
+                .isNotEmpty &&
+            canClose(),
+      );
+      await tester.runAsync(() => tester.tap(find.text('Close')));
+      await until(
+        tester,
+        () =>
+            find.byType(AlertDialog).evaluate().isEmpty &&
+            !left.isLoading &&
+            !right.isLoading,
+      );
+      expect(left.files!.any((file) => file.name == 'new.txt'), isFalse);
+      expect(left.files!.any((file) => file.name == 'other.txt'), isTrue);
+      expect(right.files!.any((file) => file.name == 'new.txt'), isTrue);
+      final sourceWritten = (await tester.runAsync(
+        () => File(source.$1).readAsBytes(),
+      ))!;
+      final destinationWritten = (await tester.runAsync(
+        () => File(archivePath).readAsBytes(),
+      ))!;
+      expect(
+        ZipDecoder().decodeBytes(sourceWritten).findFile('members/new.txt'),
+        isNull,
+      );
+      expect(
+        ZipDecoder()
+            .decodeBytes(destinationWritten)
+            .findFile('folder/new.txt')
+            ?.content,
+        [7, 8, 9],
       );
       expect(tester.takeException(), isNull);
     },
     variant: desktop,
   );
 
-  testWidgets(
-    'archive context-menu copy cannot revive a source after reopening the same archive',
-    (tester) async {
-      await tester.runAsync(prepareFixture);
-      final source = (await tester.runAsync(prepareArchiveSource))!;
-      final selected = sourceFile();
-      left.toggleSelection(selected);
-      await mount(tester, () async {
-        showFileContextMenu(
-          widgetRef.context,
-          widgetRef,
-          PanelSide.local,
-          selected,
-          const Offset(24, 24),
+  for (final move in [false, true]) {
+    testWidgets(
+      'archive context-menu ${move ? 'move' : 'copy'} keeps the original member selection while the popup is open',
+      (tester) async {
+        await tester.runAsync(prepareFixture);
+        await tester.runAsync(prepareArchiveSource);
+        final selected = sourceFile();
+        left.toggleSelection(selected);
+        await mount(tester, () async {
+          showFileContextMenu(
+            widgetRef.context,
+            widgetRef,
+            PanelSide.local,
+            selected,
+            const Offset(24, 24),
+          );
+        });
+        await tester.tap(find.text('Transfer'));
+        await tester.pumpAndSettle();
+        final copy = find.text(
+          move
+              ? archiveTransferText(widgetRef.context, 'toArchive')
+              : 'Copy to the other archive…',
         );
-      });
-      await tester.tap(find.text('Transfer'));
-      await tester.pumpAndSettle();
-      final copy = find.text('Copy to the other archive…');
-      expect(copy, findsOneWidget);
-      await tester.runAsync(() async {
-        await left.navigateToPath(
-          input,
-          origin: left.captureLocalClipboardOrigin(input),
+        expect(copy, findsOneWidget);
+        left.clearSelection();
+        left.toggleSelection(
+          left.files!.firstWhere((file) => file.name == 'other.txt'),
         );
-        await left.enterArchive(
-          left.files!.firstWhere((file) => file.path == source.$1),
+        await tester.tap(copy);
+        await until(tester, canClose);
+        expect(
+          find.text(move ? 'Move between archives' : 'Copy between archives'),
+          findsOneWidget,
         );
-        await left.navigateInto(
-          left.files!.firstWhere((file) => file.name == 'members'),
+        expect(find.text('/members/new.txt → /folder/new.txt'), findsOneWidget);
+        expect(find.textContaining('/folder/other.txt'), findsNothing);
+        await tester.tap(find.text('Close'));
+        await tester.pumpAndSettle();
+        expect(
+          await tester.runAsync(() => File(archivePath).readAsBytes()),
+          original,
         );
-      });
-      await tester.tap(copy);
-      await until(tester, () => find.byType(SnackBar).evaluate().isNotEmpty);
-      expect(
-        find.textContaining(
-          archiveEndpointText(widgetRef.context, 'sourceChanged'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.byType(AlertDialog), findsNothing);
-      expect(
-        await tester.runAsync(() => File(archivePath).readAsBytes()),
-        original,
-      );
-      expect(
-        await tester.runAsync(() => File(source.$1).readAsBytes()),
-        source.$2,
-      );
-      expect(tester.takeException(), isNull);
-    },
-    variant: desktop,
-  );
+        expect(tester.takeException(), isNull);
+      },
+      variant: desktop,
+    );
+
+    testWidgets(
+      'archive context-menu ${move ? 'move' : 'copy'} cannot revive a source after reopening the same archive',
+      (tester) async {
+        await tester.runAsync(prepareFixture);
+        final source = (await tester.runAsync(prepareArchiveSource))!;
+        final selected = sourceFile();
+        left.toggleSelection(selected);
+        await mount(tester, () async {
+          showFileContextMenu(
+            widgetRef.context,
+            widgetRef,
+            PanelSide.local,
+            selected,
+            const Offset(24, 24),
+          );
+        });
+        await tester.tap(find.text('Transfer'));
+        await tester.pumpAndSettle();
+        final copy = find.text(
+          move
+              ? archiveTransferText(widgetRef.context, 'toArchive')
+              : 'Copy to the other archive…',
+        );
+        expect(copy, findsOneWidget);
+        await tester.runAsync(() async {
+          await left.navigateToPath(
+            input,
+            origin: left.captureLocalClipboardOrigin(input),
+          );
+          await left.enterArchive(
+            left.files!.firstWhere((file) => file.path == source.$1),
+          );
+          await left.navigateInto(
+            left.files!.firstWhere((file) => file.name == 'members'),
+          );
+        });
+        await tester.tap(copy);
+        await until(tester, () => find.byType(SnackBar).evaluate().isNotEmpty);
+        expect(
+          find.textContaining(
+            archiveEndpointText(widgetRef.context, 'sourceChanged'),
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(
+          await tester.runAsync(() => File(archivePath).readAsBytes()),
+          original,
+        );
+        expect(
+          await tester.runAsync(() => File(source.$1).readAsBytes()),
+          source.$2,
+        );
+        expect(tester.takeException(), isNull);
+      },
+      variant: desktop,
+    );
+  }
 
   testWidgets(
     'ordinary copy routes into the captured member directory without a generic success plan',

@@ -23,6 +23,7 @@ import '../utils/formatters.dart';
 import 'file_operation_dialog.dart';
 import 'internal_viewer_dialog.dart';
 import 'archive_endpoint_dialog.dart';
+import 'archive_endpoint_actions.dart';
 import 'archive_member_move_dialog.dart';
 
 enum ArchiveWorkspaceAction { browse, copyOut, moveOut, edit }
@@ -528,15 +529,33 @@ class _ArchiveWorkspaceDialogState
   }
 
   Future<void> _moveOut() async {
+    final files = List<FileItem>.unmodifiable(_selection);
     final otherSide = widget.side == PanelSide.local
         ? PanelSide.remote
         : PanelSide.local;
     if (ref.read(panelProvider(otherSide)).isInArchive) {
+      ArchiveEndpointTransferResult? result;
+      var sourceInvalidated = false;
       await _run(() async {
-        throw UnsupportedError(
-          archiveEndpointText(context, 'archiveMoveUnsupported'),
+        final destination = CapturedArchiveImportDestination.capture(
+          ref,
+          otherSide,
+        );
+        result = await showCapturedArchiveWorkspaceCopy(
+          context,
+          source: _workspace!,
+          files: files,
+          destination: destination,
+          moveSources: true,
+          isReviewCurrent: () => mounted && widget.origin.isCurrent,
+          onSourceInvalidated: () => sourceInvalidated = true,
         );
       });
+      // Source removal is published from a separate reviewed candidate. Close
+      // this borrowed view before its old in-memory members can be used again.
+      if (mounted && (result != null || sourceInvalidated)) {
+        Navigator.pop(context);
+      }
       return;
     }
     final proceed = await showDialog<bool>(
@@ -561,7 +580,6 @@ class _ArchiveWorkspaceDialogState
       ),
     );
     if (proceed != true || !mounted) return;
-    final files = _selection;
     await _run(() async {
       final plan = await showFileOperationDialog(
         context,
