@@ -1,7 +1,8 @@
 # File manager gap closure plan
 
 Date: 12 November 2026. Scope baseline: `28b7b9ce388e08345aa995037256ab50ab0e17b9`.
-Working branch: `feature/file-manager-gap-closure-20261112`.
+Scope branch: `feature/file-manager-gap-closure-20261112`.
+Implementation branches and evidence are recorded in the checkpoint ledger.
 
 This plan covers every missing or partial capability from the requested file-manager
 feature inventory and the preceding [source audit](../file-manager-capability-audit.md).
@@ -44,7 +45,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | --- | --- | --- | --- |
 | [G01](01-workspace-and-interaction.md#g01) | Source-bound incoming drops | Implementing | None |
 | [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Implementing | None |
-| [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Implementing | None |
+| [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
 | [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Scoped | G02 command identity |
 | [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Scoped | G01; existing collections |
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
@@ -96,9 +97,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Execution order
 
-1. G01 incoming-drop identity and operation review.
-2. G02 direct Quick Open actions.
-3. G03 conflict previews and details.
+1. G01 incoming-drop identity, G02 direct Quick Open actions and G03 conflict previews form the first batch. Preserve each verified increment separately as it becomes ready.
 4. G04 menu configuration, G05 gathering stack, G09 command entry, G12 external terminal, and G13 file conversion.
 5. G18 archive endpoints, followed by G19–G24; run G25/G27/G29/G37 transport increments as their prerequisites are ready.
 6. Remaining provider, native, localization and release lanes, with required target-specific evidence recorded independently.
@@ -110,7 +109,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 
 | Increment | Remote branch / commit | Evidence | Status |
 | --- | --- | --- | --- |
-| Scope all remaining gaps | `feature/file-manager-gap-closure-20261112` | 51 scoped items across six lanes | Scope and acceptance criteria recorded; checkpoint pending |
+| Scope all remaining gaps | `feature/file-manager-gap-closure-20261112` · `9887b53` · PR #58 | 51 scoped items across six lanes | Scope and acceptance criteria preserved remotely |
+| G03 conflict previews | `feature/conflict-review-20261112` | 140 tests passed across four service/widget suites; focused analysis clean | Closed for the documented bounded preview scope |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

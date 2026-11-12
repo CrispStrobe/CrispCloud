@@ -50,7 +50,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Conflict previews and details
 
-**Status:** Implementing. **Dependencies:** None.
+**Status:** Closed for the bounded preview scope below. **Dependencies:** None.
 
 **Scope:** Show bounded image previews and selected safe metadata for both captured conflict candidates.
 
@@ -65,6 +65,19 @@ capability. Required live/device checks remain visible after code implementation
 - Decision buttons, apply-to-all behavior and keyboard/narrow layouts retain their existing semantics.
 
 **Starting points:** lib/widgets/file_operation_conflict_dialog.dart; FileOperationConflict and captured backends.
+
+**Delivered:** [Conflict review](../conflict-review.md) documents paired image
+previews, safe metadata, captured-session checks and explicit unavailable states.
+Automatic reads require a bounded-download backend. Inputs are capped at 4 MiB,
+16 million pixels and an 8192-pixel edge; thumbnail output is capped at 384 pixels
+and 1 MiB, with a 15-second deadline. No dependency was added.
+
+**Observed validation:** 140 tests passed across the preview service, conflict
+dialog, operation dialog and operation service suites on the pinned Flutter
+toolchain. Coverage includes real decoding, cancellation, source replacement,
+metadata redaction, explicit decisions and narrow enlarged German/Arabic layouts.
+Decoder-format availability remains a platform capability; this increment does
+not claim additional image formats or live-provider certification.
 
 ## G04
 

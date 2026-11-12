@@ -174,7 +174,7 @@ implementation already handles their edge cases.
 
 | Opportunity | Concrete work still needed |
 | --- | --- |
-| Overwrite image previews and richer file details | Add bounded, source-bound previews to conflict review; retain original source/destination identity while decoding asynchronously. |
+| Overwrite image previews and richer file details | **Completed in G03.** Paired bounded previews and safe metadata retain original source/destination identity, reject stale versions and cancel late work. See [conflict review](conflict-review.md) and the [closure evidence](file-manager-gaps/01-workspace-and-interaction.md#g03). |
 | Quick Open for saved objects | Index favorites, devices, workspaces and rename presets as direct actions with captured source identity and unavailable-source handling. |
 | Configurable main-menu structure | Persist validated command identifiers and layout separately from shortcut bindings, with reset/import behavior. |
 | Temporary gathering stack | Build a dedicated drop/collect surface on existing source-bound collections; preserve original references until a reviewed transfer succeeds. |
