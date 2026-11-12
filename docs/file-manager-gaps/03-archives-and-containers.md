@@ -33,6 +33,16 @@ unsupported protection or timestamp policies are refused. The
 [endpoint specification](../archive-endpoints.md) records byte, entry, path,
 nesting, time, metadata and encryption boundaries.
 
+**Native large-file continuation (2026-11-13):** Eligible unencrypted top-level
+ZIP/CBZ, 7z/CB7, TAR/CBT and TGZ/TAR.GZ workspaces use private input/import/review
+spools, streamed member hashes and exact streamed publication with an 8 GiB
+member/container/expanded budget. The reader, writer and publisher retain
+metadata, path, protection and source-authority checks. Buffered editors,
+protected/nested profiles and directory-to-archive synchronization retain their
+separate smaller bounds. The [parity report](../archive-parity-large-continuation.md)
+records the independently measured codec results and blocked Flutter runtime
+gate; native app acceptance is still open.
+
 **Boundary:** Capabilities are format-specific. Mutating one member may require repacking the container; declare cost and read/write/encryption support. Keep original containers recoverable until replacement is verified.
 
 **Acceptance:**
@@ -127,6 +137,14 @@ its narrower scope. Copy source bytes are never written or deleted. A changed so
 or late failure retains/restores the original destination through the existing
 journal. Bounds remain 64 MiB/member and 256 MiB/container/aggregate.
 
+The 2026-11-13 continuation replaces those bounds for eligible native streamed
+common-format workspaces with their individual 8 GiB budgets. Imports use sealed
+private spools; transfer checks and source-removal hashes consume bounded
+streams. A streamed pair's combined candidate budget is the sum of its two
+workspace limits, while each archive retains its own limit. Two buffered
+workspaces retain the earlier 256 MiB combined budget. The new integration
+tests are authored and statically checked; the Flutter runtime gate remains.
+
 **Delivered same-workspace continuation (2026-11-12):** **Move within archive…**
 preflights a selected group, supports recursive/implicit/empty directories and
 stages one metadata-preserving rename group. Stop, keep-both and skip policies
@@ -159,7 +177,7 @@ increment does not close the broader G20 scope.
 
 ### Large background archive jobs
 
-**Status:** Partially implemented: bounded native foreground TAR/CBT and data-image creation; durable queued packing and restart remain. **Dependencies:** G18; transfer queue.
+**Status:** Partially implemented: native foreground ZIP/7z/TGZ creation and common-format editing now stream, alongside TAR/CBT and data-image creation; durable queued packing, restart and app runtime qualification remain. **Dependencies:** G18; transfer queue.
 
 **Scope:** Add worker/streaming packing, durable recovery and bounded validation.
 
@@ -185,10 +203,19 @@ tests; independent readers check content and supported metadata. Native
 ISO/HFSX/DMG already have their separate streamed creation profiles. Ordinary
 buffered/compressed formats and existing archive edits retain their bounds.
 
+**Native common-format continuation (2026-11-13):** ZIP/ZIP64, 7z Copy/LZMA2
+and TGZ creation use an 8 GiB native budget; existing common-format workspaces
+stream snapshots, imports, repacking and publication. Each requested format has
+passed complete >2 GiB member codec checks and independent decoding. ZIP64 also
+passed a >4 GiB member and 65,536-entry case. Codec processes yielded to the
+event loop; this is not a Flutter UI responsiveness measurement. Receipts are
+linked from the [parity report](../archive-parity-large-continuation.md).
+
 **Remaining:** Durable queue/job records, worker lifecycle, stop/restart and
-process-interruption recovery for packing, larger existing-container editing,
-and provider/platform acceptance. The measured foreground TAR path is a
-foundation for G21, not a claim that durable background jobs are delivered.
+process-interruption recovery for packing, large protected/nested profiles,
+and provider/platform acceptance. Automatic approval review blocked the local
+Flutter runner, so authored application integration tests are not runtime
+passes. Foreground streaming does not close the durable background-job scope.
 
 ## G22
 

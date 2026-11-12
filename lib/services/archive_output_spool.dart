@@ -1,5 +1,7 @@
 import 'package:koni_archive/koni_archive.dart' as koni;
 
+import 'archive_types.dart';
+
 import 'archive_output_spool_memory.dart'
     if (dart.library.io) 'archive_output_spool_io.dart'
     as platform;
@@ -16,6 +18,7 @@ abstract class ArchiveOutputSpool {
 
   int get length;
   int get maxBytes;
+  bool get isSealed;
   Future<void> write(List<int> bytes);
   Future<void> finish();
   Stream<List<int>> openRead({int chunkSize = 256 * 1024});
@@ -27,7 +30,7 @@ abstract class ArchiveOutputSpool {
 }
 
 void validateArchiveSpoolLimit(int limit) {
-  if (limit <= 0 || limit > 2 * 1024 * 1024 * 1024) {
+  if (limit <= 0 || limit > kArchiveStreamingLimit) {
     throw ArgumentError.value(limit, 'maxBytes');
   }
 }

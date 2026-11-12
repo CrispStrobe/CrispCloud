@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../models/archive_endpoint.dart';
 import '../models/file_item.dart';
 import 'archive_container_publisher.dart';
+import 'archive_output_spool.dart';
 import 'archive_publication_journal.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
@@ -120,10 +121,12 @@ class ArchiveEndpoint {
   ArchiveEndpoint.fromWorkspace(
     this.workspace, {
     this.ownsWorkspace = false,
-    this.importDeadline = const Duration(minutes: 10),
+    Duration? importDeadline,
     this.readInactivity = const Duration(seconds: 30),
-  });
+  }) : importDeadline = importDeadline ?? const Duration(minutes: 10),
+       _scaleImportDeadline = importDeadline == null;
   final Duration importDeadline;
+  final bool _scaleImportDeadline;
   final Duration readInactivity;
   final ArchiveWorkspace workspace;
   final bool ownsWorkspace;
@@ -158,6 +161,11 @@ class ArchiveEndpoint {
   );
 
   bool get isCurrent => !_closed && workspace.isCurrent;
+
+  Duration _importBudget(int bytes) =>
+      _scaleImportDeadline && workspace.supportsLargeFiles
+      ? _archiveReadBudget(importDeadline, bytes)
+      : importDeadline;
   void _check() {
     if (!isCurrent) throw StateError('The captured archive endpoint changed.');
     if (!workspace.canUpdate) throw UnsupportedError(workspace.updateSupport);
@@ -351,20 +359,37 @@ class ArchiveEndpoint {
       control: control,
     );
     var bytes = 0;
+    var projected = workspace.expandedBytes;
+    final sourceStreams =
+        source.capabilities.boundedDownload ||
+        source is ArchiveOperationBackend &&
+            source.workspace.supportsLargeFiles;
+    final memberLimit = workspace.supportsLargeFiles && !sourceStreams
+        ? kArchiveReadLimit
+        : workspace.maxMemberBytes;
     for (final entry in plan.entries) {
+      if (entry.outcome != FileOperationOutcome.pending) continue;
       if (entry.source.isSymlink == true ||
           !entry.source.isFolder &&
               (entry.source.size == null ||
                   entry.source.size! < 0 ||
-                  entry.source.size! > kArchiveReadLimit)) {
+                  entry.source.size! > memberLimit)) {
         plan.errors.add(
-          'An import member has an unsupported type or exceeds 64 MiB: ${entry.source.path}',
+          'An import member has an unsupported type or exceeds ${_archiveLimitLabel(memberLimit)}: ${entry.source.path}',
         );
       }
-      if (!entry.source.isFolder) bytes += entry.source.size ?? 0;
+      if (!entry.source.isFolder) {
+        bytes += entry.source.size ?? 0;
+        projected +=
+            (entry.source.size ?? 0) -
+            (entry.existing?.isFolder == false ? entry.existing?.size ?? 0 : 0);
+      }
     }
-    if (bytes > ArchiveService.maxExtractedBytes) {
-      plan.errors.add('The selected import exceeds 256 MiB.');
+    if (bytes > workspace.maxExpandedBytes ||
+        projected > workspace.maxExpandedBytes) {
+      plan.errors.add(
+        'The selected import and retained archive contents exceed ${_archiveLimitLabel(workspace.maxExpandedBytes)}.',
+      );
     }
     _check();
     final nativeSnapshots = <String, Object>{};
@@ -418,7 +443,16 @@ class ArchiveEndpoint {
     final overlay = plan.destination as _ArchiveImportOverlay;
     final witnesses = <_ImportWitness>[];
     (plan.source as _ArchiveImportSource).control = control;
-    final deadline = Timer(importDeadline, control.cancel);
+    final deadline = Timer(
+      _importBudget(
+        plan.entries.fold<int>(
+          workspace.expandedBytes,
+          (sum, entry) =>
+              sum + (entry.source.isFolder ? 0 : entry.source.size ?? 0),
+        ),
+      ),
+      control.cancel,
+    );
     try {
       await _verifyArchiveSource(import._archiveSource, control: control);
       for (final entry in plan.entries.where(
@@ -461,10 +495,9 @@ class ArchiveEndpoint {
             control.checkpoint,
             control: control,
             inactivity: readInactivity,
+            maxBytes: workspace.maxMemberBytes,
           );
-          final imported = overlay._bytes[entry.destination];
-          if (imported == null ||
-              digest != sha256.convert(imported).toString()) {
+          if (digest != overlay._hashes[entry.destination]) {
             throw StateError(
               'Import source bytes changed: ${entry.source.path}',
             );
@@ -518,6 +551,11 @@ class ArchiveEndpoint {
       await control.checkpoint();
       overlay._check();
       import._archiveSource?.snapshot.checkCurrent();
+      if (witnesses.isEmpty) {
+        throw StateError(
+          'No archive members were selected after collision handling.',
+        );
+      }
       workspace.applyImport([
         for (final witness in witnesses)
           ArchiveWorkspaceImport(
@@ -526,15 +564,17 @@ class ArchiveEndpoint {
             bytes: witness.source.isFolder
                 ? null
                 : overlay._bytes[witness.destination],
+            spool: witness.source.isFolder
+                ? null
+                : overlay._spools[witness.destination],
+            contentSha256: witness.sha256,
             modified: witness.source.updatedAt,
             mode: witness.mode,
           ),
       ], expectedRevision: overlay.revision);
-      if (witnesses.isEmpty) {
-        throw StateError(
-          'No archive members were selected after collision handling.',
-        );
-      }
+      // applyImport has adopted the complete set. A failed later review keeps
+      // the draft and its spools with the workspace until discard or close.
+      overlay._releaseSpoolOwnership();
       _witnesses.addAll(witnesses);
       _staged = import;
       _review = await workspace.review(
@@ -546,8 +586,11 @@ class ArchiveEndpoint {
       return _review!;
     } finally {
       deadline.cancel();
-      overlay._bytes.clear();
-      _busy = false;
+      try {
+        await overlay._dispose();
+      } finally {
+        _busy = false;
+      }
     }
   }
 
@@ -557,7 +600,7 @@ class ArchiveEndpoint {
   Future<ArchiveEndpointMoveReview> stageArchiveMove(
     ArchiveEndpointImportPlan import, {
     required FileOperationControl control,
-    int maxCandidateBytes = ArchiveService.maxArchiveBytes,
+    int? maxCandidateBytes,
   }) async {
     _check();
     if (!import.isArchiveMove ||
@@ -567,18 +610,25 @@ class ArchiveEndpoint {
         _moveCommitting) {
       throw StateError('This preview is not an available archive move.');
     }
-    if (maxCandidateBytes <= 0 ||
-        maxCandidateBytes > ArchiveService.maxArchiveBytes) {
+    final snapshot = import._archiveSource!.snapshot;
+    final combinedLimit =
+        workspace.supportsLargeFiles || snapshot.workspace.supportsLargeFiles
+        ? workspace.maxContainerBytes + snapshot.workspace.maxContainerBytes
+        : ArchiveService.maxArchiveBytes;
+    final candidateLimit = maxCandidateBytes ?? combinedLimit;
+    if (candidateLimit <= 0 || candidateLimit > combinedLimit) {
       throw ArgumentError.value(maxCandidateBytes, 'maxCandidateBytes');
     }
-    final snapshot = import._archiveSource!.snapshot;
     if (archiveMoveUnsupportedReason(snapshot.workspace, workspace)
         case final String reason) {
       throw UnsupportedError(reason);
     }
     final originalRevision = workspace.revision;
     ArchiveWorkspace? shadow;
-    final deadline = Timer(importDeadline, control.cancel);
+    final deadline = Timer(
+      _importBudget(workspace.expandedBytes + snapshot.workspace.expandedBytes),
+      control.cancel,
+    );
     try {
       final destinationReview = await _stageImport(import, control: control);
       _busy = true;
@@ -618,7 +668,7 @@ class ArchiveEndpoint {
         );
       }
       if (sourceReview.packedBytes + destinationReview.packedBytes >
-          maxCandidateBytes) {
+          candidateLimit) {
         throw const ArchiveViewException(
           'The two reviewed archive candidates exceed the combined move limit.',
         );
@@ -851,14 +901,26 @@ class ArchiveEndpoint {
           workspace.journal,
         );
         final cleanupControl = FileOperationControl();
-        final cleanupDeadline = Timer(importDeadline, cleanupControl.cancel);
-        Future<T> bounded<T>(Future<T> operation) => operation.timeout(
-          readInactivity,
-          onTimeout: () {
-            cleanupControl.cancel();
-            throw TimeoutException('Source cleanup acknowledgement timed out.');
-          },
+        final cleanupDeadline = Timer(
+          _importBudget(
+            _witnesses.fold<int>(
+              workspace.outermost.file.size ?? 0,
+              (sum, item) =>
+                  sum + (item.source.isFolder ? 0 : item.source.size ?? 0),
+            ),
+          ),
+          cleanupControl.cancel,
         );
+        Future<T> bounded<T>(Future<T> operation, {int? workBytes}) =>
+            operation.timeout(
+              workBytes == null ? readInactivity : _importBudget(workBytes),
+              onTimeout: () {
+                cleanupControl.cancel();
+                throw TimeoutException(
+                  'Source cleanup acknowledgement timed out.',
+                );
+              },
+            );
         try {
           for (final witness in ordered) {
             final file = witness.source;
@@ -873,7 +935,10 @@ class ArchiveEndpoint {
               }
 
               current();
-              await bounded(publisher.verifyReceipt(receipt));
+              await bounded(
+                publisher.verifyReceipt(receipt),
+                workBytes: receipt.file.size,
+              );
               current();
               final observed = await bounded(input.stat(file.path!));
               final now = observed == null
@@ -891,9 +956,14 @@ class ArchiveEndpoint {
                   'Source directories remain: this operation has no exact identity-guarded directory deletion contract.',
                 );
               } else {
-                if (sha256
-                            .convert(await workspace.read(witness.destination))
-                            .toString() !=
+                if (await _digest(
+                          workspace.backend,
+                          (await workspace.backend.stat(witness.destination))!,
+                          () async => current(),
+                          control: cleanupControl,
+                          inactivity: readInactivity,
+                          maxBytes: workspace.maxMemberBytes,
+                        ) !=
                         witness.sha256 ||
                     await _digest(
                           input,
@@ -901,13 +971,17 @@ class ArchiveEndpoint {
                           () async => current(),
                           control: cleanupControl,
                           inactivity: readInactivity,
+                          maxBytes: workspace.maxMemberBytes,
                         ) !=
                         witness.sha256) {
                   throw StateError(
                     'The original source or published member changed.',
                   );
                 }
-                await bounded(publisher.verifyReceipt(receipt));
+                await bounded(
+                  publisher.verifyReceipt(receipt),
+                  workBytes: receipt.file.size,
+                );
                 current();
                 if (!await bounded(
                   native.deleteNativeArchiveImportSource(
@@ -919,10 +993,14 @@ class ArchiveEndpoint {
                       current();
                     },
                     verifyPublication: () async {
-                      await bounded(publisher.verifyReceipt(receipt));
+                      await bounded(
+                        publisher.verifyReceipt(receipt),
+                        workBytes: receipt.file.size,
+                      );
                       current();
                     },
                   ),
+                  workBytes: now.size! + receipt.file.size!,
                 )) {
                   if (!input.capabilities.conditionalDelete ||
                       !_hasVersion(now)) {
@@ -1010,7 +1088,7 @@ class ArchiveEndpoint {
       checkpoint,
       control: control,
       inactivity: readInactivity,
-      maxBytes: ArchiveService.maxArchiveBytes,
+      maxBytes: snapshot.workspace.outermost.maxContainerBytes,
     );
     if (hash != snapshot.fingerprint) {
       throw StateError(
@@ -1065,6 +1143,16 @@ FileItem _captureImportFile(FileItem file) => file.metadata == null
         metadata: Map.unmodifiable(Map<String, dynamic>.of(file.metadata!)),
       );
 
+Duration _archiveReadBudget(Duration base, int bytes) {
+  const bufferedLimit = 256 * 1024 * 1024;
+  final excess = bytes > bufferedLimit ? bytes - bufferedLimit : 0;
+  return base + Duration(seconds: (excess + 1024 * 1024 - 1) ~/ (1024 * 1024));
+}
+
+String _archiveLimitLabel(int bytes) => bytes % (1024 * 1024 * 1024) == 0
+    ? '${bytes ~/ (1024 * 1024 * 1024)} GiB'
+    : '${bytes ~/ (1024 * 1024)} MiB';
+
 Future<String> _digest(
   FileOperationBackend source,
   FileItem expected,
@@ -1089,7 +1177,10 @@ Future<String> _digest(
   }
   var count = 0;
   final readControl = FileOperationControl();
-  final deadline = Timer(const Duration(minutes: 5), readControl.cancel);
+  final deadline = Timer(
+    _archiveReadBudget(const Duration(minutes: 5), expected.size!),
+    readControl.cancel,
+  );
   try {
     var stream = readControl
         .bind(source.readFile(expected))
@@ -1200,12 +1291,18 @@ class _ArchiveImportSource extends FileOperationBackend {
 
 class _ArchiveImportOverlay extends FileOperationBackend {
   _ArchiveImportOverlay(this.workspace, this.current)
-    : revision = workspace.revision;
+    : revision = workspace.revision,
+      _projectedBytes = workspace.expandedBytes;
   final ArchiveWorkspace workspace;
   final bool Function() current;
   final int revision;
   final _bytes = <String, Uint8List>{};
+  final _spools = <String, ArchiveOutputSpool>{};
+  final _retiredSpools = <ArchiveOutputSpool>{};
+  final _hashes = <String, String>{};
   final _directories = <String>{};
+  int _projectedBytes;
+  bool _disposed = false;
   void _check() {
     if (!isCurrent) {
       throw StateError('The archive draft changed during import.');
@@ -1225,7 +1322,10 @@ class _ArchiveImportOverlay extends FileOperationBackend {
   p.Context get paths => p.posix;
   @override
   bool get isCurrent =>
-      current() && workspace.isCurrent && workspace.revision == revision;
+      !_disposed &&
+      current() &&
+      workspace.isCurrent &&
+      workspace.revision == revision;
   @override
   bool get supportsStagedVerification => true;
   @override
@@ -1235,13 +1335,13 @@ class _ArchiveImportOverlay extends FileOperationBackend {
     if (path == '/' || _directories.contains(path)) {
       return FileItem(name: paths.basename(path), path: path, isFolder: true);
     }
-    if (_bytes.containsKey(path)) {
+    if (_bytes.containsKey(path) || _spools.containsKey(path)) {
       return FileItem(
         name: paths.basename(path),
         path: path,
         isFolder: false,
-        size: _bytes[path]!.length,
-        metadata: {'version': sha256.convert(_bytes[path]!).toString()},
+        size: _spools[path]?.length ?? _bytes[path]!.length,
+        metadata: {'version': _hashes[path]},
       );
     }
     return workspace.backend.stat(path);
@@ -1252,7 +1352,7 @@ class _ArchiveImportOverlay extends FileOperationBackend {
     _check();
     path = _path(path);
     final items = {for (final item in workspace.list(path)) item.path!: item};
-    for (final entry in {..._directories, ..._bytes.keys}) {
+    for (final entry in {..._directories, ..._bytes.keys, ..._spools.keys}) {
       if (paths.dirname(entry) == path) items[entry] = (await stat(entry))!;
     }
     return items.values.toList();
@@ -1271,7 +1371,22 @@ class _ArchiveImportOverlay extends FileOperationBackend {
   @override
   Stream<List<int>> readFile(FileItem file) async* {
     _check();
-    yield _bytes[file.path!] ?? await workspace.read(file.path!);
+    final path = _path(file.path!);
+    final spool = _spools[path];
+    final bytes = _bytes[path];
+    if (spool != null) {
+      await for (final chunk in spool.openRead()) {
+        _check();
+        yield chunk;
+      }
+    } else if (bytes != null) {
+      yield bytes;
+    } else {
+      await for (final chunk in workspace.openRead(path)) {
+        _check();
+        yield chunk;
+      }
+    }
     _check();
   }
 
@@ -1297,28 +1412,125 @@ class _ArchiveImportOverlay extends FileOperationBackend {
     if (old?.isFolder == true || old != null && !replace) {
       throw StateError('Archive member conflict.');
     }
-    final builder = BytesBuilder(copy: false);
-    await for (final chunk in data) {
+    if (length == null || length < 0 || length > workspace.maxMemberBytes) {
+      throw StateError(
+        'Imported member exceeds ${_archiveLimitLabel(workspace.maxMemberBytes)} or has no captured length.',
+      );
+    }
+    final projected = _projectedBytes - (old?.size ?? 0) + length;
+    if (projected > workspace.maxExpandedBytes) {
+      throw StateError(
+        'Private import and retained archive contents exceed ${_archiveLimitLabel(workspace.maxExpandedBytes)}.',
+      );
+    }
+    final builder = workspace.supportsLargeFiles
+        ? null
+        : BytesBuilder(copy: false);
+    final spool = workspace.supportsLargeFiles
+        ? await ArchiveOutputSpool.create(maxBytes: workspace.maxMemberBytes)
+        : null;
+    final digest = _ArchiveImportDigest();
+    final hash = sha256.startChunkedConversion(digest);
+    var hashClosed = false;
+    var adopted = false;
+    var received = 0;
+    final previousBytes = _bytes[path];
+    final previousSpool = _spools[path];
+    final previousHash = _hashes[path];
+    final previousProjected = _projectedBytes;
+    try {
       _check();
-      if (builder.length + chunk.length > kArchiveReadLimit) {
-        throw StateError('Imported member exceeds 64 MiB.');
+      await for (final chunk in data) {
+        _check();
+        if (chunk.length > length - received) {
+          throw StateError('Imported member grew while copying.');
+        }
+        if (chunk is! Uint8List &&
+            chunk.any((byte) => byte < 0 || byte > 255)) {
+          throw StateError('Imported member contains invalid bytes.');
+        }
+        received += chunk.length;
+        if (spool == null) {
+          // The buffered fallback must also own buffers from reusable providers.
+          final copy = Uint8List.fromList(chunk);
+          hash.add(copy);
+          builder!.add(copy);
+        } else {
+          // File writes and hashes consume bounded owned chunks. No complete
+          // source member or compressed container is retained in Dart memory.
+          for (var offset = 0; offset < chunk.length; offset += 256 * 1024) {
+            _check();
+            final end = offset + 256 * 1024 < chunk.length
+                ? offset + 256 * 1024
+                : chunk.length;
+            final copy = Uint8List.fromList(chunk.sublist(offset, end));
+            hash.add(copy);
+            await spool.write(copy);
+          }
+        }
       }
-      builder.add(chunk);
+      _check();
+      if (received != length) {
+        throw StateError('Imported member length changed.');
+      }
+      hash.close();
+      hashClosed = true;
+      await spool?.finish();
+      _check();
+      if (spool != null) {
+        _spools[path] = spool;
+        _bytes.remove(path);
+      } else {
+        _bytes[path] = builder!.takeBytes();
+        _spools.remove(path);
+      }
+      _hashes[path] = digest.value!.toString();
+      _projectedBytes = projected;
+      await verifyStaged?.call((await stat(path))!);
+      _check();
+      adopted = true;
+      if (previousSpool != null) _retiredSpools.add(previousSpool);
+    } finally {
+      if (!hashClosed) hash.close();
+      if (!adopted) {
+        if (previousBytes == null) {
+          _bytes.remove(path);
+        } else {
+          _bytes[path] = previousBytes;
+        }
+        if (previousSpool == null) {
+          _spools.remove(path);
+        } else {
+          _spools[path] = previousSpool;
+        }
+        if (previousHash == null) {
+          _hashes.remove(path);
+        } else {
+          _hashes[path] = previousHash;
+        }
+        _projectedBytes = previousProjected;
+        await spool?.dispose();
+      }
     }
-    _check();
-    if (length == null || builder.length != length) {
-      throw StateError('Imported member length changed.');
+  }
+
+  void _releaseSpoolOwnership() => _spools.clear();
+
+  Future<void> _dispose() async {
+    _disposed = true;
+    Object? error;
+    for (final spool in {..._spools.values, ..._retiredSpools}) {
+      try {
+        await spool.dispose();
+      } catch (failure) {
+        error ??= failure;
+      }
     }
-    final bytes = builder.takeBytes();
-    if (_bytes.values.fold<int>(0, (sum, item) => sum + item.length) -
-            (_bytes[path]?.length ?? 0) +
-            bytes.length >
-        ArchiveService.maxExtractedBytes) {
-      throw StateError('Private archive import exceeds 256 MiB.');
-    }
-    _bytes[path] = bytes;
-    await verifyStaged?.call((await stat(path))!);
-    _check();
+    _spools.clear();
+    _retiredSpools.clear();
+    _bytes.clear();
+    _hashes.clear();
+    if (error != null) throw error;
   }
 
   @override
@@ -1327,4 +1539,14 @@ class _ArchiveImportOverlay extends FileOperationBackend {
   @override
   Future<void> deleteEmptyDirectory(String path) async =>
       throw UnsupportedError('Private archive import is copy-only.');
+}
+
+class _ArchiveImportDigest implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) => value = data;
+
+  @override
+  void close() {}
 }

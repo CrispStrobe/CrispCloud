@@ -794,7 +794,13 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
                         Text(t('directoriesRemain')),
                       if (workspace?.pendingPublication != null)
                         Text(t('recoveryClose')),
-                      Text(t('bounds')),
+                      Text(
+                        t(
+                          workspace?.supportsLargeFiles == true
+                              ? 'streamedBounds'
+                              : 'bounds',
+                        ),
+                      ),
                       if (_review == null &&
                           (widget.source != null || widget.isArchiveCopy) &&
                           _endpoint != null) ...[

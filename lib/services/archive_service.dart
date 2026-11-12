@@ -1,11 +1,12 @@
 // lib/services/archive_service.dart
 //
-// Archive operations: extract and create .zip files.
-// Uses package:archive for codec support.
+// Archive operations: streamed, verified native extraction and bounded
+// compatibility helpers for archive bytes and previews.
 
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
@@ -14,6 +15,8 @@ import 'archive_viewer_service.dart';
 import 'archive_viewer_file.dart';
 import 'archive_format_registry.dart';
 import 'archive_member_index.dart';
+import 'file_operation_backend.dart';
+import 'local_file_service.dart';
 import '../utils/system_links.dart';
 
 class ArchiveService {
@@ -43,22 +46,80 @@ class ArchiveService {
     if (kIsWeb) {
       throw UnsupportedError('Extract to disk is unavailable on Web.');
     }
-    final file = File(archivePath);
-    if (await file.length() > maxArchiveBytes) {
-      throw const ArchiveViewException(
-        'Archive exceeds the 256 MiB input limit.',
-      );
-    }
-    return extractArchiveBytes(
-      archivePath,
-      await file.readAsBytes(),
-      targetDir,
-      overwrite: overwrite,
-      password: password,
-      selectedPaths: selectedPaths,
-      isCancelled: isCancelled,
-      onProgress: onProgress,
-    );
+    if (isCancelled?.call() ?? false) return [];
+    final sourcePath = p.normalize(p.absolute(archivePath));
+    final root = p.normalize(p.absolute(targetDir));
+    final local = LocalFileService();
+    return local.withFileOperationAccess(sourcePath, () async {
+      final file = File(sourcePath);
+      final source = await file.stat();
+      if (await FileSystemEntity.type(sourcePath, followLinks: false) !=
+              FileSystemEntityType.file ||
+          source.type != FileSystemEntityType.file) {
+        throw const ArchiveViewException(
+          'Extraction requires a regular archive file.',
+        );
+      }
+      if (source.size > kArchiveStreamingLimit) {
+        throw const ArchiveViewException(
+          'Archive exceeds the 8 GiB native input limit.',
+        );
+      }
+      late final ViewerArchive archive;
+      try {
+        archive = await openViewerArchiveFile(
+          sourcePath,
+          name: archivePath,
+          password: password,
+          streaming: true,
+          isCancelled: isCancelled,
+        );
+      } catch (_) {
+        if (isCancelled?.call() ?? false) return <String>[];
+        rethrow;
+      }
+      try {
+        final streaming = archive.maxStreamingMemberBytes > kArchiveReadLimit;
+        if (!streaming && source.size > maxArchiveBytes) {
+          throw const ArchiveViewException(
+            'This archive profile exceeds the 256 MiB input limit.',
+          );
+        }
+        Future<void> checkSource() async {
+          final latest = await file.stat();
+          if (await FileSystemEntity.type(sourcePath, followLinks: false) !=
+                  FileSystemEntityType.file ||
+              latest.type != source.type ||
+              latest.size != source.size ||
+              latest.modified != source.modified ||
+              latest.changed != source.changed) {
+            throw const ArchiveViewException(
+              'The source archive changed during extraction.',
+            );
+          }
+        }
+
+        return await local.withFileOperationAccess(
+          root,
+          () => _extractOpened(
+            archive,
+            root,
+            local: local,
+            maxTotalBytes: streaming
+                ? archive.maxStreamingMemberBytes
+                : maxExtractedBytes,
+            overwrite: overwrite,
+            selectedPaths: selectedPaths,
+            isCancelled: isCancelled,
+            onProgress: onProgress,
+            sourcePath: sourcePath,
+            checkSource: checkSource,
+          ),
+        );
+      } finally {
+        await archive.close();
+      }
+    });
   }
 
   /// Validate every selected path before writing anything. Never follow links
@@ -88,79 +149,295 @@ class ArchiveService {
     );
     try {
       final root = p.normalize(p.absolute(targetDir));
-      final selected = archive.members
-          .where(
-            (entry) =>
-                selectedPaths == null ||
-                selectedPaths.any(
-                  (path) =>
-                      entry.name == path ||
-                      entry.name.startsWith(
-                        '${path.replaceAll(RegExp(r'/+$'), '')}/',
-                      ),
-                ),
-          )
-          .toList();
-      final paths = <int, String>{};
-      final names = <String>{};
+      final local = LocalFileService();
+      return await local.withFileOperationAccess(
+        root,
+        () => _extractOpened(
+          archive,
+          root,
+          local: local,
+          maxTotalBytes: maxExtractedBytes,
+          overwrite: overwrite,
+          selectedPaths: selectedPaths,
+          isCancelled: isCancelled,
+          onProgress: onProgress,
+        ),
+      );
+    } finally {
+      await archive.close();
+    }
+  }
+
+  /// All selected destinations are checked before any directory is created.
+  /// Each file is decoded into a private sibling, checked again from disk, and
+  /// only then published. A cancelled operation returns completed files; its
+  /// active stage is discarded by the backend without replacing a destination.
+  static Future<List<String>> _extractOpened(
+    ViewerArchive archive,
+    String root, {
+    required LocalFileService local,
+    required int maxTotalBytes,
+    required bool overwrite,
+    Set<String>? selectedPaths,
+    bool Function()? isCancelled,
+    void Function(int completed, int total)? onProgress,
+    String? sourcePath,
+    Future<void> Function()? checkSource,
+  }) async {
+    void checkCancelled() {
+      if (isCancelled?.call() ?? false) {
+        throw const _ArchiveExtractionCancelled();
+      }
+    }
+
+    final backend = LocalOperationBackend(
+      local,
+      isCurrent: () => !(isCancelled?.call() ?? false),
+    );
+    final extracted = <String>[];
+    try {
+      checkCancelled();
+      final selection = selectedPaths?.map(safeMemberPath).toSet();
+      final selected = <({ViewerArchiveMember member, String destination})>[];
+      final names = <String, bool>{};
       var totalBytes = 0;
-      for (final entry in selected) {
+      for (final entry in archive.members) {
+        checkCancelled();
+        final candidate = entry.name
+            .replaceAll('\\', '/')
+            .split('/')
+            .where((part) => part.isNotEmpty && part != '.')
+            .join('/');
+        if (selection != null &&
+            !selection.any(
+              (path) => candidate == path || candidate.startsWith('$path/'),
+            )) {
+          continue;
+        }
         if (entry.pathEscapedRoot || entry.isSpecial) {
           throw ArchiveViewException('Unsafe archive entry: ${entry.name}');
         }
         final relative = safeMemberPath(entry.name);
         final destination = p.joinAll([root, ...relative.split('/')]);
-        final key = Platform.isWindows
-            ? destination.toLowerCase()
-            : destination;
-        if (!names.add(key)) {
+        final key = backend.pathKey(destination);
+        if (sourcePath != null && key == backend.pathKey(sourcePath)) {
+          throw const ArchiveViewException(
+            'Extraction cannot replace its source archive.',
+          );
+        }
+        if (names.containsKey(key)) {
           throw ArchiveViewException(
             'Duplicate archive destination: ${entry.name}',
           );
         }
-        await _checkDestination(
-          root,
-          destination,
-          isFile: entry.isFile,
-          overwrite: overwrite,
-        );
-        totalBytes += entry.isFile ? entry.size : 0;
-        if (totalBytes > maxExtractedBytes) {
-          throw const ArchiveViewException(
-            'Extraction exceeds the 256 MiB total limit.',
+        names[key] = entry.isFile;
+        if (entry.size < 0 ||
+            !entry.isFile && entry.size != 0 ||
+            entry.isFile && entry.size > archive.maxStreamingMemberBytes) {
+          throw ArchiveViewException(
+            'Archive entry exceeds the supported extraction limit: ${entry.name}',
           );
         }
-        paths[entry.index] = destination;
+        totalBytes += entry.isFile ? entry.size : 0;
+        if (totalBytes > maxTotalBytes) {
+          throw ArchiveViewException(
+            'Extraction exceeds the ${maxTotalBytes ~/ (1024 * 1024)} MiB total limit.',
+          );
+        }
+        selected.add((member: entry, destination: destination));
       }
-      final extracted = <String>[];
+      for (final target in selected) {
+        checkCancelled();
+        var ancestor = p.dirname(target.destination);
+        while (p.isWithin(root, ancestor)) {
+          if (names[backend.pathKey(ancestor)] == true) {
+            throw ArchiveViewException(
+              'A file occupies an archive directory: ${target.member.name}',
+            );
+          }
+          ancestor = p.dirname(ancestor);
+        }
+        await _checkDestination(
+          root,
+          target.destination,
+          isFile: target.member.isFile,
+          overwrite: overwrite,
+        );
+      }
+      await checkSource?.call();
       var completed = 0;
-      for (final entry in selected) {
-        if (isCancelled?.call() ?? false) break;
-        final destination = paths[entry.index]!;
+      for (final target in selected) {
+        checkCancelled();
+        await checkSource?.call();
+        final entry = target.member;
+        final destination = target.destination;
         await _checkDestination(
           root,
           destination,
           isFile: entry.isFile,
           overwrite: overwrite,
         );
+        await _ensureExtractionDirectory(
+          entry.isFile ? p.dirname(destination) : destination,
+          backend,
+          checkCancelled,
+        );
         if (entry.isFile) {
-          final content = await archive.readMember(entry);
-          if (isCancelled?.call() ?? false) break;
-          final file = File(destination);
-          await file.parent.create(recursive: true);
-          // Create exclusively before writing: existing files require the
-          // explicit overwrite choice, including changes after preflight.
-          await file.create(exclusive: !overwrite);
-          await file.writeAsBytes(content, flush: true);
+          await _writeExtractedMember(
+            archive,
+            entry,
+            root,
+            destination,
+            backend,
+            overwrite: overwrite,
+            checkCancelled: checkCancelled,
+            checkSource: checkSource,
+          );
           extracted.add(destination);
-        } else {
-          await Directory(destination).create(recursive: true);
         }
         onProgress?.call(++completed, selected.length);
       }
       return extracted;
-    } finally {
-      await archive.close();
+    } on _ArchiveExtractionCancelled {
+      return extracted;
+    } catch (_) {
+      // Backend streams independently observe the same cancellation callback.
+      if (isCancelled?.call() ?? false) return extracted;
+      rethrow;
+    }
+  }
+
+  static Future<void> _writeExtractedMember(
+    ViewerArchive archive,
+    ViewerArchiveMember entry,
+    String root,
+    String destination,
+    LocalOperationBackend backend, {
+    required bool overwrite,
+    required void Function() checkCancelled,
+    Future<void> Function()? checkSource,
+  }) async {
+    Digest? sourceDigest;
+    var sourceVerified = false;
+    Stream<List<int>> decoded() async* {
+      final digest = _ArchiveExtractionDigest();
+      final hash = sha256.startChunkedConversion(digest);
+      var closed = false;
+      try {
+        await for (final chunk in archive.openMember(
+          entry,
+          maxBytes: archive.maxStreamingMemberBytes,
+          chunkSize: 256 * 1024,
+        )) {
+          checkCancelled();
+          hash.add(chunk);
+          yield chunk;
+        }
+        // Reaching a decoder's natural EOF is required: its CRC/length check
+        // may reject a stream after its last data chunk has been emitted.
+        checkCancelled();
+        hash.close();
+        closed = true;
+        sourceDigest = digest.value;
+        sourceVerified = sourceDigest != null;
+      } finally {
+        if (!closed) hash.close();
+      }
+    }
+
+    await backend.writePreparedFile(
+      destination,
+      decoded(),
+      entry.size,
+      replace: overwrite,
+      verifyStaged: (staged) async {
+        checkCancelled();
+        if (!sourceVerified || staged.size != entry.size) {
+          throw const ArchiveViewException(
+            'The extracted member did not finish verification.',
+          );
+        }
+        var received = 0;
+        final actual = await sha256
+            .bind(
+              backend.readFile(staged).map((chunk) {
+                checkCancelled();
+                received += chunk.length;
+                if (received > entry.size) {
+                  throw const ArchiveViewException(
+                    'The staged extracted file changed size.',
+                  );
+                }
+                return chunk;
+              }),
+            )
+            .single;
+        checkCancelled();
+        if (received != entry.size || actual != sourceDigest) {
+          throw const ArchiveViewException(
+            'The staged extracted file does not match its decoded source.',
+          );
+        }
+      },
+      checkpoint: (state) async {
+        // A completed rename is already a published file. Cancellation takes
+        // effect before the next member, not after this file is committed.
+        if (state['phase'] == 'committed') return;
+        checkCancelled();
+        if (state['phase'] == 'committing') {
+          await _checkDestination(
+            root,
+            destination,
+            isFile: true,
+            overwrite: overwrite,
+          );
+          await checkSource?.call();
+          checkCancelled();
+        }
+      },
+    );
+  }
+
+  static Future<void> _ensureExtractionDirectory(
+    String directory,
+    LocalOperationBackend backend,
+    void Function() checkCancelled,
+  ) async {
+    final missing = <String>[];
+    var cursor = directory;
+    while (true) {
+      checkCancelled();
+      final type = await entityTypeTrustingSystemLinks(cursor);
+      if (type == FileSystemEntityType.notFound) {
+        missing.add(cursor);
+      } else if (type != FileSystemEntityType.directory) {
+        throw ArchiveViewException(
+          'Extraction parent is not a regular directory: $cursor',
+        );
+      }
+      final parent = p.dirname(cursor);
+      if (parent == cursor) break;
+      cursor = parent;
+    }
+    for (final path in missing.reversed) {
+      checkCancelled();
+      // Recheck the complete ancestor chain before each directory creation.
+      var ancestor = p.dirname(path);
+      while (true) {
+        if (await entityTypeTrustingSystemLinks(ancestor) !=
+            FileSystemEntityType.directory) {
+          throw ArchiveViewException('Extraction parent changed: $ancestor');
+        }
+        final parent = p.dirname(ancestor);
+        if (parent == ancestor) break;
+        ancestor = parent;
+      }
+      if (await entityTypeTrustingSystemLinks(path) ==
+          FileSystemEntityType.link) {
+        throw ArchiveViewException('Extraction will not follow a link: $path');
+      }
+      checkCancelled();
+      await backend.createDirectory(path);
     }
   }
 
@@ -295,7 +572,7 @@ class ArchiveService {
   /// when it is opened, independently from this filename hint.
   static bool isArchive(String filename) => isArchiveFilename(filename);
 
-  /// List contents through the same bounded readers as pane navigation/F3.
+  /// Native common formats use the streamed readers; previews remain bounded.
   static Future<List<FileItem>> listArchiveContents(
     String archivePath,
     String innerPath,
@@ -303,7 +580,11 @@ class ArchiveService {
     if (kIsWeb) {
       throw UnsupportedError('Use listArchiveContentsFromBytes on Web');
     }
-    final archive = await openViewerArchiveFile(archivePath, name: archivePath);
+    final archive = await openViewerArchiveFile(
+      archivePath,
+      name: archivePath,
+      streaming: true,
+    );
     try {
       return ArchiveMemberIndex(archive).list(innerPath);
     } finally {
@@ -361,4 +642,18 @@ class ArchiveService {
     final member = index.members[safeMemberPath(path)];
     return member == null || !member.isFile ? null : archive.readMember(member);
   }
+}
+
+class _ArchiveExtractionCancelled implements Exception {
+  const _ArchiveExtractionCancelled();
+}
+
+class _ArchiveExtractionDigest implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) => value = data;
+
+  @override
+  void close() {}
 }

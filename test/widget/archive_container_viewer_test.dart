@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,8 +9,11 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/services/archive_types.dart';
+import 'package:crisp_cloud/services/archive_viewer_file_io.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
+import 'package:crisp_cloud/widgets/archive_integrity_dialog.dart';
 import 'package:crisp_cloud/widgets/hex_viewer.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../support/archive_iso_fixtures.dart';
 import '../support/archive_package_fixtures.dart';
 import '../support/archive_rpm_fixtures.dart';
+import '../support/archive_tar_writer_fixtures.dart';
 import '../support/dmg_fixture.dart';
 import '../support/hfs_fixture.dart';
 import '../support/workflow_fake_client.dart';
@@ -67,7 +72,7 @@ class _ArchiveLocal extends Fake implements LocalFileService {
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     fullReads++;
-    throw StateError('The large ISO must use the existing positional source.');
+    throw StateError('Native files must use the existing bounded source.');
   }
 }
 
@@ -82,25 +87,31 @@ class _NativeIso {
   static Future<_NativeIso> create(
     WidgetTester tester, {
     Completer<void>? acquireGate,
+    String name = 'large.iso',
+    Future<void> Function(File file)? writeArchive,
   }) async {
     return (await tester.runAsync(() async {
       final directory = await Directory.systemTemp.createTemp('f3-archive-');
-      final fixture = IsoFixture();
-      const fileBytes = 80 * 1024 * 1024;
-      isoBoth32(
-        fixture.bytes,
-        16 * IsoFixture.sectorSize + 80,
-        fileBytes ~/ IsoFixture.sectorSize,
-      );
-      final disk = File('${directory.path}/large.iso');
-      await disk.writeAsBytes(fixture.bytes);
-      final handle = await disk.open(mode: FileMode.append);
-      try {
-        // Sparse padding keeps the test fixture small while exercising a
-        // real file larger than the old full-buffer archive limit.
-        await handle.truncate(fileBytes);
-      } finally {
-        await handle.close();
+      final disk = File('${directory.path}/$name');
+      if (writeArchive != null) {
+        await writeArchive(disk);
+      } else {
+        final fixture = IsoFixture();
+        const fileBytes = 80 * 1024 * 1024;
+        isoBoth32(
+          fixture.bytes,
+          16 * IsoFixture.sectorSize + 80,
+          fileBytes ~/ IsoFixture.sectorSize,
+        );
+        await disk.writeAsBytes(fixture.bytes);
+        final handle = await disk.open(mode: FileMode.append);
+        try {
+          // Sparse padding keeps the test fixture small while exercising a
+          // real file larger than the old full-buffer archive limit.
+          await handle.truncate(fileBytes);
+        } finally {
+          await handle.close();
+        }
       }
       final local = _ArchiveLocal(directory.path, acquireGate: acquireGate);
       final cloud = WorkflowFakeClient()..current = false;
@@ -116,8 +127,8 @@ class _NativeIso {
           .read(panelSourceProvider(PanelSide.local).notifier)
           .setSource(LocalPanelSource(directory.path));
       await panel.refresh();
-      final file = panel.files!.firstWhere((file) => file.name == 'large.iso');
-      expect(file.size, fileBytes);
+      final file = panel.files!.firstWhere((file) => file.name == name);
+      expect(file.size, await disk.length());
       expect(panel.originForOperation(file), isNotNull);
       return _NativeIso(directory, local, container, file);
     }))!;
@@ -166,10 +177,14 @@ Future<void> _memoryViewer(
   await tester.pumpAndSettle();
 }
 
-Future<void> _waitFor(WidgetTester tester, bool Function() ready) async {
+Future<void> _waitFor(
+  WidgetTester tester,
+  bool Function() ready, {
+  int attempts = 300,
+}) async {
   // Native stat/open operations need real event-loop turns; advancing the
   // widget test's fake clock alone cannot finish them.
-  for (var attempt = 0; attempt < 300; attempt++) {
+  for (var attempt = 0; attempt < attempts; attempt++) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 10)),
     );
@@ -182,8 +197,173 @@ Future<void> _waitFor(WidgetTester tester, bool Function() ready) async {
 ChoiceChip _chip(WidgetTester tester, String label) =>
     tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, label));
 
+Future<void> _writeLargeTar(File file) async {
+  const memberBytes = 65 * 1024 * 1024;
+  // Reuse an independently generated Python USTAR regular-file header and
+  // change only its name, length and checksum. Payload bytes are sparse zeros.
+  final header = referenceTar('ustar').sublist(512, 1024);
+  header.fillRange(0, 100, 0);
+  header.setAll(0, utf8.encode('large.txt'));
+  header.fillRange(124, 136, 0);
+  header.setAll(
+    124,
+    ascii.encode(memberBytes.toRadixString(8).padLeft(11, '0')),
+  );
+  header.fillRange(148, 156, 32);
+  final checksum = header.fold<int>(0, (sum, byte) => sum + byte);
+  header.setAll(148, ascii.encode(checksum.toRadixString(8).padLeft(6, '0')));
+  header[154] = 0;
+  final output = await file.open(mode: FileMode.write);
+  try {
+    await output.writeFrom(header);
+    await output.truncate(512 + memberBytes + 1024);
+  } finally {
+    await output.close();
+  }
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'native F3 checks a 65 MiB member while previews remain bounded',
+    (tester) async {
+      final native = await _NativeIso.create(
+        tester,
+        name: 'large.tar',
+        writeArchive: _writeLargeTar,
+      );
+      try {
+        await native.mount(tester);
+        await _waitFor(
+          tester,
+          () => find.text('large.txt').evaluate().isNotEmpty,
+        );
+        expect(native.file.size, greaterThan(kArchiveReadLimit));
+        await tester.tap(find.text('large.txt'));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('64 MB safety limit'), findsOneWidget);
+        expect(find.byType(InternalViewerDialog), findsOneWidget);
+
+        await tester.tap(find.byKey(const ValueKey('test-archive')));
+        await tester.pump();
+        final check = tester.widget<ArchiveIntegrityDialog>(
+          find.byType(ArchiveIntegrityDialog),
+        );
+        expect(check.archive.maxStreamingMemberBytes, kArchiveStreamingLimit);
+        await _waitFor(
+          tester,
+          () => find.text('All regular files checked').evaluate().isNotEmpty,
+          attempts: 3000,
+        );
+        expect(
+          find.text('Checked 1 · Failed 0 · Skipped 0 · Unchecked 0'),
+          findsOneWidget,
+        );
+        expect(native.local.fullReads, 0);
+        expect(native.local.acquisitions, 1);
+        expect(native.local.releases, 0);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await native.dispose(tester);
+      }
+      expect(native.local.releases, 1);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  testWidgets('native protected ZIP reopens fresh borrowed sources', (
+    tester,
+  ) async {
+    final bytes = ZipEncoder(password: 'secret').encode(
+      Archive()
+        ..addFile(ArchiveFile.bytes('secret.txt', utf8.encode('secret text'))),
+    );
+    final native = await _NativeIso.create(
+      tester,
+      name: 'locked.zip',
+      writeArchive: (file) async {
+        await file.writeAsBytes(bytes);
+      },
+    );
+    try {
+      await native.mount(tester);
+      await _waitFor(
+        tester,
+        () => find.text('secret.txt').evaluate().isNotEmpty,
+      );
+      await tester.tap(find.text('secret.txt'));
+      await tester.pumpAndSettle();
+      expect(find.text('Password required'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'secret');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('secret text', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+      expect(native.local.fullReads, 0);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await native.dispose(tester);
+    }
+  });
+
+  for (final name in ['wrong.zip', 'wrong.7z', 'wrong.tar', 'wrong.tgz']) {
+    testWidgets('native pane and F3 still sniff the contents of $name', (
+      tester,
+    ) async {
+      final archive = Archive()
+        ..addFile(
+          ArchiveFile.bytes('sniffed.txt', utf8.encode('sniffed content')),
+        );
+      final payload = name.endsWith('.zip') || name.endsWith('.7z')
+          ? TarEncoder().encode(archive)
+          : ZipEncoder().encode(archive);
+      final bytes = name.endsWith('.tgz') ? gzip.encode(payload) : payload;
+      final native = await _NativeIso.create(
+        tester,
+        name: name,
+        writeArchive: (file) async {
+          await file.writeAsBytes(bytes);
+        },
+      );
+      try {
+        await tester.runAsync(() async {
+          final pane = await openViewerArchiveFile(
+            native.file.path!,
+            name: name,
+            streaming: true,
+          );
+          try {
+            expect(pane.members.single.name, 'sniffed.txt');
+            expect(
+              utf8.decode(await pane.readMember(pane.members.single)),
+              'sniffed content',
+            );
+          } finally {
+            await pane.close();
+          }
+        });
+        await native.mount(tester);
+        await _waitFor(
+          tester,
+          () => find.text('sniffed.txt').evaluate().isNotEmpty,
+        );
+        await tester.tap(find.text('sniffed.txt'));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('sniffed content', findRichText: true),
+          findsOneWidget,
+        );
+        expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+        expect(tester.takeException(), isNull);
+      } finally {
+        await native.dispose(tester);
+      }
+    });
+  }
 
   testWidgets(
     'a native 80 MiB ISO lists and reopens without releasing its viewer source',

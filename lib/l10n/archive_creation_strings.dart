@@ -56,6 +56,29 @@ String archiveCreationError(BuildContext context, Object error) {
 }
 
 const _messages = <String, List<String>>{
+  "Create an archive up to 8 GiB, including headers, with up to 8 GiB of expanded contents. Temporary disk space is required. Existing files are never replaced.":
+      [
+        "Erstellt ein Archiv bis zu 8 GiB einschließlich Headern mit bis zu 8 GiB entpacktem Inhalt. Temporärer Speicherplatz ist erforderlich. Vorhandene Dateien werden nicht ersetzt.",
+        "Crée une archive jusqu’à 8 Gio, en-têtes compris, et jusqu’à 8 Gio de contenu décompressé. Espace disque temporaire nécessaire. Les fichiers existants ne sont jamais remplacés.",
+        "Crea un archivo de hasta 8 GiB, incluidas las cabeceras, y hasta 8 GiB descomprimidos. Requiere espacio temporal en disco. No se reemplazan archivos existentes.",
+        "Cria um arquivo de até 8 GiB, incluindo cabeçalhos, e até 8 GiB descompactados. Requer espaço temporário em disco. Ficheiros existentes nunca são substituídos.",
+        "创建最多 8 GiB（含头信息）的压缩包，解压内容总量最多 8 GiB。需要临时磁盘空间。不会覆盖已有文件。",
+        "ヘッダーを含め最大8 GiB、展開内容の合計も最大8 GiBのアーカイブを作成します。一時ディスク領域が必要です。既存のファイルは上書きしません。",
+        "헤더를 포함해 최대 8 GiB, 압축 해제 총용량도 최대 8 GiB인 압축 파일을 만듭니다. 임시 디스크 공간이 필요합니다. 기존 파일은 덮어쓰지 않습니다.",
+        "أنشئ أرشيفاً حتى 8 GiB شاملاً الرؤوس، وبمحتوى مفكوك حتى 8 GiB. يتطلب مساحة مؤقتة على القرص. لا تُستبدل الملفات الموجودة.",
+      ],
+  "Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing files are never replaced.":
+      [
+        "Lokale Dateien werden in ein neues TAR- oder CBT-Archiv bis zu 2 GiB einschließlich Headern gestreamt. Vorhandene Dateien werden nicht ersetzt.",
+        "Crée une archive TAR ou CBT en flux jusqu’à 2 Gio, en-têtes compris. Les fichiers existants ne sont jamais remplacés.",
+        "Crea por flujo un TAR o CBT de hasta 2 GiB, incluidas las cabeceras. No se reemplazan archivos existentes.",
+        "Cria por fluxo um TAR ou CBT de até 2 GiB, incluindo cabeçalhos. Ficheiros existentes nunca são substituídos.",
+        "将本地文件流式写入新的 TAR 或 CBT 压缩包，最大 2 GiB（含头信息）。不会覆盖已有文件。",
+        "ローカルファイルから最大2 GiB（ヘッダーを含む）のTARまたはCBTアーカイブを作成します。既存のファイルは上書きしません。",
+        "로컬 파일로 헤더를 포함해 최대 2 GiB의 새 TAR 또는 CBT 압축 파일을 만듭니다. 기존 파일은 덮어쓰지 않습니다.",
+        "أنشئ TAR أو CBT جديداً بتدفق الملفات المحلية حتى 2 GiB شاملاً الرؤوس. لا تُستبدل الملفات الموجودة.",
+      ],
+
   'UNIX compress — one file': [
     'UNIX compress — eine Datei',
     'UNIX compress — un fichier',

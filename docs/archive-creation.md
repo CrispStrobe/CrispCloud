@@ -72,11 +72,20 @@ publication at the next cancellation check; a codec may need to finish its
 current block first. A commit that already completed is reported as successful.
 Keep the dialog open until it reports completion or cancellation.
 
-Ordinary archive creation is bounded to 64 MiB per source file, 256 MiB of total
-source content and packed output, 200,000 entries, 200 folder levels and 8 MiB
-of member-path text. Format headers also count toward packed limits. All
-compressed TAR choices have a 64 MiB decoded TAR limit, including headers.
-Single-file compressors and compressed TAR also cap encoded output at 64 MiB.
+Eligible native local **ZIP/CBZ, 7z/CB7 and TAR.GZ/TGZ creation streams up to
+8 GiB** per source file, total source content and packed output. For TGZ the
+decoded TAR, including its headers and padding, must also fit 8 GiB. The large
+7z path supports Store and LZMA2; choosing Deflate or password protection uses
+the existing buffered path. ZIP encryption also uses that smaller path. The
+dialog displays the applicable limit for the captured endpoints and options.
+
+Buffered archive creation remains bounded to 64 MiB per source file and
+256 MiB of total source content and packed output. Buffered compressed TAR
+choices have a 64 MiB decoded TAR limit, including headers; single-file
+compressors and buffered compressed TAR also cap encoded output at 64 MiB.
+All creation paths retain entry, path and depth bounds: at most 200,000 entries,
+200 folder levels and 8 MiB of member-path text, with format-specific metadata
+limits where smaller. Format headers count toward packed limits.
 Fresh native ISO/HFSX/DMG creation has a separate streamed 2 GiB image-output
 bound; it does not increase existing-container editing limits. HFSX/DMG are
 data volumes without copied resource forks, extended attributes or symlinks.
@@ -85,11 +94,12 @@ output limit**, including headers, extended names, alignment and the trailer.
 It accepts regular files larger than 64 MiB and source totals above 256 MiB
 when the complete output fits. Both captured endpoints must provide bounded
 native-local reads; the destination must also provide bounded, verified staged
-writes. Other TAR compression choices,
-browser/fallback creation and existing TAR editing retain their ordinary limits.
-The format picker displays the larger bound only for eligible TAR/CBT endpoints.
+writes. Existing eligible native TAR/CBT workspaces use the separate 8 GiB
+streamed editing path. Browser/fallback creation and other TAR compression
+choices retain their ordinary limits. The format picker shows the larger limits
+only when the captured endpoints and chosen options support them.
 
-The TAR path streams source reads, temporary output, decoded member checks and
+The native streaming paths stream source reads, temporary output, decoded member checks and
 destination readback. Packing, verification and saving report byte progress;
 verification includes another complete source read, and saving includes staged
 readback and a final source check. These phases deliberately perform more I/O
@@ -100,6 +110,14 @@ output and destination staging require additional disk space. Disk exhaustion,
 source changes and late output collisions must fail without replacing an
 existing destination. The [large TAR verification record](archive-sync-large-tar-verification.md)
 distinguishes actual measured fixtures from the configured upper bound.
+
+ZIP, TGZ and 7z have each processed a member larger than 2 GiB through the
+standalone writer and independent readers. ZIP64 has also processed a member
+larger than 4 GiB and an archive with 65,536 entries. The fixtures compress to
+small physical files; they do not establish a full 8 GiB application save or
+large physical-container publication. See the [writer evidence](archive-streaming-codec-verification.md),
+[reader evidence](archive-streaming-reader-verification.md) and
+[integration status](archive-parity-large-continuation.md).
 
 Large durable background jobs remain separate work. The current creation entry
 point accepts native local selections. Other archive browsing and editing
@@ -125,4 +143,10 @@ the former member and aggregate limits, header-inclusive preflight, bounded
 readback, phase progress, cancellation, source mutation and late collisions.
 Its optional reference output is checked by Python's TAR reader and GNU tar
 using `test/support/check_archive_large_tar.py`.
+`test/archive_streamed_creation_test.dart` covers the new native ZIP, default
+7z LZMA2 and TGZ creation paths, metadata, cancellation and source/output changes.
+These Flutter integration registrations have not run in this continuation:
+automatic approval review blocked the local Flutter runner. Direct Dart codec
+checks and independent Python/libarchive checks did run; their receipts above
+record the distinction.
 These tests are evidence only when run against the branch being reviewed.

@@ -154,15 +154,16 @@ class ArchiveContainerPublisher {
     }
     var count = 0;
     final elapsed = Stopwatch()..start();
+    final deadline = _verificationDeadline(file.size!);
     final hash = await sha256
         .bind(
           backend.readFile(file).timeout(const Duration(seconds: 30)).map((
             chunk,
           ) {
             _check(isCancelled: isCancelled);
-            if (elapsed.elapsed > const Duration(minutes: 5)) {
+            if (elapsed.elapsed > deadline) {
               throw TimeoutException(
-                'Archive verification exceeded five minutes.',
+                'Archive verification exceeded its size-dependent deadline.',
               );
             }
             count += chunk.length;
@@ -273,8 +274,57 @@ class ArchiveContainerPublisher {
     ArchivePublicationDependency? dependency,
     ArchivePublicationDirectoryDependency? directoryDependency,
   }) async {
+    // Keep the original buffered API bounded. Large candidates must retain
+    // their private spool and use publishStream throughout publication.
+    if (bytes.length > 256 * 1024 * 1024) {
+      throw const FormatException(
+        'Buffered archive publication is limited to 256 MiB. Use a streamed candidate.',
+      );
+    }
+    return publishStream(
+      original: original,
+      originalSha256: originalSha256,
+      length: bytes.length,
+      candidateSha256: sha256.convert(bytes).toString(),
+      openRead: () => Stream.value(bytes),
+      retry: retry,
+      isCancelled: isCancelled,
+      onPhase: onPhase,
+      beforePublication: beforePublication,
+      dependency: dependency,
+      directoryDependency: directoryDependency,
+    );
+  }
+
+  /// Publishes a captured, repeatable candidate without collecting its bytes.
+  ///
+  /// The caller owns the source (normally a sealed private spool) until this
+  /// future completes. [candidateSha256] and [length] describe the reviewed
+  /// candidate. Every streamed byte is counted and hashed before staging may
+  /// commit; staged and installed files are independently read back through
+  /// the same recovery and access-policy guards as buffered publication.
+  /// A retry can reuse an already verified candidate without reopening the
+  /// source, but must still provide the identical length and fingerprint.
+  Future<ArchivePublicationReceipt> publishStream({
+    required FileItem original,
+    required String originalSha256,
+    required int length,
+    required String candidateSha256,
+    required Stream<List<int>> Function() openRead,
+    ArchivePublicationRecord? retry,
+    bool Function()? isCancelled,
+    void Function(ArchivePublicationPhase)? onPhase,
+    TransferCheckpoint? beforePublication,
+    ArchivePublicationDependency? dependency,
+    ArchivePublicationDirectoryDependency? directoryDependency,
+  }) async {
     if (_running) {
       throw StateError('An archive publication is already running.');
+    }
+    if (length < 0 ||
+        length > ArchivePublicationRecord.maximumContainerBytes ||
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(candidateSha256)) {
+      throw const FormatException('Invalid streamed archive candidate.');
     }
     _running = true;
     _active = null;
@@ -290,15 +340,15 @@ class ArchiveContainerPublisher {
             storage: backend.storageReference!,
             original: original,
             originalSha256: originalSha256,
-            candidateSha256: sha256.convert(bytes).toString(),
-            candidateBytes: bytes.length,
+            candidateSha256: candidateSha256,
+            candidateBytes: length,
             phase: ArchivePublicationPhase.prepared,
             createdAt: DateTime.now().toUtc(),
             dependency: dependency,
             directoryDependency: directoryDependency,
           );
-      if (record.candidateSha256 != sha256.convert(bytes).toString() ||
-          record.candidateBytes != bytes.length ||
+      if (record.candidateSha256 != candidateSha256 ||
+          record.candidateBytes != length ||
           record.originalSha256 != originalSha256 ||
           dependency != null &&
               jsonEncode(record.dependency?.toJson()) !=
@@ -357,7 +407,7 @@ class ArchiveContainerPublisher {
         _active = saved;
       }
       if (_active!.candidate == null) {
-        await _stage(bytes, isCancelled: isCancelled, onPhase: onPhase);
+        await _stage(openRead, isCancelled: isCancelled, onPhase: onPhase);
       }
       return await _finish(
         isCancelled: isCancelled,
@@ -382,7 +432,7 @@ class ArchiveContainerPublisher {
   }
 
   Future<void> _stage(
-    Uint8List bytes, {
+    Stream<List<int>> Function() openRead, {
     bool Function()? isCancelled,
     void Function(ArchivePublicationPhase)? onPhase,
   }) async {
@@ -416,10 +466,63 @@ class ArchiveContainerPublisher {
     if (existing == null) {
       onPhase?.call(ArchivePublicationPhase.prepared);
       _check(isCancelled: isCancelled);
+      var sourceVerified = false;
+      Stream<List<int>> checkedRead() async* {
+        final digest = _ArchiveCandidateDigest();
+        final hash = sha256.startChunkedConversion(digest);
+        var received = 0;
+        var closed = false;
+        final elapsed = Stopwatch()..start();
+        final deadline = _verificationDeadline(record.candidateBytes);
+        try {
+          await for (final chunk in openRead().timeout(
+            const Duration(seconds: 30),
+          )) {
+            _check(isCancelled: isCancelled);
+            if (elapsed.elapsed > deadline) {
+              throw TimeoutException(
+                'Archive candidate reading exceeded its size-dependent deadline.',
+              );
+            }
+            if (chunk.length > record.candidateBytes - received) {
+              throw StateError('The reviewed archive candidate grew.');
+            }
+            if (chunk is! Uint8List &&
+                chunk.any((byte) => byte < 0 || byte > 255)) {
+              throw StateError('The archive candidate contains invalid bytes.');
+            }
+            for (var offset = 0; offset < chunk.length; offset += 256 * 1024) {
+              _check(isCancelled: isCancelled);
+              final end = offset + 256 * 1024 < chunk.length
+                  ? offset + 256 * 1024
+                  : chunk.length;
+              // A provider may reuse its input buffer after yielding. Own each
+              // bounded chunk until the upload consumer has processed it.
+              final bytes = Uint8List.fromList(chunk.sublist(offset, end));
+              received += bytes.length;
+              hash.add(bytes);
+              yield bytes;
+            }
+          }
+          _check(isCancelled: isCancelled);
+          if (received != record.candidateBytes) {
+            throw StateError('The reviewed archive candidate was truncated.');
+          }
+          hash.close();
+          closed = true;
+          if (digest.value?.toString() != record.candidateSha256) {
+            throw StateError('The reviewed archive candidate changed.');
+          }
+          sourceVerified = true;
+        } finally {
+          if (!closed) hash.close();
+        }
+      }
+
       await backend.writePreparedFile(
         path,
-        Stream.value(bytes),
-        bytes.length,
+        checkedRead(),
+        record.candidateBytes,
         replace: false,
         checkpoint: (state) async {
           _check(
@@ -428,13 +531,16 @@ class ArchiveContainerPublisher {
         },
         verifyStaged: (staged) async {
           _check(isCancelled: isCancelled);
+          if (!sourceVerified) {
+            throw StateError('The archive candidate stream was not verified.');
+          }
           await _applyAccessPolicy(staged.path!, attributes);
           final checked = await _inspect(
             staged.path!,
             isCancelled: isCancelled,
           );
           if (checked?.hash != record.candidateSha256 ||
-              checked?.file.size != bytes.length) {
+              checked?.file.size != record.candidateBytes) {
             throw StateError(
               'The staged archive candidate could not be verified.',
             );
@@ -452,6 +558,9 @@ class ArchiveContainerPublisher {
           }
         },
       );
+      if (!sourceVerified) {
+        throw StateError('The archive candidate stream was not verified.');
+      }
     }
     _check(isCancelled: isCancelled);
     if (existing != null) await _applyAccessPolicy(path, attributes);
@@ -463,7 +572,7 @@ class ArchiveContainerPublisher {
     final candidate = await _inspect(path, isCancelled: isCancelled);
     if (candidate == null ||
         candidate.hash != record.candidateSha256 ||
-        candidate.file.size != bytes.length) {
+        candidate.file.size != record.candidateBytes) {
       throw StateError('The written archive candidate could not be verified.');
     }
     await _record(
@@ -1065,6 +1174,22 @@ class ArchiveContainerPublisher {
       );
     }
   }
+}
+
+// Preserve an inactivity deadline independently from total work. A fixed
+// five-minute total makes otherwise healthy multi-gigabyte local files fail
+// during recovery. Budget one second per MiB plus the original setup allowance.
+Duration _verificationDeadline(int bytes) =>
+    Duration(seconds: 5 * 60 + (bytes + 1024 * 1024 - 1) ~/ (1024 * 1024));
+
+class _ArchiveCandidateDigest implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) => value = data;
+
+  @override
+  void close() {}
 }
 
 String _accessPolicyHash(TransferMetadata metadata) {

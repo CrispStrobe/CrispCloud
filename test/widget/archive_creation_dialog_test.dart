@@ -20,7 +20,9 @@ const _flatFilesHelp =
 const _compressedTarHelp =
     'Compressed TAR is limited to 64 MiB after decompression, including archive headers.';
 const _streamedTarHelp =
-    'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing archive editing keeps its 64 MiB member and 256 MiB total limits. Existing files are never replaced.';
+    'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing files are never replaced.';
+const _streamedCommonHelp =
+    'Create an archive up to 8 GiB, including headers, with up to 8 GiB of expanded contents. Temporary disk space is required. Existing files are never replaced.';
 const _encodedHelp =
     'Single-file compressors and compressed TAR are limited to 64 MiB of encoded output.';
 const _ordinaryHelp =
@@ -652,6 +654,7 @@ void main() {
         _flatFilesHelp,
         _compressedTarHelp,
         _streamedTarHelp,
+        _streamedCommonHelp,
         _encodedHelp,
         _hfsHelp,
         _isoHelp,
@@ -753,7 +756,7 @@ void main() {
     'ar',
   ]) {
     testWidgets(
-      '$language shows native TAR and CBT limits only on eligible formats at narrow large text',
+      '$language distinguishes native TAR and common archive limits at narrow large text',
       (tester) async {
         backend = _StreamingCreationBackend()
           ..put('/input/report.txt', [1, 2, 3]);
@@ -770,10 +773,12 @@ void main() {
         }
         await format(tester, tr(tester, ArchiveCreationFormat.tarGzip.label));
         expect(find.text(tr(tester, _streamedTarHelp)), findsNothing);
-        expect(find.text(tr(tester, _compressedTarHelp)), findsOneWidget);
-        expect(find.text(tr(tester, _encodedHelp)), findsOneWidget);
+        expect(find.text(tr(tester, _streamedCommonHelp)), findsOneWidget);
+        expect(find.text(tr(tester, _compressedTarHelp)), findsNothing);
+        expect(find.text(tr(tester, _encodedHelp)), findsNothing);
         await format(tester, tr(tester, ArchiveCreationFormat.zip.label));
-        expect(find.text(tr(tester, _ordinaryHelp)), findsOneWidget);
+        expect(find.text(tr(tester, _ordinaryHelp)), findsNothing);
+        expect(find.text(tr(tester, _streamedCommonHelp)), findsOneWidget);
         expect(find.text(tr(tester, _streamedTarHelp)), findsNothing);
         expect(tester.takeException(), isNull);
       },

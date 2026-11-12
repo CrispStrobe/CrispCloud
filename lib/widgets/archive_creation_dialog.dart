@@ -216,6 +216,13 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
       source: widget.source,
       destination: widget.destination,
     );
+    final streamedCommon = ArchiveCreationService.supportsStreamedCreation(
+      format: _format,
+      source: widget.source,
+      destination: widget.destination,
+      password: _protect ? _password.text : null,
+      compression: _compression,
+    );
     final progress = _progress;
     return PopScope(
       canPop: !_busy,
@@ -367,8 +374,10 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   tr(
                     _format.diskImage
                         ? 'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.'
+                        : streamedCommon
+                        ? 'Create an archive up to 8 GiB, including headers, with up to 8 GiB of expanded contents. Temporary disk space is required. Existing files are never replaced.'
                         : streamedTar
-                        ? 'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing archive editing keeps its 64 MiB member and 256 MiB total limits. Existing files are never replaced.'
+                        ? 'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing files are never replaced.'
                         : _format.singlePayload
                         ? 'Select one local file, up to 64 MiB. Its name after decompression comes from the output filename.'
                         : _format == ArchiveCreationFormat.ar
@@ -377,14 +386,17 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                if (_format.wrapper != null && !_format.singlePayload)
+                if (!streamedCommon &&
+                    _format.wrapper != null &&
+                    !_format.singlePayload)
                   Text(
                     tr(
                       'Compressed TAR is limited to 64 MiB after decompression, including archive headers.',
                     ),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                if (_format.wrapper != null || _format.singlePayload)
+                if (!streamedCommon &&
+                    (_format.wrapper != null || _format.singlePayload))
                   Text(
                     tr(
                       'Single-file compressors and compressed TAR are limited to 64 MiB of encoded output.',

@@ -18,6 +18,8 @@ import 'archive_package_writers.dart';
 import 'archive_tar_writer.dart';
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
+import 'archive_streaming_writer.dart';
+import 'archive_streamed_reader.dart';
 import 'archive_zip_package_policy.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
@@ -400,6 +402,33 @@ class ArchiveCreationService {
       destination.capabilities.boundedUpload &&
       destination.supportsStagedVerification;
 
+  /// Common unprotected archive creation uses file-backed codecs on native
+  /// local storage. The compression choice must be represented by that writer.
+  static bool supportsStreamedCreation({
+    required ArchiveCreationFormat format,
+    required FileOperationBackend source,
+    required FileOperationBackend destination,
+    String? password,
+    ArchiveCreationCompression compression = ArchiveCreationCompression.normal,
+  }) =>
+      const bool.fromEnvironment('dart.library.io') &&
+      password == null &&
+      const {
+        ArchiveEndpointFormat.zip,
+        ArchiveEndpointFormat.sevenZip,
+        ArchiveEndpointFormat.tarGzip,
+      }.contains(format.endpointFormat) &&
+      !(format.endpointFormat == ArchiveEndpointFormat.sevenZip &&
+          compression == ArchiveCreationCompression.deflate) &&
+      source.storageReference?.isLocal == true &&
+      source.storageReference?.provider != 'browser' &&
+      destination.storageReference?.isLocal == true &&
+      destination.storageReference?.provider != 'browser' &&
+      source.capabilities.boundedDownload &&
+      destination.capabilities.boundedDownload &&
+      destination.capabilities.boundedUpload &&
+      destination.supportsStagedVerification;
+
   Future<ArchiveCreationResult> create({
     required FileOperationBackend source,
     required FileOperationBackend destination,
@@ -415,6 +444,17 @@ class ArchiveCreationService {
       source: source,
       destination: destination,
     );
+    final streamedCommon = supportsStreamedCreation(
+      format: options.format,
+      source: source,
+      destination: destination,
+      password: options.password,
+      compression: options.compression,
+    );
+    final streamed = streamedTar || streamedCommon;
+    final streamedLimit = streamedCommon
+        ? kArchiveStreamingLimit
+        : maxStreamedTarBytes;
     void check() {
       if (isCancelled?.call() ?? false) {
         throw const ArchiveCreationException(ArchiveCreationError.cancelled);
@@ -484,10 +524,14 @@ class ArchiveCreationService {
         ArchiveCreationError.unsupportedEntry,
       );
     }
-    final memberLimit = options.format.diskImage || streamedTar
+    final memberLimit = streamedCommon
+        ? kArchiveStreamingLimit
+        : options.format.diskImage || streamedTar
         ? 2 * 1024 * 1024 * 1024
         : kArchiveReadLimit;
-    final totalLimit = options.format.diskImage || streamedTar
+    final totalLimit = streamedCommon
+        ? kArchiveStreamingLimit
+        : options.format.diskImage || streamedTar
         ? 2 * 1024 * 1024 * 1024
         : options.format.wrapper != null
         ? kArchiveReadLimit
@@ -642,7 +686,7 @@ class ArchiveCreationService {
     }
 
     Future<void> reportBytes(int count, String path) async {
-      if (!streamedTar || bytePhase == null) return;
+      if (!streamed || bytePhase == null) return;
       completedBytes += count;
       if (completedBytes > phaseBytes) {
         throw const ArchiveCreationException(
@@ -789,7 +833,9 @@ class ArchiveCreationService {
     final packageIssue = await archiveZipPackageIssue(options.name, captured);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
     final spool = await ArchiveOutputSpool.create(
-      maxBytes: options.format.diskImage || streamedTar
+      maxBytes: streamedCommon
+          ? kArchiveStreamingLimit
+          : options.format.diskImage || streamedTar
           ? 2 * 1024 * 1024 * 1024
           : ArchiveService.maxArchiveBytes,
     );
@@ -801,10 +847,23 @@ class ArchiveCreationService {
         check();
       }
 
-      if (streamedTar) {
+      if (streamed) {
         beginBytePhase(ArchiveCreationPhase.packing, totalBytes, options.name);
       }
-      if (options.format.diskImage) {
+      if (streamedCommon) {
+        await writeStreamingArchiveEntries(
+          options.format.endpointFormat,
+          captured,
+          sink: emit,
+          maxOutputBytes: spool.maxBytes,
+          level: switch (options.compression) {
+            ArchiveCreationCompression.none => 0,
+            ArchiveCreationCompression.lzma2 => 6,
+            _ => options.compression.deflateLevel,
+          },
+          isCancelled: isCancelled,
+        );
+      } else if (options.format.diskImage) {
         progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
         switch (options.format) {
           case ArchiveCreationFormat.iso:
@@ -963,7 +1022,7 @@ class ArchiveCreationService {
       await spool.finish();
       check();
 
-      if (streamedTar) {
+      if (streamed) {
         // Read the created members, revalidate source contents, then hash the
         // complete output. These are three distinct streamed verification
         // passes, all represented in one monotonic byte total.
@@ -1012,14 +1071,23 @@ class ArchiveCreationService {
       } else {
         // Decode with the regular reader, which is independent of the ZIP encoder.
         final verificationSource = await spool.openByteSource();
-        final archive = await openViewerArchiveSource(
-          streamedTar
-              ? _CreationTarVerificationSource(verificationSource, check)
-              : verificationSource,
-          name: options.name,
-          password: options.password,
-          maxMemberBytes: streamedTar ? maxStreamedTarBytes : kArchiveReadLimit,
-        );
+        final archive = streamedCommon
+            ? (await openStreamedArchiveSource(
+                verificationSource,
+                name: options.name,
+                maxBytes: streamedLimit,
+                isCancelled: isCancelled,
+              )).archive
+            : await openViewerArchiveSource(
+                streamedTar
+                    ? _CreationTarVerificationSource(verificationSource, check)
+                    : verificationSource,
+                name: options.name,
+                password: options.password,
+                maxMemberBytes: streamedTar
+                    ? maxStreamedTarBytes
+                    : kArchiveReadLimit,
+              );
         try {
           final expected = {for (final entry in entries) entry.name: entry};
           if (archive.members.length != entries.length ||
@@ -1050,14 +1118,11 @@ class ArchiveCreationService {
               );
             }
             if (member.isFile) {
-              final digest = streamedTar
+              final digest = streamed
                   ? await sha256
                         .bind(
                           checkedOutput(
-                            archive.openMember(
-                              member,
-                              maxBytes: maxStreamedTarBytes,
-                            ),
+                            archive.openMember(member, maxBytes: streamedLimit),
                             expectedLength: member.size,
                             path: name,
                           ),
@@ -1073,7 +1138,7 @@ class ArchiveCreationService {
                 );
               }
             }
-            if (!streamedTar) {
+            if (!streamed) {
               progress(
                 ArchiveCreationPhase.verifying,
                 ++done,
@@ -1118,7 +1183,7 @@ class ArchiveCreationService {
 
       await validateSources();
       await checkDestination();
-      if (!streamedTar) {
+      if (!streamed) {
         progress(ArchiveCreationPhase.saving, 0, spool.length, output);
       }
       final packedHash =
@@ -1132,7 +1197,7 @@ class ArchiveCreationService {
                   )
                   .first)
               .toString();
-      if (streamedTar) {
+      if (streamed) {
         // Staging, its full readback, and one final source-content check all
         // happen before the existing exclusive publication boundary.
         beginBytePhase(

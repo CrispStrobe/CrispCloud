@@ -63,8 +63,12 @@ times and permission bits are imported. Protection follows the destination.
 Ownership, ACLs, resource forks and signatures are not copied; setuid/setgid
 inputs are refused. Same physical outer containers are rejected, including
 separate nested routes and native hard-link aliases under both captured grants.
-Source and destination workspaces retain 64 MiB per-member and 256 MiB
-aggregate/container bounds; the larger spooled browsing path does not raise them.
+Eligible native top-level unencrypted ZIP/CBZ, 7z/CB7, TAR/CBT and TGZ/TAR.GZ
+workspaces use an 8 GiB member/expanded/container budget. Imports are sealed
+private file spools, with exact lengths and digests verified before adoption.
+Buffered, protected, nested and unsupported-codec workspaces retain 64 MiB per
+member and 256 MiB aggregate/container limits. A browsing spool alone never
+grants the larger write capability.
 
 The source's authority, captured revisions, physical identity and complete outer
 bytes are rechecked before staging and after destination staging. The latter
@@ -90,8 +94,11 @@ package sources remain unavailable for this move workflow.
 Preparation uses the verified copy overlay and a separately owned source-removal
 workspace. Both complete candidates are decoded, verified and presented before
 either physical archive changes. The borrowed source workspace stays clean.
-The combined packed candidate budget is 256 MiB, alongside existing per-member
-and per-container limits. Only successfully copied members enter removal;
+The combined packed candidate budget defaults to the sum of the individual
+workspace limits when either endpoint supports native streaming (up to 16 GiB
+for two 8 GiB workspaces). Each container and its expanded contents must still
+fit its own bound. Two buffered endpoints retain a combined 256 MiB budget.
+Only successfully copied members enter removal;
 skipped members and directories with remaining children stay in the source.
 Keep-both/replace/skip retain the existing copy semantics and metadata profile.
 
@@ -260,7 +267,7 @@ container or falls back to a direct provider upload.
 | ZIP | Plain or the supported AES-256 policy | UTC whole seconds in the supported signed timestamp range; otherwise DOS wall-time fields at two-second resolution | Mixed protected/plain files, legacy or other AES strengths, and encrypted directory entries are refused. |
 | 7z | Plain or original AES password, retaining original header visibility | Millisecond resolution | Header encryption is detected independently of file data, including containers with no ordinary files. |
 | TAR / CBT | Inspected regular-file profiles | Whole seconds for imports | Known ownership and PAX metadata are retained; unsupported extensions, links and special entries are refused. |
-| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress | Whole seconds for imports | Decoded TAR is limited to 64 MiB, including headers. Wrapper/profile inspection precedes writes. |
+| Compressed TAR | Supported TAR inside gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress | Whole seconds for imports | Eligible native TGZ/TAR.GZ streams within 8 GiB, including decoded TAR headers. Other wrappers and buffered paths retain 64 MiB. Wrapper/profile inspection precedes writes. |
 | CBZ / CB7 / unsigned JAR/WAR/EAR / KMZ | Corresponding ZIP/7z policy | Corresponding underlying format | Java signatures/digests block editing; KMZ needs a top-level KML; original member order is retained. |
 | gzip / bzip2 / XZ / Zstandard / LZ4 / LZMA / UNIX compress | Exactly one immediate ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. Recursive inner-container views cannot be flattened, including same-codec nested streams. |
 | AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. CPIO retains newc/CRC, odc or binary byte order; unsupported or overflowing metadata is refused. |
@@ -343,12 +350,21 @@ enables or disables 7z header protection.
 Paths are validated before they become members: no traversal, absolute paths,
 links or special entries, duplicate paths, or file/directory collisions.
 Limits are 200,000 explicit entries, 200 path components, 4,096 UTF-8 bytes per
-member path and 8 MiB of member names. Each decoded member is limited to
-64 MiB; total decoded content and packed output are each limited to 256 MiB.
-Nested routes are limited to eight levels. An import has a ten-minute overall
-staging deadline and 30-second source-call/read inactivity limits. Digest
-streams also have a five-minute whole-read bound and cancel their source
-subscription when cancelled or timed out.
+member path and 8 MiB of member names. Eligible native streamed workspaces
+limit each member, expanded total and packed output to 8 GiB; TGZ also limits
+its intermediate decoded TAR to 8 GiB. Buffered workspaces limit a decoded
+member to 64 MiB and total decoded content/packed output to 256 MiB. Buffered
+preview/editor reads retain their 64 MiB bound even in a streamed workspace.
+Nested writes remain buffered and limited to eight levels. Streamed 7z headers
+are bounded to 16 MiB, with bounded codec dictionaries.
+
+Imports retain a ten-minute staging floor and digest reads a five-minute floor;
+native large jobs scale their whole-operation time budget with declared bytes
+using a conservative 1 MiB/s allowance. Source-call/read inactivity is still
+limited to 30 seconds. Explicit caller deadlines are retained. Cancellation or
+timeout cancels the active subscription. Publication separately verifies exact
+stream length and SHA-256 while writing and on staged/installed readback; the
+existing lease, exclusive moves, journal and recovery authority remain in use.
 
 ## Move source disposition
 

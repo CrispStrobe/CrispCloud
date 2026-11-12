@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-13",
+  "timezone": "Europe/Berlin",
+  "scope": "Native archive writer codecs; generated payload streams and independent offline decoding",
+  "software": {
+    "dart": "3.13.7 stable linux_x64",
+    "flutter_toolchain_bundle": "3.47.8 (engine not executed)",
+    "python": "3.12.14",
+    "python_zlib_runtime": "1.3.2",
+    "libarchive": "3.7.4",
+    "koni_archive": "0.9.0",
+    "koni_codecs": "0.9.0",
+    "dart_archive": "4.6.0"
+  },
+  "native_resource_limit_bytes": 8589934592,
+  "rss_sampling_interval_ms": 20,
+  "rss_notes": "Only sampled peak-minus-baseline deltas were retained. Absolute baseline/peak values are not available for these writer runs. Includes JIT/allocator behavior; can miss peaks between samples; not app-level memory profiling.",
+  "payload": {
+    "path": "large.bin",
+    "mode_octal": "0644",
+    "mtime_utc": "2026-11-12T01:02:03Z",
+    "kind": "all-zero bytes generated in bounded chunks"
+  },
+  "cases": [
+    {
+      "format": "zip",
+      "profile": "DEFLATE",
+      "uncompressed_bytes": 2147483665,
+      "packed_bytes": 2087412,
+      "elapsed_ms": 13141,
+      "sampled_rss_increase_bytes": 7393280,
+      "largest_output_chunk_bytes": 4109,
+      "payload_sha256": "d9378e43c0e666027848e63668ba0a821b4726843e366626946e3823b477299e",
+      "packed_sha256": "1f9378c0e9174ba4035fbac29d2df69762353e069290ff3f30405816a38d438d",
+      "independent_reader": "Python zipfile",
+      "independent_full_content_check_passed": true
+    },
+    {
+      "format": "tgz",
+      "profile": "TAR plus DEFLATE",
+      "uncompressed_bytes": 2147483665,
+      "packed_bytes": 2087347,
+      "elapsed_ms": 13381,
+      "sampled_rss_increase_bytes": 63127552,
+      "largest_output_chunk_bytes": 4160,
+      "payload_sha256": "d9378e43c0e666027848e63668ba0a821b4726843e366626946e3823b477299e",
+      "packed_sha256": "0bd1354a50fd31be4b249ff8ca0d35e47cc53ae9521ac21f990549247bf0883b",
+      "independent_reader": "Python tarfile",
+      "independent_full_content_check_passed": true
+    },
+    {
+      "format": "7z",
+      "profile": "LZMA2 with independently reset 262144-byte blocks",
+      "uncompressed_bytes": 2147483665,
+      "packed_bytes": 925824,
+      "elapsed_ms": 46518,
+      "sampled_rss_increase_bytes": 67641344,
+      "largest_output_chunk_bytes": 262144,
+      "payload_sha256": "d9378e43c0e666027848e63668ba0a821b4726843e366626946e3823b477299e",
+      "packed_sha256": "547028ffb419c92de617c08163e47012f73e498154db823569dd9112e126bfbc",
+      "independent_reader": "libarchive 3.7.4",
+      "independent_full_content_check_passed": true
+    },
+    {
+      "format": "zip64",
+      "profile": "DEFLATE; member exceeds 4 GiB",
+      "uncompressed_bytes": 4294967313,
+      "packed_bytes": 4174781,
+      "elapsed_ms": 27558,
+      "sampled_rss_increase_bytes": 126951424,
+      "largest_output_chunk_bytes": 4109,
+      "payload_sha256": "0a05f7ccc43a8e6c830fd3b8ad9dfc0129ce8f65fd6cc96be998988a1871fe21",
+      "packed_sha256": null,
+      "independent_reader": "Python zipfile",
+      "independent_full_content_check_passed": true
+    }
+  ],
+  "focused_checks_passed": [
+    "ZIP stored and deflated; 7z Copy and all three bounded LZMA2 dictionary tiers; TAR; TGZ; GZIP",
+    "Unicode paths, empty file/directory, UTC modification seconds, POSIX modes",
+    "Gzip original name/comment/time/OS header preservation",
+    "Unsafe path, logical/output size, growing/truncated source and protected-profile rejection",
+    "Cancellation closes source stream; sink backpressure stops read-ahead",
+    "ZIP64 65536-entry archive independently read",
+    "ZIP64 >4GiB member header preflight and actual full-payload test",
+    "Focused Dart analyzer reports no issues"
+  ],
+  "limitations": [
+    "Large tests establish expanded member sizes, not physical multi-gigabyte container publication",
+    "Encrypted streaming profile, split-volume creation and arbitrary nested write-back excluded",
+    "Metadata and path resource bounds remain",
+    "Flutter launcher blocked by automatic approval review; no Flutter engine/widget/UI runtime result claimed"
+  ]
+}

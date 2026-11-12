@@ -36,6 +36,8 @@ class _NativeSpool extends ArchiveOutputSpool {
   @override
   int get length => _length;
   bool _finished = false, _disposed = false, _failed = false;
+  @override
+  bool get isSealed => _finished && !_disposed && !_failed;
   Completer<void>? _operation;
   Future<void>? _disposal;
   final _sources = <_FileSource>{};
@@ -87,7 +89,14 @@ class _NativeSpool extends ArchiveOutputSpool {
             ? at + 256 * 1024
             : bytes.length;
         final chunk = Uint8List.fromList(bytes.sublist(at, end));
-        await output!.writeFrom(chunk);
+        // Sparse zero runs retain exact logical bytes while avoiding needless
+        // disk allocation for large sparse inputs and decoded zero-filled TARs.
+        // Filesystems without sparse allocation still keep the same semantics.
+        if (chunk.every((byte) => byte == 0)) {
+          await output!.setPosition(_length + chunk.length);
+        } else {
+          await output!.writeFrom(chunk);
+        }
         _length += chunk.length;
       }
     } catch (_) {
@@ -104,6 +113,7 @@ class _NativeSpool extends ArchiveOutputSpool {
     if (_finished) return;
     _begin();
     try {
+      await output!.truncate(_length);
       await output!.flush();
       await output!.close();
       output = null;

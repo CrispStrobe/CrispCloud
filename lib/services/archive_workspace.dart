@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
@@ -11,6 +12,9 @@ import 'archive_container_publisher.dart';
 import 'archive_endpoint_policy.dart';
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
+import 'archive_output_spool.dart';
+import 'archive_streamed_reader.dart';
+import 'archive_streaming_writer.dart';
 import 'archive_zip_package_policy.dart';
 import 'archive_publication_journal.dart';
 import 'archive_browser_session.dart';
@@ -18,6 +22,7 @@ import 'archive_member_index.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
 import 'file_operation_service.dart';
+import 'file_operation_backend.dart' show LocalOperationBackend;
 import 'storage_transfer_contract.dart';
 
 class ArchiveWorkspace {
@@ -28,8 +33,13 @@ class ArchiveWorkspace {
     this._fingerprint,
     this.password,
     this._policy,
-    this.journal,
-  ) {
+    this.journal, {
+    bool streaming = false,
+    ArchiveOutputSpool? snapshot,
+    // ignore: prefer_initializing_formals
+  }) : _streaming = streaming,
+       _snapshotSpool = snapshot {
+    if (snapshot != null) _ownedSpools.add(snapshot);
     _loadEntries();
   }
   final FileOperationBackend source;
@@ -40,6 +50,21 @@ class ArchiveWorkspace {
   final String? password;
   ArchiveEndpointPolicy _policy;
   final ArchivePublicationJournal journal;
+  final bool _streaming;
+  ArchiveOutputSpool? _snapshotSpool;
+  final _ownedSpools = <ArchiveOutputSpool>{};
+  ArchiveWorkspaceReview? _latestReview;
+  bool get supportsLargeFiles => _streaming;
+  int get maxMemberBytes =>
+      _streaming ? kArchiveStreamingLimit : kArchiveReadLimit;
+  int get maxContainerBytes =>
+      _streaming ? kArchiveStreamingLimit : ArchiveService.maxArchiveBytes;
+  int get maxExpandedBytes =>
+      _streaming ? kArchiveStreamingLimit : ArchiveService.maxExtractedBytes;
+  int get expandedBytes => _entries.values.fold<int>(
+    0,
+    (sum, entry) => sum + (entry.isFolder ? 0 : entry.size),
+  );
   final _entries = <String, _ArchiveEntry>{};
   bool _closed = false;
   bool _dirty = false;
@@ -147,6 +172,92 @@ class ArchiveWorkspace {
     return builder.takeBytes();
   }
 
+  static bool _streamableName(String name) {
+    final lower = name.toLowerCase();
+    return const [
+      '.zip',
+      '.cbz',
+      '.7z',
+      '.cb7',
+      '.tar',
+      '.cbt',
+      '.tgz',
+      '.tar.gz',
+    ].any(lower.endsWith);
+  }
+
+  /// Captures a repeatable private snapshot without retaining file contents in
+  /// the Dart heap. Both the metadata witness and the exact byte count must
+  /// still match after the read; publication later checks the full digest again.
+  static Future<({ArchiveOutputSpool spool, String digest})> _captureSpool(
+    FileOperationBackend source,
+    FileItem file, {
+    required int maxBytes,
+    bool Function()? isCancelled,
+  }) async {
+    if (file.size == null || file.size! < 0 || file.size! > maxBytes) {
+      throw const ArchiveViewException(
+        'Archive input exceeds its streamed limit.',
+      );
+    }
+    if (file.size! > kArchiveReadLimit &&
+        !source.capabilities.boundedDownload &&
+        !(source is ArchiveOperationBackend &&
+            source.workspace.supportsLargeFiles)) {
+      throw const ArchiveViewException(
+        'This source does not provide bounded large-file reads.',
+      );
+    }
+    void check() {
+      if (!source.isCurrent) throw StateError('The archive source changed.');
+      if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    }
+
+    check();
+    final spool = await ArchiveOutputSpool.create(maxBytes: maxBytes);
+    try {
+      var length = 0;
+      Stream<List<int>> capture() async* {
+        await for (final chunk in source.readFile(file)) {
+          check();
+          if (chunk.length > file.size! - length) {
+            throw const ArchiveViewException(
+              'The captured archive input grew.',
+            );
+          }
+          if (chunk is! Uint8List &&
+              chunk.any((byte) => byte < 0 || byte > 255)) {
+            throw const ArchiveViewException(
+              'The captured input contains invalid bytes.',
+            );
+          }
+          for (var at = 0; at < chunk.length; at += 256 * 1024) {
+            final end = at + 256 * 1024 < chunk.length
+                ? at + 256 * 1024
+                : chunk.length;
+            final owned = Uint8List.fromList(chunk.sublist(at, end));
+            await spool.write(owned);
+            length += owned.length;
+            check();
+            yield owned;
+          }
+        }
+      }
+
+      final digest = await sha256.bind(capture()).single;
+      check();
+      if (length != file.size ||
+          !sameArchiveFile(file, await source.stat(file.path!))) {
+        throw StateError('The captured archive input changed while reading.');
+      }
+      await spool.finish();
+      return (spool: spool, digest: digest.toString());
+    } catch (_) {
+      await spool.dispose();
+      rethrow;
+    }
+  }
+
   /// Opens a nested route through owned workspaces. Each inner save replaces
   /// its member in the parent working copy; only the outermost save reaches
   /// physical storage, through the existing conflict and verification gates.
@@ -239,6 +350,65 @@ class ArchiveWorkspace {
     if (current == null || !sameArchiveFile(file, current)) {
       throw StateError('The captured archive changed before opening.');
     }
+    if (!kIsWeb &&
+        source is LocalOperationBackend &&
+        _streamableName(file.name)) {
+      final captured = await _captureSpool(
+        source,
+        current,
+        maxBytes: kArchiveStreamingLimit,
+      );
+      ViewerArchive? opened;
+      try {
+        if (expectedFingerprint != null &&
+            captured.digest != expectedFingerprint) {
+          throw StateError(
+            'The archive changed since it was opened. Refresh it before editing.',
+          );
+        }
+        final result = await openStreamedArchiveSource(
+          await captured.spool.openByteSource(),
+          name: file.name,
+          password: password,
+          maxBytes: kArchiveStreamingLimit,
+        );
+        opened = result.archive;
+        if (!result.policy.encrypted &&
+            supportsStreamingArchiveWriting(result.policy.format)) {
+          return ArchiveWorkspace._(
+            source,
+            current,
+            result.archive,
+            captured.digest,
+            password,
+            result.policy,
+            journal ?? ArchivePublicationJournal(),
+            streaming: true,
+            snapshot: captured.spool,
+          );
+        }
+        // Protected small containers keep the existing password and metadata
+        // preservation path. No large encrypted source is buffered as fallback.
+        if (current.size! > ArchiveService.maxArchiveBytes) {
+          throw const ArchiveViewException(
+            'Large encrypted archive editing is not supported by this codec.',
+          );
+        }
+        await opened.close();
+        opened = null;
+      } on ArchiveStreamingUnsupported {
+        await opened?.close();
+        if (current.size! > ArchiveService.maxArchiveBytes) {
+          await captured.spool.dispose();
+          rethrow;
+        }
+      } catch (_) {
+        await opened?.close();
+        await captured.spool.dispose();
+        rethrow;
+      }
+      await captured.spool.dispose();
+    }
     final bytes = await _read(source, current, ArchiveService.maxArchiveBytes);
     if (!sameArchiveFile(current, await source.stat(current.path!)) ||
         current.size != bytes.length) {
@@ -317,11 +487,14 @@ class ArchiveWorkspace {
         member: entry.value,
       );
     }
-    _validateEntries(_entries);
+    _validateEntries(_entries, maxBytes: maxExpandedBytes);
     _revision++;
   }
 
-  static void _validateEntries(Map<String, _ArchiveEntry> entries) {
+  static void _validateEntries(
+    Map<String, _ArchiveEntry> entries, {
+    int maxBytes = ArchiveService.maxExtractedBytes,
+  }) {
     if (entries.length > 200000) {
       throw const ArchiveViewException(
         'Archive exceeds the 200,000 member limit.',
@@ -340,8 +513,10 @@ class ArchiveWorkspace {
         );
       }
       if (!entry.isFolder) total += entry.size;
-      if (total > ArchiveService.maxExtractedBytes) {
-        throw const ArchiveViewException('Archive contents exceed 256 MiB.');
+      if (total > maxBytes) {
+        throw ArchiveViewException(
+          'Archive contents exceed ${maxBytes ~/ (1024 * 1024)} MiB.',
+        );
       }
       var parent = p.posix.dirname(entry.name);
       while (parent != '.' && parent != '/') {
@@ -361,7 +536,7 @@ class ArchiveWorkspace {
         'Finish or recover the current archive publication before changing its draft.',
       );
     }
-    _validateEntries(entries);
+    _validateEntries(entries, maxBytes: maxExpandedBytes);
     for (final entry in entries.values) {
       final privilege = (entry.mode ?? 0) & 0xc00;
       if (privilege != 0 &&
@@ -431,7 +606,9 @@ class ArchiveWorkspace {
         size: folder ? null : entry.size,
         updatedAt: folder ? _entries['$prefix$name']?.modified : entry.modified,
         metadata: {
-          'version': entry.bytes == null
+          'version': entry.contentSha256 != null
+              ? '${entry.contentSha256}:${entry.name}'
+              : entry.bytes == null
               ? '$_fingerprint:${entry.member?.index}:${entry.name}'
               : '${sha256.convert(entry.bytes!)}:${entry.name}',
         },
@@ -451,7 +628,47 @@ class ArchiveWorkspace {
     if (entry == null || entry.isFolder) {
       throw StateError('Not an archive file: $path');
     }
+    if (entry.spool != null) {
+      if (entry.size > kArchiveReadLimit) {
+        throw const ArchiveViewException(
+          'This member is too large for a buffered editor. Copy it out using the streamed transfer.',
+        );
+      }
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in openRead(path)) {
+        bytes.add(chunk);
+      }
+      return bytes.takeBytes();
+    }
     return entry.bytes ?? _archive.readMember(entry.member!);
+  }
+
+  Stream<List<int>> openRead(String path) async* {
+    _check();
+    final name = path.replaceFirst(RegExp(r'^/+'), '');
+    final entry = _entries[name];
+    if (entry == null || entry.isFolder) {
+      throw StateError('Not an archive file: $path');
+    }
+    final generation = _revision;
+    final stream = entry.spool != null
+        ? entry.spool!.openRead()
+        : entry.bytes != null
+        ? Stream<List<int>>.value(entry.bytes!)
+        : _archive.openMember(entry.member!, maxBytes: maxMemberBytes);
+    var received = 0;
+    await for (final chunk in stream) {
+      _check();
+      if (_revision != generation || chunk.length > entry.size - received) {
+        throw StateError('The archive member changed during its transfer.');
+      }
+      received += chunk.length;
+      yield chunk;
+    }
+    _check();
+    if (_revision != generation || received != entry.size) {
+      throw StateError('The archive member ended at an unexpected size.');
+    }
   }
 
   void replace(String path, Uint8List bytes, {DateTime? modified, int? mode}) {
@@ -521,8 +738,22 @@ class ArchiveWorkspace {
       if (previous != null && previous.isFolder != item.isFolder) {
         throw StateError('Archive member type changed: $name');
       }
-      if (!item.isFolder &&
-          (item.bytes == null || item.bytes!.length > kArchiveReadLimit)) {
+      if (item.isFolder &&
+              (item.bytes != null ||
+                  item.spool != null ||
+                  item.contentSha256 != null) ||
+          !item.isFolder &&
+              (item.bytes == null && item.spool == null ||
+                  item.bytes != null && item.spool != null ||
+                  item.bytes != null &&
+                      item.bytes!.length > kArchiveReadLimit ||
+                  item.spool != null &&
+                      (!_streaming ||
+                          !item.spool!.isSealed ||
+                          item.spool!.length > maxMemberBytes ||
+                          item.contentSha256 == null ||
+                          !RegExp(r'^[a-f0-9]{64}$')
+                              .hasMatch(item.contentSha256!)))) {
         throw const ArchiveViewException(
           'An imported member exceeds its size limit.',
         );
@@ -532,6 +763,8 @@ class ArchiveWorkspace {
         item.isFolder,
         member: previous?.member,
         bytes: item.bytes == null ? null : Uint8List.fromList(item.bytes!),
+        spool: item.spool,
+        contentSha256: item.contentSha256,
         modified: item.isFolder && previous != null
             ? previous.modified
             : _policy.normalizeImportedTime(item.modified) ??
@@ -541,7 +774,12 @@ class ArchiveWorkspace {
             : item.mode ?? previous?.mode,
       );
     }
-    if (items.isNotEmpty) _publish(updated);
+    if (items.isNotEmpty) {
+      _publish(updated);
+      _ownedSpools.addAll(
+        items.map((item) => item.spool).whereType<ArchiveOutputSpool>(),
+      );
+    }
   }
 
   /// Adopts selected directory-sync imports and exact removals together. A
@@ -743,15 +981,21 @@ class ArchiveWorkspace {
             entry.isFolder ||
             entry.size != member.size ||
             member.size < 0 ||
-            member.size > kArchiveReadLimit ||
+            member.size > maxMemberBytes ||
             member.sha256 == null ||
             !RegExp(r'^[a-f0-9]{64}$').hasMatch(member.sha256!)) {
           throw StateError('The copied source member changed: $name');
         }
-        final bytes = await read('/$name');
+        final digest = await sha256
+            .bind(
+              openRead('/$name').map((chunk) {
+                check();
+                return chunk;
+              }),
+            )
+            .single;
         check();
-        if (bytes.length != member.size ||
-            sha256.convert(bytes).toString() != member.sha256) {
+        if (digest.toString() != member.sha256) {
           throw StateError('Copied source bytes do not match: $name');
         }
         files.add(name);
@@ -802,27 +1046,47 @@ class ArchiveWorkspace {
       if (isCancelled?.call() ?? false) {
         throw StateError('Archive move cancelled.');
       }
-      final original = await read(entry.source.path!);
+      final original = await sha256.bind(openRead(entry.source.path!)).single;
       final target = await plan.destination.stat(entry.destination);
       if (target == null || target.isFolder || target.isSymlink == true) {
         throw StateError(
           'The copied destination is missing: ${entry.destination}',
         );
       }
-      final copied = await _read(
-        plan.destination,
-        target,
-        kArchiveReadLimit,
-        isCancelled: isCancelled,
-      );
+      if (target.size == null ||
+          target.size! > maxMemberBytes ||
+          target.size != entry.source.size ||
+          target.size! > kArchiveReadLimit &&
+              !plan.destination.capabilities.boundedDownload) {
+        throw StateError(
+          'The copied destination cannot be verified with bounded reads.',
+        );
+      }
+      var count = 0;
+      final copied = await sha256
+          .bind(
+            plan.destination.readFile(target).map((chunk) {
+              _check(writing: true);
+              if (!plan.destination.isCurrent ||
+                  (isCancelled?.call() ?? false)) {
+                throw const FileOperationCancelled();
+              }
+              if (chunk.length > target.size! - count) {
+                throw StateError('The copied destination grew.');
+              }
+              count += chunk.length;
+              return chunk;
+            }),
+          )
+          .single;
       final after = await plan.destination.stat(entry.destination);
       if (!plan.destination.isCurrent ||
           after == null ||
           after.uuid != target.uuid ||
           after.size != target.size ||
           after.updatedAt != target.updatedAt ||
-          sha256.convert(original).toString() !=
-              sha256.convert(copied).toString()) {
+          count != target.size ||
+          original != copied) {
         throw StateError(
           'The copied destination changed: ${entry.destination}',
         );
@@ -882,6 +1146,8 @@ class ArchiveWorkspace {
         entry.value.isFolder,
         member: entry.value.member,
         bytes: entry.value.bytes,
+        spool: entry.value.spool,
+        contentSha256: entry.value.contentSha256,
         modified: entry.value.modified,
         mode: entry.value.mode,
       );
@@ -1036,6 +1302,8 @@ class ArchiveWorkspace {
                 entry.value.isFolder,
                 member: entry.value.member,
                 bytes: entry.value.bytes,
+                spool: entry.value.spool,
+                contentSha256: entry.value.contentSha256,
                 modified: entry.value.modified,
                 mode: entry.value.mode,
               );
@@ -1058,10 +1326,15 @@ class ArchiveWorkspace {
   }) async {
     _check(writing: true);
     final staged = <String, _ArchiveEntry>{};
+    final capturedSpools = <ArchiveOutputSpool>[];
+    final generation = _revision;
     final visited = <String>{};
     var total = _entries.values.fold<int>(0, (sum, entry) => sum + entry.size);
     Future<void> add(FileItem file, String name, int depth) async {
       _check(writing: true);
+      if (_revision != generation) {
+        throw StateError('The archive draft changed during import.');
+      }
       if (!input.isCurrent) throw StateError('The added-file source changed.');
       if (isCancelled?.call() ?? false) {
         throw StateError('Archive update cancelled.');
@@ -1103,6 +1376,31 @@ class ArchiveWorkspace {
           await add(child, '$name/${child.name}', depth + 1);
         }
       } else {
+        if (_streaming) {
+          final captured = await _captureSpool(
+            input,
+            file,
+            maxBytes: maxMemberBytes,
+            isCancelled: isCancelled,
+          );
+          capturedSpools.add(captured.spool);
+          total += captured.spool.length - (_entries[name]?.size ?? 0);
+          if (total > maxExpandedBytes) {
+            throw const ArchiveViewException(
+              'Archive contents exceed the native streaming limit.',
+            );
+          }
+          staged[name] = _ArchiveEntry(
+            name,
+            false,
+            member: _entries[name]?.member,
+            spool: captured.spool,
+            contentSha256: captured.digest,
+            modified: _policy.normalizeImportedTime(file.updatedAt),
+            mode: _entries[name]?.mode,
+          );
+          return;
+        }
         final bytes = await _read(
           input,
           file,
@@ -1127,13 +1425,39 @@ class ArchiveWorkspace {
     final prefix = directory == '/'
         ? ''
         : '${directory.replaceFirst(RegExp(r'^/+'), '')}/';
-    for (final file in files) {
-      await add(file, '$prefix${file.name}', 0);
+    try {
+      for (final file in files) {
+        await add(file, '$prefix${file.name}', 0);
+      }
+      if (_revision != generation) {
+        throw StateError('The archive draft changed during import.');
+      }
+      _publish({..._entries, ...staged});
+      _ownedSpools.addAll(capturedSpools);
+    } catch (_) {
+      for (final spool in capturedSpools) {
+        await spool.dispose();
+      }
+      rethrow;
     }
-    _publish({..._entries, ...staged});
   }
 
   Future<Uint8List> repack({bool Function()? isCancelled}) async {
+    return collectArchiveWrite(
+      (sink) => _writePacked(
+        sink,
+        maxOutputBytes: ArchiveService.maxArchiveBytes,
+        isCancelled: isCancelled,
+      ),
+      maxBytes: ArchiveService.maxArchiveBytes,
+    );
+  }
+
+  Future<void> _writePacked(
+    Future<void> Function(List<int>) sink, {
+    required int maxOutputBytes,
+    bool Function()? isCancelled,
+  }) async {
     _check(writing: true);
     void checkPacking() {
       _check(writing: true);
@@ -1203,31 +1527,43 @@ class ArchiveWorkspace {
               ? null
               : () async* {
                   checkPacking();
-                  yield await read('/${entry.name}');
+                  yield* openRead('/${entry.name}');
                 },
         ),
     ];
     final packageIssue = await archiveZipPackageIssue(file.name, entries);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
-    return collectArchiveWrite(
-      (sink) => writeArchiveEntries(
+    if (_streaming) {
+      await writeStreamingArchiveEntries(
         _policy.format,
         entries,
         sink: sink,
         source: _policy.inspection,
-        compression: _policy.compression,
-        singlePayload: _policy.singlePayload,
         gzipHeader: _policy.gzipHeader,
-        xzCheck: _policy.xzCheck,
-        password: encrypted ? password : null,
-        encryptNames: encryptNames,
-        maxOutputBytes: ArchiveService.maxArchiveBytes,
+        maxOutputBytes: maxOutputBytes,
         isCancelled: () {
           checkPacking();
           return false;
         },
-      ),
-      maxBytes: ArchiveService.maxArchiveBytes,
+      );
+      return;
+    }
+    await writeArchiveEntries(
+      _policy.format,
+      entries,
+      sink: sink,
+      source: _policy.inspection,
+      compression: _policy.compression,
+      singlePayload: _policy.singlePayload,
+      gzipHeader: _policy.gzipHeader,
+      xzCheck: _policy.xzCheck,
+      password: encrypted ? password : null,
+      encryptNames: encryptNames,
+      maxOutputBytes: maxOutputBytes,
+      isCancelled: () {
+        checkPacking();
+        return false;
+      },
     );
   }
 
@@ -1240,6 +1576,7 @@ class ArchiveWorkspace {
     if (_pendingPublication != null && _pendingReview != null) {
       return _pendingReview!;
     }
+    if (_latestReview?.isCurrent == true) return _latestReview!;
     final generations = <ArchiveWorkspace, int>{};
     ArchiveWorkspace? level = this;
     while (level != null) {
@@ -1247,10 +1584,40 @@ class ArchiveWorkspace {
       level = level._parentWorkspace;
     }
     _saving = true;
+    ArchiveOutputSpool? spool;
     try {
-      final bytes = await repack(isCancelled: isCancelled);
-      final checked = await _verifyPacked(bytes, isCancelled: isCancelled);
-      await checked.close();
+      Uint8List? bytes;
+      if (_streaming) {
+        spool = await ArchiveOutputSpool.create(maxBytes: maxContainerBytes);
+        await _writePacked(
+          spool.write,
+          maxOutputBytes: maxContainerBytes,
+          isCancelled: isCancelled,
+        );
+        await spool.finish();
+      } else {
+        bytes = await repack(isCancelled: isCancelled);
+      }
+      final checked = await _verifyPacked(
+        bytes,
+        spool: spool,
+        isCancelled: isCancelled,
+      );
+      await checked.archive.close();
+      final digest = spool == null
+          ? sha256.convert(bytes!).toString()
+          : (await sha256
+                    .bind(
+                      spool.openRead().map((chunk) {
+                        _check(writing: true);
+                        if (isCancelled?.call() ?? false) {
+                          throw const FileOperationCancelled();
+                        }
+                        return chunk;
+                      }),
+                    )
+                    .single)
+                .toString();
       final changes = <ArchiveWorkspaceChange>[];
       final retained = <String>{};
       for (final entry in _entries.values) {
@@ -1268,7 +1635,7 @@ class ArchiveWorkspace {
             ),
           );
         }
-        if (entry.bytes != null || original == null) {
+        if (entry.bytes != null || entry.spool != null || original == null) {
           changes.add(
             ArchiveWorkspaceChange(
               entry.isFolder
@@ -1297,12 +1664,23 @@ class ArchiveWorkspace {
       final result = ArchiveWorkspaceReview._(
         this,
         generations,
-        bytes.asUnmodifiableView(),
+        bytes?.asUnmodifiableView(),
         List.unmodifiable(changes),
+        spool: spool,
+        sha256: digest,
       );
       _validateReview(result);
+      final stale = _latestReview?.spool;
+      if (stale != null && stale != _snapshotSpool && stale != spool) {
+        await stale.dispose();
+        _ownedSpools.remove(stale);
+      }
+      if (spool != null) _ownedSpools.add(spool);
+      spool = null;
+      _latestReview = result;
       return result;
     } finally {
+      await spool?.dispose();
       _saving = false;
     }
   }
@@ -1319,15 +1697,23 @@ class ArchiveWorkspace {
     }
   }
 
-  Future<ViewerArchive> _verifyPacked(
-    Uint8List bytes, {
+  Future<({ViewerArchive archive, ArchiveEndpointPolicy policy})> _verifyPacked(
+    Uint8List? bytes, {
+    ArchiveOutputSpool? spool,
     bool Function()? isCancelled,
   }) async {
-    final replacement = await openViewerArchive(
-      bytes,
-      name: file.name,
-      password: password,
-    );
+    final streamed = spool == null
+        ? null
+        : await openStreamedArchiveSource(
+            await spool.openByteSource(),
+            name: file.name,
+            password: password,
+            maxBytes: maxContainerBytes,
+            isCancelled: isCancelled,
+          );
+    final replacement =
+        streamed?.archive ??
+        await openViewerArchive(bytes!, name: file.name, password: password);
     try {
       final actual = ArchiveMemberIndex(replacement).members;
       if (_entries.length != actual.length ||
@@ -1342,6 +1728,7 @@ class ArchiveWorkspace {
         final expected = _entries[item.key]!;
         final member = item.value;
         if (member.isFile == expected.isFolder ||
+            member.isFile && member.size != expected.size ||
             expected.modified != null &&
                 (member.modified == null ||
                     !member.modified!.isAtSameMomentAs(expected.modified!)) ||
@@ -1353,9 +1740,27 @@ class ArchiveWorkspace {
           );
         }
         if (member.isFile) {
-          final decoded = await replacement.readMember(member);
-          final original = await read('/${item.key}');
-          if (sha256.convert(decoded) != sha256.convert(original) ||
+          Stream<List<int>> checked(Stream<List<int>> stream) async* {
+            await for (final chunk in stream) {
+              _check(writing: true);
+              if (isCancelled?.call() ?? false) {
+                throw const FileOperationCancelled();
+              }
+              yield chunk;
+            }
+          }
+
+          final decoded = await sha256
+              .bind(
+                checked(
+                  replacement.openMember(member, maxBytes: maxMemberBytes),
+                ),
+              )
+              .single;
+          final original = await sha256
+              .bind(checked(openRead('/${item.key}')))
+              .single;
+          if (decoded != original ||
               encrypted &&
                   (_policy.format == ArchiveEndpointFormat.zip ||
                       member.size > 0) &&
@@ -1368,12 +1773,14 @@ class ArchiveWorkspace {
         }
         await Future<void>.delayed(Duration.zero);
       }
-      final policy = await ArchiveEndpointPolicy.inspect(
-        bytes,
-        file.name,
-        replacement,
-        password,
-      );
+      final policy =
+          streamed?.policy ??
+          await ArchiveEndpointPolicy.inspect(
+            bytes!,
+            file.name,
+            replacement,
+            password,
+          );
       if (policy.reason != null ||
           policy.format != _policy.format ||
           policy.encrypted != encrypted ||
@@ -1382,7 +1789,7 @@ class ArchiveWorkspace {
           'Repacked archive protection policy could not be preserved.',
         );
       }
-      return replacement;
+      return (archive: replacement, policy: policy);
     } catch (_) {
       await replacement.close();
       rethrow;
@@ -1443,16 +1850,13 @@ class ArchiveWorkspace {
     _saving = true;
     ViewerArchive? replacement;
     try {
-      replacement = await _verifyPacked(
-        selected.bytes,
+      final checked = await _verifyPacked(
+        selected._bytes,
+        spool: selected.spool,
         isCancelled: isCancelled,
       );
-      final replacementPolicy = await ArchiveEndpointPolicy.inspect(
-        selected.bytes,
-        file.name,
-        replacement,
-        password,
-      );
+      replacement = checked.archive;
+      final replacementPolicy = checked.policy;
       _validateReview(selected);
       if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
       ArchivePublicationReceipt? receipt;
@@ -1478,10 +1882,12 @@ class ArchiveWorkspace {
       } else {
         final publisher = ArchiveContainerPublisher(source, journal);
         try {
-          receipt = await publisher.publish(
+          receipt = await publisher.publishStream(
             original: file,
             originalSha256: _fingerprint,
-            bytes: selected.bytes,
+            length: selected.packedBytes,
+            candidateSha256: selected.sha256,
+            openRead: selected.openRead,
             retry: _pendingPublication,
             isCancelled: () => _closed || (isCancelled?.call() ?? false),
             onPhase: onPhase,
@@ -1501,12 +1907,19 @@ class ArchiveWorkspace {
       _archive = replacement;
       _policy = replacementPolicy;
       replacement = null;
-      _fingerprint = sha256.convert(selected.bytes).toString();
+      _fingerprint = selected.sha256;
       _loadEntries();
       _dirty = false;
       _pendingPublication = null;
       _pendingReview = null;
+      _latestReview = null;
       await previous.close();
+      _snapshotSpool = selected.spool;
+      for (final stale in _ownedSpools.toList()) {
+        if (stale == _snapshotSpool) continue;
+        await stale.dispose();
+        _ownedSpools.remove(stale);
+      }
       if (_closed) await _archive.close();
       // A failed enclosing publication retains its already verified child and
       // parent draft. The next explicit save retries the recorded candidate.
@@ -1568,7 +1981,14 @@ class ArchiveWorkspace {
     try {
       await _archive.close();
     } finally {
-      await _parentWorkspace?.close();
+      try {
+        for (final spool in _ownedSpools) {
+          await spool.dispose();
+        }
+        _ownedSpools.clear();
+      } finally {
+        await _parentWorkspace?.close();
+      }
     }
   }
 }
@@ -1626,6 +2046,8 @@ class _ArchiveEntry {
     this.isFolder, {
     this.member,
     this.bytes,
+    this.spool,
+    this.contentSha256,
     DateTime? modified,
     int? mode,
   }) : _modified = modified, // ignore: prefer_initializing_formals
@@ -1634,11 +2056,13 @@ class _ArchiveEntry {
   final bool isFolder;
   final ViewerArchiveMember? member;
   final Uint8List? bytes;
+  final ArchiveOutputSpool? spool;
+  final String? contentSha256;
   final DateTime? _modified;
   final int? _mode;
   DateTime? get modified => _modified ?? member?.modified;
   int? get mode => _mode ?? member?.posixMode;
-  int get size => bytes?.length ?? member?.size ?? 0;
+  int get size => spool?.length ?? bytes?.length ?? member?.size ?? 0;
 }
 
 enum ArchiveWorkspaceChangeKind {
@@ -1685,12 +2109,19 @@ class ArchiveWorkspaceImport {
     this.path, {
     required this.isFolder,
     this.bytes,
+    this.spool,
+    this.contentSha256,
     this.modified,
     this.mode,
   });
   final String path;
   final bool isFolder;
   final Uint8List? bytes;
+
+  /// A sealed, verified native snapshot. Ownership transfers only when
+  /// [ArchiveWorkspace.applyImport] succeeds.
+  final ArchiveOutputSpool? spool;
+  final String? contentSha256;
   final DateTime? modified;
   final int? mode;
 }
@@ -1714,14 +2145,25 @@ class ArchiveWorkspaceReview {
   const ArchiveWorkspaceReview._(
     this.workspace,
     this._generations,
-    this.bytes,
-    this.changes,
-  );
+    this._bytes,
+    this.changes, {
+    this.spool,
+    required this.sha256,
+  });
   final ArchiveWorkspace workspace;
   final Map<ArchiveWorkspace, int> _generations;
-  final Uint8List bytes;
+  final Uint8List? _bytes;
+  final ArchiveOutputSpool? spool;
+  final String sha256;
+  Uint8List get bytes =>
+      _bytes ??
+      (throw StateError(
+        'This review is streamed; use openRead instead of allocating its bytes.',
+      ));
+  Stream<List<int>> openRead() =>
+      spool?.openRead() ?? Stream<List<int>>.value(bytes);
   final List<ArchiveWorkspaceChange> changes;
-  int get packedBytes => bytes.length;
+  int get packedBytes => spool?.length ?? bytes.length;
   bool get isCurrent => _generations.entries.every(
     (entry) => entry.key.isCurrent && entry.key._revision == entry.value,
   );
@@ -1768,7 +2210,7 @@ class ArchiveOperationBackend extends FileOperationBackend {
 
   @override
   Stream<List<int>> readFile(FileItem file) async* {
-    yield await workspace.read(file.path!);
+    yield* workspace.openRead(file.path!);
   }
 
   /// Archive metadata is optional per member; implicit directories and some

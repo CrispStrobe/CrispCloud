@@ -14,7 +14,7 @@
 //   font     — font specimen
 //   csv      — parsed table (CSV/TSV)
 //   office   — DOCX/XLSX/PPTX/ODT/ODS/ODP/EPUB text extraction
-//   archive  — bounded archive/disk-image listing and nested member previews
+//   archive  — streamed native containers and bounded nested member previews
 //
 // Hex, ASCII, Binary and Text always work, even for files too large to load
 // fully, thanks to ViewBytesSource streaming on native platforms.
@@ -45,8 +45,10 @@ import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../services/archive_streamed_reader.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/archive_viewer_source.dart';
+import '../services/archive_viewer_streaming.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'ebook_editor_dialog.dart';
@@ -1050,6 +1052,72 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     unawaited(source.close());
   }
 
+  Future<({ViewerArchive archive, ArchiveViewerSource source})>
+  _openArchiveHandle(
+    ViewBytesSource source, {
+    required int prepareToken,
+    required int loadToken,
+    required String name,
+    required bool Function() isCurrent,
+    String? password,
+  }) async {
+    var borrowed = _borrowArchiveSource(source, prepareToken, loadToken, name);
+    var retained = false;
+    try {
+      ViewerArchive archive;
+      final streamed =
+          !kIsWeb &&
+          widget.bytesOverride == null &&
+          _expansionName == null &&
+          isStreamedArchiveViewerName(name) &&
+          matchesStreamedArchiveViewerSignature(
+            name,
+            await borrowed.read(0, source.size < 8 ? source.size : 8),
+          );
+      if (streamed) {
+        try {
+          archive = (await openStreamedArchiveSource(
+            borrowed,
+            name: name,
+            password: password,
+            isCancelled: () => !isCurrent(),
+          )).archive;
+          // Preservation restrictions govern edits, not F3's read-only view.
+        } on ArchiveViewException catch (error) {
+          if (!useBoundedArchiveViewerFallback(error)) rethrow;
+          // Failed readers own and close their adapter. The viewer still owns
+          // the underlying file and its access grant; fallback must borrow it
+          // again so password retries never reuse a closed adapter.
+          _releaseArchiveSource(borrowed);
+          if (!isCurrent()) {
+            throw const ArchiveViewException('Archive opening was cancelled.');
+          }
+          borrowed = _borrowArchiveSource(
+            source,
+            prepareToken,
+            loadToken,
+            name,
+          );
+          archive = await openViewerArchiveSource(
+            borrowed,
+            name: name,
+            password: password,
+          );
+        }
+      } else {
+        archive = await openViewerArchiveSource(
+          borrowed,
+          name: name,
+          password: password,
+        );
+      }
+      retained = true;
+      return (archive: archive, source: borrowed);
+    } finally {
+      if (!retained) _releaseArchiveSource(borrowed);
+    }
+  }
+
   Future<void> _openArchive(int token) async {
     final source = _source;
     if (source == null) {
@@ -1069,14 +1137,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     // passwords after that probe, without prompting for an unused attempt.
     for (var attempt = 0; attempt <= 3; attempt++) {
       if (!mounted || !current()) return;
-      final borrowed = _borrowArchiveSource(source, token, loadToken, name);
+      ArchiveViewerSource? borrowed;
       var accepted = false;
       try {
-        final handle = await openViewerArchiveSource(
-          borrowed,
+        final opened = await _openArchiveHandle(
+          source,
+          prepareToken: token,
+          loadToken: loadToken,
           name: name,
+          isCurrent: current,
           password: password,
         );
+        borrowed = opened.source;
+        final handle = opened.archive;
         if (!mounted || !current()) {
           await handle.close();
           return;
@@ -2213,19 +2286,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         !previous.isClosed;
     final entered = await _promptArchivePassword(wrong: wrong);
     if (!mounted || entered == null || !current()) return null;
-    final borrowed = _borrowArchiveSource(
-      source,
-      prepareToken,
-      loadToken,
-      name,
-    );
+    ArchiveViewerSource? borrowed;
     var accepted = false;
     try {
-      final reopened = await openViewerArchiveSource(
-        borrowed,
+      final opened = await _openArchiveHandle(
+        source,
+        prepareToken: prepareToken,
+        loadToken: loadToken,
         name: name,
+        isCurrent: current,
         password: entered,
       );
+      borrowed = opened.source;
+      final reopened = opened.archive;
       if (!mounted || !current()) {
         await reopened.close();
         return null;
