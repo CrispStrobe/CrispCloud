@@ -70,6 +70,27 @@ final-table footnote is exact to its authored original in RGB, text and word
 geometry through three cycles. Native-added paragraphs, endnote bridge
 offsets and native projection schema errors remain recorded separately.
 
+The [continuation branch 7308125 checkpoint](evidence/continuation-7308125/README.md)
+passes 725 Dart tests, 130 Python controls, 51 JavaScript media checks plus
+document browser acceptance, and 196 required DOCX schema outputs with zero
+errors. Its [complete native corpus](evidence/native-corpus-7308125/README.md)
+retains all 22 cases and 66 repeat imports without execution/import errors,
+including 2,438 archived files and 222 verified compressed raster pages. All
+initial and repeat page counts match. Six initial renders are exact; 47/66
+cycles are exact relative to the preceding parser import and 37/66 relative to
+the first. All strict structural comparisons still differ. Both source goldens
+reproduce, while only one of the two parser outputs matches its source golden.
+
+The current runtime recovers a closed native header/footer table only at its
+exact declared story boundary with the existing guard present. The
+[four native controls](evidence/header-table-boundary-20261112/README.md)
+retain exact relative table geometry and the remaining 0.35 pt absolute
+placement differences. A proposed textbox table-depth reset passed schema
+validation but caused a 12 pt native-source regression; it was
+[retracted with its counterexample retained](evidence/textbox-table-context-20261112/README.md).
+The [continuation handoff](continuation-20261112.md) records the exact app/parser
+pins, integration results and remaining priorities.
+
 The [solid-shape context control](officeart-context.md) now retains all three
 editable shapes in its native DOC. Ordered geometry agrees within 0.1 pt, while
 dash spacing and RGB differences remain visible in the receipt. Explicit path

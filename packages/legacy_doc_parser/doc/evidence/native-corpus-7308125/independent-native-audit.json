@@ -1,0 +1,344 @@
+{
+  "schema": "legacy-doc-parser/independent-native-evidence-audit",
+  "version": 1,
+  "auditedAt": "2026-11-12T20:37:45.913606+00:00",
+  "method": "Independent read-only reconciliation and hashing of existing separately measured native case reports, manifests and archived members. No new native conversion or rendering was performed.",
+  "inputDirectory": "/workspace/scratch/db8a3205659b/native-corpus-7308125",
+  "indexSha256": "445d558b44e23bd0cc0b329893d5e1322e61fdaea12f93453383fb9aff282a37",
+  "sourceCommit": "730812534e8dc045d6d97f600218228f05c51b97",
+  "sourceTree": "c69a9b26fff0d8b6c22519321f34c2781f4943d6",
+  "counts": {
+    "verifiedManifestDigests": 22,
+    "verifiedCompressedReportDigests": 22,
+    "verifiedDecodedReportDigestsAndSizes": 22,
+    "sourceReceiptsMatchPinnedCorpus": 22,
+    "measuredCases": 22,
+    "sourceUnchanged": 22,
+    "binaryDocUnchanged": 22,
+    "buildSourcesUnchanged": 22,
+    "initialComparisons": 22,
+    "initialPageCountsMatch": 22,
+    "initial_pageDimensionsMatch": 20,
+    "initial_pageTextMatches": 19,
+    "initial_layoutTextExactlyMatches": 16,
+    "initial_matchesWithinTolerance": 11,
+    "initial_rasterExactlyMatches": 6,
+    "initial_exactOnThisRenderer": 6,
+    "initialZeroWordDrift": 10,
+    "initialReferencePageTotal": 23,
+    "initialActualPageTotal": 23,
+    "nativeDocxExportComparisons": 22,
+    "nativeDocxExportPageCountsMatch": 22,
+    "nativeDocxExport_pageDimensionsMatch": 22,
+    "nativeDocxExport_pageTextMatches": 12,
+    "nativeDocxExport_layoutTextExactlyMatches": 10,
+    "nativeDocxExport_matchesWithinTolerance": 10,
+    "nativeDocxExport_rasterExactlyMatches": 4,
+    "nativeDocxExport_exactOnThisRenderer": 4,
+    "nativeDocxExportZeroWordDrift": 7,
+    "nativeDocxExportReferencePageTotal": 23,
+    "nativeDocxExportActualPageTotal": 23,
+    "sourceGolden_matched": 2,
+    "parserGolden_different": 1,
+    "initialStrictStructuralMatches": 0,
+    "fullCaseExactIncludingAllStructuralChecks": 0,
+    "measuredCycles": 66,
+    "cycleInputUnchanged": 66,
+    "cycleBinaryDocUnchanged": 66,
+    "paginationFromPreviousImport_exact": 47,
+    "paginationFromPreviousImport_pageCountsMatch": 66,
+    "paginationFromPreviousImport_pageDimensionsMatch": 66,
+    "paginationFromPreviousImport_pageTextMatches": 63,
+    "paginationFromPreviousImport_layoutTextExactlyMatches": 60,
+    "paginationFromFirstImport_exact": 37,
+    "paginationFromFirstImport_pageCountsMatch": 66,
+    "paginationFromFirstImport_pageDimensionsMatch": 66,
+    "paginationFromFirstImport_pageTextMatches": 63,
+    "paginationFromFirstImport_layoutTextExactlyMatches": 60,
+    "paginationFromBinaryDoc_exact": 33,
+    "paginationFromBinaryDoc_pageCountsMatch": 66,
+    "paginationFromBinaryDoc_pageDimensionsMatch": 66,
+    "paginationFromBinaryDoc_pageTextMatches": 60,
+    "paginationFromBinaryDoc_layoutTextExactlyMatches": 54,
+    "cycle_bridgeChanges_strictMatches": 0,
+    "cycle_semanticDifferencesFromNativeDoc_strictMatches": 0,
+    "cycle_semanticDifferencesFromPreviousImport_strictMatches": 0,
+    "cycle_semanticDifferencesFromFirstImport_strictMatches": 0,
+    "verifiedArchiveDigests": 22,
+    "verifiedArtifactMemberDigestsAndSizes": 2438,
+    "retainedPdfRenders": 212,
+    "verifiedDecodedGzipPageDigests": 222,
+    "verifiedArchivedOriginalSourceDigests": 22,
+    "artifactArchiveBytes": 3547388,
+    "compressedReportBytes": 552640,
+    "originalDocxToBinaryComparisons": 14,
+    "originalDocxToBinaryPageCountsMatch": 14,
+    "originalDocxToBinary_pageDimensionsMatch": 14,
+    "originalDocxToBinary_pageTextMatches": 12,
+    "originalDocxToBinary_layoutTextExactlyMatches": 11,
+    "originalDocxToBinary_matchesWithinTolerance": 11,
+    "originalDocxToBinary_rasterExactlyMatches": 3,
+    "originalDocxToBinary_exactOnThisRenderer": 3,
+    "originalDocxToBinaryZeroWordDrift": 8,
+    "originalDocxToBinaryReferencePageTotal": 15,
+    "originalDocxToBinaryActualPageTotal": 15,
+    "sourceGolden_not-recorded": 20,
+    "parserGolden_not-recorded": 20,
+    "parserGolden_matched": 1
+  },
+  "distinctReceiptCounts": {
+    "sourceCommit": 1,
+    "sourceInputReceipt": 1,
+    "compiledExecutableReceipt": 1,
+    "corpusReceipt": 1,
+    "toolReceipts": 1,
+    "goldenEnvironment": 1
+  },
+  "commonSourceInputReceiptSha256": "e447664a3295571fb66a873da3a1c76689de158e125448b3de80f53120d96e75",
+  "commonReportedCompiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+  "compiledExecutableCaveat": "The executable is excluded from retained artifacts; its identical hash is reported by all 22 original execution receipts, not rehashed by this audit.",
+  "initialExactCases": [
+    "comment-threads",
+    "content-controls",
+    "content-controls-legacy",
+    "word-altchunk",
+    "linked-textboxes",
+    "linked-textboxes-native"
+  ],
+  "allThreeCyclesExactAgainstFirstImport": [
+    "formatting",
+    "word",
+    "story-media",
+    "comment-threads",
+    "bookmarks",
+    "content-controls",
+    "content-controls-legacy",
+    "word-altchunk",
+    "emf-vectors",
+    "wmf-vectors",
+    "list-continue",
+    "list-restart"
+  ],
+  "decisiveFindings": [
+    {
+      "area": "initial page geometry",
+      "cases": [
+        "list-continue",
+        "list-restart"
+      ],
+      "binaryPageSizePoints": [
+        595.303937,
+        841.889764
+      ],
+      "parserPageSizePoints": [
+        612.0,
+        792.0
+      ],
+      "finding": "Page count remains one but A4 source geometry becomes Letter in the parser output; exact listed numbering text is retained."
+    },
+    {
+      "area": "accumulating roundtrip drift",
+      "cases": [
+        "table-borders",
+        "note-markers"
+      ],
+      "maximumWordDriftVersusPreviousPoints": 13.45,
+      "maximumWordDriftVersusFirstAtCycle3Points": 40.35,
+      "finding": "Each binary roundtrip adds layout drift despite stable page counts; no claim about which substage causes all of it."
+    },
+    {
+      "area": "reviewed source goldens",
+      "sourceMatches": 2,
+      "parserMatches": 1,
+      "matchingParserCase": "linked-textboxes-native",
+      "differentParserCase": "formatting",
+      "formattingMaximumWordDriftPoints": 11.902
+    },
+    {
+      "area": "strict structure",
+      "finding": "Every initial comparison to native DOCX and every repeat structural comparison reports differences. Native DOCX export can normalize or lose structure; these are strict differences, not automatic attribution of all losses to the parser."
+    },
+    {
+      "area": "rendering scope",
+      "finding": "Results cover the recorded Linux LibreOfficeDev 26.8.0.0.alpha0 and fonts at RGB 72 DPI; they do not certify Microsoft Word or other platform/font environments."
+    }
+  ],
+  "caseEvidenceReceipts": [
+    {
+      "case": "formatting",
+      "directory": "sealed/01-formatting",
+      "manifestSha256": "75a3df3ba21c8ef92c47d61f4dd756a40549bcc667f29c67a8b15f1e084bc29e",
+      "compressedReportSha256": "6f2bb51545238547c751b88c8a577df68bc722375028b5b5080ccf4591497e67",
+      "decodedReportSha256": "679ab1fdff2eff834146c2b6eeeb4af051e133f891d18e2eefd12a8739fe6233",
+      "archiveSha256": "df71dd102231944205ed404ed7558bf6926079ef0b2270cbe331796870255e5b"
+    },
+    {
+      "case": "word",
+      "directory": "sealed/02-word",
+      "manifestSha256": "6730f16664125b9ca273ef9964038f11cb50c91c9fc83501ba9c53f5d5758c7d",
+      "compressedReportSha256": "29d68c2e08fde8a2648c6846bd12eab9a07938e8135c6a4615bfb8e8409a0595",
+      "decodedReportSha256": "e368ebdd76b5d56d7b6d454ac0728dd5983ef2af75956856714e967e15e8da9a",
+      "archiveSha256": "8d2c26240dbb908d8b8afed0f39adceacb91f2cdd4630056b04e1f6cb408bbbb"
+    },
+    {
+      "case": "word-compatibility",
+      "directory": "sealed/03-word-compatibility",
+      "manifestSha256": "54965d4eee258c4e0b36d28d5c8f27f67d6fff45cb0e02ce8cb25811d282d447",
+      "compressedReportSha256": "11003b077026e0502e985eb6f99b87a75af5af0ce547d64ba676807a2d1d1615",
+      "decodedReportSha256": "76fb3fc2c734b950888cb5a4916112df41fc78142009df9af0b2b3f26d66d092",
+      "archiveSha256": "ab0e470ca5b7634584a57a5766dc286f9a7daa00e1e44e3f6f5b63474707fbb8"
+    },
+    {
+      "case": "table-borders",
+      "directory": "sealed/04-table-borders",
+      "manifestSha256": "6398470cc03a4dcb3eb2b6c2fafdbafbd2a3e2c580ac607094805964fd3a6770",
+      "compressedReportSha256": "7aa19290db39f74e54543c6f59a77a3f8abb9d88217173950d16f72820b36ad8",
+      "decodedReportSha256": "2d524fb6230a55b037d74c1c33f3783412fc970711a07fcd50fcb087f467b7ed",
+      "archiveSha256": "ea231f4d45a1bfca0c0b6d931ed2a9e6e84ea6013e1287653de280b3df753203"
+    },
+    {
+      "case": "story-media",
+      "directory": "sealed/05-story-media",
+      "manifestSha256": "1f4bf38a0502eb49621dd68439395634392b0c4fe68ade639ebeec5b90ca4b5e",
+      "compressedReportSha256": "683561a586a08aba48cd67eac5943aa1be9c7115320d984206dcb942bd730a26",
+      "decodedReportSha256": "a0380192f445bec1a29dbeb1c4b201b35ee0d926efa66c5d0ecf1d90bb70e3e1",
+      "archiveSha256": "963a94d5929269b761fe40a267d70542140b2b7094911b35c0e8a489e22980c5"
+    },
+    {
+      "case": "comment-threads",
+      "directory": "sealed/06-comment-threads",
+      "manifestSha256": "a467960620abbd6402ce534bd25ca8f06ddeeddb3d4417b9d80e5152b4f1ceff",
+      "compressedReportSha256": "9c3c6c7b6e50d4a06630687a9d3de212593cc4da4357fca4dff86d031dcb7aad",
+      "decodedReportSha256": "6962500d0011779c91c2f2d7f65493e70c256303e6b64163a66922904cfc8794",
+      "archiveSha256": "44b487d958eaa76372667cd4b5c8a1abc82c2bb8bdbd4ecfdf6ea0db4b246378"
+    },
+    {
+      "case": "note-markers",
+      "directory": "sealed/07-note-markers",
+      "manifestSha256": "f7d6a1c0ba01361c8ebcc1208b2f551958633ffdfb1acbc8dab9efde5bfe3012",
+      "compressedReportSha256": "1813c2713a3a86e4ab46dfc554edf92ad149e2f767a7e1cd07aa4f5b3460eb01",
+      "decodedReportSha256": "cf245e8164052d99145c38985d07334ea3398802a6022d6b32c8edb306664b05",
+      "archiveSha256": "693e1e4171d9d9c03f5a1dbe2662b78f2337b1ed058960c20e045240d7cd86d3"
+    },
+    {
+      "case": "bookmarks",
+      "directory": "sealed/08-bookmarks",
+      "manifestSha256": "cc28e6f548f2c74a2e8b481d21630c5b19c89b85ad9226a761e84e8d17be5bbc",
+      "compressedReportSha256": "eaa2256ec79c539d6f23d41d1466e0ec9d62177b9b6ec3c1defbf26a7b3fcf16",
+      "decodedReportSha256": "c27e5493f929fb3e511887422a46fe111414d85eccf81715fbad2b2958a85feb",
+      "archiveSha256": "42eec49d0c49516f127d401cf5e50aa3d38b0bdbbb555f6fc67a8e875466b0c4"
+    },
+    {
+      "case": "content-controls",
+      "directory": "sealed/09-content-controls",
+      "manifestSha256": "97615c412e20ec4bc267b5f5683e5a7cd0b29f7faf8b4a72989f3cee64db0747",
+      "compressedReportSha256": "493b294d3f9382734f4bc3fc4f3db6559c5a331e2578ce3efeaca1c8ef6c9160",
+      "decodedReportSha256": "9d169b3a46f66a17d9233e610db7a728fc069dd3ddcdad3f81ef1af50d113887",
+      "archiveSha256": "e296f42a8ce4b2719174cfb41644dc74c5525ca7058ddb8879ad08be389181b8"
+    },
+    {
+      "case": "content-controls-legacy",
+      "directory": "sealed/10-content-controls-legacy",
+      "manifestSha256": "00d368d389be1dd990c393efe4e197aab8614a29fabea5a6403716d049ba9b87",
+      "compressedReportSha256": "8165d8a06f50499f20a083ab81f2ef41891a309ecfe9760546986a0a389134a3",
+      "decodedReportSha256": "76808244d33fda77a9b0ef3144aae3fb2232e6300eb744b9046be7c9c2e9a952",
+      "archiveSha256": "149c8250883ad3a8bd04a7819cf34a484601934b75485661d59b6ec55b1e143e"
+    },
+    {
+      "case": "word-altchunk",
+      "directory": "sealed/11-word-altchunk",
+      "manifestSha256": "e3c433ed548630793f912291ab5d144fb163d7ffec32f061bf7c1f81af0131ef",
+      "compressedReportSha256": "3a3e38d065204f1c7cdfbdc44289e099ef680dd46fd26feff7985737d8b558fb",
+      "decodedReportSha256": "dad367e44f51ad23911ff8d664113f96968d29127c899384aa9b44b30abcf725",
+      "archiveSha256": "4d3072c5557af9bb497fb1fa93d75b6ef5126ad0b60cb1f81acf5b9f83c0a947"
+    },
+    {
+      "case": "linked-textboxes",
+      "directory": "sealed/12-linked-textboxes",
+      "manifestSha256": "94b4c9f5db45459299128f0248d9b7c9f760477334e4e8b43bc258c43b9151dd",
+      "compressedReportSha256": "38e35cea7f52a16079f88dc0b6d2b34ae0323d0be9ee38192016b0ef43798a67",
+      "decodedReportSha256": "1c0b4bd1265fa06d12445d72ddbfa191df279490edcfb13c5399da2c9d6bf422",
+      "archiveSha256": "0068679c94ef6d19cf949ea2b1702f3130857c2a323f9aefa10f6ba3e569c763"
+    },
+    {
+      "case": "officeart-shapes",
+      "directory": "sealed/13-officeart-shapes",
+      "manifestSha256": "0409fa7c973b9ebb2524e52f7e1784472aed4fdc63b0730ceafe99608a012205",
+      "compressedReportSha256": "146b6714ca495d352d13214b9ba9deb53b2a3eecbee4b1c637412559aed2bc0c",
+      "decodedReportSha256": "389f7f88cb214c5bd2e8979b05c9c6bc8882ef4348bde0128a71701bf9a1232b",
+      "archiveSha256": "5b7ad4b60b774a9434000037f2bafd1fe49f8a0dd75a43f32a9a13b79ee7d282"
+    },
+    {
+      "case": "linked-textboxes-native",
+      "directory": "sealed/14-linked-textboxes-native",
+      "manifestSha256": "c9f7bec98105b29f324f13bdfd4cc08e98e2b7f9a507decedcd89b1fd26b8545",
+      "compressedReportSha256": "52fdf5b19ebae0065d2b8a5d0561d85139b89e274508e568d962e6ee30790a80",
+      "decodedReportSha256": "cc4127771b156976cd13d8a9c91f21276d5676d3ce8cb17fe90b14a6991cf8d1",
+      "archiveSha256": "ff7984d7fc5dedb63b3c5b325ad940718f9dd940fb27e020f0a776732b462d58"
+    },
+    {
+      "case": "emf-vectors",
+      "directory": "sealed/15-emf-vectors",
+      "manifestSha256": "83e246bc866509e7fdc12fe2dccb3ad8adeffb00ad3a654aaa8613a77f76cdc7",
+      "compressedReportSha256": "a7e1f14b8711bc6482c8f1a08af29ef8e894fae80f3a112b5125439c8d762bcc",
+      "decodedReportSha256": "bd613b27a5e9e3c9442b3ccf6a02479c8467774cd8a26272999a5d22d5152c16",
+      "archiveSha256": "3c7e4b6da0593b38663805ae57e35edf7e7cc95dff296b70a65a0de309b47c7d"
+    },
+    {
+      "case": "wmf-vectors",
+      "directory": "sealed/16-wmf-vectors",
+      "manifestSha256": "108717626c97685168825cc10c506a6564a844d1b485c1f4c6faf63a959d65bc",
+      "compressedReportSha256": "02c1cde962eb7829a8686c5ad8178bcaf5c3ef2462fa5c8c1601f69f07aacf43",
+      "decodedReportSha256": "19960f36f5c323378c9c880a9770e605aef785465ac6bd5e31477c8c3654b394",
+      "archiveSha256": "55ba810400bc7a3d00b7c29a5361d6747ba6f12a4bccb609b470f3526a535b72"
+    },
+    {
+      "case": "linked-textboxes-compact",
+      "directory": "sealed/17-linked-textboxes-compact",
+      "manifestSha256": "ce65adce9b2be5dfdd34da4d7ccbb70ae71905b242501273a33cd7d0c6687742",
+      "compressedReportSha256": "4ec918292069f54280b5bfe36dec9d0d8c0c5d386752e040988c77ebb1fb4e11",
+      "decodedReportSha256": "122ea31bb8fc3eacec252e76defd1aab158068aad3d4e10fb51e2d900ff89eb7",
+      "archiveSha256": "2e20c955c65127988a0270b55664ac5eae4ab817d54c4963125cdaa46e7146c8"
+    },
+    {
+      "case": "list-continue",
+      "directory": "sealed/18-list-continue",
+      "manifestSha256": "8493e01d67c16b9250f3fc201e1ea1fe44f3f8b2e97c966c1921d01da994a5b1",
+      "compressedReportSha256": "037c2ee4030d7beb7e4d8d4ff7cf6259c263a04e66f90b3615bf00e2a14cb356",
+      "decodedReportSha256": "cbde1446c1ad94bc9bdc5e596d42d92afce535f9bfc6687d5f81d67903a6f7a2",
+      "archiveSha256": "b4a5063fd58c48ef9508df2b85b09ae970c607e825209fe33138b6cb80f82c97"
+    },
+    {
+      "case": "list-restart",
+      "directory": "sealed/19-list-restart",
+      "manifestSha256": "c180e9a5e5132278762e7c4b8aeefa85b6ce3ceffa6a175f1a45e4c3f561d909",
+      "compressedReportSha256": "b224e7ff6abe710302dcaac7ea698742fb0327f69a4a3220479b75ee83852ab0",
+      "decodedReportSha256": "bc0ea1dfa43a22b151adb908f98c7b8f56bd4c8e0516780057f5a4dc0f9196f3",
+      "archiveSha256": "cba333245decde9b8bb92d8cec548deeaeca50b4eccc3f4fd4d5e1294b28c96e"
+    },
+    {
+      "case": "word14-margin-origin",
+      "directory": "sealed/20-word14-margin-origin",
+      "manifestSha256": "37b20ea0ce3eb25c90de51872ef15791e6f2d8eead2d755a616f72b448e3b1d4",
+      "compressedReportSha256": "d9644d4d284dc37467107a116343d9a191942381169952b96af807d4f3256298",
+      "decodedReportSha256": "6ef1c82a0693fb7eb9bae22b841519c29627d3c343a33b32f3013f30a810947d",
+      "archiveSha256": "49c61f2062038eae38eb5e186250b8dbb977226a803e7e54089913c77a7acda9"
+    },
+    {
+      "case": "word16-page-origin",
+      "directory": "sealed/21-word16-page-origin",
+      "manifestSha256": "07cb2b18a659e0c7743287fcb019bd54e455b3e74b4abd01322da14e81173b21",
+      "compressedReportSha256": "4cf07f7189392cac541b377e7530d39b6398f79075e16fa7f5d6b9b3b8df20bf",
+      "decodedReportSha256": "80989a5ee28ffc3827dbf6732ea702d94682036c1c88e6b9f579c7ceddd007d0",
+      "archiveSha256": "ab10f3478b3fbe34578334b325e8a5dfb22a78a55d47a8d57465ce738231236c"
+    },
+    {
+      "case": "poi-simple-table2",
+      "directory": "sealed/22-poi-simple-table2",
+      "manifestSha256": "d2c3d3a737b45096ad2da50ddce9da2f6e4185ae3e7e3d0d29c698e7e4e38b18",
+      "compressedReportSha256": "d0789083cc8502f9ce88e9b5c607cbd65e04038fd1f069a5ecd3e2015f4b00b6",
+      "decodedReportSha256": "051ced85fdb5c12edee16fa5bab8673e49b743948ba640a6e9b66d024f4ae95c",
+      "archiveSha256": "06b19019bbc0e1b492596b03ff97209f63342ff07ce4e050a3133619dc8f77e7"
+    }
+  ]
+}

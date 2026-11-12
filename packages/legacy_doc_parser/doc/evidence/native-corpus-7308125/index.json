@@ -1,0 +1,3006 @@
+{
+  "schema": "legacy-doc-parser/bounded-corpus-index",
+  "version": 1,
+  "parserDirectory": "/workspace/scratch/db8a3205659b/parser-validation",
+  "sourceCommit": "730812534e8dc045d6d97f600218228f05c51b97",
+  "sourceTree": "c69a9b26fff0d8b6c22519321f34c2781f4943d6",
+  "corpusSha256": "78070c0aed4f6eafcd806abefde472ee8fa9bddbd1e0ee29a6d5bf76746ac7ae",
+  "caseIds": [
+    "formatting",
+    "word",
+    "word-compatibility",
+    "table-borders",
+    "story-media",
+    "comment-threads",
+    "note-markers",
+    "bookmarks",
+    "content-controls",
+    "content-controls-legacy",
+    "word-altchunk",
+    "linked-textboxes",
+    "officeart-shapes",
+    "linked-textboxes-native",
+    "emf-vectors",
+    "wmf-vectors",
+    "linked-textboxes-compact",
+    "list-continue",
+    "list-restart",
+    "word14-margin-origin",
+    "word16-page-origin",
+    "poi-simple-table2"
+  ],
+  "roundtripCyclesRequested": 3,
+  "rasterDpi": 72,
+  "rasterStorage": "gzip",
+  "dart": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+  "office": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+  "helperSha256": {
+    "wrapper": "08a80872ba1520f9f8ee7991b551824d20ea76f1ee740d0d7d9b769a582fe40d",
+    "sealer": "18798f97df81a06e1d449d4b41567f08800e831e42688cf6a3f9fa6216a63011",
+    "verifier": "0c886d6038e3ce28bfbba2e1b93a6687711b099f353ee11cdb5e017cd8195338"
+  },
+  "status": "complete",
+  "startedAt": "2026-11-12T20:23:58.907515+00:00",
+  "method": "Sequential independent run.py invocations; each separate compiler, environment and native report is retained. This is not one combined invocation.",
+  "cases": [
+    {
+      "id": "formatting",
+      "status": "complete",
+      "rawDirectory": "runs/01-formatting",
+      "sealedDirectory": "sealed/01-formatting",
+      "freeBytesBeforeMeasurement": 2034110464,
+      "startedAt": "2026-11-12T20:23:58.957990+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "formatting",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/01-formatting"
+      ],
+      "stage": "complete",
+      "reportSha256": "679ab1fdff2eff834146c2b6eeeb4af051e133f891d18e2eefd12a8739fe6233",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 11.901999999999987,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "matched",
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "parserAgainstSourceGolden": {
+          "status": "different",
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 11.901999999999987,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "semanticDifferenceCount": 9,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 14.2
+      },
+      "sealedManifestSha256": "75a3df3ba21c8ef92c47d61f4dd756a40549bcc667f29c67a8b15f1e084bc29e",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "6f2bb51545238547c751b88c8a577df68bc722375028b5b5080ccf4591497e67",
+        "bytes": 30440,
+        "uncompressedSha256": "679ab1fdff2eff834146c2b6eeeb4af051e133f891d18e2eefd12a8739fe6233",
+        "uncompressedBytes": 10358589
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "df71dd102231944205ed404ed7558bf6926079ef0b2270cbe331796870255e5b",
+        "bytes": 228388,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:24:24.327760+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "word",
+      "status": "complete",
+      "rawDirectory": "runs/02-word",
+      "sealedDirectory": "sealed/02-word",
+      "freeBytesBeforeMeasurement": 2019381248,
+      "startedAt": "2026-11-12T20:24:24.335343+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "word",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/02-word"
+      ],
+      "stage": "complete",
+      "reportSha256": "e368ebdd76b5d56d7b6d454ac0728dd5983ef2af75956856714e967e15e8da9a",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 18.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 5.320600000000013,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 10,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 16.75
+      },
+      "sealedManifestSha256": "6730f16664125b9ca273ef9964038f11cb50c91c9fc83501ba9c53f5d5758c7d",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "29d68c2e08fde8a2648c6846bd12eab9a07938e8135c6a4615bfb8e8409a0595",
+        "bytes": 33320,
+        "uncompressedSha256": "e368ebdd76b5d56d7b6d454ac0728dd5983ef2af75956856714e967e15e8da9a",
+        "uncompressedBytes": 9839224
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "8d2c26240dbb908d8b8afed0f39adceacb91f2cdd4630056b04e1f6cb408bbbb",
+        "bytes": 208308,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:24:52.035544+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "word-compatibility",
+      "status": "complete",
+      "rawDirectory": "runs/03-word-compatibility",
+      "sealedDirectory": "sealed/03-word-compatibility",
+      "freeBytesBeforeMeasurement": 1977241600,
+      "startedAt": "2026-11-12T20:24:52.044912+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "word-compatibility",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/03-word-compatibility"
+      ],
+      "stage": "complete",
+      "reportSha256": "76fb3fc2c734b950888cb5a4916112df41fc78142009df9af0b2b3f26d66d092",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 2,
+          "actualPages": 2,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 2,
+          "actualPages": 2,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 2,
+          "actualPages": 2,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 8,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 17.03
+      },
+      "sealedManifestSha256": "54965d4eee258c4e0b36d28d5c8f27f67d6fff45cb0e02ce8cb25811d282d447",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "11003b077026e0502e985eb6f99b87a75af5af0ce547d64ba676807a2d1d1615",
+        "bytes": 35464,
+        "uncompressedSha256": "76fb3fc2c734b950888cb5a4916112df41fc78142009df9af0b2b3f26d66d092",
+        "uncompressedBytes": 9628162
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "ab0e470ca5b7634584a57a5766dc286f9a7daa00e1e44e3f6f5b63474707fbb8",
+        "bytes": 315176,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 124,
+      "completedAt": "2026-11-12T20:25:19.494292+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "table-borders",
+      "status": "complete",
+      "rawDirectory": "runs/04-table-borders",
+      "sealedDirectory": "sealed/04-table-borders",
+      "freeBytesBeforeMeasurement": 1976836096,
+      "startedAt": "2026-11-12T20:25:19.501884+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "table-borders",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/04-table-borders"
+      ],
+      "stage": "complete",
+      "reportSha256": "2d524fb6230a55b037d74c1c33f3783412fc970711a07fcd50fcb087f467b7ed",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 74.42699999999999,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 74.42699999999999,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 9,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 14.25
+      },
+      "sealedManifestSha256": "6398470cc03a4dcb3eb2b6c2fafdbafbd2a3e2c580ac607094805964fd3a6770",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "7aa19290db39f74e54543c6f59a77a3f8abb9d88217173950d16f72820b36ad8",
+        "bytes": 29020,
+        "uncompressedSha256": "2d524fb6230a55b037d74c1c33f3783412fc970711a07fcd50fcb087f467b7ed",
+        "uncompressedBytes": 7966400
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "ea231f4d45a1bfca0c0b6d931ed2a9e6e84ea6013e1287653de280b3df753203",
+        "bytes": 181088,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:25:43.638759+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "story-media",
+      "status": "complete",
+      "rawDirectory": "runs/05-story-media",
+      "sealedDirectory": "sealed/05-story-media",
+      "freeBytesBeforeMeasurement": 1976553472,
+      "startedAt": "2026-11-12T20:25:43.648594+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "story-media",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/05-story-media"
+      ],
+      "stage": "complete",
+      "reportSha256": "a0380192f445bec1a29dbeb1c4b201b35ee0d926efa66c5d0ecf1d90bb70e3e1",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 6,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 11.04
+      },
+      "sealedManifestSha256": "1f4bf38a0502eb49621dd68439395634392b0c4fe68ade639ebeec5b90ca4b5e",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "683561a586a08aba48cd67eac5943aa1be9c7115320d984206dcb942bd730a26",
+        "bytes": 20500,
+        "uncompressedSha256": "a0380192f445bec1a29dbeb1c4b201b35ee0d926efa66c5d0ecf1d90bb70e3e1",
+        "uncompressedBytes": 3923062
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "963a94d5929269b761fe40a267d70542140b2b7094911b35c0e8a489e22980c5",
+        "bytes": 121268,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:26:02.839002+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "comment-threads",
+      "status": "complete",
+      "rawDirectory": "runs/06-comment-threads",
+      "sealedDirectory": "sealed/06-comment-threads",
+      "freeBytesBeforeMeasurement": 1976098816,
+      "startedAt": "2026-11-12T20:26:02.847426+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "comment-threads",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/06-comment-threads"
+      ],
+      "stage": "complete",
+      "reportSha256": "6962500d0011779c91c2f2d7f65493e70c256303e6b64163a66922904cfc8794",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 6,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 10.48
+      },
+      "sealedManifestSha256": "a467960620abbd6402ce534bd25ca8f06ddeeddb3d4417b9d80e5152b4f1ceff",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "9c3c6c7b6e50d4a06630687a9d3de212593cc4da4357fca4dff86d031dcb7aad",
+        "bytes": 19080,
+        "uncompressedSha256": "6962500d0011779c91c2f2d7f65493e70c256303e6b64163a66922904cfc8794",
+        "uncompressedBytes": 2339797
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "44b487d958eaa76372667cd4b5c8a1abc82c2bb8bdbd4ecfdf6ea0db4b246378",
+        "bytes": 76148,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:26:20.839509+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "note-markers",
+      "status": "complete",
+      "rawDirectory": "runs/07-note-markers",
+      "sealedDirectory": "sealed/07-note-markers",
+      "freeBytesBeforeMeasurement": 2040446976,
+      "startedAt": "2026-11-12T20:26:20.851322+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "note-markers",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/07-note-markers"
+      ],
+      "stage": "complete",
+      "reportSha256": "cf245e8164052d99145c38985d07334ea3398802a6022d6b32c8edb306664b05",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 14,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 15.04
+      },
+      "sealedManifestSha256": "f7d6a1c0ba01361c8ebcc1208b2f551958633ffdfb1acbc8dab9efde5bfe3012",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "1813c2713a3a86e4ab46dfc554edf92ad149e2f767a7e1cd07aa4f5b3460eb01",
+        "bytes": 29580,
+        "uncompressedSha256": "cf245e8164052d99145c38985d07334ea3398802a6022d6b32c8edb306664b05",
+        "uncompressedBytes": 8957478
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "693e1e4171d9d9c03f5a1dbe2662b78f2337b1ed058960c20e045240d7cd86d3",
+        "bytes": 274744,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:26:45.987332+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "bookmarks",
+      "status": "complete",
+      "rawDirectory": "runs/08-bookmarks",
+      "sealedDirectory": "sealed/08-bookmarks",
+      "freeBytesBeforeMeasurement": 2013581312,
+      "startedAt": "2026-11-12T20:26:45.996692+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "bookmarks",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/08-bookmarks"
+      ],
+      "stage": "complete",
+      "reportSha256": "c27e5493f929fb3e511887422a46fe111414d85eccf81715fbad2b2958a85feb",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 3.0500000000000114,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.018000000000000682,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 8,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 14.32
+      },
+      "sealedManifestSha256": "cc28e6f548f2c74a2e8b481d21630c5b19c89b85ad9226a761e84e8d17be5bbc",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "eaa2256ec79c539d6f23d41d1466e0ec9d62177b9b6ec3c1defbf26a7b3fcf16",
+        "bytes": 28824,
+        "uncompressedSha256": "c27e5493f929fb3e511887422a46fe111414d85eccf81715fbad2b2958a85feb",
+        "uncompressedBytes": 7919875
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "42eec49d0c49516f127d401cf5e50aa3d38b0bdbbb555f6fc67a8e875466b0c4",
+        "bytes": 174772,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:27:10.112006+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "content-controls",
+      "status": "complete",
+      "rawDirectory": "runs/09-content-controls",
+      "sealedDirectory": "sealed/09-content-controls",
+      "freeBytesBeforeMeasurement": 1734541312,
+      "startedAt": "2026-11-12T20:27:10.127895+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "content-controls",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/09-content-controls"
+      ],
+      "stage": "complete",
+      "reportSha256": "9d169b3a46f66a17d9233e610db7a728fc069dd3ddcdad3f81ef1af50d113887",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.09000000000000341,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 8,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 13.34
+      },
+      "sealedManifestSha256": "97615c412e20ec4bc267b5f5683e5a7cd0b29f7faf8b4a72989f3cee64db0747",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "493b294d3f9382734f4bc3fc4f3db6559c5a331e2578ce3efeaca1c8ef6c9160",
+        "bytes": 25448,
+        "uncompressedSha256": "9d169b3a46f66a17d9233e610db7a728fc069dd3ddcdad3f81ef1af50d113887",
+        "uncompressedBytes": 6113910
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "e296f42a8ce4b2719174cfb41644dc74c5525ca7058ddb8879ad08be389181b8",
+        "bytes": 126108,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:27:33.421071+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "content-controls-legacy",
+      "status": "complete",
+      "rawDirectory": "runs/10-content-controls-legacy",
+      "sealedDirectory": "sealed/10-content-controls-legacy",
+      "freeBytesBeforeMeasurement": 1262936064,
+      "startedAt": "2026-11-12T20:27:33.428863+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "content-controls-legacy",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/10-content-controls-legacy"
+      ],
+      "stage": "complete",
+      "reportSha256": "76808244d33fda77a9b0ef3144aae3fb2232e6300eb744b9046be7c9c2e9a952",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.09000000000000341,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 8,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 13.79
+      },
+      "sealedManifestSha256": "00d368d389be1dd990c393efe4e197aab8614a29fabea5a6403716d049ba9b87",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "8165d8a06f50499f20a083ab81f2ef41891a309ecfe9760546986a0a389134a3",
+        "bytes": 25832,
+        "uncompressedSha256": "76808244d33fda77a9b0ef3144aae3fb2232e6300eb744b9046be7c9c2e9a952",
+        "uncompressedBytes": 6113554
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "149c8250883ad3a8bd04a7819cf34a484601934b75485661d59b6ec55b1e143e",
+        "bytes": 126544,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:27:58.418133+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "word-altchunk",
+      "status": "complete",
+      "rawDirectory": "runs/11-word-altchunk",
+      "sealedDirectory": "sealed/11-word-altchunk",
+      "freeBytesBeforeMeasurement": 1679609856,
+      "startedAt": "2026-11-12T20:27:58.428515+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "word-altchunk",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/11-word-altchunk"
+      ],
+      "stage": "complete",
+      "reportSha256": "dad367e44f51ad23911ff8d664113f96968d29127c899384aa9b44b30abcf725",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 7,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 13.59
+      },
+      "sealedManifestSha256": "e3c433ed548630793f912291ab5d144fb163d7ffec32f061bf7c1f81af0131ef",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "3a3e38d065204f1c7cdfbdc44289e099ef680dd46fd26feff7985737d8b558fb",
+        "bytes": 28412,
+        "uncompressedSha256": "dad367e44f51ad23911ff8d664113f96968d29127c899384aa9b44b30abcf725",
+        "uncompressedBytes": 7526902
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "4d3072c5557af9bb497fb1fa93d75b6ef5126ad0b60cb1f81acf5b9f83c0a947",
+        "bytes": 145220,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:28:22.524904+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "linked-textboxes",
+      "status": "complete",
+      "rawDirectory": "runs/12-linked-textboxes",
+      "sealedDirectory": "sealed/12-linked-textboxes",
+      "freeBytesBeforeMeasurement": 1679384576,
+      "startedAt": "2026-11-12T20:28:22.534859+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "linked-textboxes",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/12-linked-textboxes"
+      ],
+      "stage": "complete",
+      "reportSha256": "1c0b4bd1265fa06d12445d72ddbfa191df279490edcfb13c5399da2c9d6bf422",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.05000000000001137,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 10,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 8.21
+      },
+      "sealedManifestSha256": "94b4c9f5db45459299128f0248d9b7c9f760477334e4e8b43bc258c43b9151dd",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "38e35cea7f52a16079f88dc0b6d2b34ae0323d0be9ee38192016b0ef43798a67",
+        "bytes": 21260,
+        "uncompressedSha256": "1c0b4bd1265fa06d12445d72ddbfa191df279490edcfb13c5399da2c9d6bf422",
+        "uncompressedBytes": 1935268
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "0068679c94ef6d19cf949ea2b1702f3130857c2a323f9aefa10f6ba3e569c763",
+        "bytes": 123696,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:28:38.030094+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "officeart-shapes",
+      "status": "complete",
+      "rawDirectory": "runs/13-officeart-shapes",
+      "sealedDirectory": "sealed/13-officeart-shapes",
+      "freeBytesBeforeMeasurement": 1679183872,
+      "startedAt": "2026-11-12T20:28:38.038594+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "officeart-shapes",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/13-officeart-shapes"
+      ],
+      "stage": "complete",
+      "reportSha256": "389f7f88cb214c5bd2e8979b05c9c6bc8882ef4348bde0128a71701bf9a1232b",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 8,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 8.73
+      },
+      "sealedManifestSha256": "0409fa7c973b9ebb2524e52f7e1784472aed4fdc63b0730ceafe99608a012205",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "146b6714ca495d352d13214b9ba9deb53b2a3eecbee4b1c637412559aed2bc0c",
+        "bytes": 17000,
+        "uncompressedSha256": "389f7f88cb214c5bd2e8979b05c9c6bc8882ef4348bde0128a71701bf9a1232b",
+        "uncompressedBytes": 1090412
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "5b7ad4b60b774a9434000037f2bafd1fe49f8a0dd75a43f32a9a13b79ee7d282",
+        "bytes": 170420,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:28:53.413975+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "linked-textboxes-native",
+      "status": "complete",
+      "rawDirectory": "runs/14-linked-textboxes-native",
+      "sealedDirectory": "sealed/14-linked-textboxes-native",
+      "freeBytesBeforeMeasurement": 1678659584,
+      "startedAt": "2026-11-12T20:28:53.424033+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "linked-textboxes-native",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/14-linked-textboxes-native"
+      ],
+      "stage": "complete",
+      "reportSha256": "cc4127771b156976cd13d8a9c91f21276d5676d3ce8cb17fe90b14a6991cf8d1",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.05000000000001137,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "matched",
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "parserAgainstSourceGolden": {
+          "status": "matched",
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "semanticDifferenceCount": 10,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 8.76
+      },
+      "sealedManifestSha256": "c9f7bec98105b29f324f13bdfd4cc08e98e2b7f9a507decedcd89b1fd26b8545",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "52fdf5b19ebae0065d2b8a5d0561d85139b89e274508e568d962e6ee30790a80",
+        "bytes": 20468,
+        "uncompressedSha256": "cc4127771b156976cd13d8a9c91f21276d5676d3ce8cb17fe90b14a6991cf8d1",
+        "uncompressedBytes": 1868956
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "ff7984d7fc5dedb63b3c5b325ad940718f9dd940fb27e020f0a776732b462d58",
+        "bytes": 119716,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:29:10.009487+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "emf-vectors",
+      "status": "complete",
+      "rawDirectory": "runs/15-emf-vectors",
+      "sealedDirectory": "sealed/15-emf-vectors",
+      "freeBytesBeforeMeasurement": 1671696384,
+      "startedAt": "2026-11-12T20:29:10.020311+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "emf-vectors",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/15-emf-vectors"
+      ],
+      "stage": "complete",
+      "reportSha256": "bd613b27a5e9e3c9442b3ccf6a02479c8467774cd8a26272999a5d22d5152c16",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.049999999999954525,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 5,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 8.9
+      },
+      "sealedManifestSha256": "83e246bc866509e7fdc12fe2dccb3ad8adeffb00ad3a654aaa8613a77f76cdc7",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "a7e1f14b8711bc6482c8f1a08af29ef8e894fae80f3a112b5125439c8d762bcc",
+        "bytes": 17352,
+        "uncompressedSha256": "bd613b27a5e9e3c9442b3ccf6a02479c8467774cd8a26272999a5d22d5152c16",
+        "uncompressedBytes": 1673769
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "3c7e4b6da0593b38663805ae57e35edf7e7cc95dff296b70a65a0de309b47c7d",
+        "bytes": 109788,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:29:26.003696+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "wmf-vectors",
+      "status": "complete",
+      "rawDirectory": "runs/16-wmf-vectors",
+      "sealedDirectory": "sealed/16-wmf-vectors",
+      "freeBytesBeforeMeasurement": 1671503872,
+      "startedAt": "2026-11-12T20:29:26.016548+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "wmf-vectors",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/16-wmf-vectors"
+      ],
+      "stage": "complete",
+      "reportSha256": "19960f36f5c323378c9c880a9770e605aef785465ac6bd5e31477c8c3654b394",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 5,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 9.37
+      },
+      "sealedManifestSha256": "108717626c97685168825cc10c506a6564a844d1b485c1f4c6faf63a959d65bc",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "02c1cde962eb7829a8686c5ad8178bcaf5c3ef2462fa5c8c1601f69f07aacf43",
+        "bytes": 17436,
+        "uncompressedSha256": "19960f36f5c323378c9c880a9770e605aef785465ac6bd5e31477c8c3654b394",
+        "uncompressedBytes": 1673990
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "55ba810400bc7a3d00b7c29a5361d6747ba6f12a4bccb609b470f3526a535b72",
+        "bytes": 100220,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 114,
+      "completedAt": "2026-11-12T20:29:42.692509+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "linked-textboxes-compact",
+      "status": "complete",
+      "rawDirectory": "runs/17-linked-textboxes-compact",
+      "sealedDirectory": "sealed/17-linked-textboxes-compact",
+      "freeBytesBeforeMeasurement": 1671319552,
+      "startedAt": "2026-11-12T20:29:42.701909+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "linked-textboxes-compact",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/17-linked-textboxes-compact"
+      ],
+      "stage": "complete",
+      "reportSha256": "122ea31bb8fc3eacec252e76defd1aab158068aad3d4e10fb51e2d900ff89eb7",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 288.05,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 10,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 11.17
+      },
+      "sealedManifestSha256": "ce65adce9b2be5dfdd34da4d7ccbb70ae71905b242501273a33cd7d0c6687742",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "4ec918292069f54280b5bfe36dec9d0d8c0c5d386752e040988c77ebb1fb4e11",
+        "bytes": 21016,
+        "uncompressedSha256": "122ea31bb8fc3eacec252e76defd1aab158068aad3d4e10fb51e2d900ff89eb7",
+        "uncompressedBytes": 3211904
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "2e20c955c65127988a0270b55664ac5eae4ab817d54c4963125cdaa46e7146c8",
+        "bytes": 105156,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:30:03.789825+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "list-continue",
+      "status": "complete",
+      "rawDirectory": "runs/18-list-continue",
+      "sealedDirectory": "sealed/18-list-continue",
+      "freeBytesBeforeMeasurement": 1587941376,
+      "startedAt": "2026-11-12T20:30:03.801140+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "list-continue",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/18-list-continue"
+      ],
+      "stage": "complete",
+      "reportSha256": "cbde1446c1ad94bc9bdc5e596d42d92afce535f9bfc6687d5f81d67903a6f7a2",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": false,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 24.909236000000007,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 6,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 14.99
+      },
+      "sealedManifestSha256": "8493e01d67c16b9250f3fc201e1ea1fe44f3f8b2e97c966c1921d01da994a5b1",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "037c2ee4030d7beb7e4d8d4ff7cf6259c263a04e66f90b3615bf00e2a14cb356",
+        "bytes": 23656,
+        "uncompressedSha256": "cbde1446c1ad94bc9bdc5e596d42d92afce535f9bfc6687d5f81d67903a6f7a2",
+        "uncompressedBytes": 11002876
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "b4a5063fd58c48ef9508df2b85b09ae970c607e825209fe33138b6cb80f82c97",
+        "bytes": 95048,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:30:30.509679+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "list-restart",
+      "status": "complete",
+      "rawDirectory": "runs/19-list-restart",
+      "sealedDirectory": "sealed/19-list-restart",
+      "freeBytesBeforeMeasurement": 1796239360,
+      "startedAt": "2026-11-12T20:30:30.518518+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "list-restart",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/19-list-restart"
+      ],
+      "stage": "complete",
+      "reportSha256": "bc0ea1dfa43a22b151adb908f98c7b8f56bd4c8e0516780057f5a4dc0f9196f3",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": false,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 26.809235999999984,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 6,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 14.82
+      },
+      "sealedManifestSha256": "c180e9a5e5132278762e7c4b8aeefa85b6ce3ceffa6a175f1a45e4c3f561d909",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "b224e7ff6abe710302dcaac7ea698742fb0327f69a4a3220479b75ee83852ab0",
+        "bytes": 24768,
+        "uncompressedSha256": "bc0ea1dfa43a22b151adb908f98c7b8f56bd4c8e0516780057f5a4dc0f9196f3",
+        "uncompressedBytes": 13098817
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "cba333245decde9b8bb92d8cec548deeaeca50b4eccc3f4fd4d5e1294b28c96e",
+        "bytes": 99608,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:30:57.285957+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "word14-margin-origin",
+      "status": "complete",
+      "rawDirectory": "runs/20-word14-margin-origin",
+      "sealedDirectory": "sealed/20-word14-margin-origin",
+      "freeBytesBeforeMeasurement": 1792151552,
+      "startedAt": "2026-11-12T20:30:57.296594+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "word14-margin-origin",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/20-word14-margin-origin"
+      ],
+      "stage": "complete",
+      "reportSha256": "6ef1c82a0693fb7eb9bae22b841519c29627d3c343a33b32f3013f30a810947d",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": false,
+          "maximumWordDriftPoints": null,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": false,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 11,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 11.05
+      },
+      "sealedManifestSha256": "37b20ea0ce3eb25c90de51872ef15791e6f2d8eead2d755a616f72b448e3b1d4",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "d9644d4d284dc37467107a116343d9a191942381169952b96af807d4f3256298",
+        "bytes": 26052,
+        "uncompressedSha256": "6ef1c82a0693fb7eb9bae22b841519c29627d3c343a33b32f3013f30a810947d",
+        "uncompressedBytes": 6404478
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "49c61f2062038eae38eb5e186250b8dbb977226a803e7e54089913c77a7acda9",
+        "bytes": 254776,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:31:17.229516+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "word16-page-origin",
+      "status": "complete",
+      "rawDirectory": "runs/21-word16-page-origin",
+      "sealedDirectory": "sealed/21-word16-page-origin",
+      "freeBytesBeforeMeasurement": 1619906560,
+      "startedAt": "2026-11-12T20:31:17.239068+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "word16-page-origin",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/21-word16-page-origin"
+      ],
+      "stage": "complete",
+      "reportSha256": "80989a5ee28ffc3827dbf6732ea702d94682036c1c88e6b9f579c7ceddd007d0",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 56.400000000000006,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.10000000000002274,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 7,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 20.47
+      },
+      "sealedManifestSha256": "07cb2b18a659e0c7743287fcb019bd54e455b3e74b4abd01322da14e81173b21",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "4cf07f7189392cac541b377e7530d39b6398f79075e16fa7f5d6b9b3b8df20bf",
+        "bytes": 31716,
+        "uncompressedSha256": "80989a5ee28ffc3827dbf6732ea702d94682036c1c88e6b9f579c7ceddd007d0",
+        "uncompressedBytes": 18540984
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "ab10f3478b3fbe34578334b325e8a5dfb22a78a55d47a8d57465ce738231236c",
+        "bytes": 275084,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:31:50.896444+00:00",
+      "rawRemovedAfterVerification": true
+    },
+    {
+      "id": "poi-simple-table2",
+      "status": "complete",
+      "rawDirectory": "runs/22-poi-simple-table2",
+      "sealedDirectory": "sealed/22-poi-simple-table2",
+      "freeBytesBeforeMeasurement": 1750286336,
+      "startedAt": "2026-11-12T20:31:50.907590+00:00",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/db8a3205659b/parser-validation/tool/fidelity/run.py",
+        "--office",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+        "--dart",
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--case",
+        "poi-simple-table2",
+        "--roundtrip-cycles",
+        "3",
+        "--raster-storage",
+        "gzip",
+        "--dpi",
+        "72",
+        "--output",
+        "/workspace/scratch/db8a3205659b/native-corpus-7308125/runs/22-poi-simple-table2"
+      ],
+      "stage": "complete",
+      "reportSha256": "051ced85fdb5c12edee16fa5bab8673e49b743948ba640a6e9b66d024f4ae95c",
+      "summary": {
+        "reportStatus": "measured",
+        "caseStatus": "measured",
+        "roundtripCyclesCompleted": 3,
+        "pagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.30000000000001137,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": false,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": false,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": false
+        },
+        "bridgePagination": null,
+        "nativeConversionPagination": {
+          "referencePages": 1,
+          "actualPages": 1,
+          "pageDimensionsMatch": true,
+          "pageTextMatches": true,
+          "maximumWordDriftPoints": 0.0,
+          "tolerancePoints": 0.25,
+          "matchesWithinTolerance": true,
+          "rasterSettingsMatch": true,
+          "rasterExactlyMatches": true,
+          "layoutTextExactlyMatches": true,
+          "exactOnThisRenderer": true
+        },
+        "sourceGolden": {
+          "status": "not-recorded"
+        },
+        "parserAgainstSourceGolden": {
+          "status": "not-recorded"
+        },
+        "semanticDifferenceCount": 6,
+        "exactOnThisRenderer": false,
+        "compiledExecutableSha256": "41f26a80a4598918c82d3b473023102a5e6eae42167de158afa8d22c91548091",
+        "measurementDurationSeconds": 15.15
+      },
+      "sealedManifestSha256": "d2c3d3a737b45096ad2da50ddce9da2f6e4185ae3e7e3d0d29c698e7e4e38b18",
+      "sealedReport": {
+        "path": "native-report.json.xz",
+        "sha256": "d0789083cc8502f9ce88e9b5c607cbd65e04038fd1f069a5ecd3e2015f4b00b6",
+        "bytes": 25996,
+        "uncompressedSha256": "051ced85fdb5c12edee16fa5bab8673e49b743948ba640a6e9b66d024f4ae95c",
+        "uncompressedBytes": 11647364
+      },
+      "sealedArchive": {
+        "path": "native-artifacts.tar.xz",
+        "sha256": "06b19019bbc0e1b492596b03ff97209f63342ff07ce4e050a3133619dc8f77e7",
+        "bytes": 116112,
+        "format": "USTAR/XZ",
+        "compressionPreset": 6
+      },
+      "sealedFileCount": 104,
+      "completedAt": "2026-11-12T20:32:16.547470+00:00",
+      "rawRemovedAfterVerification": true
+    }
+  ],
+  "events": [
+    {
+      "time": "2026-11-12T20:23:58.932933+00:00",
+      "case": null,
+      "stage": "started",
+      "freeBytes": 2034114560
+    },
+    {
+      "time": "2026-11-12T20:23:58.958012+00:00",
+      "case": "formatting",
+      "stage": "measurement-running",
+      "freeBytes": 2034110464
+    },
+    {
+      "time": "2026-11-12T20:24:21.212789+00:00",
+      "case": "formatting",
+      "stage": "measurement-verified",
+      "freeBytes": 1978568704
+    },
+    {
+      "time": "2026-11-12T20:24:21.213426+00:00",
+      "case": "formatting",
+      "stage": "sealing",
+      "freeBytes": 1978564608
+    },
+    {
+      "time": "2026-11-12T20:24:23.892217+00:00",
+      "case": "formatting",
+      "stage": "verifying-seal",
+      "freeBytes": 1978269696
+    },
+    {
+      "time": "2026-11-12T20:24:24.281582+00:00",
+      "case": "formatting",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1978265600
+    },
+    {
+      "time": "2026-11-12T20:24:24.327786+00:00",
+      "case": "formatting",
+      "stage": "complete",
+      "freeBytes": 2019381248
+    },
+    {
+      "time": "2026-11-12T20:24:24.335362+00:00",
+      "case": "word",
+      "stage": "measurement-running",
+      "freeBytes": 2019381248
+    },
+    {
+      "time": "2026-11-12T20:24:48.287553+00:00",
+      "case": "word",
+      "stage": "measurement-verified",
+      "freeBytes": 1947090944
+    },
+    {
+      "time": "2026-11-12T20:24:48.288373+00:00",
+      "case": "word",
+      "stage": "sealing",
+      "freeBytes": 1947090944
+    },
+    {
+      "time": "2026-11-12T20:24:51.244186+00:00",
+      "case": "word",
+      "stage": "verifying-seal",
+      "freeBytes": 1936273408
+    },
+    {
+      "time": "2026-11-12T20:24:51.983860+00:00",
+      "case": "word",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1936269312
+    },
+    {
+      "time": "2026-11-12T20:24:52.035568+00:00",
+      "case": "word",
+      "stage": "complete",
+      "freeBytes": 1977241600
+    },
+    {
+      "time": "2026-11-12T20:24:52.044996+00:00",
+      "case": "word-compatibility",
+      "stage": "measurement-running",
+      "freeBytes": 1977241600
+    },
+    {
+      "time": "2026-11-12T20:25:16.434641+00:00",
+      "case": "word-compatibility",
+      "stage": "measurement-verified",
+      "freeBytes": 1937002496
+    },
+    {
+      "time": "2026-11-12T20:25:16.435851+00:00",
+      "case": "word-compatibility",
+      "stage": "sealing",
+      "freeBytes": 1937002496
+    },
+    {
+      "time": "2026-11-12T20:25:19.025116+00:00",
+      "case": "word-compatibility",
+      "stage": "verifying-seal",
+      "freeBytes": 1936609280
+    },
+    {
+      "time": "2026-11-12T20:25:19.457206+00:00",
+      "case": "word-compatibility",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1936605184
+    },
+    {
+      "time": "2026-11-12T20:25:19.494313+00:00",
+      "case": "word-compatibility",
+      "stage": "complete",
+      "freeBytes": 1976840192
+    },
+    {
+      "time": "2026-11-12T20:25:19.501901+00:00",
+      "case": "table-borders",
+      "stage": "measurement-running",
+      "freeBytes": 1976836096
+    },
+    {
+      "time": "2026-11-12T20:25:40.787224+00:00",
+      "case": "table-borders",
+      "stage": "measurement-verified",
+      "freeBytes": 1940135936
+    },
+    {
+      "time": "2026-11-12T20:25:40.788027+00:00",
+      "case": "table-borders",
+      "stage": "sealing",
+      "freeBytes": 1940135936
+    },
+    {
+      "time": "2026-11-12T20:25:43.223077+00:00",
+      "case": "table-borders",
+      "stage": "verifying-seal",
+      "freeBytes": 1917575168
+    },
+    {
+      "time": "2026-11-12T20:25:43.602062+00:00",
+      "case": "table-borders",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1939877888
+    },
+    {
+      "time": "2026-11-12T20:25:43.638786+00:00",
+      "case": "table-borders",
+      "stage": "complete",
+      "freeBytes": 1976553472
+    },
+    {
+      "time": "2026-11-12T20:25:43.648617+00:00",
+      "case": "story-media",
+      "stage": "measurement-running",
+      "freeBytes": 1976553472
+    },
+    {
+      "time": "2026-11-12T20:26:01.230781+00:00",
+      "case": "story-media",
+      "stage": "measurement-verified",
+      "freeBytes": 1948282880
+    },
+    {
+      "time": "2026-11-12T20:26:01.231694+00:00",
+      "case": "story-media",
+      "stage": "sealing",
+      "freeBytes": 1948278784
+    },
+    {
+      "time": "2026-11-12T20:26:02.558774+00:00",
+      "case": "story-media",
+      "stage": "verifying-seal",
+      "freeBytes": 1948094464
+    },
+    {
+      "time": "2026-11-12T20:26:02.793471+00:00",
+      "case": "story-media",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1948090368
+    },
+    {
+      "time": "2026-11-12T20:26:02.839028+00:00",
+      "case": "story-media",
+      "stage": "complete",
+      "freeBytes": 1976098816
+    },
+    {
+      "time": "2026-11-12T20:26:02.847445+00:00",
+      "case": "comment-threads",
+      "stage": "measurement-running",
+      "freeBytes": 1976098816
+    },
+    {
+      "time": "2026-11-12T20:26:19.689148+00:00",
+      "case": "comment-threads",
+      "stage": "measurement-verified",
+      "freeBytes": 2027421696
+    },
+    {
+      "time": "2026-11-12T20:26:19.690514+00:00",
+      "case": "comment-threads",
+      "stage": "sealing",
+      "freeBytes": 2027417600
+    },
+    {
+      "time": "2026-11-12T20:26:20.609873+00:00",
+      "case": "comment-threads",
+      "stage": "verifying-seal",
+      "freeBytes": 2015956992
+    },
+    {
+      "time": "2026-11-12T20:26:20.793580+00:00",
+      "case": "comment-threads",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 2015952896
+    },
+    {
+      "time": "2026-11-12T20:26:20.839536+00:00",
+      "case": "comment-threads",
+      "stage": "complete",
+      "freeBytes": 2040446976
+    },
+    {
+      "time": "2026-11-12T20:26:20.851346+00:00",
+      "case": "note-markers",
+      "stage": "measurement-running",
+      "freeBytes": 2040446976
+    },
+    {
+      "time": "2026-11-12T20:26:43.107933+00:00",
+      "case": "note-markers",
+      "stage": "measurement-verified",
+      "freeBytes": 1908531200
+    },
+    {
+      "time": "2026-11-12T20:26:43.108893+00:00",
+      "case": "note-markers",
+      "stage": "sealing",
+      "freeBytes": 1908527104
+    },
+    {
+      "time": "2026-11-12T20:26:45.609303+00:00",
+      "case": "note-markers",
+      "stage": "verifying-seal",
+      "freeBytes": 1974804480
+    },
+    {
+      "time": "2026-11-12T20:26:45.946232+00:00",
+      "case": "note-markers",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1974800384
+    },
+    {
+      "time": "2026-11-12T20:26:45.987363+00:00",
+      "case": "note-markers",
+      "stage": "complete",
+      "freeBytes": 2013581312
+    },
+    {
+      "time": "2026-11-12T20:26:45.996716+00:00",
+      "case": "bookmarks",
+      "stage": "measurement-running",
+      "freeBytes": 2013581312
+    },
+    {
+      "time": "2026-11-12T20:27:07.356341+00:00",
+      "case": "bookmarks",
+      "stage": "measurement-verified",
+      "freeBytes": 1698177024
+    },
+    {
+      "time": "2026-11-12T20:27:07.357840+00:00",
+      "case": "bookmarks",
+      "stage": "sealing",
+      "freeBytes": 1698172928
+    },
+    {
+      "time": "2026-11-12T20:27:09.739360+00:00",
+      "case": "bookmarks",
+      "stage": "verifying-seal",
+      "freeBytes": 1697927168
+    },
+    {
+      "time": "2026-11-12T20:27:10.072670+00:00",
+      "case": "bookmarks",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1697923072
+    },
+    {
+      "time": "2026-11-12T20:27:10.112032+00:00",
+      "case": "bookmarks",
+      "stage": "complete",
+      "freeBytes": 1734541312
+    },
+    {
+      "time": "2026-11-12T20:27:10.127918+00:00",
+      "case": "content-controls",
+      "stage": "measurement-running",
+      "freeBytes": 1734541312
+    },
+    {
+      "time": "2026-11-12T20:27:30.648877+00:00",
+      "case": "content-controls",
+      "stage": "measurement-verified",
+      "freeBytes": 605016064
+    },
+    {
+      "time": "2026-11-12T20:27:30.652556+00:00",
+      "case": "content-controls",
+      "stage": "sealing",
+      "freeBytes": 605011968
+    },
+    {
+      "time": "2026-11-12T20:27:33.112598+00:00",
+      "case": "content-controls",
+      "stage": "verifying-seal",
+      "freeBytes": 1021747200
+    },
+    {
+      "time": "2026-11-12T20:27:33.392608+00:00",
+      "case": "content-controls",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1230188544
+    },
+    {
+      "time": "2026-11-12T20:27:33.421088+00:00",
+      "case": "content-controls",
+      "stage": "complete",
+      "freeBytes": 1262940160
+    },
+    {
+      "time": "2026-11-12T20:27:33.428879+00:00",
+      "case": "content-controls-legacy",
+      "stage": "measurement-running",
+      "freeBytes": 1262936064
+    },
+    {
+      "time": "2026-11-12T20:27:56.238822+00:00",
+      "case": "content-controls-legacy",
+      "stage": "measurement-verified",
+      "freeBytes": 1647058944
+    },
+    {
+      "time": "2026-11-12T20:27:56.240370+00:00",
+      "case": "content-controls-legacy",
+      "stage": "sealing",
+      "freeBytes": 1647058944
+    },
+    {
+      "time": "2026-11-12T20:27:58.095697+00:00",
+      "case": "content-controls-legacy",
+      "stage": "verifying-seal",
+      "freeBytes": 1646866432
+    },
+    {
+      "time": "2026-11-12T20:27:58.375654+00:00",
+      "case": "content-controls-legacy",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1646862336
+    },
+    {
+      "time": "2026-11-12T20:27:58.418163+00:00",
+      "case": "content-controls-legacy",
+      "stage": "complete",
+      "freeBytes": 1679609856
+    },
+    {
+      "time": "2026-11-12T20:27:58.428540+00:00",
+      "case": "word-altchunk",
+      "stage": "measurement-running",
+      "freeBytes": 1679609856
+    },
+    {
+      "time": "2026-11-12T20:28:20.068814+00:00",
+      "case": "word-altchunk",
+      "stage": "measurement-verified",
+      "freeBytes": 1643532288
+    },
+    {
+      "time": "2026-11-12T20:28:20.070728+00:00",
+      "case": "word-altchunk",
+      "stage": "sealing",
+      "freeBytes": 1643528192
+    },
+    {
+      "time": "2026-11-12T20:28:22.155071+00:00",
+      "case": "word-altchunk",
+      "stage": "verifying-seal",
+      "freeBytes": 1643315200
+    },
+    {
+      "time": "2026-11-12T20:28:22.488116+00:00",
+      "case": "word-altchunk",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1643311104
+    },
+    {
+      "time": "2026-11-12T20:28:22.524930+00:00",
+      "case": "word-altchunk",
+      "stage": "complete",
+      "freeBytes": 1679384576
+    },
+    {
+      "time": "2026-11-12T20:28:22.534875+00:00",
+      "case": "linked-textboxes",
+      "stage": "measurement-running",
+      "freeBytes": 1679384576
+    },
+    {
+      "time": "2026-11-12T20:28:37.005668+00:00",
+      "case": "linked-textboxes",
+      "stage": "measurement-verified",
+      "freeBytes": 1655521280
+    },
+    {
+      "time": "2026-11-12T20:28:37.007196+00:00",
+      "case": "linked-textboxes",
+      "stage": "sealing",
+      "freeBytes": 1655517184
+    },
+    {
+      "time": "2026-11-12T20:28:37.824986+00:00",
+      "case": "linked-textboxes",
+      "stage": "verifying-seal",
+      "freeBytes": 1655328768
+    },
+    {
+      "time": "2026-11-12T20:28:38.001345+00:00",
+      "case": "linked-textboxes",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1655324672
+    },
+    {
+      "time": "2026-11-12T20:28:38.030120+00:00",
+      "case": "linked-textboxes",
+      "stage": "complete",
+      "freeBytes": 1679183872
+    },
+    {
+      "time": "2026-11-12T20:28:38.038616+00:00",
+      "case": "officeart-shapes",
+      "stage": "measurement-running",
+      "freeBytes": 1679183872
+    },
+    {
+      "time": "2026-11-12T20:28:52.633382+00:00",
+      "case": "officeart-shapes",
+      "stage": "measurement-verified",
+      "freeBytes": 1656987648
+    },
+    {
+      "time": "2026-11-12T20:28:52.635649+00:00",
+      "case": "officeart-shapes",
+      "stage": "sealing",
+      "freeBytes": 1656983552
+    },
+    {
+      "time": "2026-11-12T20:28:53.203122+00:00",
+      "case": "officeart-shapes",
+      "stage": "verifying-seal",
+      "freeBytes": 1656754176
+    },
+    {
+      "time": "2026-11-12T20:28:53.379229+00:00",
+      "case": "officeart-shapes",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1656750080
+    },
+    {
+      "time": "2026-11-12T20:28:53.413997+00:00",
+      "case": "officeart-shapes",
+      "stage": "complete",
+      "freeBytes": 1678659584
+    },
+    {
+      "time": "2026-11-12T20:28:53.424049+00:00",
+      "case": "linked-textboxes-native",
+      "stage": "measurement-running",
+      "freeBytes": 1678659584
+    },
+    {
+      "time": "2026-11-12T20:29:08.978571+00:00",
+      "case": "linked-textboxes-native",
+      "stage": "measurement-verified",
+      "freeBytes": 1649373184
+    },
+    {
+      "time": "2026-11-12T20:29:08.980523+00:00",
+      "case": "linked-textboxes-native",
+      "stage": "sealing",
+      "freeBytes": 1649369088
+    },
+    {
+      "time": "2026-11-12T20:29:09.801088+00:00",
+      "case": "linked-textboxes-native",
+      "stage": "verifying-seal",
+      "freeBytes": 1649192960
+    },
+    {
+      "time": "2026-11-12T20:29:09.983016+00:00",
+      "case": "linked-textboxes-native",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1649188864
+    },
+    {
+      "time": "2026-11-12T20:29:10.009511+00:00",
+      "case": "linked-textboxes-native",
+      "stage": "complete",
+      "freeBytes": 1671696384
+    },
+    {
+      "time": "2026-11-12T20:29:10.020327+00:00",
+      "case": "emf-vectors",
+      "stage": "measurement-running",
+      "freeBytes": 1671696384
+    },
+    {
+      "time": "2026-11-12T20:29:25.177769+00:00",
+      "case": "emf-vectors",
+      "stage": "measurement-verified",
+      "freeBytes": 1648517120
+    },
+    {
+      "time": "2026-11-12T20:29:25.180027+00:00",
+      "case": "emf-vectors",
+      "stage": "sealing",
+      "freeBytes": 1648517120
+    },
+    {
+      "time": "2026-11-12T20:29:25.797890+00:00",
+      "case": "emf-vectors",
+      "stage": "verifying-seal",
+      "freeBytes": 1648349184
+    },
+    {
+      "time": "2026-11-12T20:29:25.973235+00:00",
+      "case": "emf-vectors",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1648345088
+    },
+    {
+      "time": "2026-11-12T20:29:26.003722+00:00",
+      "case": "emf-vectors",
+      "stage": "complete",
+      "freeBytes": 1671503872
+    },
+    {
+      "time": "2026-11-12T20:29:26.016577+00:00",
+      "case": "wmf-vectors",
+      "stage": "measurement-running",
+      "freeBytes": 1671503872
+    },
+    {
+      "time": "2026-11-12T20:29:41.844147+00:00",
+      "case": "wmf-vectors",
+      "stage": "measurement-verified",
+      "freeBytes": 1648332800
+    },
+    {
+      "time": "2026-11-12T20:29:41.847244+00:00",
+      "case": "wmf-vectors",
+      "stage": "sealing",
+      "freeBytes": 1648332800
+    },
+    {
+      "time": "2026-11-12T20:29:42.465867+00:00",
+      "case": "wmf-vectors",
+      "stage": "verifying-seal",
+      "freeBytes": 1648173056
+    },
+    {
+      "time": "2026-11-12T20:29:42.642573+00:00",
+      "case": "wmf-vectors",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1648168960
+    },
+    {
+      "time": "2026-11-12T20:29:42.692533+00:00",
+      "case": "wmf-vectors",
+      "stage": "complete",
+      "freeBytes": 1671319552
+    },
+    {
+      "time": "2026-11-12T20:29:42.701930+00:00",
+      "case": "linked-textboxes-compact",
+      "stage": "measurement-running",
+      "freeBytes": 1671319552
+    },
+    {
+      "time": "2026-11-12T20:30:02.051604+00:00",
+      "case": "linked-textboxes-compact",
+      "stage": "measurement-verified",
+      "freeBytes": 1562484736
+    },
+    {
+      "time": "2026-11-12T20:30:02.053248+00:00",
+      "case": "linked-textboxes-compact",
+      "stage": "sealing",
+      "freeBytes": 1562480640
+    },
+    {
+      "time": "2026-11-12T20:30:03.535829+00:00",
+      "case": "linked-textboxes-compact",
+      "stage": "verifying-seal",
+      "freeBytes": 1562312704
+    },
+    {
+      "time": "2026-11-12T20:30:03.762660+00:00",
+      "case": "linked-textboxes-compact",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1562308608
+    },
+    {
+      "time": "2026-11-12T20:30:03.789848+00:00",
+      "case": "linked-textboxes-compact",
+      "stage": "complete",
+      "freeBytes": 1587941376
+    },
+    {
+      "time": "2026-11-12T20:30:03.801158+00:00",
+      "case": "list-continue",
+      "stage": "measurement-running",
+      "freeBytes": 1587941376
+    },
+    {
+      "time": "2026-11-12T20:30:26.947022+00:00",
+      "case": "list-continue",
+      "stage": "measurement-verified",
+      "freeBytes": 1754415104
+    },
+    {
+      "time": "2026-11-12T20:30:26.949271+00:00",
+      "case": "list-continue",
+      "stage": "sealing",
+      "freeBytes": 1754411008
+    },
+    {
+      "time": "2026-11-12T20:30:30.093192+00:00",
+      "case": "list-continue",
+      "stage": "verifying-seal",
+      "freeBytes": 1754255360
+    },
+    {
+      "time": "2026-11-12T20:30:30.475351+00:00",
+      "case": "list-continue",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1754251264
+    },
+    {
+      "time": "2026-11-12T20:30:30.509699+00:00",
+      "case": "list-continue",
+      "stage": "complete",
+      "freeBytes": 1796239360
+    },
+    {
+      "time": "2026-11-12T20:30:30.518536+00:00",
+      "case": "list-restart",
+      "stage": "measurement-running",
+      "freeBytes": 1796239360
+    },
+    {
+      "time": "2026-11-12T20:30:53.035460+00:00",
+      "case": "list-restart",
+      "stage": "measurement-verified",
+      "freeBytes": 1746948096
+    },
+    {
+      "time": "2026-11-12T20:30:53.037828+00:00",
+      "case": "list-restart",
+      "stage": "sealing",
+      "freeBytes": 1746944000
+    },
+    {
+      "time": "2026-11-12T20:30:56.794292+00:00",
+      "case": "list-restart",
+      "stage": "verifying-seal",
+      "freeBytes": 1745641472
+    },
+    {
+      "time": "2026-11-12T20:30:57.242054+00:00",
+      "case": "list-restart",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1745637376
+    },
+    {
+      "time": "2026-11-12T20:30:57.285978+00:00",
+      "case": "list-restart",
+      "stage": "complete",
+      "freeBytes": 1792151552
+    },
+    {
+      "time": "2026-11-12T20:30:57.296611+00:00",
+      "case": "word14-margin-origin",
+      "stage": "measurement-running",
+      "freeBytes": 1792151552
+    },
+    {
+      "time": "2026-11-12T20:31:15.140027+00:00",
+      "case": "word14-margin-origin",
+      "stage": "measurement-verified",
+      "freeBytes": 1587863552
+    },
+    {
+      "time": "2026-11-12T20:31:15.143677+00:00",
+      "case": "word14-margin-origin",
+      "stage": "sealing",
+      "freeBytes": 1587859456
+    },
+    {
+      "time": "2026-11-12T20:31:16.764112+00:00",
+      "case": "word14-margin-origin",
+      "stage": "verifying-seal",
+      "freeBytes": 1587539968
+    },
+    {
+      "time": "2026-11-12T20:31:17.176314+00:00",
+      "case": "word14-margin-origin",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1587535872
+    },
+    {
+      "time": "2026-11-12T20:31:17.229540+00:00",
+      "case": "word14-margin-origin",
+      "stage": "complete",
+      "freeBytes": 1619906560
+    },
+    {
+      "time": "2026-11-12T20:31:17.239085+00:00",
+      "case": "word16-page-origin",
+      "stage": "measurement-running",
+      "freeBytes": 1619906560
+    },
+    {
+      "time": "2026-11-12T20:31:45.914516+00:00",
+      "case": "word16-page-origin",
+      "stage": "measurement-verified",
+      "freeBytes": 1633267712
+    },
+    {
+      "time": "2026-11-12T20:31:45.918350+00:00",
+      "case": "word16-page-origin",
+      "stage": "sealing",
+      "freeBytes": 1633263616
+    },
+    {
+      "time": "2026-11-12T20:31:50.321953+00:00",
+      "case": "word16-page-origin",
+      "stage": "verifying-seal",
+      "freeBytes": 1708851200
+    },
+    {
+      "time": "2026-11-12T20:31:50.866957+00:00",
+      "case": "word16-page-origin",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1691787264
+    },
+    {
+      "time": "2026-11-12T20:31:50.896466+00:00",
+      "case": "word16-page-origin",
+      "stage": "complete",
+      "freeBytes": 1750286336
+    },
+    {
+      "time": "2026-11-12T20:31:50.907608+00:00",
+      "case": "poi-simple-table2",
+      "stage": "measurement-running",
+      "freeBytes": 1750286336
+    },
+    {
+      "time": "2026-11-12T20:32:13.056952+00:00",
+      "case": "poi-simple-table2",
+      "stage": "measurement-verified",
+      "freeBytes": 1686839296
+    },
+    {
+      "time": "2026-11-12T20:32:13.060114+00:00",
+      "case": "poi-simple-table2",
+      "stage": "sealing",
+      "freeBytes": 1686835200
+    },
+    {
+      "time": "2026-11-12T20:32:16.097568+00:00",
+      "case": "poi-simple-table2",
+      "stage": "verifying-seal",
+      "freeBytes": 1686654976
+    },
+    {
+      "time": "2026-11-12T20:32:16.491698+00:00",
+      "case": "poi-simple-table2",
+      "stage": "seal-verified-before-cleanup",
+      "freeBytes": 1686650880
+    },
+    {
+      "time": "2026-11-12T20:32:16.547495+00:00",
+      "case": "poi-simple-table2",
+      "stage": "complete",
+      "freeBytes": 1730179072
+    },
+    {
+      "time": "2026-11-12T20:32:16.550140+00:00",
+      "case": null,
+      "stage": "all-independent-cases-complete",
+      "freeBytes": 1730179072
+    }
+  ],
+  "updatedAt": "2026-11-12T20:32:16.550140+00:00",
+  "measurementEnvironmentSha256": "60155df828be26229e49e27472b288f052d1bc17d5eb882796bdba42976bd786",
+  "completedAt": "2026-11-12T20:32:16.550123+00:00",
+  "completedCases": 22,
+  "completedRoundtripCycles": 66
+}

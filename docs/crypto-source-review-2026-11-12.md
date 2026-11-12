@@ -1163,3 +1163,5 @@ technical source-binding fingerprints are refreshed; no release action is taken.
   "reviewed_source_sha256": "8363ea907f2aa8a48f1b0db4932c98b294c441d53b7377324f4e8ff2e60e338f"
 }
 ```
+
+The 1.2.7 snapshot adds UNIX compress output and archive move dependency records. Destination verification uses the existing SHA-256 and persistent storage authority checks; the versioned records contain no passwords. The complete archive publication/model/dialog surface is included in the reviewed inventory. No new encryption primitive or credential destination is introduced.

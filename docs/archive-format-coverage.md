@@ -47,8 +47,8 @@ The existing source-account, review, verification and recovery requirements in
 
 ## Creating and editing
 
-Use **Create archive…** for the 31-choice format picker. It exposes only implemented
-compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA take one
+Use **Create archive…** for the 33-choice format picker. It exposes only implemented
+compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress take one
 regular file; AR takes flat regular files; the other creation formats support
 folders within their format-specific name/depth limits. KMZ needs a top-level
 KML document. Java archives must be unsigned.

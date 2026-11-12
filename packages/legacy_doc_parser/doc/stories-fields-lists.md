@@ -13,6 +13,10 @@ the main story. `stories` contains formatted auxiliary content. Every start,
 end, anchor, bookmark and field CP is a **document-global UTF-16 code-unit
 position**, with an exclusive end. A paragraph's end includes its terminator.
 Header/footer guard paragraph marks are excluded from story contents.
+An independently observed native table-ended header/footer can use its closed
+row marker immediately before the guard. This bounded interoperability recovery
+retains the table at the declared endpoint and reports
+`recoveredTableStoryBoundary`; malformed or incomplete tables are not repaired.
 
 | Content | Reference source | Exposed information |
 | --- | --- | --- |

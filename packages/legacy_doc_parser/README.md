@@ -193,3 +193,5 @@ Integration refresh: solid OfficeArt context, exact textbox content boundaries, 
 The combined integration also preserves note table tails, corroborated header textbox aliases and corroborated shared header shape occurrences. Current acceptance: 773 Dart tests, 156 Python oracle controls, and 217 DOCX outputs checked by a freshly built independent Open XML SDK validator. Retained native receipts continue to report their explicit remaining layout differences.
 
 The latest native counterexample retracts the experimental textbox table-depth reset; the established indentation behavior is retained. Shared header shapes preserve per-anchor geometry without rewriting source shape IDs. This final source cohort passes 809 Dart tests and 162 Python controls.
+
+The completed continuation recovers bounded native header/footer stories ending in closed tables, with an explicit recovery warning. The combined source passes 826 Dart tests, 162 Python controls and independent Open XML SDK validation of 222 DOCX outputs. Native corpus receipts preserve their measured layout differences and source identities.

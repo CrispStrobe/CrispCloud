@@ -427,6 +427,10 @@ void main(List<String> arguments) {
     'header-textbox-duplicate-chain',
     'header-textbox-first-enabled',
     'header-textbox-first-roundtrip',
+    'header-ending-paragraph',
+    'header-ending-table',
+    'footer-ending-paragraph',
+    'footer-ending-table',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }

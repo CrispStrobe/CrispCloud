@@ -143,14 +143,16 @@ void main() {
           throw StateError('Interrupted install');
         }
       };
-      await expectLater(
-        ArchiveContainerPublisher(backend, firstJournal).publish(
-          original: (await backend.stat('/out/work.zip'))!,
-          originalSha256: sha256.convert(original).toString(),
-          bytes: candidate,
-        ),
-        throwsA(anything),
-      );
+      await tester.runAsync(() async {
+        await expectLater(
+          ArchiveContainerPublisher(backend, firstJournal).publish(
+            original: (await backend.stat('/out/work.zip'))!,
+            originalSha256: sha256.convert(original).toString(),
+            bytes: candidate,
+          ),
+          throwsA(anything),
+        );
+      });
       backend.before = null;
       var changed = false;
       final restarted = ArchivePublicationJournal(storage: storage);
@@ -172,11 +174,15 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Recover'));
+      await _activateAndWaitForText(tester, 'Recover', 'Finish publication');
       await tester.pumpAndSettle();
       expect(find.text('/out/work.zip'), findsOneWidget);
       await tester.ensureVisible(find.text('Finish publication'));
-      await tester.tap(find.text('Finish publication'));
+      await _activateAndWaitForText(
+        tester,
+        'Finish publication',
+        'No unfinished archive publication for this account.',
+      );
       await tester.pumpAndSettle();
       expect(backend.files['/out/work.zip'], candidate);
       expect(restarted.records.single.phase, ArchivePublicationPhase.complete);
@@ -184,8 +190,11 @@ void main() {
         find.text('No unfinished archive publication for this account.'),
         findsOneWidget,
       );
-      await tester.tap(find.text('Close'));
-      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Close'));
+        await tester.pumpAndSettle();
+        await Future<void>.delayed(Duration.zero);
+      });
       expect(changed, isTrue);
       expect(tester.takeException(), isNull);
     },

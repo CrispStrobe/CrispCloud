@@ -1,0 +1,223 @@
+{
+  "source": "independently authored two-page ReportLab PDF; LibreOffice not invoked",
+  "sourceSha256": "77a1ced75b8911eafc35014f49181b0a9e34b863188b0da61a333f03feebdf1b",
+  "tools": {
+    "pdftoppm": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+      "sha256": "de772e88ab9977ccde25def9b403bf42675d75f5dd82b19fbd7d8123ad183159",
+      "version": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    },
+    "pdftotext": {
+      "path": "/usr/bin/pdftotext",
+      "sha256": "7fe3559cac3ba61dd93650a1ba90499b9fc488184ef8d0f2f1305ddf52c0378b",
+      "version": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    },
+    "pdfinfo": {
+      "path": "/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override/pdfinfo",
+      "sha256": "fee70ade670fb025343aca2b5c3a2aacacb8ed9edce1b716b233b5de924b6bf5",
+      "version": "pdfinfo version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    }
+  },
+  "plain": {
+    "pdfSha256": "77a1ced75b8911eafc35014f49181b0a9e34b863188b0da61a333f03feebdf1b",
+    "pages": [
+      {
+        "size": [
+          180.0,
+          120.0
+        ],
+        "words": [
+          {
+            "text": "Independent",
+            "box": [
+              10.0,
+              31.384,
+              76.72,
+              42.484
+            ]
+          },
+          {
+            "text": "page",
+            "box": [
+              80.056,
+              31.384,
+              106.744,
+              42.484
+            ]
+          },
+          {
+            "text": "1",
+            "box": [
+              110.08,
+              31.384,
+              116.752,
+              42.484
+            ]
+          }
+        ]
+      },
+      {
+        "size": [
+          180.0,
+          120.0
+        ],
+        "words": [
+          {
+            "text": "Independent",
+            "box": [
+              10.0,
+              31.384,
+              76.72,
+              42.484
+            ]
+          },
+          {
+            "text": "page",
+            "box": [
+              80.056,
+              31.384,
+              106.744,
+              42.484
+            ]
+          },
+          {
+            "text": "2",
+            "box": [
+              110.08,
+              31.384,
+              116.752,
+              42.484
+            ]
+          }
+        ]
+      }
+    ],
+    "text": "Independent page 1\n\fIndependent page 2\n\f",
+    "rasterSha256": [
+      "d81413611c06b2e0972543ecff7bfc0937ab41c41eb6fc62e00b531e58c0661d",
+      "ec74094f5e472ce1199528b3229a5f336bbcbea8c3c4d24cf7ee2dbb5e9376b8"
+    ],
+    "rasterDpi": 72,
+    "rasterColorSpace": "RGB"
+  },
+  "compressed": {
+    "pdfSha256": "77a1ced75b8911eafc35014f49181b0a9e34b863188b0da61a333f03feebdf1b",
+    "pages": [
+      {
+        "size": [
+          180.0,
+          120.0
+        ],
+        "words": [
+          {
+            "text": "Independent",
+            "box": [
+              10.0,
+              31.384,
+              76.72,
+              42.484
+            ]
+          },
+          {
+            "text": "page",
+            "box": [
+              80.056,
+              31.384,
+              106.744,
+              42.484
+            ]
+          },
+          {
+            "text": "1",
+            "box": [
+              110.08,
+              31.384,
+              116.752,
+              42.484
+            ]
+          }
+        ]
+      },
+      {
+        "size": [
+          180.0,
+          120.0
+        ],
+        "words": [
+          {
+            "text": "Independent",
+            "box": [
+              10.0,
+              31.384,
+              76.72,
+              42.484
+            ]
+          },
+          {
+            "text": "page",
+            "box": [
+              80.056,
+              31.384,
+              106.744,
+              42.484
+            ]
+          },
+          {
+            "text": "2",
+            "box": [
+              110.08,
+              31.384,
+              116.752,
+              42.484
+            ]
+          }
+        ]
+      }
+    ],
+    "text": "Independent page 1\n\fIndependent page 2\n\f",
+    "rasterSha256": [
+      "d81413611c06b2e0972543ecff7bfc0937ab41c41eb6fc62e00b531e58c0661d",
+      "ec74094f5e472ce1199528b3229a5f336bbcbea8c3c4d24cf7ee2dbb5e9376b8"
+    ],
+    "rasterDpi": 72,
+    "rasterColorSpace": "RGB",
+    "rasterStorage": "gzip",
+    "rasterArtifacts": [
+      {
+        "page": 1,
+        "path": "page-0001.ppm.gz",
+        "compression": "gzip",
+        "sha256": "54a161f04a98a3a25c4fc7eeaae2a9a91779e869c18365d22cb4f81b71c833f5",
+        "sizeBytes": 1403,
+        "uncompressedSha256": "d81413611c06b2e0972543ecff7bfc0937ab41c41eb6fc62e00b531e58c0661d",
+        "uncompressedSizeBytes": 64815
+      },
+      {
+        "page": 2,
+        "path": "page-0002.ppm.gz",
+        "compression": "gzip",
+        "sha256": "0cecdf85c06d3449e11346e62bb87d132c74880fcb3a6e129d7ea8b715a0b9d7",
+        "sizeBytes": 1471,
+        "uncompressedSha256": "ec74094f5e472ce1199528b3229a5f336bbcbea8c3c4d24cf7ee2dbb5e9376b8",
+        "uncompressedSizeBytes": 64815
+      }
+    ],
+    "rasterManifest": {
+      "path": "raster-manifest.json",
+      "sha256": "2eebbba741c1a5dcc912fac8a6d2b0d010ed6c38d995f8fa9798fb8dc1020b77"
+    }
+  },
+  "comparison": {
+    "referencePages": 2,
+    "actualPages": 2,
+    "pageDimensionsMatch": true,
+    "pageTextMatches": true,
+    "maximumWordDriftPoints": 0.0,
+    "tolerancePoints": 0.25,
+    "matchesWithinTolerance": true,
+    "rasterSettingsMatch": true,
+    "rasterExactlyMatches": true,
+    "layoutTextExactlyMatches": true,
+    "exactOnThisRenderer": true
+  }
+}

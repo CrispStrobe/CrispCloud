@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "https://github.com/CrispStrobe/crisperbooks.git",
-  "revision": "c98e05307f537397a4fad26b75883ac387fefebf",
-  "git_tree": "caf3c05476dd3a613b33cf0982cdc4e57026ebcf",
+  "revision": "32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52",
+  "git_tree": "ad8ca87ab5101b39166cb775131caa341bda176e",
   "packages": {
     "crisperbooks": ".",
     "crisp_ebook": "packages/crisp_ebook",
@@ -24,9 +24,9 @@
     },
     ".github/workflows/ebook-editor.yml": {
       "mode": "100644",
-      "git_blob": "39bad8c9bca52ac3e5d446995d51b70f35cbd1a1",
-      "bytes": 14420,
-      "sha256": "69f94addc71c42374a64380acc7714be37bc2351c8a66bf44ff4927b1daf017a"
+      "git_blob": "037cb1e8fc178d15ea1f803086638946c556a3e1",
+      "bytes": 15048,
+      "sha256": "2829a3e552a95de361b1e03f4b01cc2be5d52d72edc550f10baecdb852437aa6"
     },
     ".github/workflows/ebook-linux-host.yml": {
       "mode": "100644",
@@ -66,9 +66,9 @@
     },
     "README.md": {
       "mode": "100644",
-      "git_blob": "496e1455718d60a3ddc7ea212b8e267a4925b4b0",
-      "bytes": 4197,
-      "sha256": "0d2a87106104cf3f5b900ebfb0d2a03b71bee0a5090574b34a260aefa22644b0"
+      "git_blob": "9f007f69bf78091bb8532a1b105f644e1a3e4450",
+      "bytes": 4551,
+      "sha256": "9a29020450deeb2c7053a35452a0efba0b4552e5c8c2e5c8a779342cb7329be4"
     },
     "analysis_options.yaml": {
       "mode": "100644",
@@ -1092,9 +1092,9 @@
     },
     "packages/crisp_ebook_conversion/tool/verify_import_chain.py": {
       "mode": "100644",
-      "git_blob": "712fc30c0bf8218c296a864c8a34b59397868f45",
-      "bytes": 4116,
-      "sha256": "2ef5d251b09b65b7abaa4926c7ceb4b41897186c52eb014f05037b128b1aa453"
+      "git_blob": "4410520b6fe8edbeb31771d31ce746683fb62f76",
+      "bytes": 4300,
+      "sha256": "90120937eae8f5995c8c81b98172e171131d95f8a13a3af9cfefb6394254a359"
     },
     "packages/crisp_ebook_conversion/tool/web_metadata_probe.dart": {
       "mode": "100644",
@@ -1614,9 +1614,9 @@
     },
     "packages/crisp_ebook_reader/test/native/reader_platform_integration.dart": {
       "mode": "100644",
-      "git_blob": "23895b15ca17ae09b4c69a2cf97feff1b4ce1e3d",
-      "bytes": 12506,
-      "sha256": "e2e797fc63362908dc6e54568933cfe74ac11758efc940f16e0fb44da183e366"
+      "git_blob": "dde0c4f838a417b12fe5df2556160495e54e0a96",
+      "bytes": 12563,
+      "sha256": "448e4658c28b6ea72dbb6a6e27dd71507d064f06de5270902ee359b7cdbe955f"
     },
     "packages/crisp_ebook_reader/tool/capture_linux_host.py": {
       "mode": "100644",
@@ -1638,9 +1638,9 @@
     },
     "packages/crisp_ebook_reader/tool/prepare_native_host_smoke.py": {
       "mode": "100644",
-      "git_blob": "c1d5179110dfe0c501a93952c9ee56c34a4dd3d9",
-      "bytes": 6593,
-      "sha256": "1b0c7f2b2f48abbba278ad3490d14182091650a287ade3cde919fb1ab882669f"
+      "git_blob": "c06e4db2c3abe0fb2948a51589e9b1bef8e437bf",
+      "bytes": 8326,
+      "sha256": "f55e843cf8f1f79d68509f67306c952ffc185372b14661175e8d2b3e15f40407"
     },
     "pubspec.lock": {
       "mode": "100644",

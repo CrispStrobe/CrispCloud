@@ -42,11 +42,14 @@ env:
 
 jobs:
   build-upload:
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
         with:

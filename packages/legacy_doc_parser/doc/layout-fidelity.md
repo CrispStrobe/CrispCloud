@@ -78,6 +78,23 @@ note into another story nor invents table structure. The document reports
 `recoveredTableStoryBoundary`; ordinary malformed or unterminated ranges still
 fail. This is an explicit compatibility recovery, not a relaxed format rule.
 
+The same bounded recovery now covers native header/footer content ending at a
+closed table-row mark immediately before its own guard CR. The complete parsed
+table must end at that exact content boundary; stray cell marks, unclosed rows,
+missing/wrong guards and unterminated text still fail. Adjacent header/footer
+stories remain disjoint and no paragraph is borrowed from another range.
+[MS-DOC Headers](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/8465bee7-6c79-45a9-812e-58b0c5fd6cdc)
+requires separate content and guard paragraph marks, so the document still
+reports `recoveredTableStoryBoundary` for this native interoperability case.
+
+The [four retained native controls](evidence/header-table-boundary-20261112/README.md)
+cover headers and footers, each ending with a table or a following paragraph.
+Both table-ended sources previously failed import; all four now retain their
+text and table, with unchanged paragraph-ended output. The table-ended footer
+has a measured 0.35-point common vertical offset and the table-ended header has
+a 0.35-point body-text offset. Relative table geometry is unchanged; these
+measurements do not assert whole-page equality.
+
 A native DOCX-to-DOC round trip also exposed an empty initial section with two
 leading zero CPs. The parser retains that initial section's identity and layout
 with `recoveredEmptySection`. Conversion carries it as an empty OOXML section,

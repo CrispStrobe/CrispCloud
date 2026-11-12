@@ -37,6 +37,9 @@ jobs:
       BOT: 'true'
     steps:
       - uses: actions/checkout@v5
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -68,6 +71,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
       - name: Verify offline help topics and translation revisions
@@ -231,10 +237,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15-intel]
     steps:
       - uses: actions/checkout@v5
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
 
@@ -332,6 +341,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
@@ -360,7 +372,7 @@ jobs:
 
   # ---------- Multi-platform builds (matrix) ----------
   # Linux, Android, and Web build on ubuntu-latest.
-  # Windows builds on windows-latest. macOS and iOS on macos-latest.
+  # Windows builds on windows-latest. macOS and iOS on macos-15-intel.
   build-ubuntu:
     name: Build ${{ matrix.platform }} (Ubuntu)
     runs-on: ubuntu-latest
@@ -393,6 +405,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         if: matrix.platform != 'web'
         uses: ./.github/actions/setup-ebook-rust
@@ -517,6 +532,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
 
@@ -581,16 +599,19 @@ jobs:
           path: crispcloud-windows-x64.zip
           retention-days: 14
 
-  # ---------- macOS + iOS (both on macos-latest) ----------
+  # ---------- macOS + iOS (both on macos-15-intel) ----------
   build-macos:
     name: Build + launch macOS
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 50
     needs: analyze
 
     steps:
       - uses: actions/checkout@v5
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
         with:
@@ -691,10 +712,13 @@ jobs:
 
   ios-terminal-native:
     name: iOS folder and embedded shell tests
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Cache verified embedded shell frameworks
         uses: actions/cache@v5
         with:
@@ -714,13 +738,16 @@ jobs:
 
   build-ios:
     name: Build iOS (no-codesign)
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 60
     needs: analyze
 
     steps:
       - uses: actions/checkout@v5
 
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
         with:

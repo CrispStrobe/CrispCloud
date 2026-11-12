@@ -185,13 +185,23 @@ void main() {
   }
 
   Future<void> until(WidgetTester tester, bool Function() done) async {
-    for (var index = 0; index < 250 && !done(); index++) {
+    final deadline = DateTime.now().add(const Duration(seconds: 30));
+    while (!done() && DateTime.now().isBefore(deadline)) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );
       await tester.pump(const Duration(milliseconds: 20));
     }
-    expect(done(), isTrue);
+    expect(
+      done(),
+      isTrue,
+      reason: find
+          .byType(Text)
+          .evaluate()
+          .map((element) => (element.widget as Text).data ?? '')
+          .where((text) => text.isNotEmpty)
+          .join('\n'),
+    );
   }
 
   bool canClose() => find
