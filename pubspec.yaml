@@ -239,6 +239,10 @@ flutter:
     - assets/fonts/RobotoMono_LICENSE.txt
     - assets/licenses/pdf_fonts/
     - assets/licenses/terminal/
+    - docs/USER_GUIDE.md
+    - docs/help/USER_GUIDE.de.md
+    - docs/help/USER_GUIDE.fr.md
+    - docs/help/manifest.json
 
   fonts:
     - family: StoreRoboto

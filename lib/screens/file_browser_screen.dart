@@ -79,6 +79,8 @@ import '../widgets/command_entry_dialog.dart';
 import '../l10n/command_entry_strings.dart';
 import '../widgets/gathering_stack_dialog.dart';
 import '../l10n/gathering_stack_strings.dart';
+import '../widgets/help_guide_dialog.dart';
+import '../l10n/help_guide_strings.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
@@ -681,6 +683,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         ),
       ),
       fixed(
+        'userGuide',
+        HelpGuideStrings(context).text('title'),
+        () => showUserGuide(context),
+      ),
+      fixed(
         'reset',
         strings.text('reset'),
         () => showBrowserMenuEditor(
@@ -1043,6 +1050,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenu(
         label: context.tr('Help'),
         menus: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: HelpGuideStrings(context).text('title'),
+            onSelected: () => showUserGuide(context),
+          ),
           PlatformMenuItem(
             label: context.commanderTr("Keyboard Shortcuts..."),
             onSelected: () => showKeyboardShortcutsDialog(context),
@@ -1965,6 +1976,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   void _runOverflowAction(BuildContext context, String value) {
     switch (value) {
+      case 'user_guide':
+        showUserGuide(context);
       case 'menu_layout':
         showBrowserMenuEditor(context, ref, _browserMenuBindings(context, ref));
       case 'synchronized_browsing':
@@ -2490,6 +2503,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'shortcuts',
           child: _overflowItem(Icons.keyboard, l.keyboardShortcuts),
+        ),
+        PopupMenuItem(
+          value: 'user_guide',
+          child: _overflowItem(
+            Icons.help_outline,
+            HelpGuideStrings(context).text('title'),
+          ),
         ),
         PopupMenuItem(
           value: 'about',

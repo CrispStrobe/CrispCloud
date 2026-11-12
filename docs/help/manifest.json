@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "sourceLanguage": "en",
+  "guides": {
+    "en": {
+      "asset": "docs/USER_GUIDE.md",
+      "sha256": "cc32bab17f293c5b594959de7598b3b18d8953684c26e9ed45999acf6024826f"
+    },
+    "de": {
+      "asset": "docs/help/USER_GUIDE.de.md",
+      "sha256": "559d63656387c93e1127f27ffe71c5ae3a94000b6a11c0d0b87a0d7fdbf927e3",
+      "sourceSha256": "cc32bab17f293c5b594959de7598b3b18d8953684c26e9ed45999acf6024826f"
+    },
+    "fr": {
+      "asset": "docs/help/USER_GUIDE.fr.md",
+      "sha256": "ca950f3a175c44049e8b34513247547fc0a4a0bb41df858ad3c91ec3cd1e12b0",
+      "sourceSha256": "cc32bab17f293c5b594959de7598b3b18d8953684c26e9ed45999acf6024826f"
+    }
+  }
+}

@@ -30,11 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Eleven implementation increments are preserved on remote feature branches:
-**six closed scopes** (G02, G03, G05, G13, G27, G37) and **five implemented features
+Twelve implementation increments are preserved on remote feature branches:
+**seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **five implemented features
 with target-runtime/live-server acceptance pending** (G01, G04, G09, G12, G25).
-The remaining 40 items
-comprise **28 implementation gaps, 10 research prerequisites and two
+The remaining 39 items
+comprise **27 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -46,8 +46,8 @@ The current stack contains the original scope and every incremental checkpoint.
 Continuation work from `403e942d` is recorded in
 [the active increment plan](continuation-20261112.md). G25 has verified native
 loopback/recovery coverage, and G09 has verified command/keyboard coverage.
-G05's reviewed reference workflow is closed with regression evidence.
-G49 remains in progress until its separate remote checkpoint is recorded.
+G05's reviewed reference workflow and G49's maintained three-language offline
+help are closed with their separate regression evidence and remote checkpoints.
 
 ## Lane index
 
@@ -112,7 +112,7 @@ G49 remains in progress until its separate remote checkpoint is recorded.
 | [G46](05-native-platforms-and-release.md#g46) | Direct cable transfer | Hardware research | Hardware/protocol fixtures; compatible runtime |
 | [G47](05-native-platforms-and-release.md#g47) | Native binary extension compatibility | Architecture research | ABI specification; bitness/OS hosts; license review |
 | [G48](06-localization-and-acceptance.md#g48) | UI language coverage | Scoped | Terminology review; localization inventory |
-| [G49](06-localization-and-acceptance.md#g49) | Localized help | Implementing | Canonical English guide; documentation localization |
+| [G49](06-localization-and-acceptance.md#g49) | Localized help | Closed: English/German/French offline guides | 23 aligned topics; nine-language controls; more guide languages remain future work |
 | [G50](06-localization-and-acceptance.md#g50) | Native and live-provider acceptance | Acceptance pending | Target machines; explicit test accounts and fixtures |
 | [G51](06-localization-and-acceptance.md#g51) | Web runtime and WebAssembly acceptance | Acceptance pending | Browser test harness; dependency compatibility |
 
@@ -144,7 +144,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | Continuation scope | `feature/gap-extension-scope-20261112` · `cd14477` · PR #69 | G05/G09/G25/G49 boundaries and staged validation plan | Scope preserved remotely |
 | G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, cleanup `5b2f1fa` · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
 | G09 command entry | `feature/command-entry-20261112` · `50a9547` · PR #71 | 152 tests passed across eight command/context/keyboard suites; 62 passed in the final service/dialog/context gate | Implemented; native argument/permission/keyboard acceptance pending |
-| G05 gathering stack | `feature/gathering-stack-20261112` | 56 service/widget/operation-dialog tests passed; focused analysis clean | Closed for the reviewed reference workflow |
+| G05 gathering stack | `feature/gathering-stack-20261112` · `8f117e7` · PR #72 | 56 service/widget/operation-dialog tests passed; focused analysis clean | Closed for the reviewed reference workflow |
+| G49 localized help | `feature/localized-help-20261112` | 35 guide/reader/real-screen integration tests passed; all three guides and revision-update workflow verified | Closed for maintained English/German/French offline help |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

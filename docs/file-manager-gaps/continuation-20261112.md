@@ -124,3 +124,38 @@ own file contents, stage them for recovery or make grouped accounts atomic.
 It currently gathers through explicit selection commands. Native outgoing drag
 is G06; actual signed/browser access grants remain G50/G51 acceptance. See
 [gathering stack](../gathering-stack.md).
+
+The stack checkpoint is `8f117e7` on `feature/gathering-stack-20261112` in
+[PR #72](https://github.com/CrispStrobe/CrispCloud/pull/72), stacked on command entry.
+
+## G49 — Maintained offline help
+
+The corrected English guide and complete German/French translations provide
+**23 matching stable topics** each. Instructions reflect delivered source-bound
+panes, reviewed operations, recovery, encryption-key ownership, protocol limits,
+search/archive bounds, command execution and application-lifetime scheduling.
+Unverified installation promises and unsupported remote-editor claims were
+removed. All essential workflows are bundled; supplementary repository links
+open only on a deliberate supported click.
+
+The reader supports topic/content search, selectable text, context routing and
+language changes that preserve the visible topic while clearing old-language
+search. Controls cover the existing nine UI locales. Unsupported guide
+languages, missing or stale translations produce explicit English fallback;
+invalid English assets produce a bounded retry surface. Revision hashes bind
+translations to the reviewed source without claiming cryptographic authenticity
+or independent linguistic certification.
+
+The final guide/reader/real-screen integration gate passed **35 tests**. It covers
+stable links, all asset/error/fallback states, latest-request ownership,
+short/narrow windows, enlarged Arabic text, keyboard overlap, app-menu access
+and the F1 context route. The repository validator confirms all three topic
+orders and digests. A separate temporary-copy exercise confirms that a source
+edit fails validation, source refresh preserves stale translations, and each
+explicit translation approval updates only its reviewed stamp. CI now runs the
+same validator before app dependency resolution.
+
+Status is **closed for maintained English/German/French offline help**.
+Additional complete guides and broader UI language coverage remain separate
+localization work. No dependency was added. Maintenance instructions are in
+[docs/help/README.md](../help/README.md).

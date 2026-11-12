@@ -96,7 +96,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Git status and actions | Missing | No integrated status/add/commit/push/pull workflow. |
 | Native indexed search | Missing | Recursive application search exists; no OS search-index integration. |
 | Process viewer, application removal, default file-manager registration | Missing | These require separate native platform work. |
-| Languages and help | Partial | Nine UI locales: English, German, French, Spanish, Portuguese, Chinese, Japanese, Korean and Arabic, with English fallback. User guide is English; the larger requested language set is incomplete. |
+| Languages and help | Help implemented for three languages; broader UI coverage partial | Nine UI locales remain English, German, French, Spanish, Portuguese, Chinese, Japanese, Korean and Arabic. **G49 adds maintained English/German/French offline guides**, 23 aligned topics, topic/content search, contextual routes and explicit fallback. The larger requested UI language set remains G48. See [help maintenance](help/README.md). |
 
 ## Viewing and editing
 
@@ -191,7 +191,7 @@ explicitly implemented or closed entry claims delivered behavior.
 | FTP resume, FXP and additional proxy modes | **G25 download resume implemented:** negotiated offsets plus verified source/prefix/assembled contents and retained-stage cleanup. Record selected live-server acceptance; implement FXP and direct-protocol proxy modes independently. |
 | Favorite synchronization | Define account, encryption and merge semantics for portable favorites without copying local access grants or credentials to another computer. |
 | Git integration | Add repository discovery, per-file status and reviewed add/commit/push/pull actions with command cancellation and credential handling. |
-| Broader localization and help | Translate remaining UI/help content and validate layout, shortcuts and terminology for each newly supported locale. |
+| Broader localization and help | **G49 complete for English/German/French offline help**, with revision validation and nine-language reader controls. Extend the remaining UI language set under G48 and add separately reviewed guides for further languages. |
 
 ### Larger platform-dependent projects
 
@@ -260,15 +260,16 @@ separate [FTP API boundary](ftp-transport.md).
 
 ## Follow-up gap closure validation
 
-All 51 remaining gap scopes are recorded in six lane documents. Eight further
-implementation increments are preserved on remote feature branches: five closed
-scopes (G02, G03, G13, G27, G37), and three implemented features with named
-target-runtime acceptance pending (G01, G04, G12). The remaining 43 items are
-31 scoped implementations, ten research prerequisites and two cross-cutting
-acceptance items.
+All 51 gap scopes are recorded in six lane documents. Twelve implementation
+increments are preserved on remote feature branches: seven closed scopes
+(G02, G03, G05, G13, G27, G37, G49), and five implemented features with named
+target-runtime/live-server acceptance pending (G01, G04, G09, G12, G25).
+The remaining 39 items are 27 scoped implementations, ten research prerequisites
+and two cross-cutting acceptance items.
 
-The [follow-up validation record](file-manager-gaps/validation-20261112.md)
-contains the branch/PR checkpoints and individual test gates. Counts from
+The [earlier validation record](file-manager-gaps/validation-20261112.md) and
+[continuation record](file-manager-gaps/continuation-20261112.md) contain the
+branch/PR checkpoints and individual test gates. Counts from
 overlapping gates are not added together. The final conversion gate passed 80
 tests; the final proxy/security gate passed 197. Full application analysis
 completed with **0 errors, 96 warnings and 1,038 informational findings** under
@@ -280,3 +281,9 @@ The integrated **JavaScript release web build passed** for code checkpoint
 runtime, WebAssembly, signed/native and live-provider acceptance remain open.
 The current feature branch checks were queued at inspection; hosted CI success
 is not claimed. No new dependency was introduced in these eight increments.
+
+The continuation adds G25 verified FTP download resume and consumed-stage
+cleanup, G09 reviewed command entry, G05 persistent gathering references and
+G49 maintained offline help. Its focused transfer, command, stack and help
+gates are recorded separately in the continuation document; their overlapping
+test counts are not summed. These four increments also add no dependency.
