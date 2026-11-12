@@ -89,44 +89,61 @@ void main() {
     EbookBookInfo? book;
     EbookSelection? selection;
     var overlayClicks = 0;
+    final beforeReader = FocusNode(debugLabel: 'before-book');
+    final afterReader = FocusNode(debugLabel: 'after-book');
+    addTearDown(beforeReader.dispose);
+    addTearDown(afterReader.dispose);
     Widget reader() => MaterialApp(
           home: Scaffold(
-            body: Center(
-              child: ValueListenableBuilder<Size>(
-                valueListenable: size,
-                builder: (context, value, child) => SizedBox(
-                  width: value.width,
-                  height: value.height,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: CrispEbookReader(
-                          bytes: bytes,
-                          filename: 'host-smoke.epub',
-                          controller: controller,
-                          onReady: (value) => book = value,
-                          onSelection: (value) => selection = value,
-                          onError: errors.add,
-                        ),
-                      ),
-                      Positioned(
-                        right: 20,
-                        top: 20,
-                        child: GestureDetector(
-                          key: const ValueKey('flutter-overlay'),
-                          onTap: () => overlayClicks++,
-                          child: const SizedBox(
-                            width: 35,
-                            height: 35,
-                            child: ColoredBox(color: Color(0xffff00ff)),
+            body: Column(children: [
+              TextButton(
+                focusNode: beforeReader,
+                onPressed: () {},
+                child: const Text('Before book'),
+              ),
+              Expanded(
+                  child: Center(
+                child: ValueListenableBuilder<Size>(
+                  valueListenable: size,
+                  builder: (context, value, child) => SizedBox(
+                    width: value.width,
+                    height: value.height,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: CrispEbookReader(
+                            bytes: bytes,
+                            filename: 'host-smoke.epub',
+                            controller: controller,
+                            onReady: (value) => book = value,
+                            onSelection: (value) => selection = value,
+                            onError: errors.add,
                           ),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          right: 20,
+                          top: 20,
+                          child: GestureDetector(
+                            key: const ValueKey('flutter-overlay'),
+                            onTap: () => overlayClicks++,
+                            child: const SizedBox(
+                              width: 35,
+                              height: 35,
+                              child: ColoredBox(color: Color(0xffff00ff)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              )),
+              TextButton(
+                focusNode: afterReader,
+                onPressed: () {},
+                child: const Text('After book'),
               ),
-            ),
+            ]),
           ),
         );
 
@@ -202,6 +219,39 @@ void main() {
     await controller.goTo(results.first.cfi);
     await until(tester, () async => controller.location?.sectionIndex == 1,
         'Whole-book search did not navigate to the second chapter.');
+
+    // The first link returns to chapter one and the second remains here. Tab,
+    // Tab, Shift+Tab, Enter must activate the first link using actual WebKit
+    // keyboard focus, rather than simulating the controller's navigation API.
+    await tester.tapAt(
+        tester.getRect(find.byType(Texture)).topLeft + const Offset(550, 20),
+        kind: PointerDeviceKind.mouse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await until(tester, () async => controller.location?.sectionIndex == 0,
+        'Tab and Shift+Tab did not reach the publication link.');
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await until(tester, () async => afterReader.hasFocus,
+        'Control Tab trapped focus inside the publication.');
+    expect(((await stats())['items'] as List).single['focused'], false);
+    await tester.tapAt(
+        tester.getRect(find.byType(Texture)).topLeft + const Offset(550, 20),
+        kind: PointerDeviceKind.mouse);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await until(tester, () async => beforeReader.hasFocus,
+        'Control Shift Tab did not return to the previous Flutter control.');
+    expect(((await stats())['items'] as List).single['focused'], false);
 
     final beforeResize = ((await stats())['items'] as List).single['width'];
     size.value = const Size(520, 360);

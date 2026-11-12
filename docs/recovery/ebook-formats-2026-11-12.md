@@ -44,3 +44,12 @@ and verification results below will identify what actually changed.
 - Initial checkpoint: recorded the requested scope and actual baseline before
   implementation. Root owns remote publishing; parallel workers own isolated
   core, converter, and platform-runtime paths.
+- Core and platform checkpoint: genuine FB2/FBZ serialization, 14 focused core
+  regressions, official author-schema validation and independent Foliate reopen
+  for both outputs passed. The writer reports presentation/navigation changes,
+  preserves supported prose, links, notes and embedded raster resources, and
+  refuses non-representable content. Linux Tab/Shift+Tab now traverse book links;
+  Ctrl+Tab/Ctrl+Shift+Tab leave the content surface. Real-target desktop/mobile
+  smoke apps and hosted jobs are added for Windows, macOS, Android and iOS.
+  Local preparation, generated-app analysis, workflow parsing and native helper
+  syntax checks passed; hosted rendering and device results remain pending.

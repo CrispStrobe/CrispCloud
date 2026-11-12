@@ -147,6 +147,7 @@ void Error(FlMethodCall* call, const std::string& message) {
   X(webkit_settings_set_enable_html5_database) X(webkit_settings_set_enable_page_cache) \
   X(webkit_settings_set_enable_developer_extras) \
   X(webkit_settings_set_enable_media_stream) \
+  X(webkit_settings_set_enable_tabs_to_links) \
   X(webkit_settings_set_media_playback_requires_user_gesture) \
   X(webkit_settings_set_hardware_acceleration_policy) \
   X(webkit_navigation_policy_decision_get_navigation_action) \

@@ -18,6 +18,7 @@ void ConfigureWebKitSettings(Api& api, WebKitSettings* settings) {
   api.webkit_settings_set_enable_page_cache(settings, FALSE);
   api.webkit_settings_set_enable_developer_extras(settings, FALSE);
   api.webkit_settings_set_enable_media_stream(settings, FALSE);
+  api.webkit_settings_set_enable_tabs_to_links(settings, TRUE);
   api.webkit_settings_set_media_playback_requires_user_gesture(settings, TRUE);
   api.webkit_settings_set_hardware_acceleration_policy(
       settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);

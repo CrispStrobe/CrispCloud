@@ -62,7 +62,7 @@ opf = '''<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-iden
 chapter = lambda body: '<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Library</title></head><body>' + body + '</body></html>'
 hostile = '''<script>fetch('http://127.0.0.1:18189/script')</script><img src="http://127.0.0.1:18189/image" alt=""/><iframe src="http://127.0.0.1:18189/frame"></iframe><style>body { background-image: url('http://127.0.0.1:18189/style'); }</style>'''
 one = chapter('<h1 id="start">Library lanterns</h1><p>Library lanterns illuminate café shelves. Books stay local.</p><svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" viewBox="0 0 80 40"><rect width="80" height="40" fill="#1f5947"/></svg>' + hostile + ''.join(f'<p>Library paragraph {i}. A thousand stories stay on these local shelves.</p>' for i in range(100)))
-two = chapter('<h1 id="finish">Second library shelf</h1><p>The journey continues. Ελληνικά 日本語 café.</p>')
+two = chapter('<h1 id="finish">Second library shelf</h1><p>The journey continues. Ελληνικά 日本語 café.</p><p><a href="one.xhtml#start">Return to the first chapter</a></p><p><a href="#finish">Stay in this chapter</a></p>')
 nav = '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><ol><li><a href="one.xhtml#start">Library lanterns</a></li><li><a href="two.xhtml#finish">Second library shelf</a></li></ol></nav></body></html>'
 with zipfile.ZipFile(output / "assets/host-smoke.epub", "w") as archive:
     archive.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
