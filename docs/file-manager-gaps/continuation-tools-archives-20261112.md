@@ -60,3 +60,23 @@ cleanup/reopen race and close-then-delete regression. Narrow pinned Dart
 analysis reported **no issues**. No dependency was added. This checkpoint is a
 foundation only; it does not mark G10 or G11 complete or imply target-platform
 application-launch acceptance.
+
+Remote checkpoint: `47b7c57012cfc23f8100bad8c5a7fb4c53171a12` on
+`feature/private-tool-staging-20261112`,
+[draft PR 75](https://github.com/CrispStrobe/CrispCloud/pull/75).
+
+### Conditional publication foundation
+
+[External remote editing](../external-remote-editing.md) now has a narrow
+provider contract for publishing only the reviewed existing revision. Its first
+adapter uses Dropbox's immutable account identity, exact file ID/path/revision,
+revision-addressed reads, bounded sequential upload sessions and strict update
+commit. An uncertain response retains the caller's pending generation for
+reconciliation; no unconditional retry or alternate destination is available.
+
+Observed gate: **17 provider tests passed** and narrow pinned analysis reported
+**no issues**. Ambiguous finish errors are covered explicitly. The watched
+editor session and UI remain in progress; the provider foundation alone does
+not close G10. Other providers need their own original-preserving publication
+contract before they can upload external edits automatically. No dependency was
+added and no S3/Azure transfer adapter was changed.

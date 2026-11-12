@@ -27,6 +27,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'cloud_storage_interface.dart';
 import 'bounded_http_transfer.dart';
 import 'bounded_transfer_stream.dart';
+import 'conditional_file_publication.dart';
+import 'dropbox_file_publication.dart';
 import 'dropbox_config_service.dart';
 import 'dropbox_operation_failure.dart';
 import 'log_service.dart';
@@ -34,7 +36,47 @@ import 'secure_storage_service.dart';
 import './connection_failure.dart';
 
 class DropboxClientAdapter extends CloudStorageClient
-    with CloudTransferOperations {
+    with CloudTransferOperations
+    implements ConditionalFilePublication {
+  DropboxFilePublication get _filePublication => DropboxFilePublication(
+    accessToken: () async {
+      await _ensureToken();
+      if (!isAuthenticated) {
+        throw const FilePublicationException(
+          FilePublicationFailure.unavailable,
+        );
+      }
+      return _accessToken!;
+    },
+  );
+
+  @override
+  Future<FilePublicationVersion> inspectForPublication(
+    String path, {
+    required void Function() checkCurrent,
+  }) => _filePublication.inspectForPublication(path, checkCurrent: checkCurrent);
+
+  @override
+  Stream<List<int>> readForPublication(
+    FilePublicationVersion version, {
+    required void Function() checkCurrent,
+  }) => _filePublication.readForPublication(version, checkCurrent: checkCurrent);
+
+  @override
+  Future<FilePublicationVersion> publishFileVersion(
+    FilePublicationVersion expected,
+    Stream<List<int>> contents, {
+    required int length,
+    required void Function() checkCurrent,
+    required Future<void> Function(String contentHash) prepareCommit,
+  }) => _filePublication.publishFileVersion(
+    expected,
+    contents,
+    length: length,
+    checkCurrent: checkCurrent,
+    prepareCommit: prepareCommit,
+  );
+
   @override
   StorageTransferCapabilities get transferCapabilities =>
       const StorageTransferCapabilities(
