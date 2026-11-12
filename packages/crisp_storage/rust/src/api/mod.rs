@@ -63,8 +63,12 @@ pub async fn download(
         .await?)
 }
 #[frb(sync)]
+/// 0 until the running download knows its starting offset, then bytes + 1.
+/// The +1 encoding keeps the bridge signature while distinguishing "not
+/// started yet" from "starting at byte 0" (see RustSmbSession.download).
 pub fn progress(id: u64) -> anyhow::Result<u64> {
-    Ok(session(id)?.progress())
+    let s = session(id)?;
+    Ok(if s.progress_started() { s.progress() + 1 } else { 0 })
 }
 #[frb(sync)]
 pub fn cancel_session(id: u64) -> anyhow::Result<()> {
