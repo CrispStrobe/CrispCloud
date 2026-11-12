@@ -5,6 +5,9 @@ import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/providers/providers.dart';
+import 'package:crisp_cloud/providers/office_conversion_provider.dart';
+import 'package:crisp_cloud/services/installed_office_converter.dart';
+import 'package:crisp_cloud/services/legacy_word_conversion.dart';
 import 'package:crisp_cloud/widgets/file_editor_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/keepass_editor_dialog.dart';
@@ -171,7 +174,11 @@ void main() {
   testWidgets('F4 DOC creates a sibling and opens its captured rich editor', (
     tester,
   ) async {
-    final harness = await WorkspaceTestHarness.create();
+    final harness = await WorkspaceTestHarness.create(
+      extraOverrides: [
+        installedOfficeDiscoveryProvider.overrideWithValue(() async => []),
+      ],
+    );
     addTearDown(harness.dispose);
     final original = legacyWordFixture('Body 世界\rSecond paragraph\r');
     harness.cloud.put('/one/legacy.doc', original);
@@ -190,6 +197,18 @@ void main() {
       ),
     );
     await tester.tap(find.text('F4'));
+    await tester.runAsync(
+      () => _until(
+        tester,
+        () => find
+            .byKey(const ValueKey('word-conversion-method'))
+            .evaluate()
+            .isNotEmpty,
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('word-conversion-method')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Text only (built in)').last);
     await tester.pumpAndSettle();
     expect(find.byType(LegacyWordConversionDialog), findsOneWidget);
     expect(find.textContaining('Formatting, page layout'), findsOneWidget);
@@ -221,4 +240,102 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+
+  testWidgets(
+    'installed conversion saves exact bytes beside source and initially opens F3',
+    (tester) async {
+      final original = legacyWordFixture('Original Word body\r');
+      final converted = convertLegacyWordToDocx(
+        legacyWordFixture('Converted body\r'),
+      );
+      const installation = InstalledOfficeInstallation(
+        kind: InstalledOfficeKind.libreOffice,
+        displayName: 'LibreOffice',
+        executablePath: '/fake/soffice',
+      );
+      var calls = 0;
+      final harness = await WorkspaceTestHarness.create(
+        extraOverrides: [
+          installedOfficeDiscoveryProvider.overrideWithValue(
+            () async => [installation],
+          ),
+          installedOfficeConversionProvider.overrideWithValue(({
+            required bytes,
+            required sourceName,
+            required installation,
+            output = InstalledOfficeOutput.docx,
+          }) async {
+            calls++;
+            expect(bytes, orderedEquals(original));
+            return InstalledOfficeConversionResult(
+              bytes: converted,
+              installation: installation,
+              output: output,
+              elapsed: Duration.zero,
+            );
+          }),
+        ],
+      );
+      addTearDown(harness.dispose);
+      harness.cloud.put('/one/legacy.doc', original);
+      harness.cloud.directories.add('/other');
+      final panel = harness.container.read(panelProvider(_side));
+      await panel.navigateToPath('/one');
+      final file = panel.displayedFiles!.singleWhere(
+        (file) => file.name == 'legacy.doc',
+      );
+      await _mount(
+        tester,
+        harness,
+        (context, ref) => TextButton(
+          onPressed: () => showFileEditorDialog(context, ref, file, _side),
+          child: const Text('F4'),
+        ),
+      );
+      await tester.tap(find.text('F4'));
+      await tester.runAsync(
+        () => _until(
+          tester,
+          () => find
+              .byKey(const ValueKey('word-conversion-method'))
+              .evaluate()
+              .isNotEmpty,
+        ),
+      );
+      await panel.navigateToPath('/other');
+      await tester.runAsync(() async {
+        await tester.tap(find.byKey(const ValueKey('word-conversion-primary')));
+        await _until(
+          tester,
+          () => find.text('Review converted copy').evaluate().isNotEmpty,
+        );
+      });
+      expect(harness.cloud.writes, isEmpty);
+      await tester.runAsync(() async {
+        await tester.tap(find.byKey(const ValueKey('word-conversion-primary')));
+        await _until(
+          tester,
+          () => find.byType(InternalViewerDialog).evaluate().isNotEmpty,
+        );
+      });
+      const output = '/one/legacy (converted).docx';
+      expect(calls, 1);
+      expect(harness.cloud.files[output], orderedEquals(converted));
+      expect(harness.cloud.files['/one/legacy.doc'], orderedEquals(original));
+      expect(
+        harness.cloud.files.keys.where((p) => p.startsWith('/other/')),
+        isEmpty,
+      );
+      final viewer = tester.widget<InternalViewerDialog>(
+        find.byType(InternalViewerDialog),
+      );
+      expect(viewer.file.path, output);
+      expect(viewer.origin, isNotNull);
+      expect(find.byType(OfficeEditorDialog), findsNothing);
+      expect(panel.currentPath, '/other');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }

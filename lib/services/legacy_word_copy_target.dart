@@ -4,24 +4,27 @@ import 'file_operation_service.dart';
 import 'legacy_word_conversion.dart';
 
 /// A create-only destination beside the original, on its captured storage.
-/// It never replaces either the binary document or an existing DOCX copy.
+/// It never replaces either the binary document or an existing Word copy.
 class LegacyWordCopyTarget {
   const LegacyWordCopyTarget({required this.backend, required this.sourcePath});
 
   final FileOperationBackend backend;
   final String sourcePath;
 
-  Future<FileItem> create(LegacyWordDocxCopy copy) async {
+  Future<FileItem> create(LegacyWordCopy copy) async {
     checkIntegrityCurrent(backend, null);
     if (!backend.paths.isAbsolute(sourcePath)) {
       throw StateError('The original file path could not be verified.');
     }
-    final name = validateLegacyWordDocxName(copy.fileName);
+    final name = validateLegacyWordCopyName(
+      copy.fileName,
+      extension: copy.extension,
+    );
     final directory = backend.paths.dirname(sourcePath);
     final output = backend.paths.join(directory, name);
     if (backend.samePath(output, sourcePath) ||
         !backend.samePath(backend.paths.dirname(output), directory)) {
-      throw StateError('Choose a new DOCX filename beside the original.');
+      throw StateError('Choose a new Word filename beside the original.');
     }
     // A successful listing verifies directory access; permission errors must
     // not be mistaken for an absent file by a provider-specific stat adapter.
@@ -39,7 +42,7 @@ class LegacyWordCopyTarget {
     final created = await backend.stat(output);
     checkIntegrityCurrent(backend, null);
     if (created == null || created.isFolder || created.isSymlink == true) {
-      throw StateError('The new DOCX could not be verified after saving.');
+      throw StateError('The new Word copy could not be verified after saving.');
     }
     return created.copyWith(path: output);
   }

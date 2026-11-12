@@ -3,16 +3,30 @@ import 'dart:typed_data';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
 import 'legacy_word_document.dart';
+import 'word_conversion_inspection.dart';
 
-/// A new DOCX prepared from the extracted main-story text of a legacy DOC/DOT.
+/// A new Word package prepared from a legacy DOC/DOT.
 /// It has no association with a writable destination; the caller must create
 /// a separate file using its captured storage source.
-class LegacyWordDocxCopy {
-  const LegacyWordDocxCopy({required this.fileName, required this.bytes});
+class LegacyWordCopy {
+  const LegacyWordCopy({
+    required this.fileName,
+    required this.bytes,
+    this.extension = 'docx',
+    this.converterName,
+    this.inspection,
+  });
 
   final String fileName;
   final Uint8List bytes;
+  final String extension;
+  final String? converterName;
+  final WordConversionInspection? inspection;
+  bool get isTextOnly => converterName == null;
 }
+
+/// Backwards-compatible name for callers of the original text-copy workflow.
+typedef LegacyWordDocxCopy = LegacyWordCopy;
 
 enum LegacyWordConversionIssue { invalidName, invalidText, tooComplex }
 
@@ -112,6 +126,14 @@ void _validateTextBudget(String text) {
 }
 
 String suggestedLegacyWordDocxName(String sourceName) {
+  return suggestedLegacyWordCopyName(sourceName, textOnly: true);
+}
+
+String suggestedLegacyWordCopyName(
+  String sourceName, {
+  bool textOnly = false,
+  String extension = 'docx',
+}) {
   final basename = sourceName.split(RegExp(r'[/\\]')).last;
   final stem = basename.replaceFirst(
     RegExp(r'\.(doc|dot)$', caseSensitive: false),
@@ -127,17 +149,22 @@ String suggestedLegacyWordDocxName(String sourceName) {
     end--;
   }
   final shortStem = safeStem.substring(0, end);
-  return '${shortStem.isEmpty ? 'Document' : shortStem} (text).docx';
+  return '${shortStem.isEmpty ? 'Document' : shortStem} (${textOnly ? 'text' : 'converted'}).$extension';
 }
 
 /// Only a filename is accepted. Storage placement belongs to the captured
 /// source, never to user-supplied directories or the currently active pane.
 String validateLegacyWordDocxName(String name) {
+  return validateLegacyWordCopyName(name);
+}
+
+String validateLegacyWordCopyName(String name, {String extension = 'docx'}) {
   final trimmed = name.trim();
-  if (trimmed.length <= 5 ||
+  if (!const {'docx', 'docm'}.contains(extension) ||
+      trimmed.length <= 5 ||
       trimmed.length > 255 ||
-      !trimmed.toLowerCase().endsWith('.docx') ||
-      trimmed == '.docx' ||
+      !trimmed.toLowerCase().endsWith('.$extension') ||
+      trimmed == '.$extension' ||
       RegExp(r'[<>:"/\\|?*\x00-\x1f]').hasMatch(trimmed)) {
     throw const LegacyWordConversionException(
       LegacyWordConversionIssue.invalidName,

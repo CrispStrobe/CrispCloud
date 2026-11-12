@@ -7,7 +7,7 @@ import 'package:xml/xml.dart';
 import 'archive_viewer_service.dart';
 import 'office_package_parts.dart';
 
-/// Checks the additional invariants for editing Word macro documents/templates.
+/// Checks opaque-part and signature invariants for editing Word packages.
 ///
 /// The existing Word serializer retains imported OPC parts. Before upload we
 /// additionally verify the original main MIME type, binary/VBA payloads and
@@ -18,6 +18,7 @@ class WordPackagePreservation {
   final _WordSnapshot _snapshot;
 
   static const contentTypesByExtension = <String, String>{
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml',
     'docm': 'application/vnd.ms-word.document.macroEnabled.main+xml',
     'dotm': 'application/vnd.ms-word.template.macroEnabledTemplate.main+xml',
     'dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml',
@@ -44,7 +45,7 @@ class WordPackagePreservation {
     if (current.mainPath != _snapshot.mainPath ||
         current.mainType != _snapshot.mainType) {
       throw const FormatException(
-        'Saving would change the Word macro/template type. The original was not changed.',
+        'Saving would change the Word document type. The original was not changed.',
       );
     }
     for (final part in _snapshot.protectedParts.entries) {
@@ -57,7 +58,7 @@ class WordPackagePreservation {
     for (final relationship in _snapshot.protectedRelationships) {
       if (!current.protectedRelationships.contains(relationship)) {
         throw const FormatException(
-          'Saving would remove a Word macro relationship. The original was not changed.',
+          'Saving would remove a preserved Word relationship. The original was not changed.',
         );
       }
     }
@@ -122,6 +123,11 @@ Future<_WordSnapshot> _readSnapshot(Uint8List bytes, String name) async {
     for (final element in types.rootElement.childElements) {
       final type = element.getAttribute('ContentType');
       if (type == null) continue;
+      if (type.toLowerCase().contains('digital-signature')) {
+        throw const FormatException(
+          'This Word package is digitally signed. Save an unsigned copy in Word before editing it here.',
+        );
+      }
       if (element.name.local == 'Override') {
         final part = element.getAttribute('PartName');
         if (part != null) {
@@ -142,6 +148,7 @@ Future<_WordSnapshot> _readSnapshot(Uint8List bytes, String name) async {
     bool opaque(String path) {
       final lower = path.toLowerCase();
       return lower.endsWith('.bin') ||
+          lower.contains('/embeddings/') ||
           lower.contains('vba') ||
           lower.startsWith('customui/') ||
           typeOf(path).toLowerCase().contains('vba');
@@ -156,9 +163,16 @@ Future<_WordSnapshot> _readSnapshot(Uint8List bytes, String name) async {
           if (rel.name.local != 'Relationship') continue;
           final type = rel.getAttribute('Type') ?? '';
           final target = rel.getAttribute('Target') ?? '';
+          if (type.toLowerCase().contains('/digital-signature/')) {
+            throw const FormatException(
+              'This Word package is digitally signed. Save an unsigned copy in Word before editing it here.',
+            );
+          }
           if (!opaque(path) &&
               !type.toLowerCase().contains('vba') &&
-              !target.toLowerCase().contains('vba')) {
+              !target.toLowerCase().contains('vba') &&
+              !type.toLowerCase().contains('oleobject') &&
+              !target.toLowerCase().contains('embeddings/')) {
             continue;
           }
           relationships.add(

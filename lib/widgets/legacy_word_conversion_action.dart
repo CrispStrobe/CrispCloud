@@ -6,16 +6,19 @@ import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
 import '../providers/providers.dart';
+import '../providers/office_conversion_provider.dart';
 import '../services/captured_file_target.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/file_operation_backend.dart';
 import '../services/legacy_word_copy_target.dart';
 import '../services/panel_source_service.dart';
 import 'legacy_word_conversion_dialog.dart';
+import 'internal_viewer_dialog.dart';
 import 'office_editor_dialog.dart';
 
-/// Converts a verified legacy document into a separate file, then opens that
-/// actual file in the Word editor. Pane changes cannot redirect either write.
+/// Converts a verified legacy document into a separate file. Native conversion
+/// opens that exact package for viewing; editing is an explicit subsequent
+/// action. Pane changes cannot redirect either write.
 Future<void> showLegacyWordConversionForFile(
   BuildContext context,
   WidgetRef ref,
@@ -57,6 +60,8 @@ Future<void> showLegacyWordConversionForFile(
       context,
       sourceName: file.name,
       bytes: bytes,
+      discover: ref.read(installedOfficeDiscoveryProvider),
+      convert: ref.read(installedOfficeConversionProvider),
       onSave: (copy) async {
         created = await destination.create(copy);
       },
@@ -91,6 +96,15 @@ Future<void> showLegacyWordConversionForFile(
     }
     await ref.read(panelProvider(side)).refresh();
     if (!context.mounted) return;
+    if (!copy.isTextOnly) {
+      final action = await showInternalViewer(
+        context,
+        file: newFile,
+        side: side,
+        origin: captured,
+      );
+      if (!context.mounted || action != InternalViewerAction.edit) return;
+    }
     await showOfficeEditorDialog(
       context,
       ref,
