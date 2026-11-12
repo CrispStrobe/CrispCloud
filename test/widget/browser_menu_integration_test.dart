@@ -7,6 +7,7 @@ import 'package:crisp_cloud/providers/browser_menu_provider.dart';
 import 'package:crisp_cloud/providers/custom_command_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/screens/file_browser_screen.dart';
+import 'package:crisp_cloud/screens/screen_dialogs.dart';
 import 'package:crisp_cloud/services/browser_menu_store.dart';
 import 'package:crisp_cloud/services/code_editor_menu.dart';
 import 'package:crisp_cloud/services/custom_toolbar_command_service.dart';
@@ -19,6 +20,7 @@ import 'package:crisp_cloud/services/theme_service.dart';
 import 'package:crisp_cloud/services/transfer_journal.dart';
 import 'package:crisp_cloud/services/transfer_journal_storage.dart';
 import 'package:crisp_cloud/widgets/configurable_browser_menu.dart';
+import 'package:crisp_cloud/widgets/help_guide_dialog.dart';
 import 'package:crisp_cloud/widgets/drive_bar.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -146,6 +148,7 @@ void main() {
           'integrityRecovery',
           'customize',
           'reset',
+          'userGuide',
         ]),
       );
       final panel = container.read(panelProvider(PanelSide.local));
@@ -166,6 +169,29 @@ void main() {
         before + 1,
         reason: 'An already captured menu callback cannot steal a modal editor key.',
       );
+      Navigator.of(tester.element(find.byType(AlertDialog))).pop();
+      await tester.pumpAndSettle();
+      widget.fixedCommands
+          .firstWhere((entry) => entry.id == 'userGuide')
+          .onSelected!();
+      await tester.pumpAndSettle();
+      expect(find.byType(HelpGuideDialog), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('help-content-en-getting-started')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('help-close')));
+      await tester.pumpAndSettle();
+      showKeyboardShortcutsHelp(context);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('keyboard-help-user-guide')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('help-content-en-keyboard-shortcuts')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('help-close')));
+      await tester.pumpAndSettle();
       Navigator.of(tester.element(find.byType(AlertDialog))).pop();
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

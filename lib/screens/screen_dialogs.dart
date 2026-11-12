@@ -35,10 +35,11 @@ import '../l10n/undo_presentation.dart';
 import '../l10n/workspace_ux_strings.dart';
 import '../services/keyboard_shortcut_service.dart';
 import '../widgets/keyboard_shortcut_dialog.dart';
+import '../widgets/help_guide_dialog.dart';
+import '../l10n/help_guide_strings.dart';
 
-/// Explicit selection, or the cursor item when nothing is marked. This mirrors
-/// Total Commander: F5/F6/F8 operate on the item under the cursor when there
-/// is no multi-selection.
+/// Explicit selection, or the cursor item when nothing is marked. File actions
+/// operate on that item when there is no multi-selection.
 List<FileItem> _selectedOrCursor(PanelNotifier panel) {
   if (panel.selection.isNotEmpty) return panel.selection.toList();
   final cursor = panel.cursorItem;
@@ -151,7 +152,7 @@ void showKeyboardShortcutsHelp(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // F-keys (DC orthodox FM)
+            // File action keys.
             _shortcutRow('F1', 'This help dialog'),
             _shortcutRow('F2 / Shift+F6', 'Rename (in-place)'),
             _shortcutRow('F3', 'View file (full-screen)'),
@@ -253,6 +254,12 @@ void showKeyboardShortcutsHelp(BuildContext context) {
         ),
       ),
       actions: [
+        TextButton(
+          key: const ValueKey('keyboard-help-user-guide'),
+          onPressed: () =>
+              showUserGuide(context, topicId: 'keyboard-shortcuts'),
+          child: Text(HelpGuideStrings(context).text('title')),
+        ),
         TextButton(
           onPressed: () => showKeyboardShortcutSettings(context),
           child: Text(WorkspaceUxStrings(context).text('customize')),

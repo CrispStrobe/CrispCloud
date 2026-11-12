@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Writable archive endpoints
 
-**Status:** Scoped. **Dependencies:** Existing archive workspace.
+**Status:** Implementing. **Dependencies:** Existing archive workspace.
 
 **Scope:** Expose reviewed archive mutations as captured operation endpoints with verified container publication.
 

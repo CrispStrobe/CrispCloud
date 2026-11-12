@@ -54,7 +54,9 @@ background worker.
 FTP remains a native passive-mode transport. Both secure modes verify the
 control and data certificates against the platform/Dart trust configuration.
 The HTTP custom-CA setting does not change FTP trust. Browser FTP, FTP-specific
-proxies, FXP and byte-offset restart remain gaps. Existing secure connections
+proxies and FXP remain gaps. **G25 adds verified native byte-offset download
+resume**, durable retained stages and verified cleanup; selected real-server
+interoperability remains pending. See [FTP resume](ftp-resume.md). Existing secure connections
 retain implicit TLS and their saved port; new connections default to explicit
 TLS. Details and migration rules are in [FTP transport](ftp-transport.md).
 
@@ -77,7 +79,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Synchronized browsing | Implemented | `lib/services/synchronized_browsing_service.dart`, provider and pane controls map relative navigation between captured roots. Missing counterparts stop the link without creating folders. See [synchronized browsing](synchronized-browsing.md). |
 | Configurable buttons and external commands with arguments | Implemented | `lib/widgets/file_command_toolbar.dart`, `lib/services/custom_toolbar_command_service.dart`; saved command/argument templates and review. |
 | Configurable main menu | Implemented / target-runtime acceptance pending | **Added in G04.** Saved command-based menu trees, user-command references, preview/reset/import/export and mandatory recovery controls; native presentation remains a target-runtime check. See [main menus](main-menus.md). |
-| Command line and terminal | Implemented with platform limits | `lib/widgets/terminal_panel.dart`, `docs/terminal.md`; desktop PTY/ConPTY, SSH and sandbox-specific shells. Exact legacy key conventions differ. |
+| Command line and terminal | Implemented with platform limits / command-entry native acceptance pending | **G09 adds reviewed command entry:** typed or saved programs, bounded PATH lookup, immutable literal arguments and scoped filename/path insertion from the captured ordinary local pane. See [command entry](command-entry.md). The separate terminal retains desktop PTY/ConPTY, SSH and sandbox-specific shells. |
 | Preferred external terminal application | Implemented / native acceptance pending | **Added in G12.** Per-OS configuration and reviewed launch at the captured local folder, with literal arguments and stale-request checks. See [external terminal](external-terminal.md). Actual terminal-window acceptance remains per OS. |
 | Quick Open across commands, favorites, devices and rename presets | Implemented | **Added in G02.** Saved paths, sources, existing devices, workspaces and rename presets are direct searchable actions with captured identity and unavailable-target handling. See [Quick Open](quick-open.md). |
 | Custom columns | Implemented | `lib/models/file_view_configuration.dart`, file-view editor; metadata columns and saved profiles. |
@@ -86,7 +88,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Show hidden files | Implemented | Pane option, menu and shortcut. |
 | Drag/drop between panes and onto folders | Implemented | Captured in-app source/destination review in `lib/services/folder_drop_service.dart`. |
 | OS desktop/file-manager drag/drop | Partial | **Incoming routing completed in G01:** captured source/destination copy review supports native files/trees and browser handles/manifests in either pane. Real OS/browser acceptance is pending; native drag-out remains G06. See [incoming drops](external-drops.md). |
-| Temporary gathering stack | Partial | Source-bound collections gather references from different folders, without a dedicated drop-stack surface. |
+| Gathering stack | Implemented for the reviewed reference workflow | **Added in G05.** A persistent dedicated stack gathers explicit selections from independent folders/accounts, preserves original identity, and reviews a captured destination before grouped copy/move. Only confirmed successes leave the stack. Native drag-out remains separate. See [gathering stack](gathering-stack.md). |
 | Tags | Partial | Device-local image gallery tags, ratings and labels; not general native file tags. |
 | Storage size visualization | Implemented | `lib/services/storage_scan_service.dart`, `docs/storage-analyzer.md`; treemap, sunburst, saved scans and partial-result reporting. |
 | Activity and logs | Implemented | Operations panel, transfer history, audit and diagnostic logs. |
@@ -94,7 +96,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Git status and actions | Missing | No integrated status/add/commit/push/pull workflow. |
 | Native indexed search | Missing | Recursive application search exists; no OS search-index integration. |
 | Process viewer, application removal, default file-manager registration | Missing | These require separate native platform work. |
-| Languages and help | Partial | Nine UI locales: English, German, French, Spanish, Portuguese, Chinese, Japanese, Korean and Arabic, with English fallback. User guide is English; the larger requested language set is incomplete. |
+| Languages and help | Help implemented for three languages; broader UI coverage partial | Nine UI locales remain English, German, French, Spanish, Portuguese, Chinese, Japanese, Korean and Arabic. **G49 adds maintained English/German/French offline guides**, 23 aligned topics, topic/content search, contextual routes and explicit fallback. The larger requested UI language set remains G48. See [help maintenance](help/README.md). |
 
 ## Viewing and editing
 
@@ -142,7 +144,7 @@ grants. The link is transient and is not restored after restarting the app.
 | SOCKS4/4a HTTP routing | Implemented for native HTTP/HTTPS | **Added in G27.** Explicit local IPv4 versus remote DNS, bounded user IDs, strict HTTPS trust and no automatic fallback. All 197 focused proxy/security tests passed, including the native-parser host validation regression; see [proxy routing](proxy-routing.md). |
 | FTP/SFTP-specific proxies | Missing | Separate protocol/socket adapters remain scoped in G28. |
 | FXP | Missing | Cross-server copies currently pass through the application. |
-| Resume downloads | Provider-specific | SFTP/SMB and selected cloud adapters have range/resume paths; FTP transfer has no byte-offset restart. Journal recovery is not equivalent to byte resume. |
+| Resume downloads | Provider-specific; FTP implemented / live acceptance pending | **Added in G25.** Native FTP uses negotiated binary offsets, captured source/connection evidence, verified prefixes and a full assembled-content digest before publication. Durable partial references survive retries and are cleaned only after verified publication. Upload resume and selected live-server acceptance remain separate. See [FTP resume](ftp-resume.md). |
 | Queues, download later, background operations, priority/reorder | Implemented | Durable transfer jobs, scheduled start, waiting/conflict states and history. |
 | Transfer bandwidth caps | Partial | Per-operation client-stream pacing exists; separate global upload/download wire limits do not. |
 | Sharing and provider links | Implemented with limits | Provider-aware sharing including Dropbox; no local synced-directory-to-Dropbox link resolution. |
@@ -180,16 +182,16 @@ explicitly implemented or closed entry claims delivered behavior.
 | Overwrite image previews and richer file details | **Completed in G03.** Paired bounded previews and safe metadata retain original source/destination identity, reject stale versions and cancel late work. See [conflict review](conflict-review.md) and the [closure evidence](file-manager-gaps/01-workspace-and-interaction.md#g03). |
 | Quick Open for saved objects | **Completed in G02.** Direct actions retain source identity, validate original tab restoration and open rename review without mutations. See [Quick Open](quick-open.md). |
 | Configurable main-menu structure | **Implemented in G04.** Validated command identifiers and layouts, inactive preview, reset/import/export and last-valid recovery are covered by the 96-test menu integration gate. Native presentation remains G50/G51. See [main menus](main-menus.md). |
-| Temporary gathering stack | Build a dedicated drop/collect surface on existing source-bound collections; preserve original references until a reviewed transfer succeeds. |
+| Gathering stack | **Completed in G05 for the reviewed reference workflow.** Explicit selection commands, persistent source-bound references, reordered/removable entries, fixed-destination overview and confirmed per-root outcome reconciliation. Native outgoing drag remains G06. |
 | UUE/XXE/MIME file conversion | **Completed in G13 for the documented formats.** All 80 codec/service/dialog tests passed, including real native exclusive publication. Single-part Base64 MIME and backend capability limits remain explicit. See [file conversion](file-conversion.md). |
 | Folder-to-archive sync and archive-to-archive transfer | Add writable archive endpoints to comparison/transfer planning, preserve passwords and container identity, and verify/repack the original container before reporting success. |
 | Larger background archive jobs | Move bounded packing to a cancellable worker or streaming spool, add durable queue/recovery behavior, and validate output without whole-container buffering. |
 | Additional archive formats | Review reader/writer capability, limits, licensing and malformed-input handling individually. Read-only support does not imply editable or creatable archives. |
 | External editor with remote save/upload | Stage a source-bound file, track editor changes and require safe conflict handling before uploading to the original account/path. |
-| FTP resume, FXP and additional proxy modes | Add protocol-specific capability negotiation and live interoperability tests. General queue recovery or client-mediated copy does not supply these features. |
+| FTP resume, FXP and additional proxy modes | **G25 download resume implemented:** negotiated offsets plus verified source/prefix/assembled contents and retained-stage cleanup. Record selected live-server acceptance; implement FXP and direct-protocol proxy modes independently. |
 | Favorite synchronization | Define account, encryption and merge semantics for portable favorites without copying local access grants or credentials to another computer. |
 | Git integration | Add repository discovery, per-file status and reviewed add/commit/push/pull actions with command cancellation and credential handling. |
-| Broader localization and help | Translate remaining UI/help content and validate layout, shortcuts and terminology for each newly supported locale. |
+| Broader localization and help | **G49 complete for English/German/French offline help**, with revision validation and nine-language reader controls. Extend the remaining UI language set under G48 and add separately reviewed guides for further languages. |
 
 ### Larger platform-dependent projects
 
@@ -249,7 +251,8 @@ application behavior or acceptance on all native platforms. The JavaScript
 release web build succeeded. Its optional WebAssembly dry run
 failed with exit 247, so this report does not establish WebAssembly support.
 Compilation does not establish browser behavior for every workflow.
-FTP-specific proxies, FXP and byte-offset resume remain absent. G37 now adds
+FTP-specific proxies and FXP remain absent. G25 now adds native verified download
+resume, with live-server acceptance pending. G37 adds
 observed physical FTP transport cleanup during stalled TLS negotiation,
 including pending login and data channels. Owner close/logout and deadlines
 are covered; generic pre-subscription queue-stop propagation retains the
@@ -257,15 +260,16 @@ separate [FTP API boundary](ftp-transport.md).
 
 ## Follow-up gap closure validation
 
-All 51 remaining gap scopes are recorded in six lane documents. Eight further
-implementation increments are preserved on remote feature branches: five closed
-scopes (G02, G03, G13, G27, G37), and three implemented features with named
-target-runtime acceptance pending (G01, G04, G12). The remaining 43 items are
-31 scoped implementations, ten research prerequisites and two cross-cutting
-acceptance items.
+All 51 gap scopes are recorded in six lane documents. Twelve implementation
+increments are preserved on remote feature branches: seven closed scopes
+(G02, G03, G05, G13, G27, G37, G49), and five implemented features with named
+target-runtime/live-server acceptance pending (G01, G04, G09, G12, G25).
+The remaining 39 items are 27 scoped implementations, ten research prerequisites
+and two cross-cutting acceptance items.
 
-The [follow-up validation record](file-manager-gaps/validation-20261112.md)
-contains the branch/PR checkpoints and individual test gates. Counts from
+The [earlier validation record](file-manager-gaps/validation-20261112.md) and
+[continuation record](file-manager-gaps/continuation-20261112.md) contain the
+branch/PR checkpoints and individual test gates. Counts from
 overlapping gates are not added together. The final conversion gate passed 80
 tests; the final proxy/security gate passed 197. Full application analysis
 completed with **0 errors, 96 warnings and 1,038 informational findings** under
@@ -277,3 +281,19 @@ The integrated **JavaScript release web build passed** for code checkpoint
 runtime, WebAssembly, signed/native and live-provider acceptance remain open.
 The current feature branch checks were queued at inspection; hosted CI success
 is not claimed. No new dependency was introduced in these eight increments.
+
+The continuation adds G25 verified FTP download resume and consumed-stage
+cleanup, G09 reviewed command entry, G05 persistent gathering references and
+G49 maintained offline help. Its focused transfer, command, stack and help
+gates are recorded separately in the continuation document; their overlapping
+test counts are not summed. These four increments also add no dependency.
+
+At continuation code checkpoint `e475032`, the final menu regression gate passed
+55 tests. Full analysis completed with **0 errors, 96 warnings and 1,039
+informational findings**, and the final interpreter adjustment separately
+passed focused analysis. The integrated JavaScript release build passed in
+198.9 seconds with `APP_VERSION=1.1.0+12` and `GIT_HASH=e4750326`; bundled guide
+bytes match their reviewed digests. The automatic optional WebAssembly probe
+again exited 247. Native/live/browser acceptance and complete hosted CI evidence
+remain open. The [transport bandwidth design](file-manager-gaps/transfer-bandwidth-design.md)
+records the next G29 implementation boundaries without claiming it implemented.

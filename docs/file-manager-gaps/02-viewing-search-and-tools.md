@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### External remote editing
 
-**Status:** Scoped. **Dependencies:** Captured editor session; conflict review.
+**Status:** Implementing. **Dependencies:** Captured editor session; conflict review.
 
 **Scope:** Watch a staged remote file and safely upload edits to the captured original source.
 
@@ -30,7 +30,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### External comparison tools
 
-**Status:** Scoped. **Dependencies:** G10 staging lifetime.
+**Status:** Implementing. **Dependencies:** G10 staging lifetime.
 
 **Scope:** Configure text/image comparison tools and stage reviewed local or remote pairs.
 

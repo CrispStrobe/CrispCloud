@@ -77,6 +77,12 @@ import '../widgets/lock_screen.dart';
 import '../widgets/workspace_dialog.dart';
 import '../widgets/file_view_editor_dialog.dart';
 import '../widgets/custom_command_dialog.dart';
+import '../widgets/command_entry_dialog.dart';
+import '../l10n/command_entry_strings.dart';
+import '../widgets/gathering_stack_dialog.dart';
+import '../l10n/gathering_stack_strings.dart';
+import '../widgets/help_guide_dialog.dart';
+import '../l10n/help_guide_strings.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
@@ -162,6 +168,7 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ShortcutAction.back => panel.canNavigateBack,
           ShortcutAction.forward => panel.canNavigateForward,
           ShortcutAction.reopenClosedTab => panel.canReopenClosedTab,
+          ShortcutAction.commandEntry => commandEntryAvailable(ref),
           ShortcutAction.closeTab =>
             panel.tabs.length > 1 && panel.activeTab?.isProtected != true,
           _ => true,
@@ -526,6 +533,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     route('columns', context.commanderTr('Columns and view'), 'columns');
     route('customCommands', context.commanderTr('Custom commands'), 'commands');
+    add(
+      'gatherSelection',
+      GatheringStackStrings(context).text('gather'),
+      () => addPanelSelectionToGatheringStack(
+        context,
+        ref,
+        ref.read(activePanelProvider),
+      ),
+      available: () =>
+          _activePanel(ref).selection.isNotEmpty &&
+          !_activePanel(ref).isInArchive,
+    );
+    route(
+      'gatheringStack',
+      GatheringStackStrings(context).text('title'),
+      'gathering_stack',
+    );
     route('extensions', context.extensionTr('Extensions'), 'extensions');
     route(
       'synchronizedBrowsing',
@@ -664,6 +688,11 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
           ref,
           _browserMenuBindings(context, ref),
         ),
+      ),
+      fixed(
+        'userGuide',
+        HelpGuideStrings(context).text('title'),
+        () => showUserGuide(context),
       ),
       fixed(
         'reset',
@@ -1036,6 +1065,10 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       PlatformMenu(
         label: context.tr('Help'),
         menus: <PlatformMenuItem>[
+          PlatformMenuItem(
+            label: HelpGuideStrings(context).text('title'),
+            onSelected: () => showUserGuide(context),
+          ),
           PlatformMenuItem(
             label: context.commanderTr("Keyboard Shortcuts..."),
             onSelected: () => showKeyboardShortcutsDialog(context),
@@ -1958,6 +1991,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
 
   void _runOverflowAction(BuildContext context, String value) {
     switch (value) {
+      case 'user_guide':
+        showUserGuide(context);
       case 'menu_layout':
         showBrowserMenuEditor(context, ref, _browserMenuBindings(context, ref));
       case 'synchronized_browsing':
@@ -1968,6 +2003,20 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showPanelViewDialog(context, ref, ref.read(activePanelProvider));
       case 'commands':
         showCustomCommandsDialog(context, ref, ref.read(activePanelProvider));
+      case 'command_entry':
+        if (commandEntryAvailable(ref)) showCommandEntryDialog(context, ref);
+      case 'gather_selection':
+        addPanelSelectionToGatheringStack(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+        );
+      case 'gathering_stack':
+        showGatheringStackDialog(
+          context,
+          ref,
+          destinationSide: ref.read(activePanelProvider),
+        );
       case 'extensions':
         showExtensionsDialog(context, ref, ref.read(activePanelProvider));
       case 'multi_rename':
@@ -2121,6 +2170,31 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       tooltip: l.moreActions,
       onSelected: (value) => _runOverflowAction(context, value),
       itemBuilder: (context) => <PopupMenuEntry<String>>[
+        PopupMenuItem(
+          value: 'gather_selection',
+          enabled:
+              _activePanel(ref).selection.isNotEmpty &&
+              !_activePanel(ref).isInArchive,
+          child: _overflowItem(
+            Icons.playlist_add,
+            GatheringStackStrings(context).text('gather'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'gathering_stack',
+          child: _overflowItem(
+            Icons.layers_outlined,
+            GatheringStackStrings(context).text('title'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'command_entry',
+          enabled: commandEntryAvailable(ref),
+          child: _overflowItem(
+            Icons.terminal,
+            CommandEntryStrings(context).text('title'),
+          ),
+        ),
         PopupMenuItem(
           value: 'menu_layout',
           child: _overflowItem(
@@ -2444,6 +2518,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         PopupMenuItem(
           value: 'shortcuts',
           child: _overflowItem(Icons.keyboard, l.keyboardShortcuts),
+        ),
+        PopupMenuItem(
+          value: 'user_guide',
+          child: _overflowItem(
+            Icons.help_outline,
+            HelpGuideStrings(context).text('title'),
+          ),
         ),
         PopupMenuItem(
           value: 'about',

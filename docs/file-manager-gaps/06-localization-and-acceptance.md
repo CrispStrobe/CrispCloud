@@ -30,7 +30,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Localized help
 
-**Status:** Scoped. **Dependencies:** Canonical English guide; documentation localization.
+**Status:** Closed for maintained English/German/French offline help. **Dependencies:** Canonical English guide; documentation localization.
 
 **Scope:** Provide maintained German and French help, then align other locales with available guides.
 
@@ -45,6 +45,27 @@ capability. Required live/device checks remain visible after code implementation
 - A source-topic update has a visible translation-update workflow so help does not silently diverge.
 
 **Starting points:** docs/USER_GUIDE.md and help routes; G48 terminology.
+
+**Delivered increment:** Corrected canonical instructions and complete German
+and French guides share 23 stable topics. All three are bundled; the reader
+supports topic/content search, selectable text, language changes preserving the
+visible topic, internal links, and contextual keyboard help. The app menu,
+overflow menu, native Help menu and F1 help expose the reader. Controls cover all
+nine existing UI locales, with an explicit English fallback for other guide
+languages or stale/missing translations. See [help maintenance](../help/README.md).
+
+**Observed evidence:** **35 tests passed** across guide validation, reader widgets
+and the real browser-screen menu/F1 integration. Coverage includes asset bounds,
+digests, missing/stale/corrupt guides, offline topic links, late async results,
+filtered language switching, external-link boundaries, narrow/short windows,
+enlarged Arabic text and keyboard overlap. All three guides validate with the
+same topic order; a temporary-copy maintenance exercise confirms source refresh
+keeps translations stale until separately approved. CI runs the validator.
+
+**Boundary retained:** Revision digests establish internal consistency, not a
+signature or independent linguistic certification. Additional full help
+languages remain future localization work; nine translated controls do not
+claim nine complete user guides. No new dependency was added.
 
 ## G50
 

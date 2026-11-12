@@ -30,10 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Eight implementation increments are preserved on remote feature branches:
-**five closed scopes** (G02, G03, G13, G27, G37) and **three implemented features
-with target-runtime acceptance pending** (G01, G04, G12). The remaining 43 items
-comprise **31 scoped implementation gaps, 10 research prerequisites and two
+Twelve implementation increments are preserved on remote feature branches:
+**seven closed scopes** (G02, G03, G05, G13, G27, G37, G49) and **five implemented features
+with target-runtime/live-server acceptance pending** (G01, G04, G09, G12, G25).
+The remaining 39 items
+comprise **27 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -41,6 +42,16 @@ The [12 November validation record](validation-20261112.md) separates passing
 unit/widget/native-loopback evidence, static analysis, JavaScript compilation,
 the unsuccessful optional WebAssembly dry run and outstanding native/live checks.
 The current stack contains the original scope and every incremental checkpoint.
+
+Continuation work from `403e942d` is recorded in
+[the active increment plan](continuation-20261112.md). G25 has verified native
+loopback/recovery coverage, and G09 has verified command/keyboard coverage.
+G05's reviewed reference workflow and G49's maintained three-language offline
+help are closed with their separate regression evidence and remote checkpoints.
+
+The [external tools and archive continuation](continuation-tools-archives-20261112.md)
+starts from `d76fe9b`. G10, G11 and G18 are implementing; their implementation
+and acceptance status will change only after verified remote checkpoints.
 
 ## Lane index
 
@@ -61,27 +72,27 @@ The current stack contains the original scope and every incremental checkpoint.
 | [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Closed: direct saved-item workflow | New network discovery remains G30 |
 | [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
 | [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Implemented / target-runtime acceptance pending | Native menu presentation and keyboard dispatch under G50/G51 |
-| [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Scoped | G01; existing collections |
+| [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Closed: reviewed reference workflow | Explicit collection commands; native drag-out remains G06 |
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
-| [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Scoped | G04; existing terminal/custom commands |
-| [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Scoped | Captured editor session; conflict review |
-| [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Scoped | G10 staging lifetime |
+| [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Implemented / native acceptance pending | Captured local commands and scoped insertion verified; actual OS behavior under G50 |
+| [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Implementing | Captured editor session; conflict review |
+| [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Implementing | G10 staging lifetime |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
 | [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Closed: documented streaming formats | Single-part Base64 MIME; verified exclusive-output backends only |
 | [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Scoped | Provider range capabilities |
 | [G15](02-viewing-search-and-tools.md#g15) | Nested and encrypted archive search | Scoped | G18 archive identity; reader capabilities |
 | [G16](02-viewing-search-and-tools.md#g16) | Native indexed search | Scoped | Native search bridge |
 | [G17](02-viewing-search-and-tools.md#g17) | Additional viewer adapters | Scoped | Existing viewer dispatch; extension review |
-| [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Scoped | Existing archive workspace |
+| [G18](03-archives-and-containers.md#g18) | Writable archive endpoints | Implementing | Existing archive workspace |
 | [G19](03-archives-and-containers.md#g19) | Directory-to-archive synchronization | Scoped | G18 |
 | [G20](03-archives-and-containers.md#g20) | Archive-to-archive transfer | Scoped | G18 |
 | [G21](03-archives-and-containers.md#g21) | Large background archive jobs | Scoped | G18; transfer queue |
 | [G22](03-archives-and-containers.md#g22) | Archive format coverage | Scoped | License and format review per codec |
 | [G23](03-archives-and-containers.md#g23) | Remote and browser archive creation | Scoped | G18; G21 where streaming is required |
 | [G24](03-archives-and-containers.md#g24) | External packer adapters | Scoped | G17 extension isolation |
-| [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Scoped | Existing transfer recovery |
+| [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Implemented / live-server acceptance pending | Native loopback/recovery verified; selected server interoperability under G50 |
 | [G26](04-connections-and-transfers.md#g26) | Server-to-server FTP transfer | Scoped | G25 transfer evidence; server support |
 | [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Closed: native HTTP/HTTPS scope | Direct-protocol proxy work remains G28 |
 | [G28](04-connections-and-transfers.md#g28) | Direct-protocol proxy routing | Scoped | Per-protocol socket factories |
@@ -105,7 +116,7 @@ The current stack contains the original scope and every incremental checkpoint.
 | [G46](05-native-platforms-and-release.md#g46) | Direct cable transfer | Hardware research | Hardware/protocol fixtures; compatible runtime |
 | [G47](05-native-platforms-and-release.md#g47) | Native binary extension compatibility | Architecture research | ABI specification; bitness/OS hosts; license review |
 | [G48](06-localization-and-acceptance.md#g48) | UI language coverage | Scoped | Terminology review; localization inventory |
-| [G49](06-localization-and-acceptance.md#g49) | Localized help | Scoped | Canonical English guide; documentation localization |
+| [G49](06-localization-and-acceptance.md#g49) | Localized help | Closed: English/German/French offline guides | 23 aligned topics; nine-language controls; more guide languages remain future work |
 | [G50](06-localization-and-acceptance.md#g50) | Native and live-provider acceptance | Acceptance pending | Target machines; explicit test accounts and fixtures |
 | [G51](06-localization-and-acceptance.md#g51) | Web runtime and WebAssembly acceptance | Acceptance pending | Browser test harness; dependency compatibility |
 
@@ -134,6 +145,12 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G27 SOCKS4/4a HTTP routing | `feature/socks4-http-routing-20261112` · `42ae79c` · PR #66 | 197 tests passed across six proxy/security/TLS suites including the final host-validation delta; focused analysis and independent review clean | Closed for native HTTP/HTTPS routing |
 | G13 file encoding/decoding | `feature/file-conversion-20261112` · implementation `ebede8d` · PR #67 | 80 tests passed across codec, service/native-filesystem and dialog suites; no analyzer findings in new files | Closed for documented UUE/XXE and single-part MIME formats on supported exclusive-output backends |
 | Integrated validation | `feature/file-conversion-20261112` · code checkpoint `ebede8d` | Full analysis: 0 errors, 96 warnings, 1,038 infos; JavaScript release web build passed with version/hash; optional WebAssembly dry run exited 247 | [Detailed evidence and limits](validation-20261112.md) |
+| Continuation scope | `feature/gap-extension-scope-20261112` · `cd14477` · PR #69 | G05/G09/G25/G49 boundaries and staged validation plan | Scope preserved remotely |
+| G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, cleanup `5b2f1fa` · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
+| G09 command entry | `feature/command-entry-20261112` · `50a9547` · PR #71 | 152 tests passed across eight command/context/keyboard suites; 62 passed in the final service/dialog/context gate | Implemented; native argument/permission/keyboard acceptance pending |
+| G05 gathering stack | `feature/gathering-stack-20261112` · `8f117e7` · PR #72 | 56 service/widget/operation-dialog tests passed; focused analysis clean | Closed for the reviewed reference workflow |
+| G49 localized help | `feature/localized-help-20261112` · code `e475032` · PR #73 | 35 guide/reader/real-screen integration tests passed; all three guides and revision-update workflow verified | Closed for maintained English/German/French offline help |
+| Continuation integrated validation | `feature/localized-help-20261112` · compiled code `e475032` | 55 menu regressions passed; full analysis gate: 0 errors, 96 warnings, 1,039 infos; versioned JavaScript release build passed; optional WebAssembly probe exited 247 | [Continuation evidence and remaining acceptance](continuation-20261112.md#integrated-validation) |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

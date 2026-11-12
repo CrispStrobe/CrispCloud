@@ -45,11 +45,11 @@ cancel that handshake. A late native completion cannot revive a closed session.
 ## Scope
 
 Passive FTP is supported in native builds. Servers must expose their passive
-data ports through their firewall. Browser FTP, FTP-specific proxies, FXP,
-byte-range FTP resume and first-class SCP are separate gaps. The general
-reviewed transfer queue, pause/cancel and recovery controls still apply to FTP
-jobs, but recovery does not imply a server supports restarting a data stream at
-an arbitrary byte offset.
+data ports through their firewall. [Verified download resume](ftp-resume.md)
+negotiates `REST STREAM` for captured source identities and checks the complete
+assembled file before publication. A server without the required restart or
+source evidence refuses resume and requires a reviewed restart. Browser FTP,
+FTP-specific proxies, FXP, upload resume and first-class SCP are separate gaps.
 
 ## Verification
 
@@ -76,13 +76,13 @@ and directory/upload/download data-channel deadlines and cancellation. The
 observation occurs before fixture teardown, so a failed caller Future alone is
 not treated as proof of transport cleanup.
 
-Cancellation coverage is specific to the owning session's close/disconnect and
-account logout. The generic upload-stream API does not expose a cancellation
-token before it subscribes to source bytes; stopping a queued operation during
-that initial handshake can still wait for its connection deadline. Subscription
-cancellation during an asynchronous download setup can likewise wait for setup
-to finish. Those deadlines now close the native connection; this change does
-not claim immediate queue-stop propagation through every provider API.
+The range-download API also owns its session before connection setup finishes.
+Cancelling that subscription closes a pending control/data transport, including
+an unanswered `REST` reply or data TLS handshake. The generic upload-stream API
+does not expose a cancellation token before it subscribes to source bytes;
+stopping a queued upload during that initial handshake can still wait for its
+connection deadline. This does not claim immediate queue-stop propagation
+through every provider API.
 
 The final G37 gate passed all 145 tests across the lifetime, explicit-TLS,
 streaming-session, adapter, media-transfer, provider-dispatch, SOCKS5, proxy and

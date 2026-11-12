@@ -156,7 +156,7 @@ platform-menu model passing tests does not establish signed application behavior
 
 ### Gathering stack
 
-**Status:** Scoped. **Dependencies:** G01; existing collections.
+**Status:** Closed for the reviewed reference workflow. **Dependencies:** G01; existing collections.
 
 **Scope:** Gather source-bound references from different folders and transfer them through one reviewed plan.
 
@@ -171,6 +171,26 @@ platform-menu model passing tests does not establish signed application behavior
 - Partial completion removes only confirmed successes and keeps failed or untouched references available.
 
 **Starting points:** FileCollectionService; panel collection origins; FileOperationService.
+
+**Delivered increment:** A persistent, bounded stack gathers explicitly selected
+references from independent folders/accounts, keeps same-named originals
+distinct, and supports refresh, removal and reordering. A complete overview
+captures the destination before the ordinary per-account copy/move reviews.
+Only confirmed successful roots leave the stack; partial, canceled, skipped,
+filtered, missing or failed roots remain. New gather tickets prevent old
+completion callbacks from removing later intent. See [gathering stack](../gathering-stack.md).
+
+**Observed evidence:** **56 tests passed** across the stack service, stack
+dialogs and existing operation-dialog regressions. Coverage includes saved
+references, original-source changes, fixed destinations, partial folder/move
+outcomes, failed publication, stale-review cleanup, cancellation and enlarged
+German/Arabic layouts. Focused analysis of all new files and the modified
+operation dialog has no findings. No dependency was added.
+
+**Boundary retained:** This surface adds references through explicit selection
+commands. It does not stage file contents or promise atomic transfer across
+accounts. Transfers use foreground reviews; native drag-out and signed/browser
+grant acceptance retain their separate G06/G50/G51 boundaries.
 
 ## G06
 
@@ -236,7 +256,7 @@ platform-menu model passing tests does not establish signed application behavior
 
 ### Command entry and keyboard conventions
 
-**Status:** Scoped. **Dependencies:** G04; existing terminal/custom commands.
+**Status:** Implemented / native acceptance pending. **Dependencies:** G04; existing terminal/custom commands.
 
 **Scope:** Complete reviewed program launch and file/path insertion shortcuts across supported desktop targets.
 
@@ -251,3 +271,25 @@ platform-menu model passing tests does not establish signed application behavior
 - Default and customized shortcuts work without stealing input from editors or the terminal; launch requires the existing command review.
 
 **Starting points:** keyboard_shortcut_service.dart; keyboard_shortcuts.dart; custom_toolbar_command_service.dart.
+
+**Delivered increment:** A dedicated command-entry dialog prepares an installed
+program or a saved command from the captured ordinary local pane. Literal typed
+arguments and JSON-style filename/path insertion produce one immutable argument
+vector; saved templates expand once. A bounded absolute-directory PATH lookup
+shows the resolved executable in the existing review. Run remains a separate
+action with final source, file, directory, grant, executable and draft checks.
+Ctrl+Enter/Ctrl+Shift+Enter insertion has its own customizable shortcut scope.
+See [command entry](../command-entry.md) for the supported syntax and programs.
+
+**Observed evidence:** The eight-suite command, context, runner, keyboard and
+dialog gate passed **152 tests**. New files and the review-lifetime change pass
+focused analysis without findings. Independent review checks captured source
+identity, immutable arguments and cancellation. The final three-suite gate
+passed **62 tests** after correcting interpreter/script option boundaries and
+Windows shell-name normalization. Overlapping counts are not added. No
+dependency was added.
+
+**Remaining acceptance:** Actual Windows argument transport, Linux/macOS file
+permissions and symlinks, signed/store-build restrictions and operating-system
+keyboard dispatch remain G50 checks. Metadata/path checks cannot eliminate a
+replacement race before the operating system opens an executable.

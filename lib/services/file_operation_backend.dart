@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -56,6 +57,24 @@ class LocalOperationBackend extends FileOperationBackend {
   @override
   bool get supportsStagedVerification =>
       !kIsWeb || service is LocalTransferFileOperations;
+  @override
+  bool get supportsRetainedStageCleanup => !kIsWeb;
+  @override
+  bool isRetainedStagePath(String stagePath, String destinationPath) {
+    final directory = paths.dirname(stagePath);
+    final name = paths.basename(directory);
+    return !kIsWeb &&
+        !stagePath.contains('\u0000') &&
+        !destinationPath.contains('\u0000') &&
+        paths.isAbsolute(stagePath) &&
+        paths.isAbsolute(destinationPath) &&
+        paths.normalize(stagePath) == stagePath &&
+        paths.basename(stagePath) == 'payload' &&
+        name.startsWith('.crisp-transfer-') &&
+        name.length > '.crisp-transfer-'.length &&
+        samePath(paths.dirname(directory), paths.dirname(destinationPath));
+  }
+
   @override
   StorageTransferCapabilities get capabilities => StorageTransferCapabilities(
     caseSensitivity: !kIsWeb && (Platform.isWindows || Platform.isMacOS)
@@ -400,6 +419,7 @@ class LocalOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -413,6 +433,7 @@ class LocalOperationBackend extends FileOperationBackend {
       length,
       replace: replace,
       preallocate: preallocate,
+      retainPartialFileOnFailure: retainPartialFileOnFailure,
       verifyStaged: verifyStaged,
       checkpoint: checkpoint,
     );
@@ -451,6 +472,7 @@ class LocalOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     FileItem? cloneSource,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -560,6 +582,8 @@ class LocalOperationBackend extends FileOperationBackend {
       final staging = await Directory(paths.dirname(path))
           .createTemp('.crisp-transfer-');
       final staged = File(paths.join(staging.path, 'payload'));
+      var journalOwnsStage = false;
+      var committed = false;
       try {
         await checkpoint?.call({
           'phase': 'staging',
@@ -567,6 +591,13 @@ class LocalOperationBackend extends FileOperationBackend {
           'stagedPath': staged.path,
           'stagingDirectory': staging.path,
         });
+        journalOwnsStage =
+            retainPartialFileOnFailure &&
+            checkpoint != null &&
+            canRecover &&
+            cloneSource == null &&
+            !preallocate &&
+            length != null;
         int? originalMode;
         if (initialType == FileSystemEntityType.file) {
           final mode = (await destination.stat()).mode;
@@ -622,6 +653,27 @@ class LocalOperationBackend extends FileOperationBackend {
           } finally {
             await writer.close();
           }
+        } else if (journalOwnsStage) {
+          // IOSink.addStream can discard buffered input on a source error.
+          // A journal-owned partial must contain the bytes already accepted,
+          // so complete each write and flush even when its source is canceled.
+          final writer = await staged.open(mode: FileMode.write);
+          try {
+            await for (final chunk in data) {
+              _check();
+              received += chunk.length;
+              if (received > length) {
+                throw StateError('Source length changed.');
+              }
+              await writer.writeFrom(chunk);
+            }
+          } finally {
+            try {
+              await writer.flush();
+            } finally {
+              await writer.close();
+            }
+          }
         } else {
           final sink = staged.openWrite();
           try {
@@ -670,6 +722,7 @@ class LocalOperationBackend extends FileOperationBackend {
         }
         if (!replace) {
           if (await moveNativeNoReplace(staged.path, path)) {
+            committed = true;
             await checkpoint?.call({'phase': 'committed', 'destination': path});
             return;
           }
@@ -678,12 +731,48 @@ class LocalOperationBackend extends FileOperationBackend {
           );
         }
         await staged.rename(path);
+        committed = true;
         await checkpoint?.call({'phase': 'committed', 'destination': path});
       } finally {
-        try {
-          await staging.delete(recursive: true);
-        } catch (_) {
-          /* Preserve write result. */
+        var keepPartial = false;
+        if (journalOwnsStage && !committed) {
+          try {
+            if (await FileSystemEntity.type(staged.path, followLinks: false) ==
+                FileSystemEntityType.file) {
+              final size = await staged.length();
+              keepPartial = size > 0 && size <= length!;
+            }
+          } catch (_) {
+            // An acknowledged journal owns an inaccessible stage as well.
+            // Retain it for explicit recovery rather than lose its evidence.
+            keepPartial = true;
+          }
+        }
+        if (!keepPartial) {
+          try {
+            if (retainPartialFileOnFailure) {
+              // A journaled attempt must never recursively delete another
+              // entry placed in its private directory. The durable reference
+              // remains available if exact cleanup cannot be confirmed.
+              final entries = staging.listSync(followLinks: false);
+              if (entries.every((entry) => entry.path == staged.path)) {
+                final type = FileSystemEntity.typeSync(
+                  staged.path,
+                  followLinks: false,
+                );
+                if (!committed &&
+                    type == FileSystemEntityType.file &&
+                    (!journalOwnsStage || staged.lengthSync() == 0)) {
+                  staged.deleteSync();
+                }
+                staging.deleteSync();
+              }
+            } else {
+              await staging.delete(recursive: true);
+            }
+          } catch (_) {
+            /* Preserve write result. */
+          }
         }
       }
     });
@@ -854,6 +943,212 @@ class LocalOperationBackend extends FileOperationBackend {
   }
 
   @override
+  Future<void> cleanupRetainedStage(
+    String stagePath, {
+    required FileItem published,
+    required String publishedSha256,
+    TransferCheckpoint? checkpoint,
+  }) async {
+    if (kIsWeb) {
+      return super.cleanupRetainedStage(
+        stagePath,
+        published: published,
+        publishedSha256: publishedSha256,
+        checkpoint: checkpoint,
+      );
+    }
+    final destination = published.path;
+    final stageDirectory = paths.dirname(stagePath);
+    if (destination == null ||
+        !isRetainedStagePath(stagePath, destination) ||
+        published.isFolder ||
+        published.isSymlink == true ||
+        published.size == null ||
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(publishedSha256)) {
+      throw StateError(
+        'The retained staging path is outside its exact private layout.',
+      );
+    }
+    await service.withFileOperationAccess(paths.dirname(destination), () async {
+      _check();
+      await checkpoint?.call();
+
+      void checkParents() {
+        var parent = paths.dirname(stageDirectory);
+        while (true) {
+          if (FileSystemEntity.typeSync(parent, followLinks: false) !=
+              FileSystemEntityType.directory) {
+            throw FileSystemException(
+              'Recovery cleanup parent is not a regular directory.',
+              parent,
+            );
+          }
+          final next = paths.dirname(parent);
+          if (next == parent) break;
+          parent = next;
+        }
+      }
+
+      void checkPrivateDirectory() {
+        if (FileSystemEntity.typeSync(stageDirectory, followLinks: false) !=
+            FileSystemEntityType.directory) {
+          throw FileSystemException(
+            'Recovery staging directory changed.',
+            stageDirectory,
+          );
+        }
+        final entries = Directory(stageDirectory).listSync(followLinks: false);
+        if (entries.any((entry) => !samePath(entry.path, stagePath))) {
+          throw FileSystemException(
+            'Recovery staging directory contains other entries.',
+            stageDirectory,
+          );
+        }
+      }
+
+      bool sameStat(FileStat first, FileStat second) =>
+          first.type == second.type &&
+          first.size == second.size &&
+          first.mode == second.mode &&
+          first.modified.isAtSameMomentAs(second.modified) &&
+          first.changed.isAtSameMomentAs(second.changed);
+
+      checkParents();
+      final directoryType = FileSystemEntity.typeSync(
+        stageDirectory,
+        followLinks: false,
+      );
+      if (directoryType == FileSystemEntityType.notFound) {
+        final missing = await _confirmMissing(stageDirectory);
+        _check();
+        if (missing) return;
+        throw StateError(
+          'The retained staging directory could not be inspected.',
+        );
+      }
+      checkPrivateDirectory();
+      if (FileSystemEntity.typeSync(destination, followLinks: false) !=
+          FileSystemEntityType.file) {
+        throw StateError('The published destination is not a regular file.');
+      }
+      final destinationBefore = FileStat.statSync(destination);
+      if (destinationBefore.size != published.size ||
+          (published.updatedAt != null &&
+              !published.updatedAt!.isAtSameMomentAs(
+                destinationBefore.modified,
+              ))) {
+        throw StateError(
+          'The published destination changed before recovery cleanup.',
+        );
+      }
+      final stageType = FileSystemEntity.typeSync(
+        stagePath,
+        followLinks: false,
+      );
+      if (stageType != FileSystemEntityType.file &&
+          stageType != FileSystemEntityType.notFound) {
+        throw StateError('The retained payload is not a regular file.');
+      }
+      if (stageType == FileSystemEntityType.notFound &&
+          !await _confirmMissing(stagePath)) {
+        throw StateError('The retained payload could not be inspected.');
+      }
+      final stageBefore = stageType == FileSystemEntityType.file
+          ? FileStat.statSync(stagePath)
+          : null;
+      if (stageBefore != null &&
+          (stageBefore.size < 0 || stageBefore.size > destinationBefore.size)) {
+        throw StateError(
+          'The retained payload is not a valid published prefix.',
+        );
+      }
+      String? stageDigest;
+      if (stageBefore != null) {
+        var received = 0;
+        stageDigest =
+            (await sha256
+                    .bind(
+                      File(stagePath).openRead().asyncMap((chunk) async {
+                        await checkpoint?.call();
+                        _check();
+                        received += chunk.length;
+                        return chunk;
+                      }),
+                    )
+                    .first)
+                .toString();
+        if (received != stageBefore.size) {
+          throw StateError(
+            'The retained payload changed while verifying cleanup.',
+          );
+        }
+      }
+      final fullDigest = _NativeStageDigest();
+      final prefixDigest = _NativeStageDigest();
+      final fullSink = sha256.startChunkedConversion(fullDigest);
+      final prefixSink = sha256.startChunkedConversion(prefixDigest);
+      var received = 0;
+      var prefixRemaining = stageBefore?.size ?? 0;
+      try {
+        await for (final chunk in File(destination).openRead()) {
+          await checkpoint?.call();
+          _check();
+          received += chunk.length;
+          fullSink.add(chunk);
+          if (prefixRemaining > 0) {
+            final count = chunk.length < prefixRemaining
+                ? chunk.length
+                : prefixRemaining;
+            prefixSink.add(
+              count == chunk.length ? chunk : chunk.sublist(0, count),
+            );
+            prefixRemaining -= count;
+          }
+        }
+      } finally {
+        fullSink.close();
+        prefixSink.close();
+      }
+      if (received != destinationBefore.size ||
+          prefixRemaining != 0 ||
+          fullDigest.value?.toString() != publishedSha256 ||
+          (stageDigest != null &&
+              prefixDigest.value?.toString() != stageDigest)) {
+        throw StateError(
+          'Published contents or the retained prefix changed; recovery files retained.',
+        );
+      }
+      await checkpoint?.call();
+      _check();
+      // Recheck every path and snapshot after the final asynchronous boundary.
+      // Delete exactly the verified payload, then only its empty directory.
+      checkParents();
+      checkPrivateDirectory();
+      if (FileSystemEntity.typeSync(destination, followLinks: false) !=
+              FileSystemEntityType.file ||
+          !sameStat(destinationBefore, FileStat.statSync(destination))) {
+        throw StateError(
+          'The published destination changed during recovery cleanup.',
+        );
+      }
+      if (stageBefore != null) {
+        if (FileSystemEntity.typeSync(stagePath, followLinks: false) !=
+                FileSystemEntityType.file ||
+            !sameStat(stageBefore, FileStat.statSync(stagePath))) {
+          throw StateError(
+            'The retained payload changed during recovery cleanup.',
+          );
+        }
+        File(stagePath).deleteSync();
+      } else if (FileSystemEntity.typeSync(stagePath, followLinks: false) !=
+          FileSystemEntityType.notFound) {
+        throw StateError('A new payload appeared during recovery cleanup.');
+      }
+      Directory(stageDirectory).deleteSync();
+    });
+  }
+
+  @override
   Future<void> setModified(String path, DateTime modified) async {
     _check();
     await service.withFileOperationAccess(
@@ -888,6 +1183,14 @@ class LocalOperationBackend extends FileOperationBackend {
       await Link(destination).create(linkTarget);
     });
   }
+}
+
+class _NativeStageDigest implements Sink<Digest> {
+  Digest? value;
+  @override
+  void add(Digest digest) => value = digest;
+  @override
+  void close() {}
 }
 
 class CloudOperationBackend extends FileOperationBackend {
@@ -1077,6 +1380,7 @@ class CloudOperationBackend extends FileOperationBackend {
     int? length, {
     required bool replace,
     bool preallocate = false,
+    bool retainPartialFileOnFailure = false,
     String? resumeUploadPath,
     Future<void> Function(FileItem staged)? verifyStaged,
     Future<void> Function(Map<String, dynamic> state)? checkpoint,
@@ -1684,7 +1988,9 @@ class CloudOperationBackend extends FileOperationBackend {
     return (client as CloudTransferOperations).readTransferRange(
       file.path!,
       offset,
-      expectedVersion: _fileVersion(file),
+      expectedVersion: file.metadata?['rangeReadSnapshot'] is String
+          ? file.metadata!['rangeReadSnapshot'] as String
+          : _fileVersion(file),
     );
   }
 

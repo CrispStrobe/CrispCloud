@@ -36,6 +36,11 @@ Future<FileOperationPlan?> showFileOperationDialog(
   FileOperationBackend? sourceBackend,
   Map<PanelFileOrigin, List<FileItem>>? sourceGroups,
   PanelSide? externalDestinationSide,
+  PanelSide? lockedDestinationSide,
+  bool Function()? isReviewCurrent,
+  void Function(FileOperationPlan plan)? onPreparedPlan,
+  Future<void> Function(FileOperationPlan plan)? onForegroundPlan,
+  String Function(int index, int count, PanelFileOrigin origin)? groupLabel,
 }) async {
   if (files.isEmpty) return null;
   final invokingSide = ref.read(activePanelProvider);
@@ -143,7 +148,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
       FileOperationPlan? last;
       var index = 0;
       for (final group in groups.entries) {
-        if (!context.mounted) return last;
+        if (!context.mounted || !(isReviewCurrent?.call() ?? true)) return last;
         index++;
         last = await showDialog<FileOperationPlan>(
           context: context,
@@ -158,7 +163,12 @@ Future<FileOperationPlan?> showFileOperationDialog(
             protectedSources: protected,
             allowBackground: false,
             onAccepted: rememberSelection,
+            lockedDestinationSide: lockedDestinationSide,
+            isReviewCurrent: isReviewCurrent,
+            onPreparedPlan: onPreparedPlan,
+            onForegroundPlan: onForegroundPlan,
             reviewGroup:
+                groupLabel?.call(index, groups!.length, group.key) ??
                 'Account $index of ${groups!.length}: ${ref.read(panelProvider(side)).storageDisplayName(group.key.storageReference)}',
           ),
         );
@@ -185,6 +195,11 @@ Future<FileOperationPlan?> showFileOperationDialog(
         sourceBackend: sourceBackend,
         onAccepted: rememberSelection,
         externalDestinationSide: externalDestinationSide,
+        lockedDestinationSide: lockedDestinationSide,
+        isReviewCurrent: isReviewCurrent,
+        onPreparedPlan: onPreparedPlan,
+        onForegroundPlan: onForegroundPlan,
+        allowBackground: onForegroundPlan == null,
       ),
     );
     return result;
@@ -208,6 +223,10 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     this.reviewGroup,
     this.onAccepted,
     this.externalDestinationSide,
+    this.lockedDestinationSide,
+    this.isReviewCurrent,
+    this.onPreparedPlan,
+    this.onForegroundPlan,
   });
   final PanelSide side;
   final List<FileItem> files;
@@ -228,6 +247,20 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   /// captured destination is writable; the temporary source is never offered
   /// as a destination and cannot be queued beyond its foreground lifetime.
   final PanelSide? externalDestinationSide;
+
+  /// A caller-reviewed destination stays fixed across source-account groups.
+  /// Unlike a read-only external source, this also supports ordinary moves.
+  final PanelSide? lockedDestinationSide;
+  final bool Function()? isReviewCurrent;
+
+  /// Additional original-evidence checks run after the ordinary write-free
+  /// planner, before its preview can be accepted.
+  final void Function(FileOperationPlan plan)? onPreparedPlan;
+
+  /// Called after each foreground run settles, including cancellation and
+  /// partial failure, before the next account can start. Preview/background
+  /// dismissal never reports pending work as a successful transfer.
+  final Future<void> Function(FileOperationPlan plan)? onForegroundPlan;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
@@ -282,6 +315,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   bool _preparing = false;
   bool _running = false;
   bool _finished = false;
+  bool _foregroundReportFailed = false;
   String? _error;
   String? _current;
   int _planningScanned = 0;
@@ -321,7 +355,16 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       final opposite = widget.side == PanelSide.local
           ? PanelSide.remote
           : PanelSide.local;
-      if (widget.externalDestinationSide case final destinationSide?) {
+      if (widget.lockedDestinationSide case final destinationSide?) {
+        if (widget.destinationOrigin == null ||
+            widget.destinationPath == null) {
+          throw ArgumentError(
+            'A locked destination requires its captured origin and path.',
+          );
+        }
+        _origins[destinationSide] = widget.destinationOrigin!;
+        _destinationSide = destinationSide;
+      } else if (widget.externalDestinationSide case final destinationSide?) {
         if (widget.sourceBackend == null || widget.destinationOrigin == null) {
           throw StateError(
             'An external copy requires captured source and destination storage.',
@@ -364,12 +407,16 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
   FileOperationBackend _backend(PanelFileOrigin origin) => fileOperationBackend(
     source: origin.source,
     local: ref.read(localFileServiceProvider),
-    isCurrent: () => origin.isCurrent,
+    isCurrent: () =>
+        origin.isCurrent && (widget.isReviewCurrent?.call() ?? true),
   );
 
   @override
   void dispose() {
-    if (widget.externalDestinationSide != null) _control.cancel();
+    if (widget.externalDestinationSide != null ||
+        widget.onForegroundPlan != null) {
+      _control.cancel();
+    }
     _destination.dispose();
     _relativeBase.dispose();
     _mask.dispose();
@@ -396,6 +443,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       change();
       _plan = null;
       _finished = false;
+      _foregroundReportFailed = false;
       _error = null;
     });
   }
@@ -410,6 +458,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
       _error = null;
       _plan = null;
       _finished = false;
+      _foregroundReportFailed = false;
       _planningScanned = 0;
       _planningPath = null;
     });
@@ -440,6 +489,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             if (file.storage == destinationOrigin.storageReference) file.path,
         ],
       );
+      widget.onPreparedPlan?.call(plan);
       if (mounted) setState(() => _plan = plan);
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
@@ -745,8 +795,22 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         if (mounted) setState(() {});
       },
     );
+    var reported = false;
+    Future<void> reportForeground() async {
+      reported = true;
+      try {
+        await widget.onForegroundPlan!(plan);
+      } catch (_) {
+        _foregroundReportFailed = true;
+        rethrow;
+      }
+    }
+
     try {
       await future;
+      if (!background && widget.onForegroundPlan != null) {
+        await reportForeground();
+      }
       await _panel.refresh();
       if (!identical(_panel, targetPanel)) await targetPanel.refresh();
       if (mounted) {
@@ -757,6 +821,14 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
         });
       }
     } catch (error) {
+      if (!reported && !background && widget.onForegroundPlan != null) {
+        try {
+          await reportForeground();
+        } catch (_) {
+          // Keep the original transfer failure visible; returning null also
+          // stops further groups when its completion could not be recorded.
+        }
+      }
       if (mounted) {
         setState(() {
           _running = false;
@@ -890,7 +962,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                         ),
                       )
                       .toList(),
-                  onChanged: _busy
+                  onChanged: _busy || widget.lockedDestinationSide != null
                       ? null
                       : (side) => _change(() {
                           _destinationSide = side;
@@ -903,7 +975,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: _destination,
-                  enabled: !_busy,
+                  enabled: !_busy && widget.lockedDestinationSide == null,
                   decoration: InputDecoration(
                     labelText: context.commanderTr("Destination directory"),
                     border: const OutlineInputBorder(),
@@ -1627,7 +1699,10 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
             TextButton(
               onPressed: _preparing
                   ? null
-                  : () => Navigator.pop(context, _finished ? _plan : null),
+                  : () => Navigator.pop(
+                      context,
+                      _finished && !_foregroundReportFailed ? _plan : null,
+                    ),
               child: Text(
                 _finished
                     ? context.commanderTr("Close")

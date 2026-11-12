@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,8 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/command_entry_strings.dart';
+import '../models/command_entry.dart';
 import '../models/panel_side.dart';
 import '../providers/custom_command_provider.dart';
 import '../providers/panel_provider.dart';
@@ -494,11 +497,19 @@ class CommandRunDialog extends StatefulWidget {
     required this.captured,
     required this.prepared,
     required this.service,
+    this.reviewedStart,
+    this.errorText,
   });
   final CustomToolbarCommand command;
   final CommandInvocationContext captured;
   final PreparedToolbarCommand prepared;
   final CustomToolbarCommandService service;
+
+  /// Optional source-bound preparation with literal argv. The callback must
+  /// check the supplied review lifetime around every await before launching.
+  final Future<RunningToolbarCommand> Function(bool Function() isReviewCurrent)?
+  reviewedStart;
+  final String Function(Object error)? errorText;
   @override
   State<CommandRunDialog> createState() => _CommandRunDialogState();
 }
@@ -508,12 +519,36 @@ class _CommandRunDialogState extends State<CommandRunDialog> {
   CommandExecutionResult? _result;
   String? _error;
   bool _starting = false;
+  int _startGeneration = 0;
   Future<void> _start() async {
+    if (_starting || _run != null || _error != null) return;
+    final generation = ++_startGeneration;
+    bool isReviewCurrent() =>
+        mounted &&
+        generation == _startGeneration &&
+        _starting &&
+        ModalRoute.of(context)?.isCurrent != false;
     setState(() => _starting = true);
     try {
-      final run = await widget.service.start(widget.command, widget.captured);
-      if (!mounted) {
+      if (widget.reviewedStart == null) {
+        final now = widget.service.prepare(widget.command, widget.captured);
+        if (now.executable != widget.prepared.executable ||
+            now.workingDirectory != widget.prepared.workingDirectory ||
+            !listEquals(now.arguments, widget.prepared.arguments)) {
+          throw const CommandEntryException(CommandEntryFailure.changed);
+        }
+      }
+      final run =
+          await (widget.reviewedStart?.call(isReviewCurrent) ??
+              widget.service.start(widget.command, widget.captured));
+      if (!isReviewCurrent()) {
         run.dispose();
+        if (mounted && generation == _startGeneration) {
+          setState(() {
+            _starting = false;
+            _error = CommandEntryStrings(context).text('changed');
+          });
+        }
         return;
       }
       _run = run;
@@ -522,13 +557,25 @@ class _CommandRunDialogState extends State<CommandRunDialog> {
       final result = await run.completed;
       if (mounted) setState(() => _result = result);
     } catch (error) {
-      if (mounted) {
+      if (mounted && generation == _startGeneration) {
         setState(() {
-          _error = '$error';
+          _error =
+              widget.errorText?.call(error) ??
+              (error is CommandEntryException
+                  ? CommandEntryStrings(context).failure(error)
+                  : '$error');
           _starting = false;
         });
       }
     }
+  }
+
+  void _cancelStart() {
+    _startGeneration++;
+    setState(() {
+      _starting = false;
+      _error = _t(context, 'Cancelled');
+    });
   }
 
   void _refresh() {
@@ -537,6 +584,7 @@ class _CommandRunDialogState extends State<CommandRunDialog> {
 
   @override
   void dispose() {
+    _startGeneration++;
     _run?.removeListener(_refresh);
     _run?.dispose();
     super.dispose();
@@ -602,7 +650,7 @@ class _CommandRunDialogState extends State<CommandRunDialog> {
             FilledButton(onPressed: _start, child: Text(_t(context, 'Run'))),
           if (running)
             TextButton(
-              onPressed: _run?.cancel,
+              onPressed: _run?.cancel ?? _cancelStart,
               child: Text(_t(context, 'Cancel')),
             ),
           TextButton(

@@ -2,6 +2,11 @@
 
 [Gap register](README.md) · [Current capability audit](../file-manager-capability-audit.md).
 
+This record describes the preceding eight-increment checkpoint. The later
+G05/G09/G25/G49 work and its current evidence are maintained in the
+[continuation record](continuation-20261112.md); the gap register has current
+counts and statuses.
+
 ## Scope and checkpoint
 
 The requested feature inventory is consolidated into 51 stable gaps across six
