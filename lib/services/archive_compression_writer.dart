@@ -5,10 +5,17 @@ import 'package:crypto/crypto.dart';
 import 'package:koni_codecs/koni_codecs.dart' as koni;
 
 import 'archive_types.dart';
+import 'archive_lz4_codec.dart';
+import 'archive_lzma_codec.dart';
 
-enum ArchiveCompressionKind { gzip, bzip2, xz, zstd }
+enum ArchiveCompressionKind { gzip, bzip2, xz, zstd, lz4, lzma }
 
-ArchiveCompressionKind? archiveCompressionForBytes(Uint8List bytes) {
+/// LZMA-alone has no magic signature. Only an explicit filename hint can route
+/// it here, and reader/rewrite validation must still decode the exact stream.
+ArchiveCompressionKind? archiveCompressionForBytes(
+  Uint8List bytes, {
+  String? name,
+}) {
   bool starts(List<int> signature) =>
       bytes.length >= signature.length &&
       Iterable<int>.generate(signature.length)
@@ -20,6 +27,16 @@ ArchiveCompressionKind? archiveCompressionForBytes(Uint8List bytes) {
   }
   if (starts(const [0x28, 0xb5, 0x2f, 0xfd])) {
     return ArchiveCompressionKind.zstd;
+  }
+  if (starts(const [0x04, 0x22, 0x4d, 0x18])) {
+    return ArchiveCompressionKind.lz4;
+  }
+  final lower = name?.toLowerCase() ?? '';
+  if ((lower.endsWith('.lzma') || lower.endsWith('.tlz')) &&
+      bytes.length >= 18 &&
+      bytes[0] < 225 &&
+      bytes[13] == 0) {
+    return ArchiveCompressionKind.lzma;
   }
   return null;
 }
@@ -81,6 +98,18 @@ Uint8List encodeArchiveCompression(
         level: level == 0 ? 1 : level,
         checksum: true,
       );
+    case ArchiveCompressionKind.lz4:
+      return encodeArchiveLz4(
+        input,
+        maxOutputBytes: maxOutputBytes,
+        compress: level != 0,
+      );
+    case ArchiveCompressionKind.lzma:
+      return encodeArchiveLzma(
+        input,
+        level: level,
+        maxOutputBytes: maxOutputBytes,
+      );
   }
   return Uint8List.fromList(output.getBytes());
 }
@@ -100,6 +129,10 @@ void validateArchiveCompressionRewrite(
     'Concatenated streams, extra frames or unsupported compression metadata cannot be preserved by this writer.',
   );
   switch (kind) {
+    case ArchiveCompressionKind.lz4:
+      if (!decodeArchiveLz4(bytes).canRewrite) refuse();
+    case ArchiveCompressionKind.lzma:
+      decodeArchiveLzma(bytes);
     case ArchiveCompressionKind.gzip:
       final header = _gzipHeaderLength(bytes);
       if (bytes[3] & 4 != 0) {

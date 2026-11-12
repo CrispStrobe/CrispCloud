@@ -21,6 +21,10 @@ const _hfsHelp =
     'Creates a case-sensitive HFSX data volume. Names use HFS Unicode normalization. Resource forks, extended attributes and symbolic links are not copied.';
 const _isoHelp =
     'Creates a data-only ISO with Rock Ridge and Joliet names. Boot records and UDF filesystems are not created.';
+const _lz4Help =
+    'LZ4 offers fast compression or storage without compression. Both modes include content checksums.';
+const _lzmaHelp =
+    'LZMA uses a 64 KiB dictionary for Fast, 8 MiB for Normal and 64 MiB for Maximum. The format has no content checksum.';
 
 class _RecordingService extends ArchiveCreationService {
   final List<ArchiveCreationOptions> requests = [];
@@ -105,7 +109,7 @@ void main() {
     await tester.ensureVisible(field);
     await tester.tap(field);
     await tester.pumpAndSettle();
-    // The 24-item menu lazily builds rows outside its visible viewport.
+    // The format menu lazily builds rows outside its visible viewport.
     // Scroll toward the target before ensureVisible asks for its element.
     await tester.scrollUntilVisible(
       find.text(label),
@@ -371,6 +375,86 @@ void main() {
     },
   );
 
+  for (final value in [
+    ArchiveCreationFormat.lz4,
+    ArchiveCreationFormat.tarLz4,
+    ArchiveCreationFormat.lzma,
+    ArchiveCreationFormat.tarLzma,
+  ]) {
+    testWidgets('${value.label} exposes accurate controls and format guidance', (
+      tester,
+    ) async {
+      await show(tester);
+      await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('archive-create-password')),
+        'discarded password',
+      );
+      await format(tester, value.label);
+      final lz4 =
+          value == ArchiveCreationFormat.lz4 ||
+          value == ArchiveCreationFormat.tarLz4;
+      final expectedName =
+          '${value.singlePayload ? 'report.txt' : 'report'}${value.extension}';
+      expect(name(tester), expectedName);
+      expect(
+        find.byKey(const ValueKey('archive-create-protect')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('archive-create-password')),
+        findsNothing,
+      );
+      expect(find.text(lz4 ? _lz4Help : _lzmaHelp), findsOneWidget);
+      expect(find.text(lz4 ? _lzmaHelp : _lz4Help), findsNothing);
+      expect(
+        find.text(value.singlePayload ? _singleFileHelp : _compressedTarHelp),
+        findsOneWidget,
+      );
+      expect(
+        compressionChoices(tester, value),
+        lz4
+            ? [
+                ArchiveCreationCompression.none,
+                ArchiveCreationCompression.normal,
+              ]
+            : [
+                ArchiveCreationCompression.fast,
+                ArchiveCreationCompression.normal,
+                ArchiveCreationCompression.maximum,
+              ],
+      );
+      expect(
+        compression(tester, value).initialValue,
+        ArchiveCreationCompression.normal,
+      );
+      final field = find.byKey(
+        ValueKey('archive-create-compression-${value.name}'),
+      );
+      await tester.ensureVisible(field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      final choice = find.text(lz4 ? 'Store (no compression)' : 'Maximum').last;
+      await tester.ensureVisible(choice);
+      await tester.tap(choice);
+      await tester.pumpAndSettle();
+      await submit(tester);
+      final request = service.requests.single;
+      expect(request.format, value);
+      expect(request.name, expectedName);
+      expect(
+        request.compression,
+        lz4
+            ? ArchiveCreationCompression.none
+            : ArchiveCreationCompression.maximum,
+      );
+      expect(request.password, isNull);
+      expect(request.encryptNames, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final hidden in [true, false]) {
     testWidgets('CB7 carries the selected hidden-filenames policy: $hidden', (
       tester,
@@ -422,6 +506,8 @@ void main() {
     ArchiveCreationFormat.tarBzip2,
     ArchiveCreationFormat.tarXz,
     ArchiveCreationFormat.tarZstd,
+    ArchiveCreationFormat.tarLz4,
+    ArchiveCreationFormat.tarLzma,
   ]) {
     testWidgets('${value.label} displays the shared decompression limit', (
       tester,
@@ -466,6 +552,8 @@ void main() {
         'bzip2 — one file',
         'XZ — one file',
         'Zstandard — one file',
+        'LZ4 — one file',
+        'LZMA — one file',
         'ISO data image',
         'HFSX data image',
         'DMG (HFSX data volume)',
@@ -479,6 +567,8 @@ void main() {
         _compressedTarHelp,
         _hfsHelp,
         _isoHelp,
+        _lz4Help,
+        _lzmaHelp,
       ]) {
         expect(tr(tester, key), isNot(key), reason: '${locale.$1}: $key');
       }
@@ -487,6 +577,10 @@ void main() {
         ArchiveCreationFormat.hfsx,
         ArchiveCreationFormat.dmg,
         ArchiveCreationFormat.tarBzip2,
+        ArchiveCreationFormat.tarLz4,
+        ArchiveCreationFormat.tarLzma,
+        ArchiveCreationFormat.lz4,
+        ArchiveCreationFormat.lzma,
         ArchiveCreationFormat.xz,
       ]) {
         await format(tester, tr(tester, value.label));
@@ -502,6 +596,18 @@ void main() {
           final detail = value == ArchiveCreationFormat.iso
               ? _isoHelp
               : _hfsHelp;
+          expect(find.text(tr(tester, detail)), findsOneWidget);
+          expect(find.text(detail), findsNothing);
+        }
+        if (value == ArchiveCreationFormat.lz4 ||
+            value == ArchiveCreationFormat.tarLz4 ||
+            value == ArchiveCreationFormat.lzma ||
+            value == ArchiveCreationFormat.tarLzma) {
+          final detail =
+              value == ArchiveCreationFormat.lz4 ||
+                  value == ArchiveCreationFormat.tarLz4
+              ? _lz4Help
+              : _lzmaHelp;
           expect(find.text(tr(tester, detail)), findsOneWidget);
           expect(find.text(detail), findsNothing);
         }

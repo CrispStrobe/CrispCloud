@@ -16,6 +16,8 @@ void main() {
     ArchiveCompressionKind.bzip2: '.bz2',
     ArchiveCompressionKind.xz: '.xz',
     ArchiveCompressionKind.zstd: '.zst',
+    ArchiveCompressionKind.lz4: '.lz4',
+    ArchiveCompressionKind.lzma: '.lzma',
   };
 
   for (final kind in ArchiveCompressionKind.values) {
@@ -24,7 +26,10 @@ void main() {
       () async {
         final packed = encodeArchiveCompression(repeated, kind);
         expect(packed.length, lessThan(repeated.length ~/ 10));
-        expect(archiveCompressionForBytes(packed), kind);
+        expect(
+          archiveCompressionForBytes(packed, name: 'payload${suffixes[kind]}'),
+          kind,
+        );
         expect(
           () => validateArchiveCompressionRewrite(packed, kind),
           returnsNormally,

@@ -77,6 +77,12 @@ void main() {
         'bundle.tar.zst': 'tar-zstd',
         'bundle.tar.zstd': 'tar-zstd',
         'bundle.tzst': 'tar-zstd',
+        'bundle.tar.lz4': 'tar-lz4',
+        'bundle.tar.lzma': 'tar-lzma',
+        'bundle.tlz': 'tar-lzma',
+        'bundle.tar.lz': 'tar-lzip',
+        'bundle.tar.Z': 'tar-compress',
+        'bundle.taz': 'tar-compress',
       };
       for (final entry in expected.entries) {
         expect(archiveFormatForName(entry.key)?.id, entry.value);
@@ -95,6 +101,10 @@ void main() {
         '.xz',
         '.zst',
         '.zstd',
+        '.lz4',
+        '.lzma',
+        '.lz',
+        '.Z',
       ]) {
         final name = 'notes.txt$suffix';
         expect(isSingleCompressedFile(name), isTrue, reason: name);
@@ -115,6 +125,10 @@ void main() {
           '/packages/app.rpm:/usr/share',
           '/packages/app.cab:/readme.txt',
           '/packages/data.pbzx:/docs',
+          '/packages/data.tar.lz4:/docs',
+          '/packages/data.tlz:/docs',
+          '/packages/data.tar.lz:/docs',
+          '/packages/data.taz:/docs',
         ]) {
           expect(isArchiveVirtualPath(path), isTrue, reason: path);
         }
@@ -147,6 +161,10 @@ void main() {
         'package.rpm': 'application/x-rpm',
         'cabinet.cab': 'application/vnd.ms-cab-compressed',
         'payload.pbzx': 'application/octet-stream',
+        'payload.lz4': 'application/x-lz4',
+        'payload.lzma': 'application/x-lzma',
+        'payload.lz': 'application/x-lzip',
+        'payload.Z': 'application/x-compress',
       };
       for (final entry in expected.entries) {
         expect(
@@ -212,10 +230,7 @@ void main() {
         '.img',
         '.sparseimage',
         '.sparsebundle',
-        '.lzma',
         '.lzo',
-        '.lz4',
-        '.Z',
         '.zipx',
       ]) {
         final name = 'unsupported$suffix';
@@ -263,10 +278,14 @@ void main() {
           'tar-bzip2',
           'tar-xz',
           'tar-zstd',
+          'tar-lz4',
+          'tar-lzma',
           'gzip',
           'bzip2',
           'xz',
           'zstd',
+          'lz4',
+          'lzma',
           'iso',
           'dmg',
           'hfs',
@@ -292,10 +311,14 @@ void main() {
           'tar-bzip2',
           'tar-xz',
           'tar-zstd',
+          'tar-lz4',
+          'tar-lzma',
           'gzip',
           'bzip2',
           'xz',
           'zstd',
+          'lz4',
+          'lzma',
           'iso',
           'ar',
           'deb',
@@ -303,6 +326,27 @@ void main() {
           'xar',
         },
       );
+    });
+
+    test('Lzip and UNIX compress remain explicitly read-only', () {
+      for (final name in [
+        'file.lz',
+        'files.tar.lz',
+        'file.Z',
+        'files.tar.Z',
+        'files.taz',
+      ]) {
+        final format = archiveFormatForName(name)!;
+        expect(format.canCreate, isFalse, reason: name);
+        expect(format.canModify, isFalse, reason: name);
+        expect(format.notes, contains('Read-only'), reason: name);
+      }
+      expect(
+        archiveFormatForName('file.lzma')!.notes,
+        contains('no content checksum'),
+      );
+      expect(archiveFormatForName('file.lzma')!.notes, contains('filename'));
+      expect(archiveFormatForName('file.lz4')!.notes, contains('skippable'));
     });
 
     final zipAliases = archiveFormatCapabilities

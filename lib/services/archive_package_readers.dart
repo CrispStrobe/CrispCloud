@@ -147,10 +147,12 @@ Future<ViewerArchive> openArArchive(
   return _rawArchive('ar', input, members, payloads);
 });
 
-/// Reads portable ASCII/odc (070707), SVR4 newc (070701) and CRC (070702).
+/// Reads modern binary little/big-endian CPIO, portable ASCII/odc (070707),
+/// SVR4 newc (070701) and CRC (070702).
 /// Links and special files are listed as non-extractable metadata. Concatenated
-/// archives and binary CPIO are not silently interpreted. The odc profile is
-/// read-only: the newc/CRC writer inspector still refuses its different layout.
+/// archives and PWB-specific type semantics are not silently interpreted. Binary
+/// and odc profiles remain read-only; the newc/CRC writer inspector is separate.
+/// https://github.com/libarchive/libarchive/blob/master/libarchive/cpio.5
 Future<ViewerArchive> openCpioArchive(
   koni.ByteSource source, {
   required int maxMemberBytes,
@@ -161,38 +163,70 @@ Future<ViewerArchive> openCpioArchive(
   var offset = 0;
   var records = 0;
   var trailer = false;
+  String? profile;
   while (offset < source.length) {
     _checkCount(++records);
-    final magic = ascii.decode(await input.metadata(offset, 6));
+    final signature = await input.metadata(offset, 6);
+    final little = signature[0] == 0xc7 && signature[1] == 0x71;
+    final binary = little || (signature[0] == 0x71 && signature[1] == 0xc7);
+    final magic = binary
+        ? (little ? 'binary-le' : 'binary-be')
+        : ascii.decode(signature);
     final odc = magic == '070707';
-    if (!odc && magic != '070701' && magic != '070702') {
+    if (!binary && !odc && magic != '070701' && magic != '070702') {
       throw const ArchiveViewException(
-        'This CPIO variant is unavailable. Supported variants are odc, newc and CRC.',
+        'This CPIO variant is unavailable. Supported variants are modern binary, odc, newc and CRC.',
       );
     }
-    final headerSize = odc ? 76 : 110;
-    final fields = await input.metadata(offset + 6, headerSize - 6);
-    final values = <int>[];
-    var fieldOffset = 0;
-    for (final width
-        in odc
-            ? const [6, 6, 6, 6, 6, 6, 6, 11, 6, 11]
-            : const [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]) {
-      values.add(
-        _number(
-          ascii.decode(fields.sublist(fieldOffset, fieldOffset + width)),
-          odc ? 8 : 16,
-          'CPIO header field',
-        ),
+    // newc and CRC use the same record layout and may be mixed; the existing
+    // writer preserves the variant of each record. Only layout or byte-order
+    // transitions would make this archive's interpretation ambiguous.
+    final currentProfile = binary || odc ? magic : 'newc-crc';
+    if (profile != null && profile != currentProfile) {
+      throw _corrupt(
+        'Mixed CPIO header profiles or byte orders are unavailable.',
       );
-      fieldOffset += width;
     }
-    final mode = values[odc ? 2 : 1];
-    final links = values[odc ? 5 : 4];
-    final modified = values[odc ? 7 : 5];
-    final size = values[odc ? 9 : 6];
-    final nameSize = values[odc ? 8 : 11];
-    final checksum = odc ? 0 : values[12];
+    profile = currentProfile;
+    final headerSize = binary ? 26 : (odc ? 76 : 110);
+    final int mode, links, modified, size, nameSize, checksum;
+    if (binary) {
+      final data = ByteData.sublistView(await input.metadata(offset, 26));
+      final order = little ? Endian.little : Endian.big;
+      int word(int index) => data.getUint16(index * 2, order);
+      // CPIO stores the high 16-bit word first even in its little-endian
+      // layout. Reading these fields as ordinary uint32 would swap the words.
+      mode = word(3);
+      links = word(6);
+      modified = word(8) * 65536 + word(9);
+      nameSize = word(10);
+      size = word(11) * 65536 + word(12);
+      checksum = 0;
+      if (size > 0x7fffffff) throw _corrupt('Invalid binary CPIO member size.');
+    } else {
+      final fields = await input.metadata(offset + 6, headerSize - 6);
+      final values = <int>[];
+      var fieldOffset = 0;
+      for (final width
+          in odc
+              ? const [6, 6, 6, 6, 6, 6, 6, 11, 6, 11]
+              : const [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]) {
+        values.add(
+          _number(
+            ascii.decode(fields.sublist(fieldOffset, fieldOffset + width)),
+            odc ? 8 : 16,
+            'CPIO header field',
+          ),
+        );
+        fieldOffset += width;
+      }
+      mode = values[odc ? 2 : 1];
+      links = values[odc ? 5 : 4];
+      modified = values[odc ? 7 : 5];
+      size = values[odc ? 9 : 6];
+      nameSize = values[odc ? 8 : 11];
+      checksum = odc ? 0 : values[12];
+    }
     if (nameSize < 1 || nameSize > _maxNameBytes) {
       throw _corrupt('Invalid CPIO name length.');
     }
@@ -202,10 +236,23 @@ Future<ViewerArchive> openCpioArchive(
     }
     final name = utf8.decode(nameBytes.sublist(0, nameSize - 1));
     final nameEnd = offset + headerSize + nameSize;
-    final dataOffset = odc ? nameEnd : _align4(nameEnd);
+    int align(int value) =>
+        binary ? (value + 1) ~/ 2 * 2 : (odc ? value : _align4(value));
+    final dataOffset = align(nameEnd);
     input.checkRange(dataOffset, size);
-    final next = odc ? dataOffset + size : _align4(dataOffset + size);
+    final next = align(dataOffset + size);
     input.checkRange(dataOffset + size, next - dataOffset - size);
+    if (binary &&
+        ((await input.metadata(
+              nameEnd,
+              dataOffset - nameEnd,
+            )).any((byte) => byte != 0) ||
+            (await input.metadata(
+              dataOffset + size,
+              next - dataOffset - size,
+            )).any((byte) => byte != 0))) {
+      throw _corrupt('Invalid binary CPIO alignment padding.');
+    }
     if ((magic == '070701' || size == 0) && checksum != 0) {
       throw _corrupt('Invalid CPIO checksum field.');
     }

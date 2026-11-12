@@ -1232,6 +1232,12 @@ class InternalViewerService {
       }
     }
 
+    // Binary CPIO payloads are also used without a filename extension.
+    if (header.length >= 2 &&
+        ((header[0] == 0xc7 && header[1] == 0x71) ||
+            (header[0] == 0x71 && header[1] == 0xc7))) {
+      return ViewerMode.archive;
+    }
     // Package payloads often have no extension (Apple Payload/Content).
     if (header.length >= 4 &&
         ((header[0] == 0x70 &&
@@ -1291,6 +1297,27 @@ class InternalViewerService {
       return ViewerMode.archive;
     }
 
+    // LZ4 / Lzip frames, including the skippable frames shared by LZ4/Zstd.
+    if (header.length >= 4 &&
+        ((header[0] == 0x04 &&
+                header[1] == 0x22 &&
+                header[2] == 0x4d &&
+                header[3] == 0x18) ||
+            (header[0] == 0x4c &&
+                header[1] == 0x5a &&
+                header[2] == 0x49 &&
+                header[3] == 0x50) ||
+            (header[0] >= 0x50 &&
+                header[0] <= 0x5f &&
+                header[1] == 0x2a &&
+                header[2] == 0x4d &&
+                header[3] == 0x18))) {
+      return ViewerMode.archive;
+    }
+    // UNIX compress: 1F 9D. Raw LZMA has no unique magic and needs its suffix.
+    if (header.length >= 2 && header[0] == 0x1f && header[1] == 0x9d) {
+      return ViewerMode.archive;
+    }
     // Zstandard: 28 B5 2F FD
     if (header.length >= 4 &&
         header[0] == 0x28 &&

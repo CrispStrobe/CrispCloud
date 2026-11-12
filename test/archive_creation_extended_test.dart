@@ -131,6 +131,39 @@ void main() {
     expect(backend.writes.length, 1);
   });
 
+  for (final format in [
+    ArchiveCreationFormat.tarLz4,
+    ArchiveCreationFormat.tarLzma,
+  ]) {
+    test(
+      '${format.name} creates a verified tree including empty folders',
+      () async {
+        await backend.createDirectory('/input/empty-folder');
+        final result = await create(format, ['/input']);
+        final archive = await openViewerArchive(
+          backend.contents[result.path]!,
+          name: result.path,
+        );
+        addTearDown(archive.close);
+        expect(archive.formatName, 'tar');
+        expect(
+          archive.members.any(
+            (member) =>
+                !member.isFile &&
+                member.name.replaceAll(RegExp(r'/+$'), '') ==
+                    'input/empty-folder',
+          ),
+          isTrue,
+        );
+        final file = archive.members.singleWhere(
+          (member) => member.name == 'input/Ünicode.txt',
+        );
+        expect(utf8.decode(await archive.readMember(file)), 'captured source');
+        expect(backend.writes, [result.path]);
+      },
+    );
+  }
+
   test('KMZ requires a top-level KML document', () async {
     await expectLater(
       create(ArchiveCreationFormat.kmz, ['/input/Ünicode.txt']),

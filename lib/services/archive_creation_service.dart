@@ -29,10 +29,14 @@ enum ArchiveCreationFormat {
   tarBzip2,
   tarXz,
   tarZstd,
+  tarLz4,
+  tarLzma,
   gzip,
   bzip2,
   xz,
   zstd,
+  lz4,
+  lzma,
   ar,
   cpio,
   xar,
@@ -55,6 +59,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarBzip2 => '.tar.bz2',
     ArchiveCreationFormat.tarXz => '.tar.xz',
     ArchiveCreationFormat.tarZstd => '.tar.zst',
+    ArchiveCreationFormat.tarLz4 => '.tar.lz4',
+    ArchiveCreationFormat.tarLzma => '.tar.lzma',
     ArchiveCreationFormat.gzip => '.gz',
     ArchiveCreationFormat.bzip2 => '.bz2',
     ArchiveCreationFormat.zstd => '.zst',
@@ -67,10 +73,14 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarBzip2 => 'TAR.BZ2',
     ArchiveCreationFormat.tarXz => 'TAR.XZ',
     ArchiveCreationFormat.tarZstd => 'TAR.ZST',
+    ArchiveCreationFormat.tarLz4 => 'TAR.LZ4',
+    ArchiveCreationFormat.tarLzma => 'TAR.LZMA',
     ArchiveCreationFormat.gzip => 'gzip — one file',
     ArchiveCreationFormat.bzip2 => 'bzip2 — one file',
     ArchiveCreationFormat.xz => 'XZ — one file',
     ArchiveCreationFormat.zstd => 'Zstandard — one file',
+    ArchiveCreationFormat.lz4 => 'LZ4 — one file',
+    ArchiveCreationFormat.lzma => 'LZMA — one file',
     ArchiveCreationFormat.hfsx => 'HFSX data image',
     ArchiveCreationFormat.dmg => 'DMG (HFSX data volume)',
     ArchiveCreationFormat.iso => 'ISO data image',
@@ -96,10 +106,14 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.tarBzip2 => ArchiveEndpointFormat.tarBzip2,
     ArchiveCreationFormat.tarXz => ArchiveEndpointFormat.tarXz,
     ArchiveCreationFormat.tarZstd => ArchiveEndpointFormat.tarZstd,
+    ArchiveCreationFormat.tarLz4 => ArchiveEndpointFormat.tarLz4,
+    ArchiveCreationFormat.tarLzma => ArchiveEndpointFormat.tarLzma,
     ArchiveCreationFormat.gzip => ArchiveEndpointFormat.gzip,
     ArchiveCreationFormat.bzip2 => ArchiveEndpointFormat.bzip2,
     ArchiveCreationFormat.xz => ArchiveEndpointFormat.xz,
     ArchiveCreationFormat.zstd => ArchiveEndpointFormat.zstd,
+    ArchiveCreationFormat.lz4 => ArchiveEndpointFormat.lz4,
+    ArchiveCreationFormat.lzma => ArchiveEndpointFormat.lzma,
     ArchiveCreationFormat.ar => ArchiveEndpointFormat.ar,
     ArchiveCreationFormat.cpio => ArchiveEndpointFormat.cpio,
     ArchiveCreationFormat.xar => ArchiveEndpointFormat.xar,
@@ -116,6 +130,10 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.xz => ArchiveCompressionKind.xz,
     ArchiveCreationFormat.tarZstd ||
     ArchiveCreationFormat.zstd => ArchiveCompressionKind.zstd,
+    ArchiveCreationFormat.tarLz4 ||
+    ArchiveCreationFormat.lz4 => ArchiveCompressionKind.lz4,
+    ArchiveCreationFormat.tarLzma ||
+    ArchiveCreationFormat.lzma => ArchiveCompressionKind.lzma,
     _ => null,
   };
 
@@ -124,6 +142,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.bzip2,
     ArchiveCreationFormat.xz,
     ArchiveCreationFormat.zstd,
+    ArchiveCreationFormat.lz4,
+    ArchiveCreationFormat.lzma,
   }.contains(this);
   bool get diskImage => const {
     ArchiveCreationFormat.iso,
@@ -156,6 +176,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
       ArchiveCreationCompression.maximum,
     ],
     ArchiveCreationFormat.tarBzip2 ||
+    ArchiveCreationFormat.tarLzma ||
+    ArchiveCreationFormat.lzma ||
     ArchiveCreationFormat.tarXz ||
     ArchiveCreationFormat.tarZstd ||
     ArchiveCreationFormat.bzip2 ||
@@ -164,6 +186,10 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
       ArchiveCreationCompression.fast,
       ArchiveCreationCompression.normal,
       ArchiveCreationCompression.maximum,
+    ],
+    ArchiveCreationFormat.tarLz4 || ArchiveCreationFormat.lz4 => const [
+      ArchiveCreationCompression.none,
+      ArchiveCreationCompression.normal,
     ],
     ArchiveCreationFormat.sevenZip || ArchiveCreationFormat.cb7 => const [
       ArchiveCreationCompression.none,
@@ -674,6 +700,8 @@ class ArchiveCreationService {
             ArchiveEndpointFormat.tarBzip2,
             ArchiveEndpointFormat.tarXz,
             ArchiveEndpointFormat.tarZstd,
+            ArchiveEndpointFormat.tarLz4,
+            ArchiveEndpointFormat.tarLzma,
           }.contains(options.format.endpointFormat) ||
           options.format.singlePayload) {
         await writeArchiveEntries(

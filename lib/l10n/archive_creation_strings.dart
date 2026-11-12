@@ -96,6 +96,26 @@ const _messages = <String, List<String>>{
     'Zstandard — 파일 하나',
     'Zstandard — ملف واحد',
   ],
+  'LZ4 — one file': [
+    'LZ4 — eine Datei',
+    'LZ4 — un fichier',
+    'LZ4 — un archivo',
+    'LZ4 — um ficheiro',
+    'LZ4 — 单个文件',
+    'LZ4 — 単一ファイル',
+    'LZ4 — 파일 하나',
+    'LZ4 — ملف واحد',
+  ],
+  'LZMA — one file': [
+    'LZMA — eine Datei',
+    'LZMA — un fichier',
+    'LZMA — un archivo',
+    'LZMA — um ficheiro',
+    'LZMA — 单个文件',
+    'LZMA — 単一ファイル',
+    'LZMA — 파일 하나',
+    'LZMA — ملف واحد',
+  ],
   'ISO data image': [
     'ISO-Datenabbild',
     'Image de données ISO',
@@ -209,6 +229,28 @@ const _messages = <String, List<String>>{
         '圧縮TARはヘッダーを含め、展開後64 MiBまでです。',
         '압축된 TAR는 헤더를 포함하여 압축 해제 후 64 MiB로 제한됩니다.',
         'يقتصر TAR المضغوط على 64 MiB بعد فك الضغط، بما فيها رؤوس الأرشيف.',
+      ],
+  'LZ4 offers fast compression or storage without compression. Both modes include content checksums.':
+      [
+        'LZ4 bietet schnelle Komprimierung oder Speichern ohne Komprimierung. Beide Modi enthalten Inhaltsprüfsummen.',
+        'LZ4 propose une compression rapide ou un stockage sans compression. Les deux modes incluent des sommes de contrôle du contenu.',
+        'LZ4 permite una compresión rápida o almacenar sin comprimir. Ambos modos incluyen sumas de comprobación del contenido.',
+        'LZ4 permite compressão rápida ou armazenamento sem compressão. Ambos os modos incluem somas de verificação do conteúdo.',
+        'LZ4 支持快速压缩或不压缩存储。两种模式都包含内容校验和。',
+        'LZ4では高速圧縮と非圧縮での格納を選べます。どちらのモードにも内容のチェックサムが含まれます。',
+        'LZ4는 빠른 압축 또는 압축 없는 저장을 제공합니다. 두 모드 모두 콘텐츠 체크섬을 포함합니다.',
+        'يوفر LZ4 ضغطاً سريعاً أو تخزيناً بدون ضغط. يتضمن كلا الوضعين مجاميع تحقق للمحتوى.',
+      ],
+  'LZMA uses a 64 KiB dictionary for Fast, 8 MiB for Normal and 64 MiB for Maximum. The format has no content checksum.':
+      [
+        'LZMA verwendet für „Schnell“ ein Wörterbuch von 64 KiB, für „Normal“ 8 MiB und für „Maximal“ 64 MiB. Das Format enthält keine Inhaltsprüfsumme.',
+        'LZMA utilise un dictionnaire de 64 Kio pour « Rapide », de 8 Mio pour « Normale » et de 64 Mio pour « Maximale ». Le format ne contient aucune somme de contrôle du contenu.',
+        'LZMA usa un diccionario de 64 KiB para Rápida, 8 MiB para Normal y 64 MiB para Máxima. El formato no incluye una suma de comprobación del contenido.',
+        'LZMA usa um dicionário de 64 KiB para Rápida, 8 MiB para Normal e 64 MiB para Máxima. O formato não inclui uma soma de verificação do conteúdo.',
+        'LZMA 的“快速”模式使用 64 KiB 字典，“标准”使用 8 MiB，“最大”使用 64 MiB。此格式不包含内容校验和。',
+        'LZMAの辞書サイズは「高速」で64 KiB、「標準」で8 MiB、「最大」で64 MiBです。この形式には内容のチェックサムがありません。',
+        'LZMA는 빠르게에서 64 KiB, 보통에서 8 MiB, 최대에서 64 MiB 사전을 사용합니다. 이 형식에는 콘텐츠 체크섬이 없습니다.',
+        'يستخدم LZMA قاموساً بحجم 64 KiB للوضع سريع، و8 MiB للوضع عادي، و64 MiB للوضع أقصى. لا يتضمن هذا التنسيق مجموع تحقق للمحتوى.',
       ],
   'Creates a case-sensitive HFSX data volume. Names use HFS Unicode normalization. Resource forks, extended attributes and symbolic links are not copied.':
       [
