@@ -31,11 +31,22 @@ jobs:
   crypto-release-inputs:
     name: Crypto release evidence
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      BOT: 'true'
     steps:
       - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Resolve immutable dependency sources
+        run: flutter pub get --enforce-lockfile
       - name: Verify release evidence failure paths
         run: |
+          python3 -m unittest discover -s tool -p test_verify_ebook_sources.py -v
           python3 -m unittest discover -s tool -p test_crypto_release_evidence.py -v
           python3 -m unittest discover -s tool -p test_apple_export_preflight.py -v
       - name: Check provider dependencies and Apple declaration
@@ -115,8 +126,7 @@ jobs:
 
       - name: CrisperBooks source and reusable API contracts
         run: |
-          python3 tool/verify_crisperbooks.py
-          (cd packages/crisperbooks && flutter pub get && flutter analyze && flutter test test)
+          python3 tool/verify_ebook_sources.py
 
       - name: Standalone legacy Word parser contracts
         run: |

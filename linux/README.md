@@ -22,7 +22,7 @@ Older releases are rejected by the runtime probe even if their APIs appear
 compatible. That known older crash is separate from any failure on a newer
 runtime, which still requires its own native diagnostics and verification.
 
-`packages/crisp_ebook_reader/linux/CMakeLists.txt` checks for those headers and
+The pinned `crisp_ebook_reader` dependency's `linux/CMakeLists.txt` checks for those headers and
 **CMake 3.19 or newer**. If either is absent, or `CRISP_EBOOK_WEBKITGTK=OFF` is set,
 it compiles a small plugin that reports the enhanced host as unavailable. The application remains
 buildable and launchable. GTK, GModule and the enhanced host's epoxy OpenGL
