@@ -1,8 +1,10 @@
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/archive_creation_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/services/archive_creation_service.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
+import 'package:crisp_cloud/services/storage_transfer_contract.dart';
 import 'package:crisp_cloud/widgets/archive_creation_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +19,12 @@ const _flatFilesHelp =
     'Select regular local files without folders. Up to 64 MiB per file and 256 MiB total.';
 const _compressedTarHelp =
     'Compressed TAR is limited to 64 MiB after decompression, including archive headers.';
+const _streamedTarHelp =
+    'Stream local files into a new TAR or CBT archive up to 2 GiB, including headers. Existing archive editing keeps its 64 MiB member and 256 MiB total limits. Existing files are never replaced.';
+const _encodedHelp =
+    'Single-file compressors and compressed TAR are limited to 64 MiB of encoded output.';
+const _ordinaryHelp =
+    'Local files only. Up to 64 MiB per file and 256 MiB total. Existing files are never replaced.';
 const _hfsHelp =
     'Creates a case-sensitive HFSX data volume. Names use HFS Unicode normalization. Resource forks, extended attributes and symbolic links are not copied.';
 const _isoHelp =
@@ -53,6 +61,21 @@ class _RecordingService extends ArchiveCreationService {
   }
 }
 
+class _StreamingCreationBackend extends ArchiveCreationBackend {
+  @override
+  StorageReference get storageReference => const StorageReference(
+    kind: 'local',
+    provider: 'native',
+    accountKey: 'creation-guidance',
+  );
+  @override
+  StorageTransferCapabilities get capabilities =>
+      const StorageTransferCapabilities(
+        boundedDownload: true,
+        boundedUpload: true,
+      );
+}
+
 void main() {
   late _RecordingService service;
   late ArchiveCreationBackend backend;
@@ -66,6 +89,7 @@ void main() {
     WidgetTester tester, {
     String language = 'en',
     double width = 800,
+    double textScale = 1,
     String selectedPath = '/input/report.txt',
   }) async {
     tester.view.physicalSize = Size(width, 900);
@@ -78,6 +102,11 @@ void main() {
         locale: Locale(language),
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: Scaffold(
           body: ArchiveCreationDialog(
             source: backend,
@@ -568,6 +597,7 @@ void main() {
       await show(tester);
       await format(tester, value.label);
       expect(find.text(_compressedTarHelp), findsOneWidget);
+      expect(find.text(_encodedHelp), findsOneWidget);
       expect(
         find.text(
           'TAR.GZ is limited to 64 MiB after decompression, including archive headers.',
@@ -621,6 +651,8 @@ void main() {
         _singleFileHelp,
         _flatFilesHelp,
         _compressedTarHelp,
+        _streamedTarHelp,
+        _encodedHelp,
         _hfsHelp,
         _isoHelp,
         _lz4Help,
@@ -692,6 +724,60 @@ void main() {
       expect(service.requests.single.name, 'report.txt.xz');
       expect(tester.takeException(), isNull);
     });
+  }
+
+  testWidgets('buffered TAR and CBT keep the ordinary creation limits', (
+    tester,
+  ) async {
+    await show(tester);
+    for (final value in [
+      ArchiveCreationFormat.tar,
+      ArchiveCreationFormat.cbt,
+    ]) {
+      await format(tester, value.label);
+      expect(find.text(_ordinaryHelp), findsOneWidget);
+      expect(find.text(_streamedTarHelp), findsNothing);
+      expect(find.text(_encodedHelp), findsNothing);
+    }
+  });
+
+  for (final language in [
+    'en',
+    'de',
+    'fr',
+    'es',
+    'pt',
+    'zh',
+    'ja',
+    'ko',
+    'ar',
+  ]) {
+    testWidgets(
+      '$language shows native TAR and CBT limits only on eligible formats at narrow large text',
+      (tester) async {
+        backend = _StreamingCreationBackend()
+          ..put('/input/report.txt', [1, 2, 3]);
+        await show(tester, language: language, width: 320, textScale: 1.8);
+        for (final value in [
+          ArchiveCreationFormat.tar,
+          ArchiveCreationFormat.cbt,
+        ]) {
+          await format(tester, tr(tester, value.label));
+          expect(find.text(tr(tester, _streamedTarHelp)), findsOneWidget);
+          expect(find.text(tr(tester, _ordinaryHelp)), findsNothing);
+          expect(find.text(tr(tester, _encodedHelp)), findsNothing);
+          expect(tester.takeException(), isNull);
+        }
+        await format(tester, tr(tester, ArchiveCreationFormat.tarGzip.label));
+        expect(find.text(tr(tester, _streamedTarHelp)), findsNothing);
+        expect(find.text(tr(tester, _compressedTarHelp)), findsOneWidget);
+        expect(find.text(tr(tester, _encodedHelp)), findsOneWidget);
+        await format(tester, tr(tester, ArchiveCreationFormat.zip.label));
+        expect(find.text(tr(tester, _ordinaryHelp)), findsOneWidget);
+        expect(find.text(tr(tester, _streamedTarHelp)), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
   for (final language in ['de', 'ar']) {

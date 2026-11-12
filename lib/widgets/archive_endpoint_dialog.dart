@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/archive_directory_sync_strings.dart';
 import '../l10n/archive_endpoint_strings.dart';
 import '../l10n/archive_transfer_strings.dart';
 import '../l10n/commander_strings.dart';
@@ -930,6 +931,14 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
   }
 }
 
+/// Requests a container password without retaining it beyond its owning route.
+Future<String?> requestArchiveEndpointPassword(
+  BuildContext context,
+  String name,
+  bool wrong, {
+  String? role,
+}) => _password(context, name, wrong, role: role);
+
 Future<String?> _password(
   BuildContext context,
   String name,
@@ -1069,8 +1078,11 @@ class _ArchiveRecoveryDialogState extends State<_ArchiveRecoveryDialog> {
             (widget.containerPath == null ||
                 record.original.path == widget.containerPath),
       )) {
+        if (!mounted) return;
         try {
-          records.add(await publisher.inspect(record));
+          records.add(
+            await publisher.inspect(record, isCancelled: () => !mounted),
+          );
         } catch (error) {
           records.add(
             ArchiveRecoveryInspection(
@@ -1139,11 +1151,23 @@ class _ArchiveRecoveryDialogState extends State<_ArchiveRecoveryDialog> {
                         children: [
                           if (item.record.dependency != null)
                             Text(t('sourceArchive')),
+                          if (item.record.directoryDependency != null)
+                            Text(t('destinationArchive')),
                           SelectableText(item.record.original.path!),
                           if (item.record.dependency
                               case final dependency?) ...[
                             Text(t('destinationArchive')),
                             SelectableText(dependency.file.path!),
+                          ],
+                          if (item.record.directoryDependency
+                              case final directoryDependency?) ...[
+                            Text(
+                              archiveDirectorySyncText(
+                                context,
+                                'sourceDirectory',
+                              ),
+                            ),
+                            SelectableText(directoryDependency.directory.path!),
                           ],
                           Text(item.message),
                           SelectableText(

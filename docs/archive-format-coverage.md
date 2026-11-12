@@ -230,6 +230,14 @@ content checksums from publisher authentication.
   verified by streaming; this does not raise the existing workspace edit,
   preview or ordinary extraction limits. Browser/fallback output spools are
   capped at 256 MiB, and the creation UI remains native-local.
+- Fresh native uncompressed TAR/CBT creation also streams to a 2 GiB packed
+  output bound, including headers and alignment. Eligible bounded native-local
+  endpoints can create members above 64 MiB and archives above 256 MiB, with
+  streaming member hashes, full source rechecks and staged byte readback.
+  TAR member streaming is used explicitly for this verification path; ordinary
+  viewer reads, extraction and existing TAR editing keep their previous bounds.
+  Compressed TAR, browser/fallback creation and durable background jobs do not
+  inherit this extension. See the [measured large TAR evidence](archive-sync-large-tar-verification.md).
 - Ordinary creation and existing workspace publication keep the 256 MiB packed
   and decoded-total limits; compressed streams and decoded TAR wrappers keep
   their 64 MiB bounds. Native spooling does not make buffered codecs unbounded.

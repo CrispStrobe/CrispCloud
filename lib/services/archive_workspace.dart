@@ -49,6 +49,8 @@ class ArchiveWorkspace {
   ArchivePublicationRecord? _pendingPublication;
   ArchivePublicationReceipt? _lastReceipt;
   Object? _sourceRemovalAuthority;
+  Object? _directorySyncAuthority;
+  ArchivePublicationDirectoryDependency? _directorySyncDependency;
   ArchiveWorkspace? _parentWorkspace;
   bool get dirty => _dirty || (_parentWorkspace?.dirty ?? false);
   bool get isCurrent => !_closed && source.isCurrent;
@@ -97,6 +99,9 @@ class ArchiveWorkspace {
   /// review must still retain each format's required content and protection.
   bool get canRemoveMembers =>
       canUpdate && !_policy.singlePayload && _policy.packageKind != 'deb';
+
+  bool get canSynchronizeDirectory =>
+      canRemoveMembers && _policy.format != ArchiveEndpointFormat.ar;
 
   String get updateSupport => _parentWorkspace?._policy.packageKind == 'deb'
       ? 'Debian payloads require an external package build workflow. Replace the prepared control and data archives together in the outer package.'
@@ -537,6 +542,126 @@ class ArchiveWorkspace {
       );
     }
     if (items.isNotEmpty) _publish(updated);
+  }
+
+  /// Adopts selected directory-sync imports and exact removals together. A
+  /// selected directory never recursively removes unchecked descendants.
+  /// The owner token and complete source-tree dependency remain bound for this
+  /// workspace's lifetime, preventing ordinary Save from bypassing sync guards.
+  List<String> applyDirectorySync({
+    required List<ArchiveWorkspaceImport> imports,
+    required Set<String> removals,
+    required String directory,
+    required int expectedRevision,
+    required Object publicationAuthority,
+    required ArchivePublicationDirectoryDependency dependency,
+  }) {
+    _check(writing: true);
+    if (!canSynchronizeDirectory ||
+        _revision != expectedRevision ||
+        _saving ||
+        pendingPublication != null ||
+        _directorySyncAuthority != null ||
+        _sourceRemovalAuthority != null) {
+      throw StateError('The archive cannot adopt this synchronization draft.');
+    }
+    final scope = directory == '/'
+        ? ''
+        : ArchiveService.safeMemberPath(
+            directory.replaceFirst(RegExp(r'^/'), ''),
+          );
+    if (scope.isNotEmpty &&
+        _entries[scope]?.isFolder != true &&
+        !_entries.keys.any((name) => name.startsWith('$scope/'))) {
+      throw StateError('The synchronization destination directory changed.');
+    }
+    String name(String path) {
+      final canonical = ArchiveService.safeMemberPath(
+        path.replaceFirst(RegExp(r'^/'), ''),
+      );
+      if (path != '/$canonical' ||
+          scope.isNotEmpty && !canonical.startsWith('$scope/')) {
+        throw StateError(
+          'A synchronization action escapes its archive directory.',
+        );
+      }
+      return canonical;
+    }
+
+    final removed = removals.map(name).toSet();
+    final originalNames = SplayTreeMap<String, bool>()
+      ..addEntries(_entries.keys.map((path) => MapEntry(path, true)));
+    final retainedNames = SplayTreeMap<String, bool>()
+      ..addEntries(
+        _entries.keys
+            .where((path) => !removed.contains(path))
+            .map((path) => MapEntry(path, true)),
+      );
+    bool descendants(String path) =>
+        originalNames.firstKeyAfter('$path/')?.startsWith('$path/') ?? false;
+    for (final path in removed) {
+      if (!_entries.containsKey(path) && !descendants(path)) {
+        throw StateError('A selected archive-only entry changed: $path');
+      }
+      if ((_entries[path]?.isFolder ?? descendants(path)) &&
+          (retainedNames.firstKeyAfter('$path/')?.startsWith('$path/') ??
+              false)) {
+        throw StateError(
+          'Select every descendant before removing archive directory: $path',
+        );
+      }
+    }
+    final updated = Map.of(_entries);
+    for (final path in removed) {
+      updated.remove(path);
+    }
+    final imported = <String>{};
+    for (final item in imports) {
+      final path = name(item.path);
+      if (!imported.add(path) || removed.contains(path)) {
+        throw StateError(
+          'A synchronization path has conflicting actions: $path',
+        );
+      }
+      final previous = updated[path];
+      if (previous != null && previous.isFolder != item.isFolder ||
+          !item.isFolder &&
+              (retainedNames.firstKeyAfter('$path/')?.startsWith('$path/') ??
+                  false)) {
+        throw StateError('A synchronization entry has a type conflict: $path');
+      }
+      if (!item.isFolder &&
+              (item.bytes == null || item.bytes!.length > kArchiveReadLimit) ||
+          item.isFolder && item.bytes != null ||
+          (item.mode ?? 0) & 0xc00 != 0) {
+        throw StateError(
+          'A synchronization import has unsupported content or permissions.',
+        );
+      }
+      updated[path] = _ArchiveEntry(
+        path,
+        item.isFolder,
+        member: previous?.member,
+        bytes: item.bytes == null ? null : Uint8List.fromList(item.bytes!),
+        modified: item.isFolder && previous != null
+            ? previous.modified
+            : _policy.normalizeImportedTime(item.modified) ??
+                  previous?.modified,
+        mode: item.isFolder && previous != null
+            ? previous.mode
+            : item.mode ?? previous?.mode,
+      );
+      retainedNames[path] = true;
+    }
+    if (imports.isEmpty && removals.isEmpty) {
+      throw StateError('Select at least one synchronization action.');
+    }
+    _publish(updated);
+    _directorySyncAuthority = publicationAuthority;
+    _directorySyncDependency = dependency;
+    return List.unmodifiable(
+      (removed.map((path) => '/$path').toList()..sort()),
+    );
   }
 
   void remove(Iterable<String> paths) {
@@ -1273,6 +1398,8 @@ class ArchiveWorkspace {
     TransferCheckpoint? beforePublication,
     ArchivePublicationDependency? dependency,
     Object? sourceRemovalAuthority,
+    ArchivePublicationDirectoryDependency? directoryDependency,
+    Object? directorySyncAuthority,
   }) async {
     _check(writing: true);
     if (_sourceRemovalAuthority != null &&
@@ -1280,6 +1407,18 @@ class ArchiveWorkspace {
             dependency == null && _pendingPublication?.dependency == null)) {
       throw StateError(
         'Source removal requires its paired move coordinator and verified destination dependency.',
+      );
+    }
+    if (_directorySyncAuthority != null &&
+        (!identical(directorySyncAuthority, _directorySyncAuthority) ||
+            jsonEncode(
+                  (directoryDependency ??
+                          _pendingPublication?.directoryDependency)
+                      ?.toJson(),
+                ) !=
+                jsonEncode(_directorySyncDependency!.toJson()))) {
+      throw StateError(
+        'Directory synchronization requires its owner and original source-tree dependency.',
       );
     }
     if (_saving) throw StateError('An archive publication is already running.');
@@ -1290,6 +1429,8 @@ class ArchiveWorkspace {
         beforePublication: beforePublication,
         dependency: dependency,
         sourceRemovalAuthority: sourceRemovalAuthority,
+        directoryDependency: directoryDependency,
+        directorySyncAuthority: directorySyncAuthority,
       );
       if (source is _NestedArchiveBackend) {
         (source as _NestedArchiveBackend)._refreshParentRevision();
@@ -1346,6 +1487,7 @@ class ArchiveWorkspace {
             onPhase: onPhase,
             beforePublication: beforePublication,
             dependency: dependency,
+            directoryDependency: directoryDependency,
           );
         } catch (_) {
           _pendingPublication = publisher.activeRecord;
@@ -1375,6 +1517,8 @@ class ArchiveWorkspace {
           beforePublication: beforePublication,
           dependency: dependency,
           sourceRemovalAuthority: sourceRemovalAuthority,
+          directoryDependency: directoryDependency,
+          directorySyncAuthority: directorySyncAuthority,
         );
         (source as _NestedArchiveBackend)._refreshParentRevision();
       }
