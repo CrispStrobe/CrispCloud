@@ -2045,7 +2045,9 @@ class PanelNotifier extends ChangeNotifier {
     String id, {
     bool newTab = false,
     int pageIndex = 0,
+    bool Function()? canContinue,
   }) async {
+    if (_isDisposed || !(canContinue?.call() ?? true)) return;
     final requestedTab = _activeTabId;
     final requestedNavigation = _navigationRevision;
     var request = ++_collectionRequest;
@@ -2053,7 +2055,8 @@ class PanelNotifier extends ChangeNotifier {
         !_isDisposed &&
         requestedTab == _activeTabId &&
         requestedNavigation == _navigationRevision &&
-        request == _collectionRequest;
+        request == _collectionRequest &&
+        (canContinue?.call() ?? true);
     await flushCollectionMarks();
     if (!stillRequested()) return;
     final store = _ref.read(fileCollectionStoreProvider);
@@ -2081,7 +2084,8 @@ class PanelNotifier extends ChangeNotifier {
         _isDisposed ||
         request != _collectionRequest ||
         tab != _activeTabId ||
-        requestedNavigation != _navigationRevision;
+        requestedNavigation != _navigationRevision ||
+        !(canContinue?.call() ?? true);
     _collectionBusy = true;
     _collectionLoadError = null;
     _collectionProgress = '';
@@ -7238,15 +7242,42 @@ class PanelNotifier extends ChangeNotifier {
     });
   }
 
-  Future<void> _restoreSelectedTab() async {
+  Future<void> _restoreSelectedTab({
+    PanelFileOrigin? capturedOrigin,
+    bool allowAccessRequests = true,
+    bool Function()? canContinue,
+    bool requireAvailable = false,
+  }) async {
     final tab = activeTab;
-    if (tab == null || _isDisposed) return;
-    final savedView = tab.view;
+    final revision = _navigationRevision;
+    bool stillSelected() =>
+        !_isDisposed &&
+        tab != null &&
+        _activeTabId == tab.id &&
+        (canContinue?.call() ?? true) &&
+        (capturedOrigin?.isCurrent ?? true);
+    if (!stillSelected()) {
+      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      return;
+    }
+    final target = tab!;
+    final savedView = target.view;
     _applyTabView(savedView);
     try {
-      if (tab.collectionId != null) {
-        await openCollection(tab.collectionId!);
-        if (!_isDisposed && _activeTabId == tab.id && savedView != null) {
+      if (target.collectionId != null) {
+        bool currentCollection() =>
+            stillSelected() && _navigationRevision == revision;
+        await openCollection(
+          target.collectionId!,
+          canContinue: currentCollection,
+        );
+        if (!currentCollection() || _collectionId != target.collectionId) {
+          if (requireAvailable) {
+            throw StateError('The saved collection could not be opened.');
+          }
+          return;
+        }
+        if (savedView != null) {
           _applyTabView(savedView);
           _sortFiles();
           _captureTabView();
@@ -7255,13 +7286,22 @@ class PanelNotifier extends ChangeNotifier {
         }
         return;
       }
-      final storage = tab.storage;
+      final storage = target.storage;
       if (storage == null) {
+        if (requireAvailable) {
+          throw StateError('The saved tab has no storage account.');
+        }
         await refresh();
         return;
       }
-      final origin = resolveStorageReference(storage, tab.path);
-      if (origin == null) {
+      final origin = capturedOrigin ??
+          (requireAvailable ? null : resolveStorageReference(storage, target.path));
+      if (origin == null ||
+          !origin.isCurrent ||
+          origin.storageReference != storage) {
+        if (requireAvailable) {
+          throw StateError('The saved tab\'s original source is unavailable.');
+        }
         _pendingTabStorage = storage;
         _files = [];
         _isLoading = false;
@@ -7273,21 +7313,50 @@ class PanelNotifier extends ChangeNotifier {
             .read(errorProvider)
             .addError(
               storage.accountKey == 'legacy-unscoped-tab'
-                  ? 'Choose a source for the older saved tab "${tab.label}". Its previous format did not identify the account.'
-                  : 'Reconnect ${storage.provider} for the saved tab "${tab.label}". Its original account is unavailable.',
+                  ? 'Choose a source for the older saved tab "${target.label}". Its previous format did not identify the account.'
+                  : 'Reconnect ${storage.provider} for the saved tab "${target.label}". Its original account is unavailable.',
             );
         notifyListeners();
         return;
       }
       _pendingTabStorage = null;
+      final requestedPath = target.path;
+      final expectedPath = origin.source.isLocal
+          ? _normaliseLocalPath(requestedPath)
+          : requestedPath;
       await navigateToPath(
-        tab.path,
+        requestedPath,
         origin: origin,
         recordHistory: false,
         bypassTabLock: true,
+        allowAccessRequests: allowAccessRequests,
+        canContinue: () =>
+            stillSelected() &&
+            origin.isCurrent &&
+            _navigationRevision >= revision &&
+            _navigationRevision <= revision + 1,
       );
-      if (!_isDisposed && _activeTabId == tab.id) _pushHistory(currentPath);
+      if (!stillSelected() || _navigationRevision != revision + 1) {
+        if (requireAvailable) {
+          throw StateError('The tab request is no longer current.');
+        }
+        return;
+      }
+      if (requireAvailable &&
+          (!hasVerifiedDirectoryListing ||
+              currentPath != expectedPath ||
+              _currentDirectoryOrigin?.storageReference != storage ||
+              !_sameFileSource(
+                _currentDirectoryOrigin!.source,
+                origin.source.withPath(expectedPath),
+              ))) {
+        throw StateError(
+          directoryListingError?.message ?? 'The saved folder could not be opened.',
+        );
+      }
+      _pushHistory(currentPath);
     } catch (error) {
+      if (requireAvailable) rethrow;
       if (!_isDisposed) {
         _ref.read(errorProvider).addError('Could not reopen tab: $error');
       }
@@ -7387,16 +7456,29 @@ class PanelNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> selectTab(String tabId) async {
+  Future<void> selectTab(
+    String tabId, {
+    PanelFileOrigin? capturedOrigin,
+    bool allowAccessRequests = true,
+    bool Function()? canContinue,
+    bool requireAvailable = false,
+  }) async {
     _log.debug('selectTab: $tabId');
-    if (!_tabs.any((tab) => tab.id == tabId)) return;
+    bool requestAvailable() =>
+        !_isDisposed &&
+        _tabs.any((tab) => tab.id == tabId) &&
+        (capturedOrigin?.isCurrent ?? true) &&
+        (canContinue?.call() ?? true);
+    if (!requestAvailable()) {
+      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      return;
+    }
     _rememberNavigationCursor();
     final navigation = ++_navigationRevision;
     ++_listingGeneration;
     if (_collectionMarks != null) await flushCollectionMarks();
-    if (_isDisposed ||
-        navigation != _navigationRevision ||
-        !_tabs.any((tab) => tab.id == tabId)) {
+    if (!requestAvailable() || navigation != _navigationRevision) {
+      if (requireAvailable) throw StateError('The tab request is no longer current.');
       return;
     }
     if (tabId != _activeTabId) {
@@ -7423,7 +7505,18 @@ class PanelNotifier extends ChangeNotifier {
         await openCollection(
           list.collectionId!,
           pageIndex: list.collectionPageIndex!,
+          canContinue: () =>
+              requestAvailable() &&
+              navigation == _navigationRevision &&
+              _activeTabId == tabId,
         );
+        if (requireAvailable &&
+            (!requestAvailable() ||
+                navigation != _navigationRevision ||
+                _activeTabId != tabId ||
+                _collectionId != list.collectionId)) {
+          throw StateError('The saved collection could not be opened.');
+        }
         return;
       }
       _showingSearchResults = true;
@@ -7446,7 +7539,12 @@ class PanelNotifier extends ChangeNotifier {
     }
     notifyListeners();
     _saveTabs();
-    await _restoreSelectedTab();
+    await _restoreSelectedTab(
+      capturedOrigin: capturedOrigin,
+      allowAccessRequests: allowAccessRequests,
+      canContinue: canContinue,
+      requireAvailable: requireAvailable,
+    );
   }
 
   /// Cycle to the next tab. Wraps around.
@@ -7626,6 +7724,10 @@ class PanelNotifier extends ChangeNotifier {
     int activeIndex = 0,
     bool replace = false,
     bool keepProtected = true,
+    PanelFileOrigin? capturedOrigin,
+    bool allowAccessRequests = true,
+    bool Function()? canContinue,
+    bool requireAvailable = false,
   }) async {
     if (saved.isEmpty || saved.length > 500) {
       throw const FormatException('A panel group must contain 1–500 tabs.');
@@ -7649,6 +7751,34 @@ class PanelNotifier extends ChangeNotifier {
         );
       }
     }
+    bool requestAvailable() =>
+        !_isDisposed &&
+        (capturedOrigin?.isCurrent ?? true) &&
+        (canContinue?.call() ?? true);
+    if (!requestAvailable()) {
+      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      return;
+    }
+    final selected = incoming[activeIndex.clamp(0, incoming.length - 1)];
+    if (requireAvailable &&
+        selected.collectionId == null &&
+        (capturedOrigin == null ||
+            capturedOrigin.storageReference != selected.storage)) {
+      throw StateError('The saved tab\'s original source is unavailable.');
+    }
+    if (requireAvailable || canContinue != null) {
+      final previousTab = _activeTabId;
+      final navigation = _navigationRevision;
+      // A guarded action must recheck its captured source and intent after
+      // saving marks, before it appends or selects any restored tab.
+      await flushCollectionMarks();
+      if (!requestAvailable() ||
+          navigation != _navigationRevision ||
+          previousTab != _activeTabId) {
+        if (requireAvailable) throw StateError('The tab request is no longer current.');
+        return;
+      }
+    }
     _departTab();
     _leaveFileList(forget: false);
     if (replace) {
@@ -7662,7 +7792,17 @@ class PanelNotifier extends ChangeNotifier {
       }
     }
     _tabs.addAll(incoming);
-    await selectTab(incoming[activeIndex.clamp(0, incoming.length - 1)].id);
+    await selectTab(
+      selected.id,
+      capturedOrigin: capturedOrigin,
+      allowAccessRequests: allowAccessRequests,
+      canContinue: canContinue,
+      requireAvailable: requireAvailable,
+    );
+    if (!requestAvailable()) {
+      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      return;
+    }
     await _saveTabs(force: true, rethrowErrors: true);
   }
 

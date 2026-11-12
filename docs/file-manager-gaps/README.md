@@ -44,7 +44,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | ID | Feature | Status | Dependency / next boundary |
 | --- | --- | --- | --- |
 | [G01](01-workspace-and-interaction.md#g01) | Source-bound incoming drops | Implemented / target-runtime acceptance pending | Real OS/browser drag sessions under G50/G51 |
-| [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Implementing | None |
+| [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Closed: direct saved-item workflow | New network discovery remains G30 |
 | [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
 | [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Scoped | G02 command identity |
 | [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Scoped | G01; existing collections |
@@ -112,7 +112,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | Scope all remaining gaps | `feature/file-manager-gap-closure-20261112` · `9887b53` · PR #58 | 51 scoped items across six lanes | Scope and acceptance criteria preserved remotely |
 | G03 conflict previews | `feature/conflict-review-20261112` · `132f70e` · PR #59 | 140 tests passed across four service/widget suites; focused analysis clean | Closed for the documented bounded preview scope |
 | G12 external terminal | `feature/external-terminal-20261112` · `f798f27` · PR #60 | 45 tests passed across five suites; one existing macOS-only skip; follow-up bounds tests passed in the 118-test run | Implemented; native terminal-window acceptance pending |
-| G01 incoming drops | `feature/incoming-drop-routing-20261112` | 118 tests passed across six drop/operation suites and the terminal service suite; focused analysis clean | Implemented; real OS/browser drag acceptance pending |
+| G01 incoming drops | `feature/incoming-drop-routing-20261112` · `a452b7a` · PR #61 | 118 tests passed across six drop/operation suites and the terminal service suite; focused analysis clean | Implemented; real OS/browser drag acceptance pending |
+| G02 direct Quick Open | `feature/quick-open-actions-20261112` | 193 tests passed across nine navigation/rename suites and three conversion suites; focused analysis has no errors/warnings | Closed for the direct saved-item workflow |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.
