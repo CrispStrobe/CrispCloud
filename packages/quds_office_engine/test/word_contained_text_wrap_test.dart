@@ -201,6 +201,118 @@ void main() {
     );
   }
 
+  test(
+    'Indic cell clusters keep their owners through direct and isolate saves',
+    () async {
+      for (final isolate in [false, true]) {
+        var document = WmlDocument(
+          sections: [
+            WmlSection(
+              blocks: [
+                WmlTable(
+                  grid: [42],
+                  rows: [
+                    WmlTableRow(
+                      cells: [
+                        WmlTableCell(
+                          blocks: [
+                            WmlParagraph(inlines: [WmlRun(text: 'Aक्षक्ष')]),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+        for (var cycle = 0; cycle <= 3; cycle++) {
+          _expectAllCellTextFits(document);
+          final lines = WordLayoutEngine(
+            font: null,
+          ).layout(document).pages.single.lines;
+          expect(
+            lines.map(
+              (line) => line.glyphs.map((glyph) => glyph.glyph.logicalIndex),
+            ),
+            [
+              [0],
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+          );
+          expect(document.paragraphs.single.text, 'Aक्षक्ष');
+          if (cycle == 3) break;
+          final bytes = isolate
+              ? await OfficeIsolateSave.word(document)
+              : WordSerializer().writeBytes(document);
+          document = WordDeserializer().readBytes(bytes);
+        }
+      }
+    },
+  );
+
+  group('Unicode segmentation contract', () {
+    // Authored expected clusters, independent of the implementation/package.
+    for (final sample in <({String text, List<String> expected})>[
+      (text: 'क्', expected: ['क्']),
+      (text: 'क्ष', expected: ['क्ष']),
+      (text: 'क्‍ष', expected: ['क्‍ष']),
+      (text: 'কাকী', expected: ['কা', 'কী']),
+      (text: 'காகி', expected: ['கா', 'கி']),
+      (text: 'ക്ക', expected: ['ക്ക']),
+      (text: 'ש\u05c1', expected: ['שׁ']),
+      (text: '\u0600A', expected: ['\u0600A']),
+      (text: 'a\u200d👩', expected: ['a\u200d', '👩']),
+      (text: 'A\r\nB', expected: ['A', '\r\n', 'B']),
+      (text: '', expected: []),
+    ]) {
+      test(
+        'segments exact authored clusters: ${sample.text.runes.toList()}',
+        () {
+          final clusters = GraphemeClusters.segment(sample.text);
+          expect(clusters.map((cluster) => cluster.text), sample.expected);
+          var offset = 0;
+          for (final cluster in clusters) {
+            expect(cluster.start, offset);
+            offset += cluster.text.length;
+            expect(cluster.end, offset);
+            expect(cluster.length, cluster.text.length);
+            expect(
+              sample.text.substring(cluster.start, cluster.end),
+              cluster.text,
+            );
+          }
+          expect(offset, sample.text.length);
+        },
+      );
+    }
+
+    test('caret lookup retains exact UTF-16 offsets across cluster types', () {
+      const text = 'Aक्ष😀কী';
+      final clusters = GraphemeClusters.segment(text);
+      expect(
+        clusters.map((cluster) => (cluster.start, cluster.end, cluster.text)),
+        [(0, 1, 'A'), (1, 4, 'क्ष'), (4, 6, '😀'), (6, 8, 'কী')],
+      );
+      expect(
+        [
+          for (var offset = 0; offset < text.length; offset++)
+            GraphemeClusters.indexAt(clusters, offset),
+        ],
+        [0, 1, 1, 1, 2, 2, 3, 3],
+      );
+      expect(GraphemeClusters.indexAt(clusters, text.length), clusters.length);
+      expect(
+        GraphemeClusters.indexAt(clusters, text.length + 1),
+        clusters.length,
+      );
+      expect(GraphemeClusters.indexAt(clusters, -1), 0);
+      expect(GraphemeClusters.indexAt(const [], 0), 0);
+    });
+  });
+
   group('fixed-container line breaks', () {
     test('long words split only when explicitly requested', () {
       const text = 'ABCDEFGHIJK';
@@ -259,6 +371,10 @@ void main() {
       ),
       (text: '👩\u0301‍💻a\u0301', width: 3, expected: ['👩́‍💻', 'á']),
       (text: '각난', width: 3, expected: ['각', '난']),
+      (text: 'क्Aक्', width: 2, expected: ['क्', 'A', 'क्']),
+      (text: 'क्षक्ष', width: 3, expected: ['क्ष', 'क्ष']),
+      (text: 'क्‍षक्‍ष', width: 3, expected: ['क्‍ष', 'क्‍ष']),
+      (text: 'কাকী', width: 2, expected: ['কা', 'কী']),
     ]) {
       test('keeps authored Unicode clusters intact: ${sample.text}', () {
         final lines = _break(sample.text, sample.width);

@@ -16,6 +16,7 @@ dart test \
   test/office_fidelity_oracle_test.dart test/office_steps_test.dart \
   test/scripted_workflows_test.dart test/numbering_collision_test.dart \
   test/list_restart_fidelity_test.dart test/rich_note_test.dart \
+  test/word_footnote_reference_test.dart \
   test/native_presentation_test.dart test/native_spreadsheet_test.dart \
   test/slide_section_fidelity_test.dart \
   test/sheet_rename_fidelity_test.dart \

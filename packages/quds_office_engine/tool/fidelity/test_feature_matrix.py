@@ -3,6 +3,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -10,6 +11,76 @@ import unittest
 from zipfile import BadZipFile, ZipFile
 
 import feature_matrix as matrix
+
+
+def portable_gate_omissions(data, source):
+    """Compare matrix declarations with the gate's simple executable commands.
+
+    Join shell continuations before tokenizing logical lines. Shell comments,
+    quoted descriptions and commands behind control operators do not establish
+    unconditional execution in this straight-line portable gate.
+    """
+    commands = set()
+    for line in source.replace('\\\n', '').splitlines():
+        lexer = shlex.shlex(line, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        argv = tuple(lexer)
+        if argv and not any(all(char in '();&|<>' for char in arg) for arg in argv):
+            commands.add(argv)
+    executed_tests = {path for argv in commands if argv[:2] == ('dart', 'test')
+                      for path in argv[2:]}
+    bundles = data['bundles'].values()
+    required_tests = {path for bundle in bundles for path in bundle['tests']}
+    required_scripts = {('dart', 'run', path) for bundle in bundles for path in bundle['scripts']}
+    required_oracles = {('python3', *argv) for bundle in bundles for argv in bundle['oracles']}
+    return {'tests': sorted(required_tests - executed_tests),
+            'scripts': sorted(required_scripts - commands),
+            'oracles': sorted(required_oracles - commands)}
+
+
+class PortableGateContractTests(unittest.TestCase):
+    DECLARATIONS = {'bundles': {'fixture': {
+        'tests': ['test/one_test.dart', 'test/two_test.dart'],
+        'scripts': ['tool/fidelity/produce.dart'],
+        'oracles': [['tool/fidelity/check_oracle.py', 'build/fidelity-example']],
+    }}}
+    GATE = ('dart test \\\n'
+            '  "test/one_test.dart" \\\n'
+            '  test/two_test.dart # an actual second test\n'
+            'dart run tool/fidelity/produce.dart\n'
+            'python3 "tool/fidelity/check_oracle.py" build/fidelity-example\n')
+
+    def test_real_portable_gate_executes_every_matrix_test_producer_and_oracle(self):
+        data, _ = matrix.load_matrix()
+        gate = (matrix.ROOT / 'tool/fidelity/check.sh').read_text()
+        self.assertEqual(portable_gate_omissions(data, gate),
+                         {'tests': [], 'scripts': [], 'oracles': []})
+
+    def test_quoted_paths_continuations_and_trailing_comments_parse_as_commands(self):
+        self.assertEqual(portable_gate_omissions(self.DECLARATIONS, self.GATE),
+                         {'tests': [], 'scripts': [], 'oracles': []})
+
+    def test_omitted_test_producer_or_oracle_cannot_be_satisfied_by_comments(self):
+        removals = {
+            'tests': 'test/two_test.dart',
+            'scripts': 'dart run tool/fidelity/produce.dart',
+            'oracles': 'python3 "tool/fidelity/check_oracle.py" build/fidelity-example',
+        }
+        for kind, removed in removals.items():
+            reduced = self.GATE.replace(removed, '')
+            for extra in ('', '\n# ' + removed + '\n', '\necho ' + shlex.quote(removed) + '\n'):
+                with self.subTest(kind=kind, extra=extra):
+                    missing = portable_gate_omissions(self.DECLARATIONS, reduced + extra)
+                    self.assertTrue(missing[kind])
+                    self.assertTrue(all(not paths for key, paths in missing.items() if key != kind))
+
+    def test_ignored_failure_or_disabled_command_does_not_satisfy_the_contract(self):
+        for replacement in ('# dart run tool/fidelity/produce.dart',
+                            'dart run tool/fidelity/produce.dart || true',
+                            'false && dart run tool/fidelity/produce.dart'):
+            gate = self.GATE.replace('dart run tool/fidelity/produce.dart', replacement)
+            with self.subTest(replacement=replacement):
+                self.assertTrue(portable_gate_omissions(self.DECLARATIONS, gate)['scripts'])
 
 
 class FeatureMatrixControls(unittest.TestCase):

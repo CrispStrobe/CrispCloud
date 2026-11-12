@@ -8,6 +8,8 @@ on:
       - 'packages/quds_office_editor/**'
       - 'lib/widgets/office_editor*'
       - 'lib/services/office_*'
+      - 'lib/l10n/**'
+      - 'assets/fonts/**'
       - 'lib/services/recursive_search_service.dart'
       - 'lib/services/captured_file_target.dart'
       - 'lib/services/pdf_file_store.dart'
