@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "appBaseCommit": "8b0c01597c231814815bf5456ab0a616102e7307",
+  "appCodeAndTestsUnchangedFromBase": true,
+  "parserCommit": "53a7f0df113f0b88967f7fecd492652ad5c730d5",
+  "suiteCommit": "09f5ec4b8eba290ff4d65678179854fb6ff6a468",
+  "parserUpstreamFiles": 341,
+  "officeManagedFiles": 680,
+  "crisperBooksManagedFiles": 246,
+  "flutterTests": 99,
+  "flutterSuites": 16,
+  "pythonHarnessTests": 74,
+  "portableJavaScriptFormats": [
+    "DOC",
+    "RTF",
+    "PPT",
+    "MSG"
+  ],
+  "installedOfficeRoutes": [
+    "built-in DOCX",
+    "native DOCX",
+    "native DOCM"
+  ],
+  "releasePubspecRestored": true,
+  "testConfiguration": "Existing system SQLite wrapper, retained Clang19.1.7 and SQLite3.46.1; optional ebook hook disabled only during tests. Native ebook conversion is not validated.",
+  "sourceIdentity": "App implementation/test sources equal the base commit; exact parser/suite mirrors, package configuration hashes and retained logs identify this integration. It was tested before its integration commit; no clean-Git-head claim is made.",
+  "files": {
+    "pubspec.yaml": "0dab2382554bf110b35a3197d0a8babc8fabe0f024568ad3f4215029d5219aac",
+    "pubspec.lock": "2a8c1f83455844560fb694c51d15f1b875f83a8a15b84ce083482568af4c7139",
+    "tool/office_fidelity_manifest.json": "eaea9dbb33df86cff2cb08eee065e6d37030c967f44aca9feb66a83b55818a46",
+    "packages/legacy_doc_parser/UPSTREAM.json": "c2786d338d600facd2f5a896599fab68c40db8e943591f6a3d6f082d7f00a5b8"
+  },
+  "checks": {
+    "focused": {
+      "archive": "focused.log.gz",
+      "sha256": "061c5cf20141477a6633dfab49f980f91be1bc03ca30765206a07b4fa60081e3",
+      "uncompressedSha256": "1e69c1ee00947212cb3b8b881e29bb522ef4015250ba75ab1c39d222b00a2f00",
+      "bytes": 20582
+    },
+    "python": {
+      "archive": "python.log.gz",
+      "sha256": "3e5ece5c96b2e8066ea4040ab4af91f9ccdee99157fe59b11380027d40e574e2",
+      "uncompressedSha256": "2afe7a1982f3e51a3e0b61ea1f0f2b481947efd20fa32ace0c3d1715dc194131",
+      "bytes": 1483
+    },
+    "native": {
+      "archive": "native.log.gz",
+      "sha256": "aeb01dfd951694b0b8c81b47ee51ffb1e7330b2d99197b97ac86c80902c12d8a",
+      "uncompressedSha256": "1320addb6a8589683434bb2dc99387111304534d08698e73ff3e49235c63d261",
+      "bytes": 4273
+    },
+    "web": {
+      "archive": "web.log.gz",
+      "sha256": "8465b97e0af27de1c58b8c8e4ff15500e9bf83ef9116f654d27588e8ee850b9f",
+      "uncompressedSha256": "59577551005ff302f9c825a85fe1b631df95c2e1e6664f5411a82ce643c7ad2f",
+      "bytes": 262
+    }
+  }
+}
