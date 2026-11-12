@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -47,6 +48,7 @@ class ArchiveWorkspace {
   ArchiveWorkspaceReview? _pendingReview;
   ArchivePublicationRecord? _pendingPublication;
   ArchivePublicationReceipt? _lastReceipt;
+  Object? _sourceRemovalAuthority;
   ArchiveWorkspace? _parentWorkspace;
   bool get dirty => _dirty || (_parentWorkspace?.dirty ?? false);
   bool get isCurrent => !_closed && source.isCurrent;
@@ -89,10 +91,12 @@ class ArchiveWorkspace {
   /// Flat AR archives and replacement-only payload/package profiles have no
   /// supported destination for this operation.
   bool get canMoveMembers =>
-      canUpdate &&
-      !_policy.singlePayload &&
-      _policy.packageKind != 'deb' &&
-      _policy.format != ArchiveEndpointFormat.ar;
+      canRemoveMembers && _policy.format != ArchiveEndpointFormat.ar;
+
+  /// Whether a verified member-removal candidate can be prepared. A successful
+  /// review must still retain each format's required content and protection.
+  bool get canRemoveMembers =>
+      canUpdate && !_policy.singlePayload && _policy.packageKind != 'deb';
 
   String get updateSupport => _parentWorkspace?._policy.packageKind == 'deb'
       ? 'Debian payloads require an external package build workflow. Replace the prepared control and data archives together in the outer package.'
@@ -545,6 +549,110 @@ class ArchiveWorkspace {
       updated.removeWhere((key, _) => key == name || key.startsWith('$name/'));
     }
     _publish(updated);
+  }
+
+  /// Removes only the exact copied members whose bytes were verified in a
+  /// destination candidate. This operates on a separate source-removal draft;
+  /// the source's physical container remains unchanged until reviewed save.
+  /// A folder is removed only when no uncopied or skipped descendant remains.
+  /// The private coordinator retains [publicationAuthority]; this workspace
+  /// subsequently requires that exact owner and a destination dependency to
+  /// publish, including after further edits or discarding its draft.
+  Future<List<String>> stageVerifiedMemberRemoval(
+    List<ArchiveWorkspaceRemoval> members, {
+    required int expectedRevision,
+    required Object publicationAuthority,
+    bool Function()? isCancelled,
+  }) async {
+    void check() {
+      _check(writing: true);
+      if (!canRemoveMembers) {
+        throw UnsupportedError(
+          'This archive profile does not support removing transferred members.',
+        );
+      }
+      if (_revision != expectedRevision ||
+          _saving ||
+          pendingPublication != null ||
+          _sourceRemovalAuthority != null) {
+        throw StateError('The source-removal draft changed after capture.');
+      }
+      if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    }
+
+    check();
+    if (members.isEmpty || members.length > 200000) {
+      throw const ArchiveViewException(
+        'No bounded copied-member set is available.',
+      );
+    }
+    final names = <String>{};
+    final files = <String>[];
+    final directories = <String>[];
+    final remainingNames = SplayTreeMap<String, bool>()
+      ..addEntries(_entries.keys.map((name) => MapEntry(name, true)));
+    bool hasChildren(String name) {
+      final prefix = '$name/';
+      return remainingNames.firstKeyAfter(prefix)?.startsWith(prefix) ?? false;
+    }
+
+    for (final member in members) {
+      check();
+      final name = ArchiveService.safeMemberPath(
+        member.path.replaceFirst(RegExp(r'^/+'), ''),
+      );
+      if (!names.add(name)) {
+        throw StateError('A copied source member is repeated: $name');
+      }
+      final entry = _entries[name];
+      if (member.isDirectory) {
+        if (member.sha256 != null ||
+            member.size != 0 ||
+            entry?.isFolder == false ||
+            entry == null && !hasChildren(name)) {
+          throw StateError('The copied source directory changed: $name');
+        }
+        directories.add(name);
+      } else {
+        if (entry == null ||
+            entry.isFolder ||
+            entry.size != member.size ||
+            member.size < 0 ||
+            member.size > kArchiveReadLimit ||
+            member.sha256 == null ||
+            !RegExp(r'^[a-f0-9]{64}$').hasMatch(member.sha256!)) {
+          throw StateError('The copied source member changed: $name');
+        }
+        final bytes = await read('/$name');
+        check();
+        if (bytes.length != member.size ||
+            sha256.convert(bytes).toString() != member.sha256) {
+          throw StateError('Copied source bytes do not match: $name');
+        }
+        files.add(name);
+      }
+    }
+    final updated = Map.of(_entries);
+    final removed = <String>[];
+    for (final file in files) {
+      updated.remove(file);
+      remainingNames.remove(file);
+      removed.add('/$file');
+    }
+    directories.sort((a, b) => b.length.compareTo(a.length));
+    for (final directory in directories) {
+      if (!hasChildren(directory)) {
+        updated.remove(directory);
+        remainingNames.remove(directory);
+        removed.add('/$directory');
+      }
+    }
+    check();
+    if (removed.isNotEmpty) {
+      _publish(updated);
+      _sourceRemovalAuthority = publicationAuthority;
+    }
+    return List.unmodifiable(removed);
   }
 
   /// Stages removal only for members whose foreground copy completed and whose
@@ -1163,14 +1271,25 @@ class ArchiveWorkspace {
     ArchiveWorkspaceReview? reviewed,
     void Function(ArchivePublicationPhase)? onPhase,
     TransferCheckpoint? beforePublication,
+    ArchivePublicationDependency? dependency,
+    Object? sourceRemovalAuthority,
   }) async {
     _check(writing: true);
+    if (_sourceRemovalAuthority != null &&
+        (!identical(sourceRemovalAuthority, _sourceRemovalAuthority) ||
+            dependency == null && _pendingPublication?.dependency == null)) {
+      throw StateError(
+        'Source removal requires its paired move coordinator and verified destination dependency.',
+      );
+    }
     if (_saving) throw StateError('An archive publication is already running.');
     if (!_dirty) {
       final receipt = await _parentWorkspace?.save(
         isCancelled: isCancelled,
         onPhase: onPhase,
         beforePublication: beforePublication,
+        dependency: dependency,
+        sourceRemovalAuthority: sourceRemovalAuthority,
       );
       if (source is _NestedArchiveBackend) {
         (source as _NestedArchiveBackend)._refreshParentRevision();
@@ -1226,6 +1345,7 @@ class ArchiveWorkspace {
             isCancelled: () => _closed || (isCancelled?.call() ?? false),
             onPhase: onPhase,
             beforePublication: beforePublication,
+            dependency: dependency,
           );
         } catch (_) {
           _pendingPublication = publisher.activeRecord;
@@ -1253,6 +1373,8 @@ class ArchiveWorkspace {
           isCancelled: isCancelled,
           onPhase: onPhase,
           beforePublication: beforePublication,
+          dependency: dependency,
+          sourceRemovalAuthority: sourceRemovalAuthority,
         );
         (source as _NestedArchiveBackend)._refreshParentRevision();
       }
@@ -1429,6 +1551,21 @@ class ArchiveWorkspaceImport {
   final int? mode;
 }
 
+/// Password-free in-memory evidence for one successfully copied source member.
+/// This member manifest is not persisted in publication recovery records.
+class ArchiveWorkspaceRemoval {
+  const ArchiveWorkspaceRemoval({
+    required this.path,
+    required this.isDirectory,
+    required this.size,
+    this.sha256,
+  });
+  final String path;
+  final bool isDirectory;
+  final int size;
+  final String? sha256;
+}
+
 class ArchiveWorkspaceReview {
   const ArchiveWorkspaceReview._(
     this.workspace,
@@ -1441,6 +1578,9 @@ class ArchiveWorkspaceReview {
   final Uint8List bytes;
   final List<ArchiveWorkspaceChange> changes;
   int get packedBytes => bytes.length;
+  bool get isCurrent => _generations.entries.every(
+    (entry) => entry.key.isCurrent && entry.key._revision == entry.value,
+  );
 }
 
 class ArchiveNestedPasswordRequiredException

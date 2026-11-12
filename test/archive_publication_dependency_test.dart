@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/archive_endpoint.dart';
+import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/services/archive_container_publisher.dart';
 import 'package:crisp_cloud/services/archive_publication_journal.dart';
@@ -163,6 +164,74 @@ void main() {
     expect(json['version'], 1);
     expect(ArchivePublicationRecord.fromJson(json).dependency, isNull);
   });
+
+  test('persisted dependency retains every recognized revision field', () {
+    final captured = ArchivePublicationDependency(
+      receiptId: dependency.receiptId,
+      storage: dependency.storage,
+      file: dependency.file.copyWith(
+        metadata: {
+          for (final key in [
+            'version',
+            'versionId',
+            'revision',
+            'eTag',
+            'etag',
+            'rev',
+            'cTag',
+          ])
+            key: '$key-1',
+          'password': 'fixture-only-never-persist',
+        },
+      ),
+      sha256: dependency.sha256,
+      accessPolicySha256: dependency.accessPolicySha256,
+    );
+    final encoded = jsonEncode(captured.toJson());
+    final decoded = ArchivePublicationDependency.fromJson(
+      jsonDecode(encoded) as Map<String, dynamic>,
+    );
+    expect(sameArchiveFile(captured.file, decoded.file), isTrue);
+    expect(decoded.file.metadata!['revision'], 'revision-1');
+    expect(encoded, isNot(contains('fixture-only-never-persist')));
+    expect(decoded.file.metadata!.containsKey('password'), isFalse);
+  });
+
+  test(
+    'native local and persisted UTC timestamps identify the same instant',
+    () {
+      final local = DateTime.fromMicrosecondsSinceEpoch(1800000000123456);
+      final original = FileItem(
+        name: 'source.zip',
+        path: '/input/source.zip',
+        isFolder: false,
+        size: 6,
+        updatedAt: local,
+      );
+      expect(
+        sameArchiveFile(original, original.copyWith(updatedAt: local.toUtc())),
+        isTrue,
+      );
+      expect(
+        sameArchiveFile(
+          original,
+          original.copyWith(
+            updatedAt: local.toUtc().add(const Duration(microseconds: 1)),
+          ),
+        ),
+        isFalse,
+      );
+      final missingTime = FileItem(
+        name: 'source.zip',
+        path: '/input/source.zip',
+        isFolder: false,
+        size: 6,
+      );
+      expect(sameArchiveFile(original, missingTime), isFalse);
+      expect(sameArchiveFile(missingTime, original), isFalse);
+      expect(sameArchiveFile(missingTime, missingTime), isTrue);
+    },
+  );
 
   test('an unverified destination cannot authorize a source removal', () {
     final unverified = destinationReceipt.record.copyWith(

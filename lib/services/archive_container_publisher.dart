@@ -1075,7 +1075,7 @@ bool sameArchiveFile(FileItem before, FileItem? after) {
       after.isSymlink == true ||
       before.size != after.size ||
       before.uuid != after.uuid ||
-      before.updatedAt != after.updatedAt) {
+      !_sameFileInstant(before.updatedAt, after.updatedAt)) {
     return false;
   }
   for (final key in [
@@ -1091,3 +1091,10 @@ bool sameArchiveFile(FileItem before, FileItem? after) {
   }
   return true;
 }
+
+// Native stat returns local DateTimes, while the durable journal stores UTC.
+// Time-zone representation must not invalidate an otherwise identical native
+// file after restart; a different instant (or missing evidence) still refuses.
+bool _sameFileInstant(DateTime? before, DateTime? after) => before == null
+    ? after == null
+    : after != null && before.isAtSameMomentAs(after);

@@ -11,6 +11,7 @@ import 'archive_publication_journal.dart';
 import 'archive_service.dart';
 import 'archive_viewer_service.dart';
 import 'archive_workspace.dart';
+import 'file_operation_backend.dart' show LocalOperationBackend;
 import 'file_operation_service.dart';
 import 'storage_transfer_contract.dart';
 import 'archive_source_cleanup_stub.dart'
@@ -33,6 +34,45 @@ class ArchiveEndpointTransferResult {
   final int removedSources;
   final List<String> retainedSources;
   final List<String> warnings;
+}
+
+enum ArchiveMovePhase { destinationPublication, sourcePublication }
+
+enum ArchiveMoveDisposition { moved, destinationOnly, sourceRecoveryRequired }
+
+/// A destination receipt is always present. Source removal is complete only
+/// with its own receipt; interrupted removal retains its dependency-bound
+/// publication record for explicit recovery.
+class ArchiveEndpointMoveResult extends ArchiveEndpointTransferResult {
+  const ArchiveEndpointMoveResult({
+    required super.receipt,
+    required super.publishedFiles,
+    required super.removedSources,
+    required this.disposition,
+    this.sourceReceipt,
+    this.sourceRecovery,
+    super.retainedSources,
+    super.warnings,
+  });
+  final ArchiveMoveDisposition disposition;
+  final ArchivePublicationReceipt? sourceReceipt;
+  final ArchivePublicationRecord? sourceRecovery;
+}
+
+class ArchiveEndpointMoveReview {
+  ArchiveEndpointMoveReview._(
+    this._owner,
+    this.destinationReview,
+    this.sourceReview,
+    List<String> removedSourcePaths,
+    List<String> retainedSourcePaths,
+  ) : removedSourcePaths = List.unmodifiable(removedSourcePaths),
+      retainedSourcePaths = List.unmodifiable(retainedSourcePaths);
+  final ArchiveEndpoint _owner;
+  final ArchiveWorkspaceReview destinationReview;
+  final ArchiveWorkspaceReview sourceReview;
+  final List<String> removedSourcePaths;
+  final List<String> retainedSourcePaths;
 }
 
 class ArchiveEndpointImportEntry {
@@ -61,6 +101,8 @@ class ArchiveEndpointImportPlan {
   final ArchiveEndpoint _owner;
   final FileOperationPlan _plan;
   final bool moveSources;
+  bool _archiveMove = false;
+  bool get isArchiveMove => _archiveMove;
   bool _consumed = false;
   List<String> get errors => List.unmodifiable(_plan.errors);
   bool get canStage => !_consumed && _plan.canExecute;
@@ -89,6 +131,12 @@ class ArchiveEndpoint {
   ArchiveEndpointImportPlan? _staged;
   ArchiveWorkspaceReview? _review;
   final _witnesses = <_ImportWitness>[];
+  ArchiveWorkspace? _moveSource;
+  ArchiveEndpointMoveReview? _moveReview;
+  ArchiveEndpointTransferResult? _moveDestinationResult;
+  ArchiveEndpointMoveResult? _moveResult;
+  bool _moveCommitting = false;
+  final Object _sourceRemovalAuthority = Object();
 
   static Future<ArchiveEndpoint> open({
     required FileOperationBackend containerBackend,
@@ -179,6 +227,66 @@ class ArchiveEndpoint {
       control: control,
       archiveSource: _ArchiveCopyWitness(snapshot, nativeSnapshot),
     );
+  }
+
+  /// The first move increment requires two distinct top-level local archives
+  /// on the same persistent installation. Nested, browser and remote moves
+  /// need their own source-publication dependency and recovery contracts.
+  static String? archiveMoveUnsupportedReason(
+    ArchiveWorkspace source,
+    ArchiveWorkspace destination,
+  ) {
+    if (!source.isCurrent || !destination.isCurrent) {
+      return 'The captured archive endpoints are no longer current.';
+    }
+    if (source.nestedMemberPaths.isNotEmpty ||
+        destination.nestedMemberPaths.isNotEmpty) {
+      return 'Moving between archives currently requires two top-level containers.';
+    }
+    if (source.source is! LocalOperationBackend ||
+        destination.source is! LocalOperationBackend ||
+        source.source.storageReference?.persistent != true ||
+        source.source.storageReference != destination.source.storageReference) {
+      return 'Moving between archives requires native local storage from the same installation.';
+    }
+    if (!source.canRemoveMembers) {
+      return 'The source archive cannot remove transferred members. ${source.updateSupport}';
+    }
+    if (!destination.canUpdate) return destination.updateSupport;
+    if (source.dirty ||
+        destination.dirty ||
+        source.pendingPublication != null ||
+        destination.pendingPublication != null) {
+      return 'Save, discard or recover both archive drafts before moving members.';
+    }
+    if (identical(source, destination) ||
+        source.source.samePath(source.file.path!, destination.file.path!)) {
+      return 'Use the single-workspace move action inside the same archive.';
+    }
+    return null;
+  }
+
+  Future<ArchiveEndpointImportPlan> prepareArchiveMove({
+    required ArchiveWorkspace source,
+    required List<FileItem> files,
+    String directory = '/',
+    FileConflictPolicy conflict = FileConflictPolicy.keepBoth,
+    FileOperationControl? control,
+  }) async {
+    _check();
+    if (archiveMoveUnsupportedReason(source, workspace)
+        case final String reason) {
+      throw UnsupportedError(reason);
+    }
+    final plan = await prepareArchiveCopy(
+      source: source,
+      files: files,
+      directory: directory,
+      conflict: conflict,
+      control: control,
+    );
+    plan._archiveMove = true;
+    return plan;
   }
 
   Future<ArchiveEndpointImportPlan> _prepareImport({
@@ -284,6 +392,16 @@ class ArchiveEndpoint {
   /// All bytes and source snapshots are verified before this single draft edit.
   /// A later review is required before any container publication.
   Future<ArchiveWorkspaceReview> stageImport(
+    ArchiveEndpointImportPlan import, {
+    required FileOperationControl control,
+  }) {
+    if (import.isArchiveMove) {
+      throw StateError('A move requires review of both archive candidates.');
+    }
+    return _stageImport(import, control: control);
+  }
+
+  Future<ArchiveWorkspaceReview> _stageImport(
     ArchiveEndpointImportPlan import, {
     required FileOperationControl control,
   }) async {
@@ -433,8 +551,230 @@ class ArchiveEndpoint {
     }
   }
 
+  /// Builds both candidates before either original is published. The source
+  /// copy witness remains a clean workspace; removal is staged in a separately
+  /// opened workspace bound to that exact physical fingerprint and password.
+  Future<ArchiveEndpointMoveReview> stageArchiveMove(
+    ArchiveEndpointImportPlan import, {
+    required FileOperationControl control,
+    int maxCandidateBytes = ArchiveService.maxArchiveBytes,
+  }) async {
+    _check();
+    if (!import.isArchiveMove ||
+        !identical(import._owner, this) ||
+        _moveReview != null ||
+        _moveSource != null ||
+        _moveCommitting) {
+      throw StateError('This preview is not an available archive move.');
+    }
+    if (maxCandidateBytes <= 0 ||
+        maxCandidateBytes > ArchiveService.maxArchiveBytes) {
+      throw ArgumentError.value(maxCandidateBytes, 'maxCandidateBytes');
+    }
+    final snapshot = import._archiveSource!.snapshot;
+    if (archiveMoveUnsupportedReason(snapshot.workspace, workspace)
+        case final String reason) {
+      throw UnsupportedError(reason);
+    }
+    final originalRevision = workspace.revision;
+    ArchiveWorkspace? shadow;
+    final deadline = Timer(importDeadline, control.cancel);
+    try {
+      final destinationReview = await _stageImport(import, control: control);
+      _busy = true;
+      await control.checkpoint();
+      snapshot.checkCurrent();
+      shadow = await ArchiveWorkspace.open(
+        snapshot.containerBackend,
+        snapshot.containerFile,
+        password: snapshot.workspace.password,
+        expectedFingerprint: snapshot.fingerprint,
+        journal: workspace.journal,
+      );
+      await control.checkpoint();
+      snapshot.checkCurrent();
+      final removed = await shadow.stageVerifiedMemberRemoval(
+        [
+          for (final witness in _witnesses)
+            ArchiveWorkspaceRemoval(
+              path: witness.source.path!,
+              isDirectory: witness.source.isFolder,
+              size: witness.source.isFolder ? 0 : witness.source.size!,
+              sha256: witness.sha256,
+            ),
+        ],
+        expectedRevision: shadow.revision,
+        publicationAuthority: _sourceRemovalAuthority,
+        isCancelled: () =>
+            _closed || control.isCancelled || !snapshot.isCurrent,
+      );
+      final sourceReview = await shadow.review(
+        isCancelled: () =>
+            _closed || control.isCancelled || !snapshot.isCurrent,
+      );
+      if (removed.isEmpty || sourceReview.changes.isEmpty) {
+        throw StateError(
+          'No successfully copied source members can be removed.',
+        );
+      }
+      if (sourceReview.packedBytes + destinationReview.packedBytes >
+          maxCandidateBytes) {
+        throw const ArchiveViewException(
+          'The two reviewed archive candidates exceed the combined move limit.',
+        );
+      }
+      await control.checkpoint();
+      _check();
+      snapshot.checkCurrent();
+      if (!sourceReview.isCurrent || !destinationReview.isCurrent) {
+        throw StateError(
+          'An archive candidate changed while preparing the move.',
+        );
+      }
+      final removedSet = removed.toSet();
+      final retained = <String>{
+        for (final entry in import._plan.entries)
+          if (!removedSet.contains(entry.source.path!)) entry.source.path!,
+      };
+      final review = ArchiveEndpointMoveReview._(
+        this,
+        destinationReview,
+        sourceReview,
+        removed,
+        retained.toList()..sort(),
+      );
+      _moveSource = shadow;
+      _moveReview = review;
+      shadow = null;
+      return review;
+    } catch (_) {
+      // Move preparation starts from a clean destination. Revert only our one
+      // still-current import mutation; an unrelated newer draft is retained.
+      if (identical(_staged, import) &&
+          workspace.isCurrent &&
+          workspace.pendingPublication == null &&
+          workspace.revision == originalRevision + 1) {
+        workspace.discardDraft();
+        _staged = null;
+        _review = null;
+        _witnesses.clear();
+      }
+      rethrow;
+    } finally {
+      deadline.cancel();
+      await shadow?.close();
+      _busy = false;
+    }
+  }
+
+  /// Publishes the verified destination first. The source-removal publication
+  /// is independently reviewed and durably depends on that exact destination
+  /// receipt. After destination success, cancellation/failure returns an
+  /// explicit partial result instead of misreporting the entire move as failed.
+  Future<ArchiveEndpointMoveResult> commitArchiveMove({
+    required ArchiveEndpointMoveReview reviewed,
+    bool Function()? isCancelled,
+    void Function(ArchiveMovePhase)? onPhase,
+  }) async {
+    _check();
+    if (_busy ||
+        _moveCommitting ||
+        _moveResult != null ||
+        !identical(reviewed._owner, this) ||
+        !identical(_moveReview, reviewed) ||
+        !identical(_review, reviewed.destinationReview) ||
+        _moveSource == null ||
+        !reviewed.sourceReview.isCurrent ||
+        !reviewed.destinationReview.isCurrent) {
+      throw StateError(
+        'Review both current archive candidates before moving members.',
+      );
+    }
+    final source = _moveSource!;
+    final snapshot = _staged!._archiveSource!.snapshot;
+    snapshot.checkCurrent();
+    _moveCommitting = true;
+    try {
+      onPhase?.call(ArchiveMovePhase.destinationPublication);
+      final destination = _moveDestinationResult ??= await _commit(
+        reviewed: reviewed.destinationReview,
+        isCancelled: isCancelled,
+      );
+      ArchivePublicationReceipt? sourceReceipt;
+      String? sourceIssue;
+      try {
+        if (_closed || (isCancelled?.call() ?? false)) {
+          throw const FileOperationCancelled();
+        }
+        snapshot.checkCurrent();
+        if (!reviewed.sourceReview.isCurrent) {
+          throw StateError('The reviewed source-removal candidate changed.');
+        }
+        onPhase?.call(ArchiveMovePhase.sourcePublication);
+        // Destination publication may take long enough for the separate
+        // physical source to change. Recheck the original native identity and
+        // complete content witness before beginning any source publication.
+        await _verifyArchiveSource(
+          _staged!._archiveSource,
+          isCancelled: () => _closed || (isCancelled?.call() ?? false),
+        );
+        sourceReceipt = await source.save(
+          reviewed: reviewed.sourceReview,
+          isCancelled: () =>
+              _closed || !snapshot.isCurrent || (isCancelled?.call() ?? false),
+          dependency: ArchivePublicationDependency.fromReceipt(
+            destination.receipt,
+          ),
+          sourceRemovalAuthority: _sourceRemovalAuthority,
+        );
+        if (sourceReceipt == null) {
+          throw StateError('The source-removal publication was not confirmed.');
+        }
+      } catch (error) {
+        sourceIssue = '$error';
+      }
+      final recovery = source.pendingPublication;
+      final disposition = sourceReceipt != null
+          ? ArchiveMoveDisposition.moved
+          : recovery != null
+          ? ArchiveMoveDisposition.sourceRecoveryRequired
+          : ArchiveMoveDisposition.destinationOnly;
+      final result = ArchiveEndpointMoveResult(
+        receipt: destination.receipt,
+        publishedFiles: destination.publishedFiles,
+        removedSources: sourceReceipt == null
+            ? 0
+            : _witnesses.where((item) => !item.source.isFolder).length,
+        disposition: disposition,
+        sourceReceipt: sourceReceipt,
+        sourceRecovery: recovery,
+        retainedSources:
+            disposition == ArchiveMoveDisposition.sourceRecoveryRequired
+            ? const []
+            : sourceReceipt == null
+            ? List.unmodifiable({
+                for (final entry in _staged!._plan.entries) entry.source.path!,
+              })
+            : reviewed.retainedSourcePaths,
+        warnings: List.unmodifiable([
+          ...destination.warnings,
+          if (sourceIssue != null) sourceIssue,
+          if (sourceReceipt?.cleanupPending == true) 'Source removal is published; its verified recovery backup still needs cleanup.',
+        ]),
+      );
+      return _moveResult = result;
+    } finally {
+      _moveCommitting = false;
+    }
+  }
+
   Future<ArchiveWorkspaceReview> review({bool Function()? isCancelled}) async {
     _check();
+    if (_staged?.isArchiveMove == true) {
+      throw StateError(
+        'Review both archive candidates through the move workflow.',
+      );
+    }
     final source = _staged?._archiveSource;
     source?.snapshot.checkCurrent();
     return _review = await workspace.review(
@@ -446,6 +786,23 @@ class ArchiveEndpoint {
   }
 
   Future<ArchiveEndpointTransferResult> commit({
+    required ArchiveWorkspaceReview reviewed,
+    bool Function()? isCancelled,
+    void Function(ArchivePublicationPhase)? onPhase,
+  }) {
+    if (_staged?.isArchiveMove == true) {
+      throw StateError(
+        'A move requires the reviewed two-container publication workflow.',
+      );
+    }
+    return _commit(
+      reviewed: reviewed,
+      isCancelled: isCancelled,
+      onPhase: onPhase,
+    );
+  }
+
+  Future<ArchiveEndpointTransferResult> _commit({
     required ArchiveWorkspaceReview reviewed,
     bool Function()? isCancelled,
     void Function(ArchivePublicationPhase)? onPhase,
@@ -673,6 +1030,7 @@ class ArchiveEndpoint {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    await _moveSource?.close();
     if (ownsWorkspace) await workspace.close();
   }
 }

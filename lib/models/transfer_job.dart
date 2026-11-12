@@ -215,7 +215,15 @@ Map<String, dynamic> transferFileJson(FileItem file) => {
   'isSymlink': file.isSymlink,
   'symlinkTarget': file.symlinkTarget,
   'metadata': {
-    for (final key in ['version', 'versionId', 'eTag', 'etag', 'rev', 'cTag'])
+    for (final key in [
+      'version',
+      'versionId',
+      'revision',
+      'eTag',
+      'etag',
+      'rev',
+      'cTag',
+    ])
       if (file.metadata?[key] != null) key: file.metadata![key].toString(),
     if (file.metadata?['rangeReadSnapshot'] case final String snapshot)
       'rangeReadSnapshot': snapshot,
