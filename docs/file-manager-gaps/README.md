@@ -1,7 +1,8 @@
 # File manager gap closure plan
 
 Date: 12 November 2026. Scope baseline: `28b7b9ce388e08345aa995037256ab50ab0e17b9`.
-Working branch: `feature/file-manager-gap-closure-20261112`.
+Scope branch: `feature/file-manager-gap-closure-20261112`.
+Implementation branches and evidence are recorded in the checkpoint ledger.
 
 This plan covers every missing or partial capability from the requested file-manager
 feature inventory and the preceding [source audit](../file-manager-capability-audit.md).
@@ -42,9 +43,9 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 | ID | Feature | Status | Dependency / next boundary |
 | --- | --- | --- | --- |
-| [G01](01-workspace-and-interaction.md#g01) | Source-bound incoming drops | Implementing | None |
+| [G01](01-workspace-and-interaction.md#g01) | Source-bound incoming drops | Implemented / target-runtime acceptance pending | Real OS/browser drag sessions under G50/G51 |
 | [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Implementing | None |
-| [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Implementing | None |
+| [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
 | [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Scoped | G02 command identity |
 | [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Scoped | G01; existing collections |
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
@@ -53,7 +54,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | [G09](01-workspace-and-interaction.md#g09) | Command entry and keyboard conventions | Scoped | G04; existing terminal/custom commands |
 | [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Scoped | Captured editor session; conflict review |
 | [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Scoped | G10 staging lifetime |
-| [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Scoped | Existing process launch bridge |
+| [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
 | [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Scoped | Existing operation backend |
 | [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Scoped | Provider range capabilities |
 | [G15](02-viewing-search-and-tools.md#g15) | Nested and encrypted archive search | Scoped | G18 archive identity; reader capabilities |
@@ -96,12 +97,10 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Execution order
 
-1. G01 incoming-drop identity and operation review.
-2. G02 direct Quick Open actions.
-3. G03 conflict previews and details.
-4. G04 menu configuration, G05 gathering stack, G09 command entry, G12 external terminal, and G13 file conversion.
-5. G18 archive endpoints, followed by G19–G24; run G25/G27/G29/G37 transport increments as their prerequisites are ready.
-6. Remaining provider, native, localization and release lanes, with required target-specific evidence recorded independently.
+1. G01 incoming-drop identity, G02 direct Quick Open actions and G03 conflict previews form the first batch. Preserve each verified increment separately as it becomes ready.
+2. G04 menu configuration, G05 gathering stack, G09 command entry, G12 external terminal, and G13 file conversion.
+3. G18 archive endpoints, followed by G19–G24; run G25/G27/G29/G37 transport increments as their prerequisites are ready.
+4. Remaining provider, native, localization and release lanes, with required target-specific evidence recorded independently.
 
 Numbering is stable traceability, not a claim that later independent work must
 wait for unavailable legacy hardware or a platform-specific entitlement.
@@ -110,7 +109,10 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 
 | Increment | Remote branch / commit | Evidence | Status |
 | --- | --- | --- | --- |
-| Scope all remaining gaps | `feature/file-manager-gap-closure-20261112` | 51 scoped items across six lanes | Scope and acceptance criteria recorded; checkpoint pending |
+| Scope all remaining gaps | `feature/file-manager-gap-closure-20261112` · `9887b53` · PR #58 | 51 scoped items across six lanes | Scope and acceptance criteria preserved remotely |
+| G03 conflict previews | `feature/conflict-review-20261112` · `132f70e` · PR #59 | 140 tests passed across four service/widget suites; focused analysis clean | Closed for the documented bounded preview scope |
+| G12 external terminal | `feature/external-terminal-20261112` · `f798f27` · PR #60 | 45 tests passed across five suites; one existing macOS-only skip; follow-up bounds tests passed in the 118-test run | Implemented; native terminal-window acceptance pending |
+| G01 incoming drops | `feature/incoming-drop-routing-20261112` | 118 tests passed across six drop/operation suites and the terminal service suite; focused analysis clean | Implemented; real OS/browser drag acceptance pending |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

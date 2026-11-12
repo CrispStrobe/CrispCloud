@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Source-bound incoming drops
 
-**Status:** Implementing. **Dependencies:** None.
+**Status:** Implemented / native and browser acceptance pending. **Dependencies:** None for the implemented copy workflow.
 
 **Scope:** Capture the actual destination, then route native and browser drops through reviewed copy operations.
 
@@ -25,6 +25,25 @@ capability. Required live/device checks remain visible after code implementation
 - Existing destinations require normal conflict decisions; cancellation and unsupported input make no destination writes and release scoped access.
 
 **Starting points:** lib/widgets/file_panel.dart; lib/services/folder_drop_service.dart; existing operation backend/planner.
+
+**Delivered:** [Incoming files and folders](../external-drops.md) documents the
+captured destination, read-only native/browser sources, normal copy review,
+conflicts and foreground lifetime. Either visual pane can receive a drop at its
+actual local folder or selected remote account. Supported directory manifests
+retain their hierarchy; native scoped access is released on completion/close.
+No dependency was added.
+
+**Observed validation:** The final focused run passed 118 tests across six
+drop/operation suites and the external-terminal service regression suite. Tests
+exercise actual pane callbacks, copies to secondary remote and opposite-pane
+local destinations, case-sensitive paths, strict browser names, mutation races,
+bounded streaming, unchanged destination bytes on cancellation and source release.
+Focused static analysis is clean. A discovered mutable-list contract mismatch
+was corrected by returning an independent directory snapshot to the planner.
+
+**Remaining acceptance:** Real operating-system drag sessions, signed macOS
+security scopes and actual browser file/directory handles require target-runtime
+checks under G50/G51. Native drag-out remains a separate G06 gap.
 
 ## G02
 
@@ -50,7 +69,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Conflict previews and details
 
-**Status:** Implementing. **Dependencies:** None.
+**Status:** Closed for the bounded preview scope below. **Dependencies:** None.
 
 **Scope:** Show bounded image previews and selected safe metadata for both captured conflict candidates.
 
@@ -65,6 +84,19 @@ capability. Required live/device checks remain visible after code implementation
 - Decision buttons, apply-to-all behavior and keyboard/narrow layouts retain their existing semantics.
 
 **Starting points:** lib/widgets/file_operation_conflict_dialog.dart; FileOperationConflict and captured backends.
+
+**Delivered:** [Conflict review](../conflict-review.md) documents paired image
+previews, safe metadata, captured-session checks and explicit unavailable states.
+Automatic reads require a bounded-download backend. Inputs are capped at 4 MiB,
+16 million pixels and an 8192-pixel edge; thumbnail output is capped at 384 pixels
+and 1 MiB, with a 15-second deadline. No dependency was added.
+
+**Observed validation:** 140 tests passed across the preview service, conflict
+dialog, operation dialog and operation service suites on the pinned Flutter
+toolchain. Coverage includes real decoding, cancellation, source replacement,
+metadata redaction, explicit decisions and narrow enlarged German/Arabic layouts.
+Decoder-format availability remains a platform capability; this increment does
+not claim additional image formats or live-provider certification.
 
 ## G04
 

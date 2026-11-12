@@ -77,13 +77,14 @@ grants. The link is transient and is not restored after restarting the app.
 | Configurable buttons and external commands with arguments | Implemented | `lib/widgets/file_command_toolbar.dart`, `lib/services/custom_toolbar_command_service.dart`; saved command/argument templates and review. |
 | Configurable main menu | Partial | Shortcuts are customizable and reflected in menus; menu structure is fixed. |
 | Command line and terminal | Implemented with platform limits | `lib/widgets/terminal_panel.dart`, `docs/terminal.md`; desktop PTY/ConPTY, SSH and sandbox-specific shells. Exact legacy key conventions differ. |
+| Preferred external terminal application | Implemented / native acceptance pending | **Added in G12.** Per-OS configuration and reviewed launch at the captured local folder, with literal arguments and stale-request checks. See [external terminal](external-terminal.md). Actual terminal-window acceptance remains per OS. |
 | Quick Open across commands, favorites, devices and rename presets | Partial | `lib/widgets/command_palette.dart` searches commands and opens managers; saved objects are not all direct searchable actions. |
 | Custom columns | Implemented | `lib/models/file_view_configuration.dart`, file-view editor; metadata columns and saved profiles. |
 | Font/color/theme customization | Implemented | Settings, theme service, file-list font controls and configurable shortcuts. |
 | Keyboard control and configurable shortcuts | Implemented | `lib/services/keyboard_shortcut_service.dart`, `lib/screens/keyboard_shortcuts.dart`; text inputs/editors retain input ownership. |
 | Show hidden files | Implemented | Pane option, menu and shortcut. |
 | Drag/drop between panes and onto folders | Implemented | Captured in-app source/destination review in `lib/services/folder_drop_service.dart`. |
-| OS desktop/file-manager drag/drop | Partial | Drop-in exists, but some routes still infer source from pane side; no native drag-out bridge found. |
+| OS desktop/file-manager drag/drop | Partial | **Incoming routing completed in G01:** captured source/destination copy review supports native files/trees and browser handles/manifests in either pane. Real OS/browser acceptance is pending; native drag-out remains G06. See [incoming drops](external-drops.md). |
 | Temporary gathering stack | Partial | Source-bound collections gather references from different folders, without a dedicated drop-stack surface. |
 | Tags | Partial | Device-local image gallery tags, ratings and labels; not general native file tags. |
 | Storage size visualization | Implemented | `lib/services/storage_scan_service.dart`, `docs/storage-analyzer.md`; treemap, sunburst, saved scans and partial-result reporting. |
@@ -174,7 +175,7 @@ implementation already handles their edge cases.
 
 | Opportunity | Concrete work still needed |
 | --- | --- |
-| Overwrite image previews and richer file details | Add bounded, source-bound previews to conflict review; retain original source/destination identity while decoding asynchronously. |
+| Overwrite image previews and richer file details | **Completed in G03.** Paired bounded previews and safe metadata retain original source/destination identity, reject stale versions and cancel late work. See [conflict review](conflict-review.md) and the [closure evidence](file-manager-gaps/01-workspace-and-interaction.md#g03). |
 | Quick Open for saved objects | Index favorites, devices, workspaces and rename presets as direct actions with captured source identity and unavailable-source handling. |
 | Configurable main-menu structure | Persist validated command identifiers and layout separately from shortcut bindings, with reset/import behavior. |
 | Temporary gathering stack | Build a dedicated drop/collect surface on existing source-bound collections; preserve original references until a reviewed transfer succeeds. |

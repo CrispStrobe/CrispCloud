@@ -6,12 +6,12 @@
 //   • General      — F-key bar, toolbar customization
 //   • Language     — system or explicit app locale
 //   • Appearance   — theme, accent colour, file-list font
-//   • Quick Search — Total Commander/Double Commander type-ahead behavior
+//   • Quick Search — configurable type-ahead behavior
 //   • Cache        — usage and size limit
 //   • Network      — proxy, TLS and provider request settings
 //   • Accessibility, Privacy, File Colors and Advanced
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,6 +39,8 @@ import '../l10n/extension_translations.dart';
 import 'extensions_dialog.dart';
 import 'keyboard_shortcut_dialog.dart';
 import '../l10n/workspace_ux_strings.dart';
+import '../l10n/external_terminal_strings.dart';
+import 'external_terminal_dialog.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -134,6 +136,12 @@ class _GeneralSection extends ConsumerWidget {
             ref,
             ref.read(activePanelProvider),
           ),
+        ),
+        ListTile(
+          key: const ValueKey('settings-external-terminal'),
+          leading: const Icon(Icons.open_in_new),
+          title: Text(ExternalTerminalStrings(context).text('title')),
+          onTap: () => showExternalTerminalDialog(context, ref),
         ),
         ListTile(
           key: const ValueKey('settings-extensions'),
@@ -298,7 +306,7 @@ class _AppearanceSection extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Section: Quick search (Total Commander / Double Commander behavior)
+// Section: Quick search and type-ahead behavior
 // ---------------------------------------------------------------------------
 
 class _QuickSearchSection extends ConsumerWidget {

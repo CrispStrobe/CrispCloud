@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/external_drop_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
@@ -34,6 +35,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
   String? destinationPath,
   FileOperationBackend? sourceBackend,
   Map<PanelFileOrigin, List<FileItem>>? sourceGroups,
+  PanelSide? externalDestinationSide,
 }) async {
   if (files.isEmpty) return null;
   final invokingSide = ref.read(activePanelProvider);
@@ -182,6 +184,7 @@ Future<FileOperationPlan?> showFileOperationDialog(
         destinationPath: destinationPath,
         sourceBackend: sourceBackend,
         onAccepted: rememberSelection,
+        externalDestinationSide: externalDestinationSide,
       ),
     );
     return result;
@@ -204,6 +207,7 @@ class FileOperationDialog extends ConsumerStatefulWidget {
     this.allowBackground = true,
     this.reviewGroup,
     this.onAccepted,
+    this.externalDestinationSide,
   });
   final PanelSide side;
   final List<FileItem> files;
@@ -219,6 +223,11 @@ class FileOperationDialog extends ConsumerStatefulWidget {
   final bool allowBackground;
   final String? reviewGroup;
   final VoidCallback? onAccepted;
+
+  /// External sources belong to the drop, not to a pane. Only this explicitly
+  /// captured destination is writable; the temporary source is never offered
+  /// as a destination and cannot be queued beyond its foreground lifetime.
+  final PanelSide? externalDestinationSide;
   @override
   ConsumerState<FileOperationDialog> createState() =>
       _FileOperationDialogState();
@@ -309,20 +318,30 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
               widget.sourceBackend!,
               isAvailable: () => _sourceOrigin!.isCurrent,
             );
-      _origins[widget.side] = _sourceOrigin!;
       final opposite = widget.side == PanelSide.local
           ? PanelSide.remote
           : PanelSide.local;
-      try {
-        _origins[opposite] =
-            widget.destinationOrigin ??
-            ref.read(panelProvider(opposite)).captureCurrentOrigin();
-      } catch (_) {
-        /* A disconnected opposite panel is not a destination. */
+      if (widget.externalDestinationSide case final destinationSide?) {
+        if (widget.sourceBackend == null || widget.destinationOrigin == null) {
+          throw StateError(
+            'An external copy requires captured source and destination storage.',
+          );
+        }
+        _origins[destinationSide] = widget.destinationOrigin!;
+        _destinationSide = destinationSide;
+      } else {
+        _origins[widget.side] = _sourceOrigin!;
+        try {
+          _origins[opposite] =
+              widget.destinationOrigin ??
+              ref.read(panelProvider(opposite)).captureCurrentOrigin();
+        } catch (_) {
+          /* A disconnected opposite panel is not a destination. */
+        }
+        _destinationSide = _origins.containsKey(opposite)
+            ? opposite
+            : widget.side;
       }
-      _destinationSide = _origins.containsKey(opposite)
-          ? opposite
-          : widget.side;
       _destination.text =
           widget.destinationPath ??
           _origins[_destinationSide]!.source.currentPath;
@@ -350,6 +369,7 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
 
   @override
   void dispose() {
+    if (widget.externalDestinationSide != null) _control.cancel();
     _destination.dispose();
     _relativeBase.dispose();
     _mask.dispose();
@@ -836,8 +856,18 @@ class _FileOperationDialogState extends ConsumerState<FileOperationDialog> {
                 if (_sourceOrigin != null)
                   Text(
                     context.commanderTr("From {0} · original item paths", [
-                      sourceBackend?.label ?? _sourceOrigin!.source.displayName,
+                      widget.externalDestinationSide != null
+                          ? ExternalDropStrings(context).text('files')
+                          : sourceBackend?.label ??
+                                _sourceOrigin!.source.displayName,
                     ]),
+                  ),
+                if (widget.externalDestinationSide != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      ExternalDropStrings(context).text('foreground'),
+                    ),
                   ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<PanelSide>(
