@@ -1,8 +1,8 @@
 # Actual-host Office acceptance evidence
 
 This evidence was collected at app commit
-`1c57245d9174fdd68dba6f6a499eae840e54fed1`, with suite source
-`3e4502152d4b6c99d164f621b5271ba4b0a7ec71` and all 378 selected vendor files
+`0bbb7f1fc5ed2a1be8ef7a94acf23ce7c4f7d715`, with suite source
+`c8d5ba3cfddf8c6fd3fa736deab992be1e0cc3aa` and all 378 selected vendor files
 verified. The source and dependency declarations were unchanged throughout the
 actual collection.
 
