@@ -34,11 +34,19 @@ class BatchRenameDialog extends ConsumerStatefulWidget {
     required this.parentRef,
     required this.side,
     required this.files,
+    this.initialOptions,
+    this.initialPresetName,
+    this.capturedOrigin,
+    this.capturedDirectory,
   });
 
   final WidgetRef parentRef;
   final PanelSide side;
   final List<FileItem> files;
+  final MultiRenameOptions? initialOptions;
+  final String? initialPresetName;
+  final PanelFileOrigin? capturedOrigin;
+  final String? capturedDirectory;
 
   @override
   ConsumerState<BatchRenameDialog> createState() => _BatchRenameDialogState();
@@ -107,9 +115,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
     super.initState();
     _files = List.of(widget.files);
     _panel = ref.read(panelProvider(widget.side));
-    _directory = _panel.currentPath;
+    _directory = widget.capturedDirectory ?? _panel.currentPath;
     try {
-      _origin = _panel.captureOperationOrigin(_files);
+      _origin = widget.capturedOrigin ?? _panel.captureOperationOrigin(_files);
+      if (_origin?.isCurrent == false) {
+        throw StateError('The original storage account disconnected. Reconnect it before reviewing this rename.');
+      }
       if (_origin == null) {
         _originError = 'These items no longer have a verified storage source. Refresh the panel.';
       } else if (_origin!.source.isLocal && !kIsWeb) {
@@ -121,6 +132,13 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
       }
     } catch (error) {
       _originError = error.toString();
+    }
+    if (widget.initialOptions case final options?) {
+      _setOptions(options);
+      if (widget.initialPresetName case final name?) {
+        _presets = {name: options};
+        _preset = name;
+      }
     }
     _loadPresets();
   }
@@ -1467,7 +1485,12 @@ class _BatchRenameDialogState extends ConsumerState<BatchRenameDialog> {
   Future<void> _loadPresets() async {
     try {
       final presets = await _presetStore.load();
-      if (mounted) setState(() => _presets = presets);
+      if (mounted) {
+        setState(() {
+          _presets = presets;
+          if (_preset != null && !_presets.containsKey(_preset)) _preset = null;
+        });
+      }
     } catch (error) {
       _log.warn('Could not load multi-rename presets', error);
       if (mounted) setState(() => _message = 'Could not load presets: $error');

@@ -49,7 +49,7 @@ checks under G50/G51. Native drag-out remains a separate G06 gap.
 
 ### Direct Quick Open actions
 
-**Status:** Implementing. **Dependencies:** None.
+**Status:** Closed for the direct saved-item workflow. **Dependencies:** Existing source/device availability.
 
 **Scope:** Search and invoke saved paths, sources, devices, workspaces and rename presets with original-source validation.
 
@@ -64,6 +64,20 @@ checks under G50/G51. Native drag-out remains a separate G06 gap.
 - Search, keyboard activation and narrow/localized layouts work; a preset opens a populated rename review and a workspace preserves independent pane intent.
 
 **Starting points:** lib/widgets/command_palette.dart; bookmarks/source/workspace providers; RenamePresetStore.
+
+**Delivered:** [Quick Open](../quick-open.md) includes searchable favorites,
+connected sources, local devices, workspaces and rename presets. Stable item IDs
+retain the highlighted target across updates. Captured-source and noninteractive
+restoration guards run before and after asynchronous work; stale or failed tab
+loads stop subsequent workspace changes. Presets open reviewed rename previews.
+No dependency was added.
+
+**Observed validation:** All 193 tests passed across nine Quick Open,
+workspace/rename suites and three file-conversion suites. Coverage includes
+same-label accounts, replaced sessions, locked tabs without access pickers,
+collection-mark saves, explicit load failures, newer navigation, keyboard
+activation, localized layouts and preset preview without writes. Focused
+analysis has no errors or warnings. New network discovery remains G30.
 
 ## G03
 

@@ -78,7 +78,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Configurable main menu | Partial | Shortcuts are customizable and reflected in menus; menu structure is fixed. |
 | Command line and terminal | Implemented with platform limits | `lib/widgets/terminal_panel.dart`, `docs/terminal.md`; desktop PTY/ConPTY, SSH and sandbox-specific shells. Exact legacy key conventions differ. |
 | Preferred external terminal application | Implemented / native acceptance pending | **Added in G12.** Per-OS configuration and reviewed launch at the captured local folder, with literal arguments and stale-request checks. See [external terminal](external-terminal.md). Actual terminal-window acceptance remains per OS. |
-| Quick Open across commands, favorites, devices and rename presets | Partial | `lib/widgets/command_palette.dart` searches commands and opens managers; saved objects are not all direct searchable actions. |
+| Quick Open across commands, favorites, devices and rename presets | Implemented | **Added in G02.** Saved paths, sources, existing devices, workspaces and rename presets are direct searchable actions with captured identity and unavailable-target handling. See [Quick Open](quick-open.md). |
 | Custom columns | Implemented | `lib/models/file_view_configuration.dart`, file-view editor; metadata columns and saved profiles. |
 | Font/color/theme customization | Implemented | Settings, theme service, file-list font controls and configurable shortcuts. |
 | Keyboard control and configurable shortcuts | Implemented | `lib/services/keyboard_shortcut_service.dart`, `lib/screens/keyboard_shortcuts.dart`; text inputs/editors retain input ownership. |
@@ -176,7 +176,7 @@ implementation already handles their edge cases.
 | Opportunity | Concrete work still needed |
 | --- | --- |
 | Overwrite image previews and richer file details | **Completed in G03.** Paired bounded previews and safe metadata retain original source/destination identity, reject stale versions and cancel late work. See [conflict review](conflict-review.md) and the [closure evidence](file-manager-gaps/01-workspace-and-interaction.md#g03). |
-| Quick Open for saved objects | Index favorites, devices, workspaces and rename presets as direct actions with captured source identity and unavailable-source handling. |
+| Quick Open for saved objects | **Completed in G02.** Direct actions retain source identity, validate original tab restoration and open rename review without mutations. See [Quick Open](quick-open.md). |
 | Configurable main-menu structure | Persist validated command identifiers and layout separately from shortcut bindings, with reset/import behavior. |
 | Temporary gathering stack | Build a dedicated drop/collect surface on existing source-bound collections; preserve original references until a reviewed transfer succeeds. |
 | UUE/XXE/MIME file conversion | Implement streaming codecs and verified output publication; define MIME attachment/header scope before exposing the command. |
