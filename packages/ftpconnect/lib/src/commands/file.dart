@@ -80,51 +80,67 @@ class FTPFile {
     // Data Transfer Socket
     int lPort = Utils.parsePort(response.message, _socket.supportIPV6);
     _socket.logger.log('Opening DataSocket to Port $lPort');
-    Socket dataSocket = await Socket.connect(
-      _socket.host,
-      lPort,
-      timeout: Duration(seconds: _socket.timeout),
-    );
-    // Test if second socket connection accepted or not
-    response = await _socket.readResponse();
-    //some server return two lines 125 and 226 for transfer finished
-    bool isTransferCompleted = response.isSuccessCode();
-    if (!isTransferCompleted && response.code != 125 && response.code != 150) {
-      dataSocket.destroy();
-      throw FTPConnectException('Connection refused. ', response.message);
-    }
-    dataSocket = await _socket.protectDataSocket(dataSocket);
-
-    // Changed to listen mode instead so that it's possible to send information back on downloaded amount
-    _socket.logger.log('Start downloading...');
-    var sink = fLocalFile.openWrite(mode: FileMode.writeOnly);
-    var received = 0;
-    await dataSocket.listen((data) {
-      sink.add(data);
-      if (onProgress != null) {
-        received += data.length;
-        var percent = ((received / fileSize) * 100).toStringAsFixed(2);
-        //in case that the file size is 0, then pass directly 100
-        double percentVal = double.tryParse(percent) ?? 100;
-        if (percentVal.isInfinite || percentVal.isNaN) percentVal = 100;
-        onProgress(percentVal, received, fileSize);
-      }
-    }).asFuture();
-
-    await dataSocket.close();
-    await sink.flush();
-    await sink.close();
-
-    if (!isTransferCompleted) {
-      //Test if All data are well transferred
+    final dataConnection = await _socket.openDataSocket(lPort);
+    try {
+      // Test if second socket connection accepted or not
       response = await _socket.readResponse();
-      if (!response.isSuccessCode()) {
-        throw FTPConnectException('Transfer Error.', response.message);
+      //some server return two lines 125 and 226 for transfer finished
+      bool isTransferCompleted = response.isSuccessCode();
+      if (!isTransferCompleted &&
+          response.code != 125 &&
+          response.code != 150) {
+        throw FTPConnectException('Connection refused. ', response.message);
       }
-    }
+      final dataSocket = await _socket.protectDataSocket(dataConnection);
 
-    _socket.logger.log('File Downloaded!');
-    return true;
+      // Changed to listen mode instead so that it's possible to send information back on downloaded amount
+      _socket.logger.log('Start downloading...');
+      final sink = fLocalFile.openWrite(mode: FileMode.writeOnly);
+      var received = 0;
+      var failed = false;
+      try {
+        await sink.addStream(
+          dataSocket.timeout(Duration(seconds: _socket.timeout)).map((data) {
+            received += data.length;
+            if (onProgress != null) {
+              final percent = ((received / fileSize) * 100).toStringAsFixed(2);
+              double percentVal = double.tryParse(percent) ?? 100;
+              if (percentVal.isInfinite || percentVal.isNaN) percentVal = 100;
+              onProgress(percentVal, received, fileSize);
+            }
+            return data;
+          }),
+        );
+        await sink.flush();
+      } catch (_) {
+        failed = true;
+        rethrow;
+      } finally {
+        if (failed) {
+          try {
+            await sink.close();
+          } catch (_) {
+            // Preserve the original receive/write failure during cleanup.
+          }
+        } else {
+          await sink.close();
+        }
+      }
+      await dataSocket.close();
+
+      if (!isTransferCompleted) {
+        //Test if All data are well transferred
+        response = await _socket.readResponse();
+        if (!response.isSuccessCode()) {
+          throw FTPConnectException('Transfer Error.', response.message);
+        }
+      }
+
+      _socket.logger.log('File Downloaded!');
+      return true;
+    } finally {
+      _socket.closeDataSocket(dataConnection);
+    }
   }
 
   /// Upload File [fFile] to the current directory with [remoteName] (using filename if not set)
@@ -150,51 +166,56 @@ class FTPFile {
     // Data Transfer Socket
     int iPort = Utils.parsePort(response.message, _socket.supportIPV6);
     _socket.logger.log('Opening DataSocket to Port $iPort');
-    Socket dataSocket = await Socket.connect(_socket.host, iPort);
-    //Test if second socket connection accepted or not
-    response = await _socket.readResponse();
-    //some server return two lines 125 and 226 for transfer finished
-    bool isTransferCompleted = response.isSuccessCode();
-    if (!isTransferCompleted && response.code != 125 && response.code != 150) {
-      dataSocket.destroy();
-      throw FTPConnectException('Connection refused. ', response.message);
-    }
-    dataSocket = await _socket.protectDataSocket(dataSocket);
-
-    _socket.logger.log('Start uploading...');
-
-    var received = 0;
-    int fileSize = await fFile.length();
-
-    Stream<List<int>> readStream = fFile.openRead().transform(
-      StreamTransformer.fromHandlers(
-        handleData: (data, sink) {
-          sink.add(data);
-          if (onProgress != null) {
-            received += data.length;
-            var percent = ((received / fileSize) * 100).toStringAsFixed(2);
-            //in case that the file size is 0, then pass directly 100
-            double percentVal = double.tryParse(percent) ?? 100;
-            if (percentVal.isInfinite || percentVal.isNaN) percentVal = 100;
-            onProgress(percentVal, received, fileSize);
-          }
-        },
-      ),
-    );
-
-    await dataSocket.addStream(readStream);
-    await dataSocket.flush();
-    await dataSocket.close();
-
-    if (!isTransferCompleted) {
-      // Test if All data are well transferred
+    final dataConnection = await _socket.openDataSocket(iPort);
+    try {
+      //Test if second socket connection accepted or not
       response = await _socket.readResponse();
-      if (!response.isSuccessCode()) {
-        throw FTPConnectException('Transfer Error.', response.message);
+      //some server return two lines 125 and 226 for transfer finished
+      bool isTransferCompleted = response.isSuccessCode();
+      if (!isTransferCompleted &&
+          response.code != 125 &&
+          response.code != 150) {
+        throw FTPConnectException('Connection refused. ', response.message);
       }
-    }
+      final dataSocket = await _socket.protectDataSocket(dataConnection);
 
-    _socket.logger.log('File Uploaded!');
-    return true;
+      _socket.logger.log('Start uploading...');
+
+      var received = 0;
+      int fileSize = await fFile.length();
+
+      Stream<List<int>> readStream = fFile.openRead().transform(
+        StreamTransformer.fromHandlers(
+          handleData: (data, sink) {
+            sink.add(data);
+            if (onProgress != null) {
+              received += data.length;
+              var percent = ((received / fileSize) * 100).toStringAsFixed(2);
+              //in case that the file size is 0, then pass directly 100
+              double percentVal = double.tryParse(percent) ?? 100;
+              if (percentVal.isInfinite || percentVal.isNaN) percentVal = 100;
+              onProgress(percentVal, received, fileSize);
+            }
+          },
+        ),
+      );
+
+      await dataSocket.addStream(readStream);
+      await dataSocket.flush();
+      await dataSocket.close();
+
+      if (!isTransferCompleted) {
+        // Test if All data are well transferred
+        response = await _socket.readResponse();
+        if (!response.isSuccessCode()) {
+          throw FTPConnectException('Transfer Error.', response.message);
+        }
+      }
+
+      _socket.logger.log('File Uploaded!');
+      return true;
+    } finally {
+      _socket.closeDataSocket(dataConnection);
+    }
   }
 }

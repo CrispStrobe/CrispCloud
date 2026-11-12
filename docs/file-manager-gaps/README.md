@@ -79,7 +79,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | [G34](04-connections-and-transfers.md#g34) | Cloud Files provider | Scoped | Account/API compatibility fixtures |
 | [G35](04-connections-and-transfers.md#g35) | Managed cloud filesystem integration | Platform research | Apple entitlements; target device |
 | [G36](04-connections-and-transfers.md#g36) | Local synced-file sharing links | Scoped | Provider/account mapping; explicit share capability |
-| [G37](04-connections-and-transfers.md#g37) | FTP stalled-handshake cleanup | Scoped | Cancelable native socket ownership |
+| [G37](04-connections-and-transfers.md#g37) | FTP stalled-handshake cleanup | Closed: owned transport scope | Generic pre-subscription queue-stop propagation remains explicit |
 | [G38](04-connections-and-transfers.md#g38) | Browser protocol access | Architecture research | Gateway deployment/trust model |
 | [G39](05-native-platforms-and-release.md#g39) | Native share targets | Scoped | Native share bridge |
 | [G40](05-native-platforms-and-release.md#g40) | Default file-viewer registration | Platform research | Packaging/registration per OS |
@@ -113,7 +113,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G03 conflict previews | `feature/conflict-review-20261112` · `132f70e` · PR #59 | 140 tests passed across four service/widget suites; focused analysis clean | Closed for the documented bounded preview scope |
 | G12 external terminal | `feature/external-terminal-20261112` · `f798f27` · PR #60 | 45 tests passed across five suites; one existing macOS-only skip; follow-up bounds tests passed in the 118-test run | Implemented; native terminal-window acceptance pending |
 | G01 incoming drops | `feature/incoming-drop-routing-20261112` · `a452b7a` · PR #61 | 118 tests passed across six drop/operation suites and the terminal service suite; focused analysis clean | Implemented; real OS/browser drag acceptance pending |
-| G02 direct Quick Open | `feature/quick-open-actions-20261112` | 193 tests passed across nine navigation/rename suites and three conversion suites; focused analysis has no errors/warnings | Closed for the direct saved-item workflow |
+| G02 direct Quick Open | `feature/quick-open-actions-20261112` · `baccf47` · PR #63 | 193 tests passed across nine navigation/rename suites and three conversion suites; focused analysis has no errors/warnings | Closed for the direct saved-item workflow |
+| G37 FTP transport lifetime | `feature/ftp-transport-lifetime-20261112` | 145 tests passed across nine FTP/SOCKS/TLS suites, including 24 native lifetime cases | Closed for owned transport cleanup; queue API boundary documented |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

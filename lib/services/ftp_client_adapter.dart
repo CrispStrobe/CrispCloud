@@ -60,6 +60,7 @@ class FTPClientAdapter extends CloudStorageClient
   // Legacy metadata operations share this connection and are serialized.
   // Bounded data transfers use independent control and data connections.
   FTPConnect? _ftpClient;
+  FTPConnect? _pendingClient;
   String? _username;
   String? _password;
   String? _host;
@@ -212,6 +213,7 @@ class FTPClientAdapter extends CloudStorageClient
       },
       timeout: 30,
     );
+    _pendingClient = connection;
     try {
       final connected = await connection.connect();
       if (!connected) {
@@ -247,6 +249,8 @@ class FTPClientAdapter extends CloudStorageClient
         'Connection failed: $e',
         {'error': e},
       );
+    } finally {
+      if (identical(_pendingClient, connection)) _pendingClient = null;
     }
   }
 
@@ -297,12 +301,16 @@ class FTPClientAdapter extends CloudStorageClient
       session.close();
     }
     _transferSessions.clear();
-    final connection = _ftpClient;
+    final connections = {
+      _ftpClient,
+      _pendingClient,
+    }.whereType<FTPConnect>().toList();
     _ftpClient = null;
+    _pendingClient = null;
     _connecting = null;
     _authenticated = false;
     _password = null;
-    if (connection != null) {
+    for (final connection in connections) {
       try {
         await connection.disconnect();
       } catch (e) {

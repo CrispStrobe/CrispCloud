@@ -250,7 +250,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### FTP stalled-handshake cleanup
 
-**Status:** Scoped. **Dependencies:** Cancelable native socket ownership.
+**Status:** Closed for owned TCP/TLS transport cleanup. **Dependencies:** Existing native socket runtime.
 
 **Scope:** Prove and enforce underlying transport cleanup during stalled TLS upgrades.
 
@@ -265,6 +265,27 @@ capability. Required live/device checks remain visible after code implementation
 - Existing plain/implicit/explicit TLS listing and transfer suites continue to pass, with cleanup counts stable under repeated failures.
 
 **Starting points:** ftp_transfer_session.dart; packages/ftpconnect transport; existing TLS fixtures.
+
+**Delivered:** [FTP transport](../ftp-transport.md) now owns pending TCP tasks and
+raw control/data sockets across TLS upgrades. Deadlines and owner close,
+disconnect or logout physically close the transport. Late completions cannot
+revive a session; initial metadata login is owned before authentication. Stream
+cancellation observes upstream cleanup failures and closes active sinks after
+their bindings unwind. Failed legacy downloads close their output file sinks.
+TLS validation is unchanged. No dependency was added; the existing vendored
+metadata runtime retains its recorded MIT license.
+
+**Observed validation:** All 145 tests passed across nine FTP, SOCKS and TLS
+suites. The 24-case lifetime suite observes peer EOF/reset after ClientHello and
+before fixture teardown, plus sink closure after active-stream cancellation.
+Focused analysis has no errors or warnings; an independent ownership review
+found no remaining concrete defect.
+
+**API boundary:** This closes the owning transport. Queue cancellation before
+an upload subscribes or while a download sets up can still wait for the
+connection deadline because the generic provider API does not yet propagate a
+cancel token at those points. The deadline now closes the socket. Broader
+queue-stop propagation is retained as an explicit follow-up within this lane.
 
 ## G38
 

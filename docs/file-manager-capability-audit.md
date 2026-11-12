@@ -134,7 +134,7 @@ grants. The link is transient and is not restored after restarting the app.
 | --- | --- | --- |
 | SFTP, WebDAV, S3, B2, Drive, OneDrive, Dropbox, SMB | Implemented | Provider adapters and conformance tests; support varies by platform and backend capability. |
 | Multiple connections and cross-server copies | Implemented | Independent source identities and client-mediated streams. |
-| FTP and implicit FTPS | Implemented | `ftp_client_adapter.dart`, `ftp_transfer_session.dart`; implicit TLS still begins before the greeting. **Certificate/data-protection enforcement was strengthened on this branch** in the bounded transfer path and the locally retained metadata runtime. See [FTP transport](ftp-transport.md). |
+| FTP and implicit FTPS | Implemented | `ftp_client_adapter.dart`, `ftp_transfer_session.dart`; implicit TLS still begins before the greeting. Certificate/data-protection enforcement covers transfer and metadata paths. **G37 adds physical TCP/TLS cleanup on deadline or owner close/logout**, proven by peer-closure fixtures. See [FTP transport](ftp-transport.md). |
 | Explicit FTP over TLS | Missing | **Added.** Saved security mode, localized selector and port migration; `AUTH TLS` before login, followed by verified TLS and protected passive data channels. Failed negotiation and invalid certificates stop the connection. |
 | HTTP proxy for HTTP cloud traffic | Implemented | `lib/services/proxy_service.dart`; does not automatically cover direct FTP/SSH sockets. |
 | SOCKS5 | Incorrectly exposed | **Added and verified.** `socks5_connector.dart`, `socks5_socket.dart` and `proxy_service.dart` implement native HTTP/HTTPS tunneling instead of the baseline HTTP `PROXY` directive. Scope includes CONNECT, remote DNS, optional password authentication and configured host bypasses; no SOCKS4, UDP, direct FTP/SSH/SMB or browser transport claim. |
@@ -247,7 +247,8 @@ application behavior or acceptance on all native platforms. The JavaScript
 release web build succeeded. Its optional WebAssembly dry run
 failed with exit 247, so this report does not establish WebAssembly support.
 Compilation does not establish browser behavior for every workflow.
-FTP-specific proxies, FXP and byte-offset resume remain absent. The stronger
-physical transport-cleanup tests during stalled TLS negotiation apply to the
-SOCKS implementation; see [FTP transport](ftp-transport.md) for its separate
-verification boundary.
+FTP-specific proxies, FXP and byte-offset resume remain absent. G37 now adds
+observed physical FTP transport cleanup during stalled TLS negotiation,
+including pending login and data channels. Owner close/logout and deadlines
+are covered; generic pre-subscription queue-stop propagation retains the
+separate [FTP API boundary](ftp-transport.md).

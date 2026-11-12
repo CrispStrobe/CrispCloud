@@ -4,6 +4,7 @@ import 'dart:io';
 
 import '/src/ftp_reply.dart';
 import '../ftpconnect.dart';
+import '../ftp_transport.dart';
 
 class FTPSocket {
   final String host;
@@ -13,7 +14,13 @@ class FTPSocket {
   final SecurityType securityType;
   final SecurityContext? securityContext;
   bool _hasSocket = false;
-  late RawSocket _socket;
+  FtpSocketTransport? _transport;
+  FtpSocketTransport? _connectingTransport;
+  final _dataTransports = <FtpSocketTransport>{};
+  int _pendingResponses = 0;
+  RawSocket get _socket =>
+      _transport?.raw ??
+      (throw FTPConnectException('The FTP connection is closed.'));
   TransferMode transferMode = TransferMode.passive;
   TransferType _transferType = TransferType.auto;
   ListCommand listCommand = ListCommand.mlsd;
@@ -28,20 +35,46 @@ class FTPSocket {
     this.securityContext,
   });
 
-  /// Negotiate private data channels with the same hostname/trust policy as
-  /// the control connection. No invalid-certificate callback is installed.
-  Future<Socket> protectDataSocket(Socket socket) async {
-    if (securityType == SecurityType.ftp) return socket;
+  /// Register ownership before TCP/TLS awaits so disconnect can always stop
+  /// a pending passive connection, including a never-finishing TLS handshake.
+  Future<FtpSocketTransport> openDataSocket(int port) async {
+    if (!_hasSocket || _transport?.isClosed != false) {
+      throw FTPConnectException('The FTP connection is closed.');
+    }
+    final data = FtpSocketTransport();
+    _dataTransports.add(data);
     try {
-      return await SecureSocket.secure(
-        socket,
-        host: host,
-        context: securityContext,
-      ).timeout(Duration(seconds: timeout));
+      await data.connect(
+        _socket.remoteAddress,
+        port,
+        timeout: Duration(seconds: timeout),
+      );
+      return data;
     } catch (_) {
-      socket.destroy();
+      closeDataSocket(data);
       rethrow;
     }
+  }
+
+  /// Negotiate private data channels with the same hostname/trust policy as
+  /// the control connection. No invalid-certificate callback is installed.
+  Future<Socket> protectDataSocket(FtpSocketTransport data) async {
+    if (!_dataTransports.contains(data)) {
+      throw FTPConnectException('The FTP data connection is closed.');
+    }
+    if (securityType != SecurityType.ftp) {
+      await data.secure(
+        host,
+        timeout: Duration(seconds: timeout),
+        securityContext: securityContext,
+      );
+    }
+    return data.socket;
+  }
+
+  void closeDataSocket(FtpSocketTransport data) {
+    _dataTransports.remove(data);
+    data.close();
   }
 
   void _validateCommand(String command) {
@@ -66,8 +99,25 @@ class FTPSocket {
   ///
   /// Blocks until data is received!
   Future<FTPReply> readResponse() async {
+    _pendingResponses++;
+    try {
+      return await _readResponse();
+    } finally {
+      _pendingResponses--;
+    }
+  }
+
+  Future<FTPReply> _readResponse() async {
+    final transport = _transport;
+    if (transport == null || transport.isClosed) {
+      throw FTPConnectException('The FTP connection is closed.');
+    }
+    final elapsed = Stopwatch()..start();
     StringBuffer res = StringBuffer();
-    await Future.doWhile(() async {
+    while (true) {
+      if (!identical(transport, _transport) || transport.isClosed) {
+        throw FTPConnectException('The FTP connection is closed.');
+      }
       bool dataReceivedSuccessfully = false;
 
       //this is used to read all data for specific command line
@@ -75,16 +125,16 @@ class FTPSocket {
         res.write(Utf8Codec().decode(_socket.read()!).trim());
         dataReceivedSuccessfully = true;
       }
-      if (dataReceivedSuccessfully) return false;
-
-      await Future.delayed(Duration(milliseconds: 300));
-      return true;
-    }).timeout(
-      Duration(seconds: timeout),
-      onTimeout: () {
+      if (dataReceivedSuccessfully) break;
+      if (elapsed.elapsed >= Duration(seconds: timeout)) {
+        transport.close();
         throw FTPConnectException('Timeout reached for Receiving response !');
-      },
-    );
+      }
+      await Future.any<void>([
+        Future<void>.delayed(const Duration(milliseconds: 30)),
+        transport.whenClosed,
+      ]);
+    }
 
     String r = res.toString();
     if (r.startsWith("\n")) r = r.replaceFirst("\n", "");
@@ -133,20 +183,39 @@ class FTPSocket {
     logger.log('Connecting...');
 
     final timeout = Duration(seconds: this.timeout);
+    if (_transport?.isClosed == false) {
+      throw FTPConnectException(
+          'An FTP connection is already open or pending.');
+    }
+    final transport = FtpSocketTransport();
+    _transport = transport;
+    _connectingTransport = transport;
+    _hasSocket = false;
+    void checkConnection() {
+      if (!identical(_transport, transport) || transport.isClosed) {
+        throw FTPConnectException('The original FTP connection was closed.');
+      }
+    }
+
+    Future<FTPReply> send(String command) {
+      checkConnection();
+      return sendCommand(command);
+    }
 
     try {
-      // FTPS starts secure
-      if (securityType == SecurityType.ftps) {
-        _socket = await RawSecureSocket.connect(
-          host,
-          port,
-          timeout: timeout,
-          context: securityContext,
-        );
-      } else {
-        _socket = await RawSocket.connect(host, port, timeout: timeout);
-      }
+      await transport.connect(
+        host,
+        port,
+        timeout: timeout,
+        tlsHost: securityType == SecurityType.ftps ? host : null,
+        securityContext: securityContext,
+      );
+      checkConnection();
     } catch (e) {
+      transport.close();
+      if (identical(_connectingTransport, transport)) {
+        _connectingTransport = null;
+      }
       throw FTPConnectException(
         'Could not connect to $host ($port)',
         e.toString(),
@@ -157,29 +226,30 @@ class FTPSocket {
     try {
       logger.log('Connection established, waiting for welcome message...');
       final greeting = await readResponse();
+      checkConnection();
       if (greeting.code != 220) {
         throw FTPConnectException('FTP greeting refused', greeting.message);
       }
 
       // Explicit TLS upgrades after the greeting, before credentials.
       if (securityType == SecurityType.ftpes) {
-        final reply = await sendCommand('AUTH TLS');
+        final reply = await send('AUTH TLS');
         if (reply.code != 234) {
           throw FTPConnectException(
             'FTP server refused AUTH TLS',
             reply.message,
           );
         }
-        _socket = await RawSecureSocket.secure(
-          _socket,
-          host: host,
-          context: securityContext,
-        ).timeout(timeout);
+        await transport.secure(
+          host,
+          timeout: timeout,
+          securityContext: securityContext,
+        );
       }
 
       if (securityType != SecurityType.ftp) {
         for (final command in ['PBSZ 0', 'PROT P']) {
-          final reply = await sendCommand(command);
+          final reply = await send(command);
           if (reply.code != 200) {
             throw FTPConnectException(
               'FTP TLS data protection refused',
@@ -190,14 +260,14 @@ class FTPSocket {
       }
 
       // Send Username
-      FTPReply lResp = await sendCommand('USER $user');
+      FTPReply lResp = await send('USER $user');
 
       //password required
       if (lResp.code == 331) {
-        lResp = await sendCommand('PASS $pass');
+        lResp = await send('PASS $pass');
         if (lResp.code == 332) {
           if (account == null) throw FTPConnectException('Account required');
-          lResp = await sendCommand('ACCT $account');
+          lResp = await send('ACCT $account');
           if (!lResp.isSuccessCode()) {
             throw FTPConnectException('Wrong Account', lResp.message);
           }
@@ -207,7 +277,7 @@ class FTPSocket {
         //account required
       } else if (lResp.code == 332) {
         if (account == null) throw FTPConnectException('Account required');
-        lResp = await sendCommand('ACCT $account');
+        lResp = await send('ACCT $account');
         if (!lResp.isSuccessCode()) {
           throw FTPConnectException('Wrong Account', lResp.message);
         }
@@ -215,13 +285,17 @@ class FTPSocket {
         throw FTPConnectException('Wrong username $user', lResp.message);
       }
 
+      checkConnection();
       logger.log('Connected!');
       return true;
     } catch (_) {
-      _hasSocket = false;
-      _socket.shutdown(SocketDirection.both);
-      await _socket.close();
+      if (identical(_transport, transport)) _hasSocket = false;
+      transport.close();
       rethrow;
+    } finally {
+      if (identical(_connectingTransport, transport)) {
+        _connectingTransport = null;
+      }
     }
   }
 
@@ -263,16 +337,29 @@ class FTPSocket {
   // Disconnect from the FTP Server
   Future<bool> disconnect() async {
     logger.log('Disconnecting...');
-    if (!_hasSocket) return true;
+    final transport = _transport;
+    if (transport == null) return true;
+    final interrupted = _connectingTransport != null ||
+        _dataTransports.isNotEmpty ||
+        _pendingResponses > 0;
+    for (final data in _dataTransports.toList()) {
+      closeDataSocket(data);
+    }
 
     try {
-      await sendCommand('QUIT');
+      // QUIT cannot be sent in the middle of TLS negotiation or while another
+      // command owns the transfer reply. Cancellation closes immediately.
+      if (!interrupted && _hasSocket && !transport.isClosed) {
+        await sendCommand('QUIT');
+      }
     } catch (ignored) {
       // Ignore
     } finally {
-      _hasSocket = false;
-      _socket.shutdown(SocketDirection.both);
-      await _socket.close();
+      transport.close();
+      if (identical(_transport, transport)) {
+        _hasSocket = false;
+        _transport = null;
+      }
     }
 
     logger.log('Disconnected!');
