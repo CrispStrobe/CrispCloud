@@ -163,10 +163,16 @@ bool isTextEditableName(String name) {
   return !name.contains('.') || textEditableExtensions.contains(ext);
 }
 
+bool isKeePassFileName(String name) => _extensionOf(name) == 'kdbx';
+
+bool isLegacyWordFileName(String name) =>
+    const {'doc', 'dot'}.contains(_extensionOf(name));
+
 /// True when F4 can open [name] in an editor with save support.
 bool isEditableInBuiltInEditor(String name) {
   final lower = name.toLowerCase();
   if (lower.endsWith('.pdf')) return true;
+  if (isKeePassFileName(lower)) return true;
   if (isImageEditorFileName(lower)) return true;
   final mediaKind = mediaKindForFileName(lower);
   if (mediaKind != null) return MediaCapabilities.canEdit(mediaKind);

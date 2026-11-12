@@ -70,6 +70,9 @@ import 'internal_viewer_views.dart';
 import 'pptx_slide_viewer.dart';
 import 'preview_media.dart';
 import 'xml_tree_view.dart';
+import 'keepass_editor_dialog.dart';
+import 'legacy_word_conversion_action.dart';
+import '../l10n/legacy_word_conversion_strings.dart';
 import '../l10n/internal_viewer_strings.dart';
 import '../l10n/office_preview_strings.dart';
 import '../l10n/file_bytes_error_strings.dart';
@@ -195,19 +198,40 @@ class _ViewerSessionHostState extends ConsumerState<_ViewerSessionHost> {
   }
 
   @override
-  Widget build(BuildContext context) => InternalViewerDialog(
-    key: ValueKey(_index),
-    file: _items[_index].file,
-    side: widget.side,
-    origin: _items[_index].origin,
-    bytesOverride: widget.bytesOverride,
-    displayName: widget.displayName,
-    onPrevious: _index > 0 ? () => _go(-1) : null,
-    onNext: _index + 1 < _items.length ? () => _go(1) : null,
-    positionLabel: _items.length > 1
+  Widget build(BuildContext context) {
+    final item = _items[_index];
+    final onPrevious = _index > 0 ? () => _go(-1) : null;
+    final onNext = _index + 1 < _items.length ? () => _go(1) : null;
+    final position = _items.length > 1
         ? '${_index + 1} / ${_items.length}'
-        : null,
-  );
+        : null;
+    if (isKeePassFileName(widget.displayName ?? item.file.name)) {
+      return KeePassEditorDialog(
+        key: ValueKey(_index),
+        file: widget.bytesOverride != null && widget.displayName != null
+            ? item.file.copyWith(name: widget.displayName)
+            : item.file,
+        side: widget.side,
+        origin: item.origin,
+        bytesOverride: widget.bytesOverride,
+        readOnly: true,
+        onPrevious: onPrevious,
+        onNext: onNext,
+        positionLabel: position,
+      );
+    }
+    return InternalViewerDialog(
+      key: ValueKey(_index),
+      file: item.file,
+      side: widget.side,
+      origin: item.origin,
+      bytesOverride: widget.bytesOverride,
+      displayName: widget.displayName,
+      onPrevious: onPrevious,
+      onNext: onNext,
+      positionLabel: position,
+    );
+  }
 }
 
 class InternalViewerDialog extends ConsumerStatefulWidget {
@@ -2129,6 +2153,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                               _tailEnabled
                                   ? Icons.pause_circle_outline
                                   : Icons.vertical_align_bottom,
+                            ),
+                          ),
+                        if (isLegacyWordFileName(_viewName) &&
+                            widget.bytesOverride == null &&
+                            _origin?.isCurrent == true)
+                          IconButton(
+                            tooltip: LegacyWordConversionStrings(
+                              Localizations.localeOf(context),
+                            ).title,
+                            icon: const Icon(Icons.transform),
+                            onPressed: () => showLegacyWordConversionForFile(
+                              context,
+                              ref,
+                              widget.file,
+                              widget.side,
+                              origin: _origin,
                             ),
                           ),
                         if (_canEdit)

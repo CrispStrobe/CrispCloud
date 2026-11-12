@@ -41,7 +41,8 @@ import '../services/file_operation_backend.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
 import '../services/save_coordinator.dart';
-import '../utils/file_editability.dart' show isTextEditableName;
+import '../utils/file_editability.dart'
+    show isTextEditableName, isKeePassFileName, isLegacyWordFileName;
 import 'code_editor_context_menu.dart';
 import 'code_editor_find_panel.dart';
 import 'code_editor_status_bar.dart';
@@ -49,6 +50,8 @@ import 'image_editor_dialog.dart';
 import 'media_editor_dialog.dart';
 import 'office_editor_dialog.dart';
 import 'pdf_editor_dialog.dart';
+import 'keepass_editor_dialog.dart';
+import 'legacy_word_conversion_action.dart';
 
 /// Opens a full-screen editor dialog for the given file.
 Future<void> showFileEditorDialog(
@@ -61,6 +64,14 @@ Future<void> showFileEditorDialog(
   if (file.isFolder) return;
   try {
     if (!forceText) {
+      if (isKeePassFileName(file.name)) {
+        await showKeePassEditorDialog(context, ref, file, side);
+        return;
+      }
+      if (isLegacyWordFileName(file.name)) {
+        await showLegacyWordConversionForFile(context, ref, file, side);
+        return;
+      }
       if (isImageEditorFileName(file.name)) {
         await showImageEditorDialog(context, ref, file, side);
         return;

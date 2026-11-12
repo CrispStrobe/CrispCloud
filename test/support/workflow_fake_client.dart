@@ -9,6 +9,7 @@ class WorkflowFakeClient extends CloudStorageClient {
   final Map<String, DateTime> modified = {};
   final Set<String> directories = {'/'};
   final List<String> writes = [];
+  final List<String> downloads = [];
   bool failUploads = false;
   bool current = true;
 
@@ -76,8 +77,13 @@ class WorkflowFakeClient extends CloudStorageClient {
   Future<Uint8List> downloadFileBytes(
     String path, {
     Function(int, int)? onProgress,
-  }) async =>
-      Uint8List.fromList(files[path] ?? (throw StateError('Missing $path')));
+  }) async {
+    downloads.add(path);
+    return Uint8List.fromList(
+      files[path] ?? (throw StateError('Missing $path')),
+    );
+  }
+
   @override
   Stream<List<int>> downloadStream(
     String path, {
