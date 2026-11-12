@@ -55,6 +55,9 @@ enum ViewerMode {
   /// Office document (DOCX/XLSX/PPTX/ODT/ODS/ODP/EPUB) — extracted text.
   office,
 
+  /// Saved email (.eml/.msg), with decoded headers, body and attachments.
+  email,
+
   /// Archive container (.zip/.tar/.gz) — member listing.
   archive,
 
@@ -311,6 +314,7 @@ class InternalViewerService {
           '.vcxproj',
           '.props',
           '.targets',
+          '.kbdx',
         ],
         ViewerMode.image: [
           '.png',
@@ -385,9 +389,12 @@ class InternalViewerService {
         ViewerMode.office: [
           '.ppt',
           '.pps',
+          '.doc',
+          '.dot',
           '.docx',
           '.docm',
           '.dotx',
+          '.dotm',
           '.xlsx',
           '.xlsm',
           '.xltx',
@@ -399,6 +406,7 @@ class InternalViewerService {
           '.odp',
           '.epub',
         ],
+        ViewerMode.email: ['.eml', '.msg'],
         ViewerMode.archive: [
           '.zip',
           '.jar',
@@ -670,6 +678,11 @@ class InternalViewerService {
 
       case ViewerMode.office:
         mimeType = _mimeForOffice(filename.toLowerCase());
+
+      case ViewerMode.email:
+        mimeType = filename.toLowerCase().endsWith('.msg')
+            ? 'application/vnd.ms-outlook'
+            : 'message/rfc822';
 
       case ViewerMode.archive:
         mimeType = _mimeForArchive(filename.toLowerCase());
@@ -1071,7 +1084,11 @@ class InternalViewerService {
   static String _mimeForOffice(String lower) {
     final ext = _extensionOf(lower);
     return switch (ext) {
-      '.docx' || '.docm' || '.dotx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.doc' || '.dot' => 'application/msword',
+      '.docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.docm' => 'application/vnd.ms-word.document.macroEnabled.12',
+      '.dotx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+      '.dotm' => 'application/vnd.ms-word.template.macroEnabled.12',
       '.xlsx' || '.xlsm' || '.xltx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       '.pptx' || '.pptm' || '.potx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       '.odt' => 'application/vnd.oasis.opendocument.text',

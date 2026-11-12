@@ -124,8 +124,9 @@ Future<_WordSnapshot> _readSnapshot(Uint8List bytes, String name) async {
       if (type == null) continue;
       if (element.name.local == 'Override') {
         final part = element.getAttribute('PartName');
-        if (part != null)
+        if (part != null) {
           overrides[part.startsWith('/') ? part.substring(1) : part] = type;
+        }
       } else if (element.name.local == 'Default') {
         final extension = element.getAttribute('Extension');
         if (extension != null) defaults[extension.toLowerCase()] = type;

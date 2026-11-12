@@ -80,7 +80,8 @@ class _PathFavoritesButtonState extends ConsumerState<PathFavoritesButton> {
     final bookmarks = ref.watch(bookmarksProvider);
     final strings = PathFavoritesStrings(context);
     final theme = Theme.of(context);
-    final touchTarget = theme.platform == TargetPlatform.android ||
+    final touchTarget =
+        theme.platform == TargetPlatform.android ||
         theme.platform == TargetPlatform.iOS;
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
@@ -459,7 +460,7 @@ class _FavoriteFormState extends ConsumerState<_FavoriteForm> {
           failed != null &&
           bookmarks.bookmarks.any((item) => item.identity == failed.identity);
       if (widget.editing || retry) {
-        await bookmarks.replace(retry ? failed! : initial, replacement);
+        await bookmarks.replace(retry ? failed : initial, replacement);
       } else {
         if (bookmarks.bookmarks.any(
           (item) =>

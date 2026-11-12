@@ -1,9 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/services/office_document_service.dart';
 import 'package:crisp_cloud/services/word_package_preservation.dart';
+import 'package:crisp_cloud/models/file_item.dart';
+import 'package:crisp_cloud/models/panel_side.dart';
+import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 import 'package:xml/xml.dart' as xml;
@@ -45,7 +51,7 @@ Uint8List _fixture(String extension) {
       'application/vnd.ms-office.vbaProject',
     ),
   ]);
-  contentTypes.rootElement.children.add(macroType);
+  if (extension != 'dotx') contentTypes.rootElement.children.add(macroType);
   parts['[Content_Types].xml'] = Uint8List.fromList(
     utf8.encode(contentTypes.toXmlString()),
   );
@@ -217,5 +223,43 @@ void main() {
         ),
       ),
     );
+  });
+
+  testWidgets('DOTM opens the real Word editor', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1100, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: OfficeEditorDialog(
+              file: FileItem(
+                name: 'template.dotm',
+                path: '/template.dotm',
+                isFolder: false,
+              ),
+              side: PanelSide.local,
+              bytesOverride: _fixture('dotm'),
+            ),
+          ),
+        ),
+      );
+      // The bounded archive reader completes real asynchronous work; the Word
+      // caret continues animating once loaded. Wait for the editor itself,
+      // rather than for all frames to stop or for fake timers to drain.
+      final elapsed = Stopwatch()..start();
+      while (find.byType(QudsWordEditor).evaluate().isEmpty) {
+        await tester.pump(const Duration(milliseconds: 20));
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+        if (elapsed.elapsed > const Duration(seconds: 15)) {
+          throw TimeoutException('DOTM did not open in the Word editor.');
+        }
+      }
+      expect(find.byType(QudsWordEditor), findsOneWidget);
+      expect(find.textContaining('cannot be edited safely'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
   });
 }

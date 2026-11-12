@@ -43,7 +43,7 @@ String extractLegacyWordText(Uint8List bytes) {
   final longStart = cslwOffset + 2;
   final characterCount = fib.u32(longStart + 3 * 4);
   if (characterCount > maxCharacters) {
-    throw const FormatException('Word text exceeds the 4 MiB preview limit.');
+    throw const FormatException('Word text exceeds the preview size limit.');
   }
   final pairCountOffset = longStart + cslw * 4;
   final pairCount = fib.u16(pairCountOffset);
@@ -61,8 +61,9 @@ String extractLegacyWordText(Uint8List bytes) {
   }
   final textTable = _WordBytes(table);
   textTable.require(clxOffset, clxLength);
-  if (clxLength < 5)
+  if (clxLength < 5) {
     throw const FormatException('Word has no text piece table.');
+  }
   var position = clxOffset;
   final end = clxOffset + clxLength;
   while (position < end && table[position] == 1) {

@@ -133,10 +133,17 @@ const Set<String> textEditableExtensions = <String>{
   'config',
   // RTF is a text format even though it is markup-heavy.
   'rtf',
+  // Saved MIME messages can be edited as source while preserving byte encoding
+  // and line endings. Outlook MSG remains binary and opens in the hex editor.
+  'eml',
+  // Autodesk keyboard shortcuts are XML; this is distinct from KeePass KDBX.
+  'kbdx',
 };
 
 /// Office formats the built-in editor can actually save in place.
-const Set<String> editableOfficeExtensions = <String>{'docx', 'xlsx', 'pptx'};
+const Set<String> editableOfficeExtensions = <String>{
+  'docx', 'docm', 'dotx', 'dotm', 'xlsx', 'pptx',
+};
 
 String _extensionOf(String name) {
   final dot = name.lastIndexOf('.');

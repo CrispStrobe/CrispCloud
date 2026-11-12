@@ -29,6 +29,7 @@ import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_surface_strings.dart';
+import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
 import '../services/word_package_preservation.dart';
 import 'office_editor_find_bar.dart';
@@ -272,7 +273,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         _loading = false;
         _error =
             '${context.tr('Could not open this document')}: '
-            '${localizedFileBytesError(context, e)}';
+            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedFileBytesError(context, e)}';
       });
     }
   }
@@ -334,7 +335,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         SnackBar(
           content: Text(
             '${context.tr('Save failed')}: '
-            '${localizedProviderError(context, e)}',
+            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),

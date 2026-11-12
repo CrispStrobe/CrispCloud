@@ -569,8 +569,8 @@ void main() {
   // ---- ViewerMode enum completeness ----------------------------------------
 
   group('ViewerMode enum', () {
-    test('has 13 values', () {
-      expect(ViewerMode.values.length, 15);
+    test('has 16 values including saved email', () {
+      expect(ViewerMode.values.length, 16);
     });
 
     test('contains the original 7 modes plus the new lister modes', () {
@@ -588,6 +588,7 @@ void main() {
           'font',
           'csv',
           'office',
+          'email',
           'archive',
           'unsupported',
         ]),
@@ -920,6 +921,34 @@ void main() {
       expect(_svc.detectMode('sheet.xlsx'), ViewerMode.office);
       expect(_svc.detectMode('slides.pptx'), ViewerMode.office);
       expect(_svc.detectMode('book.epub'), ViewerMode.office);
+    });
+
+    test('legacy Word and macro/template documents route to Office', () {
+      for (final name in ['report.doc', 'form.DOT', 'template.dotm', 'form.dotx', 'report.docm']) {
+        expect(_svc.detectMode(name), ViewerMode.office, reason: name);
+      }
+    });
+
+    test('saved messages route to email and Autodesk keymaps to XML', () {
+      expect(_svc.detectMode('saved.eml'), ViewerMode.email);
+      expect(_svc.detectMode('OUTLOOK.MSG'), ViewerMode.email);
+      expect(_svc.detectMode('shortcuts.kbdx'), ViewerMode.xml);
+      expect(_svc.detectMode('passwords.kdbx'), ViewerMode.binary);
+    });
+
+    test('new formats retain their distinct MIME types', () {
+      final bytes = Uint8List(0);
+      for (final entry in {
+        'saved.eml': 'message/rfc822',
+        'saved.msg': 'application/vnd.ms-outlook',
+        'old.doc': 'application/msword',
+        'template.dotm': 'application/vnd.ms-word.template.macroEnabled.12',
+        'report.docm': 'application/vnd.ms-word.document.macroEnabled.12',
+        'template.dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+        'shortcuts.kbdx': 'application/xml',
+      }.entries) {
+        expect(_svc.loadContent(bytes, entry.key).mimeType, entry.value, reason: entry.key);
+      }
     });
 
     test('LICENSE/README recognized as text by basename', () {
