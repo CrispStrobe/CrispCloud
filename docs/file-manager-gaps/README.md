@@ -55,7 +55,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | [G10](02-viewing-search-and-tools.md#g10) | External remote editing | Scoped | Captured editor session; conflict review |
 | [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Scoped | G10 staging lifetime |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
-| [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Scoped | Existing operation backend |
+| [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Closed: documented streaming formats | Single-part Base64 MIME; verified exclusive-output backends only |
 | [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Scoped | Provider range capabilities |
 | [G15](02-viewing-search-and-tools.md#g15) | Nested and encrypted archive search | Scoped | G18 archive identity; reader capabilities |
 | [G16](02-viewing-search-and-tools.md#g16) | Native indexed search | Scoped | Native search bridge |
@@ -116,7 +116,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G02 direct Quick Open | `feature/quick-open-actions-20261112` · `baccf47` · PR #63 | 193 tests passed across nine navigation/rename suites and three conversion suites; focused analysis has no errors/warnings | Closed for the direct saved-item workflow |
 | G37 FTP transport lifetime | `feature/ftp-transport-lifetime-20261112` · `c8f4561` · PR #64 | 145 tests passed across nine FTP/SOCKS/TLS suites, including 24 native lifetime cases | Closed for owned transport cleanup; queue API boundary documented |
 | G04 configurable menus | `feature/configurable-menus-20261112` · `55dd210` · PR #65 | 96 tests passed across 11 menu, screen, keyboard, navigation and SQLite-runtime suites | Implemented; native presentation and keyboard acceptance pending |
-| G27 SOCKS4/4a HTTP routing | `feature/socks4-http-routing-20261112` · implementation `8c1c4fd` · PR #66 | 197 tests passed across six proxy/security/TLS suites including the final host-validation delta; focused analysis and independent review clean | Closed for native HTTP/HTTPS routing |
+| G27 SOCKS4/4a HTTP routing | `feature/socks4-http-routing-20261112` · `42ae79c` · PR #66 | 197 tests passed across six proxy/security/TLS suites including the final host-validation delta; focused analysis and independent review clean | Closed for native HTTP/HTTPS routing |
+| G13 file encoding/decoding | `feature/file-conversion-20261112` | 80 tests passed across codec, service/native-filesystem and dialog suites; no analyzer findings in new files | Closed for documented UUE/XXE and single-part MIME formats on supported exclusive-output backends |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

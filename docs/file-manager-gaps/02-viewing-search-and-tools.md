@@ -87,7 +87,7 @@ argument conventions and native window behavior are not inferred from mocks.
 
 ### UUE, XXE and MIME conversion
 
-**Status:** Scoped. **Dependencies:** Existing operation backend.
+**Status:** Closed for the documented streaming formats and exclusive-output backends. **Dependencies:** Destination capability gates remain explicit.
 
 **Scope:** Stream file encoding/decoding into verified exclusive outputs.
 
@@ -102,6 +102,29 @@ argument conventions and native window behavior are not inferred from mocks.
 - Large-file conversion is bounded and cancellable; collision review, same-source checks and recovery behavior are explicit.
 
 **Starting points:** FileOperationBackend; existing verified split/combine/publication helpers; new streaming codecs.
+
+**Delivered:** [File encoding and decoding](../file-conversion.md) defines
+streaming UUE, XXE and single-part Base64 MIME conversion. The context menu
+opens a captured-source review with an explicit new filename. All decoders
+reject unsafe embedded names before staging; safe names remain metadata.
+Full syntax validation, repeated source/output hashing, staged read-back and
+exclusive publication preserve original files and existing destinations.
+No dependency was added.
+
+**Observed validation:** All 80 codec, service and dialog tests passed, including
+a real native local-filesystem encode/decode/collision roundtrip. Tests cover
+independent vectors, all byte values, chunk boundaries, Unicode MIME names,
+malformed/truncated input, source replacement, same-size mutations, corrupt
+staging, stalled-stream cancellation and translated error/layout behavior.
+New files have no analyzer findings; the existing context-menu file retains
+three pre-existing unused-import warnings and two style findings.
+
+**Boundary retained:** MIME multipart messages, quoted-printable and filename
+continuations are explicitly unsupported. The UI converts one file in its
+captured folder, creates a new output and retains the input. Destinations without
+bounded streaming, staged verification and exclusive publication are unavailable;
+this includes the current browser-local destination contract. Native macOS
+grant acceptance remains under G50.
 
 ## G14
 
