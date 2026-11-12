@@ -284,6 +284,50 @@ void main() {
       );
     },
   );
+  test(
+    'expanded arguments and the working directory retain the launch bounds',
+    () async {
+      final host = TerminalHostFixture();
+      final expanded = ExternalTerminalConfiguration(
+        platform: 'linux',
+        executable: '/tools/terminal',
+        arguments: List.filled(64, '{directory}'),
+      );
+      for (final path in ['/${'x' * 1000}', '/${'x' * 4096}']) {
+        await expectLater(
+          ExternalTerminalService(host: host).launch(
+            expanded,
+            ExternalTerminalDirectory(
+              path: path,
+              isCurrent: () => true,
+              hasExistingAccess: () async => true,
+            ),
+          ),
+          throwsA(failure(ExternalTerminalFailure.invalidConfiguration)),
+        );
+      }
+      expect(host.checkedDirectories, isEmpty);
+      expect(host.launches, isEmpty);
+    },
+  );
+  test(
+    'escaped settings cannot save a value that exceeds the load limit',
+    () async {
+      final store = ExternalTerminalStore('linux');
+      await store.save(config());
+      final escaped = ExternalTerminalConfiguration(
+        platform: 'linux',
+        executable: '/tools/terminal',
+        arguments: List.filled(8, '\u0001' * 3000),
+      );
+      expect(jsonEncode(escaped.toJson()).length, greaterThan(65536));
+      await expectLater(
+        store.save(escaped),
+        throwsA(failure(ExternalTerminalFailure.invalidConfiguration)),
+      );
+      expect((await store.load())!.toJson(), config().toJson());
+    },
+  );
   test('all supported languages have complete terminal labels and errors', () {
     final translations = ExternalTerminalStrings.translations;
     expect(translations.keys.toSet(), {

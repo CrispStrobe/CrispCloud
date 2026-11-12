@@ -86,10 +86,27 @@ class ExternalTerminalConfiguration {
     }
   }
 
-  List<String> argumentsFor(String directory) => List.unmodifiable([
-    for (final argument in arguments)
-      argument == '{directory}' ? directory : argument,
-  ]);
+  List<String> argumentsFor(String directory) {
+    final resolved = [
+      for (final argument in arguments)
+        argument == '{directory}' ? directory : argument,
+    ];
+    if (directory.length > 4096 ||
+        directory.contains('\u0000') ||
+        resolved.any((argument) => argument.length > 4096) ||
+        executable.length +
+                directory.length +
+                resolved.fold<int>(
+                  0,
+                  (size, argument) => size + argument.length,
+                ) >
+            32768) {
+      throw const ExternalTerminalException(
+        ExternalTerminalFailure.invalidConfiguration,
+      );
+    }
+    return List.unmodifiable(resolved);
+  }
 
   Map<String, dynamic> toJson() => {
     'version': 1,
@@ -156,9 +173,15 @@ class ExternalTerminalStore {
             ExternalTerminalFailure.invalidConfiguration,
           );
         }
+        final encoded = jsonEncode(value.toJson());
+        if (encoded.length > 65536) {
+          throw const ExternalTerminalException(
+            ExternalTerminalFailure.invalidConfiguration,
+          );
+        }
         if (!await (await SharedPreferences.getInstance()).setString(
           key,
-          jsonEncode(value.toJson()),
+          encoded,
         )) {
           throw const ExternalTerminalException(
             ExternalTerminalFailure.saveFailed,
@@ -268,6 +291,7 @@ class ExternalTerminalService {
         ExternalTerminalFailure.invalidConfiguration,
       );
     }
+    final arguments = configuration.argumentsFor(directory.path);
     void check() {
       if (!directory.isCurrent()) {
         throw const ExternalTerminalException(ExternalTerminalFailure.changed);
@@ -294,11 +318,7 @@ class ExternalTerminalService {
           ExternalTerminalFailure.executableUnavailable,
         );
       }
-      await host.launch(
-        configuration.executable,
-        configuration.argumentsFor(directory.path),
-        directory.path,
-      );
+      await host.launch(configuration.executable, arguments, directory.path);
     } on ExternalTerminalException {
       rethrow;
     } catch (_) {

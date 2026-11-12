@@ -37,7 +37,10 @@ Windows configurations require a native `.exe`; batch files and common command
 interpreters are rejected. The launcher never constructs a `cd` command or a
 shell command string. Only the standalone `{directory}` placeholder is supported;
 unknown or embedded placeholders are rejected. Configuration is bounded to 64
-arguments, 4096 characters per field, and 32768 characters in total.
+arguments, 4096 UTF-16 code units per field, and 32768 code units in total. The
+resolved arguments and working directory are checked again after placeholder
+expansion. Serialized preferences have the same 65536-code-unit bound on both
+save and load, so escaping cannot produce an unreadable saved configuration.
 
 Applications differ in their folder-opening arguments and whether they reuse an
 existing window. Set arguments documented by the chosen terminal. This feature
