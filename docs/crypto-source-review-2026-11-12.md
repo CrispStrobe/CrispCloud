@@ -1069,3 +1069,21 @@ Current extracted-book integration: `1.2.3` resolves the facade and its three in
 
 
 The final sibling audit also retains the independently authored parser-53a7f0d host receipts under `docs/evidence/legacy-doc-parser-20261112/parser-53a7f0d/`. These preserve their original source attribution. The current consumer remains at canonical parser f689b4c (a descendant with CI-only fixes), and its exact source inventory remains independently verified. No runtime parser file or dependency pin is rolled back by this evidence merge.
+
+
+Historical continuation record (its original source pins and digests are retained; current source attribution remains in the manifests):
+
+### Parser 53a7f0d integration source binding
+
+The exact parser mirror now follows `53a7f0df113f0b88967f7fecd492652ad5c730d5` through Quds `09f5ec4b8eba290ff4d65678179854fb6ff6a468`. Ten additional parser implementation files bring the reviewed inventory to 371 paths. They implement bounded media previews, fixed number formats, list/table operations, positioning, image appearance and row history. The runtime dependency remains `archive`; these changes add no cryptographic implementation, native provider or network operation.
+
+The root lockfile is unchanged. The 99 Word workflow tests, 74 Python harness tests, portable JavaScript checks and installed-Office acceptance pass on this integration. Temporary test hooks were removed before the following fingerprints were calculated. Only the three source-binding digests change; all existing non-digest policy fields and distribution decisions remain byte-equivalent in value. No release or filing is performed.
+
+```json
+{
+  "inventory_sha256": "c11e150c15ca1553e3575db74fb398ce0fd7e6892fe0e7c70c07429c185815c6",
+  "pubspec_lock_sha256": "2a8c1f83455844560fb694c51d15f1b875f83a8a15b84ce083482568af4c7139",
+  "reviewed_source_sha256": "532f0d03449787b9805d3b8edc0f7c4f55f94eb5c9ad7049c587341a43f8addb"
+}
+```
+
