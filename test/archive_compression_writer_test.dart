@@ -25,6 +25,10 @@ void main() {
         final packed = encodeArchiveCompression(repeated, kind);
         expect(packed.length, lessThan(repeated.length ~/ 10));
         expect(archiveCompressionForBytes(packed), kind);
+        expect(
+          () => validateArchiveCompressionRewrite(packed, kind),
+          returnsNormally,
+        );
         final archive = await openViewerArchive(
           packed,
           name: 'content.txt${suffixes[kind]}',
@@ -151,4 +155,22 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  for (final kind in [
+    ArchiveCompressionKind.gzip,
+    ArchiveCompressionKind.xz,
+    ArchiveCompressionKind.zstd,
+  ]) {
+    test(
+      '${kind.name} refuses metadata-losing concatenated frame rewrites',
+      () {
+        final first = encodeArchiveCompression(repeated, kind);
+        final combined = Uint8List.fromList([...first, ...first]);
+        expect(
+          () => validateArchiveCompressionRewrite(combined, kind),
+          throwsA(isA<ArchiveViewException>()),
+        );
+      },
+    );
+  }
 }

@@ -90,6 +90,112 @@ Uint8List encodeArchiveCompression(
 Uint8List archiveGzipHeader(Uint8List bytes) =>
     Uint8List.fromList(bytes.sublist(0, _gzipHeaderLength(bytes)));
 
+/// Refuses frame collections whose per-frame metadata would be lost by a
+/// one-stream rewrite. The normal reader has already checked payload integrity.
+void validateArchiveCompressionRewrite(
+  Uint8List bytes,
+  ArchiveCompressionKind kind,
+) {
+  void refuse() => throw const ArchiveViewException(
+    'Concatenated streams, extra frames or unsupported compression metadata cannot be preserved by this writer.',
+  );
+  switch (kind) {
+    case ArchiveCompressionKind.gzip:
+      final header = _gzipHeaderLength(bytes);
+      final input = codecs.InputMemoryStream(
+        Uint8List.sublistView(bytes, header),
+      );
+      final output = _CompressionOutput(kArchiveReadLimit);
+      final inflate = codecs.Inflate.stream(
+        input,
+        output: output,
+        throwOnError: true,
+      );
+      if (!inflate.isFinished || input.length != 8) refuse();
+      final crc = input.readUint32(), size = input.readUint32();
+      if (size != output.length || crc != codecs.getCrc32(output.getBytes())) {
+        refuse();
+      }
+    case ArchiveCompressionKind.xz:
+      if (bytes.length < 32 ||
+          bytes[bytes.length - 2] != 0x59 ||
+          bytes.last != 0x5a) {
+        refuse();
+      }
+      final data = ByteData.sublistView(bytes);
+      final footer = bytes.length - 12;
+      final indexBytes = (data.getUint32(footer + 4, Endian.little) + 1) * 4;
+      final index = footer - indexBytes;
+      if (index < 12 ||
+          index >= footer ||
+          bytes[index] != 0 ||
+          bytes[footer + 8] != bytes[6] ||
+          bytes[footer + 9] != bytes[7]) {
+        refuse();
+      }
+      var at = index + 1;
+      int variable() {
+        var value = 0, scale = 1;
+        for (var i = 0; i < 8; i++) {
+          if (at >= footer - 4) refuse();
+          final byte = bytes[at++];
+          value += (byte & 0x7f) * scale;
+          if (value > 0x1fffffffffffff) refuse();
+          if (byte < 0x80) {
+            if (i > 0 && byte == 0) refuse();
+            return value;
+          }
+          scale *= 128;
+        }
+        refuse();
+        return 0;
+      }
+      final count = variable();
+      if (count > 200000) refuse();
+      var blockEnd = 12, decoded = 0;
+      for (var i = 0; i < count; i++) {
+        final unpadded = variable();
+        if (unpadded < 5) refuse();
+        blockEnd += (unpadded + 3) ~/ 4 * 4;
+        decoded += variable();
+        if (blockEnd > index || decoded > kArchiveReadLimit) refuse();
+      }
+      if (blockEnd != index || footer - 4 - at > 3) refuse();
+      while (at < footer - 4) {
+        if (bytes[at++] != 0) refuse();
+      }
+    case ArchiveCompressionKind.zstd:
+      if (bytes.length < 6 || archiveCompressionForBytes(bytes) != kind) {
+        refuse();
+      }
+      final flags = bytes[4];
+      // Dictionary IDs and skippable extension frames require another writer.
+      if (flags & 0x1b != 0) refuse();
+      final singleSegment = flags & 0x20 != 0;
+      final sizeFlag = flags >> 6;
+      var at =
+          5 +
+          (singleSegment ? 0 : 1) +
+          (sizeFlag == 0 ? (singleSegment ? 1 : 0) : 1 << sizeFlag);
+      var blocks = 0;
+      while (true) {
+        if (at + 3 > bytes.length || ++blocks > 1000000) refuse();
+        final block = bytes[at] | bytes[at + 1] << 8 | bytes[at + 2] << 16;
+        at += 3;
+        final type = block >> 1 & 3, size = block >> 3;
+        if (type == 3 || size > 128 * 1024) refuse();
+        at += type == 1 ? 1 : size;
+        if (at > bytes.length) refuse();
+        if (block & 1 != 0) break;
+      }
+      if (flags & 4 != 0) at += 4;
+      if (at != bytes.length) refuse();
+    case ArchiveCompressionKind.bzip2:
+      // Bzip2 streams carry no per-file names, dates or opaque extension data.
+      if (bytes.length < 4 || bytes[3] < 0x31 || bytes[3] > 0x39) refuse();
+  }
+}
+
 int _gzipHeaderLength(Uint8List bytes) {
   if (bytes.length < 10 ||
       bytes[0] != 0x1f ||
@@ -245,5 +351,11 @@ class _CompressionOutput extends codecs.OutputMemoryStream {
       throw const ArchiveViewException('Compressed output exceeds its limit.');
     }
     super.reserve(total);
+  }
+
+  @override
+  void writeBackReference(int distance, int count) {
+    _check(count);
+    super.writeBackReference(distance, count);
   }
 }

@@ -499,11 +499,11 @@ void _name(ByteData d, int at, String name) {
 }
 
 int _date(DateTime date) {
-  final seconds = date.toUtc().millisecondsSinceEpoch ~/ 1000 + _hfsEpoch;
-  if (seconds < 0 || seconds > 0xffffffff) {
+  final milliseconds = date.toUtc().millisecondsSinceEpoch + _hfsEpoch * 1000;
+  if (milliseconds < 0 || milliseconds >= 0x100000000 * 1000) {
     throw const ArchiveViewException('HFS timestamps must fit 1904–2040.');
   }
-  return seconds;
+  return milliseconds ~/ 1000;
 }
 
 void _checkName(String name) {
