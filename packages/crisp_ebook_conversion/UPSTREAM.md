@@ -24,7 +24,7 @@ the local file set and hashes with `python3 tool/check_vendor.py`.
 | `src/extracted.rs` | Remove only the unused scraper HTML cache. Retain upstream lightningcss grammar checking and the existing Kindle rule extraction. |
 | `src/fonts.rs` | Stop an absent-encryption search at the EPUB container root so it does not inspect unrelated ancestor directories. |
 | `src/mobi.rs` | Preserve the source TOC in the legacy KF7 half of dual MOBI exports. Append a nested HTML TOC, insert its `type="toc"` guide reference, and resolve all navigation targets through the final byte-offset pass. |
-| `src/mobi_rewrite.rs` | Extract the shared metadata byte API behind the native file wrapper; validate all PalmDB offsets and encrypted secondary KF8 headers; avoid inflating embedded source ZIPs for ordinary metadata edits. |
+| `src/mobi_rewrite.rs` | Extract the shared metadata byte API behind the native file wrapper; validate PalmDB/section bounds and encrypted secondary KF8 headers; avoid inflating embedded source ZIPs for ordinary metadata edits; preserve UTF-8/Windows-1252 metadata encoding with lossless rejection, set the EXTH-present flag on inserted blocks, and reconcile EXTH title/hash and header title independently. |
 
 The original checkpoint replaced lightningcss with a local delimiter-only
 checker to avoid MPL dependencies. That replacement has been removed now that

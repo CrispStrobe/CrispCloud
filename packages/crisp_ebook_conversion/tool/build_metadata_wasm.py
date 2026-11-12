@@ -39,6 +39,7 @@ def main():
     source = output / 'kindling_metadata_bg.wasm'
     target = ROOT / 'assets/kindling_metadata.wasm'
     shutil.copyfile(source, target)
+    target.chmod(0o644)
     rustc = subprocess.check_output([args.rustc, '--version'], text=True).strip()
     (ROOT / 'WASM.json').write_text(json.dumps(manifest(rustc), indent=2) + '\n')
     print(json.dumps({'asset': str(target.relative_to(ROOT)), 'bytes': target.stat().st_size,

@@ -92,6 +92,7 @@ const EXTH_TITLE_HASH: u32 = 542;
 const PALMDOC_HEADER_LEN: usize = 16;
 const MOBI_MAGIC_OFFSET: usize = 16;
 const MOBI_HEADER_LENGTH_OFFSET: usize = 20;
+const MOBI_TEXT_ENCODING_OFFSET: usize = 28;
 const MOBI_FULL_NAME_OFFSET_FIELD: usize = 84; // MOBI header +68 = record0 +84
 const MOBI_FULL_NAME_LENGTH_FIELD: usize = 88; // MOBI header +72 = record0 +88
 const MOBI_EXTH_FLAGS_OFFSET: usize = 128; // MOBI header +112 = record0 +128
@@ -211,6 +212,11 @@ pub enum RewriteError {
     /// PalmDB, MOBI, or EXTH structure was malformed. Includes a short
     /// diagnostic string.
     MalformedHeader(String),
+    /// Text edits cannot be encoded using this section's declared code page.
+    UnsupportedTextEncoding(u32),
+    /// A requested metadata value is not losslessly representable in the
+    /// section's declared code page. The body and encoding are never changed.
+    UnrepresentableMetadata(u32),
     /// Caller asked to update a cover image but the input file has no
     /// existing cover record (no EXTH 201 present).
     NoCoverRecord,
@@ -233,6 +239,18 @@ impl fmt::Display for RewriteError {
             ),
             RewriteError::DrmEncrypted => write!(f, "file is DRM-encrypted; refusing to rewrite"),
             RewriteError::MalformedHeader(s) => write!(f, "malformed MOBI header: {}", s),
+            RewriteError::UnsupportedTextEncoding(encoding) => {
+                write!(
+                    f,
+                    "unsupported MOBI text encoding {}; refusing to rewrite metadata",
+                    encoding
+                )
+            }
+            RewriteError::UnrepresentableMetadata(encoding) => write!(
+                f,
+                "metadata cannot be represented losslessly in MOBI text encoding {}",
+                encoding
+            ),
             RewriteError::NoCoverRecord => write!(
                 f,
                 "cannot update cover: input has no existing cover record (EXTH 201)"
@@ -465,10 +483,14 @@ struct SectionView {
     record_idx: usize,
     /// MOBI header length in bytes (read from the record at offset 20).
     mobi_header_length: usize,
+    /// The code page applies to both text metadata and the preserved body.
+    text_encoding: u32,
     /// full_name_offset as stored in the MOBI header (relative to the record).
     full_name_offset: usize,
     /// full_name_length as stored in the MOBI header.
     full_name_length: usize,
+    /// Encoded title bytes, compared independently from EXTH 503.
+    full_name: Vec<u8>,
     /// Parsed EXTH records as (type, data) pairs in input order.
     exth_records: Vec<(u32, Vec<u8>)>,
 }
@@ -683,11 +705,17 @@ fn parse_section_record0(record: &[u8], record_idx: usize) -> Result<SectionView
             mobi_header_length
         )));
     }
+    let exth_start = MOBI_MAGIC_OFFSET
+        .checked_add(mobi_header_length)
+        .filter(|end| *end <= record.len())
+        .ok_or_else(|| RewriteError::MalformedHeader("MOBI header exceeds its record".into()))?;
+    let text_encoding = read_u32_be(record, MOBI_TEXT_ENCODING_OFFSET).ok_or_else(|| {
+        RewriteError::MalformedHeader("MOBI text encoding field truncated".into())
+    })?;
 
     let exth_flags = read_u32_be(record, MOBI_EXTH_FLAGS_OFFSET).unwrap_or(0);
     let has_exth = exth_flags & 0x40 != 0;
 
-    let exth_start = MOBI_MAGIC_OFFSET + mobi_header_length;
     let (exth_records, _exth_end) = if has_exth {
         parse_exth_block(record, exth_start)?
     } else {
@@ -696,21 +724,26 @@ fn parse_section_record0(record: &[u8], record_idx: usize) -> Result<SectionView
 
     let full_name_offset = read_u32_be(record, MOBI_FULL_NAME_OFFSET_FIELD).unwrap_or(0) as usize;
     let full_name_length = read_u32_be(record, MOBI_FULL_NAME_LENGTH_FIELD).unwrap_or(0) as usize;
-    if full_name_offset + full_name_length > record.len() {
-        return Err(RewriteError::MalformedHeader(format!(
-            "full_name range [{}..{}] exceeds record {} length {}",
-            full_name_offset,
-            full_name_offset + full_name_length,
-            record_idx,
-            record.len()
-        )));
-    }
+    let full_name_end = full_name_offset
+        .checked_add(full_name_length)
+        .filter(|end| *end <= record.len())
+        .ok_or_else(|| {
+            RewriteError::MalformedHeader(format!(
+                "full_name offset {} and length {} exceed record {} length {}",
+                full_name_offset,
+                full_name_length,
+                record_idx,
+                record.len()
+            ))
+        })?;
 
     Ok(SectionView {
         record_idx,
         mobi_header_length,
+        text_encoding,
         full_name_offset,
         full_name_length,
+        full_name: record[full_name_offset..full_name_end].to_vec(),
         exth_records,
     })
 }
@@ -798,8 +831,8 @@ struct Plan {
     /// Side-channel list of the ExthChange entries that will end up in the
     /// report. Computed during planning so we do not have to diff twice.
     exth_changes: Vec<ExthChange>,
-    /// New title string, if the title update implies a full_name rewrite.
-    new_full_name: Option<String>,
+    /// New encoded title bytes, if the update implies a full_name rewrite.
+    new_full_name: Option<Vec<u8>>,
     /// New cover image bytes, if a cover update was requested and the file
     /// has an existing cover record. None means leave the cover alone.
     new_cover_bytes: Option<Vec<u8>>,
@@ -898,6 +931,55 @@ fn has_hd_container(input: &[u8], record_offsets: &[u32]) -> bool {
     })
 }
 
+/// Encode a requested text value without relabelling the untouched book body.
+/// Empty values only remove metadata, so they need no text encoder.
+fn encode_metadata(value: &str, encoding: u32) -> Result<Vec<u8>, RewriteError> {
+    if value.is_empty() {
+        return Ok(Vec::new());
+    }
+    match encoding {
+        65001 => Ok(value.as_bytes().to_vec()),
+        1252 => value
+            .chars()
+            .map(|ch| {
+                let byte = match ch {
+                    '\u{0000}'..='\u{007f}' | '\u{00a0}'..='\u{00ff}' => ch as u8,
+                    '\u{20ac}' => 0x80,
+                    '\u{201a}' => 0x82,
+                    '\u{0192}' => 0x83,
+                    '\u{201e}' => 0x84,
+                    '\u{2026}' => 0x85,
+                    '\u{2020}' => 0x86,
+                    '\u{2021}' => 0x87,
+                    '\u{02c6}' => 0x88,
+                    '\u{2030}' => 0x89,
+                    '\u{0160}' => 0x8a,
+                    '\u{2039}' => 0x8b,
+                    '\u{0152}' => 0x8c,
+                    '\u{017d}' => 0x8e,
+                    '\u{2018}' => 0x91,
+                    '\u{2019}' => 0x92,
+                    '\u{201c}' => 0x93,
+                    '\u{201d}' => 0x94,
+                    '\u{2022}' => 0x95,
+                    '\u{2013}' => 0x96,
+                    '\u{2014}' => 0x97,
+                    '\u{02dc}' => 0x98,
+                    '\u{2122}' => 0x99,
+                    '\u{0161}' => 0x9a,
+                    '\u{203a}' => 0x9b,
+                    '\u{0153}' => 0x9c,
+                    '\u{017e}' => 0x9e,
+                    '\u{0178}' => 0x9f,
+                    _ => return Err(RewriteError::UnrepresentableMetadata(encoding)),
+                };
+                Ok(byte)
+            })
+            .collect(),
+        _ => Err(RewriteError::UnsupportedTextEncoding(encoding)),
+    }
+}
+
 /// Plan the mutations for ONE section.
 ///
 /// Called once per MOBI section, because a dual-format file's two sections
@@ -923,7 +1005,7 @@ fn plan_changes(
     // Single-value string fields. For each, if `updates` has Some(v) and
     // v differs from what is currently stored, add a plan to replace (or
     // remove if v is empty).
-    let mut plan_single = |exth_type: u32, value: Option<&str>| {
+    let mut plan_single = |exth_type: u32, value: Option<&str>| -> Result<(), RewriteError> {
         if let Some(new_value) = value {
             let old_records: Vec<Vec<u8>> = existing
                 .get(&exth_type)
@@ -945,7 +1027,7 @@ fn plan_changes(
                     });
                 }
             } else {
-                let new_bytes = new_value.as_bytes().to_vec();
+                let new_bytes = encode_metadata(new_value, section.text_encoding)?;
                 // A single-value field with multiple existing records is
                 // a degenerate case; treat it as "replace all with one".
                 let matches = old_records.len() == 1 && old_records[0] == new_bytes;
@@ -980,14 +1062,15 @@ fn plan_changes(
                 }
             }
         }
+        Ok(())
     };
 
-    plan_single(EXTH_PUBLISHER, updates.publisher.as_deref());
-    plan_single(EXTH_DESCRIPTION, updates.description.as_deref());
-    plan_single(EXTH_LANGUAGE, updates.language.as_deref());
-    plan_single(EXTH_ISBN, updates.isbn.as_deref());
-    plan_single(EXTH_ASIN, updates.asin.as_deref());
-    plan_single(EXTH_PUBLICATION_DATE, updates.publication_date.as_deref());
+    plan_single(EXTH_PUBLISHER, updates.publisher.as_deref())?;
+    plan_single(EXTH_DESCRIPTION, updates.description.as_deref())?;
+    plan_single(EXTH_LANGUAGE, updates.language.as_deref())?;
+    plan_single(EXTH_ISBN, updates.isbn.as_deref())?;
+    plan_single(EXTH_ASIN, updates.asin.as_deref())?;
+    plan_single(EXTH_PUBLICATION_DATE, updates.publication_date.as_deref())?;
 
     // Doc type is really the 113 + 501 pair. 501 alone does nothing: the
     // firmware wants an identifier to key the cover on as well, and a book
@@ -995,7 +1078,7 @@ fn plan_changes(
     // a device that has already cached a thumbnail under it keeps matching,
     // and otherwise derive the same stable UUID the build path would.
     if let Some(doc_type) = updates.doc_type.as_deref() {
-        plan_single(EXTH_CDE_TYPE, Some(doc_type));
+        plan_single(EXTH_CDE_TYPE, Some(doc_type))?;
 
         let existing_identifier = existing
             .get(&EXTH_ASIN_IDENTIFIER)
@@ -1028,112 +1111,64 @@ fn plan_changes(
                     .unwrap_or_default();
                 crate::exth::book_asin(&[], &title, &author)
             });
-        plan_single(EXTH_ASIN_IDENTIFIER, Some(identifier.as_str()));
+        plan_single(EXTH_ASIN_IDENTIFIER, Some(identifier.as_str()))?;
     } else if let Some(identifier) = updates.identifier.as_deref() {
         // Setting the identifier on its own is meaningful too: a book that
         // already carries 501 needs only 113 corrected.
-        plan_single(EXTH_ASIN_IDENTIFIER, Some(identifier));
+        plan_single(EXTH_ASIN_IDENTIFIER, Some(identifier))?;
     }
 
-    // Title: EXTH 503 (updated title), EXTH 542 (4-byte md5-derived hash of
-    // the title bytes, kindlegen and kindling both write this), AND the
-    // full_name bytes at the end of record 0. All three should stay
-    // consistent so device display, search index, and library sort match.
+    plan_single(EXTH_UPDATED_TITLE, updates.title.as_deref())?;
+
+    // EXTH 503 was reconciled above. The title hash and full_name must be
+    // checked independently: missing/empty 503 must not hide a stale header
+    // title or hash, and matching 503 must not hide a different full_name.
     if let Some(new_title) = updates.title.as_deref() {
-        let old_503 = existing
-            .get(&EXTH_UPDATED_TITLE)
-            .and_then(|v| v.first())
-            .map(|s| s.to_vec());
-
-        let title_matches = match &old_503 {
-            Some(old) => old.as_slice() == new_title.as_bytes(),
-            None => new_title.is_empty(),
+        let new_bytes = encode_metadata(new_title, section.text_encoding)?;
+        let old_hashes: Vec<Vec<u8>> = existing
+            .get(&EXTH_TITLE_HASH)
+            .map(|values| values.iter().map(|value| value.to_vec()).collect())
+            .unwrap_or_default();
+        // Hash the same encoded bytes stored in 503 and full_name.
+        let new_hashes = if new_bytes.is_empty() {
+            Vec::new()
+        } else {
+            vec![md5_first4(&new_bytes)]
         };
-
-        if !title_matches {
-            if new_title.is_empty() {
-                if let Some(old) = &old_503 {
-                    plan.exth_changes.push(ExthChange::Removed {
-                        exth_type: EXTH_UPDATED_TITLE,
-                        old_value: old.clone(),
-                    });
-                }
-                plan.exth_field_plans.push(ExthFieldPlan {
-                    exth_type: EXTH_UPDATED_TITLE,
-                    new_values: Vec::new(),
+        if old_hashes != new_hashes {
+            if old_hashes.len() == 1 && new_hashes.len() == 1 {
+                plan.exth_changes.push(ExthChange::Replaced {
+                    exth_type: EXTH_TITLE_HASH,
+                    old_value: old_hashes[0].clone(),
+                    new_value: new_hashes[0].clone(),
                 });
-                // Removing 542 as well keeps the hash consistent.
-                if let Some(old_542) = existing.get(&EXTH_TITLE_HASH).and_then(|v| v.first()) {
-                    plan.exth_changes.push(ExthChange::Removed {
-                        exth_type: EXTH_TITLE_HASH,
-                        old_value: old_542.to_vec(),
-                    });
-                    plan.exth_field_plans.push(ExthFieldPlan {
-                        exth_type: EXTH_TITLE_HASH,
-                        new_values: Vec::new(),
-                    });
-                }
-                plan.new_full_name = Some(String::new());
             } else {
-                let new_bytes = new_title.as_bytes().to_vec();
-                match old_503 {
-                    Some(old) => {
-                        plan.exth_changes.push(ExthChange::Replaced {
-                            exth_type: EXTH_UPDATED_TITLE,
-                            old_value: old,
-                            new_value: new_bytes.clone(),
-                        });
-                    }
-                    None => {
-                        plan.exth_changes.push(ExthChange::Added {
-                            exth_type: EXTH_UPDATED_TITLE,
-                            value: new_bytes.clone(),
-                        });
-                    }
-                }
-                plan.exth_field_plans.push(ExthFieldPlan {
-                    exth_type: EXTH_UPDATED_TITLE,
-                    new_values: vec![new_bytes],
-                });
-
-                // EXTH 542 = first 4 bytes of md5(title_bytes), matching
-                // build_book_exth's formula exactly.
-                let new_542 = md5_first4(new_title.as_bytes());
-                let old_542 = existing
-                    .get(&EXTH_TITLE_HASH)
-                    .and_then(|v| v.first())
-                    .map(|s| s.to_vec());
-                let hash_matches = old_542.as_deref() == Some(new_542.as_slice());
-                if !hash_matches {
-                    match old_542 {
-                        Some(old) => {
-                            plan.exth_changes.push(ExthChange::Replaced {
-                                exth_type: EXTH_TITLE_HASH,
-                                old_value: old,
-                                new_value: new_542.clone(),
-                            });
-                        }
-                        None => {
-                            plan.exth_changes.push(ExthChange::Added {
-                                exth_type: EXTH_TITLE_HASH,
-                                value: new_542.clone(),
-                            });
-                        }
-                    }
-                    plan.exth_field_plans.push(ExthFieldPlan {
+                for old in old_hashes {
+                    plan.exth_changes.push(ExthChange::Removed {
                         exth_type: EXTH_TITLE_HASH,
-                        new_values: vec![new_542],
+                        old_value: old,
                     });
                 }
-
-                plan.new_full_name = Some(new_title.to_string());
+                for new in &new_hashes {
+                    plan.exth_changes.push(ExthChange::Added {
+                        exth_type: EXTH_TITLE_HASH,
+                        value: new.clone(),
+                    });
+                }
             }
+            plan.exth_field_plans.push(ExthFieldPlan {
+                exth_type: EXTH_TITLE_HASH,
+                new_values: new_hashes,
+            });
+        }
+        if section.full_name != new_bytes {
+            plan.new_full_name = Some(new_bytes);
         }
     }
 
     // Multi-value string fields: authors (100) and subjects (105). Update
     // is "replace the whole list"; empty vec means "delete all".
-    let mut plan_multi = |exth_type: u32, value: Option<&[String]>| {
+    let mut plan_multi = |exth_type: u32, value: Option<&[String]>| -> Result<(), RewriteError> {
         if let Some(new_list) = value {
             let old_records: Vec<Vec<u8>> = existing
                 .get(&exth_type)
@@ -1143,8 +1178,8 @@ fn plan_changes(
             let new_bytes_list: Vec<Vec<u8>> = new_list
                 .iter()
                 .filter(|s| !s.is_empty())
-                .map(|s| s.as_bytes().to_vec())
-                .collect();
+                .map(|s| encode_metadata(s, section.text_encoding))
+                .collect::<Result<_, _>>()?;
 
             let matches = old_records == new_bytes_list;
             if !matches {
@@ -1166,10 +1201,11 @@ fn plan_changes(
                 });
             }
         }
+        Ok(())
     };
 
-    plan_multi(EXTH_CREATOR, updates.authors.as_deref());
-    plan_multi(EXTH_SUBJECT, updates.subjects.as_deref());
+    plan_multi(EXTH_CREATOR, updates.authors.as_deref())?;
+    plan_multi(EXTH_SUBJECT, updates.subjects.as_deref())?;
 
     // Cover image: only valid if the file already has a cover record. We
     // compare the new bytes against the existing cover record bytes; if
@@ -1259,8 +1295,8 @@ fn rebuild_section_record(old: &[u8], section: &SectionView, plan: &Plan) -> Vec
     }
     let new_exth_block = serialize_exth_block(&new_exth);
 
-    let new_full_name_bytes: Vec<u8> = if let Some(ref s) = plan.new_full_name {
-        s.as_bytes().to_vec()
+    let new_full_name_bytes: Vec<u8> = if let Some(ref bytes) = plan.new_full_name {
+        bytes.clone()
     } else {
         old[section.full_name_offset..section.full_name_offset + section.full_name_length].to_vec()
     };
@@ -1268,7 +1304,8 @@ fn rebuild_section_record(old: &[u8], section: &SectionView, plan: &Plan) -> Vec
     let mut rebuilt = Vec::with_capacity(old.len() + new_exth_block.len());
     // PalmDOC header unchanged.
     rebuilt.extend_from_slice(&old[..PALMDOC_HEADER_LEN]);
-    // MOBI header unchanged; the full_name fields get patched below.
+    // Preserve the MOBI header, including the body encoding. The full_name
+    // fields and EXTH-present flag get patched below.
     rebuilt.extend_from_slice(
         &old[PALMDOC_HEADER_LEN..PALMDOC_HEADER_LEN + section.mobi_header_length],
     );
@@ -1296,6 +1333,10 @@ fn rebuild_section_record(old: &[u8], section: &SectionView, plan: &Plan) -> Vec
         rebuilt.resize(old.len(), 0x00);
     }
 
+    // A section without EXTH is accepted on input. Its new block must also
+    // be advertised in the header or readers will ignore every added field.
+    let exth_flags = read_u32_be(old, MOBI_EXTH_FLAGS_OFFSET).unwrap_or(0) | 0x40;
+    put_u32_be(&mut rebuilt, MOBI_EXTH_FLAGS_OFFSET, exth_flags);
     put_u32_be(
         &mut rebuilt,
         MOBI_FULL_NAME_OFFSET_FIELD,
