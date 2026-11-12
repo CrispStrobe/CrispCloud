@@ -39,9 +39,10 @@ comprise **25 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
-G18 additionally has a delivered native local archive workflow. It remains in
-the 25 implementation gaps because remote publication access-policy contracts
-and browser operation leases still require code, alongside native acceptance.
+G18 additionally has a delivered native local archive workflow, and G14 has a
+delivered native viewer-preparation lifecycle increment. Both remain in the
+25 implementation gaps: remote/browser archive publication and verified remote
+paging/larger text comparison still require code, alongside native acceptance.
 
 The [12 November validation record](validation-20261112.md) separates passing
 unit/widget/native-loopback evidence, static analysis, JavaScript compilation,
@@ -62,6 +63,11 @@ support independent copies only. G18 now connects reviewed native archive
 imports, member edits and explicit recovery to pane, clipboard and menu actions.
 Shared retained staging and archive publication have separate verified
 foundation checkpoints.
+
+The [viewer preparation continuation](viewer-spool-continuation-20261112.md)
+adds bounded cancellation, source/version checks and retryable temporary-copy
+cleanup to the existing native viewer spool. Its partial G14 boundary retains
+the existing size limits and does not claim immutable provider snapshots.
 
 ## Lane index
 
@@ -91,7 +97,7 @@ foundation checkpoints.
 | [G11](02-viewing-search-and-tools.md#g11) | External comparison tools | Implemented / native acceptance pending | Private-copy workflow verified; installed GUI tools under G50 |
 | [G12](02-viewing-search-and-tools.md#g12) | Preferred external terminal | Implemented / native acceptance pending | Verify installed terminals on each claimed desktop OS |
 | [G13](02-viewing-search-and-tools.md#g13) | UUE, XXE and MIME conversion | Closed: documented streaming formats | Single-part Base64 MIME; verified exclusive-output backends only |
-| [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Scoped | Provider range capabilities |
+| [G14](02-viewing-search-and-tools.md#g14) | Large-file viewer and comparison limits | Partially implemented: native preparation lifecycle | Provider-enforced snapshots/ranges; async paging; large text comparison |
 | [G15](02-viewing-search-and-tools.md#g15) | Nested and encrypted archive search | Scoped | G18 archive identity; reader capabilities |
 | [G16](02-viewing-search-and-tools.md#g16) | Native indexed search | Scoped | Native search bridge |
 | [G17](02-viewing-search-and-tools.md#g17) | Additional viewer adapters | Scoped | Existing viewer dispatch; extension review |
@@ -168,6 +174,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | Archive publication/recovery | `feature/archive-publication-recovery-20261112` · `005771b` · PR #78 | 24 verified-publication/recovery tests; narrow analysis clean | Native local foundation; remote/browser prerequisites remain implementation work |
 | G10 external remote editing | `feature/external-remote-editing-20261112` · `c5ddfff` · PR #80 | 125 distinct checks across 11 suites, including final five lifecycle cases; three current offline guides | Implemented; native editor/live Dropbox acceptance pending |
 | G18 native archive endpoints | `feature/writable-archive-endpoints-20261112` · core `e32401c`, UI `c74986a`, reviewed fixes `af79a89` · PR #81 | 104 archive checks plus 58 distinct host/help checks: 162 across 14 suites; three current offline guides | Native local increment delivered; remote/browser publication implementation and native acceptance remain |
+| G14 viewer preparation | `feature/viewer-spool-lifecycle-20261112` · scope `57d9cfd`, code `dfb7978` · PR #83 | 29 lifecycle checks plus 81 existing viewer/archive/help checks: 110 across seven suites; three current offline guides | Native lifecycle increment delivered; broader remote paging/comparison scope remains open |
+| Tools/archive/viewer integrated validation | `feature/viewer-spool-lifecycle-20261112` · compiled code `dfb7978` | Full analysis: 0 errors, 96 warnings, 1,040 infos; versioned JavaScript release build passed; packaged guide bytes verified | [Observed gates and remaining acceptance](viewer-spool-continuation-20261112.md#integrated-validation) |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

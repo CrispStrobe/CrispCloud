@@ -178,11 +178,32 @@ grant acceptance remains under G50.
 
 ### Large-file viewer and comparison limits
 
-**Status:** Scoped. **Dependencies:** Provider range capabilities.
+**Status:** Partially implemented: native temporary-copy lifecycle delivered; verified remote paging and larger text comparison remain. **Dependencies:** Provider snapshot/range capabilities.
 
 **Scope:** Extend remote paging, spooling and text comparison without unbounded buffers.
 
 **Implementation:** Replace whole remote staging where feasible with verified range readers or bounded temporary spools. Add capability-aware paging/search and investigate chunked text comparison/merge with a clear editable-size contract.
+
+**Delivered lifecycle increment:** Native temporary-copy preparation responds
+to cancellation and source loss during stalled metadata or stream reads. Its
+overall and inactivity deadlines are separate; input pause/resume follows local
+write backpressure. A provider's missing cancellation acknowledgement cannot
+hold the preparation attempt open indefinitely. Captured metadata maps remain
+immutable, and final comparison covers every recognized revision alias.
+Partial copies are cleaned up independently, while explicit completed-copy
+cleanup coalesces concurrent calls and remains retryable after failure.
+
+The [lifecycle specification](../viewer-spool-lifecycle.md) describes the
+six-hour overall deadline, two-minute inactivity deadline, 50 ms source checks,
+unchanged 2 GiB default cap, filesystem limits and exact helper/caller boundary.
+Before/after metadata checks do not provide a provider-enforced immutable
+snapshot. No renderer, editable-merge or archive-member size limit is raised.
+
+**Observed evidence:** 29 new lifecycle checks and 81 existing viewer, archive
+and help checks passed across seven suites. Narrow analysis is clean. The
+[continuation record](viewer-spool-continuation-20261112.md) and
+[draft PR 83](https://github.com/CrispStrobe/CrispCloud/pull/83) preserve scope,
+code and validation separately.
 
 **Boundary:** Do not remove limits without a memory, disk, cancellation and consistency design. A provider without stable range/version semantics may need a verified spool. Rich renderers keep documented format-specific bounds.
 
