@@ -1,0 +1,63 @@
+{
+  "source_commit": "561f486b9f13248f90dba679bdbf60bf8dc8ffcf",
+  "managed_source_commit": "1d19150ff35e95374fa3c11e0b6a43d187d24024",
+  "status": "failed",
+  "sdk_files": 468,
+  "engine_files": 346,
+  "host_files": 122,
+  "validator_exit_code": 0,
+  "schema_elapsed_seconds": 7.132242171999678,
+  "input_manifest_sha256": "1df30bae9b60aa4309b320f593f8c7ffe783ff0c37db500afc2e01101bdc5448",
+  "native_status": "failed",
+  "sdk_passing_files": 468,
+  "sdk_failures": 0,
+  "all_schema_receipt_hashes_match": true,
+  "schema_report_sha256": "36de2e29fb60597c403c671a83f900c78abb4dff8decbb8bd502388d7fb3fda0",
+  "native_command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/07eb2580faa9/crisp-expansion-validation-current/tool/office-validation/render.py",
+    "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/current/external/host-inputs",
+    "/workspace/scratch/07eb2580faa9/acceptance-expansion/final-host/current/external/host-native"
+  ],
+  "native_exit_code": 1,
+  "native_files": 116,
+  "native_pages": 152,
+  "native_scope": "Every actual-host capture, including DOCM/DOTX/DOTM, custom tabs and picture-only slides; full shared-engine rendering is separately required by source acceptance.",
+  "native_cycle_groups": 33,
+  "native_failures": [
+    {
+      "file": "build/fidelity-host/word-picture-gif-1.docx",
+      "error": "Rendered fidelity PDF has no extractable text"
+    },
+    {
+      "file": "build/fidelity-host/word-picture-gif-2.docx",
+      "error": "Rendered fidelity PDF has no extractable text"
+    },
+    {
+      "file": "build/fidelity-host/word-picture-gif-3.docx",
+      "error": "Rendered fidelity PDF has no extractable text"
+    },
+    {
+      "file": "build/fidelity-host/word-picture-jpeg-1.docx",
+      "error": "Rendered fidelity PDF has no extractable text"
+    },
+    {
+      "file": "build/fidelity-host/word-picture-jpeg-2.docx",
+      "error": "Rendered fidelity PDF has no extractable text"
+    },
+    {
+      "file": "build/fidelity-host/word-picture-jpeg-3.docx",
+      "error": "Rendered fidelity PDF has no extractable text"
+    },
+    {
+      "case": "build/fidelity-host/word-picture-gif.docx",
+      "error": "Missing successful render for cycle file: build/fidelity-host/word-picture-gif-1.docx"
+    },
+    {
+      "case": "build/fidelity-host/word-picture-jpeg.docx",
+      "error": "Missing successful render for cycle file: build/fidelity-host/word-picture-jpeg-1.docx"
+    }
+  ],
+  "all_input_hashes_unchanged": true,
+  "host_native_report_sha256": "586110cf9e5e949d5c19a01ad99139a5b554794015a92f2e904c3df6769d69c8"
+}

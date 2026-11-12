@@ -1,0 +1,23 @@
+{
+  "recorded_utc": "2026-11-12T15:51:39.759664+00:00",
+  "status": "failed_native_acceptance",
+  "app_commit": "561f486b9f13248f90dba679bdbf60bf8dc8ffcf",
+  "source_commit": "1d19150ff35e95374fa3c11e0b6a43d187d24024",
+  "artifacts": {
+    "README.md": "09037de83e51c35f2e43e5b350e78af69784b094e80837e4c2825724ad92e052",
+    "external-summary.json": "aa0ecf1e8a48a87b30d731f7cbe79296278e261d1ee7726cdac388f4ba24536c",
+    "host-native-report.json.gz": "310e4141372aec61e4ab499e13031b11254dc731feb2a742e7ddf4c07b2a0960",
+    "host-native.log.gz": "348329ce3c2acbdc59537544cd93f537f86b4cdcd5570658064ab882ac09e5a1",
+    "image-only-inputs/word-picture-gif-1.docx": "c4a9a1d30bffbea0d3747c0cd211535b30b12871292913dbdc3fbaa15afd1d14",
+    "image-only-inputs/word-picture-gif-2.docx": "f189fd24987144a03b0e679c96b3111f725da52e5f9e9a020f54b508bf300851",
+    "image-only-inputs/word-picture-gif-3.docx": "466768a669088b885efadef3c7efc013d0aa087e83904c47d0b5639afefe445c",
+    "image-only-inputs/word-picture-jpeg-1.docx": "6e87f7dfec9884a920e438dd09e13aa893cd6d8aacd4a4d62656caeb92bf9ef8",
+    "image-only-inputs/word-picture-jpeg-2.docx": "fa3b76a19a93cf2aeba376072c9953222efa6281eddfc81eeb939db4a7e422bb",
+    "image-only-inputs/word-picture-jpeg-3.docx": "20fec4335389334934ab94dff9b7f72749e11c0caa500f8b5107b18b6c7de686",
+    "input-manifest.json.gz": "91bb8e9e8e5654bcaf8919589984226d0a4faa8532dbe702c1678dd5e494db5d",
+    "producer-acceptance.json": "277554d1b771ad044e2f6f7fd9993fe9e19acb6fe24e2ad03b1e42ceb5a62dc9",
+    "schema-report.json.gz": "53a26b14a02bf455ab5cfe774626887f136505d15c3737477b02ca15b7ee172b"
+  },
+  "uncompressed_native_report_sha256": "586110cf9e5e949d5c19a01ad99139a5b554794015a92f2e904c3df6769d69c8",
+  "uncompressed_native_log_sha256": "3c6f4c568bd50b5dc3ead4dab44783697d810aa4a7ee9c24007f7222d61e2e32"
+}
