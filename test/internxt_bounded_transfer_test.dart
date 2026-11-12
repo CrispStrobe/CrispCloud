@@ -5,7 +5,10 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:crisp_cloud/services/internxt_client_adapter.dart';
+import 'package:crisp_cloud/services/connection_failure.dart';
 import 'package:crisp_cloud/services/internxt_streaming_transfer.dart';
+import 'package:crisp_storage/src/cloud/internxt_streaming_transfer.dart'
+    as core;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:internxt_client/internxt_client.dart' as sdk;
@@ -50,6 +53,8 @@ class _Fixture extends http.BaseClient {
   int? truncateDownloadAt;
   bool extraDownloadByte = false, missingEtag = false;
   bool failStart = false, failFinish = false, failRegister = false;
+  bool hideRegistered = false;
+  int metaNotFoundTimes = 0;
   bool wrongUploadMetadata = false, oversizeStart = false;
   String? unsafeDownloadUrl, unsafeUploadUrl;
   Future<void> Function()? afterMetadata, afterUploadPart, afterDownloadChunk;
@@ -134,7 +139,7 @@ class _Fixture extends http.BaseClient {
         'result': [
           downloadMeta,
           if (registeredBody != null)
-            {...registeredBody!, 'uuid': 'uploaded-file'},
+            if (!hideRegistered) {...registeredBody!, 'uuid': 'uploaded-file'},
         ],
       });
     }
@@ -201,6 +206,10 @@ class _Fixture extends http.BaseClient {
       return jsonResponse({'uuid': 'uploaded-file'}, 201);
     }
     if (path == '/files/uploaded-file/meta') {
+      if (metaNotFoundTimes > 0) {
+        metaNotFoundTimes--;
+        return jsonResponse({'error': 'not yet'}, 404);
+      }
       return jsonResponse({
         ...registeredBody!,
         'uuid': 'uploaded-file',
@@ -223,6 +232,17 @@ void main() {
   late _Fixture fixture;
   late Directory temp;
   setUp(() async {
+    core.InternxtStreamingTransfer.registrationRetryDelays = const [
+      Duration.zero,
+      Duration.zero,
+      Duration.zero,
+    ];
+    core.InternxtStreamingTransfer.readAfterWriteDelays = const [
+      Duration.zero,
+      Duration.zero,
+      Duration.zero,
+    ];
+    core.InternxtRecentUploads.clear();
     temp = await Directory.current.createTemp('internxt_transfer_test_');
     client = session();
     adapter = InternxtClientAdapter.withClient(client);
@@ -498,15 +518,14 @@ void main() {
   }
 
   test(
-    'empty files use an exact zero-byte ciphertext and still verify registration',
+    'empty files are refused before any request (Internxt has no empty files)',
     () => run(() async {
-      await adapter.uploadStream(const Stream.empty(), 0, 'empty.bin', '/');
-      expect(fixture.partLengths, [0]);
-      expect(fixture.registeredBody!['size'], 0);
-      expect(
-        (fixture.finishBody!['shards'] as List).single['hash'],
-        crypto.sha256.convert([]).toString(),
+      await expectLater(
+        adapter.uploadStream(const Stream.empty(), 0, 'empty.bin', '/'),
+        throwsA(isA<InternxtEmptyFileUnsupported>()),
       );
+      expect(fixture.starts, 0);
+      expect(fixture.registrations, 0);
       await clean();
     }),
   );
@@ -536,13 +555,12 @@ void main() {
     }),
   );
 
-  for (final stage in ['start', 'finish', 'register']) {
+  for (final stage in ['start', 'finish']) {
     test(
       '$stage failure is not retried and cannot expose credentials',
       () => run(() async {
         fixture.failStart = stage == 'start';
         fixture.failFinish = stage == 'finish';
-        fixture.failRegister = stage == 'register';
         await expectLater(
           adapter.uploadStream(Stream.value([1, 2]), 2, 'file.bin', '/'),
           throwsA(
@@ -555,11 +573,78 @@ void main() {
         );
         expect(fixture.starts, 1);
         expect(fixture.finishes, lessThanOrEqualTo(1));
-        expect(fixture.registrations, lessThanOrEqualTo(1));
+        expect(fixture.registrations, 0);
         await clean();
       }),
     );
   }
+
+  test(
+    'a registration that failed on the way back is found, not repeated',
+    () => run(() async {
+      fixture.failRegister = true; // 503, but the entry exists
+      await adapter.uploadStream(Stream.value([1, 2]), 2, 'file.bin', '/');
+      expect(fixture.registrations, 1);
+      await clean();
+    }),
+  );
+
+  test(
+    'registration is retried on transient errors and then fails redacted',
+    () => run(() async {
+      fixture.failRegister = true;
+      fixture.hideRegistered = true;
+      await expectLater(
+        adapter.uploadStream(Stream.value([1, 2]), 2, 'file.bin', '/'),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.toString(),
+            'redacted diagnostic',
+            isNot(contains('synthetic-token')),
+          ),
+        ),
+      );
+      expect(fixture.registrations, 4);
+      await clean();
+    }),
+  );
+
+  test(
+    'verification waits while fresh metadata still answers 404',
+    () => run(() async {
+      fixture.metaNotFoundTimes = 2;
+      await adapter.uploadStream(Stream.value([1, 2]), 2, 'file.bin', '/');
+      expect(fixture.registrations, 1);
+      expect(fixture.metaNotFoundTimes, 0);
+      await clean();
+    }),
+  );
+
+  test(
+    'verification gives up when the metadata never appears',
+    () => run(() async {
+      fixture.metaNotFoundTimes = 100;
+      await expectLater(
+        adapter.uploadStream(Stream.value([1, 2]), 2, 'file.bin', '/'),
+        throwsStateError,
+      );
+      await clean();
+    }),
+  );
+
+  test(
+    'a fresh upload is listed with its full name before the listing has it',
+    () => run(() async {
+      fixture.hideRegistered = true;
+      await adapter.uploadStream(Stream.value([1, 2]), 2, 'file.bin', '/');
+      final listing = await adapter.listPath('/');
+      final names = [
+        for (final f in (listing['files'] as List).cast<Map>()) f['name'],
+      ];
+      expect(names, contains('file.bin'));
+      await clean();
+    }),
+  );
 
   test(
     'mismatching created file identity cannot report successful upload',

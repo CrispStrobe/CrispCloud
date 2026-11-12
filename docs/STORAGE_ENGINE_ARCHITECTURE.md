@@ -5,15 +5,16 @@ CrispSorter. This describes SMB, Filen and Internxt storage, not the language
 composition of the entire applications. The tables describe responsibilities;
 line counts would mix application code, generated bridges and vendored libraries.
 
-SMB engine selection is implemented. Sharing the Rust Filen/Internxt clients with
-the Flutter apps is the proposed next migration; this document does not make
-those adapters, settings or CLI commands available.
+SMB engine selection is implemented. CrispCloud's GUI now also offers the
+vendored Rust Filen/Internxt clients as an experimental, per-connection engine
+(Dart remains the default); see [RUST_CLOUD_ENGINES.md](RUST_CLOUD_ENGINES.md).
+The standalone CLI, CrisperPlayer and release packaging are not migrated yet.
 
 ## Current implementation
 
 | App / surface | Application layer | SMB engine | Filen / Internxt engine |
 | --- | --- | --- | --- |
-| CrispCloud installed GUI | Flutter/Dart; provider adapters, credentials and transfer queue | Shared Dart facade; libsmb2 C library by default, optional Rust through FFI | Dart clients plus app streaming adapters |
+| CrispCloud installed GUI | Flutter/Dart; provider adapters, credentials and transfer queue | Shared Dart facade; libsmb2 C library by default, optional Rust through FFI | Dart clients by default; optional Rust (`crisp_cloud_bridge`) per connection |
 | CrispCloud standalone CLI | Dart VM; independent CLI configuration | The same shared SMB facade and choices as the GUI | Not yet supported by the CLI adapter factory |
 | CrisperPlayer installed GUI and desktop control | Flutter/Dart; remote libraries, download queue, imports and playback | Same shared facade, pinned to an immutable CrispCloud commit | Dart clients in its remote adapter |
 | CrispSorter GUI and standalone CLI | Svelte/TypeScript GUI; Rust/Tauri application backend | Explicit OS mount or direct Rust | Native Rust clients when the provider features are enabled |
@@ -100,7 +101,9 @@ The planned settings are:
 | Account: `rust` | Strict Rust selection; unavailable native support is an error |
 | Account: `auto` | Prefer Rust, with Dart fallback only when locally unavailable before authentication/work |
 
-These are planned settings, not existing Filen/Internxt GUI controls or CLI flags.
+CrispCloud's GUI implements the account-level values (dart, rust, auto) per
+connection profile plus the build defaults `CRISP_FILEN_BACKEND` /
+`CRISP_INTERNXT_BACKEND`; the CLI flags are still planned.
 A later default flip to `auto` enables Rust-preferred operation with the bounded
 fallback policy. It affects new sessions/jobs on inheriting accounts. Explicit
 Dart/Rust overrides remain intact, and active transfers retain their original
