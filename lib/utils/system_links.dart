@@ -26,3 +26,12 @@ Future<FileSystemEntityType> entityTypeTrustingSystemLinks(String path) async {
   }
   return type;
 }
+
+/// Synchronous counterpart for checks bracketing native filesystem writes.
+FileSystemEntityType entityTypeTrustingSystemLinksSync(String path) {
+  final type = FileSystemEntity.typeSync(path, followLinks: false);
+  if (type == FileSystemEntityType.link && isSystemRootLink(path)) {
+    return FileSystemEntity.typeSync(path, followLinks: true);
+  }
+  return type;
+}

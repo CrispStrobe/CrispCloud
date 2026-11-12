@@ -976,7 +976,7 @@ class LocalOperationBackend extends FileOperationBackend {
       void checkParents() {
         var parent = paths.dirname(stageDirectory);
         while (true) {
-          if (FileSystemEntity.typeSync(parent, followLinks: false) !=
+          if (entityTypeTrustingSystemLinksSync(parent) !=
               FileSystemEntityType.directory) {
             throw FileSystemException(
               'Recovery cleanup parent is not a regular directory.',

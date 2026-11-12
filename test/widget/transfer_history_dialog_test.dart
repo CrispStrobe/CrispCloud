@@ -181,7 +181,12 @@ void main() {
       await tester.pump();
       await tester.runAsync(() => running!);
       await tester.pumpAndSettle();
-      expect(journal.job('waiting_copy')!.status, TransferJobStatus.completed);
+      expect(
+        journal.job('waiting_copy')!.status,
+        TransferJobStatus.completed,
+        reason:
+            '${journal.job('waiting_copy')!.message} ${journal.job('waiting_copy')!.entries.map((e) => e.message).toList()}',
+      );
       expect(
         await tester.runAsync(destination.readAsString),
         'existing destination',

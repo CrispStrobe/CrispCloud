@@ -38,17 +38,21 @@ Uint8List _document() {
 }
 
 void main() {
-  test('DOC and DOT previews are readable and explicitly text-only', () async {
-    for (final name in ['report.doc', 'template.DOT']) {
-      final preview = await parseOfficeDocument(_document(), name);
-      expect(preview.plainText, 'Hello\nWorld');
-      expect(preview.fallback, isNull);
-      expect(preview.markdown, isEmpty);
-      expect(preview.note, contains('Formatting'));
-      expect(preview.rawXml, isNull);
-      expect(await extractOfficeText(_document(), name), 'Hello\nWorld');
-    }
-  });
+  test(
+    'DOC and DOT previews retain main-story text and disclose partial fidelity',
+    () async {
+      for (final name in ['report.doc', 'template.DOT']) {
+        final preview = await parseOfficeDocument(_document(), name);
+        expect(preview.plainText, 'Hello\nWorld');
+        expect(preview.fallback, isNull);
+        expect(preview.markdown, isEmpty);
+        expect(preview.safeHtml, contains('Hello'));
+        expect(preview.notice, OfficePreviewNotice.legacyWordPartial);
+        expect(preview.rawXml, isNull);
+        expect(await extractOfficeText(_document(), name), 'Hello\nWorld');
+      }
+    },
+  );
 
   test('malformed DOC becomes a safe extraction failure', () async {
     final preview = await parseOfficeDocument(

@@ -29,6 +29,51 @@ class BrowserMenuStrings {
   String unavailable(String id) => '${text('unavailable')} · $id';
 
   static const messages = <String, List<String>>{
+    'selection': [
+      'Selection',
+      'Auswahl',
+      'Sélection',
+      'Selección',
+      'Seleção',
+      '选择',
+      '選択',
+      '선택',
+      'التحديد',
+    ],
+    'copyNames': [
+      'Copy name(s)',
+      'Namen kopieren',
+      'Copier les noms',
+      'Copiar nombres',
+      'Copiar nomes',
+      '复制名称',
+      '名前をコピー',
+      '이름 복사',
+      'نسخ الأسماء',
+    ],
+    'copyFullPaths': [
+      'Copy full path(s)',
+      'Vollständige Pfade kopieren',
+      'Copier les chemins complets',
+      'Copiar rutas completas',
+      'Copiar caminhos completos',
+      '复制完整路径',
+      'フルパスをコピー',
+      '전체 경로 복사',
+      'نسخ المسارات الكاملة',
+    ],
+    'compareDirectories': [
+      'Compare Directories',
+      'Verzeichnisse vergleichen',
+      'Comparer les répertoires',
+      'Comparar directorios',
+      'Comparar diretórios',
+      '比较目录',
+      'ディレクトリを比較',
+      '디렉터리 비교',
+      'مقارنة المجلدات',
+    ],
+
     'workspaces': [
       'Workspaces',
       'Arbeitsbereiche',

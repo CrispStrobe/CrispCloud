@@ -87,7 +87,7 @@ void main() {
       await tester.tap(find.byTooltip('Convert to DOCX'));
       await tester.pumpAndSettle();
       expect(find.byType(LegacyWordConversionDialog), findsOneWidget);
-      expect(find.text('template (text).docx'), findsOneWidget);
+      expect(find.text('template (converted).docx'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(find.byType(LegacyWordConversionDialog), findsNothing);
@@ -121,7 +121,10 @@ void main() {
         await tester.tap(find.text('F3'));
         await _until(
           tester,
-          () => find.textContaining('Detached body').evaluate().isNotEmpty,
+          () => find
+              .textContaining('Detached body', findRichText: true)
+              .evaluate()
+              .isNotEmpty,
         );
       });
       expect(find.byTooltip('Convert to DOCX'), findsNothing);
@@ -156,6 +159,19 @@ void main() {
     await tester.tap(find.text('F4'));
     await tester.pumpAndSettle();
     expect(find.byType(LegacyWordConversionDialog), findsOneWidget);
+    await tester.runAsync(
+      () => _until(
+        tester,
+        () => find
+            .byKey(const ValueKey('word-conversion-method'))
+            .evaluate()
+            .isNotEmpty,
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('word-conversion-method')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Text only (built in)').last);
+    await tester.pumpAndSettle();
     expect(find.textContaining('Formatting, page layout'), findsOneWidget);
     // A pane navigation during the disclosure must not redirect the output.
     await panel.navigateToPath('/other');

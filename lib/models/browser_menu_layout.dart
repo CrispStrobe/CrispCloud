@@ -57,6 +57,7 @@ class BrowserMenuLayout {
   static const maxDepth = 5;
   static const maxMenus = 12;
   static const labelKeys = {
+    'selection',
     'file',
     'edit',
     'view',
@@ -284,7 +285,7 @@ class BrowserMenuLayout {
         BrowserMenuNode(
           id: 'selection-submenu',
           kind: BrowserMenuNodeKind.submenu,
-          label: 'Selection',
+          labelKey: 'selection',
           children: [
             ...actions(['selectAll', 'findPattern']),
             ...workflows([

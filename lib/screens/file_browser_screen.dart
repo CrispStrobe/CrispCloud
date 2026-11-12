@@ -404,17 +404,17 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     add(
       'copyNames',
-      'Copy name(s)',
+      BrowserMenuStrings(context).text('copyNames'),
       () => copySelectionNamesOrPaths(ref, namesOnly: true),
     );
     add(
       'copyFullPaths',
-      'Copy full path(s)',
+      BrowserMenuStrings(context).text('copyFullPaths'),
       () => copySelectionNamesOrPaths(ref, namesOnly: false),
     );
     add(
       'compareDirectories',
-      'Compare Directories',
+      BrowserMenuStrings(context).text('compareDirectories'),
       () => compareDirectories(ref),
       available: () => canCompareDirectories(ref),
     );

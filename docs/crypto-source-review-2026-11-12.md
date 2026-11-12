@@ -845,3 +845,5 @@ native CMake, probe/trace, packaging and descriptive changes.
 ## Integration source binding
 
 The integration combines the recorded KeePass and ebook inventories without changing the stored distribution decisions. Duplicate reviewed paths are removed. The Word parser now lives in the shared Quds engine; it parses and serializes user documents without introducing cryptographic operations. The new directory selection comparison uses names, sizes and timestamps, and the new clipboard commands only copy names or paths. Fingerprints bind the merged inventory, resolved lockfile and exact reviewed source bytes. They do not represent a new Apple approval or distribution review.
+
+The macOS transfer cleanup reconciliation uses the same existing root-owned system-link exception as normal file writes. It changes filesystem parent validation only; user-directory links remain refused. The ebook host now reports an absent browser platform plugin through its existing fallback path. Neither change adds cryptographic operations or network destinations.

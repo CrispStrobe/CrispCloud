@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/browser_menu_strings.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -411,18 +412,18 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         action: () => showTransferHistoryDialog(widget.parentContext, ref),
       ),
       _Command(
-        name: 'Copy name(s)',
+        name: BrowserMenuStrings(context).text('copyNames'),
         icon: Icons.copy,
         action: () => copySelectionNamesOrPaths(ref, namesOnly: true),
       ),
       _Command(
-        name: 'Copy full path(s)',
+        name: BrowserMenuStrings(context).text('copyFullPaths'),
         icon: Icons.copy,
         action: () => copySelectionNamesOrPaths(ref, namesOnly: false),
       ),
       if (canCompareDirectories(ref))
         _Command(
-          name: 'Compare Directories',
+          name: BrowserMenuStrings(context).text('compareDirectories'),
           icon: Icons.compare_arrows,
           action: () => compareDirectories(ref),
         ),
