@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/file_item.dart';
-import '../services/log_service.dart';
 import '../models/panel_side.dart';
 import '../models/panel_drag_data.dart';
 import '../providers/providers.dart';
@@ -27,6 +26,7 @@ import 'file_selection_bar.dart';
 import 'file_list_dialog.dart';
 import 'file_collections_dialog.dart';
 import 'file_operation_dialog.dart';
+import 'external_drop_review.dart';
 import '../services/file_operation_service.dart';
 import '../services/folder_drop_service.dart';
 import 'folder_drop_target.dart';
@@ -54,9 +54,8 @@ class FilePanel extends ConsumerStatefulWidget {
 }
 
 class _FilePanelState extends ConsumerState<FilePanel> {
-  static const _log = Log('FilePanel');
-
   bool _isDragging = false;
+  bool _externalDropInProgress = false;
   AppError? _lastShownError;
   late final ScrollController _scrollController;
 
@@ -234,59 +233,30 @@ class _FilePanelState extends ConsumerState<FilePanel> {
     return GestureDetector(
       onTap: widget.onTap,
       child: DropTarget(
+        enable:
+            !_externalDropInProgress &&
+            (ModalRoute.of(context)?.isCurrent ?? true),
         onDragEntered: (_) => setState(() => _isDragging = true),
         onDragExited: (_) => setState(() => _isDragging = false),
         onDragDone: (details) async {
-          if (panel.showingSearchResults) {
-            setState(() => _isDragging = false);
-            ref
-                .read(errorProvider)
-                .addError(
-                  'Return to a real folder before dropping files into this panel.',
-                );
+          if (!mounted ||
+              _externalDropInProgress ||
+              ModalRoute.of(context)?.isCurrent == false) {
             return;
           }
-          setState(() => _isDragging = false);
-          if (kIsWeb) {
-            // Web: save dropped files to the current local folder.
-            final localSvc = ref.read(localFileServiceProvider);
-            for (final xFile in details.files) {
-              try {
-                final bytes = await xFile.readAsBytes();
-                final targetPath = '${panel.currentPath}/${xFile.name}';
-                await localSvc.saveFile(targetPath, bytes);
-              } catch (e) {
-                _log.warn('operation failed', e);
-              }
-            }
-            panel.refresh();
-          } else {
-            final auth = ref.read(authProvider);
-            if (widget.side == PanelSide.remote && auth.isConnected) {
-              try {
-                final items = details.files
-                    .map(
-                      (xFile) => FileItem(
-                        name: xFile.name,
-                        path: xFile.path,
-                        isFolder: false,
-                      ),
-                    )
-                    .toList();
-                await ref.read(transferProvider).uploadFiles(items);
-              } catch (e) {
-                _log.warn('operation failed', e);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        context.commanderTr("Upload failed: {0}", [e]),
-                      ),
-                    ),
-                  );
-                }
-              }
-            }
+          setState(() {
+            _isDragging = false;
+            _externalDropInProgress = true;
+          });
+          try {
+            await showExternalDropReview(
+              context,
+              ref,
+              widget.side,
+              details.files,
+            );
+          } finally {
+            if (mounted) setState(() => _externalDropInProgress = false);
           }
         },
         child: content,

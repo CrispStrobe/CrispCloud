@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### Source-bound incoming drops
 
-**Status:** Implementing. **Dependencies:** None.
+**Status:** Implemented / native and browser acceptance pending. **Dependencies:** None for the implemented copy workflow.
 
 **Scope:** Capture the actual destination, then route native and browser drops through reviewed copy operations.
 
@@ -25,6 +25,25 @@ capability. Required live/device checks remain visible after code implementation
 - Existing destinations require normal conflict decisions; cancellation and unsupported input make no destination writes and release scoped access.
 
 **Starting points:** lib/widgets/file_panel.dart; lib/services/folder_drop_service.dart; existing operation backend/planner.
+
+**Delivered:** [Incoming files and folders](../external-drops.md) documents the
+captured destination, read-only native/browser sources, normal copy review,
+conflicts and foreground lifetime. Either visual pane can receive a drop at its
+actual local folder or selected remote account. Supported directory manifests
+retain their hierarchy; native scoped access is released on completion/close.
+No dependency was added.
+
+**Observed validation:** The final focused run passed 118 tests across six
+drop/operation suites and the external-terminal service regression suite. Tests
+exercise actual pane callbacks, copies to secondary remote and opposite-pane
+local destinations, case-sensitive paths, strict browser names, mutation races,
+bounded streaming, unchanged destination bytes on cancellation and source release.
+Focused static analysis is clean. A discovered mutable-list contract mismatch
+was corrected by returning an independent directory snapshot to the planner.
+
+**Remaining acceptance:** Real operating-system drag sessions, signed macOS
+security scopes and actual browser file/directory handles require target-runtime
+checks under G50/G51. Native drag-out remains a separate G06 gap.
 
 ## G02
 

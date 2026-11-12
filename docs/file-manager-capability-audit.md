@@ -84,7 +84,7 @@ grants. The link is transient and is not restored after restarting the app.
 | Keyboard control and configurable shortcuts | Implemented | `lib/services/keyboard_shortcut_service.dart`, `lib/screens/keyboard_shortcuts.dart`; text inputs/editors retain input ownership. |
 | Show hidden files | Implemented | Pane option, menu and shortcut. |
 | Drag/drop between panes and onto folders | Implemented | Captured in-app source/destination review in `lib/services/folder_drop_service.dart`. |
-| OS desktop/file-manager drag/drop | Partial | Drop-in exists, but some routes still infer source from pane side; no native drag-out bridge found. |
+| OS desktop/file-manager drag/drop | Partial | **Incoming routing completed in G01:** captured source/destination copy review supports native files/trees and browser handles/manifests in either pane. Real OS/browser acceptance is pending; native drag-out remains G06. See [incoming drops](external-drops.md). |
 | Temporary gathering stack | Partial | Source-bound collections gather references from different folders, without a dedicated drop-stack surface. |
 | Tags | Partial | Device-local image gallery tags, ratings and labels; not general native file tags. |
 | Storage size visualization | Implemented | `lib/services/storage_scan_service.dart`, `docs/storage-analyzer.md`; treemap, sunburst, saved scans and partial-result reporting. |
