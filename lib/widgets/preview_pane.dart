@@ -25,11 +25,14 @@ import '../l10n/pdf_editor_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
+import '../services/email_message_service.dart';
 import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'preview_media.dart';
 import 'pdf_editor_dialog.dart';
 import 'code_highlighting.dart';
+import 'email_message_view.dart';
+import 'internal_viewer_dialog.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -54,6 +57,7 @@ enum PreviewType {
   video,
   audio,
   office,
+  email,
   font,
   none,
 }
@@ -105,6 +109,7 @@ PreviewType _classifyFile(String name) {
     case 'yaml':
     case 'yml':
     case 'xml':
+    case 'kbdx':
     case 'ini':
     case 'cfg':
     case 'conf':
@@ -146,9 +151,21 @@ PreviewType _classifyFile(String name) {
     case 'vim':
     case 'makefile':
       return PreviewType.text;
+    case 'eml':
+    case 'msg':
+      return PreviewType.email;
+    case 'doc':
+    case 'dot':
     case 'docx':
+    case 'docm':
+    case 'dotx':
+    case 'dotm':
     case 'xlsx':
+    case 'xlsm':
+    case 'xltx':
     case 'pptx':
+    case 'pptm':
+    case 'potx':
     case 'odt':
     case 'ods':
     case 'odp':
@@ -194,6 +211,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   static const _log = Log('PreviewPane');
   Uint8List? _previewBytes;
   String? _textContent;
+  EmailMessageDocument? _emailMessage;
   PdfController? _pdfController;
   PdfDocument? _pdfDocument;
   ViewerSpool? _spool;
@@ -267,6 +285,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _releaseResources();
     _previewBytes = null;
     _textContent = null;
+    _emailMessage = null;
     _error = null;
     _loading = false;
     _loadedFile = file;
@@ -351,6 +370,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         }
         _pdfDocument = document;
         _pdfController = PdfController(document: Future.value(document));
+      } else if (type == PreviewType.email) {
+        _emailMessage = parseEmailMessage(bytes, file.name);
       } else if (type == PreviewType.office) {
         final text = await _extractOfficeText(
           bytes,
@@ -609,6 +630,24 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             ],
           ),
         ),
+      );
+    }
+
+    final email = _emailMessage;
+    if (email != null) {
+      return EmailMessageView(
+        message: email,
+        onOpenAttachment: (attachment) {
+          final bytes = attachment.bytes;
+          if (bytes == null) return;
+          unawaited(showInternalViewer(
+            context,
+            file: file,
+            side: widget.side,
+            bytesOverride: bytes,
+            displayName: attachment.name,
+          ));
+        },
       );
     }
 

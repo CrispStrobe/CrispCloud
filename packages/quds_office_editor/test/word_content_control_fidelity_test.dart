@@ -78,7 +78,7 @@ void main() {
           ['Nested ', 'Be edited ta'],
         );
         final output = File(
-          'build/fidelity-content-controls/editor-controls-$cycle.docx',
+          'build/fidelity-content-controls-legacy/editor-controls-$cycle.docx',
         );
         output.parent.createSync(recursive: true);
         output.writeAsBytesSync(bytes);
@@ -98,7 +98,7 @@ void main() {
       editor.caret.collapseSelection();
       final before = editor.document.paragraphs.map((p) => p.text).toList();
       expect(editor.canUndo, isFalse);
-      expect(editor.insertParagraphBreak, throwsArgumentError);
+      expect(editor.insertParagraphBreak, throwsUnsupportedError);
       expect(editor.canUndo, isFalse);
       expect(editor.document.paragraphs.map((p) => p.text), before);
       final saved = control(

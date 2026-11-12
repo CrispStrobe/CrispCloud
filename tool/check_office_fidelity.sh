@@ -17,9 +17,11 @@ flutter test --coverage --coverage-path build/fidelity-host/coverage/lcov.info \
   test/office_ribbon_footnotes_test.dart \
   test/office_ribbon_common_i18n_test.dart \
   test/office_document_service_test.dart \
+  test/legacy_word_document_test.dart \
+  test/word_template_preservation_test.dart \
+  test/word_format_strings_test.dart \
   test/office_preview_fidelity_test.dart \
   test/office_preview_strings_test.dart \
-  test/office_ribbon_common_i18n_test.dart \
   test/office_search_fidelity_test.dart \
   test/recursive_search_service_test.dart \
   test/office_pdf_service_test.dart \

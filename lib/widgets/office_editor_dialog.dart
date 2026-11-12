@@ -29,7 +29,9 @@ import '../l10n/file_bytes_error_strings.dart';
 import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_surface_strings.dart';
+import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
+import '../services/word_package_preservation.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
 
@@ -42,6 +44,7 @@ const Set<String> kOfficeExtensions = <String>{
   'docx',
   'docm',
   'dotx',
+  'dotm',
   'xlsx',
   'xlsm',
   'xltx',
@@ -52,6 +55,7 @@ const Set<String> kOfficeExtensions = <String>{
   'ods',
   'odp',
   'doc',
+  'dot',
   'xls',
   'ppt',
   'pps',
@@ -65,7 +69,10 @@ bool isOfficeFileName(String name) {
 
 bool _isEditableOoxml(String name) {
   final ext = name.split('.').last.toLowerCase();
-  return ext == 'docx' || ext == 'xlsx' || ext == 'pptx';
+  return ext == 'docx' ||
+      WordPackagePreservation.contentTypesByExtension.containsKey(ext) ||
+      ext == 'xlsx' ||
+      ext == 'pptx';
 }
 
 Future<void> showOfficeEditorDialog(
@@ -111,12 +118,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   OfficeEditorKind _kind = OfficeEditorKind.unsupported;
   Uint8List? _loadedBytes;
   CapturedFileTarget? _target;
+  WordPackagePreservation? _wordPreservation;
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
-  // Only document commands advance the revision. Caret, selection, layout and
-  // menu notifications must not make an otherwise completed save look dirty.
-  int _editRevision = 0;
   String? _error;
   final FocusNode _focusNode = FocusNode(debugLabel: 'QudsOfficeEditor');
   final GlobalKey<OfficeEditorRibbonState> _ribbonKey =
@@ -164,7 +169,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       });
     }
     _controller?.removeListener(_onControllerChanged);
-    _controller?.commands.removeListener(_onDocumentCommand);
     _controller?.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -175,6 +179,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (!_isEditableOoxml(name)) return OfficeEditorKind.unsupported;
     switch (ext) {
       case 'docx':
+      case 'docm':
+      case 'dotx':
+      case 'dotm':
         return OfficeEditorKind.word;
       case 'xlsx':
         return OfficeEditorKind.sheet;
@@ -213,6 +220,11 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         return;
       }
 
+      _wordPreservation = await WordPackagePreservation.capture(
+        bytes,
+        widget.file.name,
+      );
+      if (!mounted) return;
       final controller = switch (kind) {
         OfficeEditorKind.word => WordEditorController.fromBytes(
           bytes,
@@ -233,7 +245,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         return;
       }
       controller?.addListener(_onControllerChanged);
-      controller?.commands.addListener(_onDocumentCommand);
       // Documents with footnotes or endnotes open with the notes pane, the
       // place where their text is edited.
       if (controller is WordEditorController &&
@@ -255,8 +266,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '${context.tr('Could not open this document')}: '
-            '${localizedFileBytesError(context, e)}';
+        _error =
+            '${context.tr('Could not open this document')}: '
+            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedFileBytesError(context, e)}';
       });
     }
   }
@@ -266,11 +278,6 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     final dirty = _controller?.isDirty ?? false;
     if (dirty == _dirty) return;
     setState(() => _dirty = dirty);
-  }
-
-  void _onDocumentCommand() {
-    _editRevision++;
-    _onControllerChanged();
   }
 
   Future<void> _save({bool popAfter = false}) async {
@@ -283,8 +290,12 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       // Serialization captures this document revision. Editing remains enabled
       // while encoding/uploading, so completing this write cannot clean a newer
       // revision or dismiss it through Save and Close.
-      final savedRevision = _editRevision;
+      // Inline notes, cells, and slide text can be visible before their undo
+      // command is committed. Flush them before recording the saved revision.
+      controller.commitPendingEdits();
+      final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
+      await _wordPreservation?.validateSaved(bytes);
       final target = _target;
       if (target == null) {
         throw StateError(
@@ -299,7 +310,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       }
       _loadedBytes = bytes;
       if (!mounted) return;
-      if (_editRevision == savedRevision) controller.markClean();
+      if (controller.contentRevision == savedRevision) controller.markClean();
       setState(() {
         _saving = false;
         _dirty = controller.isDirty;
@@ -315,8 +326,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${context.tr('Save failed')}: '
-              '${localizedProviderError(context, e)}'),
+          content: Text(
+            '${context.tr('Save failed')}: '
+            '${WordFormatStrings(Localizations.localeOf(context)).translate(e.toString()) ?? localizedProviderError(context, e)}',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -325,7 +338,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
 
   Future<void> _close() async {
     if (_saving) return;
-    if (!_dirty) {
+    // Pending inline drafts participate in the controller's dirty state. Keep
+    // them pending until Save so Cancel and Discard also work for invalid input.
+    if (!(_controller?.isDirty ?? _dirty)) {
       Navigator.of(context).pop();
       return;
     }

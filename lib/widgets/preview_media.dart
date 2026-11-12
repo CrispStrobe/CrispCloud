@@ -14,6 +14,7 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/preview_media_strings.dart';
 import '../services/archive_viewer_service.dart';
+import '../services/legacy_word_document.dart';
 
 /// RFC 4180-style delimited parser: supports quoted cells, embedded commas,
 /// quotes and newlines. Used for CSV/TSV previews and spreadsheets.
@@ -105,10 +106,16 @@ Future<String> extractOfficeText(Uint8List bytes, String filename,
   final buffer = StringBuffer();
   ViewerArchive? archive;
   try {
+    if (ext == 'doc' || ext == 'dot') {
+      final text = extractLegacyWordText(bytes);
+      return text.isEmpty
+          ? (strings?.text('noText') ?? '(No text content found)')
+          : text;
+    }
     archive = await openViewerArchive(bytes, name: filename);
     final files = archive.members.where((m) => m.isFile).toList();
     final xmlPaths = switch (ext) {
-      'docx' || 'docm' || 'dotx' => <String>['word/document.xml'],
+      'docx' || 'docm' || 'dotx' || 'dotm' => <String>['word/document.xml'],
       'xlsx' || 'xlsm' || 'xltx' => files
           .map((f) => f.name)
           .where((n) => n.startsWith('xl/worksheets/') && n.endsWith('.xml'))
@@ -151,6 +158,8 @@ Future<String> extractOfficeText(Uint8List bytes, String filename,
         continue;
       }
     }
+  } on FormatException {
+    return (strings?.text('extractFailed') ?? '(Could not extract text from this document)');
   } on ArchiveViewException {
     return (strings?.text('extractFailed') ?? '(Could not extract text from this document)');
   } on ArchivePasswordRequiredException {

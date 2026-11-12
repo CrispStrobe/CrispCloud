@@ -4,8 +4,7 @@ import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:test/test.dart';
 
 /// Word wraps footer page numbers in a docPartObj gallery control. Such
-/// presentation-only wrappers must not make the document unopenable, while
-/// data-carrying header/footer controls still fail closed.
+/// wrappers retain their metadata around the editable footer paragraph.
 void main() {
   const String ns = OfficeNamespaces.w;
   const String rns = OfficeNamespaces.r;
@@ -62,14 +61,20 @@ void main() {
     );
   });
 
-  test('a data-carrying footer content control still fails closed', () {
-    expect(
-      () => WordDeserializer().read(
-        packageWithFooter(
-          '<w:sdtPr><w:id w:val="9"/><w:tag w:val="client"/></w:sdtPr>',
-        ),
+  test('a tagged footer content control keeps its exact native wrapper', () {
+    var document = WordDeserializer().read(
+      packageWithFooter(
+        '<w:sdtPr><w:id w:val="9"/><w:tag w:val="client"/></w:sdtPr>',
       ),
-      throwsUnsupportedError,
     );
+    for (var cycle = 0; cycle < 3; cycle++) {
+      final footer = document.sections.first.footer.single;
+      expect(footer.text, 'Page 1');
+      expect(footer.contentControlWrappers.single.id, '9');
+      expect(footer.contentControlWrappers.single.tag, 'client');
+      document = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(document),
+      );
+    }
   });
 }

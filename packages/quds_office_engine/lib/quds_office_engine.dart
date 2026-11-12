@@ -108,6 +108,7 @@ export 'src/word/model/word_revision.dart';
 export 'src/word/model/word_styles.dart';
 export 'src/word/model/word_table.dart';
 export 'src/word/model/word_toc.dart';
+export 'src/word/model/word_tree.dart';
 export 'src/word/properties/wml_properties.dart';
 export 'src/word/serial/word_deserializer.dart';
 export 'src/word/serial/word_drawing_io.dart';

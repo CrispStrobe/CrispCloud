@@ -353,4 +353,44 @@ void main() {
       }
     },
   );
+
+  test(
+    'header clipboard paragraphs stay in their story through history',
+    () async {
+      OfficeClipboard.instance.useSystem = false;
+      addTearDown(() {
+        OfficeClipboard.instance.clear();
+        OfficeClipboard.instance.useSystem = true;
+      });
+      final body = _paragraph('Body remains');
+      final header = _paragraph('Header');
+      final controller = WordEditorController(
+        document: WmlDocument(
+          sections: [
+            WmlSection(blocks: [body], header: [header]),
+          ],
+        ),
+      );
+      addTearDown(controller.dispose);
+      controller.beginHeaderFooterEdit(0, footer: false);
+      controller.caret
+        ..selectionAnchor = 0
+        ..logicalIndex = header.text.length;
+      await controller.copyToClipboard();
+      expect((await OfficeClipboard.instance.read()).plain, 'Header');
+      controller.caret
+        ..logicalIndex = header.text.length
+        ..collapseSelection();
+      await controller.pasteFromClipboard();
+      expect(header.text, 'HeaderHeader');
+      expect(body.text, 'Body remains');
+      controller.endHeaderFooterEdit();
+      controller.undo();
+      expect(header.text, 'Header');
+      expect(body.text, 'Body remains');
+      controller.redo();
+      expect(header.text, 'HeaderHeader');
+      expect(body.text, 'Body remains');
+    },
+  );
 }

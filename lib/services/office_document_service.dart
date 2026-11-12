@@ -21,6 +21,7 @@ import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
 
 import 'archive_viewer_service.dart';
+import 'legacy_word_document.dart';
 import 'office_package_parts.dart';
 
 const int _kOfficePartCap = 8 * 1024 * 1024;
@@ -146,12 +147,23 @@ Future<OfficeDocument> parseOfficeDocument(
   }
   ViewerArchive? archive;
   try {
+    if (ext == 'doc' || ext == 'dot') {
+      return OfficeDocument(
+        kind: OfficeDocumentKind.document,
+        markdown: '',
+        plainText: extractLegacyWordText(bytes),
+        note:
+            'Word binary text preview. Formatting, images, headers, notes '
+            'and tracked changes are not reproduced. Save as DOCX to edit.',
+      );
+    }
     archive = await openViewerArchive(bytes, name: filename);
 
     switch (ext) {
       case 'docx':
       case 'docm':
       case 'dotx':
+      case 'dotm':
         return await _parseDocx(archive);
       case 'xlsx':
       case 'xlsm':

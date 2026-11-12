@@ -33,6 +33,26 @@ void _expectNativeDefaults(WmlDocument document) {
 }
 
 void main() {
+  test('new TOC link appearance survives its first export', () {
+    var document = WordDeserializer().read(_source());
+    WordToc.applyHeading(document.paragraphs.first, 1);
+    final toc = WmlToc();
+    document.sections.first.blocks.add(toc);
+    WordToc.refresh(toc, document);
+    for (var cycle = 0; cycle < 4; cycle++) {
+      final current = document.sections.first.blocks.whereType<WmlToc>().single;
+      final run = current.itemParagraphs.single.inlines
+          .whereType<WmlRun>()
+          .single;
+      expect(run.properties.underline, WmlUnderline.single);
+      expect(run.properties.color, '2E75B6');
+      expect(run.hyperlink?.anchor, isNotEmpty);
+      document = WordDeserializer().readBytes(
+        WordSerializer().writeBytes(document),
+      );
+    }
+  });
+
   for (final withStyle in [false, true]) {
     test(
       'unrelated style catalog $withStyle retains native paragraph defaults',

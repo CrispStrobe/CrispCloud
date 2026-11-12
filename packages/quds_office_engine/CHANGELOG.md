@@ -4,6 +4,11 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Reserve native footnote/endnote separator-definition IDs when inserting new
+  notes, including relocated note and main parts. Imported absence of separator
+  definitions also suppresses the preview rule; new note parts retain their
+  standard definitions. Three-save regressions preserve both behaviors.
+
 - Integrate formatting-aware note updates with native markers: Enter and
   backspace carry actual inline boundaries and styled text; imported unmarked
   or later-marked notes retain visible leading whitespace. More complex

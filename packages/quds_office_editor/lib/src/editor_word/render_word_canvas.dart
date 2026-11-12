@@ -1520,6 +1520,8 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       cellWidth: cell?.width,
       frameX: frame?.pageX(section),
       frameWidth: frame?.width,
+      frameInsetLeft: frame?.insetLeft ?? LaidOutLine.framePad,
+      frameInsetRight: frame?.insetRight ?? LaidOutLine.framePad,
       columnCount: section.resolvedColumnCount,
       columnIndex: columnIndex,
       columnWidth: section.columnWidth,
@@ -1597,61 +1599,20 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
   }
 
   WmlFrame? _frameContaining(WmlParagraph? target) {
-    if (target == null) {
-      return null;
-    }
-    WmlFrame? walk(List<WmlBlock> blocks) {
-      for (final WmlBlock block in blocks) {
-        if (block is WmlFrame) {
-          if (_paragraphIn(block.blocks, target)) {
-            return block;
-          }
-          final WmlFrame? nested = walk(block.blocks);
-          if (nested != null) {
-            return nested;
-          }
-        } else if (block is WmlTable) {
-          for (final WmlTableRow row in block.rows) {
-            for (final WmlTableCell cell in row.cells) {
-              final WmlFrame? found = walk(cell.blocks);
-              if (found != null) {
-                return found;
-              }
-            }
-          }
-        }
-      }
-      return null;
-    }
-
-    for (final WmlSection section in document.sections) {
-      final WmlFrame? found = walk(section.blocks);
-      if (found != null) {
-        return found;
-      }
-    }
-    return null;
-  }
-
-  bool _paragraphIn(List<WmlBlock> blocks, WmlParagraph target) {
-    for (final WmlBlock block in blocks) {
-      if (identical(block, target)) {
-        return true;
-      }
-      if (block is WmlFrame && _paragraphIn(block.blocks, target)) {
-        return true;
-      }
-      if (block is WmlTable) {
-        for (final WmlTableRow row in block.rows) {
-          for (final WmlTableCell cell in row.cells) {
-            if (_paragraphIn(cell.blocks, target)) {
-              return true;
-            }
-          }
+    if (target == null) return null;
+    WmlFrame? result;
+    for (final section in document.sections) {
+      for (final block in WordTree.descendants(section.blocks)) {
+        if (block is WmlFrame &&
+            WordTree.paragraphs(
+              block.blocks,
+            ).any((p) => identical(p, target))) {
+          // Descendants follow their parent, so the innermost frame wins.
+          result = block;
         }
       }
     }
-    return false;
+    return result;
   }
 
   RulerHit? _rulerHit(Offset local) {
@@ -3112,14 +3073,26 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
       final int end = cell.paragraphEnd ?? start;
       return line.paragraphIndex >= start && line.paragraphIndex <= end;
     }
-    return line.x >= cell.x - 1 && line.x <= cell.x + cell.width;
+    // A picture-only or empty cell owns no paragraph and cannot clip a
+    // neighboring body line that happens to share its horizontal coordinate.
+    return false;
   }
 
-  LaidOutBox? _cellForLine(LaidOutPage page, LaidOutLine line) {
+  LaidOutBox? _cellForLine(
+    LaidOutPage page,
+    LaidOutLine line, {
+    WmlFrame? containingFrame,
+  }) {
     LaidOutBox? best;
     var bestArea = double.infinity;
     for (final LaidOutBox box in page.frames) {
       if (box.kind != LaidOutBoxKind.tableCell || !_lineInCell(line, box)) {
+        continue;
+      }
+      if (containingFrame != null &&
+          !WordTree.descendants(containingFrame.blocks).contains(box.table)) {
+        // An absolute frame is its own story. Its ancestor cell must not
+        // clip frame text, including when the frame is outside that cell.
         continue;
       }
       final double area = box.width * box.height;
@@ -3321,8 +3294,26 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
           Paint()..color = const Color(0x55F3F3F3),
         );
       }
+      final paragraphs = document.paragraphs.toList();
+      final paragraphIndices = <WmlParagraph, int>{
+        for (var index = 0; index < paragraphs.length; index++)
+          paragraphs[index]: index,
+      };
+      final frameOwners = <int, WmlFrame>{};
+      for (final box in page.frames) {
+        final frame = box.frame;
+        if (frame == null) continue;
+        for (final paragraph in WordTree.paragraphs(frame.blocks)) {
+          final index = paragraphIndices[paragraph];
+          if (index != null) frameOwners[index] = frame;
+        }
+      }
       for (final LaidOutLine line in page.lines) {
-        final LaidOutBox? cell = _cellForLine(page, line);
+        final LaidOutBox? cell = _cellForLine(
+          page,
+          line,
+          containingFrame: frameOwners[line.paragraphIndex],
+        );
         if (cell != null) {
           canvas.save();
           canvas.clipRect(
@@ -4066,11 +4057,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     )..layout();
     var x = line.x;
     if (line.tocLeader) {
-      x = WordToc.pageNumberX(
-        pageWidth: pageWidth ?? laidOut.pageSize.width,
-        marginRight: marginRight ?? 72,
-        numberWidth: painter.width,
-      );
+      x = line.boxWidth > 0
+          ? line.boxX + line.boxWidth - painter.width
+          : WordToc.pageNumberX(
+              pageWidth: pageWidth ?? laidOut.pageSize.width,
+              marginRight: marginRight ?? 72,
+              numberWidth: painter.width,
+            );
     } else if (line.justification == WmlJustification.right) {
       final double rightEdge = line.width > 1
           ? line.x + line.width
@@ -4244,11 +4237,13 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     final double from = last.x + last.advance + 6;
     final double numberWidth =
         (line.overlayText?.length ?? 1) * (line.overlaySize * 0.56);
-    final double to = WordToc.leaderEndX(
-      pageWidth: pageWidth ?? laidOut.pageSize.width,
-      marginRight: marginRight ?? 72,
-      numberWidth: numberWidth,
-    );
+    final double to = line.boxWidth > 0
+        ? line.boxX + line.boxWidth - numberWidth - 4
+        : WordToc.leaderEndX(
+            pageWidth: pageWidth ?? laidOut.pageSize.width,
+            marginRight: marginRight ?? 72,
+            numberWidth: numberWidth,
+          );
     if (to <= from + 8) {
       return;
     }

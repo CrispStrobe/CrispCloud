@@ -152,6 +152,8 @@ abstract final class WordRuler {
     double? cellWidth,
     double? frameX,
     double? frameWidth,
+    double frameInsetLeft = LaidOutLine.framePad,
+    double frameInsetRight = LaidOutLine.framePad,
     int columnCount = 1,
     int columnIndex = 0,
     double columnWidth = 0,
@@ -162,9 +164,11 @@ abstract final class WordRuler {
         frameX != null &&
         frameWidth != null &&
         frameWidth > 12) {
+      final left = frameX + frameInsetLeft;
       return (
-        left: frameX + LaidOutLine.framePad,
-        right: frameX + frameWidth - LaidOutLine.framePad,
+        left: left,
+        right:
+            left + math.max(1, frameWidth - frameInsetLeft - frameInsetRight),
       );
     }
     if (lineBoxX != null && lineBoxWidth != null && lineBoxWidth > 0) {
@@ -177,9 +181,11 @@ abstract final class WordRuler {
       );
     }
     if (frameX != null && frameWidth != null && frameWidth > 12) {
+      final left = frameX + frameInsetLeft;
       return (
-        left: frameX + LaidOutLine.framePad,
-        right: frameX + frameWidth - LaidOutLine.framePad,
+        left: left,
+        right:
+            left + math.max(1, frameWidth - frameInsetLeft - frameInsetRight),
       );
     }
     if (columnCount > 1 && columnWidth > 0) {

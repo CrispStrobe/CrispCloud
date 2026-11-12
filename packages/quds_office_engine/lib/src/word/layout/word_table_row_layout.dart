@@ -41,12 +41,20 @@ part of 'word_layout.dart';
       ),
     ],
   );
-  final laid = WordLayoutEngine(
-    font: owner.font,
-    fonts: owner.fonts,
-    measure: owner.measure,
-    fallbackWidthFactor: owner.fallbackWidthFactor,
-  ).layout(storyDocument, updateFields: false);
+  final deferredFrames = <WmlFrame, ({double y, int paragraphIndex})>{};
+  final deferredVisuals = <WmlVisual, double>{};
+  final rowEngine =
+      WordLayoutEngine(
+          font: owner.font,
+          fonts: owner.fonts,
+          measure: owner.measure,
+          fallbackWidthFactor: owner.fallbackWidthFactor,
+        )
+        .._deferredContainedFrames = deferredFrames
+        .._deferredContainedVisuals = deferredVisuals
+        .._containedPhysicalSection = owner._containedPhysicalSection ?? section
+        .._containedTableDepth = math.max(0, owner._containedTableDepth - 1);
+  final laid = rowEngine.layout(storyDocument, updateFields: false);
   final paragraphs = storyDocument.paragraphs.toList();
   final lines = laid.pages.single.lines;
   final frames = laid.pages.single.frames;
@@ -56,6 +64,28 @@ part of 'word_layout.dart';
   var start = top;
   var cursor = y;
   var page = pageIndex;
+  final emittedFrames = <WmlFrame>{};
+  final emittedVisuals = <WmlVisual>{};
+
+  bool anchorInSlice(double anchor, double end) =>
+      anchor >= start - 0.01 &&
+      (anchor < end - 0.01 || (end >= bottom - 0.01 && anchor <= end + 0.01));
+
+  Iterable<MapEntry<WmlFrame, ({double y, int paragraphIndex})>> framesThrough(
+    double end,
+  ) => deferredFrames.entries.where((entry) {
+    final anchor = entry.value.y;
+    // A boundary anchor belongs to the following slice. The final boundary
+    // stays on the last page, including a frame after the last text block.
+    return !emittedFrames.contains(entry.key) && anchorInSlice(anchor, end);
+  });
+
+  Iterable<MapEntry<WmlVisual, double>> visualsThrough(double end) =>
+      deferredVisuals.entries.where(
+        (entry) =>
+            !emittedVisuals.contains(entry.key) &&
+            anchorInSlice(entry.value, end),
+      );
 
   Set<int> notesThrough(double end) => {
     for (final line in lines)
@@ -64,6 +94,10 @@ part of 'word_layout.dart';
           paragraphs[line.paragraphIndex],
           line.glyphs.map((g) => g.glyph.logicalIndex),
         ),
+    for (final entry in framesThrough(end))
+      for (final paragraph in WordTree.paragraphs(entry.key.blocks))
+        for (final run in paragraph.inlines.whereType<WmlRun>())
+          if (run.noteRefId != null && !run.noteRefEndnote) run.noteRefId!,
   };
 
   void nextPage() {
@@ -127,7 +161,10 @@ part of 'word_layout.dart';
         end,
         isNoteContent: false,
       );
-      if (copy.paragraphIndex != null) {
+      // TOC hit boxes point at the global heading, not a paragraph owned by
+      // the temporary row document. Only source-paragraph indices need the
+      // row's offset when its shaped content returns to the body flow.
+      if (copy.paragraphIndex != null && copy.kind != LaidOutBoxKind.tocEntry) {
         copy.paragraphIndex = copy.paragraphIndex! + paragraphIndex;
       }
       if (copy.paragraphEnd != null) {
@@ -138,6 +175,33 @@ part of 'word_layout.dart';
         copy.tableRow = rowIndex;
       }
       currentFrames.add(copy);
+    }
+    // Anchored frames retain page/margin coordinates. Paint them as complete
+    // objects on their source anchor's page, never as clipped row fragments.
+    for (final entry in framesThrough(end)) {
+      owner._layoutFrameContents(
+        entry.key,
+        section,
+        pages,
+        current,
+        currentFrames,
+        page,
+        paragraphIndex + entry.value.paragraphIndex,
+      );
+      emittedFrames.add(entry.key);
+    }
+    for (final entry in visualsThrough(end)) {
+      owner._layoutVisual(
+        entry.key.visual,
+        section,
+        pages,
+        current,
+        currentFrames,
+        page,
+        cursor,
+        allowBreak: false,
+      );
+      emittedVisuals.add(entry.key);
     }
     cursor += end - start;
     start = end;

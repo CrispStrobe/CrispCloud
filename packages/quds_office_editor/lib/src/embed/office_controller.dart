@@ -92,12 +92,17 @@ abstract class OfficeController extends ChangeNotifier {
   OfficeTheme get theme => _config.theme;
 
   /// isDirty API.
-  bool get isDirty => _dirty;
+  bool get isDirty => _dirty || _hasPendingEdits;
+
+  // Drafts contribute to dirty state without replacing the state of unrelated
+  // committed commands. Discarding a draft therefore cannot clear those edits.
+  bool get _hasPendingEdits => false;
 
   /// Monotonic revision for controller-observed document changes. Hosts can
   /// capture this after committing pending edits and compare it after an
   /// asynchronous save. Caret, viewport and layout notifications do not advance
-  /// it; immediate note-pane edits do, before their undo command is committed.
+  /// it; changed note, cell and slide text drafts do, before their undo command
+  /// is committed. Discarding a changed draft advances it as well.
   int get contentRevision => _contentRevision;
 
   /// canUndo API.
@@ -176,6 +181,13 @@ abstract class OfficeController extends ChangeNotifier {
   /// Relayout / refresh after undo/redo.
   void afterHistoryChange() {}
 
+  /// Applies active editor drafts and records their undo commands.
+  ///
+  /// Hosts should call this before capturing [contentRevision] for a save.
+  /// [isDirty] already includes changed drafts, so a close prompt can inspect it
+  /// without committing. Both byte-saving APIs also commit drafts.
+  void commitPendingEdits() {}
+
   /// saveBytes API.
   Uint8List saveBytes({String? password});
 
@@ -184,6 +196,7 @@ abstract class OfficeController extends ChangeNotifier {
   /// Unlike [saveBytes], this does not mark the controller clean — the host
   /// should call [markClean] after the bytes are written to disk.
   Future<Uint8List> saveBytesAsync({String? password}) async {
+    commitPendingEdits();
     return saveBytes(password: password);
   }
 
@@ -841,9 +854,12 @@ class WordEditorController extends OfficeController {
   }
 
   @override
+  void commitPendingEdits() => commitNoteEdits();
+
+  @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
-    commitNoteEdits();
+    commitPendingEdits();
     final Uint8List bytes = WordSerializer().writeBytes(
       document,
       password: password,
@@ -855,7 +871,7 @@ class WordEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
-    commitNoteEdits();
+    commitPendingEdits();
     return OfficeIsolateSave.word(document, password: password);
   }
 
@@ -1027,7 +1043,6 @@ class WordEditorController extends OfficeController {
   /// Rebuilds TOC entries from headings, or only refreshes printed page numbers.
   void updateTableOfContents({bool pageNumbersOnly = false}) {
     if (!pageNumbersOnly) {
-      WordLink.ensureHeadingBookmarks(document);
       WordToc.refreshAll(document);
     }
     _relayoutTocPages();
@@ -1096,6 +1111,7 @@ class WordEditorController extends OfficeController {
       _commitParagraphInlines(
         paragraph,
         () => WmlRunEdit.insertRuns(paragraph, at, <WmlRun>[run]),
+        textEdit: (start: at, end: at, insertedLength: text.length),
       );
       if (document.trackRevisions) {
         _recordRevision(
@@ -1528,107 +1544,35 @@ class WordEditorController extends OfficeController {
   }
 
   ({List<WmlBlock> parent, int index})? _hostSlotOf(WmlParagraph para) {
-    for (final WmlSection section in document.sections) {
-      for (int i = 0; i < section.blocks.length; i++) {
-        final WmlBlock block = section.blocks[i];
-        if (identical(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
+    final List<WmlParagraph>? story = isEditingComment
+        ? selectedComment?.paragraphs
+        : isEditingHeaderFooter
+        ? _ensureHeaderFooterParagraphs()
+        : null;
+    if (story != null) {
+      final index = story.indexOf(para);
+      if (index >= 0) return (parent: story, index: index);
+    }
+    final exact = WordTree.locate(document, para);
+    if (exact != null) return exact;
+    // Generated TOC paragraphs are owned by the TOC, not an editable child
+    // list. Inserting adjacent blocks uses that actual TOC position.
+    for (final blocks in <List<WmlBlock>>[
+      for (final section in document.sections) section.blocks,
+      for (final note in [...document.footnotes, ...document.endnotes])
+        note.blocks,
+    ]) {
+      for (final block in WordTree.descendants(blocks)) {
         if (block is WmlToc && WordToc.ownsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlTable) {
-          final ({List<WmlBlock> parent, int index})? nested = _tableSlotOf(
-            block,
-            para,
-          );
-          if (nested != null) {
-            return nested;
-          }
+          return WordTree.locate(document, block);
         }
       }
     }
     return null;
   }
 
-  ({List<WmlBlock> parent, int index})? _tableSlotOf(
-    WmlTable table,
-    WmlParagraph para,
-  ) {
-    for (final WmlTableRow row in table.rows) {
-      for (final WmlTableCell cell in row.cells) {
-        final int index = cell.blocks.indexOf(para);
-        if (index >= 0) {
-          return (parent: cell.blocks, index: index);
-        }
-        for (final WmlBlock block in cell.blocks) {
-          if (block is WmlTable) {
-            final ({List<WmlBlock> parent, int index})? nested = _tableSlotOf(
-              block,
-              para,
-            );
-            if (nested != null) {
-              return nested;
-            }
-          }
-        }
-      }
-    }
-    return null;
-  }
-
-  ({List<WmlBlock> parent, int index})? _topLevelInsertSlot() {
-    final WmlParagraph para = _activeParagraph;
-    for (final WmlSection section in document.sections) {
-      for (int i = 0; i < section.blocks.length; i++) {
-        final WmlBlock block = section.blocks[i];
-        if (identical(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlToc && WordToc.ownsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlTable && _tableContainsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-        if (block is WmlFrame && _frameContainsParagraph(block, para)) {
-          return (parent: section.blocks, index: i);
-        }
-      }
-    }
-    return null;
-  }
-
-  static bool _frameContainsParagraph(WmlFrame frame, WmlParagraph para) {
-    for (final WmlBlock block in frame.blocks) {
-      if (identical(block, para)) {
-        return true;
-      }
-      if (block is WmlTable && _tableContainsParagraph(block, para)) {
-        return true;
-      }
-      if (block is WmlFrame && _frameContainsParagraph(block, para)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  static bool _tableContainsParagraph(WmlTable table, WmlParagraph para) {
-    for (final WmlTableRow row in table.rows) {
-      for (final WmlTableCell cell in row.cells) {
-        for (final WmlBlock block in cell.blocks) {
-          if (identical(block, para)) {
-            return true;
-          }
-          if (block is WmlTable && _tableContainsParagraph(block, para)) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
+  ({List<WmlBlock> parent, int index})? _topLevelInsertSlot() =>
+      WordTree.flowHost(document, _activeParagraph);
 
   void _revealParagraph(int index) {
     const double pointsToPixels = 96 / 72;
@@ -2698,7 +2642,7 @@ class WordEditorController extends OfficeController {
   }
 
   List<WmlBlock> _captureWordFragment() {
-    if (isEditingComment) {
+    if (isEditingComment || isEditingHeaderFooter) {
       return _captureSlicedCommentParagraphs();
     }
     if (_isEntireDocumentSelected()) {
@@ -2897,6 +2841,7 @@ class WordEditorController extends OfficeController {
     if (lines.isEmpty) {
       return;
     }
+    _preflightMultilineInsert(lines);
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -2916,6 +2861,7 @@ class WordEditorController extends OfficeController {
         _commitParagraphInlines(
           para,
           () => WmlRunEdit.replaceRange(para, start, start, line),
+          textEdit: (start: start, end: start, insertedLength: line.length),
         );
         caret.logicalIndex = start + lines[i].length;
         caret.collapseSelection();
@@ -2932,6 +2878,9 @@ class WordEditorController extends OfficeController {
     if (paragraphs.isEmpty) {
       return;
     }
+    _preflightMultilineInsert(<String>[
+      for (final spans in paragraphs) spans.map((span) => span.text).join(),
+    ]);
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -2953,6 +2902,37 @@ class WordEditorController extends OfficeController {
     if (blocks.isEmpty) {
       return;
     }
+    _assertSelectionCanChange();
+    WordContentControls.assertCanInsert(document, blocks);
+    _assertIncomingBookmarks(blocks);
+    final paragraphStory = isEditingComment || isEditingHeaderFooter;
+    if (paragraphStory) {
+      if (blocks.any((block) => block is! WmlParagraph)) {
+        throw UnsupportedError(
+          'This story accepts paragraph content; pasting other block objects '
+          'here is not supported.',
+        );
+      }
+      _preflightMultilineInsert(<String>[
+        for (final block in blocks) block is WmlParagraph ? block.text : '',
+      ]);
+    }
+    final mergedParagraphs = paragraphStory
+        ? blocks.whereType<WmlParagraph>()
+        : blocks.take(1).whereType<WmlParagraph>();
+    if ((paragraphStory || !_wordBodyIsBlank()) &&
+        mergedParagraphs.any(
+          (paragraph) =>
+              paragraph.contentControlWrappers.isNotEmpty ||
+              paragraph.inlines.any(
+                (inline) => inline is WmlContentControlBoundary,
+              ),
+        )) {
+      throw UnsupportedError(
+        'Pasting native paragraph wrappers or inline content controls into an '
+        'existing paragraph is not supported. Retain them as complete objects.',
+      );
+    }
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -2960,7 +2940,7 @@ class WordEditorController extends OfficeController {
     final List<WmlBlock> clones = <WmlBlock>[
       for (final WmlBlock block in blocks) WmlClone.block(block),
     ];
-    if (isEditingComment) {
+    if (paragraphStory) {
       for (int i = 0; i < clones.length; i++) {
         if (i > 0) {
           _splitActiveParagraph();
@@ -2982,13 +2962,49 @@ class WordEditorController extends OfficeController {
     notifyListeners();
   }
 
+  void _assertIncomingBookmarks(List<WmlBlock> blocks) {
+    final paragraphs = blocks.expand(WmlClone.paragraphsOf).toList();
+    if (!paragraphs.any(
+      (paragraph) =>
+          paragraph.inlines.any((inline) => inline is WmlBookmarkBoundary),
+    )) {
+      return;
+    }
+    // A fragment must carry complete pairs. A copied range in a later block
+    // must not mutate the destination and defer an ID collision until save.
+    final incoming = WordBookmarks.ranges(
+      WmlDocument(sections: [WmlSection(blocks: blocks)]),
+    );
+    final ids = <String>{};
+    final names = <String>{};
+    for (final paragraph in _paragraphs) {
+      final generated = WordBookmarks.generatedName(paragraph);
+      if (generated != null) names.add(generated);
+      for (final inline in paragraph.inlines.whereType<WmlBookmarkBoundary>()) {
+        if (inline.isStart) {
+          ids.add(WordBookmarks.canonicalId(inline.id));
+          if (inline.name != null) names.add(inline.name!);
+        }
+      }
+    }
+    for (final range in incoming) {
+      if (!ids.add(WordBookmarks.canonicalId(range.start.id)) ||
+          !names.add(range.name)) {
+        throw UnsupportedError(
+          'Pasting this bookmark requires remapping its native ID and name '
+          'before it can be added to the same story.',
+        );
+      }
+    }
+  }
+
   bool _wordBodyIsBlank() {
     for (final WmlSection section in document.sections) {
       for (final WmlBlock block in section.blocks) {
         if (block is WmlParagraph) {
           if (block.text.isNotEmpty ||
               block.inlines.any(
-                (WmlInline inline) => inline is WmlZeroWidthInline,
+                (inline) => inline is! WmlRun || inline.isAtomic,
               )) {
             return false;
           }
@@ -3128,25 +3144,14 @@ class WordEditorController extends OfficeController {
       caret.logicalIndex,
       caret.logicalIndex,
     ).start;
-    final List<WmlInline> before = _cloneInlines(para);
     final int added = inlines.whereType<WmlRun>().fold<int>(
       0,
-      (int n, WmlRun r) => n + r.text.length,
+      (int n, WmlRun run) => n + run.text.length,
     );
-    commands.commit(
-      _CallbackCommand(
-        executeFn: () {
-          para.inlines
-            ..clear()
-            ..addAll(_cloneInlinesFrom(before));
-          WmlRunEdit.insertInlines(para, start, inlines);
-        },
-        undoFn: () {
-          para.inlines
-            ..clear()
-            ..addAll(_cloneInlinesFrom(before));
-        },
-      ),
+    _commitParagraphInlines(
+      para,
+      () => WmlRunEdit.insertInlines(para, start, inlines),
+      textEdit: (start: start, end: start, insertedLength: added),
     );
     caret.logicalIndex = start + added;
     caret.collapseSelection();
@@ -3162,9 +3167,16 @@ class WordEditorController extends OfficeController {
       caret.logicalIndex,
       caret.logicalIndex,
     ).start;
+    WordContentControls.assertCanSplit(para, index);
+    final slot = _hostSlotOf(para);
+    if (slot == null || !identical(slot.parent[slot.index], para)) {
+      throw UnsupportedError('This paragraph has no editable block owner.');
+    }
+    final List<WmlBlock> parent = slot.parent;
+    final int at = slot.index + 1;
     final List<WmlInline> before = _cloneInlines(para);
-    final WmlParagraph split = WmlParagraph(inlines: _cloneInlinesFrom(before));
-    final List<WmlInline> tail = WmlRunEdit.splitParagraphInlines(split, index);
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
+    final split = WmlClone.splitInlines(para, index);
     // Keep both the inserted paragraph and its story stable across history.
     // Later commands hold this paragraph, even after focus moves to the body.
     final WmlParagraph next = WmlParagraph(
@@ -3173,20 +3185,24 @@ class WordEditorController extends OfficeController {
         ..listRestart = null
         ..pageBreakBefore = pageBreakBefore
         ..columnBreakBefore = columnBreakBefore,
-      inlines: tail.isEmpty ? <WmlInline>[WmlRun()] : _cloneInlinesFrom(tail),
+      inlines: split.tail.isEmpty
+          ? <WmlInline>[WmlRun()]
+          : _cloneInlinesFrom(split.tail),
     );
-    final List<WmlBlock> parent = isEditingComment
-        ? selectedComment!.paragraphs
-        : isEditingHeaderFooter
-        ? _ensureHeaderFooterParagraphs()
-        : _hostSlotOf(para)?.parent ?? sectionAtCaret.blocks;
-    final int at = parent.indexOf(para) + 1;
     commands.commit(
       _CallbackCommand(
         executeFn: () {
+          revisions.restore(document);
           para.inlines
             ..clear()
-            ..addAll(_cloneInlinesFrom(split.inlines));
+            ..addAll(_cloneInlinesFrom(before));
+          WordRevisions.splitParagraph(document, para, next, index);
+          para.inlines
+            ..clear()
+            ..addAll(_cloneInlinesFrom(split.head));
+          next.inlines
+            ..clear()
+            ..addAll(_cloneInlinesFrom(split.tail));
           parent.insert(at.clamp(0, parent.length), next);
         },
         undoFn: () {
@@ -3194,6 +3210,7 @@ class WordEditorController extends OfficeController {
           para.inlines
             ..clear()
             ..addAll(_cloneInlinesFrom(before));
+          revisions.restore(document);
         },
       ),
     );
@@ -3321,23 +3338,116 @@ class WordEditorController extends OfficeController {
   static List<WmlInline> _cloneInlines(WmlParagraph para) =>
       _cloneInlinesFrom(para.inlines);
 
-  static List<WmlInline> _cloneInlinesFrom(List<WmlInline> source) {
-    return WmlClone.inlines(source);
+  static List<WmlInline> _cloneInlinesFrom(List<WmlInline> source) =>
+      WmlClone.inlines(source);
+
+  void _assertSelectionCanChange() {
+    if (caret.isCollapsed) return;
+    final paragraphs = _paragraphs;
+    final range = caret.normalizedRange;
+    if (range.startPara < 0 || range.endPara >= paragraphs.length) return;
+    if (range.startPara != range.endPara) {
+      for (var index = range.startPara; index <= range.endPara; index++) {
+        if (WordContentControls.hasStructuralControls(paragraphs[index])) {
+          throw UnsupportedError(
+            'Changing several paragraphs containing a structural content '
+            'control is not supported. Edit each paragraph separately.',
+          );
+        }
+      }
+    }
+    for (var index = range.startPara; index <= range.endPara; index++) {
+      final paragraph = paragraphs[index];
+      final span = WmlRunEdit.normalizeRange(
+        paragraph,
+        index == range.startPara ? range.startIdx : 0,
+        index == range.endPara ? range.endIdx : paragraph.text.length,
+      );
+      WordContentControls.assertCanEdit(paragraph, span.start, span.end);
+    }
   }
 
-  void _commitParagraphInlines(WmlParagraph paragraph, void Function() update) {
+  // Simulate the text portion of a paste/Enter before opening a command batch.
+  // A later unsupported split must not leave an earlier replacement committed.
+  void _preflightMultilineInsert(List<String> lines) {
+    _assertSelectionCanChange();
+    if (lines.isEmpty) return;
+    final range = caret.normalizedRange;
+    final paragraphs = _paragraphs;
+    if (range.startPara < 0 || range.startPara >= paragraphs.length) return;
+    final original = paragraphs[range.startPara];
+    if (lines.length > 1) {
+      final slot = _hostSlotOf(original);
+      if (slot == null || !identical(slot.parent[slot.index], original)) {
+        throw UnsupportedError('This paragraph has no editable block owner.');
+      }
+    }
+    // Multi-paragraph inline-control changes were rejected above. No wrapper
+    // can be split in that branch; existing structural selection rules apply.
+    if (range.startPara != range.endPara) return;
+    var preview = WmlClone.paragraph(original);
+    final span = WmlRunEdit.normalizeRange(
+      preview,
+      range.startIdx,
+      range.endIdx,
+    );
+    var offset = span.start;
+    if (!caret.isCollapsed && !document.trackRevisions) {
+      WmlRunEdit.replaceRange(preview, span.start, span.end, '');
+    }
+    for (var index = 0; index < lines.length; index++) {
+      if (lines[index].isNotEmpty) {
+        WmlRunEdit.replaceRange(preview, offset, offset, lines[index]);
+        offset += lines[index].length;
+      }
+      if (index + 1 < lines.length) {
+        WordContentControls.assertCanSplit(preview, offset);
+        final split = WmlClone.splitInlines(preview, offset);
+        preview = WmlParagraph(inlines: split.tail);
+        offset = 0;
+      }
+    }
+  }
+
+  void _commitParagraphInlines(
+    WmlParagraph paragraph,
+    void Function() update, {
+    ({int start, int end, int insertedLength})? textEdit,
+  }) {
+    if (textEdit != null) {
+      WordContentControls.assertCanEdit(
+        paragraph,
+        textEdit.start,
+        textEdit.end,
+      );
+    }
     final List<WmlInline> before = _cloneInlines(paragraph);
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
+    final String oldText = paragraph.text;
     void restore() {
       paragraph.inlines
         ..clear()
         ..addAll(_cloneInlinesFrom(before));
+      revisions.restore(document);
     }
 
     commands.commit(
       _CallbackCommand(
         executeFn: () {
           restore();
+          if (textEdit != null) {
+            WordRevisions.rebaseEdit(
+              document,
+              paragraph,
+              start: textEdit.start,
+              end: textEdit.end,
+              insertedLength: textEdit.insertedLength,
+            );
+          }
           update();
+          if (textEdit == null) {
+            WordRevisions.rebaseTextChange(document, paragraph, oldText);
+          }
         },
         undoFn: restore,
       ),
@@ -3352,13 +3462,13 @@ class WordEditorController extends OfficeController {
     required int end,
     required String text,
   }) {
-    final bool beforeTracking = document.trackRevisions;
-    WmlRevision? revision;
+    final WmlRevisionSnapshot before = WordRevisions.capture(document);
+    WmlRevisionSnapshot? after;
     commands.commit(
       _CallbackCommand(
         executeFn: () {
-          if (revision == null) {
-            revision = WordRevisions.record(
+          if (after == null) {
+            WordRevisions.record(
               document,
               kind: kind,
               paragraph: paragraph,
@@ -3367,15 +3477,12 @@ class WordEditorController extends OfficeController {
               end: end,
               text: text,
             );
+            after = WordRevisions.capture(document);
           } else {
-            document.trackRevisions = true;
-            document.revisions.add(revision!);
+            after!.restore(document);
           }
         },
-        undoFn: () {
-          document.revisions.remove(revision);
-          document.trackRevisions = beforeTracking;
-        },
+        undoFn: () => before.restore(document),
       ),
     );
   }
@@ -3392,6 +3499,7 @@ class WordEditorController extends OfficeController {
     if (selectedVisual != null) {
       return;
     }
+    _assertSelectionCanChange();
     final String previous = _activeParagraph.text;
     commands.beginBatch();
     if (!caret.isCollapsed) {
@@ -3407,6 +3515,7 @@ class WordEditorController extends OfficeController {
     _commitParagraphInlines(
       para,
       () => WmlRunEdit.replaceRange(para, start, start, text),
+      textEdit: (start: start, end: start, insertedLength: text.length),
     );
     if (document.trackRevisions) {
       _recordRevision(
@@ -3454,6 +3563,7 @@ class WordEditorController extends OfficeController {
     }
     final String previous = _activeParagraph.text;
     if (!caret.isCollapsed) {
+      _assertSelectionCanChange();
       commands.beginBatch();
       _deleteNormalizedSelection();
       commands.endBatch();
@@ -3514,6 +3624,7 @@ class WordEditorController extends OfficeController {
     _commitParagraphInlines(
       paragraph,
       () => WmlRunEdit.replaceRange(paragraph, range.start, range.end, ''),
+      textEdit: (start: range.start, end: range.end, insertedLength: 0),
     );
     caret.logicalIndex = range.start;
     caret.collapseSelection();
@@ -3524,6 +3635,7 @@ class WordEditorController extends OfficeController {
   }
 
   void _deleteNormalizedSelection() {
+    _assertSelectionCanChange();
     if (document.trackRevisions) {
       _deleteNormalizedTextOnly();
       return;
@@ -3565,15 +3677,14 @@ class WordEditorController extends OfficeController {
     final WmlParagraph first = parent[range.startPara];
     final WmlParagraph last = parent[range.endPara];
     final List<WmlInline> inlines = _cloneInlines(first);
+    final List<WmlInline> lastInlines = _cloneInlines(last);
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     final int from = WmlRunEdit.normalizeRange(
       first,
       range.startIdx,
       first.text.length,
     ).start;
     final int to = WmlRunEdit.normalizeRange(last, 0, range.endIdx).end;
-    final WmlParagraph tail = WmlClone.paragraph(last);
-    WmlRunEdit.replaceRange(tail, 0, to, '');
-    final List<WmlInline> suffix = _cloneInlines(tail);
     void restore() {
       parent
         ..clear()
@@ -3581,20 +3692,41 @@ class WordEditorController extends OfficeController {
       first.inlines
         ..clear()
         ..addAll(_cloneInlinesFrom(inlines));
+      last.inlines
+        ..clear()
+        ..addAll(_cloneInlinesFrom(lastInlines));
+      revisions.restore(document);
     }
 
     commands.commit(
       _CallbackCommand(
         executeFn: () {
           restore();
+          WordRevisions.rebaseEdit(
+            document,
+            first,
+            start: from,
+            end: first.text.length,
+            insertedLength: 0,
+          );
           WmlRunEdit.replaceRange(first, from, first.text.length, '');
+          WordRevisions.rebaseEdit(
+            document,
+            last,
+            start: 0,
+            end: to,
+            insertedLength: 0,
+          );
+          WmlRunEdit.replaceRange(last, 0, to, '');
+          WordRevisions.joinParagraphs(document, first, last);
           first.inlines.addAll(
             _cloneInlinesFrom(
-              suffix,
+              last.inlines,
             ).where((inline) => inline is! WmlRun || inline.text.isNotEmpty),
           );
           WmlRunEdit.coalesce(first);
           parent.removeRange(range.startPara + 1, range.endPara + 1);
+          WordRevisions.markDetached(document);
         },
         undoFn: restore,
       ),
@@ -3639,6 +3771,7 @@ class WordEditorController extends OfficeController {
         _commitParagraphInlines(
           para,
           () => WmlRunEdit.replaceRange(para, from, to, ''),
+          textEdit: (start: from, end: to, insertedLength: 0),
         );
       }
     }
@@ -3648,6 +3781,7 @@ class WordEditorController extends OfficeController {
   }
 
   void _replaceDocumentWithEmptyParagraph() {
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     final List<({WmlSection section, List<WmlBlock> blocks})> before =
         <({WmlSection section, List<WmlBlock> blocks})>[
           for (final WmlSection section in document.sections)
@@ -3657,10 +3791,12 @@ class WordEditorController extends OfficeController {
     commands.commit(
       _CallbackCommand(
         executeFn: () {
+          revisions.restore(document);
           for (final WmlSection section in document.sections) {
             section.blocks.clear();
           }
           document.sections.first.blocks.add(empty);
+          WordRevisions.markDetached(document);
           selectedTable = null;
           selectedVisual = null;
           selectedEquation = null;
@@ -3674,6 +3810,7 @@ class WordEditorController extends OfficeController {
               ..clear()
               ..addAll(snap.blocks);
           }
+          revisions.restore(document);
         },
       ),
     );
@@ -3689,6 +3826,7 @@ class WordEditorController extends OfficeController {
     int endIdx,
   ) {
     final WmlParagraph startIdentity = paras[startPara];
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     final List<({WmlSection section, List<WmlBlock> blocks})> sectionSnaps =
         <({WmlSection section, List<WmlBlock> blocks})>[
           for (final WmlSection section in document.sections)
@@ -3711,6 +3849,7 @@ class WordEditorController extends OfficeController {
     commands.commit(
       _CallbackCommand(
         executeFn: () {
+          revisions.restore(document);
           for (final WmlBlock block in remove) {
             final List<WmlBlock>? parent = _parentBlocksOfBlock(block);
             parent?.remove(block);
@@ -3724,10 +3863,19 @@ class WordEditorController extends OfficeController {
             final int from = p == startPara ? startIdx : 0;
             final int to = p == endPara ? endIdx : para.text.length;
             if (to > from) {
+              final range = WmlRunEdit.normalizeRange(para, from, to);
+              WordRevisions.rebaseEdit(
+                document,
+                para,
+                start: range.start,
+                end: range.end,
+                insertedLength: 0,
+              );
               WmlRunEdit.replaceRange(para, from, to, '');
             }
           }
           _ensureBodyHasParagraph();
+          WordRevisions.markDetached(document);
           selectedTable = null;
           selectedVisual = null;
           selectedEquation = null;
@@ -3744,6 +3892,7 @@ class WordEditorController extends OfficeController {
               ..clear()
               ..addAll(_cloneInlinesFrom(inlines));
           });
+          revisions.restore(document);
         },
       ),
     );
@@ -3815,6 +3964,7 @@ class WordEditorController extends OfficeController {
       return;
     }
     final String text = _activeParagraph.text;
+    _preflightMultilineInsert(const <String>['', '']);
     commands.beginBatch();
     if (!caret.isCollapsed) {
       _deleteNormalizedSelection();
@@ -3970,6 +4120,7 @@ class WordEditorController extends OfficeController {
     final WmlParagraph para = _activeParagraph;
     final String old = para.text;
     if (value.text != old) {
+      _setParagraphText(WmlClone.paragraph(para), value.text);
       _applyingIme = true;
       _syncParagraphDirection(para, incoming: value.text);
       _commitParagraphInlines(para, () => _setParagraphText(para, value.text));
@@ -4178,12 +4329,15 @@ class WordEditorController extends OfficeController {
     }
     final List<WmlInline> keepInlines = _cloneInlines(keep);
     final List<WmlInline> dropInlines = _cloneInlines(drop);
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     commands.commit(
       _CallbackCommand(
         executeFn: () {
+          revisions.restore(document);
           keep.inlines
             ..clear()
             ..addAll(_cloneInlinesFrom(keepInlines));
+          WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
             _cloneInlinesFrom(
               dropInlines,
@@ -4202,6 +4356,7 @@ class WordEditorController extends OfficeController {
           if (!parent.contains(drop)) {
             parent.insert(dropAt.clamp(0, parent.length), drop);
           }
+          revisions.restore(document);
         },
       ),
     );
@@ -4231,6 +4386,13 @@ class WordEditorController extends OfficeController {
     final WmlParagraph drop = backward
         ? paras[currentIndex]
         : paras[otherIndex];
+    if (WordContentControls.hasStructuralControls(keep) ||
+        WordContentControls.hasStructuralControls(drop)) {
+      throw UnsupportedError(
+        'Joining paragraphs containing a structural content control is not '
+        'supported. Preserve each existing wrapper and paragraph.',
+      );
+    }
     if (isEditingComment || isEditingHeaderFooter) {
       final List<WmlParagraph> parent = isEditingComment
           ? selectedComment!.paragraphs
@@ -4275,12 +4437,15 @@ class WordEditorController extends OfficeController {
     final int join = keep.text.length;
     final List<WmlInline> keepInlines = _cloneInlines(keep);
     final List<WmlInline> dropInlines = _cloneInlines(drop);
+    final WmlRevisionSnapshot revisions = WordRevisions.capture(document);
     commands.commit(
       _CallbackCommand(
         executeFn: () {
+          revisions.restore(document);
           keep.inlines
             ..clear()
             ..addAll(_cloneInlinesFrom(keepInlines));
+          WordRevisions.joinParagraphs(document, keep, drop);
           keep.inlines.addAll(
             _cloneInlinesFrom(
               dropInlines,
@@ -4299,6 +4464,7 @@ class WordEditorController extends OfficeController {
           if (!parent.contains(drop)) {
             parent.insert(dropAt.clamp(0, parent.length), drop);
           }
+          revisions.restore(document);
         },
       ),
     );
@@ -5857,35 +6023,8 @@ class WordEditorController extends OfficeController {
   List<WmlBlock>? _parentBlocksOfVisual(WmlVisual visual) =>
       _parentBlocksOfBlock(visual);
 
-  List<WmlBlock>? _parentBlocksOfBlock(WmlBlock target) {
-    List<WmlBlock>? walk(List<WmlBlock> blocks) {
-      if (blocks.contains(target)) {
-        return blocks;
-      }
-      for (final WmlBlock block in blocks) {
-        if (block is! WmlTable) {
-          continue;
-        }
-        for (final WmlTableRow row in block.rows) {
-          for (final WmlTableCell cell in row.cells) {
-            final List<WmlBlock>? found = walk(cell.blocks);
-            if (found != null) {
-              return found;
-            }
-          }
-        }
-      }
-      return null;
-    }
-
-    for (final WmlSection section in document.sections) {
-      final List<WmlBlock>? found = walk(section.blocks);
-      if (found != null) {
-        return found;
-      }
-    }
-    return null;
-  }
+  List<WmlBlock>? _parentBlocksOfBlock(WmlBlock target) =>
+      WordTree.locate(document, target)?.parent;
 
   List<LaidOutLine> _contentLines() {
     return <LaidOutLine>[
@@ -6052,26 +6191,8 @@ class WordEditorController extends OfficeController {
     return OfficeVisual.nextKind(kind);
   }
 
-  List<WmlBlock>? _parentBlocksOf(WmlParagraph para) {
-    for (final WmlSection section in document.sections) {
-      if (section.blocks.contains(para)) {
-        return section.blocks;
-      }
-      for (final WmlBlock block in section.blocks) {
-        if (block is! WmlTable) {
-          continue;
-        }
-        for (final WmlTableRow row in block.rows) {
-          for (final WmlTableCell cell in row.cells) {
-            if (cell.blocks.contains(para)) {
-              return cell.blocks;
-            }
-          }
-        }
-      }
-    }
-    return null;
-  }
+  List<WmlBlock>? _parentBlocksOf(WmlParagraph para) =>
+      WordTree.locate(document, para)?.parent;
 
   @override
   /// semanticsLabel API.
@@ -6127,12 +6248,39 @@ class WordEditorController extends OfficeController {
   @override
   /// applyReplace API.
   int applyReplace(OfficeFindOptions options, {OfficeFindHit? only}) {
-    final int count = OfficeFind.replaceWord(document, options, only: only);
-    if (count > 0) {
-      relayout();
-      notifyListeners();
+    if (!config.allowsMutation) return 0;
+    final plan = OfficeFind.prepareWordReplace(document, options, only: only);
+    if (plan.count == 0) return 0;
+    commitNoteEdits();
+    final before = <WmlParagraph, List<WmlInline>>{
+      for (final paragraph in plan.paragraphs)
+        paragraph: _cloneInlines(paragraph),
+    };
+    final revisions = WordRevisions.capture(document);
+    final previous = _activeParagraph.text;
+    void restore() {
+      for (final entry in before.entries) {
+        entry.key.inlines
+          ..clear()
+          ..addAll(_cloneInlinesFrom(entry.value));
+      }
+      revisions.restore(document);
     }
-    return count;
+
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          restore();
+          plan.apply();
+        },
+        undoFn: restore,
+      ),
+    );
+    relayout();
+    _markLocalEdit(previousText: previous);
+    _syncImeSelection();
+    notifyListeners();
+    return plan.count;
   }
 
   @override
@@ -6346,7 +6494,7 @@ class WordEditorController extends OfficeController {
     }
     final int cols = columns.clamp(1, 20);
     final WmlTable table = WmlTable(
-      grid: List<double>.filled(cols, 96),
+      grid: List<double>.filled(cols, 96, growable: true),
       rows: <WmlTableRow>[
         for (int r = 0; r < rows.clamp(1, 50); r++)
           WmlTableRow(
@@ -6395,6 +6543,10 @@ class WordEditorController extends OfficeController {
     if (targets.isEmpty) {
       return;
     }
+    // Validate the whole request before a command can mutate any paragraph.
+    for (final revision in targets) {
+      WordRevisions.validateRevision(document, revision);
+    }
     final Map<WmlParagraph, List<WmlInline>> inlines =
         <WmlParagraph, List<WmlInline>>{};
     for (final revision in targets) {
@@ -6406,10 +6558,7 @@ class WordEditorController extends OfficeController {
         inlines.putIfAbsent(paragraph, () => _cloneInlines(paragraph));
       }
     }
-    final List<WmlRevision> before = List<WmlRevision>.of(document.revisions);
-    final Map<WmlRevision, bool?> status = <WmlRevision, bool?>{
-      for (final revision in targets) revision: revision.accepted,
-    };
+    final WmlRevisionSnapshot before = WordRevisions.capture(document);
     final int? selected = selectedRevisionIndex;
     void restore() {
       for (final entry in inlines.entries) {
@@ -6417,12 +6566,7 @@ class WordEditorController extends OfficeController {
           ..clear()
           ..addAll(_cloneInlinesFrom(entry.value));
       }
-      document.revisions
-        ..clear()
-        ..addAll(before);
-      for (final entry in status.entries) {
-        entry.key.accepted = entry.value;
-      }
+      before.restore(document);
       selectedRevisionIndex = selected;
     }
 
@@ -6888,22 +7032,55 @@ class WordEditorController extends OfficeController {
   /// The text a notes editor shows for [note]: one line per paragraph.
   String noteEditText(WmlNote note) => WordNotes.editableText(note);
 
-  final Map<WmlNote, List<WmlBlock>> _noteEditStart =
-      <WmlNote, List<WmlBlock>>{};
+  final Map<WmlNote, _WordNoteEditSnapshot> _noteEditStart =
+      <WmlNote, _WordNoteEditSnapshot>{};
 
   /// Replaces the editable text of [note], keeping its formatting, tables,
   /// pictures and links (see [WordNotes.editText]).
   ///
   /// Successive calls for the same note form one edit; [commitNoteEdit]
   /// records it as a single undo step. A pending edit is also committed by an
-  /// edit of another note and by [undo]. The text is applied immediately, so
-  /// saving needs no commit.
+  /// edit of another note, [undo], and saving. The text and content revision
+  /// change immediately, before the undo command is committed.
   void setNoteText(WmlNote note, String text) {
-    if (!config.allowsMutation) {
+    if (!config.allowsMutation || WordNotes.editableText(note) == text) {
       return;
     }
-    final List<String> beforeText = note.paragraphs.map((p) => p.text).toList();
-    if (WordNotes.editableText(note) == text) return;
+    final beforeText = WordNotes.editableParagraphs(
+      note,
+    ).map((paragraph) => paragraph.text).toList();
+    final paragraphs = note.allParagraphs.toList();
+    final hasInlineControls = paragraphs.any(
+      WordContentControls.hasInlineControls,
+    );
+    if (hasInlineControls &&
+        text.split('\n').length != WordNotes.editableParagraphs(note).length) {
+      throw UnsupportedError(
+        'Changing paragraph boundaries in a note containing an inline '
+        'content control is not supported.',
+      );
+    }
+    if (hasInlineControls ||
+        paragraphs.any(
+          (paragraph) =>
+              paragraph.inlines.whereType<WmlBookmarkBoundary>().isNotEmpty,
+        )) {
+      // Validate replacements and native range deletion before committing
+      // another pending note or creating this note's history snapshot.
+      WordNotes.editText(
+        WmlNote(
+          id: note.id,
+          endnote: note.endnote,
+          addReference: note.addReference,
+          addReferenceSpace: note.addReferenceSpace,
+          referencePropertiesXml: note.referencePropertiesXml,
+          blocks: <WmlBlock>[
+            for (final block in note.blocks) WmlClone.block(block),
+          ],
+        ),
+        text,
+      );
+    }
     for (final WmlNote other in _noteEditStart.keys.toList()) {
       if (!identical(other, note)) {
         commitNoteEdit(other);
@@ -6911,12 +7088,25 @@ class WordEditorController extends OfficeController {
     }
     _noteEditStart.putIfAbsent(
       note,
-      () => <WmlBlock>[for (final WmlBlock b in note.blocks) WmlClone.block(b)],
+      () => _WordNoteEditSnapshot(note, document),
     );
+    final Map<WmlParagraph, String> previousText = <WmlParagraph, String>{
+      for (final paragraph in WordNotes.editableParagraphs(note))
+        paragraph: paragraph.text,
+    };
     WordNotes.editText(note, text);
-    if (listEquals(beforeText, note.paragraphs.map((p) => p.text).toList())) {
+    if (listEquals(
+      beforeText,
+      WordNotes.editableParagraphs(
+        note,
+      ).map((paragraph) => paragraph.text).toList(),
+    )) {
       return;
     }
+    for (final entry in previousText.entries) {
+      WordRevisions.rebaseTextChange(document, entry.key, entry.value);
+    }
+    WordRevisions.markDetached(document);
     _contentRevision++;
     _dirty = true;
     relayout();
@@ -6939,29 +7129,21 @@ class WordEditorController extends OfficeController {
 
   /// Records the edit started by [setNoteText] as one undoable command.
   void commitNoteEdit(WmlNote note) {
-    final List<WmlBlock>? before = _noteEditStart.remove(note);
+    final _WordNoteEditSnapshot? before = _noteEditStart.remove(note);
     if (before == null) {
       return;
     }
-    final List<WmlBlock> after = <WmlBlock>[
-      for (final WmlBlock b in note.blocks) WmlClone.block(b),
-    ];
-    if (WmlClone.plainTextOf(before) == WmlClone.plainTextOf(after) &&
-        before.length == after.length) {
+    final _WordNoteEditSnapshot after = _WordNoteEditSnapshot(note, document);
+    if (before.text == after.text &&
+        listEquals(before.blocks, after.blocks) &&
+        before.revisions.matches(document)) {
       return;
-    }
-    void restore(List<WmlBlock> blocks) {
-      note.blocks
-        ..clear()
-        ..addAll(<WmlBlock>[
-          for (final WmlBlock b in blocks) WmlClone.block(b),
-        ]);
     }
 
     commands.commit(
       _CallbackCommand(
-        executeFn: () => restore(after),
-        undoFn: () => restore(before),
+        executeFn: () => after.restore(note, document),
+        undoFn: () => before.restore(note, document),
       ),
     );
   }
@@ -7093,6 +7275,20 @@ class SheetEditorController extends OfficeController {
 
   /// cellEditor API.
   late final InlineCellEditor cellEditor;
+
+  SmlWorksheet? _cellEditSheet;
+  SmlCell? _cellEditCell;
+  String? _cellTextBeforeEdit;
+  String? _cellTextLastObserved;
+
+  @override
+  bool get _hasPendingEdits =>
+      cellEditor.editing &&
+      _cellTextBeforeEdit != null &&
+      cellEditor.formulaBar != _cellTextBeforeEdit;
+
+  @override
+  bool get canUndo => super.canUndo || _hasPendingEdits;
 
   /// selectedDrawingIndex API.
   int? selectedDrawingIndex;
@@ -7271,6 +7467,7 @@ class SheetEditorController extends OfficeController {
   }
 
   void _acceptOpenedWorkbook(SmlWorkbook opened, {required bool recalculate}) {
+    cancelCellEdit();
     workbook = opened;
     _activeSheet = 0;
     selectedDrawingIndex = null;
@@ -7290,8 +7487,46 @@ class SheetEditorController extends OfficeController {
   }
 
   @override
+  void undo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitCellEdit();
+    super.undo();
+  }
+
+  @override
+  void redo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitCellEdit();
+    super.redo();
+  }
+
+  @override
+  void commitPendingEdits() {
+    if (_hasPendingEdits) {
+      final SmlWorksheet target = _cellEditSheet ?? sheet;
+      final SmlCell cell = _cellEditCell ?? target.cell(activeCell);
+      lastValidationError = _cellInputError(
+        target,
+        cell,
+        cellEditor.formulaBar,
+      );
+      if (lastValidationError != null) {
+        // Retain the visible draft if a save cannot apply it to the workbook.
+        notifyListeners();
+        throw StateError(lastValidationError!);
+      }
+    }
+    commitCellEdit();
+  }
+
+  @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
+    commitPendingEdits();
     final Uint8List bytes = SheetSerializer().writeBytes(
       workbook,
       password: password,
@@ -7303,11 +7538,13 @@ class SheetEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
+    commitPendingEdits();
     return OfficeIsolateSave.workbook(workbook, password: password);
   }
 
   /// setActiveSheet API.
   void setActiveSheet(int index) {
+    commitCellEdit();
     _activeSheet = index.clamp(0, workbook.sheets.length - 1);
     selectedDrawingIndex = null;
     selection.selectCell(const SmlCellRef(0, 0));
@@ -8331,20 +8568,11 @@ class SheetEditorController extends OfficeController {
   }
 
   void _replaceCellEditorSelection(String insert) {
-    final String text = cellEditor.formulaBar;
-    final int start = cellEditor.selectionStart;
-    final int end = cellEditor.selectionEnd;
-    final String next = text.replaceRange(start, end, insert);
-    cellEditor.formulaBar = next;
-    cellEditor.caretIndex = start + insert.length;
-    cellEditor.selectionBase = cellEditor.caretIndex;
-    cellEditor.bridge.setValue(
-      TextEditingValue(
-        text: next,
-        selection: TextSelection.collapsed(offset: cellEditor.caretIndex),
-      ),
+    cellEditor.replaceRange(
+      cellEditor.selectionStart,
+      cellEditor.selectionEnd,
+      insert,
     );
-    notifyListeners();
   }
 
   void _pasteSheetCells(
@@ -8546,6 +8774,7 @@ class SheetEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
+    commitCellEdit();
     final SmlCell lockedCell = sheet.cell(activeCell);
     if (sheet.protection?.enabled == true && lockedCell.locked) {
       lastValidationError = 'The sheet is protected.';
@@ -8559,8 +8788,11 @@ class SheetEditorController extends OfficeController {
     selectedDrawingIndex = null;
     _clearPoint();
     final SmlCell cell = sheet.cell(activeCell);
-    final String seed =
-        initial ?? (replace ? '' : (cell.formula ?? cell.asString));
+    _cellEditSheet = sheet;
+    _cellEditCell = cell;
+    _cellTextBeforeEdit = cell.formula ?? cell.asString;
+    _cellTextLastObserved = _cellTextBeforeEdit;
+    final String seed = initial ?? (replace ? '' : _cellTextBeforeEdit!);
     cellEditor.begin(seed, caret: caret);
     _refreshFunctionSuggestions();
     notifyListeners();
@@ -8598,6 +8830,10 @@ class SheetEditorController extends OfficeController {
   }
 
   void _onCellEditorChanged() {
+    if (cellEditor.editing && _cellTextLastObserved != cellEditor.formulaBar) {
+      _cellTextLastObserved = cellEditor.formulaBar;
+      _contentRevision++;
+    }
     if (!_applyingPoint) {
       _clearPoint();
       _suppressFunctionSuggestions = false;
@@ -8772,10 +9008,14 @@ class SheetEditorController extends OfficeController {
     if (!cellEditor.editing) {
       return;
     }
+    if (_hasPendingEdits) {
+      _contentRevision++;
+    }
     _clearPoint();
     functionSuggestions = const <FormulaFnDoc>[];
     cellEditor.editing = false;
     cellEditor.bridge.detach();
+    _clearCellEditTracking();
     notifyListeners();
   }
 
@@ -8788,13 +9028,31 @@ class SheetEditorController extends OfficeController {
   }
 
   void _commitFormula(String text) {
-    final SmlCell cell = sheet.cell(activeCell);
+    final SmlWorksheet target = _cellEditSheet ?? sheet;
+    final SmlCell cell = _cellEditCell ?? target.cell(activeCell);
+    final bool discardedDraft =
+        _cellTextBeforeEdit != null && text != _cellTextBeforeEdit;
+    _clearCellEditTracking();
+    if (text == (cell.formula ?? cell.asString)) {
+      lastValidationError = null;
+      notifyListeners();
+      return;
+    }
+    lastValidationError = _cellInputError(target, cell, text);
+    if (lastValidationError != null) {
+      if (discardedDraft) {
+        _contentRevision++;
+      }
+      notifyListeners();
+      return;
+    }
     final Object? prevValue = cell.value;
     final String? prevFormula = cell.formula;
     final SmlCellType prevType = cell.type;
     commands.commit(
       _CallbackCommand(
-        executeFn: () => _applyCellText(cell, text),
+        executeFn: () =>
+            FormulaEvaluator.applyInput(workbook, target, cell, text),
         undoFn: () {
           cell.value = prevValue;
           cell.formula = prevFormula;
@@ -8806,12 +9064,22 @@ class SheetEditorController extends OfficeController {
     notifyListeners();
   }
 
-  void _applyCellText(SmlCell cell, String text) {
-    if (sheet.protection != null && sheet.protection!.enabled && cell.locked) {
-      lastValidationError = 'The sheet is protected.';
-      return;
+  void _clearCellEditTracking() {
+    _cellEditSheet = null;
+    _cellEditCell = null;
+    _cellTextBeforeEdit = null;
+    _cellTextLastObserved = null;
+  }
+
+  String? _cellInputError(SmlWorksheet target, SmlCell cell, String text) {
+    if (target.protection?.enabled == true && cell.locked) {
+      return 'The sheet is protected.';
     }
-    lastValidationError = SmlAnalysis.validateInput(sheet, cell.ref, text);
+    return SmlAnalysis.validateInput(target, cell.ref, text);
+  }
+
+  void _applyCellText(SmlCell cell, String text) {
+    lastValidationError = _cellInputError(sheet, cell, text);
     if (lastValidationError != null) {
       return;
     }
@@ -9215,6 +9483,17 @@ class SlideEditorController extends OfficeController {
   int? _selectedAnimationIndex;
   PmlSlideShow? _show;
   String? _textBeforeEdit;
+  PmlShape? _textEditShape;
+  PmlTableCell? _textEditCell;
+
+  @override
+  bool get _hasPendingEdits =>
+      textEditor.editing &&
+      _textBeforeEdit != null &&
+      textEditor.formulaBar != _textBeforeEdit;
+
+  @override
+  bool get canUndo => super.canUndo || _hasPendingEdits;
 
   /// textEditor API.
   late final InlineCellEditor textEditor = InlineCellEditor(
@@ -9279,8 +9558,30 @@ class SlideEditorController extends OfficeController {
   }
 
   @override
+  void commitPendingEdits() => commitTextEdit();
+
+  @override
+  void undo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitTextEdit();
+    super.undo();
+  }
+
+  @override
+  void redo() {
+    if (!config.enableUndo || !config.allowsMutation) {
+      return;
+    }
+    commitTextEdit();
+    super.redo();
+  }
+
+  @override
   /// saveBytes API.
   Uint8List saveBytes({String? password}) {
+    commitPendingEdits();
     final Uint8List bytes = SlideSerializer().writeBytes(
       presentation,
       password: password,
@@ -9292,6 +9593,7 @@ class SlideEditorController extends OfficeController {
   @override
   /// saveBytesAsync API.
   Future<Uint8List> saveBytesAsync({String? password}) {
+    commitPendingEdits();
     return OfficeIsolateSave.presentation(presentation, password: password);
   }
 
@@ -9894,7 +10196,10 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsSelection) {
       return;
     }
-    if (textEditor.editing && !identical(selected, shape)) {
+    if (textEditor.editing &&
+        (!identical(selected, shape) ||
+            selectedTableRow != row ||
+            selectedTableCol != col)) {
       commitTextEdit();
     }
     selectShape(shape);
@@ -10131,21 +10436,22 @@ class SlideEditorController extends OfficeController {
     if (shape == null || shape.visual != null || !config.allowsMutation) {
       return;
     }
+    commitTextEdit();
+    _textEditShape = shape;
     if (shape.table != null) {
       final PmlTableCell cell = shape.table!.cellAt(
         selectedTableRow,
         selectedTableCol,
       );
+      _textEditCell = cell;
       _textBeforeEdit = cell.text;
       final String seed = initial ?? (replace ? '' : cell.text);
-      cell.text = seed;
       textEditor.begin(seed, caret: caret, multiline: true);
       notifyListeners();
       return;
     }
     _textBeforeEdit = shape.text;
     final String seed = initial ?? (replace ? '' : shape.text);
-    shape.text = seed;
     textEditor.begin(seed, caret: caret, multiline: true);
     notifyListeners();
   }
@@ -10266,23 +10572,11 @@ class SlideEditorController extends OfficeController {
   }
 
   void _replaceSlideEditorSelection(String insert) {
-    final String text = textEditor.formulaBar;
-    final int start = textEditor.selectionStart;
-    final int end = textEditor.selectionEnd;
-    final String next = text.replaceRange(start, end, insert);
-    textEditor.formulaBar = next;
-    textEditor.caretIndex = start + insert.length;
-    textEditor.selectionBase = textEditor.caretIndex;
-    if (selected != null) {
-      selected!.text = next;
-    }
-    textEditor.bridge.setValue(
-      TextEditingValue(
-        text: next,
-        selection: TextSelection.collapsed(offset: textEditor.caretIndex),
-      ),
+    textEditor.replaceRange(
+      textEditor.selectionStart,
+      textEditor.selectionEnd,
+      insert,
     );
-    notifyListeners();
   }
 
   void _pasteSlideShape(PmlShape source) {
@@ -10394,9 +10688,18 @@ class SlideEditorController extends OfficeController {
     if (!textEditor.editing) {
       return;
     }
-    final PmlShape? shape = selected;
-    if (shape != null && _textBeforeEdit != null) {
-      shape.text = _textBeforeEdit!;
+    final PmlShape? shape = _textEditShape;
+    final PmlTableCell? cell = _textEditCell;
+    final String? before = _textBeforeEdit;
+    if (shape != null && before != null) {
+      if (_hasPendingEdits || (cell?.text ?? shape.text) != before) {
+        _contentRevision++;
+      }
+      if (cell != null) {
+        cell.text = before;
+      } else {
+        shape.text = before;
+      }
     }
     _cancelTextEditSilent();
     notifyListeners();
@@ -10498,31 +10801,32 @@ class SlideEditorController extends OfficeController {
   }
 
   void _onShapeTextChanged() {
-    final PmlShape? shape = selected;
+    final PmlShape? shape = _textEditShape;
     if (shape != null && textEditor.editing) {
-      if (shape.table != null) {
-        shape.table!.cellAt(selectedTableRow, selectedTableCol).text =
-            textEditor.formulaBar;
-      } else {
-        shape.text = textEditor.formulaBar;
+      final PmlTableCell? cell = _textEditCell;
+      final String text = textEditor.formulaBar;
+      if ((cell?.text ?? shape.text) != text) {
+        if (cell != null) {
+          cell.text = text;
+        } else {
+          shape.text = text;
+        }
+        _contentRevision++;
       }
     }
     notifyListeners();
   }
 
   void _commitShapeText(String text) {
-    final PmlShape? shape = selected;
+    final PmlShape? shape = _textEditShape;
+    final PmlTableCell? cell = _textEditCell;
     final String prev = _textBeforeEdit ?? text;
-    _textBeforeEdit = null;
+    _clearShapeTextTracking();
     textEditor.editing = false;
     if (shape == null) {
       return;
     }
-    if (shape.table != null) {
-      final PmlTableCell cell = shape.table!.cellAt(
-        selectedTableRow,
-        selectedTableCol,
-      );
+    if (cell != null) {
       cell.text = text;
       if (prev == text) {
         notifyListeners();
@@ -10556,7 +10860,13 @@ class SlideEditorController extends OfficeController {
       textEditor.editing = false;
       textEditor.bridge.detach();
     }
+    _clearShapeTextTracking();
+  }
+
+  void _clearShapeTextTracking() {
     _textBeforeEdit = null;
+    _textEditShape = null;
+    _textEditCell = null;
   }
 
   /// nudgeSelected API.
@@ -11095,6 +11405,47 @@ class SlideEditorController extends OfficeController {
     }
     presentation.master.background = rgb;
     notifyListeners();
+  }
+}
+
+// Notes-pane edits change existing paragraph runs and their ordering. Keeping
+// those paragraph objects is essential: revisions and later commands hold them.
+class _WordNoteEditSnapshot {
+  _WordNoteEditSnapshot(WmlNote note, WmlDocument document)
+    : blocks = List<WmlBlock>.of(note.blocks),
+      text = WmlClone.plainTextOf(note.blocks),
+      parents = <List<WmlBlock>, List<WmlBlock>>{
+        for (final block in WordTree.descendants(note.blocks))
+          for (final children in WordTree.childLists(block))
+            children: List<WmlBlock>.of(children),
+      },
+      inlines = <WmlParagraph, List<WmlInline>>{
+        for (final paragraph in note.allParagraphs)
+          paragraph: WmlClone.inlines(paragraph.inlines),
+      },
+      revisions = WordRevisions.capture(document);
+
+  final List<WmlBlock> blocks;
+  final String text;
+  final Map<List<WmlBlock>, List<WmlBlock>> parents;
+  final Map<WmlParagraph, List<WmlInline>> inlines;
+  final WmlRevisionSnapshot revisions;
+
+  void restore(WmlNote note, WmlDocument document) {
+    note.blocks
+      ..clear()
+      ..addAll(blocks);
+    for (final entry in parents.entries) {
+      entry.key
+        ..clear()
+        ..addAll(entry.value);
+    }
+    for (final entry in inlines.entries) {
+      entry.key.inlines
+        ..clear()
+        ..addAll(WmlClone.inlines(entry.value));
+    }
+    revisions.restore(document);
   }
 }
 
