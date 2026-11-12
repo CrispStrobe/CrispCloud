@@ -308,3 +308,21 @@ The inventory adds reader_search.js (224 total paths). Default and forced missin
   "reviewed_source_sha256": "62a74997da1d2566bc728dd26d9918a9821d08aa2737268cd92b79531a7407a0"
 }
 ```
+
+## Isolated Linux WebKit startup and owned process cleanup
+
+Reviewed the native plugin, fixed-page helper, shared settings, bounded child runner, CMake packaging and Dart deadline. Before creating a view, the plugin asynchronously requires the helper to demonstrate script execution and an actual painted snapshot with the same ephemeral context, enabled sandbox and view settings. No publication or account input enters the helper; its fixed document disallows network resources. The helper alone has a direct system-WebKit dependency. Missing runtimes/helpers, denied startup, crashes and timeouts produce an unavailable-host result. The app performs no browser load in that failure path.
+
+The runner coalesces up to 32 callers, caches for two seconds, invalidates after real reader errors, and enforces an eight-second parent deadline. The child gets its own process group, closes inherited descriptors, discards standard streams and disables core dumps. waitid with WNOWAIT retains ownership of an exited leader PID while residual group members are stopped; only then does waitpid reap it. A foreign reaper causes a closed failure without signaling an unowned PID. No browser sandbox or host policy is disabled. The added system process primitives do not add cryptography, a network capability or a credential store. All non-digest policy fields remain unchanged.
+
+Seven actual subprocess regression scenarios passed with warnings treated as errors. The helper also passed syntax compilation against real GTK 3.24.49 and WebKitGTK 2.52.6 headers. Full linking, deferred executable installation and enhanced publication rendering remain hosted gates at this checkpoint. CI distinguishes required enhanced rendering on Ubuntu 22.04, blocked-startup recovery on the existing Ubuntu 24.04 runner, and portable-only launch. The 22.04 distribution provides maintained WebKitGTK 4.1 above the existing minimum; no acceptance assertion or browser setting is weakened.
+
+The inventory adds three helper/runner/settings files, for 227 paths. Index-based bindings exclude the temporary local test configuration:
+
+```json
+{
+  "inventory_sha256": "2b459148f02ecba0abefa23f749366e27fa76f0d28371724a3e1cb2056c87302",
+  "pubspec_lock_sha256": "5df7dcfb50f5ffc6c1649adaad649c8d7c577ece5aac6eb8ba1753c7e75703fe",
+  "reviewed_source_sha256": "97b9a5222922a789157c67f138c24aa4ee72f6959870f0cb51c5f76c83c9aec8"
+}
+```

@@ -228,3 +228,9 @@ one product feature list is universal across platforms.
 - `5e0b6f94c542a41db232eb62ec19d21a9ddacffb`: merged current main (`977b5037`), preserving both source inventories and reviewing the combined startup changes.
 
 The next shared-reader increment fixes explicit reading-data discard being retried on disposal, concurrent section-load resource leaks, and canceled searches leaving stale overlays. It also blocks late events from replaced reader views and reports search result chapter indices from their CFIs. Focused Dart analysis, both parser compatibility modes and vendor checks passed. The committed browser and one-shot storage-write regressions still require their runtime gates before final qualification. The Linux startup-helper work remains a separate increment.
+
+### Linux readiness guard implementation checkpoint
+
+Shared-reader corrections are saved at `ae0ef0bd32c786400bb28aa6f24794948e6ae1f7`. The native continuation now implements the previously unfinished startup guard. It runs a fixed script/painting probe in a separate bundled executable before creating a real view, returns portable availability on failure and cleans child processes on all outcomes. Seven real subprocess scenarios passed; actual-header helper compilation also passed. Full native packaging/rendering still requires the new hosted run.
+
+The Linux workflow has three explicitly different jobs: required complete enhanced rendering on Ubuntu 22.04; safe recovery from the observed blocked sandbox startup on Ubuntu 24.04; and the portable-only build. The official Jammy WebKitGTK 4.1 package is 2.50.4, above the retained 2.48.4 minimum (https://packages.ubuntu.com/jammy-updates/libwebkit2gtk-4.1-dev). Neither runner security policy nor the browser sandbox is relaxed. A recovery pass is not an enhanced-rendering pass.

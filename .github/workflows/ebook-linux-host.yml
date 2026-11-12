@@ -25,13 +25,24 @@ env:
 
 jobs:
   linux-host:
-    name: Ubuntu 24.04 / ${{ matrix.host }}
-    runs-on: ubuntu-24.04
+    name: ${{ matrix.os }} / ${{ matrix.host }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        host: [webkitgtk, portable-only]
+        include:
+          # Full enhanced rendering remains a required, independent gate. Jammy
+          # supplies WebKitGTK 4.1 newer than the supported 2.48.4 floor.
+          - os: ubuntu-22.04
+            host: webkitgtk
+          # The existing Noble runner refuses the browser's sandbox startup.
+          # Prove this failure stays in the readiness helper and leaves the
+          # application responsive; it is not an enhanced-rendering pass.
+          - os: ubuntu-24.04
+            host: blocked-runtime
+          - os: ubuntu-24.04
+            host: portable-only
     steps:
       - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
@@ -52,6 +63,13 @@ jobs:
             packages/crisp_ebook_reader/test/linux/surface_size_test.cc \
             -o "$RUNNER_TEMP/ebook-surface-test"
           "$RUNNER_TEMP/ebook-surface-test"
+      - name: Check isolated startup, deadlines and child cleanup
+        run: |
+          clang++ -std=c++17 -Wall -Wextra -Werror \
+            packages/crisp_ebook_reader/test/linux/runtime_probe_test.cc \
+            $(pkg-config --cflags --libs gio-2.0) \
+            -o "$RUNNER_TEMP/ebook-runtime-probe-test"
+          "$RUNNER_TEMP/ebook-runtime-probe-test"
       - name: Prepare isolated Linux app
         run: |
           flutter create --platforms=linux --project-name crisp_linux_host_smoke "$RUNNER_TEMP/ebook-linux-host"
@@ -88,6 +106,7 @@ jobs:
           fi
           extra=()
           if [[ '${{ matrix.host }}' == 'portable-only' ]]; then extra+=(--dart-define=EXPECT_PORTABLE=true); fi
+          if [[ '${{ matrix.host }}' == 'blocked-runtime' ]]; then extra+=(--dart-define=EXPECT_RUNTIME_BLOCKED=true); fi
           set -o pipefail
           xvfb-run -a -s '-screen 0 1280x900x24' dbus-run-session -- \
             flutter test integration_test/reader_host_test.dart -d linux \
@@ -122,6 +141,10 @@ jobs:
             echo 'The optional browser runtime became a startup dependency.' >&2
             exit 1
           fi
+          if [[ '${{ matrix.host }}' != 'portable-only' ]]; then
+            helper="$(dirname "$library")/crisp_ebook_webkit_probe"
+            test -x "$helper"
+          fi
       - name: Prove the enabled build launches when the optional runtime is absent
         if: matrix.host == 'webkitgtk'
         env:
@@ -141,7 +164,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ebook-linux-host-${{ matrix.host }}
+          name: ebook-linux-host-${{ matrix.os }}-${{ matrix.host }}
           path: |
             ${{ runner.temp }}/ebook-linux-host/linux-host-test.log
             ${{ runner.temp }}/ebook-linux-host/native-dependencies.log
