@@ -544,3 +544,28 @@ interactive browser acceptance. The native scoped-access regression uses the
 actual local service with injected bookmark access and temporary directories;
 it does not replace an operating-system permission-dialog test. Live storage
 connections were not exercised in these checks.
+
+## Path favorites and archive parent navigation
+
+Each pane has a literal `*` button at the far right of its tab header. The menu
+shows saved names, original storage sources and paths. Selecting a favorite
+opens it in the pane whose button was clicked, including when the other pane
+originally saved it. A disconnected source is never substituted with a different
+account that happens to have the same path.
+
+Use **Add current path…** to save a location or **Edit path favorites…** to open
+the editor. The editor supports names, absolute paths, filtering, moving entries
+up/down and removal. Changes save to the existing bookmark store and appear in
+both menus. Editing a path preserves its original storage account; to save a
+path from another account, navigate that pane to the account first and add it.
+Old bookmarks without a saved source use the existing explicit binding action.
+The menu remains available in archives, but adding a virtual archive path is
+disabled. Saved file collections retain their existing collection identity.
+
+Archive pane listings include a `..` row even at the root and in empty archives.
+Opening it moves to the containing archive directory. At a nested archive root,
+it returns to the enclosing archive and restores the nested file's cursor; at
+the outer root, it returns to the original physical/cloud directory. The row
+stays above sorted items, survives filtering and cannot be marked for file
+operations. A stale row from a previously closed archive cannot navigate a new
+frame.

@@ -754,7 +754,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         case ViewerMode.email:
           setState(() => _preparing = true);
           if (_dataSize > kEmailPreviewMaxBytes) {
-            throw const FormatException('Email exceeds the 32 MiB preview limit');
+            throw const FormatException(
+              'Email exceeds the 32 MiB preview limit',
+            );
           }
           final data = await _ensureFullData();
           if (!mounted || token != _prepareToken) return;
@@ -776,6 +778,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             _richText = searchText;
             _preparing = false;
           });
+          if (_searchOpen && _searchController.text.isNotEmpty) {
+            unawaited(_runSearch(_searchController.text));
+          }
           return;
         case ViewerMode.office:
           setState(() => _preparing = true);
@@ -1274,8 +1279,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _showGotoDialog() async {
-    final offsetMode = _mode == ViewerMode.hex ||
-        (_isStreamed && _mode != ViewerMode.email);
+    final offsetMode =
+        _mode == ViewerMode.hex || (_isStreamed && _mode != ViewerMode.email);
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
@@ -2406,7 +2411,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final document = _officeDoc;
     if (document == null) return const SizedBox.shrink();
     final lowerName = _viewName.toLowerCase();
-    final legacyOffice = lowerName.endsWith('.ppt') ||
+    final legacyOffice =
+        lowerName.endsWith('.ppt') ||
         lowerName.endsWith('.pps') ||
         lowerName.endsWith('.doc') ||
         lowerName.endsWith('.dot');
@@ -2442,6 +2448,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _inlineSearch(ThemeData theme) {
+    final textSearch = _mode == ViewerMode.text || _mode == ViewerMode.email;
     final total = _totalMatches;
     final position = _matchIndex >= 0 ? '${_matchBase + _matchIndex + 1}' : '0';
     return SizedBox(
@@ -2461,7 +2468,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   hintText: _mode == ViewerMode.hex
                       ? InternalViewerStrings(context).text('hexHint')
                       : context.commanderTr(
-                          _mode == ViewerMode.text
+                          textSearch
                               ? "Search text"
                               : "Search text or 0x… bytes",
                         ),
@@ -2475,7 +2482,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 onSubmitted: _onSearchSubmitted,
               ),
             ),
-            if (_mode == ViewerMode.text)
+            if (textSearch)
               IconButton(
                 key: const ValueKey('viewer-match-case'),
                 tooltip: context.commanderTr("Match case"),
@@ -2603,7 +2610,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       case ViewerMode.email:
         final message = _emailMessage;
         if (message == null) {
-          return _messagePane(InternalViewerStrings(context).text('noData'), theme);
+          return _messagePane(
+            InternalViewerStrings(context).text('noData'),
+            theme,
+          );
         }
         if (_searchOpen) {
           final span = _textMatchSpan();
@@ -2623,13 +2633,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           onOpenAttachment: (attachment) {
             final bytes = attachment.bytes;
             if (bytes == null) return;
-            unawaited(showInternalViewer(
-              context,
-              file: widget.file,
-              side: widget.side,
-              bytesOverride: bytes,
-              displayName: attachment.name,
-            ));
+            unawaited(
+              showInternalViewer(
+                context,
+                file: widget.file,
+                side: widget.side,
+                bytesOverride: bytes,
+                displayName: attachment.name,
+              ),
+            );
           },
         );
       case ViewerMode.archive:
@@ -3384,7 +3396,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_searching) {
       return context.commanderTr("Searching {0} of {1}", [
         formatBytes(_searchBytesScanned),
-        formatBytes(_dataSize),
+        formatBytes(
+          _mode == ViewerMode.email
+              ? (_emailSearchSource?.size ?? 0)
+              : _dataSize,
+        ),
       ]);
     }
     final base = _matches.isEmpty

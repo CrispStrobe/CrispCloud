@@ -142,7 +142,12 @@ const Set<String> textEditableExtensions = <String>{
 
 /// Office formats the built-in editor can actually save in place.
 const Set<String> editableOfficeExtensions = <String>{
-  'docx', 'docm', 'dotx', 'dotm', 'xlsx', 'pptx',
+  'docx',
+  'docm',
+  'dotx',
+  'dotm',
+  'xlsx',
+  'pptx',
 };
 
 String _extensionOf(String name) {
