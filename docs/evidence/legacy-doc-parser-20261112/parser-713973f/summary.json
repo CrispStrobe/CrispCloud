@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "appBaseCommit": "6ddf921bcaa50d11398084630d025e4c04fcf3fb",
+  "appCodeAndTestsUnchangedFromBase": true,
+  "parserCommit": "713973fb27330d190281cbe66193f6b22ec722f8",
+  "suiteCommit": "94ba00188be8f91f3aafb82d58fe05cf0268c22d",
+  "parserUpstreamFiles": 356,
+  "officeManagedFiles": 777,
+  "ebookGitCommit": "5c49682143a44e14bc0eea10c52e769bc4a4c03a",
+  "ebookFilesVerified": 278,
+  "flutterTests": 99,
+  "flutterSuites": 16,
+  "pythonHarnessTests": 101,
+  "portableJavaScriptFormats": [
+    "DOC",
+    "RTF",
+    "PPT",
+    "MSG"
+  ],
+  "installedOfficeRoutes": [
+    "built-in DOCX",
+    "native DOCX",
+    "native DOCM"
+  ],
+  "releasePubspecRestored": true,
+  "testConfiguration": "Existing system SQLite wrapper, retained Clang19.1.7 and SQLite3.46.1; optional ebook hook disabled only during tests. Native ebook conversion is not validated.",
+  "sourceIdentity": "App implementation/test sources equal the pushed base commit; exact independently pinned parser and Quds mirrors, source-mode verification, configuration hashes and retained logs identify the tested integration worktree before commit.",
+  "sourceBinding": {
+    "inventory_sha256": "bf1dbf2ee605e429070fa02305ada258fbe607b7d08976f5d76ec4cf97a9043e",
+    "pubspec_lock_sha256": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+    "reviewed_source_sha256": "771c35ba779b87b1376fd15dafd38d0f40df8273398743c80e3400305c8ece76"
+  },
+  "files": {
+    "pubspec.yaml": "cc870d6ab442de88b6723db4e5fec6f3bb8a0be10474e71d2ec35dfc02402a22",
+    "pubspec.lock": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+    "tool/office_fidelity_manifest.json": "719c2f9200680ee5b43df0a8705550fcb88d9db5c9aca039006c55ead685c662",
+    "packages/legacy_doc_parser/UPSTREAM.json": "cfd7c58d8187c5d5e64c88c3a9ac9cfe75fc43f58dadc6a10552b7ce29e40ef6",
+    "docs/ebook-source-manifest.json": "f08e781f9f99f2c8a221db685c7311cf2082138089d69925c0daa9bfa0c27fe3"
+  },
+  "checks": {
+    "focused": {
+      "archive": "focused.log.gz",
+      "sha256": "5222bef9fc83b5c87db61746e52bb509ade3049f7faf655896967052d2fa8405",
+      "uncompressedSha256": "ba60d5da209d6d26d52b7e9d379ae171ed2332f7699dad66daf502fff3ebd845",
+      "bytes": 20212
+    },
+    "python": {
+      "archive": "python.log.gz",
+      "sha256": "55e26c53fdde788570c73bb67be5102c9955ed74e29da74622bf93f375525bec",
+      "uncompressedSha256": "ac6103f9aa0ebddcb049d3af96182764f23b2cf374bb8d155eb63dcfd5252fc3",
+      "bytes": 1511
+    },
+    "native": {
+      "archive": "native.log.gz",
+      "sha256": "3cca932107db0cef71cfdf288a181debe6f8306bb9d289004a02ec4021e389f4",
+      "uncompressedSha256": "b3eb87b21db0127274578d795b9a8c1a6a8fb347623114ff76ccc72384f0c452",
+      "bytes": 4250
+    },
+    "web": {
+      "archive": "web.log.gz",
+      "sha256": "08cd9f6629b68d6fbc4e618f028a02d2553287c1ebfee6da402523ce09b746bb",
+      "uncompressedSha256": "f42e4bea479755cf1882ee46fbcf5de0a66e767e76c2fcd8bad13c71875ed828",
+      "bytes": 262
+    }
+  }
+}

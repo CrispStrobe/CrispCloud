@@ -1079,3 +1079,25 @@ The root lockfile is unchanged. The 99 Word workflow tests, 74 Python harness te
 ```
 
 Current extracted-book integration: `1.2.3` resolves the facade and its three internal packages from the same immutable Git checkout, independently verifies all tracked source bytes and records them in `docs/ebook-source-manifest.json`. The compressed browser converter and memory-only WASI worker are now present and enabled for bounded supported Kindle export; the earlier pending-runtime note describes the previous checkpoint. Native/Wasm parity, malformed-input and budget controls pass. The shim retains its published random fallback, which is not claimed as a secure RNG. Local platform speech does not introduce a remote text destination. Existing classification and distribution policy fields are unchanged.
+
+### Parser 713973f continuation source binding
+
+The source mirror adds bounded solid-shape context, independent OfficeArt use-bit
+inheritance, path editing-hint evidence, explicit table-cell layout flags and the
+documented textbox separator boundary. The runtime dependency remains `archive`;
+these changes add no cryptographic implementation, native provider or network
+operation. The existing reviewed source inventory covers every changed parser
+implementation file. New sync-tool tests also bind executable bits to Git source.
+
+All 99 Word workflow tests, 101 harness tests, portable JavaScript checks and
+installed-Office acceptance pass. Temporary hooks were removed before computing
+the fingerprints. The main dependency lock, external ebook source identity and
+all non-digest policy decisions remain unchanged. No release or filing is performed.
+
+```json
+{
+  "inventory_sha256": "bf1dbf2ee605e429070fa02305ada258fbe607b7d08976f5d76ec4cf97a9043e",
+  "pubspec_lock_sha256": "0580eb8cc18a0ff7118aedb5f4987612502c334d726edc8e54ebbb8c3499e270",
+  "reviewed_source_sha256": "771c35ba779b87b1376fd15dafd38d0f40df8273398743c80e3400305c8ece76"
+}
+```

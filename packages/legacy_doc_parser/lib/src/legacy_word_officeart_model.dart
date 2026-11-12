@@ -28,18 +28,28 @@ class LegacyWordOfficeArtPathCommand {
   final List<LegacyWordOfficeArtPoint> points;
 }
 
+/// An editing hint associated with an original vertex. It does not add a
+/// rendered segment; the source escape code remains distinct from geometry.
+class LegacyWordOfficeArtPathEditingHint {
+  const LegacyWordOfficeArtPathEditingHint(this.vertexIndex, this.escape);
+  final int vertexIndex, escape;
+}
+
 class LegacyWordOfficeArtGeometry {
   LegacyWordOfficeArtGeometry({
     required this.bounds,
     this.preset,
     List<LegacyWordOfficeArtPathCommand> path = const [],
-  }) : path = List.unmodifiable(path);
+    List<LegacyWordOfficeArtPathEditingHint> editingHints = const [],
+  }) : path = List.unmodifiable(path),
+       editingHints = List.unmodifiable(editingHints);
 
   /// A fixed supported identifier: rect, roundRect, ellipse or line.
   /// A custom path has no preset.
   final String? preset;
   final LegacyWordVectorBounds bounds;
   final List<LegacyWordOfficeArtPathCommand> path;
+  final List<LegacyWordOfficeArtPathEditingHint> editingHints;
 }
 
 /// Explicit resolved properties; null means the property was not specified.
@@ -207,10 +217,16 @@ class LegacyWordOfficeArtShape {
     this.shadow,
     this.text,
     this.position,
+    this.groupShapeBooleanProperties,
     this.ink,
     this.discussionAnchor = false,
     List<int> unsupportedProperties = const [],
-  }) : unsupportedProperties = List.unmodifiable(unsupportedProperties);
+  }) : unsupportedProperties = List.unmodifiable(unsupportedProperties) {
+    final group = groupShapeBooleanProperties;
+    if (group != null && (group < 0 || group > 0xffffffff)) {
+      throw const FormatException('Invalid OfficeArt group Boolean word.');
+    }
+  }
 
   /// MSOSPT from OfficeArtFSP.recInstance, never inferred from image bytes.
   final int type;
@@ -218,6 +234,19 @@ class LegacyWordOfficeArtShape {
   /// Original FSP flags. Group, child, OLE and master contexts need resolution
   /// before isolated geometry can be emitted as an active native shape.
   final int sourceFlags;
+
+  /// The resolved 0x03BF property word, after independent use-bit inheritance.
+  /// Original property records remain in the associated OfficeArt artifact.
+  final int? groupShapeBooleanProperties;
+
+  /// Null means the property was not explicitly used; its source default is
+  /// true. Only this group Boolean currently has an active layout mapping.
+  bool? get layoutInCell {
+    final value = groupShapeBooleanProperties;
+    if (value == null || ((value ~/ 65536) & 0x8000) == 0) return null;
+    return (value & 0x8000) != 0;
+  }
+
   final int rotationFixed16;
   final bool flipHorizontal, flipVertical;
   final LegacyWordOfficeArtGeometry? geometry;
