@@ -115,6 +115,13 @@ jobs:
           (cd packages/pdf_document && dart pub get)
           (cd packages/pdf_operations && dart pub get)
 
+      - name: Standalone legacy Word parser contracts
+        working-directory: packages/legacy_doc_parser
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+
       - name: Shared storage contracts
         working-directory: packages/crisp_storage
         run: |

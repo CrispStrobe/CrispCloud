@@ -156,7 +156,7 @@ void main() {
     'unsupported extensions do not inspect or execute package contents',
     () async {
       expect(
-        await WordPackagePreservation.capture(Uint8List(0), 'document.docx'),
+        await WordPackagePreservation.capture(Uint8List(0), 'document.doc'),
         isNull,
       );
     },
@@ -260,7 +260,7 @@ void main() {
         await expectLater(
           guard.validateSaved(_package(parts)),
           _message(
-            'Saving would remove a Word macro relationship. The original was not changed.',
+            'Saving would remove a preserved Word relationship. The original was not changed.',
           ),
         );
       },
