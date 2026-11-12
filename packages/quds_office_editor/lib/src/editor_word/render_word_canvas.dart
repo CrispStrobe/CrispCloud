@@ -11,6 +11,7 @@ import '../embed/office_context_menu.dart';
 import '../embed/office_theme.dart';
 import '../ui_components/office_chrome.dart';
 import '../visual/paint_office_visual.dart';
+import '../visual/paint_drawing_line.dart';
 import '../editor_slide/transform_handles.dart';
 import 'caret_engine.dart';
 import 'office_ruler.dart';
@@ -709,6 +710,7 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
     _images.dispose();
     super.dispose();
   }
+
   LaidOutDocument? _fittedLayout;
   final Set<LaidOutPage> _fittedPages = <LaidOutPage>{};
   int? _visualHandle;
@@ -3859,16 +3861,30 @@ class RenderWordCanvas extends RenderBox implements MouseTrackerAnnotation {
         final bool frameSelected =
             box.frame != null && identical(box.frame, selectedFrame);
         if (box.strokeColor.isNotEmpty && box.strokeColor != '00000000') {
+          if (box.frame != null) {
+            PaintDrawingLine.rectangle(
+              canvas,
+              rect,
+              _colorFromHex(box.strokeColor),
+              box.frame!.lineStyle,
+            );
+          } else {
+            canvas.drawRect(
+              rect,
+              Paint()
+                ..color = _colorFromHex(box.strokeColor)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 0.7,
+            );
+          }
+        }
+        if (frameSelected) {
           canvas.drawRect(
             rect,
             Paint()
-              ..color = frameSelected
-                  ? _theme.focusRing
-                  : _colorFromHex(box.strokeColor)
+              ..color = _theme.focusRing
               ..style = PaintingStyle.stroke
-              ..strokeWidth = frameSelected
-                  ? 1.8
-                  : (box.kind == LaidOutBoxKind.columnSep ? 0.7 : 0.8),
+              ..strokeWidth = 1.8,
           );
         }
         if (frameSelected && paintHandles && !editingFrame) {

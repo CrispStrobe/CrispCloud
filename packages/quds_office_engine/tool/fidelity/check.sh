@@ -7,6 +7,7 @@ python3 tool/fidelity/inventory.py clean
 dart test \
   test/legacy_word_document_test.dart test/bounded_cfb_reader_test.dart \
   test/word_package_preservation_test.dart test/zip_bounded_read_test.dart \
+  test/drawing_line_style_test.dart \
   test/office_fidelity_oracle_test.dart test/office_steps_test.dart \
   test/scripted_workflows_test.dart test/numbering_collision_test.dart \
   test/list_restart_fidelity_test.dart test/rich_note_test.dart \

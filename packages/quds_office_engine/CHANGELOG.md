@@ -4,6 +4,16 @@ All notable changes to `quds_office_engine` are documented here.
 
 ## Unreleased
 
+- Expose shared bounded compound-file reading, legacy Word text extraction and
+  macro/template preservation guards. Optional ZIP limits check actual inflated
+  bytes before growth; opaque-part relationships and native main-part/type
+  identity are verified before host upload.
+
+- Expose read-only native DrawingML line geometry for Word frame previews,
+  including explicit width, preset/custom dash spacing, caps, joins and inset
+  alignment. Preserve the original XML through clone, color edits and repeated
+  direct/isolate saves; malformed fragments retain the visual fallback.
+
 - Reserve native footnote/endnote separator-definition IDs when inserting new
   notes, including relocated note and main parts. Imported absence of separator
   definitions also suppresses the preview rule; new note parts retain their
