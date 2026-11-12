@@ -457,3 +457,26 @@ ebook workflow ignores only recovery-record-only pushes; packaged help files
 and all other inputs still trigger it. These narrow trigger changes prevent
 verification-note checkpoints from canceling queued qualification. Jobs and
 acceptance assertions are unchanged.
+
+## Native input diagnosis
+
+The next diagnostic increment is isolated on
+`checkpoint/ebook-native-input-20261112` so native-only checkpoints do not
+cancel the integrated application's five-job qualification. It preserves the
+current runtime behavior and adds fixed, bounded observations of GTK mapping,
+focus, key/selection-command counts, and actual WebProcess document focus and
+selection state. No book text, URLs, arbitrary JavaScript or new network access
+is exposed. The native test waits for actual book-frame focus and native text
+selection before its unchanged CFI, clipboard and pointer-selection assertions.
+
+A narrow regression using the real Dart Linux-host widget and a mocked native
+channel confirms that an immediate texture click routes focus and Ctrl+A to the
+native host with the correct modifier, without needing an extra Flutter frame.
+That test passed, and the new test and integration test analyze cleanly.
+
+Pinned Foliate code cites [WebKit issue 218086](https://bugs.webkit.org/show_bug.cgi?id=218086),
+which remains open and concerns parent-installed listeners inside script-disabled
+sandboxed frames. This is a plausible explanation for a missing selection event,
+not yet the demonstrated cause of this native failure. The diagnostic run will
+distinguish absent native focus/selection from a missing JavaScript notification.
+The book sandbox and existing acceptance requirements are retained.

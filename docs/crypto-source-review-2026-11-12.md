@@ -1255,3 +1255,53 @@ All non-digest application, declaration, documentation, France and TestFlight
 fields remain byte-for-byte unchanged. Validator rules are unchanged. Hosted
 native and application/build results, artifact inspection and live distribution
 evidence continue to have their own revision-specific records.
+
+## Native input diagnostic checkpoint
+
+This source delta starts from saved `e20e2cc4e6c50b791048b87c07867a0d3d931076`.
+Only `packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc` changes
+among the existing 295 bound paths. Its frozen SHA-256 is
+`61424ba807e92aeffa1881cf74141ad64ea883ebd7dcf572b17bdaf77c8fa77b`.
+The other 294 source files, inventory and dependency lock are unchanged.
+
+The added `inputState` method requires an already-loaded trusted reader
+document and runs a fixed read-only JavaScript expression. It inspects at most
+eight current book documents and returns only section indices, focus flags,
+selection-range counts and collapsed-selection flags. The native result path
+rejects replies larger than 4,096 bytes and retains the existing closed-view
+and evaluation-error handling. The caller cannot supply JavaScript, a selector
+or a destination. The reply contains no book text, DOM serialization,
+publication URL, selection contents, account value or credential.
+
+The existing native statistics additionally expose the view identifier,
+mapped/viewable flags and aggregate pointer/key/SelectAll counters. Counter
+increments leave input dispatch unchanged. No WebKit setting, sandbox option,
+dynamic symbol, browser script, cryptographic operation or network destination
+changes in this delta.
+
+The integration test now observes actual book-document focus and non-collapsed
+selection before retaining its existing Foliate-CFI assertion. The new focused
+Flutter regression exercises the first shortcut immediately after pointer
+focus with a mocked native channel; it does not substitute for WebProcess
+verification. Its owner reported one passing widget test and clean analysis of
+both test files. These are diagnostic assertions for the observed native
+selection failure, not a product keyboard-behavior fix or a passing native
+selection result. Both test paths are outside the runtime source inventory;
+no new runtime path needs a binding.
+
+The current fingerprints are:
+
+```json
+{
+  "inventory_sha256": "8b2e21808e50a7fb6a64749a87ff6ce448c8c88f947233f61eaaf1d17e68f82d",
+  "pubspec_lock_sha256": "e4af3d0674ff75b84ea258f7ed72a3d89c071eaad7cabac37d40b6997b32a9f1",
+  "reviewed_source_sha256": "dbe95c84ba7ec2ed1f7789ee558a35f2751450a9be2bebaaa1394d8976fca442"
+}
+```
+
+The existing source `--check` passes with this single-file delta, and the two
+changed review/policy files pass `git diff --check`. Only the policy's
+reviewed-source digest changes; every other policy byte, inventory entry,
+validator source and acceptance rule is preserved. Broader test suites were
+not repeated for this diagnostic source-binding update. Native integration
+results remain attached to their actual checkpoint and runner.

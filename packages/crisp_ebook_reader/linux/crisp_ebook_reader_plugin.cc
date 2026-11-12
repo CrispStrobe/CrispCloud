@@ -390,7 +390,10 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     const int buttons = static_cast<int>(Integer(args, "buttons"));
     const guint state = Modifiers(args) | ButtonState(buttons);
     const guint32 time = static_cast<guint32>(g_get_monotonic_time() / 1000);
-    if (type == "down") Focus(true);
+    if (type == "down") {
+      ++pointer_presses_;
+      Focus(true);
+    }
     GdkEvent* event = nullptr;
     if (Boolean(args, "touch")) {
       const GdkEventType touch_type = type == "down" ? GDK_TOUCH_BEGIN :
@@ -454,8 +457,10 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     const std::string name = String(args, "name");
     const guint modifiers = Modifiers(args);
     const bool pressed = Boolean(args, "pressed");
+    if (pressed) ++key_presses_;
     if (pressed && (modifiers & (GDK_CONTROL_MASK | GDK_META_MASK)) != 0) {
       if (name == "c" || name == "a") {
+        if (name == "a") ++select_all_commands_;
         api_.webkit_web_view_execute_editing_command(webview_, name == "c" ? "Copy" : "SelectAll");
         Touch();
       }
@@ -475,6 +480,31 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     Touch();
   }
 
+  void InspectInput(FlMethodCall* call) {
+    if (!loaded_ || !IsDocument(api_.webkit_web_view_get_uri(webview_))) {
+      Error(call, "The Linux reader document is not ready."); return;
+    }
+    // Fixed, read-only diagnostics for the real integration gate. Never expose
+    // book text, DOM serialization, arbitrary JavaScript or publication URLs.
+    // This observes the actual WebProcess, not just GTK's local focus flag.
+    static constexpr char source[] = R"JS((() => {
+      const contents = document.querySelector('foliate-view')?.renderer?.getContents?.() ?? [];
+      const documents = [];
+      for (let i = 0; i < Math.min(contents.length, 8); ++i) {
+        const {doc, index} = contents[i];
+        const selection = doc?.getSelection();
+        documents.push({sectionIndex: Number.isInteger(index) ? index : -1,
+          focused: doc?.hasFocus() === true,
+          selectionRanges: selection?.rangeCount ?? 0,
+          collapsed: selection?.isCollapsed ?? true});
+      }
+      return JSON.stringify({focused: document.hasFocus(), documents});
+    })())JS";
+    auto* evaluation = new Evaluation{shared_from_this(), FL_METHOD_CALL(g_object_ref(call)), true};
+    api_.webkit_web_view_evaluate_javascript(webview_, source, sizeof(source) - 1, nullptr,
+                                           url_.c_str(), cancellable_, EvaluationDone, evaluation);
+  }
+
   FlValue* Stats() const {
     auto* result = fl_value_new_map();
     std::lock_guard<std::mutex> lock(texture_->frames->mutex);
@@ -488,7 +518,14 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
       if (std::memcmp(frame->rgba.data(), frame->rgba.data() + i, 4) != 0) { non_uniform = true; break; }
     }
     fl_value_set_string_take(result, "nonUniform", fl_value_new_bool(non_uniform));
+    fl_value_set_string_take(result, "id", fl_value_new_int(id_));
     fl_value_set_string_take(result, "focused", fl_value_new_bool(focused_));
+    fl_value_set_string_take(result, "pointerPresses", fl_value_new_int(pointer_presses_));
+    fl_value_set_string_take(result, "keyPresses", fl_value_new_int(key_presses_));
+    fl_value_set_string_take(result, "selectAllCommands", fl_value_new_int(select_all_commands_));
+    auto* window = gtk_widget_get_window(GTK_WIDGET(webview_));
+    fl_value_set_string_take(result, "mapped", fl_value_new_bool(gtk_widget_get_mapped(GTK_WIDGET(webview_))));
+    fl_value_set_string_take(result, "viewable", fl_value_new_bool(window != nullptr && gdk_window_is_viewable(window)));
     return result;
   }
 
@@ -496,6 +533,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   struct Evaluation {
     std::weak_ptr<ReaderView> view;
     FlMethodCall* call;
+    bool input_state = false;
   };
 
   bool IsDocument(const char* uri) const {
@@ -548,17 +586,25 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     g_autoptr(GError) error = nullptr;
     auto& api = WebKitApi::Get();
     auto* value = api.webkit_web_view_evaluate_javascript_finish(reinterpret_cast<WebKitWebView*>(object), result, &error);
-    if (value != nullptr) g_object_unref(value);
     auto view = evaluation->view.lock();
     if (evaluation->call != nullptr) {
       if (view == nullptr || view->closed_) Error(evaluation->call, "The Linux reader closed before the command completed.");
       else if (error != nullptr) Error(evaluation->call, error->message);
+      else if (evaluation->input_state) {
+        g_autofree gchar* state = value != nullptr ? api.jsc_value_to_string(value) : nullptr;
+        if (state == nullptr || std::strlen(state) > 4096) Error(evaluation->call, "The Linux reader returned invalid input diagnostics.");
+        else {
+          g_autoptr(FlValue) response = fl_value_new_string(state);
+          fl_method_call_respond_success(evaluation->call, response, nullptr);
+        }
+      }
       else fl_method_call_respond_success(evaluation->call, nullptr, nullptr);
       g_object_unref(evaluation->call);
     } else if (view != nullptr && !view->closed_ && error != nullptr &&
                !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       view->Emit("error", error->message);
     }
+    if (value != nullptr) g_object_unref(value);
   }
   static gboolean Tick(gpointer data) {
     auto view = static_cast<std::weak_ptr<ReaderView>*>(data)->lock();
@@ -698,6 +744,9 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   WebKitUserContentManager* content_ = nullptr;
   GtkWidget* window_ = nullptr;
   CrispReaderTexture* texture_ = nullptr;
+  int64_t pointer_presses_ = 0;
+  int64_t key_presses_ = 0;
+  int64_t select_all_commands_ = 0;
   GCancellable* cancellable_ = nullptr;
   guint timer_ = 0;
   bool closed_ = false;
@@ -776,6 +825,7 @@ class Plugin : public std::enable_shared_from_this<Plugin> {
     } else if (method == "resize") {
       if (!view->Resize(Number(args, "width"), Number(args, "height"), Number(args, "scale"), &error)) { Error(call, error); return; }
     } else if (method == "send") { view->Send(String(args, "message"), call); return;
+    } else if (method == "inputState") { view->InspectInput(call); return;
     } else if (method == "focus") view->Focus(Boolean(args, "focused"));
     else if (method == "pointer") view->Pointer(args);
     else if (method == "scroll") view->Scroll(args);

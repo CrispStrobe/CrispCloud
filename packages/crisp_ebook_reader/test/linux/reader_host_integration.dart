@@ -14,6 +14,10 @@ const native = MethodChannel('crisp_ebook_reader/linux_host');
 Future<Map<String, dynamic>> stats() async =>
     Map<String, dynamic>.from((await native.invokeMethod('stats')) as Map);
 
+Future<Map<String, dynamic>> inputState(int id) async =>
+    Map<String, dynamic>.from(jsonDecode((await native.invokeMethod<String>(
+        'inputState', {'id': id}).timeout(const Duration(seconds: 5)))!));
+
 Future<List<EbookLinuxHostStatus>> firstProbeWithDartChild() async {
   // Dart's Unix exit-code thread waits for any child, including children
   // launched by native libraries. Exercise that real coexistence while the
@@ -251,11 +255,40 @@ void main() {
     expect(overlayClicks, 1);
 
     final content = tester.getRect(find.byType(Texture));
+    final nativeView = ((await stats())['items'] as List).single as Map;
+    final nativeId = nativeView['id'] as int;
+    expect(nativeView['mapped'], isTrue);
+    expect(nativeView['viewable'], isTrue,
+        reason: 'GTK must accept pointer/key events for the offscreen view.');
     await tester.tapAt(content.topLeft + const Offset(200, 100),
         kind: PointerDeviceKind.mouse);
+    // Flutter can forward keys immediately, while WebKit is still processing
+    // its independent mouse-event queue. Observe actual book-frame focus in
+    // the WebProcess before exercising its native SelectAll command.
+    var observedInput = <String, dynamic>{};
+    try {
+      await until(tester, () async {
+        observedInput = await inputState(nativeId);
+        return (observedInput['documents'] as List)
+            .any((document) => document['focused'] == true);
+      }, 'The native pointer did not focus the actual book document.');
+    } finally {
+      debugPrint('linux-host test: focused book state $observedInput');
+      debugPrint('linux-host test: native input counters ${await stats()}');
+    }
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    try {
+      await until(tester, () async {
+        observedInput = await inputState(nativeId);
+        return (observedInput['documents'] as List).any((document) =>
+            document['selectionRanges'] > 0 && document['collapsed'] == false);
+      }, 'Native SelectAll did not select text in the actual book document.');
+    } finally {
+      debugPrint('linux-host test: native selection state $observedInput');
+      debugPrint('linux-host test: native input counters ${await stats()}');
+    }
     await until(tester, () async => selection?.text.contains('Library') == true,
         'Native keyboard selection did not produce a Foliate CFI.');
     expect(selection!.cfi, startsWith('epubcfi('));
