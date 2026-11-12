@@ -1,87 +1,93 @@
 # legacy_doc_parser
 
-Portable Dart parsing of Word 97–2003 binary `.doc`/`.dot` files, with a typed
-document model, safe formatted previews and conversion to a separate Word Open
-XML copy. No Flutter, installed Office application, JavaScript runtime or network
-service is required by the package.
+A portable Dart library for reading Word 97–2003 binary `.doc` and `.dot` files,
+producing a structured document model and safe previews, and converting a
+separate copy to DOCX or explicitly requested DOCM. The package runs on the Dart
+VM and in JavaScript builds without Flutter, installed Office or a network
+service.
 
-Source: [CrispStrobe/legacy-doc-parser](https://github.com/CrispStrobe/legacy-doc-parser).
-The package was extracted from CrispCloud and is under active development at
-version `0.1.0-dev.1`. Supported features and remaining limitations are explicit;
-this is not a claim of complete MS-DOC fidelity or identical pagination.
+The codebase currently supports:
 
-## Consumers and source ownership
+- Main text, sections, headers, footers, footnotes, endnotes, comments and
+  bookmarks, with original UTF-16 character positions retained in the model.
+- Supported character and paragraph styles, independent script font slots,
+  tabs, borders, shading, numbering,
+  list continuation and section settings.
+- Nested tables, supported cell merges and conditional table styles, row
+  properties, and modeled floating-table anchors. Source note endings are
+  preserved without adding layout-changing paragraphs after final tables.
+- Supported tracked insertions/deletions and formatting histories. Field
+  instructions and stored results are preserved, including bounded internal
+  hyperlink fields; fields are not evaluated.
+- Supported raster images, bounded EMF/WMF preservation and vector previews,
+  basic editable OfficeArt shapes and paths, and corroborated textbox chains
+  and independent header instances.
+- Structured DOCX conversion, safe HTML and plain-text extraction, and explicit
+  DOCM output that can retain one structurally complete VBA project. Embedded
+  objects, macros and signature evidence are retained only within the documented
+  conversion contracts; the library never executes them.
+- Explicit warnings, conversion limitations and preservation counts, so callers
+  can distinguish supported output, recovered structures and retained evidence.
 
-The parser is maintained in this repository. The [Quds fork](https://github.com/CrispStrobe/quds_office_suite) exposes its public parsing and conversion API through engine compatibility exports. [CrispCloud](https://github.com/CrispStrobe/CrispCloud) uses it for legacy Word previews and reviewed DOCX/DOCM copies. Consumers retain an exact source pin and the MPL-2.0 notices; a consumer update does not imply complete format fidelity or identical native pagination.
+The library is under active development. These areas remain incomplete or need
+further qualification:
 
-Run `dart analyze`, `dart test`, and `python3 tool/verify_web.py` when updating a consumer pin. The web check compiles and executes the portable parser and converter with JavaScript; it is separate from native Word rendering acceptance.
+- Exact Word pagination and rendering across fonts, shaping engines, table and
+  floating-object layouts, wrapping, and compatibility settings. Valid OOXML
+  and matching extracted text do not establish identical native layout.
+- Arbitrary drawing groups, presets, transforms, effects, GDI text/bitmap/clipping
+  operations, and unmodeled metafile records. Unsupported preview operations do
+  not silently disappear into a claimed complete rendering.
+- Every revision, move, table-topology and cross-story combination; resolved
+  comment state and editable ink; general field evaluation and broader style
+  semantics. Unsupported or ambiguous cases remain diagnosed or rejected.
+- Lossless preservation of every legacy binary feature through conversion.
+  Conversion produces a new package, not a binary `.doc` round trip. A binary
+  DOC writer and encrypted/password-protected DOC input are not supported.
+- Signature validation or preservation of signature validity after conversion.
+  `signatureValidityClaimed` is always false.
 
-## Use the development package
+Remaining work prioritizes independently checked native layout, broader bounded
+format coverage, revision and drawing semantics, and a stable published API.
+The [fidelity status](doc/fidelity-status.md) gives the supported contracts and
+open gaps; the [oracle guide](doc/fidelity-oracles.md) explains how schema,
+semantic and native-rendering checks differ.
 
-Requires Dart 3.8 or later. The only runtime package dependency is `archive`.
-For a Git dependency:
+Use Dart 3.8 or later. `archive` is the runtime package dependency. A development
+Git dependency can be configured as follows; pin a reviewed full commit SHA
+instead of `main` for reproducible consumer builds and retain the lockfile.
 
 ```yaml
 dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser
-      ref: 34e14841ef679c6b480673ef5be354286dbd67dc
+      ref: main
 ```
-
-The example pins a tested development checkpoint. When updating, choose a
-reviewed commit for `ref` and retain the lockfile. Publishing a pub.dev release
-is a separate action.
-
-## Parse a document
 
 ```dart
 import 'dart:typed_data';
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 
-void inspectDocument(Uint8List bytes) {
-  final document = parseLegacyWordDocument(bytes);
+void inspectAndConvert(Uint8List source) {
+  final document = parseLegacyWordDocument(source);
   print(document.plainText);
-  print(document.sections.length);
   print(document.warnings);
+
+  final copy = convertLegacyWordToStructuredDocx(source);
+  print(copy.limitations);
+  // Save copy.bytes to a new .docx file; the source bytes are never modified.
 }
 ```
 
-`blocks`, `plainText` and `safeHtml` describe the main story. Original character
-positions use UTF-16 code units and exclusive range ends. Hidden runs and tracked
-changes remain in the typed model; hidden text is excluded from ordinary preview
-text. The original input is never modified. Encrypted DOC files are rejected.
+`convertLegacyWordDocument` accepts an already parsed document. For explicit
+macro-capable output, use
+`convertLegacyWord(source, format: LegacyWordOutputFormat.docm)` and inspect the
+reported limitations. `extractLegacyWordText` and `convertLegacyWordToDocx` are
+text-only APIs; they do not provide structured conversion fidelity.
 
-The existing text-only API, `extractLegacyWordText`, remains available for callers
-that intentionally need only the main story.
-
-## Convert a separate copy
-
-```dart
-import 'dart:typed_data';
-import 'package:legacy_doc_parser/legacy_doc_parser.dart';
-
-LegacyWordStructuredConversion createDocx(Uint8List source) =>
-    convertLegacyWordToStructuredDocx(source);
-
-LegacyWordStructuredConversion createDocm(Uint8List source) =>
-    convertLegacyWord(source, format: LegacyWordOutputFormat.docm);
-```
-
-`convertLegacyWord` defaults to DOCX. DOCM requires an explicit choice and can
-retain one structurally complete VBA project. DOCX never has an active VBA
-relationship. The library never executes either macros or embedded objects.
-`convertLegacyWordDocument` converts an already parsed `LegacyWordDocument`;
-`convertLegacyWordToDocx` remains the explicit text-only converter.
-
-The result contains immutable output `bytes`, `format`, `extension`,
-`limitations`, `preservedCounts`, and `signatureEvidenceParts`.
-`signatureValidityClaimed` is always false. Show the limitations and review the
-converted copy before using it for editing, publication, or a signed workflow.
-
-The [command-line example](example/legacy_doc_parser_example.dart) prints a
-structural summary and optionally creates a new output file. It refuses an
-existing destination:
+The [CLI example](example/legacy_doc_parser_example.dart) prints a summary or
+writes a separate output, refusing to overwrite an existing destination:
 
 ```sh
 dart run example/legacy_doc_parser_example.dart input.doc
@@ -89,109 +95,22 @@ dart run example/legacy_doc_parser_example.dart input.doc new-copy.docx
 dart run example/legacy_doc_parser_example.dart input.doc new-copy.docm
 ```
 
-## Current support
-
-| Feature | Current behavior |
-| --- | --- |
-| Body text and formatting | Referenced Unicode text, resolved character/paragraph styles, underline variants, basic tables, sections, and tracked insertions/deletions |
-| Tabs, borders and shading | Custom/default tab stops, supported paragraph borders and paragraph/cell shading; unsupported exact patterns are disclosed |
-| Headers, footers and notes | Referenced stories and actual Word output parts; source first/even-header activation is retained |
-| Comments, bookmarks and fields | Comment text/ranges/authors, bookmark ranges, safe locked field syntax and cached results; no field evaluation |
-| Lists | Typed numbering definitions and Word numbering output; supported preview labels with explicit approximation metadata |
-| Images and textboxes | Referenced PNG/JPEG/TIFF, supported inline/floating placement and crop, editable textboxes and validated chains |
-| OLE and VBA | Exact stored stream content with reconstructed CFB metadata; eligibility checks for active embedded objects and explicit DOCM VBA |
-| Signatures and opaque content | Inert source evidence with a manifest; no copied-signature validity claim |
-
-See the detailed contracts:
-
-- [Structured conversion](doc/conversion.md)
-- [HTML preview](doc/html-preview.md)
-- [Stories, fields and lists](doc/stories-fields-lists.md)
-- [Media and opaque preservation](doc/media-preservation.md)
-- [JSDoc comparison and attribution](doc/jsdoc-parity.md)
-
-## Preservation contract
-
-Support is recorded per feature as parsed, rendered, converted or retained as
-opaque evidence. Retaining an object's bytes is not a claim that it is editable
-or executable in the output. The library never executes macros, fields or
-embedded objects and never retrieves linked external resources.
-
-Ordinary previews exclude hidden text and private cached field content. Hidden
-or deleted media retains its presentation state, and deleted OfficeArt shapes
-remain inactive. In conversion, notes/comments anchored in hidden or private
-content remain inert evidence. All package relationships are internal.
-
-Conversion creates a new document. It cannot transfer the original document's
-signature validity to that new document. Signature artifacts, when retained,
-must be treated as evidence associated with the original file.
-
-## Development
+Run the portable acceptance checks with:
 
 ```sh
 dart pub get
 dart analyze
 dart test
 python3 tool/verify_web.py
-dart format --output=none --set-exit-if-changed .
-dart pub publish --dry-run
+python3 -m unittest discover -s tool/fidelity -p 'test_*.py'
 ```
 
-The JavaScript acceptance check requires an already installed Dart SDK and
-Node.js and an existing package configuration. Optional `--dart` and `--node`
-arguments select those executables. The script performs no package resolution,
-downloads, Flutter build, or network requests. It compiles the package to
-JavaScript and executes it under Node against the authored DOC fixture and
-synthetic OLE/VBA fixtures. Checks include Unicode, real Word parts and image
-bytes, unchanged source, internal relationships, and exact reconstructed CFB
-CLSID/state/raw FILETIME metadata. Temporary generated files are removed.
+CI also runs a source-built independent Open XML SDK validator with an exact
+corpus and positive/negative controls. Native rendering needs an installed
+Office application and its own retained evidence. Consumer pins are maintained
+by [Quds](https://github.com/CrispStrobe/quds_office_suite) and
+[CrispCloud](https://github.com/CrispStrobe/CrispCloud).
 
-These checks establish structural and JavaScript-runtime compatibility. Native
-office rendering and exact layout fidelity require separate acceptance and
-review. `dart pub publish --dry-run` checks package contents without publishing.
-
-## License
-
-New package source is licensed under **MPL-2.0**. See [LICENSE](LICENSE) and
-[NOTICE](NOTICE). The small vendored compound-file implementation retains its
-MIT license, and adapted JSDoc source retains the accompanying 0BSD notice.
-
-This Source Code Form is subject to the terms of the Mozilla Public License,
-v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
-one at https://mozilla.org/MPL/2.0/.
-
-The preservation work includes nested and conditional tables, preferred cell
-widths, list continuation, bounded EMF/WMF media, packed OfficeArt paths,
-paragraph and note layout, linked textbox reflow, comment threads and supported
-revision histories. Supported row height, splitting and header revisions retain
-editable previous properties with independently checked accept/reject
-projections. Header history that can change conditional table formatting remains
-diagnosed evidence because restoring the header flag alone cannot restore all
-previous cell and text formatting. Bounded picture-frame flips, floating quarter
-turns, direct outlines and simple offset shadows have separate authored native
-rendering controls.
-See the [eight-area fidelity ledger](doc/fidelity-status.md) and
-[oracle guide](doc/fidelity-oracles.md) for the supported contracts and remaining
-losses. Versioned evidence retains complete native results, including failures;
-matching pixels, valid packages and preserved semantics are separate checks.
-
-CI runs the portable Dart and JavaScript tests, Python structural/mutation
-oracles, and a freshly built independent Open XML SDK validation gate. The SDK
-corpus has an exact, deterministic inventory and positive/negative controls.
-Native rendering additionally requires an installed Office application and
-records its version, fonts, source hashes and successive round trips.
-[The clean 6b2b611 receipt](doc/evidence/6b2b611/README.md) retains 22 inputs
-and all 66 requested repeat imports. Six initial renders are exact on that
-renderer; all strict structural comparisons still report differences. The
-[earlier 8060ac1 receipt](doc/evidence/8060ac1/README.md) remains a reproducible
-historical checkpoint, including the import failure corrected subsequently.
-
-The current preservation increment also retains supported Word compatibility flags and OfficeArt text-box layout and supplies bounded vector previews. Unsupported drawing records remain explicit retained evidence; the parser does not claim exact native layout for every legacy drawing.
-
-Integration refresh: solid OfficeArt context, exact textbox content boundaries, bounded native metafile arcs, paragraph-mark property changes and OLE schema validity are covered by the current portable suites. The combined source checkpoint passes 697 Dart tests, 115 Python oracle controls and the document/media JavaScript acceptance probes. Native evidence remains scoped to its authored cases and recorded renderer versions.
-
-The combined integration also preserves note table tails, corroborated header textbox aliases and corroborated shared header shape occurrences. Current acceptance: 773 Dart tests, 156 Python oracle controls, and 217 DOCX outputs checked by a freshly built independent Open XML SDK validator. Retained native receipts continue to report their explicit remaining layout differences.
-
-The latest native counterexample retracts the experimental textbox table-depth reset; the established indentation behavior is retained. Shared header shapes preserve per-anchor geometry without rewriting source shape IDs. This final source cohort passes 809 Dart tests and 162 Python controls.
-
-The completed continuation recovers bounded native header/footer stories ending in closed tables, with an explicit recovery warning. The combined source passes 826 Dart tests, 162 Python controls and independent Open XML SDK validation of 222 DOCX outputs. Native corpus receipts preserve their measured layout differences and source identities.
+License: [Mozilla Public License 2.0](LICENSE). Third-party components and
+fixtures retain their applicable MIT, 0BSD and other notices; see
+[NOTICE](NOTICE) and [third_party](third_party/).

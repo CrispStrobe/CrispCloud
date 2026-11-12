@@ -94,6 +94,11 @@ EXPECTED_CASES = frozenset([
     *(f"header-alias/header-alias-{kind}" for kind in (
         "content", "empty", "leading-blank", "interior-blank", "trailing-blank",
         "two-trailing-blanks", "two-content-paragraphs")),
+    "native-inputs/note-table-ending", "native-inputs/note-floating-table",
+    "native-inputs/shared-header-textbox-paragraph",
+    "native-inputs/shared-header-textbox-table",
+    "native-inputs/header-textbox-page-variants",
+    "native-inputs/bookmarks-native-hyperlink",
     *(f"native-inputs/{kind}-ending-{ending}" for kind in ("header", "footer")
       for ending in ("paragraph", "table")),
     *(f"textbox-boundary/textbox-{story}-{kind}" for story in ("main", "header")

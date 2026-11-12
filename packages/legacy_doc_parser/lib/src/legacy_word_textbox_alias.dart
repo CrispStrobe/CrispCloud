@@ -13,6 +13,7 @@ class WordHeaderTextboxAliases {
     required Iterable<LegacyWordNoteReference> notes,
     required Iterable<LegacyWordCommentReference> comments,
   }) {
+    _fields.addAll(fields);
     for (final story in stories) {
       if (_stories.containsKey(story.id)) {
         _invalid = true;
@@ -85,6 +86,7 @@ class WordHeaderTextboxAliases {
     }
   }
 
+  final _fields = <LegacyWordField>[];
   final _stories = <String, LegacyWordStory>{};
   final _ranges = <LegacyWordStory>[];
   final _drawings = <(bool, int, int), LegacyWordDrawing>{};
@@ -184,6 +186,100 @@ class WordHeaderTextboxAliases {
       return null;
     }
     return WordHeaderTextboxAliasPair(primary, alias, primaryOwner, aliasOwner);
+  }
+
+  /// Independent instances may contain tables and recorded fields, but never
+  /// acquire authority to replay ambiguous shapes or tracked content.
+  bool validReplicas(
+    LegacyWordTextboxReference reference,
+    List<LegacyWordTextboxAnchor> occurrences,
+  ) {
+    final text = _stories[reference.storyId];
+    if (_invalid ||
+        text == null ||
+        !reference.inHeaderFooter ||
+        reference.chainLength != 1 ||
+        reference.nextTextboxId != null ||
+        occurrences.length < 2 ||
+        occurrences.length > 4096) {
+      return false;
+    }
+    final owners = <String>{};
+    var primary = 0;
+    for (final occurrence in occurrences) {
+      final drawing =
+          _drawings[(true, occurrence.shapeId, occurrence.anchorCp)];
+      final owner = _ownerAt(occurrence.anchorCp);
+      final shape = drawing?.shape;
+      if (drawing == null ||
+          owner == null ||
+          !{
+            LegacyWordStoryKind.header,
+            LegacyWordStoryKind.footer,
+          }.contains(owner.kind) ||
+          !owners.add(owner.id) ||
+          occurrence.chainIndex != 0 ||
+          (occurrence.nextShapeId ?? 0) != 0 ||
+          drawing.textboxId != reference.id << 16 ||
+          (drawing.nextTextboxShapeId ?? 0) != 0 ||
+          _shapeCounts[(true, occurrence.shapeId)] != 1 ||
+          drawing.shapeDeleted ||
+          drawing.presentation.hidden ||
+          drawing.presentation.inserted ||
+          drawing.presentation.deleted ||
+          drawing.presentation.insertionRevision != null ||
+          drawing.presentation.deletionRevision != null ||
+          shape == null ||
+          shape.type != 202 ||
+          (shape.sourceFlags & 0x3f) != 0) {
+        return false;
+      }
+      if (occurrence.shapeId == reference.shapeId &&
+          occurrence.anchorCp == reference.anchorCp) {
+        primary++;
+      }
+    }
+    if (primary != 1) return false;
+    bool content(List<LegacyWordBlock> blocks, int depth) {
+      if (depth > 63) return false;
+      for (final block in blocks) {
+        if (block is LegacyWordTable) {
+          for (final row in block.rows) {
+            if (row.formattingRevision != null) return false;
+            for (final cell in row.cells) {
+              if (!content(cell.blocks, depth + 1)) return false;
+            }
+          }
+        } else if (block is LegacyWordParagraph) {
+          if (block.numberingRevision != null ||
+              block.formattingRevision != null ||
+              (block.mark?.inserted ?? false) ||
+              (block.mark?.deleted ?? false) ||
+              block.mark?.insertionRevision != null ||
+              block.mark?.deletionRevision != null ||
+              block.mark?.formattingRevision != null) {
+            return false;
+          }
+          for (final run in block.runs) {
+            if (run.inserted ||
+                run.deleted ||
+                run.insertionRevision != null ||
+                run.deletionRevision != null ||
+                run.formattingRevision != null) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }
+
+    // Raw field controls without a parsed field PLC are not recorded fields.
+    if (RegExp(r'[\x13-\x15]').hasMatch(text.plainText) &&
+        !_fields.any((field) => field.storyId == text.id)) {
+      return false;
+    }
+    return content(text.blocks, 0);
   }
 
   LegacyWordStory? _ownerAt(int cp) {

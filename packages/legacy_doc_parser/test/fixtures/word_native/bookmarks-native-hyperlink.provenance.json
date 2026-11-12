@@ -1,0 +1,9 @@
+{
+  "source": "LibreOffice DOC bridge of the independently authored bookmarks.docx corpus case",
+  "sourceDocx": "test/fixtures/fidelity/bookmarks.docx",
+  "sourceDocxSha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+  "nativeDocSha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+  "retainedEvidence": "doc/evidence/native-corpus-7308125/sealed/08-bookmarks",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "purpose": "Exact CPicLocation/CFData-backed internal HYPERLINK metadata regression; original corpus is unchanged."
+}

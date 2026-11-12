@@ -1,0 +1,932 @@
+{
+  "schema": "legacy-doc-parser/shared-header-textboxes",
+  "version": 1,
+  "beforeSource": {
+    "commit": "2d8607b79bfb3decd78564c046d1ebb847fef20e",
+    "tree": "ec0cfa0c36a3386248295f858d2db8d3ef6a44dc",
+    "executableSha256": "3dab0e915f40c0add23cac7a350b4a81cb286a53d890e828734bd7ec44d27633",
+    "sourceFiles": {
+      "lib/legacy_doc_parser.dart": "5ef8f92595c74eae08b104a750559fff9dd8b62f39d989ecef74ebd881f2e0a1",
+      "lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
+      "lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
+      "lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
+      "lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
+      "lib/src/conversion.dart": "51ad278dcc091d1623a11956b3403fb1d3c2d9b9d8718da4bcb4c852e7b69fcc",
+      "lib/src/legacy_word_binary_source.dart": "f2e0a0ffba3c61d0ea97c2d4fc5165b4f27cf360ab85e8aa18c58b61f0f1f0c2",
+      "lib/src/legacy_word_compatibility.dart": "c82c73dd557ef7406e914235877f005b4b2760e635ded5e00243e46b0d366c2a",
+      "lib/src/legacy_word_compatibility_parser.dart": "01c11adb30b9af788e42ecb644a37782ab7cab0d3bb15eb07a2cc1abe9e5ddfe",
+      "lib/src/legacy_word_decorations.dart": "fcfee3253857e367c1c586592340c77431f80540bf5d75321611b0882cc0cbed",
+      "lib/src/legacy_word_document.dart": "9c84e371c9f0ded06bf7b413d6811985a91ba9407a273d9ccec66c69b2432e23",
+      "lib/src/legacy_word_fields.dart": "17b8a4e781417772593612b79afd746c2f2b52b508b82313d45dd5b222e589e4",
+      "lib/src/legacy_word_format_tables.dart": "36b62086b56bf7f0c005d819627a99a2450b349792f107cfed84152d1d7254ef",
+      "lib/src/legacy_word_html_media.dart": "00b2e9d3a6f0a77b91d727838f9e53028817596ebc388a523f5bd15d6a06119c",
+      "lib/src/legacy_word_layout_model.dart": "0f3c1ae25ab3f6a2eff97db493ab15144c6dd162969fc96c43e1aee8ace45061",
+      "lib/src/legacy_word_layout_parser.dart": "8bee3ec3f81e147c3919f1054d1e5459cb6fa47fd41b451f28653a0b367a4efd",
+      "lib/src/legacy_word_lists.dart": "1b6b9625981bb81651a58261e1d2824a9731ea2db6f57706fb46b10da6f640b7",
+      "lib/src/legacy_word_media_model.dart": "214856a62eb7e0ecccb50f7bf6d0574f334d8d804eddebe621586e93e891f60b",
+      "lib/src/legacy_word_media_parser.dart": "eb597709fc5044cb5aee8cc751c99c4646a5dca20bd2b8f385173457788e3642",
+      "lib/src/legacy_word_metafile.dart": "65e09d9df12c52e993a2b4714b9620a5be0755bb69706be719af0ddc25991dd0",
+      "lib/src/legacy_word_metafile_render.dart": "56cc831a724e6d61d1bfa78a15895e5129d9615d71e59de0397f77f3911f440c",
+      "lib/src/legacy_word_number_formats.dart": "3a98b56587fe4f1f72b2bcd6ca3020569d5a8f0f3b7f68fe19867b2fd19d42c8",
+      "lib/src/legacy_word_numbering.dart": "ed851e376cfabb7d2db0588718273b2bf891408fd8eb8a0c70e4d0dc8a94fa77",
+      "lib/src/legacy_word_officeart_model.dart": "834a2d6df68d02178a8d73291d719e19e78ee16c29323ad513780eb54ecaee48",
+      "lib/src/legacy_word_officeart_parser.dart": "055ce982cf157f72530f3ad40386595593c30b02645f30d61731a65130633b42",
+      "lib/src/legacy_word_revision_model.dart": "cf39ce7f1c21de1825f340718da077e3a0f74fff4f85871fa4774792778f0fcd",
+      "lib/src/legacy_word_revisions.dart": "52c090b4d1e2b45280c0ee09f5fcf32bed1c9a2d28e096d3beeecbca7f328ec0",
+      "lib/src/legacy_word_sprms.dart": "9d77a52c30842604e29bda177f08024464d5bf271cdb262aae347e97a3657324",
+      "lib/src/legacy_word_stories.dart": "445d0264897395eaec2de39f0607e747bea38fcce009cb4ec15683f64c730e44",
+      "lib/src/legacy_word_structured_conversion.dart": "b66f15ae1c00f1fa423d1e25ea6d82718a46b6937ff128c481a23a2f97aa74fe",
+      "lib/src/legacy_word_structured_model.dart": "1943a1d2ef72ad97b6070a6d7c3549def3a791dcb09d9ea8b5d459780e09c7a2",
+      "lib/src/legacy_word_structured_parser.dart": "0d700814576028228fed299dc391a70e0ddba22d82b0f17fd5a0c95f4f3a97aa",
+      "lib/src/legacy_word_structured_render.dart": "45a039b1872d2ae6e37fc5dd2fafe38f926f8855475d1c004c627ff1ae89e503",
+      "lib/src/legacy_word_table_model.dart": "91a11e4327468ca56bf445cf76df63761b57cf85314dd6eb9ff4499d5d91404b",
+      "lib/src/legacy_word_table_operations.dart": "3c5ee6009319cfc2aebb72d9744f72c754dcbaabaca076dd83cb830c7f67c5ff",
+      "lib/src/legacy_word_table_revisions.dart": "275e1795441c96583d3d6c828bdde0356a382e6cc3447a9d20ed9806f6bc68a3",
+      "lib/src/legacy_word_table_styles.dart": "2a74eb977559d3bcb23df79b2c68045660d93d810ecfc7edaf909dd3f2e92686",
+      "lib/src/legacy_word_table_text.dart": "21b5cf79dca85b3b52b545e07183a3c3fd1da4956ba03aa6f555c1ddfb481aba",
+      "lib/src/legacy_word_tables.dart": "2af3ea36751799d97509e15fdd02e7e92fd0173f7c6eb60d992d7036787ead1d",
+      "lib/src/opc_package_writer.dart": "6852b0de555c609ace9c7bddb29de27e0a2e46e642c69c853cd49beeb66cf97c",
+      "lib/src/word_comment_writer.dart": "1d6d02c61fd87b75e174760fe08a9c0dcfe31ab604298ee274f027c7a7fc6997",
+      "lib/src/word_compatibility_writer.dart": "0e7d54c6948198165236f561c018243a64c0b89d6d112b553d6b9357f97452d8",
+      "lib/src/word_decoration_writer.dart": "8a6354c2e4970a2c504db2623885f5250765a49d8414ebf0da76e3e1ac3a1281",
+      "lib/src/word_image_appearance_writer.dart": "bbab8149662c0ee56f8586ab85e482117cbbad80f13ff78c3a45ae89e4da9cb1",
+      "lib/src/word_layout_writer.dart": "eb239b04072b12722437ebef803df692b785f41c34ff29fa56215b0fe4da96a5",
+      "lib/src/word_media_writer.dart": "a224488c6749eb2b409136e2fa8108321186b6dea4abf678635c7dc9295c1804",
+      "lib/src/word_numbering_writer.dart": "5b42d1b06158bfc6823cd4ffd0e33a61a090af528caf524234fa5a6540337c09",
+      "lib/src/word_officeart_position_writer.dart": "8071ea2373c72ff323593ea7fdf142c2a4dbe5bd4bac08bd7ef2b371a1acb74e",
+      "lib/src/word_revision_writer.dart": "065aaa1b4cea36a318eb7e02b34b4b30ce552e1a1aa10b477aa6cb11caf150d6",
+      "lib/src/word_shape_writer.dart": "94b30ef61cbfe3b3bf65941677aa71f8cd1a6c74b3c4c42aab73d61774d87458",
+      "lib/src/word_story_writer.dart": "b8d3fbdf539bae86b1c89b6d662ba860b68cb27b4d6399e9753a1475d751ef9c",
+      "lib/src/word_table_revision_writer.dart": "2430d40ffe5c694a53ce21f5ec2c813c6f1cb8b579fe6ee402fa32fb9d4b0740",
+      "lib/src/word_table_style_writer.dart": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+      "lib/src/word_table_text_writer.dart": "04b7d64caf9025fa90bbb7a9b2a492490cfbd2ee518609f2bf63cb9867d86f13",
+      "lib/src/word_table_writer.dart": "f53d13e7886d04b7b077a49befce57e8be44ec1301c5060ad13f3d834c8e434f",
+      "lib/src/word_textbox_writer.dart": "e6641e07a5a1fc81bbc998de3ccf0544b6e8a0aa6a025a1938c6e45dc9762eca"
+    }
+  },
+  "afterSource": {
+    "baseCommit": "2d8607b79bfb3decd78564c046d1ebb847fef20e",
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "executableSha256": "8dd7c2c2ede11d887803d3cfec9cf97f0f01642d61090c9136cc0c594a5b54fd",
+    "sourceFiles": {
+      "lib/legacy_doc_parser.dart": "5ef8f92595c74eae08b104a750559fff9dd8b62f39d989ecef74ebd881f2e0a1",
+      "lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
+      "lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
+      "lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
+      "lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
+      "lib/src/conversion.dart": "51ad278dcc091d1623a11956b3403fb1d3c2d9b9d8718da4bcb4c852e7b69fcc",
+      "lib/src/legacy_word_binary_source.dart": "f2e0a0ffba3c61d0ea97c2d4fc5165b4f27cf360ab85e8aa18c58b61f0f1f0c2",
+      "lib/src/legacy_word_compatibility.dart": "c82c73dd557ef7406e914235877f005b4b2760e635ded5e00243e46b0d366c2a",
+      "lib/src/legacy_word_compatibility_parser.dart": "01c11adb30b9af788e42ecb644a37782ab7cab0d3bb15eb07a2cc1abe9e5ddfe",
+      "lib/src/legacy_word_decorations.dart": "fcfee3253857e367c1c586592340c77431f80540bf5d75321611b0882cc0cbed",
+      "lib/src/legacy_word_document.dart": "9c84e371c9f0ded06bf7b413d6811985a91ba9407a273d9ccec66c69b2432e23",
+      "lib/src/legacy_word_fields.dart": "17b8a4e781417772593612b79afd746c2f2b52b508b82313d45dd5b222e589e4",
+      "lib/src/legacy_word_format_tables.dart": "36b62086b56bf7f0c005d819627a99a2450b349792f107cfed84152d1d7254ef",
+      "lib/src/legacy_word_html_media.dart": "00b2e9d3a6f0a77b91d727838f9e53028817596ebc388a523f5bd15d6a06119c",
+      "lib/src/legacy_word_layout_model.dart": "0f3c1ae25ab3f6a2eff97db493ab15144c6dd162969fc96c43e1aee8ace45061",
+      "lib/src/legacy_word_layout_parser.dart": "8bee3ec3f81e147c3919f1054d1e5459cb6fa47fd41b451f28653a0b367a4efd",
+      "lib/src/legacy_word_lists.dart": "1b6b9625981bb81651a58261e1d2824a9731ea2db6f57706fb46b10da6f640b7",
+      "lib/src/legacy_word_media_model.dart": "214856a62eb7e0ecccb50f7bf6d0574f334d8d804eddebe621586e93e891f60b",
+      "lib/src/legacy_word_media_parser.dart": "eb597709fc5044cb5aee8cc751c99c4646a5dca20bd2b8f385173457788e3642",
+      "lib/src/legacy_word_metafile.dart": "65e09d9df12c52e993a2b4714b9620a5be0755bb69706be719af0ddc25991dd0",
+      "lib/src/legacy_word_metafile_render.dart": "56cc831a724e6d61d1bfa78a15895e5129d9615d71e59de0397f77f3911f440c",
+      "lib/src/legacy_word_number_formats.dart": "3a98b56587fe4f1f72b2bcd6ca3020569d5a8f0f3b7f68fe19867b2fd19d42c8",
+      "lib/src/legacy_word_numbering.dart": "ed851e376cfabb7d2db0588718273b2bf891408fd8eb8a0c70e4d0dc8a94fa77",
+      "lib/src/legacy_word_officeart_model.dart": "834a2d6df68d02178a8d73291d719e19e78ee16c29323ad513780eb54ecaee48",
+      "lib/src/legacy_word_officeart_parser.dart": "055ce982cf157f72530f3ad40386595593c30b02645f30d61731a65130633b42",
+      "lib/src/legacy_word_revision_model.dart": "cf39ce7f1c21de1825f340718da077e3a0f74fff4f85871fa4774792778f0fcd",
+      "lib/src/legacy_word_revisions.dart": "52c090b4d1e2b45280c0ee09f5fcf32bed1c9a2d28e096d3beeecbca7f328ec0",
+      "lib/src/legacy_word_sprms.dart": "9d77a52c30842604e29bda177f08024464d5bf271cdb262aae347e97a3657324",
+      "lib/src/legacy_word_stories.dart": "0bb7d7fac096ab2d5a5d93eb3d3461b085df7d5a2a319c82ef50ab0878b242a9",
+      "lib/src/legacy_word_structured_conversion.dart": "f419e9595e12746710a8334ce75394816bd7d3321b79ec9b16707427412b8444",
+      "lib/src/legacy_word_structured_model.dart": "ef7e8c5619b20648cb39497e22494debc3bb5513514934c5d6c0b0827cc7d899",
+      "lib/src/legacy_word_structured_parser.dart": "0d700814576028228fed299dc391a70e0ddba22d82b0f17fd5a0c95f4f3a97aa",
+      "lib/src/legacy_word_structured_render.dart": "45a039b1872d2ae6e37fc5dd2fafe38f926f8855475d1c004c627ff1ae89e503",
+      "lib/src/legacy_word_table_model.dart": "91a11e4327468ca56bf445cf76df63761b57cf85314dd6eb9ff4499d5d91404b",
+      "lib/src/legacy_word_table_operations.dart": "3c5ee6009319cfc2aebb72d9744f72c754dcbaabaca076dd83cb830c7f67c5ff",
+      "lib/src/legacy_word_table_revisions.dart": "275e1795441c96583d3d6c828bdde0356a382e6cc3447a9d20ed9806f6bc68a3",
+      "lib/src/legacy_word_table_styles.dart": "2a74eb977559d3bcb23df79b2c68045660d93d810ecfc7edaf909dd3f2e92686",
+      "lib/src/legacy_word_table_text.dart": "21b5cf79dca85b3b52b545e07183a3c3fd1da4956ba03aa6f555c1ddfb481aba",
+      "lib/src/legacy_word_tables.dart": "2af3ea36751799d97509e15fdd02e7e92fd0173f7c6eb60d992d7036787ead1d",
+      "lib/src/opc_package_writer.dart": "6852b0de555c609ace9c7bddb29de27e0a2e46e642c69c853cd49beeb66cf97c",
+      "lib/src/word_comment_writer.dart": "1d6d02c61fd87b75e174760fe08a9c0dcfe31ab604298ee274f027c7a7fc6997",
+      "lib/src/word_compatibility_writer.dart": "0e7d54c6948198165236f561c018243a64c0b89d6d112b553d6b9357f97452d8",
+      "lib/src/word_decoration_writer.dart": "8a6354c2e4970a2c504db2623885f5250765a49d8414ebf0da76e3e1ac3a1281",
+      "lib/src/word_image_appearance_writer.dart": "bbab8149662c0ee56f8586ab85e482117cbbad80f13ff78c3a45ae89e4da9cb1",
+      "lib/src/word_layout_writer.dart": "eb239b04072b12722437ebef803df692b785f41c34ff29fa56215b0fe4da96a5",
+      "lib/src/word_media_writer.dart": "64be559d23000bcc5dffc091c4830671001506bedecfa14ad14f838a3a1c4ffc",
+      "lib/src/word_numbering_writer.dart": "5b42d1b06158bfc6823cd4ffd0e33a61a090af528caf524234fa5a6540337c09",
+      "lib/src/word_officeart_position_writer.dart": "8071ea2373c72ff323593ea7fdf142c2a4dbe5bd4bac08bd7ef2b371a1acb74e",
+      "lib/src/word_revision_writer.dart": "065aaa1b4cea36a318eb7e02b34b4b30ce552e1a1aa10b477aa6cb11caf150d6",
+      "lib/src/word_shape_writer.dart": "94b30ef61cbfe3b3bf65941677aa71f8cd1a6c74b3c4c42aab73d61774d87458",
+      "lib/src/word_story_writer.dart": "c6f82e0b4a2ad6b988f768bff1c3b9e990a08ef213c49c119fa9ed052951bed4",
+      "lib/src/word_table_revision_writer.dart": "2430d40ffe5c694a53ce21f5ec2c813c6f1cb8b579fe6ee402fa32fb9d4b0740",
+      "lib/src/word_table_style_writer.dart": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+      "lib/src/word_table_text_writer.dart": "04b7d64caf9025fa90bbb7a9b2a492490cfbd2ee518609f2bf63cb9867d86f13",
+      "lib/src/word_table_writer.dart": "f53d13e7886d04b7b077a49befce57e8be44ec1301c5060ad13f3d834c8e434f",
+      "lib/src/word_textbox_writer.dart": "145df74585327393e9618fd504c2fb4f13deb9d3a0556aa96183bc083bc29db6"
+    },
+    "runtimeDiff": "diff --git a/lib/src/legacy_word_stories.dart b/lib/src/legacy_word_stories.dart\nindex 2994ecc..0698c08 100644\n--- a/lib/src/legacy_word_stories.dart\n+++ b/lib/src/legacy_word_stories.dart\n@@ -494,26 +494,17 @@ extension _WordStories on _StructuredWordParser {\n       final reference = textboxReferences[i];\n       references[(reference.inHeaderFooter, reference.id)] = i;\n     }\n-    final used = <(bool, int, int)>{};\n     for (final drawing in media.drawings) {\n       final encoded = drawing.textboxId;\n       if (encoded == null || encoded == 0) continue;\n       final id = encoded >> 16, chainIndex = encoded & 0xffff;\n       final key = (drawing.headerStory, id);\n       final index = references[key];\n-      if (index == null ||\n-          chainIndex >= 4096 ||\n-          !used.add((drawing.headerStory, id, chainIndex))) {\n+      if (index == null || chainIndex >= 4096) {\n         throw const FormatException(\n           'Invalid Word drawing-to-textbox reference.',\n         );\n       }\n-      final reference = textboxReferences[index];\n-      if (chainIndex == 0 && reference.shapeId != drawing.shapeId) {\n-        throw const FormatException(\n-          'Word textbox first-shape references do not agree.',\n-        );\n-      }\n       links\n           .putIfAbsent(key, () => [])\n           .add(\n@@ -525,6 +516,31 @@ extension _WordStories on _StructuredWordParser {\n             ),\n           );\n     }\n+    final headerStories =\n+        stories\n+            .where(\n+              (story) =>\n+                  story.kind == LegacyWordStoryKind.header ||\n+                  story.kind == LegacyWordStoryKind.footer,\n+            )\n+            .toList()\n+          ..sort((a, b) => a.startCp.compareTo(b.startCp));\n+    String? headerOwner(int cp) {\n+      var low = 0, high = headerStories.length;\n+      while (low < high) {\n+        final middle = (low + high) ~/ 2;\n+        final story = headerStories[middle];\n+        if (cp < story.startCp) {\n+          high = middle;\n+        } else if (cp >= story.endCp) {\n+          low = middle + 1;\n+        } else {\n+          return story.id;\n+        }\n+      }\n+      return null;\n+    }\n+\n     for (final entry in links.entries) {\n       final index = references[entry.key]!;\n       final reference = textboxReferences[index];\n@@ -533,6 +549,47 @@ extension _WordStories on _StructuredWordParser {\n       if (anchors.length > 4096 || anchors.first.chainIndex != 0) {\n         throw const FormatException('Incomplete Word textbox shape chain.');\n       }\n+      // Native exports can reuse one singleton FTXBXS in separate normal,\n+      // even and first-page header/footer stories. Their index-zero shapes\n+      // are independent instances, not a continuation chain. Recover only\n+      // when the declared primary exists and every owner is a distinct real\n+      // header/footer range, with no next-shape links anywhere.\n+      if (reference.inHeaderFooter &&\n+          reference.chainLength == 1 &&\n+          anchors.length > 1 &&\n+          anchors.every((anchor) => anchor.chainIndex == 0)) {\n+        final primary = anchors\n+            .where((anchor) => anchor.shapeId == reference.shapeId)\n+            .toList();\n+        final owners = <String>{};\n+        if (primary.length != 1 ||\n+            anchors.any((anchor) {\n+              final owner = headerOwner(anchor.anchorCp);\n+              return owner == null ||\n+                  !owners.add(owner) ||\n+                  (anchor.nextShapeId ?? 0) != 0;\n+            })) {\n+          throw const FormatException('Invalid shared Word header textbox.');\n+        }\n+        textboxReferences[index] = LegacyWordTextboxReference(\n+          id: reference.id,\n+          storyId: reference.storyId,\n+          inHeaderFooter: true,\n+          anchorCp: reference.anchorCp,\n+          shapeId: reference.shapeId,\n+          anchors: List.unmodifiable(primary),\n+          replicaAnchors: List.unmodifiable(\n+            anchors.where((anchor) => anchor.shapeId != reference.shapeId),\n+          ),\n+        );\n+        warnings.add(LegacyWordWarning.recoveredSharedHeaderTextbox);\n+        continue;\n+      }\n+      if (anchors.first.shapeId != reference.shapeId) {\n+        throw const FormatException(\n+          'Word textbox first-shape references do not agree.',\n+        );\n+      }\n       final recoverDeclaredOne =\n           reference.chainLength == 1 && anchors.length > 1;\n       if (anchors.length != reference.chainLength && !recoverDeclaredOne) {\ndiff --git a/lib/src/legacy_word_structured_conversion.dart b/lib/src/legacy_word_structured_conversion.dart\nindex a2ba5d7..8271aaa 100644\n--- a/lib/src/legacy_word_structured_conversion.dart\n+++ b/lib/src/legacy_word_structured_conversion.dart\n@@ -40,7 +40,7 @@ class _StructuredWordWriter {\n   var _commentParagraphSequence = 0;\n   final _storyRanges = <(int, int, String)>[];\n   final _events = <String, List<_WordInlineEvent>>{};\n-  final _eventOffsets = <String, int>{};\n+  final _eventOffsets = <(String, String), int>{};\n   final _headerFooters = <int, List<(bool, String, String)>>{};\n   final _storyParts = <String, String>{};\n   final _numberingIds = <int>{};\n@@ -54,7 +54,7 @@ class _StructuredWordWriter {\n   final _mediaAssets = <String, LegacyWordImageAsset>{};\n   final _mediaParts = <String, String>{};\n   final _embeddedParts = <String, String>{};\n-  final _renderedTextboxes = <String>{};\n+  final _renderedTextboxes = <(String, String)>{};\n   final _unplacedTextboxes = <(LegacyWordTextboxReference, LegacyWordStory)>[];\n   final _inertStories = <String, String>{};\n   final _hiddenContentRanges = <(int, int)>[];\ndiff --git a/lib/src/legacy_word_structured_model.dart b/lib/src/legacy_word_structured_model.dart\nindex aee20f2..3f82ed9 100644\n--- a/lib/src/legacy_word_structured_model.dart\n+++ b/lib/src/legacy_word_structured_model.dart\n@@ -50,6 +50,10 @@ enum LegacyWordWarning {\n   /// A note format is unknown or requires a disclosed decimal fallback.\n   /// The original MSONFC code remains available on the note numbering model.\n   unsupportedNoteNumberFormat,\n+\n+  /// One native singleton textbox story was reused by separate header/footer\n+  /// variants, each with its own index-zero shape and no continuation link.\n+  recoveredSharedHeaderTextbox,\n }\n \n enum LegacyWordAlignment { left, center, right, justify, distribute }\n@@ -243,6 +247,7 @@ class LegacyWordTextboxReference {\n     this.chainLength = 1,\n     this.declaredChainLength,\n     this.anchors = const [],\n+    this.replicaAnchors = const [],\n   });\n   final int id;\n   final String storyId;\n@@ -259,6 +264,10 @@ class LegacyWordTextboxReference {\n   /// Actual OfficeArtClientTextbox chain indices, when available. A story is\n   /// not duplicated for each shape and the library does not invent reflow.\n   final List<LegacyWordTextboxAnchor> anchors;\n+\n+  /// Independent singleton placements of the same source text in distinct\n+  /// header/footer stories. These are not continuations of [anchors].\n+  final List<LegacyWordTextboxAnchor> replicaAnchors;\n }\n \n class LegacyWordTextboxAnchor {\ndiff --git a/lib/src/word_media_writer.dart b/lib/src/word_media_writer.dart\nindex 2e31a62..9d8b52b 100644\n--- a/lib/src/word_media_writer.dart\n+++ b/lib/src/word_media_writer.dart\n@@ -533,7 +533,7 @@ extension _WordMedia on _StructuredWordWriter {\n         _unplacedTextboxes.add((reference, story));\n         continue;\n       }\n-      final chain = reference.anchors.isEmpty\n+      final primaryChain = reference.anchors.isEmpty\n           ? [\n               LegacyWordTextboxAnchor(\n                 shapeId: drawing.shapeId,\n@@ -542,11 +542,31 @@ extension _WordMedia on _StructuredWordWriter {\n               ),\n             ]\n           : reference.anchors;\n+      final shared = reference.replicaAnchors.isNotEmpty;\n+      if (shared &&\n+          (!reference.inHeaderFooter ||\n+              reference.chainLength != 1 ||\n+              primaryChain.length != 1)) {\n+        throw const FormatException('Invalid shared Word header textbox.');\n+      }\n+      final chain = [...primaryChain, ...reference.replicaAnchors];\n       if (chain.length > 4096) _tooComplex();\n       final resolved = <(LegacyWordDrawing, int, String)>[];\n+      final sharedOwners = <String>{};\n       for (final anchor in chain) {\n         final shape = drawings[(reference.inHeaderFooter, anchor.shapeId)];\n         final owner = _storyAt(anchor.anchorCp);\n+        if (shared &&\n+            (anchor.chainIndex != 0 ||\n+                (anchor.nextShapeId ?? 0) != 0 ||\n+                owner == null ||\n+                !sharedOwners.add(owner) ||\n+                !const {\n+                  LegacyWordStoryKind.header,\n+                  LegacyWordStoryKind.footer,\n+                }.contains(_stories[owner]?.kind))) {\n+          throw const FormatException('Invalid shared Word header textbox.');\n+        }\n         if (shape == null ||\n             owner == null ||\n             !_displayPosition(anchor.anchorCp) ||\n@@ -564,8 +584,8 @@ extension _WordMedia on _StructuredWordWriter {\n       }\n       for (var i = 0; i < resolved.length; i++) {\n         final (shape, anchor, owner) = resolved[i];\n-        final first = i == 0;\n-        final nextShape = i + 1 < resolved.length\n+        final first = shared || i == 0;\n+        final nextShape = !shared && i + 1 < resolved.length\n             ? resolved[i + 1].$1.shapeId\n             : null;\n         _event(\n@@ -581,6 +601,20 @@ extension _WordMedia on _StructuredWordWriter {\n           ),\n         );\n       }\n+      if (shared) {\n+        _evidenceRecords.add({\n+          'kind': 'sharedHeaderTextbox',\n+          'id': reference.id,\n+          'story': reference.storyId,\n+          'instances': [\n+            for (final (shape, anchor, owner) in resolved)\n+              {'shapeId': shape.shapeId, 'anchorCp': anchor, 'owner': owner},\n+          ],\n+          'reason':\n+              'Native singleton content reused by distinct header/footer stories; '\n+              'each editable instance retains its own source placement.',\n+        });\n+      }\n       if (reference.chainLength > 1) {\n         _evidenceRecords.add({\n           'kind': 'textboxChain',\ndiff --git a/lib/src/word_story_writer.dart b/lib/src/word_story_writer.dart\nindex 5965ad0..9e02516 100644\n--- a/lib/src/word_story_writer.dart\n+++ b/lib/src/word_story_writer.dart\n@@ -200,10 +200,10 @@ extension _WordStories on _StructuredWordWriter {\n   void _emitEventsThrough(int cp) {\n     final events = _events[_storyId];\n     if (events == null) return;\n-    var index = _eventOffsets[_storyId] ?? 0;\n+    var index = _eventOffsets[(_storyId, _part)] ?? 0;\n     while (index < events.length && events[index].cp <= cp) {\n       final event = events[index++];\n-      _eventOffsets[_storyId] = index;\n+      _eventOffsets[(_storyId, _part)] = index;\n       event.write();\n     }\n   }\n@@ -211,19 +211,20 @@ extension _WordStories on _StructuredWordWriter {\n   void _emitBoundaryClosures(int cp) {\n     final events = _events[_storyId];\n     if (events == null) return;\n-    var index = _eventOffsets[_storyId] ?? 0;\n+    var index = _eventOffsets[(_storyId, _part)] ?? 0;\n     while (index < events.length &&\n         events[index].cp == cp &&\n         events[index].closing) {\n       final event = events[index++];\n-      _eventOffsets[_storyId] = index;\n+      _eventOffsets[(_storyId, _part)] = index;\n       event.write();\n     }\n   }\n \n   void _finishStoryEvents() {\n     final events = _events[_storyId];\n-    if (events == null || (_eventOffsets[_storyId] ?? 0) == events.length) {\n+    if (events == null ||\n+        (_eventOffsets[(_storyId, _part)] ?? 0) == events.length) {\n       return;\n     }\n     _xml.add('<w:p');\n@@ -243,7 +244,7 @@ extension _WordStories on _StructuredWordWriter {\n     var position = run.startCp;\n     final events = _events[_storyId] ?? const <_WordInlineEvent>[];\n     while (position < run.endCp) {\n-      final index = _eventOffsets[_storyId] ?? 0;\n+      final index = _eventOffsets[(_storyId, _part)] ?? 0;\n       final boundary = index < events.length && events[index].cp < run.endCp\n           ? events[index].cp\n           : run.endCp;\n@@ -838,6 +839,7 @@ extension _WordStories on _StructuredWordWriter {\n         case LegacyWordWarning.recoveredNonconformingProperties:\n         case LegacyWordWarning.recoveredEmptySection:\n         case LegacyWordWarning.recoveredTextboxChainLength:\n+        case LegacyWordWarning.recoveredSharedHeaderTextbox:\n         case LegacyWordWarning.terminalMarkFormattingUnavailable:\n         case LegacyWordWarning.recoveredGlobalTextboxSentinel:\n           limitations.add(LegacyWordConversionLimitation.partialFormatting);\ndiff --git a/lib/src/word_textbox_writer.dart b/lib/src/word_textbox_writer.dart\nindex 6471622..88e515e 100644\n--- a/lib/src/word_textbox_writer.dart\n+++ b/lib/src/word_textbox_writer.dart\n@@ -9,7 +9,7 @@ extension _WordTextboxes on _StructuredWordWriter {\n     required bool first,\n     int? nextShape,\n   }) {\n-    if (first && !_renderedTextboxes.add(story.id)) return;\n+    if (first && !_renderedTextboxes.add((story.id, _part))) return;\n     final shape = drawing.shape, text = shape?.text;\n     final width = (drawing.rightTwips - drawing.leftTwips) / 20;\n     final height = (drawing.bottomTwips - drawing.topTwips) / 20;"
+  },
+  "environment": {
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "textExtractorVersion": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "rasterizerVersion": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+    "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+    "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745"
+  },
+  "method": "Exact native DOC source versus corrected parser DOCX, with original failure and unchanged independent page-variant control retained. Native DOCX is not a layout oracle. No golden update.",
+  "controls": [
+    {
+      "id": "header-paragraph",
+      "sourceSha256": "fce32130291308157d952e624c8ba43bee82515c337196e555ff83bf9a16f840",
+      "beforeExitCode": 255,
+      "beforeMessage": "Unhandled exception:\nFormatException: Invalid Word drawing-to-textbox reference.\n#0      _WordStories._linkTextboxDrawings (package:legacy_doc_parser/src/legacy_word_stories.dart:507)\n#1      _StructuredWordParser.parse (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:142)\n#2      readStructuredLegacyWord (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:36)\n#3      parseLegacyWordDocument (package:legacy_doc_parser/src/legacy_word_document.dart:14)\n#4      main (file:///workspace/scratch/db8a3205659b/parser-gaps-textbox/tool/fidelity/convert.dart:21)\n#5      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311)\n#6      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)\n",
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 5,
+          "paragraphs": 10,
+          "sections": 1,
+          "headers": 3,
+          "tables": 2,
+          "cells": 2,
+          "textboxes": 2,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredSharedHeaderTextbox"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "pdfSha256": "d2426756e4d95d6a4b866b5e6cfe3c2a15cc0773346a23c571f2ee1392c0f9ef",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "BODY",
+                "box": [
+                  72.1,
+                  72.508,
+                  106.06,
+                  85.792
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  72.85,
+                  73.258,
+                  98.158,
+                  86.542
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  108.85,
+                  87.058,
+                  138.802,
+                  100.342
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  72.85,
+                  100.858,
+                  142.138,
+                  114.142
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "BODY\nBOX\n     CELL\nAFTER_BOX\n\f",
+        "rasterSha256": [
+          "61a37611a2bed48891d7aba3ff8faeb15ed839d026aebb20c567c21af25c579b"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB",
+        "rasterStorage": "gzip",
+        "rasterArtifacts": [
+          {
+            "page": 1,
+            "path": "page-0001.ppm.gz",
+            "compression": "gzip",
+            "sha256": "3538c752a8dccf51c3d86118cdfcdcd8c36dd5c558edeb61b04246619c33c1ba",
+            "sizeBytes": 4160,
+            "uncompressedSha256": "61a37611a2bed48891d7aba3ff8faeb15ed839d026aebb20c567c21af25c579b",
+            "uncompressedSizeBytes": 1454127
+          }
+        ],
+        "rasterManifest": {
+          "path": "raster-manifest.json",
+          "sha256": "43fb4a0745bb610b8d802fd1e78f528b2771fbe4e1d6218a5c29621ceb9a3dbe"
+        }
+      },
+      "converted": {
+        "pdfSha256": "befaf45afe9beed2373865bbb44c605c1eb693458f6978913d8ebd8fb1f66cec",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "BODY",
+                "box": [
+                  72.1,
+                  72.508,
+                  106.06,
+                  85.792
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  73.2,
+                  73.608,
+                  98.508,
+                  86.892
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  109.2,
+                  87.408,
+                  139.152,
+                  100.692
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  73.2,
+                  101.208,
+                  142.488,
+                  114.492
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "BODY\nBOX\n     CELL\nAFTER_BOX\n\f",
+        "rasterSha256": [
+          "fcc36aa0106615f5cc2bb0dec0eaa199bcc0377c4472d19f9abfd1df43b72b90"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB",
+        "rasterStorage": "gzip",
+        "rasterArtifacts": [
+          {
+            "page": 1,
+            "path": "page-0001.ppm.gz",
+            "compression": "gzip",
+            "sha256": "093f7d063a8592cc4a5b796bab0f9f78e08fd5a2d2dc328bf051a4ad07892bcb",
+            "sizeBytes": 4219,
+            "uncompressedSha256": "fcc36aa0106615f5cc2bb0dec0eaa199bcc0377c4472d19f9abfd1df43b72b90",
+            "uncompressedSizeBytes": 1454127
+          }
+        ],
+        "rasterManifest": {
+          "path": "raster-manifest.json",
+          "sha256": "c8ac82e8a8a5296ae469c12c9a330985a384d86f9b80ec8f3b666b001b8d061f"
+        }
+      },
+      "comparison": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "maximumStoryRelativeDriftPoints": 1.4210854715202004e-14
+    },
+    {
+      "id": "header-table",
+      "sourceSha256": "9950163ea0a1909293d8a10fe778b7032e95e55fde58d58a303e76c8ce81a1a1",
+      "beforeExitCode": 255,
+      "beforeMessage": "Unhandled exception:\nFormatException: Invalid Word drawing-to-textbox reference.\n#0      _WordStories._linkTextboxDrawings (package:legacy_doc_parser/src/legacy_word_stories.dart:507)\n#1      _StructuredWordParser.parse (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:142)\n#2      readStructuredLegacyWord (package:legacy_doc_parser/src/legacy_word_structured_parser.dart:36)\n#3      parseLegacyWordDocument (package:legacy_doc_parser/src/legacy_word_document.dart:14)\n#4      main (file:///workspace/scratch/db8a3205659b/parser-gaps-textbox/tool/fidelity/convert.dart:21)\n#5      _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311)\n#6      _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)\n",
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 5,
+          "paragraphs": 12,
+          "sections": 1,
+          "headers": 3,
+          "tables": 4,
+          "cells": 4,
+          "textboxes": 2,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredTableStoryBoundary",
+          "recoveredSharedHeaderTextbox"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "pdfSha256": "c4ee5963c11c97440e78cd9080c14fdde3e11278c4f13bd7186c95dcac0d0cd2",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "ANCHOR",
+                "box": [
+                  72.1,
+                  49.958,
+                  122.728,
+                  63.242
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  72.85,
+                  73.258,
+                  98.158,
+                  86.542
+                ]
+              },
+              {
+                "text": "BODY",
+                "box": [
+                  72.1,
+                  77.208,
+                  106.06,
+                  90.492
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  120.85,
+                  87.058,
+                  150.802,
+                  100.342
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  72.85,
+                  100.858,
+                  142.138,
+                  114.142
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "ANCHOR\nBOX\nBODY\n       CELL\nAFTER_BOX\n\f",
+        "rasterSha256": [
+          "dfb065150262bca12e98a3e48e502166c75733ce49b8292b559516cac08aff6c"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB",
+        "rasterStorage": "gzip",
+        "rasterArtifacts": [
+          {
+            "page": 1,
+            "path": "page-0001.ppm.gz",
+            "compression": "gzip",
+            "sha256": "5b2bce6da1d9d5b5977a62208649970e5ec3d5a56bf704a7e421a8bd3fe2441c",
+            "sizeBytes": 5213,
+            "uncompressedSha256": "dfb065150262bca12e98a3e48e502166c75733ce49b8292b559516cac08aff6c",
+            "uncompressedSizeBytes": 1454127
+          }
+        ],
+        "rasterManifest": {
+          "path": "raster-manifest.json",
+          "sha256": "1acf00752207c5376576b9d962c61a9d5cd512dc29a1a41499bc3cffc962134d"
+        }
+      },
+      "converted": {
+        "pdfSha256": "5173e3f20f36debe01d75ad4d7ab603087818818e461c2656ffc6101218339c0",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "ANCHOR",
+                "box": [
+                  72.1,
+                  49.958,
+                  122.728,
+                  63.242
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  73.2,
+                  73.608,
+                  98.508,
+                  86.892
+                ]
+              },
+              {
+                "text": "BODY",
+                "box": [
+                  72.1,
+                  77.208,
+                  106.06,
+                  90.492
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  121.2,
+                  87.408,
+                  151.152,
+                  100.692
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  73.2,
+                  101.208,
+                  142.488,
+                  114.492
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "ANCHOR\nBOX\nBODY\n       CELL\nAFTER_BOX\n\f",
+        "rasterSha256": [
+          "d23e018ed6b6560c955e44e5a4de3839474bc0c52ff448108311b01eb707815e"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB",
+        "rasterStorage": "gzip",
+        "rasterArtifacts": [
+          {
+            "page": 1,
+            "path": "page-0001.ppm.gz",
+            "compression": "gzip",
+            "sha256": "3cfaa6637697dbac1cb5f638bec1ef031321f2dc790621e21521a3ebb4a9aa70",
+            "sizeBytes": 5149,
+            "uncompressedSha256": "d23e018ed6b6560c955e44e5a4de3839474bc0c52ff448108311b01eb707815e",
+            "uncompressedSizeBytes": 1454127
+          }
+        ],
+        "rasterManifest": {
+          "path": "raster-manifest.json",
+          "sha256": "c7d9f4aae94a49586e18686ffc6419a11f5d2bee3a5a316f6042baab1f3b0473"
+        }
+      },
+      "comparison": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "maximumStoryRelativeDriftPoints": 1.4210854715202004e-14
+    },
+    {
+      "id": "header-three-pages",
+      "classification": "unchanged valid independent text stories for all three page variants",
+      "sourceSha256": "2e6c1ba05659b1fe5f7e69d625e7c612d9a3e846758df9cccd8fdfb2184ecc66",
+      "beforeExitCode": 0,
+      "beforeAndAfterDocxBytesIdentical": true,
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 5,
+          "paragraphs": 15,
+          "sections": 1,
+          "tables": 3,
+          "cells": 3,
+          "textboxes": 3,
+          "headers": 3,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "binary": {
+        "pdfSha256": "919970cc5eadcafb59558fe926040dcaf3656c89815fdd7869da7dc3a188f6d7",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "PAGE_ONE",
+                "box": [
+                  72.1,
+                  74.45,
+                  120.742,
+                  85.45
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  72.85,
+                  73.258,
+                  98.158,
+                  86.542
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  108.85,
+                  87.058,
+                  138.802,
+                  100.342
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  72.85,
+                  100.858,
+                  142.138,
+                  114.142
+                ]
+              }
+            ]
+          },
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "PAGE_TWO",
+                "box": [
+                  72.1,
+                  74.45,
+                  123.305,
+                  85.45
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  72.85,
+                  73.258,
+                  98.158,
+                  86.542
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  108.85,
+                  87.058,
+                  138.802,
+                  100.342
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  72.85,
+                  100.858,
+                  142.138,
+                  114.142
+                ]
+              }
+            ]
+          },
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "PAGE_THREE",
+                "box": [
+                  72.1,
+                  74.45,
+                  129.938,
+                  85.45
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  72.85,
+                  73.258,
+                  98.158,
+                  86.542
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  108.85,
+                  87.058,
+                  138.802,
+                  100.342
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  72.85,
+                  100.858,
+                  142.138,
+                  114.142
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "BOX\nPAGE_ONE\n     CELL\nAFTER_BOX\n\fBOX\nPAGE_TWO\n     CELL\nAFTER_BOX\n\fBOX\nPAGE_THREE\n     CELL\nAFTER_BOX\n\f",
+        "rasterSha256": [
+          "3e814fcf15b82cf6e9ac1de87804eb3bf3f28030485335793c046a155707649b",
+          "f1173b7656b43f32b7c1931cdef7137d3dee2475af44c62f7e18c3bba31a8fb6",
+          "9aa10f8c107d268c0304b8bb1bcca713cdd445b73d12c9887d933dbe58c68ae8"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB",
+        "rasterStorage": "gzip",
+        "rasterArtifacts": [
+          {
+            "page": 1,
+            "path": "page-0001.ppm.gz",
+            "compression": "gzip",
+            "sha256": "cac72fd0645724dee7e1eacb7e9361011863b9ca3a6834cfe10604704ee94397",
+            "sizeBytes": 4420,
+            "uncompressedSha256": "3e814fcf15b82cf6e9ac1de87804eb3bf3f28030485335793c046a155707649b",
+            "uncompressedSizeBytes": 1454127
+          },
+          {
+            "page": 2,
+            "path": "page-0002.ppm.gz",
+            "compression": "gzip",
+            "sha256": "fe15ad089c0caddfc2facd26414f72495de5ac3e0a82670836a880b40039e601",
+            "sizeBytes": 4513,
+            "uncompressedSha256": "f1173b7656b43f32b7c1931cdef7137d3dee2475af44c62f7e18c3bba31a8fb6",
+            "uncompressedSizeBytes": 1454127
+          },
+          {
+            "page": 3,
+            "path": "page-0003.ppm.gz",
+            "compression": "gzip",
+            "sha256": "374023d1f49630df02224908f24a8c1d78388a95d24fba1ceb7d7f673b0d0af7",
+            "sizeBytes": 4398,
+            "uncompressedSha256": "9aa10f8c107d268c0304b8bb1bcca713cdd445b73d12c9887d933dbe58c68ae8",
+            "uncompressedSizeBytes": 1454127
+          }
+        ],
+        "rasterManifest": {
+          "path": "raster-manifest.json",
+          "sha256": "742db51a5259e1b1744dbba2748314d9d89379b142650aab1914db0622be977e"
+        }
+      },
+      "converted": {
+        "pdfSha256": "fcd3c44a633a6604c048e30a85e1a0b2b03d1b41ffbc6bf99377dd6f6e9eb05a",
+        "pages": [
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "PAGE_ONE",
+                "box": [
+                  72.1,
+                  74.45,
+                  120.742,
+                  85.45
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  73.2,
+                  73.608,
+                  98.508,
+                  86.892
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  109.2,
+                  87.408,
+                  139.152,
+                  100.692
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  73.2,
+                  101.208,
+                  142.488,
+                  114.492
+                ]
+              }
+            ]
+          },
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "PAGE_TWO",
+                "box": [
+                  72.1,
+                  74.45,
+                  123.305,
+                  85.45
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  73.2,
+                  73.608,
+                  98.508,
+                  86.892
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  109.2,
+                  87.408,
+                  139.152,
+                  100.692
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  73.2,
+                  101.208,
+                  142.488,
+                  114.492
+                ]
+              }
+            ]
+          },
+          {
+            "size": [
+              612.0,
+              792.0
+            ],
+            "words": [
+              {
+                "text": "PAGE_THREE",
+                "box": [
+                  72.1,
+                  74.45,
+                  129.938,
+                  85.45
+                ]
+              },
+              {
+                "text": "BOX",
+                "box": [
+                  73.2,
+                  73.608,
+                  98.508,
+                  86.892
+                ]
+              },
+              {
+                "text": "CELL",
+                "box": [
+                  109.2,
+                  87.408,
+                  139.152,
+                  100.692
+                ]
+              },
+              {
+                "text": "AFTER_BOX",
+                "box": [
+                  73.2,
+                  101.208,
+                  142.488,
+                  114.492
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "BOX\nPAGE_ONE\n     CELL\nAFTER_BOX\n\fBOX\nPAGE_TWO\n     CELL\nAFTER_BOX\n\fBOX\nPAGE_THREE\n     CELL\nAFTER_BOX\n\f",
+        "rasterSha256": [
+          "29c7f719001b7c835bde32da417f728592ddae7ca2fb076cb1dac2fe84e9ede5",
+          "f894429374e170af7de5aa42c7270610d13ab88524d3f9de3d868aaa16958f3f",
+          "8a0b133c79b735c85c9bc3d63af0c899f6855adb2e0b8d8165d175628a585fb0"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB",
+        "rasterStorage": "gzip",
+        "rasterArtifacts": [
+          {
+            "page": 1,
+            "path": "page-0001.ppm.gz",
+            "compression": "gzip",
+            "sha256": "9154f16ce5f5a9745d23903cbfd0d684e1a31867c4b15f516facde0ce38b99a5",
+            "sizeBytes": 4469,
+            "uncompressedSha256": "29c7f719001b7c835bde32da417f728592ddae7ca2fb076cb1dac2fe84e9ede5",
+            "uncompressedSizeBytes": 1454127
+          },
+          {
+            "page": 2,
+            "path": "page-0002.ppm.gz",
+            "compression": "gzip",
+            "sha256": "d8bcadb7d322a68167482380856de9f84cdba604d8bb20d9c6258c401aee3a9d",
+            "sizeBytes": 4572,
+            "uncompressedSha256": "f894429374e170af7de5aa42c7270610d13ab88524d3f9de3d868aaa16958f3f",
+            "uncompressedSizeBytes": 1454127
+          },
+          {
+            "page": 3,
+            "path": "page-0003.ppm.gz",
+            "compression": "gzip",
+            "sha256": "cf2a876758bf24a8a2f65a89856476a2bfb5d8d1731b03cd78ace681fd933e0e",
+            "sizeBytes": 4431,
+            "uncompressedSha256": "8a0b133c79b735c85c9bc3d63af0c899f6855adb2e0b8d8165d175628a585fb0",
+            "uncompressedSizeBytes": 1454127
+          }
+        ],
+        "rasterManifest": {
+          "path": "raster-manifest.json",
+          "sha256": "9c9dd75b414645f64b2a45d5dfcfddcbf72991f0bff9ae0a2b9c1a113d327fab"
+        }
+      },
+      "comparison": {
+        "referencePages": 3,
+        "actualPages": 3,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "maximumStoryRelativeDriftPoints": 1.4210854715202004e-14
+    }
+  ],
+  "focusedTests": 57,
+  "analysis": "No issues found",
+  "recoveredImportCount": 2,
+  "unchangedValidControlCount": 1
+}

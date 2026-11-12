@@ -169,6 +169,7 @@ extension _WordTables on _StructuredWordParser {
             tableProperties?['tableRtl90'] == true,
         autoFit: tableProperties?['tableAutoFit'] == true,
         alignment: _tableAlignment(tableProperties ?? const {}),
+        position: _tablePosition(tableProperties ?? const {}),
       );
     }
 
@@ -192,4 +193,63 @@ extension _WordTables on _StructuredWordParser {
     }
     return blocks;
   }
+}
+
+// MS-DOC 2.6.3, PositionCodeOperand and XAS/YAS_plusOne. Nondefault
+// positioning/wrapping values activate tblpPr; an explicit "none" anchor
+// makes the table inline. In particular, do not delete its anchor paragraph.
+LegacyWordTablePosition? _tablePosition(_Props properties) {
+  int value(int code) => properties['tablePosition$code'] as int? ?? 0;
+  if (const [
+    0x360d,
+    0x940e,
+    0x940f,
+    0x9410,
+    0x9411,
+    0x941e,
+    0x941f,
+  ].every((code) => value(code) == 0)) {
+    return null;
+  }
+  final pc = value(0x360d), x = value(0x940e), y = value(0x940f);
+  final vertical = (pc >> 4) & 3, horizontal = (pc >> 6) & 3;
+  if (vertical == 3 || horizontal == 3) return null;
+  final xPlacement = switch (x) {
+    0 => LegacyWordTableHorizontalPlacement.left,
+    -4 => LegacyWordTableHorizontalPlacement.center,
+    -8 => LegacyWordTableHorizontalPlacement.right,
+    -12 => LegacyWordTableHorizontalPlacement.inside,
+    -16 => LegacyWordTableHorizontalPlacement.outside,
+    _ => null,
+  };
+  final yPlacement = switch (y) {
+    0 => LegacyWordTableVerticalPlacement.inline,
+    -4 => LegacyWordTableVerticalPlacement.top,
+    -8 => LegacyWordTableVerticalPlacement.center,
+    -12 => LegacyWordTableVerticalPlacement.bottom,
+    -16 => LegacyWordTableVerticalPlacement.inside,
+    -20 => LegacyWordTableVerticalPlacement.outside,
+    _ => null,
+  };
+  return LegacyWordTablePosition(
+    horizontalAnchor: const [
+      LegacyWordTableAnchor.text,
+      LegacyWordTableAnchor.margin,
+      LegacyWordTableAnchor.page,
+    ][horizontal],
+    verticalAnchor: const [
+      LegacyWordTableAnchor.margin,
+      LegacyWordTableAnchor.page,
+      LegacyWordTableAnchor.text,
+    ][vertical],
+    horizontalPlacement: xPlacement,
+    verticalPlacement: yPlacement,
+    horizontalOffsetTwips: xPlacement == null ? x - 1 : null,
+    verticalOffsetTwips: yPlacement == null ? y - 1 : null,
+    leftFromTextTwips: value(0x9410),
+    topFromTextTwips: value(0x9411),
+    rightFromTextTwips: value(0x941e),
+    bottomFromTextTwips: value(0x941f),
+    allowOverlap: value(0x3465) == 0,
+  );
 }

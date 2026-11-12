@@ -58,6 +58,10 @@ enum LegacyWordWarning {
   /// A note format is unknown or requires a disclosed decimal fallback.
   /// The original MSONFC code remains available on the note numbering model.
   unsupportedNoteNumberFormat,
+
+  /// One native singleton textbox story was reused by separate header/footer
+  /// variants, each with its own index-zero shape and no continuation link.
+  recoveredSharedHeaderTextbox,
 }
 
 enum LegacyWordAlignment { left, center, right, justify, distribute }
@@ -252,6 +256,7 @@ class LegacyWordTextboxReference {
     this.declaredChainLength,
     this.anchors = const [],
     this.headerAliases = const [],
+    this.replicaAnchors = const [],
   });
   final int id;
   final String storyId;
@@ -274,6 +279,10 @@ class LegacyWordTextboxReference {
   /// A shared source shape is distinguished by its original anchor CP.
   /// The converter revalidates the bounded normal/first-header recovery.
   final List<LegacyWordTextboxAnchor> headerAliases;
+
+  /// Independent singleton placements of the same source text in distinct
+  /// header/footer stories. These are not continuations of [anchors].
+  final List<LegacyWordTextboxAnchor> replicaAnchors;
 }
 
 class LegacyWordTextboxAnchor {
@@ -465,6 +474,7 @@ class LegacyWordTable extends LegacyWordBlock {
     this.autoFit = false,
     this.rightToLeft = false,
     this.alignment = LegacyWordAlignment.left,
+    this.position,
   });
   final List<LegacyWordTableRow> rows;
   final bool autoFit;
@@ -473,6 +483,10 @@ class LegacyWordTable extends LegacyWordBlock {
   /// Logical table alignment (left means its leading edge). Physical TJc90
   /// source values are resolved against the table direction during parsing.
   final LegacyWordAlignment alignment;
+
+  /// Absolute positioning from the table's own MS-DOC properties. The next
+  /// regular paragraph remains the anchor and remains editable content.
+  final LegacyWordTablePosition? position;
 }
 
 class LegacyWordTableRow {
@@ -778,6 +792,30 @@ class LegacyWordParagraphMark {
   final int? formattingSaveId;
 }
 
+/// The separately selected MS-DOC non-ASCII, East Asian and complex-script
+/// font faces. A null face remains unspecified; it is not the ASCII face.
+class LegacyWordScriptFonts {
+  const LegacyWordScriptFonts({
+    this.nonAscii,
+    this.eastAsia,
+    this.complexScript,
+  });
+
+  final String? nonAscii;
+  final String? eastAsia;
+  final String? complexScript;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LegacyWordScriptFonts &&
+      nonAscii == other.nonAscii &&
+      eastAsia == other.eastAsia &&
+      complexScript == other.complexScript;
+
+  @override
+  int get hashCode => Object.hash(nonAscii, eastAsia, complexScript);
+}
+
 class LegacyWordCharacterStyle {
   const LegacyWordCharacterStyle({
     this.bold = false,
@@ -790,6 +828,7 @@ class LegacyWordCharacterStyle {
     this.allCaps = false,
     this.hidden = false,
     this.fontName,
+    this.scriptFonts,
     this.fontSizeHalfPoints,
     this.kerningThresholdHalfPoints = 0,
     this.colorHex,
@@ -811,6 +850,10 @@ class LegacyWordCharacterStyle {
   final bool allCaps;
   final bool hidden;
   final String? fontName;
+
+  /// When present, script-specific faces are independent of [fontName], which
+  /// is the ASCII face. A null set preserves the original single-face API.
+  final LegacyWordScriptFonts? scriptFonts;
   final int? fontSizeHalfPoints;
 
   /// MS-DOC sprmCHpsKern threshold in half-points. Zero disables kerning.
@@ -836,6 +879,7 @@ class LegacyWordCharacterStyle {
       allCaps == other.allCaps &&
       hidden == other.hidden &&
       fontName == other.fontName &&
+      scriptFonts == other.scriptFonts &&
       fontSizeHalfPoints == other.fontSizeHalfPoints &&
       kerningThresholdHalfPoints == other.kerningThresholdHalfPoints &&
       colorHex == other.colorHex &&
@@ -855,6 +899,7 @@ class LegacyWordCharacterStyle {
     allCaps,
     hidden,
     fontName,
+    scriptFonts,
     fontSizeHalfPoints,
     kerningThresholdHalfPoints,
     colorHex,

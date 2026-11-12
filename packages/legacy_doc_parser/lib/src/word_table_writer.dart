@@ -55,6 +55,7 @@ extension _WordTableWriter on _StructuredWordWriter {
       }
       _xml.add('<w:tblStyle w:val="LegacyTable$id"/>');
     }
+    if (table.position case final position?) _tablePosition(position);
     if (table.rightToLeft) _xml.add('<w:bidiVisual w:val="on"/>');
     _xml.add(
       canWriteGrid
@@ -215,6 +216,43 @@ extension _WordTableWriter on _StructuredWordWriter {
     }
     _xml.add('</w:tbl>');
     _tableDepth--;
+  }
+
+  void _tablePosition(LegacyWordTablePosition position) {
+    final x = position.horizontalOffsetTwips, y = position.verticalOffsetTwips;
+    if ((x == null) == (position.horizontalPlacement == null) ||
+        (y == null) == (position.verticalPlacement == null) ||
+        (x != null && (x < -31680 || x > 31680)) ||
+        (y != null && (y < -31680 || y > 31680)) ||
+        [
+          position.leftFromTextTwips,
+          position.rightFromTextTwips,
+          position.topFromTextTwips,
+          position.bottomFromTextTwips,
+        ].any((distance) => distance < 0 || distance > 31680)) {
+      throw const FormatException('Invalid Word floating-table position.');
+    }
+    _xml.add(
+      '<w:tblpPr w:horzAnchor="${position.horizontalAnchor.name}" '
+      'w:vertAnchor="${position.verticalAnchor.name}" '
+      'w:leftFromText="${position.leftFromTextTwips}" '
+      'w:rightFromText="${position.rightFromTextTwips}" '
+      'w:topFromText="${position.topFromTextTwips}" '
+      'w:bottomFromText="${position.bottomFromTextTwips}"',
+    );
+    _xml.add(
+      x == null
+          ? ' w:tblpXSpec="${position.horizontalPlacement!.name}"'
+          : ' w:tblpX="$x"',
+    );
+    _xml.add(
+      y == null
+          ? ' w:tblpYSpec="${position.verticalPlacement!.name}"'
+          : ' w:tblpY="$y"',
+    );
+    _xml.add(
+      '/><w:tblOverlap w:val="${position.allowOverlap ? 'overlap' : 'never'}"/>',
+    );
   }
 
   String _tableJustification(LegacyWordAlignment value) => switch (value) {

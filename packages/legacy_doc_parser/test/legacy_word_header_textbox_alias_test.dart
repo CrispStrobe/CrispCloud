@@ -321,11 +321,42 @@ void main() {
     },
   );
 
+  test('corroborated header and footer instances use independent replicas', () {
+    final document = parseLegacyWordDocument(
+      headerTextboxAliasFixture(firstFooter: true),
+    );
+    expect(document.textboxReferences.single.headerAliases, isEmpty);
+    expect(document.textboxReferences.single.replicaAnchors, hasLength(1));
+    expect(() => convertLegacyWordDocument(document), returnsNormally);
+  });
+
+  test(
+    'recorded fields use independent replicas rather than plain aliases',
+    () {
+      final document = parseLegacyWordDocument(
+        headerTextboxAliasFixture(rawText: '\x13 PAGE \x141\x15\r\r'),
+      );
+      expect(document.textboxReferences.single.headerAliases, isEmpty);
+      expect(document.textboxReferences.single.replicaAnchors, hasLength(1));
+      expect(document.fields.single.type, 'PAGE');
+      final package = ZipDecoder().decodeBytes(
+        convertLegacyWordDocument(document).bytes,
+      );
+      final headers = package.files.where(
+        (file) =>
+            file.name.startsWith('word/header') && file.name.endsWith('.xml'),
+      );
+      expect(headers, hasLength(3));
+      expect(
+        headers.where((file) => utf8.decode(file.content).contains(' PAGE ')),
+        hasLength(2),
+      );
+    },
+  );
+
   final hostile = <String, List<int> Function()>{
     'same-header duplicates': () => headerTextboxAliasFixture(sameHeader: true),
     'main-story duplicates': () => headerTextboxAliasFixture(mainStory: true),
-    'first footer instead of header': () =>
-        headerTextboxAliasFixture(firstFooter: true),
     'declared two-frame chain': () => headerTextboxAliasFixture(count: 2),
     'unresolved first shape': () => headerTextboxAliasFixture(lid: 9999),
     'nonzero index without a next link': () =>
@@ -336,8 +367,6 @@ void main() {
     'third occurrence': () => headerTextboxAliasFixture(extraOccurrence: true),
     'group child context': () => headerTextboxAliasFixture(shapeFlags: 0xa02),
     'different shape type': () => headerTextboxAliasFixture(shapeType: 1),
-    'field identity': () =>
-        headerTextboxAliasFixture(rawText: '\x13 PAGE \x141\x15\r\r'),
     'inserted content': () =>
         headerTextboxAliasFixture(textProperties: wordSprm(0x0801, [1])),
     'deleted content': () =>

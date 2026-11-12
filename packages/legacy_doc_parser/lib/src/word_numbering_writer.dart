@@ -181,13 +181,7 @@ extension _WordNumberingWriter on _StructuredWordWriter {
         );
         xml.add('/></w:pPr><w:rPr>');
         final character = level.characterStyle;
-        if (character.fontName != null) {
-          xml.add('<w:rFonts w:ascii="');
-          xml.text(character.fontName!, attribute: true);
-          xml.add('" w:hAnsi="');
-          xml.text(character.fontName!, attribute: true);
-          xml.add('"/>');
-        }
+        _runFonts(character, xml);
         xml.add(
           '<w:b w:val="${character.bold ? 1 : 0}"/><w:i w:val="${character.italic ? 1 : 0}"/>',
         );

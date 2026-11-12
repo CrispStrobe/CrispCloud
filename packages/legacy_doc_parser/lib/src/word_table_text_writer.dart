@@ -156,13 +156,7 @@ extension _WordTableTextWriter on _StructuredWordWriter {
     }
 
     xml.add('<w:rPr>');
-    if (has('fontIndex') && style.fontName != null) {
-      xml.add('<w:rFonts w:ascii="');
-      xml.text(style.fontName!, attribute: true);
-      xml.add('" w:hAnsi="');
-      xml.text(style.fontName!, attribute: true);
-      xml.add('"/>');
-    }
+    _runFonts(style, xml, include: has);
     flag('bold', 'b', style.bold);
     flag('italic', 'i', style.italic);
     flag('allCaps', 'caps', style.allCaps);

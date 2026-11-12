@@ -1,0 +1,30 @@
+{
+  "license": "MPL-2.0",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "origin": "Literal authored OOXML; native DOC bridge; exact bytes retained",
+  "authoring": "doc/evidence/shared-header-textboxes-20261112/artifacts.tar.xz:probe.py and probe_shared_header.py",
+  "originalTwoControls": "doc/evidence/textbox-table-context-20261112/artifacts.tar.xz",
+  "cases": [
+    {
+      "file": "shared-header-textbox-paragraph.doc",
+      "sha256": "fce32130291308157d952e624c8ba43bee82515c337196e555ff83bf9a16f840",
+      "authoredSourceSha256": "1eca4dbf0a04ef2d2a856d2ca1c9be4b4a3814f26701a79f2f359a9b5ddfd850",
+      "artifactCase": "header-paragraph",
+      "requiresSharedRecovery": true
+    },
+    {
+      "file": "shared-header-textbox-table.doc",
+      "sha256": "9950163ea0a1909293d8a10fe778b7032e95e55fde58d58a303e76c8ce81a1a1",
+      "authoredSourceSha256": "4dc4fd642e6efb28238b561eb4a6db0a2ae3ba536e0ac3294d1bd51ea3c4b75d",
+      "artifactCase": "header-table",
+      "requiresSharedRecovery": true
+    },
+    {
+      "file": "header-textbox-page-variants.doc",
+      "sha256": "2e6c1ba05659b1fe5f7e69d625e7c612d9a3e846758df9cccd8fdfb2184ecc66",
+      "authoredSourceSha256": "fbcdb19ac5acbfbaa1e06ccebcc3eed2351d9ece1b1860aa54596f9a9249f392",
+      "artifactCase": "header-three-pages",
+      "requiresSharedRecovery": false
+    }
+  ]
+}

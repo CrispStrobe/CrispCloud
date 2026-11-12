@@ -230,7 +230,14 @@ extension _WordFormattingTables on _StructuredWordParser {
         baseLength.isOdd) {
       throw const FormatException('Invalid Word stylesheet size.');
     }
-    if (headerLength >= 18) defaultFont = input.u16(14);
+    // MS-DOC 2.9.274 Stshif / 2.9.272 STSHI. Each script has its own
+    // default font index; the ASCII face must not replace the other slots.
+    if (headerLength >= 18) {
+      defaultFont = input.i16(14);
+      defaultEastAsianFont = input.i16(16);
+      defaultNonAsciiFont = input.i16(18);
+    }
+    if (headerLength >= 20) defaultComplexScriptFont = input.i16(20);
     var position = 2 + headerLength;
     for (var index = 0; index < count; index++) {
       final size = input.u16(position);

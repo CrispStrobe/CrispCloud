@@ -40,7 +40,7 @@ class _StructuredWordWriter {
   var _commentParagraphSequence = 0;
   final _storyRanges = <(int, int, String)>[];
   final _events = <String, List<_WordInlineEvent>>{};
-  final _eventOffsets = <String, int>{};
+  final _eventOffsets = <(String, String), int>{};
   final _headerFooters = <int, List<(bool, String, String)>>{};
   final _storyParts = <String, String>{};
   final _numberingIds = <int>{};
@@ -51,6 +51,8 @@ class _StructuredWordWriter {
   var _tableDepth = 0;
   final _fields = <int, LegacyWordField>{};
   final _fieldChildren = <int, List<LegacyWordField>>{};
+  final _fieldInstructions = <int, String>{};
+  final _fieldBinaryData = <int, LegacyWordOpaqueArtifact?>{};
   final _mediaAssets = <String, LegacyWordImageAsset>{};
   final _mediaParts = <String, String>{};
   final _embeddedParts = <String, String>{};
@@ -263,16 +265,7 @@ class _StructuredWordWriter {
   }
 
   void _runStyle(LegacyWordCharacterStyle style, {bool resetDefaults = false}) {
-    final font = style.fontName;
-    if (font != null && font.isNotEmpty) {
-      _xml.add('<w:rFonts w:ascii="');
-      _xml.text(font, attribute: true);
-      _xml.add('" w:hAnsi="');
-      _xml.text(font, attribute: true);
-      _xml.add('" w:eastAsia="');
-      _xml.text(font, attribute: true);
-      _xml.add('"/>');
-    }
+    _runFonts(style, _xml);
     _bool('b', style.bold);
     _bool('i', style.italic);
     _bool('caps', style.allCaps);
@@ -309,6 +302,36 @@ class _StructuredWordWriter {
       );
     }
     _xml.add('<w:vertAlign w:val="${style.verticalAlign.name}"/>');
+  }
+
+  void _runFonts(
+    LegacyWordCharacterStyle style,
+    _BoundedWordXml xml, {
+    bool Function(String)? include,
+  }) {
+    final scripts = style.scriptFonts;
+    final entries = [
+      ('fontIndex', 'ascii', style.fontName),
+      (
+        scripts == null ? 'fontIndex' : 'nonAsciiFontIndex',
+        'hAnsi',
+        scripts == null ? style.fontName : scripts.nonAscii,
+      ),
+      (
+        scripts == null ? 'fontIndex' : 'eastAsianFontIndex',
+        'eastAsia',
+        scripts == null ? style.fontName : scripts.eastAsia,
+      ),
+      ('complexScriptFontIndex', 'cs', scripts?.complexScript),
+    ].where((entry) => entry.$3 != null && (include?.call(entry.$1) ?? true));
+    if (entries.isEmpty) return;
+    xml.add('<w:rFonts');
+    for (final (_, attribute, font) in entries) {
+      xml.add(' w:$attribute="');
+      xml.text(font!, attribute: true);
+      xml.add('"');
+    }
+    xml.add('/>');
   }
 
   static int _kerningThreshold(LegacyWordCharacterStyle style) {

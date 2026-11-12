@@ -1,0 +1,16 @@
+{
+  "Files": 2,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "build/note-table-schema/note-floating-table.docx",
+      "Sha256": "78f6c79fc852d0fd80d49327c2ddfe688573c798680e22a960002d1029a61e9d",
+      "Errors": []
+    },
+    {
+      "File": "build/note-table-schema/note-table-ending.docx",
+      "Sha256": "4946c71c9a176d55c0a3f5f19bf5359d1e5fb6776e3d060e8099fd230c49b114",
+      "Errors": []
+    }
+  ]
+}

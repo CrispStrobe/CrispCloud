@@ -431,6 +431,12 @@ void main(List<String> arguments) {
     'header-ending-table',
     'footer-ending-paragraph',
     'footer-ending-table',
+    'note-table-ending',
+    'note-floating-table',
+    'shared-header-textbox-paragraph',
+    'shared-header-textbox-table',
+    'header-textbox-page-variants',
+    'bookmarks-native-hyperlink',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }
