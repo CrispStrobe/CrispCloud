@@ -425,43 +425,47 @@ void main() {
     'footer_even',
     'comments',
   ]) {
-    test('unsupported $story block control fails with its source part', () {
-      final package = _source();
-      final root = story.startsWith('header')
-          ? 'hdr'
-          : story.startsWith('footer')
-          ? 'ftr'
-          : 'comments';
-      var body = _controlXml(
-        101,
-        '<w:p><w:r><w:t>Controlled story text</w:t></w:r></w:p>',
-      );
-      if (story == 'comments') body = '<w:comment w:id="7">$body</w:comment>';
-      final uri = '/word/$story.xml';
-      package
-          .getPart(uri)!
-          .writeText(
-            '<w:$root xmlns:w="${OfficeNamespaces.w}">$body</w:$root>',
-          );
-      final before = {
-        for (final part in package.parts)
-          part.uri: List<int>.of(part.bytesView),
-      };
-      expect(
-        () => WordDeserializer().read(package),
-        throwsA(
-          isA<UnsupportedError>().having(
-            (e) => e.message,
-            'location and unsupported topology',
-            contains('$uri: block control in a paragraph-only'),
+    test(
+      'unsupported $story multi-paragraph control fails with its source part',
+      () {
+        final package = _source();
+        final root = story.startsWith('header')
+            ? 'hdr'
+            : story.startsWith('footer')
+            ? 'ftr'
+            : 'comments';
+        var body = _controlXml(
+          101,
+          '<w:p><w:r><w:t>Controlled story text</w:t></w:r></w:p>'
+          '<w:p><w:r><w:t>Second controlled paragraph</w:t></w:r></w:p>',
+        );
+        if (story == 'comments') body = '<w:comment w:id="7">$body</w:comment>';
+        final uri = '/word/$story.xml';
+        package
+            .getPart(uri)!
+            .writeText(
+              '<w:$root xmlns:w="${OfficeNamespaces.w}">$body</w:$root>',
+            );
+        final before = {
+          for (final part in package.parts)
+            part.uri: List<int>.of(part.bytesView),
+        };
+        expect(
+          () => WordDeserializer().read(package),
+          throwsA(
+            isA<UnsupportedError>().having(
+              (e) => e.message,
+              'location and unsupported topology',
+              contains('$uri: block control in a paragraph-only'),
+            ),
           ),
-        ),
-      );
-      expect({
-        for (final part in package.parts)
-          part.uri: List<int>.of(part.bytesView),
-      }, before);
-    });
+        );
+        expect({
+          for (final part in package.parts)
+            part.uri: List<int>.of(part.bytesView),
+        }, before);
+      },
+    );
   }
 
   test('frame child parsing honors selected compatibility branches', () {
@@ -517,6 +521,26 @@ void main() {
       WmlRunEdit.replaceRange(copied, 0, 5, 'Copy');
       expect(original.text, 'Block Alpha Beta');
       expect(copied.text, 'Copy Alpha Beta');
+    },
+  );
+
+  test(
+    'authored native source is retained before first import and three unchanged saves',
+    () async {
+      final source = _source().save();
+      final input = File('build/fidelity-content-controls/source.docx');
+      input.parent.createSync(recursive: true);
+      input.writeAsBytesSync(source);
+      var document = WordDeserializer().readBytes(source);
+      for (var cycle = 1; cycle <= 3; cycle++) {
+        _assertModel(document, edited: false);
+        final bytes = await OfficeIsolateSave.word(document);
+        File(
+          'build/fidelity-content-controls/imported-$cycle.docx',
+        ).writeAsBytesSync(bytes);
+        document = WordDeserializer().readBytes(bytes);
+        _assertModel(document, edited: false);
+      }
     },
   );
 

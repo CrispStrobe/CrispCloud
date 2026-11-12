@@ -21,6 +21,7 @@ import '../model/word_toc.dart';
 import '../model/word_tree.dart';
 import '../properties/wml_properties.dart';
 
+part 'word_contained_layout.dart';
 part 'word_note_layout.dart';
 part 'word_table_row_layout.dart';
 part 'word_wrap_layout.dart';
@@ -706,6 +707,13 @@ class WordLayoutEngine {
   final Map<int, FontMetrics> _metricsCache = <int, FontMetrics>{};
 
   WmlDocument? _layoutDoc;
+  // Temporary tall-row shaping records absolute frame anchors without moving
+  // their page coordinates into the row's local coordinate system.
+  Map<WmlFrame, ({double y, int paragraphIndex})>? _deferredContainedFrames;
+  int _containedMeasureDepth = 0;
+  Map<WmlVisual, double>? _deferredContainedVisuals;
+  WmlSection? _containedPhysicalSection;
+  int _containedTableDepth = 0;
   final Map<WmlNote, _NoteStory> _noteStories = <WmlNote, _NoteStory>{};
   final Map<int, List<_NoteSlice>> _noteSlices = <int, List<_NoteSlice>>{};
   final Set<int> _placedNotes = <int>{};
@@ -883,7 +891,14 @@ class WordLayoutEngine {
     _noteSlices.clear();
     _placedNotes.clear();
     if (document.footnotes.isNotEmpty) fromSectionIndex = 0;
+    // Materialize every nested TOC before paragraph indices are counted. A
+    // normal engine layout also binds imported cached entries to live headings;
+    // temporary row shaping keeps their original document-wide targets.
+    for (final toc in WordToc.tocs(document)) {
+      WordToc.ensureBody(toc);
+    }
     if (updateFields) {
+      WordToc.rebindHeadings(document);
       WordFields.update(document);
     }
     final List<LaidOutPage> pages = <LaidOutPage>[];
@@ -1529,6 +1544,9 @@ class WordLayoutEngine {
     double y,
     int paragraphIndex, {
     _Flow? flow,
+    double? originX,
+    double? maxWidthOverride,
+    bool allowBreak = true,
   }) {
     var cursorY = y;
     var idx = pageIndex;
@@ -1543,9 +1561,10 @@ class WordLayoutEngine {
       cursorY,
       para,
       sourceText: toc.titleParagraph.text,
-      originX: flow?.originX,
-      maxWidthOverride: flow?.colWidth,
+      originX: originX ?? flow?.originX,
+      maxWidthOverride: maxWidthOverride ?? flow?.colWidth,
       flow: flow,
+      allowBreak: allowBreak,
     );
     cursorY = title.y;
     idx = title.pageIndex;
@@ -1565,9 +1584,10 @@ class WordLayoutEngine {
         cursorY,
         para,
         sourceText: item.text,
-        originX: flow?.originX,
-        maxWidthOverride: flow?.colWidth,
+        originX: originX ?? flow?.originX,
+        maxWidthOverride: maxWidthOverride ?? flow?.colWidth,
         flow: flow,
+        allowBreak: allowBreak,
         tocTargetParagraph: entry?.headingParagraphIndex,
         overlayText: entry != null && toc.showsPageNumberForLevel(entry.level)
             ? '${entry.pageNumber}'
@@ -1611,6 +1631,42 @@ class WordLayoutEngine {
     double? originX,
     double? maxWidthOverride,
     _Flow? flow,
+    bool allowBreak = true,
+  }) {
+    _containedTableDepth++;
+    try {
+      return _layoutTableContents(
+        table,
+        section,
+        pages,
+        current,
+        currentFrames,
+        pageIndex,
+        y,
+        paragraphIndex,
+        originX: originX,
+        maxWidthOverride: maxWidthOverride,
+        flow: flow,
+        allowBreak: allowBreak,
+      );
+    } finally {
+      _containedTableDepth--;
+    }
+  }
+
+  ({double y, int pageIndex}) _layoutTableContents(
+    WmlTable table,
+    WmlSection section,
+    List<LaidOutPage> pages,
+    List<LaidOutLine> current,
+    List<LaidOutBox> currentFrames,
+    int pageIndex,
+    double y,
+    int paragraphIndex, {
+    double? originX,
+    double? maxWidthOverride,
+    _Flow? flow,
+    bool allowBreak = true,
   }) {
     final List<double> cols = _columnWidths(table, section, maxWidthOverride);
     var cursorY = y + 6;
@@ -1630,6 +1686,19 @@ class WordLayoutEngine {
         for (final cell in row.cells)
           WordTree.visibleBlocks(cell.blocks).toList(),
       ];
+      final cellParagraphStarts = <int>[];
+      final blockParagraphOffsets = <List<int>>[];
+      var rowParagraphEnd = para;
+      for (final blocks in rowBlocks) {
+        cellParagraphStarts.add(rowParagraphEnd);
+        final offsets = <int>[0];
+        for (final block in blocks) {
+          final count = WordTree.paragraphs([block]).length;
+          rowParagraphEnd += count;
+          offsets.add(offsets.last + count);
+        }
+        blockParagraphOffsets.add(offsets);
+      }
       final double fullRowHeight = _measureTableRowHeightFrom(
         row,
         cols,
@@ -1640,7 +1709,7 @@ class WordLayoutEngine {
         rtl: rtl,
         cellPad: cellPad,
       );
-      if (fullRowHeight > section.contentHeight - cellPad * 2) {
+      if (allowBreak && fullRowHeight > section.contentHeight - cellPad * 2) {
         final laid = _layoutTallTableRow(
           this,
           table,
@@ -1659,10 +1728,7 @@ class WordLayoutEngine {
         );
         cursorY = laid.y;
         idx = laid.pageIndex;
-        para += row.cells
-            .expand((cell) => cell.blocks)
-            .expand(WmlClone.paragraphsOf)
-            .length;
+        para = rowParagraphEnd;
         continue;
       }
       final List<int> nextBlock = List<int>.filled(row.cells.length, 0);
@@ -1675,7 +1741,7 @@ class WordLayoutEngine {
             break;
           }
         }
-        if (!remaining) {
+        if (!remaining && !sliceStart) {
           break;
         }
 
@@ -1687,7 +1753,7 @@ class WordLayoutEngine {
                   if (run.noteRefId != null && !run.noteRefEndnote)
                     run.noteRefId!,
         };
-        if (_minimumNotes(rowNotes, section, idx) > 0) {
+        if (allowBreak && _minimumNotes(rowNotes, section, idx) > 0) {
           final double rowHeight = _measureTableRowHeightFrom(
             row,
             cols,
@@ -1733,7 +1799,8 @@ class WordLayoutEngine {
 
         // If the cursor is already past the usable area, advance the page
         // before opening a new row slice.
-        while ((current.isNotEmpty ||
+        while (allowBreak &&
+            (current.isNotEmpty ||
                 currentFrames.isNotEmpty ||
                 _noteReserve(idx) > 0) &&
             cursorY + cellPad + 12 > pageBottom) {
@@ -1757,7 +1824,8 @@ class WordLayoutEngine {
         // When cantSplit is set, move the whole remaining row to the next
         // page if it will not fit. Otherwise start placing cells and allow
         // mid-row continuation (Word default for Table Grid).
-        if (sliceStart &&
+        if (allowBreak &&
+            sliceStart &&
             row.cantSplit &&
             (current.isNotEmpty || currentFrames.isNotEmpty)) {
           final double estimated = _measureTableRowHeightFrom(
@@ -1793,8 +1861,8 @@ class WordLayoutEngine {
         var rowBottom = rowStartY;
         var x = rtl ? tableX + tableWidth : tableX;
         var gridCol = 0;
+        final int rowFrameStart = currentFrames.length;
         final List<LaidOutBox> rowFrames = <LaidOutBox>[];
-        final List<int> placed = List<int>.filled(row.cells.length, 0);
         var needsContinue = false;
 
         for (int c = 0; c < row.cells.length; c++) {
@@ -1807,7 +1875,9 @@ class WordLayoutEngine {
           if (rtl) {
             x -= colW;
           }
-          final int cellParaStart = para;
+          final int cellParaStart = cellParagraphStarts[c];
+          final int cellParagraphCount = blockParagraphOffsets[c].last;
+          var cellPara = cellParaStart + blockParagraphOffsets[c][nextBlock[c]];
           var cellY = rowStartY + cellPad;
           var bi = nextBlock[c];
           while (bi < rowBlocks[c].length) {
@@ -1815,9 +1885,10 @@ class WordLayoutEngine {
             final double blockH = _estimateCellBlockHeight(
               block,
               section,
-              maxWidth: math.max(12, colW - cellPad * 2),
+              maxWidth: math.max(1, colW - cellPad * 2),
             );
-            if (!row.cantSplit &&
+            if (allowBreak &&
+                !row.cantSplit &&
                 cellY + blockH > pageBottom &&
                 cellY > rowStartY + cellPad + 0.5) {
               needsContinue = true;
@@ -1826,7 +1897,8 @@ class WordLayoutEngine {
             // Word-like orphan control for consecutive list items: if this
             // block fits but the next list sibling does not, break before
             // this block so the pair moves together (e.g. UN OCHA + CEPs).
-            if (!row.cantSplit &&
+            if (allowBreak &&
+                !row.cantSplit &&
                 bi + 1 < rowBlocks[c].length &&
                 cellY > rowStartY + cellPad + 0.5 &&
                 cellY + blockH <= pageBottom) {
@@ -1835,7 +1907,7 @@ class WordLayoutEngine {
                 final double nextH = _estimateCellBlockHeight(
                   nextBlock,
                   section,
-                  maxWidth: math.max(12, colW - cellPad * 2),
+                  maxWidth: math.max(1, colW - cellPad * 2),
                 );
                 if (cellY + blockH + nextH > pageBottom) {
                   needsContinue = true;
@@ -1843,57 +1915,30 @@ class WordLayoutEngine {
                 }
               }
             }
-            if (block is WmlParagraph) {
-              final ({double y, int pageIndex}) laid = _layoutParagraph(
-                block,
-                section,
-                pages,
-                current,
-                currentFrames,
-                idx,
-                cellY,
-                para,
-                originX: x + cellPad,
-                maxWidthOverride: math.max(12, colW - cellPad * 2),
-                allowBreak: false,
-              );
-              cellY = laid.y;
-              idx = laid.pageIndex;
-              para++;
-            } else if (block is WmlEquation) {
-              final LaidOutOmml omml = OmmlLayout.layout(
-                block.math,
-                fontSize: 14,
-              );
-              currentFrames.add(
-                LaidOutBox(
-                  x: x + cellPad,
-                  y: cellY,
-                  width: math.min(colW - cellPad * 2, omml.width),
-                  height: omml.height,
-                  fillColor: 'F7FBFF',
-                  strokeColor: '8FAADC',
-                  kind: LaidOutBoxKind.equation,
-                  equation: block,
-                  omml: omml,
-                ),
-              );
-              cellY += omml.height + 4;
-            }
+            final laid = _layoutContainedBlock(
+              this,
+              block,
+              section,
+              pages,
+              current,
+              currentFrames,
+              idx,
+              cellY,
+              cellPara,
+              originX: x + cellPad,
+              maxWidth: math.max(1, colW - cellPad * 2),
+            );
+            cellY = laid.y;
+            cellPara = laid.nextParagraphIndex;
             bi++;
           }
-          placed[c] = bi - nextBlock[c];
-          final int previous = nextBlock[c];
           nextBlock[c] = bi;
           rowBottom = math.max(rowBottom, cellY + cellPad);
           final bool firstSlice = sliceStart;
           final bool lastSlice = bi >= rowBlocks[c].length;
-          // Skip cells that were empty from the start of the row. On
-          // continuation slices, still emit frames for exhausted cells so the
-          // grid (e.g. empty CHAIN cell beside WORKING RELATIONS) remains.
-          if (!(placed[c] == 0 &&
-              previous >= rowBlocks[c].length &&
-              sliceStart)) {
+          // Empty cells still have visible borders. Their absent paragraph
+          // span must not claim the next sibling's text identity.
+          {
             rowFrames.add(
               LaidOutBox(
                 x: x,
@@ -1923,8 +1968,10 @@ class WordLayoutEngine {
                   cell.borderRight,
                   inherit: table.properties.borders,
                 ),
-                paragraphIndex: cellParaStart,
-                paragraphEnd: para > cellParaStart ? para - 1 : cellParaStart,
+                paragraphIndex: cellParagraphCount == 0 ? null : cellParaStart,
+                paragraphEnd: cellParagraphCount == 0
+                    ? null
+                    : cellParaStart + cellParagraphCount - 1,
                 table: table,
                 tableRow: rowIndex,
                 tableCol: c,
@@ -1953,12 +2000,13 @@ class WordLayoutEngine {
               frame.strokeBottom = table.properties.borders;
             }
           }
-          currentFrames.add(frame);
         }
+        // Parent backgrounds precede rich descendants in painter order.
+        currentFrames.insertAll(rowFrameStart, rowFrames);
         cursorY = rowStartY + height;
         sliceStart = false;
 
-        if (needsContinue) {
+        if (allowBreak && needsContinue) {
           pages.add(
             _makePage(
               section,
@@ -1976,6 +2024,7 @@ class WordLayoutEngine {
           pageBottom = _bodyBottom(section, idx);
         }
       }
+      para = rowParagraphEnd;
     }
     _applyVerticalMerges(table, currentFrames);
     return (y: cursorY + 4, pageIndex: idx);
@@ -2012,30 +2061,24 @@ class WordLayoutEngine {
     WmlSection section, {
     required double maxWidth,
   }) {
-    if (block is WmlParagraph) {
-      final List<LaidOutPage> pages = <LaidOutPage>[];
-      final List<LaidOutLine> lines = <LaidOutLine>[];
-      final List<LaidOutBox> frames = <LaidOutBox>[];
-      final ({double y, int pageIndex}) laid = _layoutParagraph(
+    _containedMeasureDepth++;
+    try {
+      return _layoutContainedBlock(
+        this,
         block,
         section,
-        pages,
-        lines,
-        frames,
+        <LaidOutPage>[],
+        <LaidOutLine>[],
+        <LaidOutBox>[],
         0,
         0,
         0,
         originX: 0,
-        maxWidthOverride: maxWidth,
-        allowBreak: false,
-      );
-      return laid.y;
+        maxWidth: maxWidth,
+      ).y;
+    } finally {
+      _containedMeasureDepth--;
     }
-    if (block is WmlEquation) {
-      return OmmlLayout.layout(block.math, fontSize: 14).height + 4;
-    }
-    if (block is WmlOpaqueBlock) return 0;
-    return 18;
   }
 
   double _measureTableRowHeightFrom(
@@ -2063,7 +2106,7 @@ class WordLayoutEngine {
         cellY += _estimateCellBlockHeight(
           blocks[bi],
           section,
-          maxWidth: math.max(12, colW - cellPad * 2),
+          maxWidth: math.max(1, colW - cellPad * 2),
         );
       }
       rowBottom = math.max(rowBottom, cellY + cellPad);
@@ -2179,11 +2222,28 @@ class WordLayoutEngine {
     WmlSection section,
     _Flow flow,
     int paragraphIndex,
+  ) => _layoutFrameContents(
+    frame,
+    section,
+    flow.pages,
+    flow.current,
+    flow.currentFrames,
+    flow.pageIndex,
+    paragraphIndex,
+  );
+
+  int _layoutFrameContents(
+    WmlFrame frame,
+    WmlSection section,
+    List<LaidOutPage> pages,
+    List<LaidOutLine> lines,
+    List<LaidOutBox> frames,
+    int pageIndex,
+    int paragraphIndex,
   ) {
     final double x = frame.pageX(section);
     final double y = frame.pageY(section);
-    const double pad = LaidOutLine.framePad;
-    flow.currentFrames.add(
+    frames.add(
       LaidOutBox(
         x: x,
         y: y,
@@ -2195,76 +2255,29 @@ class WordLayoutEngine {
         frame: frame,
       ),
     );
-    var cursorY = y + pad;
+    var cursorY = y + frame.insetTop;
     var para = paragraphIndex;
-    final double innerX = x + pad;
-    final double innerW = math.max(12, frame.width - pad * 2);
-    for (final WmlBlock block in WordTree.visibleBlocks(frame.blocks)) {
-      switch (block) {
-        case WmlContentControlBlock():
-        case WmlOpaqueBlock():
-          break;
-        case WmlParagraph():
-          final ({double y, int pageIndex}) laid = _layoutParagraph(
-            block,
-            section,
-            flow.pages,
-            flow.current,
-            flow.currentFrames,
-            flow.pageIndex,
-            cursorY,
-            para,
-            originX: innerX,
-            maxWidthOverride: innerW,
-            allowBreak: false,
-          );
-          cursorY = laid.y;
-          para++;
-        case WmlVisual():
-          final ({double y, int pageIndex}) laid = _layoutVisual(
-            block.visual,
-            section,
-            flow.pages,
-            flow.current,
-            flow.currentFrames,
-            flow.pageIndex,
-            cursorY,
-            originX: innerX,
-            maxWidthOverride: innerW,
-            allowBreak: false,
-          );
-          cursorY = laid.y;
-        case WmlTable():
-          final ({double y, int pageIndex}) laid = _layoutTable(
-            block,
-            section,
-            flow.pages,
-            flow.current,
-            flow.currentFrames,
-            flow.pageIndex,
-            cursorY,
-            para,
-            originX: innerX,
-            maxWidthOverride: innerW,
-          );
-          cursorY = laid.y;
-          para += _tableParagraphCount(block);
-        case WmlEquation():
-          final ({double y, int pageIndex}) laid = _layoutEquation(
-            block,
-            section,
-            flow.pages,
-            flow.current,
-            flow.currentFrames,
-            flow.pageIndex,
-            cursorY,
-          );
-          cursorY = laid.y;
-        case WmlFrame():
-          para = _layoutFrame(block, section, flow, para);
-        case WmlToc():
-          break;
-      }
+    final double innerX = x + frame.insetLeft;
+    final double innerW = math.max(
+      1,
+      frame.width - frame.insetLeft - frame.insetRight,
+    );
+    for (final block in WordTree.visibleBlocks(frame.blocks)) {
+      final laid = _layoutContainedBlock(
+        this,
+        block,
+        section,
+        pages,
+        lines,
+        frames,
+        pageIndex,
+        cursorY,
+        para,
+        originX: innerX,
+        maxWidth: innerW,
+      );
+      cursorY = laid.y;
+      para = laid.nextParagraphIndex;
     }
     return para;
   }
@@ -2279,6 +2292,7 @@ class WordLayoutEngine {
     double y, {
     double? originX,
     double? maxWidthOverride,
+    double? maxHeightOverride,
     _Flow? flow,
     bool allowBreak = true,
   }) {
@@ -2286,13 +2300,17 @@ class WordLayoutEngine {
     final bool absolute =
         visual.picture.wrap == PictureWrap.behind ||
         visual.picture.wrap == PictureWrap.inFront;
+    final double widthLimit = absolute ? section.pageSize.width : maxW;
     final double width = visual.width.clamp(
-      24,
-      absolute ? section.pageSize.width : maxW,
+      math.min(24, widthLimit),
+      widthLimit,
     );
+    final double heightLimit = absolute
+        ? section.pageSize.height
+        : maxHeightOverride ?? section.contentHeight;
     final double height = visual.height.clamp(
-      24,
-      absolute ? section.pageSize.height : section.contentHeight,
+      math.min(24, heightLimit),
+      heightLimit,
     );
     if (absolute) {
       currentFrames.add(
@@ -2300,7 +2318,7 @@ class WordLayoutEngine {
       );
       return (y: y, pageIndex: pageIndex);
     }
-    final bool atTop = (y - section.margins.top).abs() < 0.5;
+    final bool atTop = allowBreak && (y - section.margins.top).abs() < 0.5;
     var cursorY = atTop ? y : y + 8 + visual.offsetY;
     var idx = pageIndex;
     var x0 = (originX ?? section.margins.left) + visual.offsetX;

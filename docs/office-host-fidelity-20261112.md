@@ -20,6 +20,7 @@ Updating the fork alone does not update these app dependencies.
 | Open Page Setup and press Apply | Rounding inches to two decimals changed imported margins | Unchanged point values remain exact and do not dirty the document |
 | Change one page margin | Nonfinite input could replace valid geometry; other margins were rounded | Only the changed margin changes; header/footer distances and gutter survive |
 | Report host coverage | A smaller instrumented subset could still produce a successful coverage command | The gate fails if any scoped Office source is absent from instrumentation |
+| Preserve imported note markers | Two older tests expected a new marker even though their authored note had none | Native marker absence is checked against source XML; a separately positioned superscript marker remains at UTF-16 offset 7 through three real saves |
 
 The paragraph dialog does not expose custom tab alignment or leader creation.
 It preserves that metadata for existing positions. Character-style editing,

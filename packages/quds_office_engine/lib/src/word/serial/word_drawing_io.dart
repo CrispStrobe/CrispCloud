@@ -14,6 +14,7 @@ import '../../visual/drawingml_visual_io.dart';
 import '../../visual/office_visual.dart';
 import '../../visual/png_bytes.dart';
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
@@ -516,6 +517,15 @@ abstract final class WordDrawingIo {
     var inLine = false;
     var frameAnchor = WmlFrameAnchor.page;
     var frameWrap = WmlFrameWrap.none;
+    String? frameBodyProperties;
+    var frameLineProperties = '';
+    // ECMA-376 bodyPr defaults: horizontal 91440 EMU, vertical 45720 EMU.
+    final frameInsets = <String, double>{
+      'lIns': 7.2,
+      'tIns': 3.6,
+      'rIns': 7.2,
+      'bIns': 3.6,
+    };
     String? fill;
     String? stroke;
     final List<WmlBlock> frameBlocks = <WmlBlock>[];
@@ -541,6 +551,16 @@ abstract final class WordDrawingIo {
         }
         if (reader.localName == 'txbxContent' && readBlockContent != null) {
           frameBlocks.addAll(readBlockContent(reader));
+        } else if (reader.localName == 'bodyPr' &&
+            reader.namespaceUri == OfficeNamespaces.wps) {
+          final source = XmlDocument.readElement(reader);
+          frameBodyProperties = XmlDocument(
+            root: source,
+          ).toXmlString(declaration: false);
+          for (final name in frameInsets.keys) {
+            final value = int.tryParse(source.getAttribute(name) ?? '');
+            if (value != null) frameInsets[name] = emuToPoints(value);
+          }
         } else if (reader.localName == 'inline') {
           wrap = PictureWrap.inline;
           _readWrapDist(adj, reader);
@@ -592,6 +612,18 @@ abstract final class WordDrawingIo {
           adj.shadow = true;
         } else if (reader.localName == 'solidFill') {
           inSolidFill = true;
+        } else if (reader.localName == 'ln' &&
+            reader.namespaceUri == OfficeNamespaces.a &&
+            sawShape) {
+          final source = XmlDocument.readElement(reader);
+          frameLineProperties = XmlDocument(
+            root: source,
+          ).toXmlString(declaration: false);
+          stroke = source
+              .firstChild('solidFill')
+              ?.firstChild('srgbClr')
+              ?.getAttribute('val')
+              ?.toUpperCase();
         } else if (reader.localName == 'ln') {
           inLine = true;
           final int? wEmu = int.tryParse(reader.getAttribute('w') ?? '');
@@ -706,6 +738,14 @@ abstract final class WordDrawingIo {
         wrap: frameWrap,
         fillColor: fill,
         strokeColor: stroke,
+        insetLeft: frameInsets['lIns']!,
+        insetTop: frameInsets['tIns']!,
+        insetRight: frameInsets['rIns']!,
+        insetBottom: frameInsets['bIns']!,
+        sourceBodyPropertiesXml: frameBodyProperties,
+        importedInsets: frameInsets,
+        sourceLinePropertiesXml: frameLineProperties,
+        importedStrokeColor: stroke,
         blocks: frameBlocks,
       );
     }

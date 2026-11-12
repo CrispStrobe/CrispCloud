@@ -12,6 +12,13 @@ abstract final class WordContentControls {
   static bool hasInlineControls(WmlParagraph paragraph) =>
       paragraph.inlines.any((inline) => inline is WmlContentControlBoundary);
 
+  /// Controls whose boundaries prohibit paragraph joins or multi-paragraph
+  /// replacements. Paragraph-owned block wrappers are separate from inline
+  /// field spans, so a wrapped PAGE field can still refresh normally.
+  static bool hasStructuralControls(WmlParagraph paragraph) =>
+      paragraph.contentControlWrappers.isNotEmpty ||
+      hasInlineControls(paragraph);
+
   static List<({WmlContentControlData control, int start, int end})> spans(
     WmlParagraph paragraph,
   ) {
@@ -42,6 +49,13 @@ abstract final class WordContentControls {
   }
 
   static void assertCanSplit(WmlParagraph paragraph, int offset) {
+    if (paragraph.contentControlWrappers.isNotEmpty) {
+      throw UnsupportedError(
+        'Splitting an auxiliary paragraph inside a native block content '
+        'control is not supported. Edit its text or formatting within the '
+        'existing paragraph.',
+      );
+    }
     for (final span in spans(paragraph)) {
       if (offset > span.start && offset < span.end) {
         throw UnsupportedError(
@@ -166,6 +180,7 @@ abstract final class WordContentControls {
     Iterable<WmlParagraph> paragraphs,
   ) sync* {
     for (final paragraph in paragraphs) {
+      yield* paragraph.contentControlWrappers;
       for (final span in spans(paragraph)) {
         yield span.control;
       }

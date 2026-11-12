@@ -36,6 +36,163 @@ WmlDocument _document(WmlBlock block) => WmlDocument(
 );
 
 void main() {
+  for (final op in ['tableRowDelete', 'tableColumnDelete', 'tocRemove']) {
+    test('$op checks bookmark owners in field-only native TOC cache paragraphs', () {
+      final document = WordDeserializer().read(
+        _source(
+          '<w:tbl><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/></w:tblGrid>'
+          '<w:tr><w:tc><w:p><w:bookmarkStart w:id="7" w:name="SourceOnly"/>'
+          '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> TOC </w:instrText></w:r></w:p>'
+          '<w:p><w:r><w:fldChar w:fldCharType="separate"/></w:r></w:p>'
+          '<w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr>'
+          '<w:r><w:t>Heading</w:t></w:r><w:r><w:tab/><w:t>2</w:t></w:r></w:p>'
+          '<w:p><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
+          '</w:tc><w:tc><w:p/></w:tc></w:tr><w:tr><w:tc><w:p/></w:tc>'
+          '<w:tc><w:p><w:r><w:t>end</w:t></w:r><w:bookmarkEnd w:id="7"/></w:p></w:tc></w:tr></w:tbl>',
+        ),
+      );
+      final table = document.sections.single.blocks.single as WmlTable;
+      final rows = List<WmlTableRow>.of(table.rows);
+      final toc = WordToc.tocs(document).single;
+      final source = toc.sourcePresentation!;
+      final range = WordBookmarks.ranges(document).single;
+      expect(WordTree.paragraphs([toc]), isNot(contains(range.startParagraph)));
+      expect(
+        source.paragraphs.any(
+          (p) => identical(p.paragraph, range.startParagraph),
+        ),
+        isTrue,
+      );
+      expect(
+        () => applyWordStructureStep(document, {
+          'op': op,
+          if (op == 'tocRemove') 'toc': 0 else 'table': 0,
+          if (op == 'tableRowDelete') 'row': 0,
+          if (op == 'tableColumnDelete') 'column': 0,
+        }),
+        throwsArgumentError,
+      );
+      expect(table.rows, orderedEquals(rows));
+      expect(table.rows.map((row) => row.cells.length), [2, 2]);
+      expect(WordToc.tocs(document).single, same(toc));
+      expect(toc.sourcePresentation, same(source));
+      final after = WordBookmarks.ranges(document).single;
+      expect(after.startParagraph, same(range.startParagraph));
+      expect(after.endParagraph, same(range.endParagraph));
+      expect(after.text, range.text);
+    });
+  }
+
+  for (final isRow in [true, false]) {
+    final op = isRow ? 'tableRowDelete' : 'tableColumnDelete';
+    for (final at in [0, 1]) {
+      test('$op cannot remove only one native bookmark endpoint at index $at', () {
+        final document = WordDeserializer().read(
+          _source(
+            '<w:tbl><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/></w:tblGrid>'
+            '<w:tr><w:tc><w:sdt><w:sdtPr><w:id w:val="71"/></w:sdtPr><w:sdtContent>'
+            '<w:p><w:bookmarkStart w:id="7" w:name="AcrossCells"/><w:r><w:t>start</w:t></w:r></w:p>'
+            '</w:sdtContent></w:sdt></w:tc><w:tc><w:p><w:r><w:t>top right</w:t></w:r></w:p></w:tc></w:tr>'
+            '<w:tr><w:tc><w:p><w:r><w:t>bottom left</w:t></w:r></w:p></w:tc>'
+            '<w:tc><w:p><w:r><w:t>end</w:t></w:r><w:bookmarkEnd w:id="7"/></w:p></w:tc></w:tr></w:tbl>',
+          ),
+        );
+        final table = document.sections.single.blocks.single as WmlTable;
+        final rows = List<WmlTableRow>.of(table.rows);
+        final cells = rows
+            .map((row) => List<WmlTableCell>.of(row.cells))
+            .toList();
+        final paragraphs = document.paragraphs.toList();
+        final inlines = paragraphs
+            .map((p) => List<WmlInline>.of(p.inlines))
+            .toList();
+        final grid = List<double>.of(table.grid);
+        final range = WordBookmarks.ranges(document).single;
+        final parts = {
+          for (final part in document.package!.parts)
+            part.uri: part.readBytes(),
+        };
+        expect(
+          () => applyWordStructureStep(document, {
+            'op': op,
+            'table': 0,
+            if (isRow) 'row': at else 'column': at,
+          }),
+          throwsArgumentError,
+        );
+        expect(table.rows, orderedEquals(rows));
+        expect(table.grid, grid);
+        for (var index = 0; index < rows.length; index++) {
+          expect(rows[index].cells, orderedEquals(cells[index]));
+        }
+        expect(document.paragraphs, orderedEquals(paragraphs));
+        for (var index = 0; index < paragraphs.length; index++) {
+          expect(paragraphs[index].inlines, orderedEquals(inlines[index]));
+        }
+        final after = WordBookmarks.ranges(document).single;
+        expect(after.start, same(range.start));
+        expect(after.end, same(range.end));
+        expect(after.text, range.text);
+        expect(document.package!.partNames, unorderedEquals(parts.keys));
+        for (final part in document.package!.parts) {
+          expect(part.readBytes(), parts[part.uri], reason: part.uri);
+        }
+      });
+    }
+
+    test(
+      '$op permits complete range removal and preserves another native range',
+      () {
+        String marked(String text, String marker) =>
+            '<w:tc><w:p>$marker<w:r><w:t>$text</w:t></w:r></w:p></w:tc>';
+        final removeStart = marked(
+          'remove start',
+          '<w:bookmarkStart w:id="7" w:name="Remove"/>',
+        );
+        final removeEnd = marked('remove end', '<w:bookmarkEnd w:id="7"/>');
+        final keepStart = marked(
+          'keep start',
+          '<w:bookmarkStart w:id="8" w:name="Keep"/>',
+        );
+        final keepEnd = marked('keep end', '<w:bookmarkEnd w:id="8"/>');
+        var document = WordDeserializer().read(
+          _source(
+            '<w:tbl><w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/></w:tblGrid>'
+            '<w:tr>$removeStart${isRow ? removeEnd : keepStart}</w:tr>'
+            '<w:tr>${isRow ? keepStart : removeEnd}$keepEnd</w:tr></w:tbl>',
+          ),
+        );
+        final keep = WordBookmarks.byName(document, 'Keep')!;
+        final keepParagraphs = [keep.startParagraph, keep.endParagraph];
+        applyWordStructureStep(document, {
+          'op': op,
+          'table': 0,
+          if (isRow) 'row': 0 else 'column': 0,
+        });
+        expect(document.paragraphs, orderedEquals(keepParagraphs));
+        expect(WordBookmarks.ranges(document).single.start, same(keep.start));
+        expect(WordBookmarks.ranges(document).single.end, same(keep.end));
+        for (var cycle = 0; cycle < 3; cycle++) {
+          final saved = WordSerializer().write(document);
+          final xml = _main(saved);
+          expect(_all(xml, 'bookmarkStart').map((n) => n.getAttribute('id')), [
+            '8',
+          ]);
+          expect(_all(xml, 'bookmarkEnd').map((n) => n.getAttribute('id')), [
+            '8',
+          ]);
+          document = WordDeserializer().readBytes(saved.save());
+          expect(document.paragraphs.map((p) => p.text), [
+            'keep start',
+            'keep end',
+          ]);
+          expect(WordBookmarks.ranges(document).single.name, 'Keep');
+          expect(WordBookmarks.ranges(document).single.text, 'keep start\n');
+        }
+      },
+    );
+  }
+
   for (final owner in ['control', 'table', 'frame', 'control-table-frame']) {
     test('script removes a nested $owner TOC from its exact live owner', () {
       final toc = WmlToc(title: 'Remove this contents');

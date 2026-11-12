@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
 
@@ -33,6 +35,57 @@ WordEditorController _inline([String content = 'XYZ']) => _controller(
   '${_controlXml(content.isEmpty ? '' : '<w:r><w:t>$content</w:t></w:r>')}'
   '<w:r><w:t>cd</w:t></w:r></w:p>',
 );
+
+WordEditorController _auxiliaryController(String story) {
+  final package = OpcPackage.create(OpcPackageKind.word);
+  final comment = story == 'comment';
+  final header = story == 'header';
+  final uri = comment ? '/word/comments.xml' : '/word/${story}1.xml';
+  final root = comment
+      ? 'comments'
+      : header
+      ? 'hdr'
+      : 'ftr';
+  final body =
+      '${_controlXml(_paragraphXml('Controlled'))}'
+      '${_paragraphXml('Following')}';
+  package.createPart(
+    uri,
+    comment
+        ? OfficeContentTypes.wordComments
+        : header
+        ? OfficeContentTypes.wordHeader
+        : OfficeContentTypes.wordFooter,
+    utf8.encode(
+      '<w:$root xmlns:w="${OfficeNamespaces.w}">'
+      '${comment ? '<w:comment w:id="7" w:author="Source author">$body</w:comment>' : body}'
+      '</w:$root>',
+    ),
+  );
+  final relationship = package
+      .relationshipsFor('/word/document.xml')
+      .add(
+        type: comment
+            ? RelationshipTypes.comments
+            : header
+            ? RelationshipTypes.header
+            : RelationshipTypes.footer,
+        target: uri.substring('/word/'.length),
+      );
+  package
+      .getPart('/word/document.xml')!
+      .writeText(
+        '<w:document xmlns:w="${OfficeNamespaces.w}" xmlns:r="${OfficeNamespaces.r}">'
+        '<w:body>${_paragraphXml('Body remains')}<w:sectPr>'
+        '${comment ? '' : '<w:${story}Reference w:type="default" r:id="${relationship.id}"/>'}'
+        '</w:sectPr></w:body></w:document>',
+      );
+  final controller = WordEditorController(
+    document: WordDeserializer().read(package),
+  );
+  addTearDown(controller.dispose);
+  return controller;
+}
 
 void _at(WordEditorController controller, WmlParagraph paragraph, int offset) {
   controller.caret
@@ -612,4 +665,179 @@ void main() {
       expect(control.blocks, [same(original), same(added)]);
     },
   );
+
+  for (final story in ['header', 'footer', 'comment']) {
+    test(
+      '$story native paragraph control keeps rich history and guards structural edits',
+      () async {
+        OfficeClipboard.instance.useSystem = false;
+        addTearDown(() {
+          OfficeClipboard.instance.clear();
+          OfficeClipboard.instance.useSystem = true;
+        });
+        final controller = _auxiliaryController(story);
+        final section = controller.document.sections.single;
+        final parent = story == 'comment'
+            ? controller.document.comments.single.paragraphs
+            : story == 'header'
+            ? section.header
+            : section.footer;
+        final paragraph = parent.first;
+        final following = parent.last;
+        final wrapper = paragraph.contentControlWrappers.single;
+        expect(paragraph.text, 'Controlled');
+        expect(following.text, 'Following');
+        expect(wrapper.id, '42');
+        if (story == 'comment') {
+          controller.beginCommentEdit(7);
+        } else {
+          controller.beginHeaderFooterEdit(0, footer: story == 'footer');
+        }
+        controller.caret
+          ..paragraphIndex = 0
+          ..logicalIndex = 3
+          ..collapseSelection();
+        controller.insertText('++');
+        controller.caret
+          ..selectionAnchorParagraph = 0
+          ..selectionAnchor = 0
+          ..logicalIndex = paragraph.text.length;
+        controller.applyRunFormat((props) => props.bold = true);
+        for (var cycle = 0; cycle < 3; cycle++) {
+          expect(parent, [same(paragraph), same(following)]);
+          expect(paragraph.contentControlWrappers, [same(wrapper)]);
+          expect(paragraph.text, 'Con++trolled');
+          expect(
+            paragraph.inlines.whereType<WmlRun>().every(
+              (run) => run.properties.bold,
+            ),
+            isTrue,
+          );
+          expect(controller.document.paragraphs.single.text, 'Body remains');
+          final bytes = controller.saveBytes();
+          final package = OpcPackage.openBytes(bytes);
+          final uri = story == 'comment'
+              ? '/word/comments.xml'
+              : '/word/${story}1.xml';
+          final xml = XmlDocument.parse(package.getPart(uri)!.readText()).root!;
+          _expectMetadata(xml);
+          final content = _all(xml, 'sdtContent').single;
+          expect(content.childrenNamed('p').single.text, 'Con++trolled');
+          expect(content.childrenNamed('r'), isEmpty);
+          final reopened = WordDeserializer().readBytes(bytes);
+          final restored = story == 'comment'
+              ? reopened.comments.single.paragraphs.first
+              : story == 'header'
+              ? reopened.sections.single.header.first
+              : reopened.sections.single.footer.first;
+          expect(restored.text, 'Con++trolled');
+          expect(restored.contentControlWrappers.single.id, '42');
+          controller.undo();
+          controller.undo();
+          expect(controller.commands.canUndo, isFalse);
+          expect(paragraph.text, 'Controlled');
+          expect(paragraph.contentControlWrappers, [same(wrapper)]);
+          controller.redo();
+          controller.redo();
+        }
+
+        controller.undo();
+        controller.markClean();
+        expect(controller.commands.canUndo, isTrue);
+        expect(controller.commands.canRedo, isTrue);
+        final inlines = List<WmlInline>.of(paragraph.inlines);
+        final followingInlines = List<WmlInline>.of(following.inlines);
+        (int, int, int, int) selection() => (
+          controller.caret.paragraphIndex,
+          controller.caret.logicalIndex,
+          controller.caret.selectionAnchorParagraph,
+          controller.caret.selectionAnchor,
+        );
+        void assertUnchanged((int, int, int, int) before) {
+          expect(parent, [same(paragraph), same(following)]);
+          expect(paragraph.text, 'Con++trolled');
+          expect(following.text, 'Following');
+          expect(paragraph.contentControlWrappers, [same(wrapper)]);
+          expect(paragraph.inlines, orderedEquals(inlines));
+          expect(following.inlines, orderedEquals(followingInlines));
+          expect(selection(), before);
+          expect(controller.commands.canUndo, isTrue);
+          expect(controller.commands.canRedo, isTrue);
+          expect(controller.isDirty, isFalse);
+          expect(controller.document.paragraphs.single.text, 'Body remains');
+        }
+
+        for (final offset in [0, 3, paragraph.text.length]) {
+          controller.caret
+            ..paragraphIndex = 0
+            ..logicalIndex = offset
+            ..collapseSelection();
+          final before = selection();
+          expect(controller.insertParagraphBreak, throwsUnsupportedError);
+          assertUnchanged(before);
+        }
+        controller.caret
+          ..paragraphIndex = 1
+          ..logicalIndex = 0
+          ..collapseSelection();
+        var before = selection();
+        expect(
+          () => controller.deleteSelectionOr(backward: true),
+          throwsUnsupportedError,
+        );
+        assertUnchanged(before);
+        controller.caret
+          ..selectionAnchorParagraph = 0
+          ..selectionAnchor = 1
+          ..paragraphIndex = 1
+          ..logicalIndex = 2;
+        before = selection();
+        expect(
+          () => controller.deleteSelectionOr(backward: false),
+          throwsUnsupportedError,
+        );
+        assertUnchanged(before);
+
+        final incoming = WmlClone.paragraph(paragraph);
+        incoming.contentControlWrappers
+          ..clear()
+          ..add(
+            WmlContentControlData(
+              xml: wrapper.xml.replaceFirst('w:val="42"', 'w:val="43"'),
+              sourcePartUri: wrapper.sourcePartUri,
+              relationships: wrapper.relationships,
+              id: '43',
+            ),
+          );
+        await OfficeClipboard.instance.write(
+          OfficeClipboardPayload(
+            kind: OfficeClipboardKind.richText,
+            plain: incoming.text,
+            wordBlocks: [incoming],
+          ),
+        );
+        controller.caret
+          ..paragraphIndex = 1
+          ..logicalIndex = 3
+          ..collapseSelection();
+        before = selection();
+        await expectLater(
+          controller.pasteFromClipboard(),
+          throwsUnsupportedError,
+        );
+        assertUnchanged(before);
+        controller.redo();
+        expect(
+          paragraph.inlines.whereType<WmlRun>().every(
+            (run) => run.properties.bold,
+          ),
+          isTrue,
+        );
+        controller.undo();
+        controller.undo();
+        expect(paragraph.text, 'Controlled');
+        expect(controller.commands.canUndo, isFalse);
+      },
+    );
+  }
 }

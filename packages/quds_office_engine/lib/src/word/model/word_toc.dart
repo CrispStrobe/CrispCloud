@@ -1,5 +1,6 @@
 import '../layout/word_layout.dart';
 import '../properties/wml_properties.dart';
+import 'wml_clone.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
 import 'word_link.dart';
@@ -241,17 +242,23 @@ abstract final class WordToc {
 
   /// refreshAll API.
   static void refreshAll(WmlDocument document) {
-    for (final WmlToc toc in tocs(document)) {
+    final targets = tocs(document).toList();
+    for (final toc in targets) {
+      assertCanRefresh(toc);
+    }
+    for (final toc in targets) {
       refresh(toc, document);
     }
   }
 
   /// Fills a TOC that has never been built so a newly opened document shows entries.
   static void refreshEmpty(WmlDocument document) {
-    for (final WmlToc toc in tocs(document)) {
-      if (toc.entries.isEmpty) {
-        refresh(toc, document);
-      }
+    final targets = tocs(document).where((toc) => toc.entries.isEmpty).toList();
+    for (final toc in targets) {
+      assertCanRefresh(toc);
+    }
+    for (final toc in targets) {
+      refresh(toc, document);
     }
   }
 
@@ -312,6 +319,8 @@ abstract final class WordToc {
 
   /// refresh API.
   static void refresh(WmlToc toc, WmlDocument document) {
+    assertCanRefresh(toc);
+    toc.sourcePresentation = null;
     // Native headings need durable, unique targets even when the caller is a
     // script or engine client rather than the editor's relayout path.
     WordLink.ensureHeadingBookmarks(document);
@@ -468,6 +477,210 @@ abstract final class WordToc {
       ),
     );
     toc.itemParagraphs.add(paragraph);
+  }
+
+  static (int, int, bool, int?, int?, String?) _configuration(WmlToc toc) => (
+    toc.minLevel,
+    toc.maxLevel,
+    toc.showPageNumbers,
+    toc.omitPageNumbersFromLevel,
+    toc.omitPageNumbersThroughLevel,
+    toc.captionLabel,
+  );
+
+  /// Records the native paragraph before the editor separates title and page
+  /// suffix. This is parsed content, so later edits still come from live items.
+  static void absorbNativeResult(WmlToc toc, WmlParagraph paragraph) {
+    final source = WmlClone.paragraph(paragraph);
+    final index = toc.itemParagraphs.length;
+    absorbResult(toc, paragraph);
+    final title = identical(toc.titleParagraph, paragraph);
+    final entry = toc.itemParagraphs.length > index;
+    final start = entry ? source.text.indexOf(paragraph.text) : 0;
+    final end = entry ? start + paragraph.text.length : 0;
+    final match = entry && toc.showsPageNumberForLevel(toc.entries[index].level)
+        ? RegExp(r'\s+(\d+)\s*$').firstMatch(source.text)
+        : null;
+    final pageStart = match == null
+        ? null
+        : source.text.lastIndexOf(match.group(1)!, match.end - 1);
+    final presentation = toc.sourcePresentation ??= WmlTocPresentation(
+      configuration: _configuration(toc),
+      paragraphs: [],
+    );
+    presentation.configuration = _configuration(toc);
+    presentation.paragraphs.add(
+      WmlTocSourceParagraph(
+        paragraph: source,
+        title: title,
+        entryIndex: entry ? index : null,
+        textStart: start,
+        textEnd: end,
+        pageStart: pageStart,
+        pageEnd: pageStart == null ? null : pageStart + match!.group(1)!.length,
+      ),
+    );
+  }
+
+  /// Rebuilds native cache paragraphs from the current editable title/items and
+  /// page values. Imported suffix runs keep their formatting and tab omission.
+  /// Changing TOC settings or rebuilding its entries selects generated output.
+  static List<WmlParagraph>? nativeParagraphs(WmlToc toc) {
+    final presentation = toc.sourcePresentation;
+    if (presentation == null) return null;
+    if (presentation.configuration != _configuration(toc)) {
+      assertCanRefresh(toc);
+      return null;
+    }
+    final sources = presentation.paragraphs;
+    final entryCount = sources.where((p) => p.entryIndex != null).length;
+    if (entryCount != toc.itemParagraphs.length ||
+        entryCount != toc.entries.length ||
+        sources.any((p) => p.textStart < 0)) {
+      assertCanRefresh(toc);
+      return null;
+    }
+    return [for (final source in sources) _nativeParagraph(toc, source)];
+  }
+
+  static WmlParagraph _nativeParagraph(
+    WmlToc toc,
+    WmlTocSourceParagraph source,
+  ) {
+    if (source.title) return WmlClone.paragraph(toc.titleParagraph);
+    final index = source.entryIndex;
+    if (index == null) return WmlClone.paragraph(source.paragraph);
+    final paragraph = WmlClone.paragraph(toc.itemParagraphs[index]);
+    final native = WmlClone.paragraph(source.paragraph);
+    final pageText = '${toc.entries[index].pageNumber}';
+    if (source.pageStart != null &&
+        source.pageEnd != null &&
+        native.text.substring(source.pageStart!, source.pageEnd!) != pageText) {
+      WmlRunEdit.replaceRange(
+        native,
+        source.pageStart!,
+        source.pageEnd!,
+        pageText,
+      );
+    }
+    final sides = _nativeSides(native, source.textStart, source.textEnd);
+    // Text trimming keeps zero-width ranges in the editable item. Endpoints
+    // owned by the preserved leading/suffix content move back there exactly
+    // once, while endpoints inside the live title retain their edited offsets.
+    paragraph.inlines.removeWhere(
+      (inline) => sides.moved.contains(_boundaryKey(inline)),
+    );
+    paragraph.inlines.insertAll(0, sides.prefix);
+    paragraph.inlines.addAll(sides.suffix);
+    paragraph.properties
+      ..fieldInstruction = source.paragraph.properties.fieldInstruction
+      ..fieldBegin = source.paragraph.properties.fieldBegin
+      ..fieldSeparate = source.paragraph.properties.fieldSeparate
+      ..fieldEnd = source.paragraph.properties.fieldEnd;
+    return paragraph;
+  }
+
+  /// Rebuilding a native cache needs range remapping. Call before changing
+  /// settings or heading bookmarks so the unsupported operation stays atomic.
+  static void assertCanRefresh(WmlToc toc) {
+    bool hasRanges(WmlParagraph paragraph) => paragraph.inlines.any(
+      (inline) =>
+          inline is WmlBookmarkBoundary || inline is WmlContentControlBoundary,
+    );
+    if (toc.itemParagraphs.any(hasRanges) ||
+        (toc.sourcePresentation?.paragraphs.any(
+              (source) => !source.title && hasRanges(source.paragraph),
+            ) ??
+            false)) {
+      throw UnsupportedError(
+        'Regenerating a TOC with native bookmark or content-control cache '
+        'ranges requires remapping those ranges. Edit the existing title, '
+        'formatting or page values without rebuilding its cache.',
+      );
+    }
+  }
+
+  static Object? _boundaryKey(WmlInline inline) => switch (inline) {
+    WmlBookmarkBoundary() => ('bookmark', inline.id, inline.isStart),
+    WmlContentControlBoundary() => ('control', inline.control, inline.start),
+    _ => null,
+  };
+
+  static Object? _rangeKey(WmlInline inline) => switch (inline) {
+    WmlBookmarkBoundary() => (
+      'bookmark',
+      BigInt.tryParse(inline.id) ?? inline.id,
+    ),
+    WmlContentControlBoundary() => ('control', inline.control),
+    _ => null,
+  };
+
+  static bool _startsRange(WmlInline inline) => switch (inline) {
+    WmlBookmarkBoundary() => inline.isStart,
+    WmlContentControlBoundary() => inline.start,
+    _ => false,
+  };
+
+  /// This composes one complete paragraph; it is not a user paragraph split.
+  /// A control may legitimately span the editable title and its cached page.
+  static ({List<WmlInline> prefix, List<WmlInline> suffix, Set<Object> moved})
+  _nativeSides(WmlParagraph source, int start, int end) {
+    final empty = <Object>{};
+    final starts = <Object, int>{};
+    var offset = 0;
+    for (final inline in source.inlines) {
+      if (inline is WmlRun) offset += inline.text.length;
+      final key = _rangeKey(inline);
+      if (key == null) continue;
+      if (_startsRange(inline)) {
+        starts[key] = offset;
+      } else if (starts[key] == offset) {
+        empty.add(key);
+      }
+    }
+    final prefix = <WmlInline>[];
+    final suffix = <WmlInline>[];
+    final moved = <Object>{};
+    offset = 0;
+    for (final inline in WmlClone.inlines(source.inlines)) {
+      if (inline is WmlRun) {
+        final next = offset + inline.text.length;
+        if (offset < start) {
+          final run = WmlClone.inlines([inline]).single as WmlRun;
+          run.text = inline.text.substring(
+            0,
+            (start - offset).clamp(0, inline.text.length),
+          );
+          if (run.text.isNotEmpty) prefix.add(run);
+        }
+        if (next > end) {
+          inline.text = inline.text.substring(
+            (end - offset).clamp(0, inline.text.length),
+          );
+          if (inline.text.isNotEmpty) suffix.add(inline);
+        }
+        offset = next;
+        continue;
+      }
+      final key = _boundaryKey(inline);
+      final range = _rangeKey(inline);
+      final emptyRange = range != null && empty.contains(range);
+      final before =
+          offset < start ||
+          (offset == start &&
+              key != null &&
+              !_startsRange(inline) &&
+              !emptyRange);
+      final after =
+          offset > end ||
+          (offset == end &&
+              (key == null || _startsRange(inline) || emptyRange));
+      if (before || after) {
+        (before ? prefix : suffix).add(inline);
+        if (key != null) moved.add(key);
+      }
+    }
+    return (prefix: prefix, suffix: suffix, moved: moved);
   }
 
   static void _keepPrefix(WmlParagraph paragraph, String prefix) {

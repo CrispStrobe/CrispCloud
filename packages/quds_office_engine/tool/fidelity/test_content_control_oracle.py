@@ -1,10 +1,13 @@
 """Independent authored positive fixture and mutation controls for SDT checks."""
 
 import copy
+from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 from xml.etree import ElementTree as ET
 
-from content_control_oracle import CUSTOMER, MC, NS, PNG, R, SOURCE, W, inspect_parts
+from content_control_oracle import CUSTOMER, ENGINE, EXPECTED_FILES, M, MC, NS, PNG, R, SOURCE, W, inspect_directory, inspect_parts
 
 PKG = "http://schemas.openxmlformats.org/package/2006/relationships"
 VML = "urn:schemas-microsoft-com:vml"
@@ -40,38 +43,40 @@ def inline_story(identifier, text):
     return paragraph
 
 
-def source():
+def source(*, edited=True, fallback=True):
     """Author expected native structures using only Python and source XML."""
     root = ET.parse(SOURCE).getroot()
     root.set("xmlns:wps", "http://schemas.microsoft.com/office/word/2010/wordprocessingShape")
     body = root.find("w:body", NS)
-    body.find("w:p/w:r/w:t", NS).text = "Outside before edited"
     content = node(root, 71).find("w:sdtContent", NS)
-    first = content.find("w:p", NS)
-    first.remove(first.find("w:r", NS))
-    first.extend([run("Block "), run("Edited", bold=True)])
-    tail = ET.Element(f"{{{W}}}p")
-    tail.append(copy.deepcopy(first.find("w:pPr", NS)))
-    tail.append(run(" Beta"))
-    content.insert(1, tail)
-    node(root, 73).find("w:sdtContent/w:p/w:r/w:t", NS).text = "Edited cell content"
-    frame = node(root, 74).find("w:sdtContent", NS)
-    frame.find("w:p/w:r/w:t", NS).text = "Frame content updated"
-    second = ET.SubElement(frame, f"{{{W}}}p")
-    second.append(run("Frame second"))
-    drawing = content.find("w:p/w:r/w:drawing", NS)
-    parents = {child: parent for parent in root.iter() for child in parent}
-    owner = parents[drawing]
-    owner.remove(drawing)
-    alternative = ET.SubElement(owner, f"{{{MC}}}AlternateContent")
-    ET.SubElement(alternative, f"{{{MC}}}Choice", {"Requires": "wps"}).append(drawing)
-    fallback = ET.SubElement(alternative, f"{{{MC}}}Fallback")
-    pict = ET.SubElement(fallback, f"{{{W}}}pict")
-    textbox = ET.SubElement(ET.SubElement(pict, f"{{{VML}}}rect"), f"{{{VML}}}textbox")
-    ET.SubElement(textbox, f"{{{W}}}txbxContent").append(copy.deepcopy(node(root, 74)))
-    node(root, 75).find("w:sdtContent/w:r/w:t", NS).text = "Gamma "
-    node(root, 76).find("w:sdtContent/w:r/w:t", NS).text = "Core"
-    node(root, 77).find("w:sdtContent", NS).append(run("empty filled"))
+    if edited:
+        body.find("w:p/w:r/w:t", NS).text = "Outside before edited"
+        first = content.find("w:p", NS)
+        first.remove(first.find("w:r", NS))
+        first.extend([run("Block "), run("Edited", bold=True)])
+        tail = ET.Element(f"{{{W}}}p")
+        tail.append(copy.deepcopy(first.find("w:pPr", NS)))
+        tail.append(run(" Beta"))
+        content.insert(1, tail)
+        node(root, 73).find("w:sdtContent/w:p/w:r/w:t", NS).text = "Edited cell content"
+        frame = node(root, 74).find("w:sdtContent", NS)
+        frame.find("w:p/w:r/w:t", NS).text = "Frame content updated"
+        second = ET.SubElement(frame, f"{{{W}}}p")
+        second.append(run("Frame second"))
+        node(root, 75).find("w:sdtContent/w:r/w:t", NS).text = "Gamma "
+        node(root, 76).find("w:sdtContent/w:r/w:t", NS).text = "Core"
+        node(root, 77).find("w:sdtContent", NS).append(run("empty filled"))
+    if fallback:
+        drawing = content.find("w:p/w:r/w:drawing", NS)
+        parents = {child: parent for parent in root.iter() for child in parent}
+        owner = parents[drawing]
+        owner.remove(drawing)
+        alternative = ET.SubElement(owner, f"{{{MC}}}AlternateContent")
+        ET.SubElement(alternative, f"{{{MC}}}Choice", {"Requires": "wps"}).append(drawing)
+        fallback_node = ET.SubElement(alternative, f"{{{MC}}}Fallback")
+        pict = ET.SubElement(fallback_node, f"{{{W}}}pict")
+        textbox = ET.SubElement(ET.SubElement(pict, f"{{{VML}}}rect"), f"{{{VML}}}textbox")
+        ET.SubElement(textbox, f"{{{W}}}txbxContent").append(copy.deepcopy(node(root, 74)))
     rels = ET.Element(f"{{{PKG}}}Relationships")
 
     def relation(identifier, kind, target):
@@ -116,7 +121,8 @@ def source():
         ET.SubElement(ET.SubElement(paragraph, f"{{{W}}}r"), f"{{{W}}}{kind}Ref")
         paragraph.append(run(name + " "))
         paragraph.append(auxiliary(inline_id, '<w:r><w:t>body</w:t></w:r>'))
-        paragraph.append(run(" edited"))
+        if edited:
+            paragraph.append(run(" edited"))
         parts[f"word/{kind}s.xml"] = ET.tostring(story)
         relation(kind, kind + "s", kind + "s.xml")
     parts["word/document.xml"] = ET.tostring(root)
@@ -131,8 +137,122 @@ def change(parts, name, operation):
 
 
 class ContentControlOracleTest(unittest.TestCase):
+    def test_rejects_inline_math_promoted_to_display(self):
+        def mutate(root):
+            paragraph = node(root, 72).findall("w:sdtContent/w:p", NS)[1]
+            math = paragraph.find("m:oMath", NS)
+            paragraph.remove(math)
+            ET.SubElement(paragraph, f"{{{M}}}oMathPara").append(math)
+        self.reject(mutate, "inline equation")
+
+    def test_rejects_new_empty_settings_part(self):
+        parts = source()
+        parts["word/settings.xml"] = f'<w:settings xmlns:w="{W}"/>'.encode()
+        with self.assertRaisesRegex(AssertionError, "settings absence"):
+            inspect_parts(parts)
+
+    def test_rejects_new_settings_relationship_at_nondefault_path(self):
+        parts = source()
+        parts["settings/native.xml"] = f'<w:settings xmlns:w="{W}"/>'.encode()
+        change(parts, "word/_rels/document.xml.rels", lambda root:
+               ET.SubElement(root, f"{{{PKG}}}Relationship",
+                             {"Id": "settings", "Type": R + "/settings", "Target": "../settings/native.xml"}))
+        with self.assertRaisesRegex(AssertionError, "settings absence"):
+            inspect_parts(parts)
+
+    def test_rejects_invented_frame_anchor_spacing(self):
+        def mutate(root):
+            paragraph = next(p for p in node(root, 71).findall("w:sdtContent/w:p", NS)
+                             if p.find(".//wps:wsp", NS) is not None)
+            properties = ET.Element(f"{{{W}}}pPr")
+            ET.SubElement(properties, f"{{{W}}}spacing", {f"{{{W}}}line": "20", f"{{{W}}}lineRule": "exact"})
+            paragraph.insert(0, properties)
+        self.reject(mutate, "anchor paragraph")
+
+    def test_rejects_default_frame_insets_replaced_by_zero(self):
+        self.reject(lambda root: root.find(".//wps:bodyPr", NS).set("lIns", "0"), "default insets")
+
+    def test_rejects_added_toc_field_paragraph(self):
+        self.reject(lambda root: node(root, 78).find("w:sdtContent", NS).append(ET.Element(f"{{{W}}}p")),
+                    "field paragraph placement")
+
+    def test_rejects_toc_boundary_moved_to_title(self):
+        def mutate(root):
+            title, entry = node(root, 78).findall("w:sdtContent/w:p", NS)
+            begin = entry.find("w:r", NS)
+            entry.remove(begin)
+            title.append(begin)
+        self.reject(mutate, "field paragraph placement")
+
+    def test_rejects_new_toc_dot_leader(self):
+        def mutate(root):
+            item = node(root, 78).findall("w:sdtContent/w:p", NS)[1]
+            tabs = ET.SubElement(item.find("w:pPr", NS), f"{{{W}}}tabs")
+            ET.SubElement(tabs, f"{{{W}}}tab", {f"{{{W}}}val": "right", f"{{{W}}}leader": "dot", f"{{{W}}}pos": "9360"})
+        self.reject(mutate, "tabs/leaders")
+
+    def test_rejects_reformatted_toc_page_suffix(self):
+        def mutate(root):
+            item = node(root, 78).findall("w:sdtContent/w:p", NS)[1]
+            suffix = next(r for r in item.findall("w:r", NS) if r.find("w:tab", NS) is not None)
+            properties = ET.Element(f"{{{W}}}rPr")
+            ET.SubElement(properties, f"{{{W}}}color", {f"{{{W}}}val": "FF0000"})
+            suffix.insert(0, properties)
+        self.reject(mutate, "suffix acquired direct formatting")
+
     def test_accepts_independently_authored_native_positive(self):
         self.assertEqual(inspect_parts(source())["inline_controls"], 12)
+
+    def test_accepts_unchanged_authored_source_without_generated_fallback(self):
+        result = inspect_parts(source(edited=False, fallback=False), phase="source")
+        self.assertEqual(result["phase"], "source")
+        self.assertIsNone(result["frame_fallback_matches"])
+
+    def test_accepts_unchanged_import_with_owned_matching_fallback(self):
+        result = inspect_parts(source(edited=False), phase="imported")
+        self.assertEqual(result["phase"], "imported")
+        self.assertTrue(result["frame_fallback_matches"])
+
+    def test_edited_output_cannot_satisfy_unchanged_baseline(self):
+        with self.assertRaisesRegex(AssertionError, "unrelated body text"):
+            inspect_parts(source(), phase="imported")
+
+    def test_source_phase_cannot_hide_changed_control_text(self):
+        parts = source(edited=False, fallback=False)
+        change(parts, "word/document.xml", lambda root:
+               setattr(node(root, 73).find("w:sdtContent/w:p/w:r/w:t", NS), "text", "Changed before import"))
+        with self.assertRaisesRegex(AssertionError, "table-cell content"):
+            inspect_parts(parts, phase="source")
+
+    def test_exact_ten_file_inventory_dispatches_independent_phase_expectations(self):
+        with tempfile.TemporaryDirectory(dir=ENGINE/"build") as folder:
+            root = Path(folder)
+            for name in EXPECTED_FILES:
+                (root/name).write_bytes(b"inventory-only control")
+            with patch("content_control_oracle.inspect_package", side_effect=lambda path, phase: {"phase": phase}):
+                result = inspect_directory(root)
+            self.assertEqual(len(result), 10)
+            self.assertEqual(result["source.docx"]["phase"], "source")
+            for cycle in range(1, 4):
+                self.assertEqual(result[f"imported-{cycle}.docx"]["phase"], "imported")
+                for mode in ("direct", "isolate"):
+                    self.assertEqual(result[f"{mode}-{cycle}.docx"]["phase"], "edited")
+
+    def test_native_baseline_inventory_rejects_missing_source(self):
+        with tempfile.TemporaryDirectory(dir=ENGINE/"build") as folder:
+            root = Path(folder)
+            for name in EXPECTED_FILES - {"source.docx"}:
+                (root/name).touch()
+            with self.assertRaisesRegex(AssertionError, "missing=.*source.docx"):
+                inspect_directory(root)
+
+    def test_native_baseline_inventory_rejects_unexpected_extra_package(self):
+        with tempfile.TemporaryDirectory(dir=ENGINE/"build") as folder:
+            root = Path(folder)
+            for name in EXPECTED_FILES | {"stale.docx"}:
+                (root/name).touch()
+            with self.assertRaisesRegex(AssertionError, "unexpected=.*stale.docx"):
+                inspect_directory(root)
 
     def reject(self, operation, message, part="word/document.xml"):
         parts = source()

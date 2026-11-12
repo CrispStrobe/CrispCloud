@@ -1,6 +1,7 @@
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
 import 'wml_document.dart';
+import 'word_toc.dart';
 import 'word_tree.dart';
 
 /// A paired bookmark with the exact text selected by its native endpoints.
@@ -33,7 +34,8 @@ abstract final class WordBookmarks {
   /// overlapping bookmarks whose end order differs from their start order.
   static List<WmlBookmarkRange> ranges(WmlDocument document) {
     final result = <WmlBookmarkRange>[];
-    for (final story in _stories(document)) {
+    final owners = Map<WmlParagraph, WmlParagraph>.identity();
+    for (final story in _stories(document, owners: owners)) {
       final open = <String, _OpenBookmark>{};
       final ids = <String>{};
       final names = <String>{};
@@ -60,7 +62,12 @@ abstract final class WordBookmarks {
                   'ranges into the same story requires remapping their endpoints.',
                 );
               }
-              open[id] = _OpenBookmark(inline, paragraph, index, offset);
+              open[id] = _OpenBookmark(
+                inline,
+                owners[paragraph] ?? paragraph,
+                index,
+                offset,
+              );
             } else {
               final start = open.remove(id);
               if (start == null) {
@@ -73,11 +80,13 @@ abstract final class WordBookmarks {
                   start: start.marker,
                   end: inline,
                   startParagraph: start.paragraph,
-                  endParagraph: paragraph,
+                  endParagraph: owners[paragraph] ?? paragraph,
                   startOffset: start.offset,
                   endOffset: offset,
                   text: start.text.toString(),
-                  paragraphs: story.sublist(start.index, index + 1),
+                  paragraphs: story
+                      .sublist(start.index, index + 1)
+                      .map((item) => owners[item] ?? item),
                 ),
               );
             }
@@ -195,8 +204,14 @@ abstract final class WordBookmarks {
     }
   }
 
-  static Iterable<List<WmlParagraph>> _stories(WmlDocument doc) sync* {
-    yield* _blockStories(doc.sections.expand((section) => section.blocks));
+  static Iterable<List<WmlParagraph>> _stories(
+    WmlDocument doc, {
+    Map<WmlParagraph, WmlParagraph>? owners,
+  }) sync* {
+    yield* _blockStories(
+      doc.sections.expand((section) => section.blocks),
+      owners: owners,
+    );
     for (final section in doc.sections) {
       yield section.header;
       yield section.footer;
@@ -206,7 +221,7 @@ abstract final class WordBookmarks {
       yield section.evenFooter;
     }
     for (final note in [...doc.footnotes, ...doc.endnotes]) {
-      yield* _blockStories(note.blocks);
+      yield* _blockStories(note.blocks, owners: owners);
     }
     for (final comment in doc.comments) {
       yield comment.paragraphs;
@@ -214,8 +229,9 @@ abstract final class WordBookmarks {
   }
 
   static Iterable<List<WmlParagraph>> _blockStories(
-    Iterable<WmlBlock> blocks,
-  ) sync* {
+    Iterable<WmlBlock> blocks, {
+    Map<WmlParagraph, WmlParagraph>? owners,
+  }) sync* {
     final paragraphs = <WmlParagraph>[];
     final frames = <WmlFrame>[];
     void visit(Iterable<WmlBlock> items) {
@@ -229,8 +245,21 @@ abstract final class WordBookmarks {
         } else if (block is WmlParagraph) {
           paragraphs.add(block);
         } else if (block is WmlToc) {
-          paragraphs.add(block.titleParagraph);
-          paragraphs.addAll(block.itemParagraphs);
+          final native = WordToc.nativeParagraphs(block);
+          if (native == null) {
+            paragraphs.add(block.titleParagraph);
+            paragraphs.addAll(block.itemParagraphs);
+          } else {
+            for (var index = 0; index < native.length; index++) {
+              final source = block.sourcePresentation!.paragraphs[index];
+              owners?[native[index]] = source.title
+                  ? block.titleParagraph
+                  : source.entryIndex == null
+                  ? source.paragraph
+                  : block.itemParagraphs[source.entryIndex!];
+            }
+            paragraphs.addAll(native);
+          }
         } else {
           for (final children in WordTree.childLists(block)) {
             visit(children);
@@ -242,7 +271,7 @@ abstract final class WordBookmarks {
     visit(blocks);
     yield paragraphs;
     for (final frame in frames) {
-      yield* _blockStories(frame.blocks);
+      yield* _blockStories(frame.blocks, owners: owners);
     }
   }
 }

@@ -250,6 +250,7 @@ abstract final class WordFields {
     paragraph.properties
       ..fieldInstruction = instr
       ..fieldBegin = true
+      ..fieldSeparate = true
       ..fieldEnd = true
       ..pageNumberField = kind == WmlFieldKind.page;
     if (kind == WmlFieldKind.hyperlink) {

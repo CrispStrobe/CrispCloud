@@ -109,7 +109,18 @@ void applyStep(
     case 'replaceText':
       final p = paragraph();
       final range = _range(p, s);
-      WmlRunEdit.replaceRange(p, range.$1, range.$2, s.string('text'));
+      final text = s.string('text');
+      final previousText = p.text;
+      // Structural guards run before either text or revision metadata changes.
+      WmlRunEdit.replaceRange(p, range.$1, range.$2, text);
+      WordRevisions.rebaseEdit(
+        doc,
+        p,
+        start: range.$1,
+        end: range.$2,
+        insertedLength: text.length,
+        previousText: previousText,
+      );
       _noteHint(p);
     case 'heading':
       WordToc.applyHeading(paragraph(), s.integer('level', max: 9));

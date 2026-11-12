@@ -27,6 +27,10 @@ dart test \
   test/word_frame_wrap_test.dart test/variable_line_breaker_test.dart \
   test/word_content_control_fidelity_test.dart test/word_bookmark_fidelity_test.dart \
   test/word_find_replace_atomic_test.dart \
+  test/word_note_bookmark_edit_test.dart \
+  test/word_table_nested_layout_test.dart test/word_table_tall_toc_layout_test.dart \
+  test/word_table_tall_frame_layout_test.dart test/word_table_picture_pagination_test.dart \
+  test/word_auxiliary_content_control_test.dart test/word_native_presentation_test.dart \
   test/word_style_introduction_test.dart test/word_table_direction_test.dart \
   test/scripted_transitions_test.dart
 dart run tool/fidelity/scenarios.dart
@@ -54,6 +58,7 @@ python3 tool/fidelity/bibliography_oracle.py
 python3 tool/fidelity/note_markers_oracle.py
 python3 tool/fidelity/frame_wrap_oracle.py
 python3 tool/fidelity/content_control_oracle.py
+python3 tool/fidelity/auxiliary_content_control_oracle.py
 python3 tool/fidelity/bookmark_ranges_oracle.py
 python3 tool/fidelity/unsupported_word_audit.py
 python3 tool/fidelity/audit_operations.py

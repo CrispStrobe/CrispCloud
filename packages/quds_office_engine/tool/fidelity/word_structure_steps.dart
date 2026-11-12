@@ -181,6 +181,15 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       if (!adding && count == 1) {
         throw ArgumentError('Cannot delete the final table row or column');
       }
+      if (!adding) {
+        final cells = isRow
+            ? t.rows[at].cells
+            : t.rows.map((row) => row.cells[at]);
+        _checkBookmarkRemoval(
+          doc,
+          _removedParagraphs(cells.expand((cell) => cell.blocks)),
+        );
+      }
       if (isRow) {
         if (adding) {
           WordTable.insertRow(t, at);
@@ -241,6 +250,7 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       WordToc.refresh(toc, doc);
     case 'tocUpdate':
       final toc = s.item('toc', WordToc.tocs(doc));
+      WordToc.assertCanRefresh(toc);
       _configureToc(toc, s);
       WordToc.refresh(toc, doc);
     case 'tocRemove':
@@ -249,16 +259,8 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       if (location == null) {
         throw ArgumentError('TOC is not attached to an editable block owner');
       }
-      final removed = WordTree.paragraphs([toc]).toSet();
-      if (WordBookmarks.ranges(doc).any(
-        (range) =>
-            removed.contains(range.startParagraph) !=
-            removed.contains(range.endParagraph),
-      )) {
-        throw ArgumentError(
-          'Removing this TOC would orphan a cross-paragraph bookmark endpoint',
-        );
-      }
+      final removed = _removedParagraphs([toc]);
+      _checkBookmarkRemoval(doc, removed);
       if (doc.revisions.any(
         (revision) =>
             revision.accepted == null &&
@@ -369,6 +371,28 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
       final location = WordTree.locate(doc, frame);
       if (location == null) throw StateError('Frame container not found');
       location.parent.removeAt(location.index);
+  }
+}
+
+Set<WmlParagraph> _removedParagraphs(Iterable<WmlBlock> blocks) => {
+  ...WordTree.paragraphs(blocks),
+  // A field-only native TOC paragraph has no live title/item counterpart.
+  // Bookmark pairing binds its endpoints to this retained source paragraph.
+  for (final toc in WordTree.descendants(blocks).whereType<WmlToc>())
+    for (final source
+        in toc.sourcePresentation?.paragraphs ?? <WmlTocSourceParagraph>[])
+      source.paragraph,
+};
+
+void _checkBookmarkRemoval(WmlDocument doc, Set<WmlParagraph> removed) {
+  if (WordBookmarks.ranges(doc).any(
+    (range) =>
+        removed.contains(range.startParagraph) !=
+        removed.contains(range.endParagraph),
+  )) {
+    throw ArgumentError(
+      'Removing these blocks would orphan a cross-paragraph bookmark endpoint',
+    );
   }
 }
 

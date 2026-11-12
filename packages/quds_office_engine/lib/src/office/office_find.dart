@@ -142,14 +142,26 @@ const _staleWordReplacement =
 final class _WordParagraphSnapshot {
   _WordParagraphSnapshot(WmlParagraph paragraph)
     : text = paragraph.text,
+      wrappers = List.of(paragraph.contentControlWrappers),
       shape = [for (final inline in paragraph.inlines) _inlineShape(inline)];
 
   final String text;
+  final List<WmlContentControlData> wrappers;
   final List<Object> shape;
 
   bool matches(WmlParagraph paragraph) {
-    if (paragraph.text != text || paragraph.inlines.length != shape.length) {
+    if (paragraph.text != text ||
+        paragraph.inlines.length != shape.length ||
+        paragraph.contentControlWrappers.length != wrappers.length) {
       return false;
+    }
+    for (var index = 0; index < wrappers.length; index++) {
+      if (!identical(
+        paragraph.contentControlWrappers[index],
+        wrappers[index],
+      )) {
+        return false;
+      }
     }
     for (var index = 0; index < shape.length; index++) {
       if (_inlineShape(paragraph.inlines[index]) != shape[index]) return false;

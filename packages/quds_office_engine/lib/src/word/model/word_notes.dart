@@ -4,6 +4,7 @@ import '../properties/wml_properties.dart';
 import 'wml_clone.dart';
 import 'wml_document.dart';
 import 'wml_run_edit.dart';
+import 'word_bookmarks.dart';
 import 'word_content_controls.dart';
 import 'word_tree.dart';
 
@@ -244,7 +245,9 @@ abstract final class WordNotes {
   /// anchors survive; inserted characters take the formatting of the text
   /// they join. Paragraph properties (such as the FootnoteText style) are
   /// kept, extra lines become paragraphs styled like the last one, and
-  /// removed lines delete trailing paragraphs. Non-paragraph blocks are kept.
+  /// removed lines delete trailing paragraphs. New paragraphs do not inherit
+  /// bookmark identity. Non-paragraph blocks are kept; removal that would
+  /// orphan one bookmark endpoint is rejected before any live edit.
   static void editText(WmlNote note, String text) {
     final List<String> lines = text.split('\n');
     List<WmlParagraph> paragraphs = editableParagraphs(note);
@@ -254,6 +257,24 @@ abstract final class WordNotes {
         'Changing note line count with inline content controls is not supported. '
         'Edit each existing control paragraph separately.',
       );
+    }
+    if (lines.length < paragraphs.length) {
+      final removed = Set<WmlParagraph>.identity()
+        ..addAll(paragraphs.skip(lines.length));
+      final story = WmlDocument(
+        sections: <WmlSection>[],
+        footnotes: note.endnote ? null : <WmlNote>[note],
+        endnotes: note.endnote ? <WmlNote>[note] : null,
+      );
+      for (final range in WordBookmarks.ranges(story)) {
+        if (removed.contains(range.startParagraph) !=
+            removed.contains(range.endParagraph)) {
+          throw UnsupportedError(
+            'Removing note paragraphs would orphan bookmark "${range.name}". '
+            'Keep both endpoint paragraphs or remove the complete range.',
+          );
+        }
+      }
     }
     final int shared = lines.length < paragraphs.length
         ? lines.length
@@ -295,7 +316,9 @@ abstract final class WordNotes {
         location.parent.insert(
           at++,
           WmlParagraph(
-            properties: template.properties.copy(),
+            properties: template.properties.copy()
+              ..bookmarkName = null
+              ..sourceBookmarkName = null,
             inlines: <WmlInline>[
               WmlRun(text: lines[i], properties: runProps.copy()),
             ],

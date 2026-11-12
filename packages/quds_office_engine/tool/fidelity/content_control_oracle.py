@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent native SDT metadata, ownership and edited-content oracle.
+"""Independent native SDT metadata, ownership and source/edit-content oracle.
 
 The corpus covers body/note/table/frame block controls and inline controls in
 ten logical stories. It does not certify block controls in paragraph-only
@@ -25,13 +25,19 @@ M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
-NS = {"w": W, "r": R, "m": M, "a": A, "wp": WP, "mc": MC}
+WPS = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+NS = {"w": W, "r": R, "m": M, "a": A, "wp": WP, "mc": MC, "wps": WPS}
 ENGINE = Path(__file__).resolve().parents[2]
 SOURCE = ENGINE / "test/fixtures/fidelity/content_controls.xml"
 CUSTOMER = b'<c:customer xmlns:c="urn:crispcloud:customer"><c:name>Original bound value</c:name></c:customer>'
 PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3e0AAAAASUVORK5CYII=")
-EXPECTED_FILES = {f"{mode}-{cycle}.docx" for mode in ("direct", "isolate")
-                  for cycle in range(1, 4)}
+EXPECTED_PHASES = {
+    "source.docx": "source",
+    **{f"imported-{cycle}.docx": "imported" for cycle in range(1, 4)},
+    **{f"{mode}-{cycle}.docx": "edited" for mode in ("direct", "isolate")
+       for cycle in range(1, 4)},
+}
+EXPECTED_FILES = set(EXPECTED_PHASES)
 
 
 def require(condition: bool, message: str) -> None:
@@ -102,7 +108,9 @@ def relationships(parts: dict[str, bytes], owner: str) -> dict[str, ET.Element]:
     return result
 
 
-def inspect_parts(parts: dict[str, bytes]) -> dict:
+def inspect_parts(parts: dict[str, bytes], phase: str = "edited") -> dict:
+    require(phase in ("source", "imported", "edited"), f"unknown content-control phase: {phase}")
+    edited = phase == "edited"
     office = [rel for rel in ET.fromstring(parts["_rels/.rels"])
               if rel.get("Type") == R + "/officeDocument"]
     require(len(office) == 1 and office[0].get("TargetMode", "Internal") == "Internal",
@@ -111,6 +119,9 @@ def inspect_parts(parts: dict[str, bytes]) -> dict:
     raw = ET.fromstring(parts[main])
     rels = relationships(parts, main)
     root = active_tree(raw)
+    require("word/settings.xml" not in parts and
+            not any(rel.get("Type") == R + "/settings" for rel in rels.values()),
+            "source settings absence changed")
     body = root.find("w:body", NS)
     require(body is not None, "missing body")
     body_controls = controls(root)
@@ -127,44 +138,69 @@ def inspect_parts(parts: dict[str, bytes]) -> dict:
     outer = body_controls["71"]
     require(body.findall("w:sdt", NS) == [outer], "body control escaped its direct owner")
     require([text(p) for p in body.findall("w:p", NS)] ==
-            ["Outside before edited", "Outside after"], "unrelated body text or ownership changed")
+            ["Outside before edited" if edited else "Outside before", "Outside after"],
+            "unrelated body text or ownership changed")
     content = outer.find("w:sdtContent", NS)
+    child_order = (("p", "p", "sdt", "tbl", "p", "p", "p", "sdt") if edited else
+                   ("p", "sdt", "tbl", "p", "p", "p", "sdt"))
     require([child.tag for child in content] ==
-            [f"{{{W}}}{name}" for name in ("p", "p", "sdt", "tbl", "p", "p", "p", "sdt")],
+            [f"{{{W}}}{name}" for name in child_order],
             "rich block order or paragraph split owner changed")
-    first, tail = content.findall("w:p", NS)[:2]
-    require(text(first) == "Block Edited" and text(tail) == " Beta", "block edit/split result changed")
+    first = content.find("w:p", NS)
+    if edited:
+        tail = content.findall("w:p", NS)[1]
+        require(text(first) == "Block Edited" and text(tail) == " Beta", "block edit/split result changed")
+    else:
+        require(text(first) == "Block Alpha Beta", "unmodified block text changed")
     require(first.find("w:pPr/w:pStyle", NS).get(f"{{{W}}}val") == "RichBody",
             "block paragraph style lost")
-    bold_runs = [run for run in first.findall("w:r", NS) if run.find("w:rPr/w:b", NS) is not None]
-    require(len(bold_runs) == 1 and text(bold_runs[0]) == "Edited", "edited run formatting widened or lost")
+    if edited:
+        bold_runs = [run for run in first.findall("w:r", NS) if run.find("w:rPr/w:b", NS) is not None]
+        require(len(bold_runs) == 1 and text(bold_runs[0]) == "Edited", "edited run formatting widened or lost")
     require(body_controls["72"] in list(content) and body_controls["78"] in list(content),
             "nested block controls escaped parent")
     require(text(body_controls["72"]) == "Nested heading" and
             [m.text for m in body_controls["72"].findall(".//m:t", NS)] == ["x+1"],
             "nested rich heading/equation content lost")
+    require(len(body_controls["72"].findall("w:sdtContent/w:p/m:oMath", NS)) == 1 and
+            not body_controls["72"].findall(".//m:oMathPara", NS),
+            "native inline equation became display math")
     table_control = content.find("w:tbl/w:tr/w:tc/w:sdt", NS)
-    require(table_control is body_controls["73"] and text(table_control) == "Edited cell content",
+    require(table_control is body_controls["73"] and
+            text(table_control) == ("Edited cell content" if edited else "Cell content"),
             "table-cell content control lost its edited text or exact owner")
     frame_controls = content.findall(".//w:txbxContent/w:sdt", NS)
     require(frame_controls == [body_controls["74"]], "frame control escaped native textbox content")
     require([text(p) for p in frame_controls[0].findall("w:sdtContent/w:p", NS)] ==
-            ["Frame content updated", "Frame second"], "frame edits escaped control or were discarded")
+            (["Frame content updated", "Frame second"] if edited else ["Frame content"]),
+            "frame edits escaped control or were discarded")
+    frame_paragraphs = [p for p in content.findall("w:p", NS)
+                        if p.find(".//wps:wsp", NS) is not None]
+    require(len(frame_paragraphs) == 1 and frame_paragraphs[0].find("w:pPr", NS) is None,
+            "native frame anchor paragraph acquired invented properties")
+    body_properties = frame_paragraphs[0].findall(".//wps:bodyPr", NS)
+    require(len(body_properties) == 1 and not body_properties[0].attrib and not list(body_properties[0]),
+            "native frame body-property omission/default insets changed")
     fallback = raw.findall(".//mc:Fallback//w:txbxContent/w:sdt", NS)
-    require(len(fallback) == 1 and identifier(fallback[0]) == "74" and
-            semantic(fallback[0]) == semantic(body_controls["74"]),
-            "native frame fallback disagrees with live content-control branch")
+    if phase == "source":
+        require(not fallback, "authored source unexpectedly contains a generated frame fallback")
+    else:
+        require(len(fallback) == 1 and identifier(fallback[0]) == "74" and
+                semantic(fallback[0]) == semantic(body_controls["74"]),
+                "native frame fallback disagrees with live content-control branch")
 
     inline_paragraphs = [p for p in content.findall("w:p", NS) if p.find("w:sdt", NS) is not None]
     require(len(inline_paragraphs) == 1, "inline controls moved to another paragraph")
     paragraph = inline_paragraphs[0]
-    require(text(paragraph) == "Inline[Gamma Core tailempty filled]", "inline surrounding text changed")
+    require(text(paragraph) == ("Inline[Gamma Core tailempty filled]" if edited else "Inline[Beta Inner tail]"),
+            "inline surrounding text changed")
     require(paragraph.findall("w:sdt", NS) == [body_controls["75"], body_controls["77"]],
             "inline control sibling order changed")
     require(body_controls["75"].find("w:sdtContent/w:sdt", NS) is body_controls["76"],
             "nested inline control was flattened")
     require([text(body_controls[str(i)]) for i in (75, 76, 77)] ==
-            ["Gamma Core tail", "Core", "empty filled"], "inline ranges expanded or lost their edits")
+            (["Gamma Core tail", "Core", "empty filled"] if edited else ["Beta Inner tail", "Inner", ""]),
+            "inline ranges expanded or lost their edits")
     require([text(run) for run in paragraph.findall("w:r", NS)] == ["Inline[", "]"],
             "inline controls absorbed surrounding text")
     toc = body_controls["78"]
@@ -174,6 +210,16 @@ def inspect_parts(parts: dict[str, bytes]) -> dict:
     require([node.get(f"{{{W}}}fldCharType") for node in toc.findall(".//w:fldChar", NS)] ==
             ["begin", "separate", "end"], "TOC native field delimiters are unbalanced")
     require(text(toc) == "ContentsNested heading2", "TOC cache/title lost")
+    toc_paragraphs = toc.findall("w:sdtContent/w:p", NS)
+    require(len(toc_paragraphs) == 2 and
+            [node.get(f"{{{W}}}fldCharType") for node in toc_paragraphs[1].findall(".//w:fldChar", NS)] ==
+            ["begin", "separate", "end"], "native TOC field paragraph placement changed")
+    require(not toc.findall(".//w:tabs", NS), "native TOC acquired generated tabs/leaders")
+    suffix = [run for run in toc_paragraphs[1].findall("w:r", NS) if run.find("w:tab", NS) is not None]
+    require(len(suffix) == 1 and text(suffix[0]) == "2" and
+            not any(suffix[0].find("w:rPr/w:" + name, NS) is not None
+                    for name in ("rFonts", "color", "b", "i", "sz")),
+            "native TOC suffix acquired direct formatting")
     anchors = {node.get(f"{{{W}}}name") for node in body_controls["72"].findall(".//w:bookmarkStart", NS)}
     require(anchors == {"sdtHeading"} and
             {node.get(f"{{{W}}}anchor") for node in toc.findall(".//w:hyperlink", NS)} == anchors,
@@ -252,7 +298,7 @@ def inspect_parts(parts: dict[str, bytes]) -> dict:
         require(set(found) == expected_ids, f"unexpected controls in {item}")
         check_aux(found[str(inline_id)], inline_id, "body" if block_id else value)
         if block_id:
-            check_aux(found[str(block_id)], block_id, value + " body edited")
+            check_aux(found[str(block_id)], block_id, value + (" body edited" if edited else " body"))
             require(stories[0].find("w:sdt", NS) is found[str(block_id)] and
                     found[str(block_id)].find("w:sdtContent/w:p/w:sdt", NS) is found[str(inline_id)],
                     f"{item} control owner changed")
@@ -267,15 +313,25 @@ def inspect_parts(parts: dict[str, bytes]) -> dict:
         require(not seen.intersection(found), "control IDs collide across stories")
         seen.update(found)
     require(len(seen) == 19, "missing active content controls")
-    return {"block_controls": 7, "inline_controls": 12, "stories": 10,
+    return {"phase": phase, "block_controls": 7, "inline_controls": 12, "stories": 10,
             "images": 1, "equations": 1, "native_tocs": 1,
-            "binding_metadata_preserved": True, "frame_fallback_matches": True}
+            "binding_metadata_preserved": True,
+            "frame_fallback_matches": None if phase == "source" else True}
 
 
-def inspect_package(path: Path) -> dict:
+def inspect_package(path: Path, phase: str = "edited") -> dict:
     with ZipFile(path) as archive:
         require(archive.testzip() is None, f"corrupt ZIP entry in {path.name}")
-        return inspect_parts({name: archive.read(name) for name in archive.namelist()})
+        return inspect_parts({name: archive.read(name) for name in archive.namelist()}, phase=phase)
+
+
+def inspect_directory(directory: Path) -> dict:
+    actual = {path.name for path in directory.glob("*.docx")}
+    require(actual == EXPECTED_FILES,
+            f"corpus mismatch; missing={sorted(EXPECTED_FILES - actual)}, "
+            f"unexpected={sorted(actual - EXPECTED_FILES)}")
+    return {name: inspect_package(directory / name, phase=EXPECTED_PHASES[name])
+            for name in sorted(EXPECTED_FILES)}
 
 
 def main() -> None:
@@ -283,11 +339,7 @@ def main() -> None:
     parser.add_argument("directory", nargs="?", type=Path,
                         default=Path("build/fidelity-content-controls"))
     args = parser.parse_args()
-    actual = {path.name for path in args.directory.glob("*.docx")}
-    require(actual == EXPECTED_FILES,
-            f"corpus mismatch; missing={sorted(EXPECTED_FILES - actual)}, "
-            f"unexpected={sorted(actual - EXPECTED_FILES)}")
-    results = {name: inspect_package(args.directory / name) for name in sorted(EXPECTED_FILES)}
+    results = inspect_directory(args.directory)
     print(json.dumps({"status": "passed", "documents": results}, indent=2))
 
 

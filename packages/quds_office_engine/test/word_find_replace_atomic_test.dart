@@ -11,6 +11,9 @@ WmlContentControlData _control() => WmlContentControlData(
 );
 
 final _shapeChanges = <String, void Function(WmlParagraph)>{
+  'paragraph control wrapper': (paragraph) {
+    paragraph.contentControlWrappers.add(_control());
+  },
   'atomic field': (paragraph) {
     paragraph.inlines.whereType<WmlRun>().single.fieldInstruction =
         ' REF entire ';

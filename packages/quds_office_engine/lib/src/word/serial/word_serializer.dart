@@ -28,6 +28,7 @@ import 'word_numbering_io.dart';
 import 'word_opaque_io.dart';
 import 'word_property_io.dart';
 import 'word_section_io.dart';
+import 'word_settings_io.dart';
 import 'word_table_property_io.dart';
 
 /// Writes a [WmlDocument] back to a `.docx` OPC package.
@@ -302,6 +303,13 @@ class WordSerializer {
 
   void _writeToc(XmlWriter w, WmlToc toc) {
     WordToc.ensureBody(toc);
+    final native = WordToc.nativeParagraphs(toc);
+    if (native != null) {
+      for (final paragraph in native) {
+        _writeParagraph(w, paragraph, nativeTocBoundary: true);
+      }
+      return;
+    }
     _writeParagraph(w, toc.titleParagraph);
     w.writeStartElement('p', prefix: 'w');
     _writePPr(w, WmlParagraphProps());
@@ -332,6 +340,7 @@ class WordSerializer {
         para.properties
           ..fieldInstruction = null
           ..fieldBegin = false
+          ..fieldSeparate = false
           ..fieldEnd = false;
       }
       final bool showNumber =
@@ -587,7 +596,12 @@ class WordSerializer {
     bool endnote = false,
     bool addNoteReferenceSpace = true,
     String? noteReferencePropertiesXml,
+    bool nativeTocBoundary = false,
   }) {
+    final paragraphShells = <XmlElement>[
+      for (final control in paragraph.contentControlWrappers)
+        WordContentControlIo.start(w, control, _package!, _activePartUri),
+    ];
     w.writeStartElement('p', prefix: 'w');
     final int? numberedInstance = _restartNumberingIds[paragraph];
     final WmlParagraphProps properties = numberedInstance == null
@@ -655,14 +669,21 @@ class WordSerializer {
     final bool pageField =
         paragraph.properties.pageNumberField &&
         (field == null || field.trim().isEmpty);
-    if (field != null && field.trim().isNotEmpty) {
+    if (nativeTocBoundary && paragraph.properties.fieldBegin) {
       _writeFieldChar(w, 'begin');
+    }
+    if (field != null && field.trim().isNotEmpty) {
+      if (!nativeTocBoundary) _writeFieldChar(w, 'begin');
       w.writeStartElement('r', prefix: 'w');
       w.writeStartElement('instrText', prefix: 'w');
       w.writeAttribute('xml:space', 'preserve');
       w.writeText(field);
       w.writeEndElement();
       w.writeEndElement();
+      if (!nativeTocBoundary || paragraph.properties.fieldSeparate) {
+        _writeFieldChar(w, 'separate');
+      }
+    } else if (nativeTocBoundary && paragraph.properties.fieldSeparate) {
       _writeFieldChar(w, 'separate');
     } else if (pageField) {
       _writeFieldChar(w, 'begin');
@@ -778,7 +799,9 @@ class WordSerializer {
       i++;
     }
     _closeCommentsNotIn(w, const <int>[]);
-    if (field != null && field.trim().isNotEmpty) {
+    if (nativeTocBoundary
+        ? paragraph.properties.fieldEnd
+        : field != null && field.trim().isNotEmpty) {
       _writeFieldChar(w, 'end');
     } else if (pageFieldOpen) {
       w.writeStartElement('r', prefix: 'w');
@@ -796,6 +819,9 @@ class WordSerializer {
       );
     }
     w.writeEndElement();
+    for (final shell in paragraphShells.reversed) {
+      WordContentControlIo.end(w, shell);
+    }
   }
 
   void _writeBookmarkBoundary(XmlWriter writer, WmlBookmarkBoundary boundary) {
@@ -1315,6 +1341,8 @@ class WordSerializer {
     WordFrameIo.write(
       w,
       frame,
+      writeParagraphProperties: (writer, properties) =>
+          _writePPr(writer, properties),
       writeBlock: (XmlWriter inner, WmlBlock child) {
         _writeBlock(inner, child, imageIds);
       },
@@ -1602,29 +1630,18 @@ class WordSerializer {
       RelationshipTypes.settings,
       'settings.xml',
     );
-    final XmlWriter w = XmlWriter();
-    w.writeStartDocument();
-    w.writeStartElement('settings', prefix: 'w');
-    w.writeNamespace('w', OfficeNamespaces.w);
-    if (document.trackRevisions) {
-      w.writeEmptyElement('trackRevisions', prefix: 'w');
-    }
-    if (document.restrictEditing) {
-      w.writeEmptyElement(
-        'documentProtection',
-        prefix: 'w',
-        attributes: <String, String>{'w:enforcement': '1'},
-      );
-    }
-    if (document.sections.any((WmlSection s) => s.differentOddEven)) {
-      w.writeEmptyElement('evenAndOddHeaders', prefix: 'w');
-    }
-    w.writeEndElement();
+    final xml = WordSettingsIo.merge(
+      package.getPart(uri)?.readText(),
+      tracking: document.trackRevisions,
+      protection: document.restrictEditing,
+      oddEven: document.sections.any((s) => s.differentOddEven),
+    );
+    if (xml == null) return;
     _putPart(
       package,
       uri,
       OfficeContentTypes.wordSettings,
-      w.toXml(),
+      xml,
       RelationshipTypes.settings,
     );
   }

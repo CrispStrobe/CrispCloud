@@ -74,12 +74,13 @@ class _NoteStory {
       visual.visual.width *= scale;
       visual.visual.height *= scale;
     }
-    final LaidOutDocument laid = WordLayoutEngine(
+    final storyEngine = WordLayoutEngine(
       font: owner.font,
       fonts: owner.fonts,
       measure: owner.measure,
       fallbackWidthFactor: owner.fallbackWidthFactor,
-    ).layout(story, updateFields: false);
+    ).._containedPhysicalSection = section;
+    final LaidOutDocument laid = storyEngine.layout(story, updateFields: false);
     final List<WmlParagraph> paragraphs = story.paragraphs.toList();
     final List<LaidOutLine> lines = <LaidOutLine>[];
     final List<LaidOutBox> frames = <LaidOutBox>[];
@@ -203,6 +204,14 @@ LaidOutLine _noteLine(
   listLabel: line.listLabel,
   listMarkerX: line.listMarkerX + dx,
   isParagraphStart: line.isParagraphStart,
+  isFooter: line.isFooter,
+  overlayText: line.overlayText,
+  overlayColor: line.overlayColor,
+  overlaySize: line.overlaySize,
+  overlayBold: line.overlayBold,
+  tocTargetParagraph: line.tocTargetParagraph,
+  tocLeader: line.tocLeader,
+  hyperlink: line.hyperlink,
   sourceText: source,
   boxX: line.boxX + dx,
   boxWidth: line.boxWidth,

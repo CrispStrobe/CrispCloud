@@ -82,15 +82,27 @@ void main() {
   for (final wrap in WmlFrameWrap.values) {
     test('$wrap keeps its distinct native and layout meaning', () async {
       final source = OpcPackage.create(OpcPackageKind.word);
+      final authored = File(
+        'test/fixtures/fidelity/frame_wrap_source.xml',
+      ).readAsStringSync();
+      const sourceWrap = '<wp:wrapSquare wrapText="bothSides"/>';
+      expect(sourceWrap.allMatches(authored), hasLength(1));
+      final nativeWrap = switch (wrap) {
+        WmlFrameWrap.none => '<wp:wrapNone/>',
+        WmlFrameWrap.square => sourceWrap,
+        WmlFrameWrap.topBottom => '<wp:wrapTopAndBottom/>',
+      };
       source
           .getPart('/word/document.xml')!
-          .writeText(
-            File(
-              'test/fixtures/fidelity/frame_wrap_source.xml',
-            ).readAsStringSync(),
-          );
-      var doc = WordDeserializer().read(source);
-      doc.sections.single.blocks.whereType<WmlFrame>().single.wrap = wrap;
+          .writeText(authored.replaceFirst(sourceWrap, nativeWrap));
+      final directory = Directory('build/fidelity-frame-wrap')
+        ..createSync(recursive: true);
+      // Persist the authored native mode before the model sees or saves it.
+      final sourceBytes = source.save();
+      File(
+        '${directory.path}/${wrap.name}-source.docx',
+      ).writeAsBytesSync(sourceBytes);
+      var doc = WordDeserializer().readBytes(sourceBytes);
       for (var cycle = 0; cycle < 4; cycle++) {
         final lines = _lines(WordLayoutEngine(font: null).layout(doc), 1);
         expect(lines.first.x, wrap == WmlFrameWrap.square ? 124 : 24);
@@ -98,8 +110,6 @@ void main() {
         _expectNoLostText(lines, _body);
         if (cycle == 3) break;
         final package = OpcPackage.openBytes(await OfficeIsolateSave.word(doc));
-        final directory = Directory('build/fidelity-frame-wrap')
-          ..createSync(recursive: true);
         File(
           '${directory.path}/${wrap.name}-${cycle + 1}.docx',
         ).writeAsBytesSync(package.save());

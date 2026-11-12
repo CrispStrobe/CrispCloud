@@ -412,15 +412,28 @@ class WmlObject extends WmlInline {
 /// Class WmlParagraph.
 class WmlParagraph extends WmlBlock {
   /// WmlParagraph API.
-  WmlParagraph({List<WmlInline>? inlines, WmlParagraphProps? properties})
-    : inlines = inlines ?? <WmlInline>[],
-      properties = properties ?? WmlParagraphProps();
+  WmlParagraph({
+    List<WmlInline>? inlines,
+    WmlParagraphProps? properties,
+    List<WmlContentControlData>? contentControlWrappers,
+  }) : inlines = inlines ?? <WmlInline>[],
+       properties = properties ?? WmlParagraphProps(),
+       contentControlWrappers =
+           contentControlWrappers ?? <WmlContentControlData>[];
 
   /// inlines API.
   List<WmlInline> inlines;
 
   /// properties API.
   WmlParagraphProps properties;
+
+  /// Native block controls around this single auxiliary-story paragraph.
+  ///
+  /// Header/footer/comment stories expose paragraphs directly. These shells,
+  /// ordered outermost first, preserve their native block wrappers while text,
+  /// formatting and fields remain editable. General body controls use
+  /// [WmlContentControlBlock] and retain arbitrary child-block ownership.
+  final List<WmlContentControlData> contentControlWrappers;
 
   /// text API.
   String get text {
@@ -514,6 +527,15 @@ class WmlFrame extends WmlBlock {
     this.wrap = WmlFrameWrap.none,
     this.fillColor,
     this.strokeColor,
+    this.insetLeft = 8,
+    this.insetTop = 8,
+    this.insetRight = 8,
+    this.insetBottom = 8,
+    this.sourceBodyPropertiesXml,
+    this.importedInsets,
+    this.sourceLinePropertiesXml,
+    this.importedStrokeColor,
+    this.anchorParagraphProperties,
     List<WmlBlock>? blocks,
   }) : blocks = blocks ?? <WmlBlock>[];
 
@@ -540,6 +562,25 @@ class WmlFrame extends WmlBlock {
 
   /// strokeColor API.
   String? strokeColor;
+
+  /// Text insets in points. Imported omitted values use DrawingML defaults;
+  /// newly created frames match the editor's conventional eight-point padding.
+  double insetLeft;
+  double insetTop;
+  double insetRight;
+  double insetBottom;
+
+  /// Sparse native body properties, including unsupported presentation fields.
+  String? sourceBodyPropertiesXml;
+  Map<String, double>? importedInsets;
+
+  /// Native line properties. An empty string records an omitted line;
+  /// null denotes a newly authored frame using the conventional one-point line.
+  String? sourceLinePropertiesXml;
+  String? importedStrokeColor;
+
+  /// Original anchor host paragraph properties, including an omitted pPr.
+  WmlParagraphProps? anchorParagraphProperties;
 
   /// blocks API.
   List<WmlBlock> blocks;
@@ -585,6 +626,36 @@ class WmlTocEntry {
   int pageNumber;
 }
 
+/// Parsed presentation of an imported TOC cache. The paragraph models retain
+/// sparse formatting and field-boundary locations; live items provide the text.
+class WmlTocPresentation {
+  WmlTocPresentation({required this.configuration, required this.paragraphs});
+
+  (int, int, bool, int?, int?, String?) configuration;
+  final List<WmlTocSourceParagraph> paragraphs;
+}
+
+/// One native TOC paragraph, with optional live title or entry ownership.
+class WmlTocSourceParagraph {
+  WmlTocSourceParagraph({
+    required this.paragraph,
+    this.title = false,
+    this.entryIndex,
+    this.textStart = 0,
+    this.textEnd = 0,
+    this.pageStart,
+    this.pageEnd,
+  });
+
+  final WmlParagraph paragraph;
+  final bool title;
+  final int? entryIndex;
+  final int textStart;
+  final int textEnd;
+  final int? pageStart;
+  final int? pageEnd;
+}
+
 /// Live table of contents built from heading paragraphs.
 class WmlToc extends WmlBlock {
   /// WmlToc API.
@@ -599,6 +670,7 @@ class WmlToc extends WmlBlock {
     List<WmlTocEntry>? entries,
     WmlParagraph? titleParagraph,
     List<WmlParagraph>? itemParagraphs,
+    this.sourcePresentation,
   }) : title = title,
        entries = entries ?? <WmlTocEntry>[],
        titleParagraph =
@@ -657,6 +729,9 @@ class WmlToc extends WmlBlock {
 
   /// itemParagraphs API.
   List<WmlParagraph> itemParagraphs;
+
+  /// Native cached presentation, invalidated by an explicit contents refresh.
+  WmlTocPresentation? sourcePresentation;
 }
 
 /// Class WmlTable.

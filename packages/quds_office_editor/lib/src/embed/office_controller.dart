@@ -1017,7 +1017,6 @@ class WordEditorController extends OfficeController {
   /// Rebuilds TOC entries from headings, or only refreshes printed page numbers.
   void updateTableOfContents({bool pageNumbersOnly = false}) {
     if (!pageNumbersOnly) {
-      WordLink.ensureHeadingBookmarks(document);
       WordToc.refreshAll(document);
     }
     _relayoutTocPages();
@@ -2897,15 +2896,17 @@ class WordEditorController extends OfficeController {
         : blocks.take(1).whereType<WmlParagraph>();
     if ((paragraphStory || !_wordBodyIsBlank()) &&
         mergedParagraphs.any(
-          (paragraph) => paragraph.inlines.any(
-            (inline) =>
-                inline is WmlContentControlBoundary ||
-                inline is WmlBookmarkBoundary,
-          ),
+          (paragraph) =>
+              paragraph.contentControlWrappers.isNotEmpty ||
+              paragraph.inlines.any(
+                (inline) =>
+                    inline is WmlContentControlBoundary ||
+                    inline is WmlBookmarkBoundary,
+              ),
         )) {
       throw UnsupportedError(
-        'Pasting native inline ranges into an existing paragraph is not '
-        'supported. Their boundaries must be retained as complete objects.',
+        'Pasting native paragraph wrappers or inline ranges into an existing '
+        'paragraph is not supported. Retain them as complete objects.',
       );
     }
     commands.beginBatch();
@@ -3328,9 +3329,9 @@ class WordEditorController extends OfficeController {
     if (range.startPara < 0 || range.endPara >= paragraphs.length) return;
     if (range.startPara != range.endPara) {
       for (var index = range.startPara; index <= range.endPara; index++) {
-        if (WordContentControls.hasInlineControls(paragraphs[index])) {
+        if (WordContentControls.hasStructuralControls(paragraphs[index])) {
           throw UnsupportedError(
-            'Changing several paragraphs containing an inline content '
+            'Changing several paragraphs containing a structural content '
             'control is not supported. Edit each paragraph separately.',
           );
         }
@@ -4366,11 +4367,11 @@ class WordEditorController extends OfficeController {
     final WmlParagraph drop = backward
         ? paras[currentIndex]
         : paras[otherIndex];
-    if (WordContentControls.hasInlineControls(keep) ||
-        WordContentControls.hasInlineControls(drop)) {
+    if (WordContentControls.hasStructuralControls(keep) ||
+        WordContentControls.hasStructuralControls(drop)) {
       throw UnsupportedError(
-        'Joining paragraphs containing an inline content control is not '
-        'supported. Their wrapper boundaries must remain in one paragraph.',
+        'Joining paragraphs containing a structural content control is not '
+        'supported. Preserve each existing wrapper and paragraph.',
       );
     }
     if (isEditingComment || isEditingHeaderFooter) {
@@ -7026,15 +7027,24 @@ class WordEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    if (note.allParagraphs.any(WordContentControls.hasInlineControls)) {
-      if (text.split('\n').length !=
-          WordNotes.editableParagraphs(note).length) {
-        throw UnsupportedError(
-          'Changing paragraph boundaries in a note containing an inline '
-          'content control is not supported.',
-        );
-      }
-      // Validate all paragraph replacements before the first live edit.
+    final paragraphs = note.allParagraphs.toList();
+    final hasInlineControls = paragraphs.any(
+      WordContentControls.hasInlineControls,
+    );
+    if (hasInlineControls &&
+        text.split('\n').length != WordNotes.editableParagraphs(note).length) {
+      throw UnsupportedError(
+        'Changing paragraph boundaries in a note containing an inline '
+        'content control is not supported.',
+      );
+    }
+    if (hasInlineControls ||
+        paragraphs.any(
+          (paragraph) =>
+              paragraph.inlines.whereType<WmlBookmarkBoundary>().isNotEmpty,
+        )) {
+      // Validate replacements and native range deletion before committing
+      // another pending note or creating this note's history snapshot.
       WordNotes.editText(
         WmlNote(
           id: note.id,

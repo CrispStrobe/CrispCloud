@@ -28,6 +28,7 @@ import 'word_opaque_io.dart';
 import 'word_property_io.dart';
 import 'word_section_io.dart';
 import 'word_serializer.dart';
+import 'word_settings_io.dart';
 import 'word_table_property_io.dart';
 
 part 'word_style_cascade.dart';
@@ -197,6 +198,88 @@ class WordDeserializer {
       }
     }
     return null;
+  }
+
+  /// Auxiliary stories currently own paragraphs directly. A native block SDT
+  /// around one paragraph can retain its exact shell on that live paragraph;
+  /// richer block topology must not be flattened into this representation.
+  ({WmlParagraph paragraph, String? paragraphId}) _readAuxiliaryControl(
+    XmlPullReader reader,
+    OpcPackage package,
+    String storyUri,
+    String storyKind,
+  ) {
+    final source = XmlDocument.readElement(reader);
+    var leaf = source;
+    while (leaf.localName == 'sdt' && leaf.namespaceUri == OfficeNamespaces.w) {
+      final content = leaf.firstChild(
+        'sdtContent',
+        namespaceUri: OfficeNamespaces.w,
+      );
+      final children = content?.childElements.toList() ?? <XmlElement>[];
+      if (children.length != 1) {
+        _unsupportedControl(
+          storyUri,
+          'block control in a paragraph-only $storyKind story requires '
+          'exactly one paragraph',
+        );
+      }
+      leaf = children.single;
+    }
+    if (leaf.localName != 'p' || leaf.namespaceUri != OfficeNamespaces.w) {
+      _unsupportedControl(
+        storyUri,
+        'block control in a paragraph-only $storyKind story contains '
+        'unsupported ${leaf.localName} content',
+      );
+    }
+    bool hasRichBlockContent(XmlElement element) {
+      if ((element.namespaceUri == OfficeNamespaces.w &&
+              (element.localName == 'drawing' ||
+                  element.localName == 'pict' ||
+                  element.localName == 'tbl')) ||
+          (element.namespaceUri == OfficeNamespaces.m &&
+              (element.localName == 'oMath' ||
+                  element.localName == 'oMathPara'))) {
+        return true;
+      }
+      return element.childElements.any(hasRichBlockContent);
+    }
+
+    if (hasRichBlockContent(leaf)) {
+      _unsupportedControl(
+        storyUri,
+        'block control in a paragraph-only $storyKind story contains '
+        'a drawing, table or equation',
+      );
+    }
+    final control = WordContentControlIo.capture(source, package, storyUri);
+    final content = _sdtContentReader(source)!;
+    while (content.next()) {
+      if (content.eventType != XmlEventType.startElement ||
+          content.namespaceUri != OfficeNamespaces.w) {
+        continue;
+      }
+      if (content.localName == 'sdt') {
+        final nested = _readAuxiliaryControl(
+          content,
+          package,
+          storyUri,
+          storyKind,
+        );
+        nested.paragraph.contentControlWrappers.insert(0, control);
+        return nested;
+      }
+      if (content.localName == 'p') {
+        final paragraphId = WordCommentIo.normalizeParagraphId(
+          content.getAttribute('paraId', namespaceUri: OfficeNamespaces.w14),
+        );
+        final paragraph = _readParagraph(content, package, storyUri)
+          ..contentControlWrappers.add(control);
+        return (paragraph: paragraph, paragraphId: paragraphId);
+      }
+    }
+    throw StateError('Preflighted content control lost its paragraph');
   }
 
   List<WmlBlock> _readBlockContent(
@@ -378,7 +461,13 @@ class WordDeserializer {
   ) {
     final WmlParagraph paragraph = WmlParagraph()
       ..properties.sourcePropertiesXml = '';
+    final previousFrames = Set<WmlFrame>.identity()..addAll(_pendingFrames);
     _readParagraphContent(reader, package, docUri, paragraph);
+    for (final frame in _pendingFrames) {
+      if (previousFrames.contains(frame)) continue;
+      frame.anchorParagraphProperties ??= paragraph.properties.copy()
+        ..importedValues = WordPropertyIo.paragraphValues(paragraph.properties);
+    }
     return paragraph;
   }
 
@@ -642,6 +731,8 @@ class WordDeserializer {
         );
         if (type == 'begin') {
           paragraph.properties.fieldBegin = true;
+        } else if (type == 'separate') {
+          paragraph.properties.fieldSeparate = true;
         } else if (type == 'end') {
           paragraph.properties.fieldEnd = true;
         }
@@ -1044,6 +1135,7 @@ class WordDeserializer {
             tocStyle ||
             tocHeading ||
             block.properties.fieldBegin ||
+            block.properties.fieldSeparate ||
             block.properties.fieldEnd;
         if (open == null && (tocInstr || tocStyle || tocHeading)) {
           final (int min, int max) = WordToc.rangeFromInstruction(
@@ -1054,7 +1146,7 @@ class WordDeserializer {
             open,
             block.properties.fieldInstruction,
           );
-          WordToc.absorbResult(open, block);
+          WordToc.absorbNativeResult(open, block);
           if (block.properties.fieldEnd) {
             collapsed.add(open);
             open = null;
@@ -1073,7 +1165,7 @@ class WordDeserializer {
               block.properties.fieldInstruction,
             );
           }
-          WordToc.absorbResult(open, block);
+          WordToc.absorbNativeResult(open, block);
           if (block.properties.fieldEnd) {
             collapsed.add(open);
             open = null;
@@ -1861,9 +1953,13 @@ class WordDeserializer {
       } else if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sdt' &&
           reader.namespaceUri == OfficeNamespaces.w) {
-        _unsupportedControl(
-          storyUri,
-          'block control in a paragraph-only header/footer story',
+        paragraphs.add(
+          _readAuxiliaryControl(
+            reader,
+            package,
+            storyUri,
+            'header/footer',
+          ).paragraph,
         );
       }
     }
@@ -2477,17 +2573,12 @@ class WordDeserializer {
     if (part == null) {
       return;
     }
-    final String xml = part.readText();
-    if (xml.contains('trackRevisions')) {
-      document.trackRevisions = !xml.contains('w:val="0"');
-    }
-    if (xml.contains('documentProtection')) {
-      document.restrictEditing = true;
-    }
-    if (xml.contains('evenAndOddHeaders')) {
-      for (final WmlSection section in document.sections) {
-        section.differentOddEven = true;
-      }
+    final settings = WordSettingsIo.read(part.readText());
+    document
+      ..trackRevisions = settings.tracking
+      ..restrictEditing = settings.protection;
+    for (final section in document.sections) {
+      section.differentOddEven = settings.oddEven;
     }
   }
 
@@ -2635,10 +2726,14 @@ class WordDeserializer {
           _takeDrawing(reader, package, commentsUri);
         } else if (reader.localName == 'sdt' &&
             reader.namespaceUri == OfficeNamespaces.w) {
-          _unsupportedControl(
+          final controlled = _readAuxiliaryControl(
+            reader,
+            package,
             commentsUri,
-            'block control in a paragraph-only comment story',
+            'comment',
           );
+          paragraphs.add(controlled.paragraph);
+          paragraphId = controlled.paragraphId;
         } else if (reader.localName == 't') {
           if (fallback.isNotEmpty) {
             fallback.write('\n');

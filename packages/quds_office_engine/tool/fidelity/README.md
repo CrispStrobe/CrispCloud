@@ -130,11 +130,14 @@ are checked independently. Arbitrary picture contours and floating table
 exclusions remain outside that acceptance scope.
 
 Imported block content controls retain live children and exact metadata in
-body, notes, tables and frames. Paired inline controls retain their positions.
-Supported paragraph operations use the actual container. Unsupported inline
-drawings/equations, auxiliary block stories, table row/cell wrappers and edits
-crossing control boundaries fail before output. UI lock and data-binding
-semantics are not implemented.
+body, notes, tables and frames. Headers, footers and comments also retain
+single-paragraph block controls, including nested wrapper shells. Paired inline
+controls retain their positions. Supported paragraph operations use the actual
+container. Unsupported inline drawings/equations, multi-paragraph or
+non-paragraph auxiliary controls, table row/cell wrappers and edits crossing
+control boundaries fail before mutation. UI lock and data-binding semantics are
+not implemented. Whole-note replacement also rejects deletion of only one
+bookmark endpoint before changing the note or controller history.
 
 The independently authored `word_structure_source.xml`,
 `word_structure_expected.json`, and `scripts/word-structure-{create,edit,remove}.json`
@@ -219,16 +222,24 @@ for combined text, geometry, notes, transition, picture and reorder steps.
 | openpyxl / python-pptx inputs | Retained source templates/styles, live charts, pivots, speaker notes, media ownership and reorder behavior |
 | Python semantic oracles | Read output ZIP/XML directly, compare authored values, decode picture pixels, verify relationships and selected child ordering |
 | Mutation controls | Deliberately break content, note marks, style flags, list starts, formulas, media, namespaces or inventories and require rejection |
-| Flutter goldens | A full rich-note page plus three pages using first/even/default header/footer pictures, before and after asynchronous save |
+| Flutter goldens | Notes and continuation, first/even/default story pictures, columns, tall tables, structure recipes, three frame wrap modes and rich nested cells, before and after saves |
 | Real CrispCloud widget tests | Open the real editor dialog, edit during an upload, capture saved bytes, retry failures and check dirty/close behavior |
-| Open XML SDK | Validate exported packages against the external OOXML schema validator; prove the validator rejects an invalid control |
-| LibreOffice / Poppler | Render each package to PDF and retained page PNGs; compare normalized text and decoded RGB pixels between complete repeated-save groups |
+| Open XML SDK | Validate exact package bytes against the external OOXML schema validator, report SHA-256 receipts, and prove the validator rejects an invalid control |
+| LibreOffice / Poppler | Render supported inputs to retained PDF/page PNGs; compare text and decoded RGB pixels against native sources and complete save-cycle groups; separately report strictly qualified native-only limitations |
 | VM line coverage | List every uncovered instrumented line and every absent source file; execution coverage does not establish correctness |
 
 The Python package oracle is not a general OOXML validator. The Open XML SDK
 checks structural validity, not application rendering. LibreOffice repeated-save
 comparisons check stability in that renderer, not pixel identity with Microsoft
 Office. These layers answer different questions and are all retained.
+
+The authored block-control-in-comment source is currently refused by
+LibreOffice. Its original seven packages are still required by the semantic and
+SDK gates. Only the specific raw-source importer refusal plus successful
+exact-path, exact-byte SDK receipts can qualify them as `native_schema_only`;
+they count as zero visual successes. A separate seven-file header/footer-control
+corpus is rendered strictly against its source. See `FID-065` in
+`docs/office-fidelity-gaps.json` at the repository root for this acceptance limit.
 
 ## Full checks
 

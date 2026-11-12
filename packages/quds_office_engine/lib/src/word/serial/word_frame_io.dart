@@ -1,9 +1,11 @@
 import '../../xml/namespaces.dart';
+import '../../xml/xml_node.dart';
 import '../../xml/xml_reader.dart';
 import '../../xml/xml_writer.dart';
 import '../model/wml_document.dart';
 import '../properties/wml_properties.dart';
 import 'word_drawing_io.dart';
+import 'word_property_io.dart';
 
 /// WordprocessingShape + VML fallback for [WmlFrame].
 ///
@@ -15,6 +17,8 @@ abstract final class WordFrameIo {
     XmlWriter w,
     WmlFrame frame, {
     required void Function(XmlWriter w, WmlBlock block) writeBlock,
+    void Function(XmlWriter w, WmlParagraphProps properties)?
+    writeParagraphProperties,
     required int docPrId,
   }) {
     final int cx = WordDrawingIo.sizeToEmu(frame.width);
@@ -28,18 +32,28 @@ abstract final class WordFrameIo {
     final String fill = _hex(frame.fillColor);
     final String stroke = _hex(frame.strokeColor);
     w.writeStartElement('p', prefix: 'w');
-    w.writeStartElement('pPr', prefix: 'w');
-    w.writeEmptyElement(
-      'spacing',
-      prefix: 'w',
-      attributes: <String, String>{
-        'w:before': '0',
-        'w:after': '0',
-        'w:line': '20',
-        'w:lineRule': 'exact',
-      },
-    );
-    w.writeEndElement();
+    final host = frame.anchorParagraphProperties;
+    if (host != null && writeParagraphProperties != null) {
+      final changed = WordPropertyIo.paragraphValues(
+        host,
+      ).entries.any((entry) => host.importedValues?[entry.key] != entry.value);
+      if (host.sourcePropertiesXml != '' || changed) {
+        writeParagraphProperties(w, host);
+      }
+    } else {
+      w.writeStartElement('pPr', prefix: 'w');
+      w.writeEmptyElement(
+        'spacing',
+        prefix: 'w',
+        attributes: <String, String>{
+          'w:before': '0',
+          'w:after': '0',
+          'w:line': '20',
+          'w:lineRule': 'exact',
+        },
+      );
+      w.writeEndElement();
+    }
     w.writeStartElement('r', prefix: 'w');
     w.writeStartElement('AlternateContent', prefix: 'mc');
     w.writeStartElement('Choice', prefix: 'mc');
@@ -291,38 +305,14 @@ abstract final class WordFrameIo {
     } else {
       w.writeEmptyElement('noFill', prefix: 'a');
     }
-    w.writeStartElement('ln', prefix: 'a');
-    if (stroke.isEmpty) {
-      w.writeEmptyElement('noFill', prefix: 'a');
-    } else {
-      w.writeAttribute('w', '12700');
-      w.writeStartElement('solidFill', prefix: 'a');
-      w.writeEmptyElement(
-        'srgbClr',
-        prefix: 'a',
-        attributes: <String, String>{'val': stroke},
-      );
-      w.writeEndElement();
-    }
-    w.writeEndElement();
+    _writeLineProperties(w, frame, stroke);
     w.writeEndElement();
     w.writeStartElement('txbx', prefix: 'wps');
     w.writeStartElement('txbxContent', prefix: 'w');
     _writeContent(w, frame, writeBlock);
     w.writeEndElement();
     w.writeEndElement();
-    w.writeEmptyElement(
-      'bodyPr',
-      prefix: 'wps',
-      attributes: <String, String>{
-        'wrap': 'square',
-        'lIns': '0',
-        'tIns': '0',
-        'rIns': '0',
-        'bIns': '0',
-        'anchor': 't',
-      },
-    );
+    _writeBodyProperties(w, frame);
     w.writeEndElement();
     w.writeEndElement();
     w.writeEndElement();
@@ -350,10 +340,10 @@ abstract final class WordFrameIo {
     w.writeAttribute(
       'style',
       'position:absolute;left:${left}pt;top:${top}pt;'
-      'width:${width}pt;height:${height}pt;z-index:${behind ? -1 : 251659264};'
-      'mso-position-horizontal-relative:$relative;'
-      'mso-position-vertical-relative:$relative;'
-      'mso-wrap-style:${frame.wrap == WmlFrameWrap.square ? 'square' : 'none'}',
+          'width:${width}pt;height:${height}pt;z-index:${behind ? -1 : 251659264};'
+          'mso-position-horizontal-relative:$relative;'
+          'mso-position-vertical-relative:$relative;'
+          'mso-wrap-style:${frame.wrap == WmlFrameWrap.square ? 'square' : 'none'}',
     );
     if (fill.isEmpty) {
       w.writeAttribute('filled', 'f');
@@ -364,6 +354,16 @@ abstract final class WordFrameIo {
       w.writeAttribute('stroked', 'f');
     } else {
       w.writeAttribute('strokecolor', '#$stroke');
+      final source = frame.sourceLinePropertiesXml;
+      final width = source == null
+          ? '12700'
+          : source.isEmpty
+          ? null
+          : XmlDocument.parse(source).root!.getAttribute('w');
+      final emu = int.tryParse(width ?? '');
+      if (emu != null) {
+        w.writeAttribute('strokeweight', '${_fmt(emu / 12700)}pt');
+      }
     }
     if (frame.wrap == WmlFrameWrap.topBottom) {
       w.writeEmptyElement(
@@ -374,7 +374,11 @@ abstract final class WordFrameIo {
       );
     }
     w.writeStartElement('textbox', prefix: 'v');
-    w.writeAttribute('inset', '0,0,0,0');
+    w.writeAttribute(
+      'inset',
+      '${_fmt(frame.insetLeft)}pt,${_fmt(frame.insetTop)}pt,'
+          '${_fmt(frame.insetRight)}pt,${_fmt(frame.insetBottom)}pt',
+    );
     w.writeStartElement('txbxContent', prefix: 'w');
     _writeContent(w, frame, writeBlock);
     w.writeEndElement();
@@ -402,6 +406,70 @@ abstract final class WordFrameIo {
     }
   }
 
+  static void _writeBodyProperties(XmlWriter writer, WmlFrame frame) {
+    final source = frame.sourceBodyPropertiesXml;
+    final properties = source == null
+        ? (XmlElement(localName: 'bodyPr', prefix: 'wps')
+            ..setAttribute('wrap', 'square')
+            ..setAttribute('anchor', 't'))
+        : XmlDocument.parse(source).root!;
+    final insets = {
+      'lIns': frame.insetLeft,
+      'tIns': frame.insetTop,
+      'rIns': frame.insetRight,
+      'bIns': frame.insetBottom,
+    };
+    for (final entry in insets.entries) {
+      if (source == null || frame.importedInsets?[entry.key] != entry.value) {
+        properties.setAttribute(
+          entry.key,
+          '${WordDrawingIo.offsetToEmu(entry.value)}',
+        );
+      }
+    }
+    properties.writeTo(writer);
+  }
+
+  static void _writeLineProperties(
+    XmlWriter writer,
+    WmlFrame frame,
+    String stroke,
+  ) {
+    final source = frame.sourceLinePropertiesXml;
+    if (source != null && stroke == _hex(frame.importedStrokeColor)) {
+      if (source.isNotEmpty) XmlDocument.parse(source).root!.writeTo(writer);
+      return;
+    }
+    final line = source == null || source.isEmpty
+        ? XmlElement(localName: 'ln', prefix: 'a')
+        : XmlDocument.parse(source).root!;
+    if (source == null && stroke.isNotEmpty) line.setAttribute('w', '12700');
+    // Color edits own the fill choice only; native width, cap, dash and join
+    // properties stay intact, including an omitted width.
+    line.children.removeWhere(
+      (child) =>
+          child is XmlElement &&
+          const {
+            'noFill',
+            'solidFill',
+            'gradFill',
+            'pattFill',
+          }.contains(child.localName),
+    );
+    final fill = XmlElement(
+      localName: stroke.isEmpty ? 'noFill' : 'solidFill',
+      prefix: 'a',
+    );
+    if (stroke.isNotEmpty) {
+      fill.children.add(
+        XmlElement(localName: 'srgbClr', prefix: 'a')
+          ..setAttribute('val', stroke),
+      );
+    }
+    line.children.insert(0, fill);
+    line.writeTo(writer);
+  }
+
   static bool _isBlankBlock(WmlBlock block) {
     return block is WmlParagraph && block.text.trim().isEmpty;
   }
@@ -410,7 +478,9 @@ abstract final class WordFrameIo {
     if (color == null || color.isEmpty) {
       return '';
     }
-    return color.startsWith('#') ? color.substring(1).toUpperCase() : color.toUpperCase();
+    return color.startsWith('#')
+        ? color.substring(1).toUpperCase()
+        : color.toUpperCase();
   }
 
   static String _fmt(double value) {

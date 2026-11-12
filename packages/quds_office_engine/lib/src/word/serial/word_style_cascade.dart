@@ -298,6 +298,7 @@ class _StyleCascade {
       styleId: old.styleId,
       fieldInstruction: old.fieldInstruction,
       fieldBegin: old.fieldBegin,
+      fieldSeparate: old.fieldSeparate,
       fieldEnd: old.fieldEnd,
       pageNumberField: old.pageNumberField,
       bookmarkName: old.bookmarkName,

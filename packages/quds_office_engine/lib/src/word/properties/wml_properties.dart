@@ -291,6 +291,7 @@ class WmlParagraphProps {
     this.styleId,
     this.fieldInstruction,
     this.fieldBegin = false,
+    this.fieldSeparate = false,
     this.fieldEnd = false,
     this.bookmarkName,
     this.sourceBookmarkName,
@@ -378,6 +379,9 @@ class WmlParagraphProps {
   /// fieldBegin API.
   bool fieldBegin;
 
+  /// A native complex field's separator occurs in this paragraph.
+  bool fieldSeparate;
+
   /// fieldEnd API.
   bool fieldEnd;
 
@@ -445,6 +449,7 @@ class WmlParagraphProps {
           styleId: styleId,
           fieldInstruction: fieldInstruction,
           fieldBegin: fieldBegin,
+          fieldSeparate: fieldSeparate,
           fieldEnd: fieldEnd,
           bookmarkName: bookmarkName,
           sourceBookmarkName: sourceBookmarkName,

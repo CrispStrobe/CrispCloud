@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
@@ -31,13 +32,19 @@ var paths = Directory.EnumerateFiles(args[0], "*", SearchOption.AllDirectories)
 if (paths.Count == 0) throw new Exception("No Office outputs to validate");
 foreach (var path in paths)
 {
+    string? sha256 = null;
     try
     {
+        // Bind the validation receipt to the exact bytes inspected, so a
+        // renderer cannot reuse a passing receipt after an output changes.
+        var bytes = File.ReadAllBytes(path);
+        sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        using var input = new MemoryStream(bytes, writable: false);
         using OpenXmlPackage package = Path.GetExtension(path) switch
         {
-            ".docx" => WordprocessingDocument.Open(path, false),
-            ".xlsx" => SpreadsheetDocument.Open(path, false),
-            ".pptx" => PresentationDocument.Open(path, false),
+            ".docx" => WordprocessingDocument.Open(input, false),
+            ".xlsx" => SpreadsheetDocument.Open(input, false),
+            ".pptx" => PresentationDocument.Open(input, false),
             _ => throw new NotSupportedException(path),
         };
         var errors = validator.Validate(package).Select(e => new
@@ -46,14 +53,14 @@ foreach (var path in paths)
             Part = e.Part?.Uri.ToString(), XPath = e.Path?.XPath,
         }).ToList();
         failures += errors.Count;
-        reports.Add(new { File = path, Errors = errors });
+        reports.Add(new { File = path, Sha256 = sha256, Errors = errors });
         Console.WriteLine($"{path}: {errors.Count} validation errors");
         foreach (var e in errors.Take(20)) Console.WriteLine($"  {e.Id}: {e.Description} [{e.Part} {e.XPath}]");
     }
     catch (Exception error)
     {
         failures++;
-        reports.Add(new { File = path, Exception = error.ToString() });
+        reports.Add(new { File = path, Sha256 = sha256, Exception = error.ToString() });
         Console.Error.WriteLine($"{path}: {error.Message}");
     }
 }

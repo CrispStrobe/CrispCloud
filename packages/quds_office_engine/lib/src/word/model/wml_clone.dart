@@ -80,6 +80,7 @@ abstract final class WmlClone {
     return WmlParagraph(
       properties: source.properties.copy(),
       inlines: inlines(source.inlines),
+      contentControlWrappers: List.of(source.contentControlWrappers),
     );
   }
 
@@ -152,6 +153,17 @@ abstract final class WmlClone {
       wrap: source.wrap,
       fillColor: source.fillColor,
       strokeColor: source.strokeColor,
+      insetLeft: source.insetLeft,
+      insetTop: source.insetTop,
+      insetRight: source.insetRight,
+      insetBottom: source.insetBottom,
+      sourceBodyPropertiesXml: source.sourceBodyPropertiesXml,
+      importedInsets: source.importedInsets == null
+          ? null
+          : Map.of(source.importedInsets!),
+      sourceLinePropertiesXml: source.sourceLinePropertiesXml,
+      importedStrokeColor: source.importedStrokeColor,
+      anchorParagraphProperties: source.anchorParagraphProperties?.copy(),
       blocks: <WmlBlock>[
         for (final WmlBlock block in source.blocks) WmlClone.block(block),
       ],
@@ -185,6 +197,23 @@ abstract final class WmlClone {
       itemParagraphs: <WmlParagraph>[
         for (final WmlParagraph item in source.itemParagraphs) paragraph(item),
       ],
+      sourcePresentation: source.sourcePresentation == null
+          ? null
+          : WmlTocPresentation(
+              configuration: source.sourcePresentation!.configuration,
+              paragraphs: [
+                for (final item in source.sourcePresentation!.paragraphs)
+                  WmlTocSourceParagraph(
+                    paragraph: paragraph(item.paragraph),
+                    title: item.title,
+                    entryIndex: item.entryIndex,
+                    textStart: item.textStart,
+                    textEnd: item.textEnd,
+                    pageStart: item.pageStart,
+                    pageEnd: item.pageEnd,
+                  ),
+              ],
+            ),
     );
   }
 

@@ -36,6 +36,160 @@ List<XmlElement> _elements(XmlElement root, String name) => [
 ];
 
 void main() {
+  for (final isolate in [false, true]) {
+    test(
+      '${isolate ? 'isolate' : 'direct'} scripted replacement rebases the original repeated revision span',
+      () async {
+        var doc = _source(
+          '<w:p><w:r><w:t>abXYZ</w:t></w:r>'
+          '<w:ins w:id="17" w:author="Original"><w:r><w:t>XYZ</w:t></w:r></w:ins>'
+          '<w:r><w:t>cd</w:t></w:r></w:p>',
+        );
+        final paragraph = doc.paragraphs.single;
+        final revision = doc.revisions.single;
+        cli.applyStep(doc, {
+          'op': 'replaceText',
+          'paragraph': 0,
+          'start': 2,
+          'end': 2,
+          'text': 'XYZ',
+        });
+        expect(paragraph.text, 'abXYZXYZXYZcd');
+        expect(doc.revisions.single, same(revision));
+        expect(WordRevisions.resolveParagraph(doc, revision), same(paragraph));
+        expect((revision.start, revision.end, revision.text), (8, 11, 'XYZ'));
+        expect(revision.conflict, isNull);
+        for (var cycle = 0; cycle < 3; cycle++) {
+          final bytes = isolate
+              ? await OfficeIsolateSave.word(doc)
+              : WordSerializer().writeBytes(doc);
+          final root = XmlDocument.parse(
+            OpcPackage.openBytes(
+              bytes,
+            ).getPart('/word/document.xml')!.readText(),
+          ).root!;
+          final native = _elements(root, 'ins').single;
+          expect(native.getAttribute('id'), '${revision.id}');
+          expect(native.getAttribute('author'), 'Original');
+          expect(native.text, 'XYZ');
+          expect(
+            _elements(root, 'p').single.childElements
+                .takeWhile((element) => element.localName != 'ins')
+                .map((element) => element.text)
+                .join(),
+            'abXYZXYZ',
+          );
+          doc = WordDeserializer().readBytes(bytes);
+          expect(
+            (doc.revisions.single.start, doc.revisions.single.end),
+            (8, 11),
+          );
+        }
+      },
+    );
+  }
+
+  test(
+    'scripted deletion before a revision shifts it and a later edit leaves it fixed',
+    () {
+      final doc = WmlDocument.empty(text: 'abXYZXYZcd');
+      final revision = WordRevisions.record(
+        doc,
+        kind: WmlRevisionKind.insert,
+        paragraphIndex: 0,
+        start: 5,
+        end: 8,
+        text: 'XYZ',
+      );
+      cli.applyStep(doc, {
+        'op': 'replaceText',
+        'paragraph': 0,
+        'start': 0,
+        'end': 2,
+        'text': '',
+      });
+      expect((revision.start, revision.end), (3, 6));
+      cli.applyStep(doc, {
+        'op': 'replaceText',
+        'paragraph': 0,
+        'start': 6,
+        'end': 8,
+        'text': '123',
+      });
+      expect((revision.start, revision.end), (3, 6));
+      expect(doc.paragraphs.single.text, 'XYZXYZ123');
+      WordRevisions.reject(doc, revision);
+      expect(doc.paragraphs.single.text, 'XYZ123');
+    },
+  );
+
+  test(
+    'a rejected scripted control edit leaves revision metadata and live tokens unchanged',
+    () {
+      final doc = _source(
+        '<w:p><w:r><w:t>ab</w:t></w:r>'
+        '<w:sdt><w:sdtPr><w:id w:val="71"/></w:sdtPr><w:sdtContent>'
+        '<w:r><w:t>XYZ</w:t></w:r></w:sdtContent></w:sdt>'
+        '<w:r><w:t>cdQQ</w:t></w:r></w:p>',
+      );
+      final p = doc.paragraphs.single;
+      final revision = WordRevisions.record(
+        doc,
+        kind: WmlRevisionKind.insert,
+        paragraphIndex: 0,
+        start: 7,
+        end: 9,
+        text: 'QQ',
+      );
+      final inlines = List<WmlInline>.of(p.inlines);
+      final before = _xml(doc);
+      expect(
+        () => cli.applyStep(doc, {
+          'op': 'replaceText',
+          'paragraph': 0,
+          'start': 1,
+          'end': 4,
+          'text': '',
+        }),
+        throwsUnsupportedError,
+      );
+      expect(p.text, 'abXYZcdQQ');
+      expect(p.inlines, orderedEquals(inlines));
+      expect(doc.revisions, [same(revision)]);
+      expect(WordRevisions.resolveParagraph(doc, revision), same(p));
+      expect((revision.start, revision.end, revision.text), (7, 9, 'QQ'));
+      expect(revision.conflict, isNull);
+      expect(_xml(doc), before);
+    },
+  );
+
+  test(
+    'a scripted edit inside a tracked span records a conflict before export',
+    () {
+      final doc = WmlDocument.empty(text: 'abXYZcd');
+      final revision = WordRevisions.record(
+        doc,
+        kind: WmlRevisionKind.insert,
+        paragraphIndex: 0,
+        start: 2,
+        end: 5,
+        text: 'XYZ',
+      );
+      cli.applyStep(doc, {
+        'op': 'replaceText',
+        'paragraph': 0,
+        'start': 3,
+        'end': 4,
+        'text': 'Q',
+      });
+      expect(doc.paragraphs.single.text, 'abXQZcd');
+      expect(revision.conflict, contains('intersects'));
+      expect(() => WordSerializer().writeBytes(doc), throwsStateError);
+      expect(() => WordRevisions.reject(doc, revision), throwsStateError);
+      expect(doc.paragraphs.single.text, 'abXQZcd');
+    },
+  );
+
   for (final invalid in <Map<String, Object?>>[
     {'color': 'invalid'},
     {'highlight': 'red'},
