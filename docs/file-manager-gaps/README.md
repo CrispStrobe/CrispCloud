@@ -46,7 +46,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | [G01](01-workspace-and-interaction.md#g01) | Source-bound incoming drops | Implemented / target-runtime acceptance pending | Real OS/browser drag sessions under G50/G51 |
 | [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Closed: direct saved-item workflow | New network discovery remains G30 |
 | [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
-| [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Scoped | G02 command identity |
+| [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Implemented / target-runtime acceptance pending | Native menu presentation and keyboard dispatch under G50/G51 |
 | [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Scoped | G01; existing collections |
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
@@ -114,7 +114,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G12 external terminal | `feature/external-terminal-20261112` · `f798f27` · PR #60 | 45 tests passed across five suites; one existing macOS-only skip; follow-up bounds tests passed in the 118-test run | Implemented; native terminal-window acceptance pending |
 | G01 incoming drops | `feature/incoming-drop-routing-20261112` · `a452b7a` · PR #61 | 118 tests passed across six drop/operation suites and the terminal service suite; focused analysis clean | Implemented; real OS/browser drag acceptance pending |
 | G02 direct Quick Open | `feature/quick-open-actions-20261112` · `baccf47` · PR #63 | 193 tests passed across nine navigation/rename suites and three conversion suites; focused analysis has no errors/warnings | Closed for the direct saved-item workflow |
-| G37 FTP transport lifetime | `feature/ftp-transport-lifetime-20261112` | 145 tests passed across nine FTP/SOCKS/TLS suites, including 24 native lifetime cases | Closed for owned transport cleanup; queue API boundary documented |
+| G37 FTP transport lifetime | `feature/ftp-transport-lifetime-20261112` · `c8f4561` · PR #64 | 145 tests passed across nine FTP/SOCKS/TLS suites, including 24 native lifetime cases | Closed for owned transport cleanup; queue API boundary documented |
+| G04 configurable menus | `feature/configurable-menus-20261112` | 96 tests passed across 11 menu, screen, keyboard, navigation and SQLite-runtime suites | Implemented; native presentation and keyboard acceptance pending |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.
