@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -21,6 +22,7 @@ class StandaloneParserSyncTest(unittest.TestCase):
             self.git(repository, 'init', '-q')
             self.git(repository, 'config', 'user.email', 'test@example.invalid')
             self.git(repository, 'config', 'user.name', 'Test')
+            self.git(repository, 'config', 'core.filemode', 'true')
         self.host.mkdir()
         self.old = {'pubspec.yaml': b'name: legacy_doc_parser\n', 'LICENSE': b'MPL source notice\n',
                     'lib/legacy_doc_parser.dart': b'old parser\n', 'doc/old.md': b'old note\n'}
@@ -82,6 +84,63 @@ class StandaloneParserSyncTest(unittest.TestCase):
         self.assertEqual((self.host / 'lib/host.dart').read_bytes(), b'host customization\n')
         _, failures = verifier.verify(self.host, self.quds, self.source)
         self.assertEqual(failures, [])
+
+    def test_new_executable_uses_committed_mode_and_bytes(self):
+        name = 'tool/check.sh'
+        script = b'#!/bin/sh\nexit 0\n'
+        self.write(self.source, name, script)
+        (self.source / name).chmod(0o755)
+        after = self.commit(self.source)
+        self.assertTrue(self.git(self.source, 'ls-tree', after, '--', name).startswith('100755 '))
+        # The checked-out source may differ; the exact commit is authoritative.
+        (self.source / name).chmod(0o644)
+        (self.source / name).write_bytes(b'uncommitted source\n')
+        # Existing callers still receive the same (commit, byte-map) pair.
+        commit, files = legacy.source_tree(self.source, after)
+        self.assertEqual(commit, after)
+        self.assertEqual(files[name], script)
+        change = legacy.plan(self.source, self.host, after)
+        target = self.host / legacy.PREFIX / name
+        self.assertFalse(target.exists())
+        office.apply(self.host, change)
+        self.assertEqual(target.read_bytes(), script)
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o755)
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source)[1], [])
+
+    def test_mode_only_updates_are_applied_in_both_directions(self):
+        name = 'lib/legacy_doc_parser.dart'
+        target = self.host / legacy.PREFIX / name
+        for mode in (0o755, 0o644):
+            with self.subTest(mode=oct(mode)):
+                (self.source / name).chmod(mode)
+                after = self.commit(self.source)
+                change = legacy.plan(self.source, self.host, after)
+                self.assertIn(f'{legacy.PREFIX}/{name}', change['writes'])
+                self.assertEqual(target.read_bytes(), self.old[name])
+                self.assertNotEqual(stat.S_IMODE(target.stat().st_mode), mode)
+                office.apply(self.host, change)
+                self.assertEqual(stat.S_IMODE(target.stat().st_mode), mode)
+                self.assertEqual(target.read_bytes(), self.old[name])
+                self.assertEqual(verifier.verify(self.host, legacy_source=self.source)[1], [])
+
+    def test_mirror_executable_bit_drift_blocks_every_planned_write(self):
+        after = self.update()
+        target = self.host / legacy.PREFIX / 'lib/legacy_doc_parser.dart'
+        target.chmod(0o755)
+        original = (self.host / 'pubspec.yaml').read_bytes()
+        with self.assertRaisesRegex(office.SyncError, 'mode drift'):
+            legacy.plan(self.source, self.host, after)
+        self.assertEqual((self.host / 'pubspec.yaml').read_bytes(), original)
+        self.assertEqual(target.read_bytes(), b'old parser\n')
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o755)
+
+    def test_verifier_reports_executable_bit_drift_against_pinned_source(self):
+        after = self.update()
+        office.apply(self.host, legacy.plan(self.source, self.host, after))
+        name = 'lib/legacy_doc_parser.dart'
+        (self.host / legacy.PREFIX / name).chmod(0o755)
+        failures = verifier.verify(self.host, legacy_source=self.source)[1]
+        self.assertIn(f'standalone parser mode mismatch: {name}', failures)
 
     def test_modified_or_extra_mirror_source_refuses_every_write(self):
         after = self.update()

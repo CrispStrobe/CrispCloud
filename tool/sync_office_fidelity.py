@@ -144,10 +144,16 @@ def plan(source, target_root, ref, branch=None):
 def apply(target_root, change):
     # Validate the whole plan before reaching this function. Each replacement
     # uses a sibling temporary file; never truncate a live vendored source.
+    modes = change.get('modes', {})
+    if (set(modes) - set(change['writes'])
+            or any(mode not in (0o644, 0o755) for mode in modes.values())):
+        raise SyncError('Invalid source modes in sync plan')
     for name, data in change['writes'].items():
         path = target_root/name
         path.parent.mkdir(parents=True, exist_ok=True)
-        mode = path.stat().st_mode & 0o777 if path.exists() else 0o644
+        mode = modes.get(name)
+        if mode is None:
+            mode = path.stat().st_mode & 0o777 if path.exists() else 0o644
         with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as temporary:
             temporary.write(data)
             temporary.flush()

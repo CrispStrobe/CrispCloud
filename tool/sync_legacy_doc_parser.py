@@ -2,8 +2,9 @@
 """Dry-run or apply an exact standalone legacy-doc-parser mirror update.
 
 Requires both pinned commits in a local parser checkout. Every existing source
-byte and the complete mirror inventory are checked before writes. No network,
-release evidence, distribution policy or Quds source is changed by this tool.
+byte, Git executable bit and the complete mirror inventory are checked before
+writes. No network, release evidence, distribution policy or Quds source is
+changed by this tool.
 """
 from __future__ import annotations
 
@@ -20,12 +21,13 @@ REPOSITORY = office.LEGACY_REPOSITORY
 GENERATED_DIRECTORIES = {'.dart_tool', 'build', '__pycache__', 'coverage'}
 
 
-def source_tree(source, ref):
+def source_snapshot(source, ref):
+    """Return committed bytes and Git regular-file modes, never worktree modes."""
     commit = office.git(source, 'rev-parse', '--verify', '--end-of-options', ref + '^{commit}').decode().strip()
     records = office.git(source, 'ls-tree', '-rzl', '--full-tree', commit).split(b'\0')
     if len(records) > 5001:
         raise office.SyncError('Standalone parser source exceeds the file-count limit')
-    files, total = {}, 0
+    files, modes, total = {}, {}, 0
     for record in records:
         if not record:
             continue
@@ -44,12 +46,24 @@ def source_tree(source, ref):
         if len(data) != length:
             raise office.SyncError('Standalone parser source extent changed')
         files[name] = data
+        modes[name] = int(mode[-3:], 8)
     if not re.search(rb'^name:\s*legacy_doc_parser\s*$', files.get('pubspec.yaml', b''), re.MULTILINE):
         raise office.SyncError('Source commit is not the legacy_doc_parser package')
     for required in ('LICENSE', 'lib/legacy_doc_parser.dart'):
         if required not in files:
             raise office.SyncError(f'Standalone package lacks required source: {required}')
+    return commit, files, modes
+
+
+def source_tree(source, ref):
+    """Retain the existing two-value byte-inventory interface."""
+    commit, files, _ = source_snapshot(source, ref)
     return commit, files
+
+
+def file_mode(path):
+    """Git regular-file mode: only the owner's executable bit is recorded."""
+    return 0o755 if path.stat().st_mode & 0o100 else 0o644
 
 
 def mirror_files(directory, tracked):
@@ -86,8 +100,8 @@ def plan(source, target_root, ref):
     if (upstream.get('repository') != REPOSITORY or upstream.get('patches') != []
             or not re.fullmatch(r'[0-9a-f]{40}', upstream.get('commit', ''))):
         raise office.SyncError('Legacy mirror needs an exact unpatched upstream pin')
-    before, old = source_tree(source, upstream['commit'])
-    after, new = source_tree(source, ref)
+    before, old, old_modes = source_snapshot(source, upstream['commit'])
+    after, new, new_modes = source_snapshot(source, ref)
     mirror = target_root / PREFIX
     if mirror.is_symlink() or not mirror.resolve().is_relative_to(target_root.resolve()):
         raise office.SyncError('Standalone parser mirror escapes the host checkout')
@@ -98,6 +112,8 @@ def plan(source, target_root, ref):
         if (not path.is_file() or path.stat().st_size != len(data)
                 or path.read_bytes() != data):
             raise office.SyncError(f'Standalone parser vendor drift: {name}')
+        if file_mode(path) != old_modes[name]:
+            raise office.SyncError(f'Standalone parser mode drift: {name}')
     # Validate the entire existing inventory before deriving a new one. Quds
     # files and their historical source identity remain byte-for-byte intact.
     for name, expected in manifest['files'].items():
@@ -118,7 +134,10 @@ def plan(source, target_root, ref):
         raise office.SyncError('App Git dependency does not match the current parser mirror')
     updated_pubspec = re.sub(pattern, lambda match: match[1] + after.encode() + match[3], pubspec)
     new_upstream = {'repository': REPOSITORY, 'commit': after, 'patches': []}
-    writes = {f'{PREFIX}/{name}': data for name, data in new.items() if old.get(name) != data}
+    writes = {f'{PREFIX}/{name}': data for name, data in new.items()
+              if old.get(name) != data or old_modes.get(name) != new_modes[name]}
+    modes = {f'{PREFIX}/{name}': mode for name, mode in new_modes.items()
+             if f'{PREFIX}/{name}' in writes}
     writes[f'{PREFIX}/UPSTREAM.json'] = (json.dumps(new_upstream, indent=2) + '\n').encode()
     writes['pubspec.yaml'] = updated_pubspec
     deletes = [f'{PREFIX}/{name}' for name in sorted(set(old) - set(new))]
@@ -126,7 +145,7 @@ def plan(source, target_root, ref):
     hashes.update({f'{PREFIX}/{name}': office.digest(data) for name, data in new.items()})
     sources = {**manifest.get('standalone_sources', {}), PREFIX: {'repository': REPOSITORY, 'commit': after}}
     result = dict(manifest, standalone_sources=sources, files=hashes)
-    return {'before': before, 'after': after, 'writes': writes, 'deletes': deletes,
+    return {'before': before, 'after': after, 'writes': writes, 'modes': modes, 'deletes': deletes,
             'manifest': result, 'manifest_path': manifest_path}
 
 

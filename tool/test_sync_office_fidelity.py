@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -65,6 +66,17 @@ class SyncOfficeFidelityTest(unittest.TestCase):
         with self.assertRaisesRegex(sync.SyncError, 'Vendor drift'):
             sync.plan(self.source, self.host, 'HEAD')
         self.assertEqual((self.host/self.name).read_text(), 'host customization')
+
+    def test_apply_without_source_modes_keeps_existing_permission_behavior(self):
+        target = self.host/self.name
+        target.chmod(0o755)
+        self.write_source(self.name, 'after')
+        self.commit()
+        change = sync.plan(self.source, self.host, 'HEAD')
+        self.assertNotIn('modes', change)
+        sync.apply(self.host, change)
+        self.assertEqual(target.read_text(), 'after')
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o755)
 
     def test_new_path_collision_refuses_every_write(self):
         new = 'packages/quds_office_engine/test/new.dart'
