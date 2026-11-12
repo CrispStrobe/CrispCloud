@@ -8,7 +8,7 @@ export 'linux_host_status.dart';
 /// Shared only by the package's Linux host and its runtime probe.
 const ebookLinuxHostChannel = MethodChannel('crisp_ebook_reader/linux_host');
 
-/// Checks the native plugin and dynamically loaded system WebKitGTK runtime.
+/// Checks the native plugin, system runtime and isolated browser startup.
 ///
 /// A Linux build without WebKit headers, or an installation without the runtime,
 /// remains launchable and returns a useful explanation here. Callers must also
@@ -23,7 +23,8 @@ Future<EbookLinuxHostStatus> probeEbookLinuxHost() async {
   try {
     final value = await ebookLinuxHostChannel
         .invokeMapMethod<String, dynamic>('probe')
-        .timeout(const Duration(seconds: 5));
+        // Native startup has an eight-second deadline, including child cleanup.
+        .timeout(const Duration(seconds: 10));
     if (value == null ||
         value['runtime'] != 'webkitgtk-4.1' ||
         value['available'] is! bool) {

@@ -6,11 +6,12 @@ import {exportPublication, metadataOf} from './normalize.js'
 import {normalizeAppearance, appearanceStyle, readingCapabilities, progressFraction,
     navigationHistory, navigateHistory, createNavigationQueue,
     guardRendererLifecycle} from './reader_controls.js'
+import {createReaderSearch} from './reader_search.js'
 
 const session = decodeURIComponent(location.hash.slice(1))
 const status = document.getElementById('status')
 let book = null, view = null, filename = '', sourceFormat = '', cleanupSections = null
-let opened = false, appearance = normalizeAppearance(), searchGeneration = 0
+let opened = false, appearance = normalizeAppearance(), searchSession = null
 const highlights = new Map()
 const enqueueNavigation = createNavigationQueue()
 const navigationMethods = new Set(['open','next','previous','goTo','goToFraction',
@@ -62,12 +63,15 @@ function applyAppearance(options) {
 }
 async function open(args) {
     opened = true
-    if (view) { view.close(); view.remove() }
+    searchSession?.dispose()
+    searchSession = null
+    const previousView = view
+    view = null
+    if (previousView) { previousView.close(); previousView.remove() }
     cleanupSections?.()
     book?.destroy?.()
     book = null
     appearance = normalizeAppearance(args.appearance)
-    ++searchGeneration
     highlights.clear()
     filename = String(args.filename || 'book.epub').slice(0, 512)
     const suffix = filename.toLowerCase().split('.').pop()
@@ -84,24 +88,28 @@ async function open(args) {
     view = document.createElement('foliate-view')
     document.getElementById('reader').append(view)
     const currentView = view
+    searchSession = createReaderSearch(currentView)
     currentView.history.addEventListener('index-change', () => {
         if (view === currentView)
             send({event:'history', data:navigationHistory(currentView)})
     })
     view.addEventListener('external-link', event => {
         event.preventDefault()
+        if (view !== currentView) return
         const href = String(event.detail.href_ ?? '')
         if (/^(https?:|mailto:)/i.test(href)) send({event:'externalLink', data:href})
     })
     view.addEventListener('load', ({detail:{doc,index}}) => {
+        if (view !== currentView) return
         let selectionTimer
         doc.addEventListener('selectionchange', () => {
             clearTimeout(selectionTimer)
             selectionTimer = setTimeout(() => {
+                if (view !== currentView) return
                 const selection = doc.getSelection()
                 if (!selection?.rangeCount || selection.isCollapsed) return
                 send({event:'selection', data:{text:selection.toString().slice(0, 20000),
-                    cfi:view.getCFI(index, selection.getRangeAt(0)), sectionIndex:index}})
+                    cfi:currentView.getCFI(index, selection.getRangeAt(0)), sectionIndex:index}})
             }, 150)
         })
         doc.addEventListener('keydown', event => {
@@ -115,12 +123,17 @@ async function open(args) {
             }
         })
     })
-    view.addEventListener('relocate', ({detail}) => send({event:'location', data:{
-        cfi:detail.cfi, fraction:Number.isFinite(detail.fraction) ? progressFraction(detail.fraction) : 0,
-        chapterTitle:detail.tocItem?.label ?? '', sectionIndex:detail.section?.current ?? 0}}))
+    view.addEventListener('relocate', ({detail}) => {
+        if (view === currentView) send({event:'location', data:{
+            cfi:detail.cfi, fraction:Number.isFinite(detail.fraction) ? progressFraction(detail.fraction) : 0,
+            chapterTitle:detail.tocItem?.label ?? '', sectionIndex:detail.section?.current ?? 0}})
+    })
     view.addEventListener('draw-annotation', ({detail:{draw,annotation}}) => draw(Overlayer.highlight, {color:annotation.color}))
     view.addEventListener('create-overlay', () => {
-        requestAnimationFrame(() => { for (const annotation of highlights.values()) view.addAnnotation(annotation).catch(() => {}) })
+        requestAnimationFrame(() => {
+            if (view !== currentView) return
+            for (const annotation of highlights.values()) currentView.addAnnotation(annotation).catch(() => {})
+        })
     })
     await view.open(book)
     guardRendererLifecycle(view)
@@ -135,20 +148,7 @@ async function open(args) {
 }
 async function search({query,limit = 200}) {
     requireBook()
-    const generation = ++searchGeneration
-    query = String(query ?? '').trim().slice(0, 1000)
-    if (!query) { view.clearSearch(); return [] }
-    const hits = []
-    for await (const result of view.search({query, matchCase:false, matchDiacritics:false, matchWholeWords:false})) {
-        if (generation !== searchGeneration) break
-        for (const match of result.subitems ?? []) {
-            const excerpt = typeof match.excerpt === 'string' ? match.excerpt
-                : [match.excerpt?.pre, match.excerpt?.match, match.excerpt?.post].filter(Boolean).join('')
-            hits.push({cfi:match.cfi, excerpt, sectionIndex:result.index})
-            if (hits.length >= Math.min(1000, Math.max(1, limit))) return hits
-        }
-    }
-    return hits
+    return searchSession.search({query, limit})
 }
 const methods = {
     open,
@@ -165,7 +165,7 @@ const methods = {
     historyForward:async () => { requireBook(); return navigateHistory(view, 'forward') },
     appearance:async args => applyAppearance(args),
     search,
-    clearSearch:async () => { requireBook(); ++searchGeneration; view.clearSearch() },
+    clearSearch:async () => { requireBook(); searchSession.clear() },
     addHighlight:async ({id,cfi,color,note}) => {
         requireBook()
         if (typeof id !== 'string' || typeof cfi !== 'string' || !cfi.startsWith('epubcfi(')) throw new Error('Invalid annotation')
@@ -203,7 +203,12 @@ window.addEventListener('message', event => {
 window.addEventListener('unhandledrejection', event => {
     if (!opened) fail(event.reason)
 })
-window.addEventListener('pagehide', () => { cleanupSections?.(); book?.destroy?.() })
+window.addEventListener('pagehide', () => {
+    searchSession?.dispose()
+    cleanupSections?.()
+    book?.destroy?.()
+    view = null
+})
 // Native JS channels may be installed after the module has evaluated.
 ready()
 const readyTimer = setInterval(() => { if (opened) clearInterval(readyTimer); else ready() }, 400)

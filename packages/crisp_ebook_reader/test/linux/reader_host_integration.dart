@@ -26,15 +26,41 @@ Future<void> until(WidgetTester tester, Future<bool> Function() condition,
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  const portable = bool.fromEnvironment('EXPECT_PORTABLE');
+  const blocked = bool.fromEnvironment('EXPECT_RUNTIME_BLOCKED');
 
-  testWidgets('real inline Linux rendering, input, isolation and teardown',
+  testWidgets(
+      portable
+          ? 'portable-only Linux host remains usable'
+          : blocked
+              ? 'unusable Linux runtime keeps Flutter responsive'
+              : 'real inline Linux rendering, input, isolation and teardown',
       (tester) async {
+    expect(portable && blocked, isFalse,
+        reason: 'The native gate must select one distinct runtime scenario.');
     debugPrint('linux-host test: probing native host');
     final status = await probeEbookLinuxHost();
     debugPrint('linux-host test: probe completed');
-    if (const bool.fromEnvironment('EXPECT_PORTABLE')) {
+    if (portable) {
       expect(status.available, isFalse);
       expect(status.reason, contains('build'));
+      return;
+    }
+    if (blocked) {
+      // This is a distinct fallback test, never a substitute for the required
+      // successful enhanced-rendering run below. The runtime must be present:
+      // the isolated startup failure must leave the application responsive.
+      expect(status.available, isFalse);
+      expect(status.runtime, 'webkitgtk-4.1');
+      expect(status.version, isNotEmpty);
+      expect(status.reason, contains('sandboxed Linux browser'));
+      await expectLater(
+          native.invokeMethod('create'), throwsA(isA<PlatformException>()));
+      expect((await stats())['views'], 0);
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(body: Text('Portable reader remains available')),
+      ));
+      expect(find.text('Portable reader remains available'), findsOneWidget);
       return;
     }
     expect(status.available, isTrue, reason: status.reason);

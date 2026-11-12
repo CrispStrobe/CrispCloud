@@ -848,6 +848,7 @@ The integration combines the recorded KeePass and ebook inventories without chan
 
 The macOS transfer cleanup reconciliation uses the same existing root-owned system-link exception as normal file writes. It changes filesystem parent validation only; user-directory links remain refused. The ebook host now reports an absent browser platform plugin through its existing fallback path. Neither change adds cryptographic operations or network destinations.
 
+
 ### Fatal-launch diagnostic refinement
 
 The next delta changes only the native plugin among the 207 bound paths. With
@@ -892,3 +893,71 @@ existing source plist declarations, Apple documentation status (`unreviewed`),
 questionnaire requirement, territory decisions or distribution controls.
 The source evidence check passed; submission validation still rejects the
 missing questionnaire result. No Apple API call or filing was made.
+
+## Interrupted-session recovery: main synchronization
+
+Merged `main` at `977b5037f133cb2d33c57db761864183455a705e` into the recovered ebook branch at `280f55167f43f227068d8a462a88aabc18e56afb`. The combined inventory retains all 207 ebook-branch paths and all 16 additional Rust-cloud paths from main (223 unique paths). Of those, 222 source files match one parent byte for byte. The remaining file, `lib/main.dart`, retains the ebook license import and registration from the feature branch plus the native secure-storage initialization call to `PlatformSecureStorage.detectMacOsKeychain()` from main; both parent diffs were inspected. Both inventories and their component descriptions remain present. All non-digest export-policy fields agree between the parents and remain unchanged.
+
+The committed merge-specific source was used for these bindings so concurrent, uncommitted follow-up fixes are not incorrectly covered by this checkpoint:
+
+```json
+{
+  "inventory_sha256": "1b8932cf629788fc5d3fb261155e6d515ca22900f61caebd9482204fb25e186a",
+  "pubspec_lock_sha256": "3b1a93697f3b0c8b43fb436989247219524baa00b6f2357c75bac8fabb0a9673",
+  "reviewed_source_sha256": "1eaaa2689cadc29fb891301601b692fbb76cf8212e8a79e2bc1c7f76db8cef97"
+}
+```
+
+This source identity check preserves the scope of each parent review; it does not establish native Linux readiness or alter distribution approval. Follow-up source changes require their own reviewed bindings.
+
+## Reading lifecycle corrections after recovery
+
+Reviewed explicit-discard handling in the editor, the section resource loader, and the host-owned search adapter. Explicit discard now suppresses the final best-effort write and relocation callbacks during closing. The resource loader shares in-flight work, retains only immutable sanitized search snapshots across unload, and releases late resources. The search adapter bounds inputs, serializes mutable Foliate iterators, returns cancellation promptly and suppresses stale overlays/events without modifying pinned vendor code. Search hit section numbers are resolved from their CFIs. No new network, cryptographic or credential capability is introduced. The only root dependency change promotes the already-locked shared_preferences_platform_interface 2.4.2 to a direct development dependency for the one-shot write-failure regression.
+
+The inventory adds reader_search.js (224 total paths). Default and forced missing-grouping/raw-DEFLATE parser regressions, vendor integrity and focused Dart analysis passed. The actual browser regression is committed for CI; local application tests are awaiting the restored native build toolchain. These bindings use staged source and exclude the temporary local SQLite test configuration and still-uncommitted Linux-host work. All non-digest policy values remain unchanged.
+
+```json
+{
+  "inventory_sha256": "51e68885d5401faac89272c84af86753e5627a5bad6ed6ab14e5925a11e3d3f4",
+  "pubspec_lock_sha256": "5df7dcfb50f5ffc6c1649adaad649c8d7c577ece5aac6eb8ba1753c7e75703fe",
+  "reviewed_source_sha256": "62a74997da1d2566bc728dd26d9918a9821d08aa2737268cd92b79531a7407a0"
+}
+```
+
+## Isolated Linux WebKit startup and owned process cleanup
+
+Reviewed the native plugin, fixed-page helper, shared settings, bounded child runner, CMake packaging and Dart deadline. Before creating a view, the plugin asynchronously requires the helper to demonstrate script execution and an actual painted snapshot with the same ephemeral context, enabled sandbox and view settings. No publication or account input enters the helper; its fixed document disallows network resources. The helper alone has a direct system-WebKit dependency. Missing runtimes/helpers, denied startup, crashes and timeouts produce an unavailable-host result. The app performs no browser load in that failure path.
+
+The runner coalesces up to 32 callers, caches for two seconds, invalidates after real reader errors, and enforces an eight-second parent deadline. The child gets its own process group, closes inherited descriptors, discards standard streams and disables core dumps. waitid with WNOWAIT retains ownership of an exited leader PID while residual group members are stopped; only then does waitpid reap it. A foreign reaper causes a closed failure without signaling an unowned PID. No browser sandbox or host policy is disabled. The added system process primitives do not add cryptography, a network capability or a credential store. All non-digest policy fields remain unchanged.
+
+Seven actual subprocess regression scenarios passed with warnings treated as errors. The helper also passed syntax compilation against real GTK 3.24.49 and WebKitGTK 2.52.6 headers. Full linking, deferred executable installation and enhanced publication rendering remain hosted gates at this checkpoint. CI distinguishes required enhanced rendering on Ubuntu 22.04, blocked-startup recovery on the existing Ubuntu 24.04 runner, and portable-only launch. The 22.04 distribution provides maintained WebKitGTK 4.1 above the existing minimum; no acceptance assertion or browser setting is weakened.
+
+The inventory adds three helper/runner/settings files, for 227 paths. Index-based bindings exclude the temporary local test configuration:
+
+```json
+{
+  "inventory_sha256": "2b459148f02ecba0abefa23f749366e27fa76f0d28371724a3e1cb2056c87302",
+  "pubspec_lock_sha256": "5df7dcfb50f5ffc6c1649adaad649c8d7c577ece5aac6eb8ba1753c7e75703fe",
+  "reviewed_source_sha256": "97b9a5222922a789157c67f138c24aa4ee72f6959870f0cb51c5f76c83c9aec8"
+}
+```
+
+## Integration source binding
+
+The integration combines the recorded KeePass and ebook inventories without changing the stored distribution decisions. Duplicate reviewed paths are removed. The Word parser now lives in the shared Quds engine; it parses and serializes user documents without introducing cryptographic operations. The new directory selection comparison uses names, sizes and timestamps, and the new clipboard commands only copy names or paths. Fingerprints bind the merged inventory, resolved lockfile and exact reviewed source bytes. They do not represent a new Apple approval or distribution review.
+
+The macOS transfer cleanup reconciliation uses the same existing root-owned system-link exception as normal file writes. It changes filesystem parent validation only; user-directory links remain refused. The ebook host now reports an absent browser platform plugin through its existing fallback path. Neither change adds cryptographic operations or network destinations.
+
+## Ebook recovery synchronized with integrated main
+
+Merged `main` at `02be67fe` into the recovered ebook feature at `04429947`, preserving its integrated office, file-manager, provider and ebook-platform changes. Both inventory path sets and all source-review narrative sections are retained, with duplicate paths removed. Of the 292 inventoried files, every file except pubspec.yaml matches at least one parent exactly. The combined pubspec equals main plus the already-reviewed direct development dependency shared_preferences_platform_interface 2.4.2; production constraints and pins come unchanged from main. The native browser-platform fallback and macOS dependency resolution from main are retained. All non-digest export-policy fields agreed between parents and remain unchanged.
+
+The merged source now requires its own application/build verification. Historical acceptance remains tied to the source revision that produced it. Exact merged bindings:
+
+```json
+{
+  "inventory_sha256": "6d74f0fa232f6d73ea3a934005e4f60b65627eb724b2e571595171a8fa640602",
+  "pubspec_lock_sha256": "e4af3d0674ff75b84ea258f7ed72a3d89c071eaad7cabac37d40b6997b32a9f1",
+  "reviewed_source_sha256": "c1077a5e50563e81a56c326e1100595d10e943d16268ab52350b4a3af99426f8"
+}
+```

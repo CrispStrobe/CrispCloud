@@ -158,9 +158,34 @@ try {
     assert.equal(await page.evaluate(() => window.__sandboxEscape),undefined)
     assert.equal(await page.evaluate(() => localStorage.getItem('crisp-sandbox-escape')),null)
     await page.evaluate(() => { URL.revokeObjectURL(window.__sandboxProbe.src); window.__sandboxProbe.remove() })
+    // Suspend an actual Foliate document read, then cancel through the public
+    // bridge. Its iterator updates shared overlays before yielding; a canceled
+    // iteration must not reintroduce outlines after the clear command returns.
+    await page.evaluate(() => {
+        const section = document.querySelector('foliate-view').book.sections[0]
+        const createDocument = section.createDocument
+        const gate = new Promise(resolve => { window.__resumeSearchRead = resolve })
+        section.createDocument = async () => {
+            section.createDocument = createDocument
+            window.__searchReadStarted = true
+            await gate
+            return createDocument()
+        }
+    })
+    const canceledSearch = command('search',{query:'library'})
+    await page.waitForFunction(() => window.__searchReadStarted === true)
+    await command('clearSearch')
+    assert.deepEqual(await canceledSearch, [], 'Cancellation must reply before the document read resumes')
+    await page.evaluate(() => window.__resumeSearchRead())
+    assert.deepEqual(await command('search',{query:'unmatchable-crisp-cancellation-probe'}), [])
+    assert.equal(await page.evaluate(() => document.querySelector('foliate-view').renderer
+        .getContents().reduce((count, item) => count + (item.overlayer?.element.childElementCount ?? 0), 0)), 0,
+        'No canceled search overlays may remain after the next query')
     const hits = await command('search',{query:'library',limit:10})
     assert(hits.length > 0)
     assert(hits[0].cfi.startsWith('epubcfi('))
+    const secondChapterHit = await command('search',{query:'journey',limit:10})
+    assert(secondChapterHit.some(hit => hit.sectionIndex === 1), 'Search hits retain the actual section index')
     await command('goTo',{target:info.toc[0].children[0].href})
     await command('appearance',{theme:'dark',fontSize:22,flow:'scrolled'})
     await command('addHighlight',{id:'fixture',cfi:hits[0].cfi,color:'#f9d66b'})

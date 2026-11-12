@@ -16,9 +16,12 @@
 #include <vector>
 
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
+#include <dlfcn.h>
 #include <epoxy/gl.h>
 #include <webkit2/webkit2.h>
+#include "reader_runtime_probe.h"
 #include "reader_surface_size.h"
+#include "reader_webkit_settings.h"
 #endif
 
 namespace {
@@ -203,6 +206,16 @@ struct WebKitApi {
   }
 };
 
+std::string ProbeExecutable() {
+  Dl_info module = {};
+  if (dladdr(reinterpret_cast<const void*>(&crisp_ebook_reader_plugin_register_with_registrar),
+             &module) == 0 || module.dli_fname == nullptr) return "";
+  g_autofree char* absolute = g_canonicalize_filename(module.dli_fname, nullptr);
+  g_autofree char* directory = g_path_get_dirname(absolute);
+  g_autofree char* helper = g_build_filename(directory, "crisp_ebook_webkit_probe", nullptr);
+  return helper;
+}
+
 struct Frame {
   uint32_t width = 1;
   uint32_t height = 1;
@@ -341,9 +354,9 @@ class TexturePool {
 class ReaderView : public std::enable_shared_from_this<ReaderView> {
  public:
   ReaderView(int64_t id, FlMethodChannel* channel, FlTextureRegistrar* registrar,
-             TexturePool& textures)
+             TexturePool& textures, std::shared_ptr<crisp_ebook::RuntimeProbe> readiness)
       : id_(id), channel_(channel), registrar_(registrar), textures_(textures),
-        api_(WebKitApi::Get()) {}
+        api_(WebKitApi::Get()), readiness_(std::move(readiness)) {}
   ~ReaderView() { Close(); }
 
   bool Initialize(std::string* error) {
@@ -359,20 +372,9 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
         g_object_new(api_.webkit_web_view_get_type(), "web-context", context_, nullptr));
     Trace("configuring WebKit view");
     auto* settings = api_.webkit_web_view_get_settings(webview_);
-    api_.webkit_settings_set_enable_javascript(settings, TRUE);
-    api_.webkit_settings_set_javascript_can_open_windows_automatically(settings, FALSE);
-    api_.webkit_settings_set_allow_file_access_from_file_urls(settings, FALSE);
-    api_.webkit_settings_set_allow_universal_access_from_file_urls(settings, FALSE);
-    api_.webkit_settings_set_enable_html5_local_storage(settings, FALSE);
-    api_.webkit_settings_set_enable_html5_database(settings, FALSE);
-    api_.webkit_settings_set_enable_page_cache(settings, FALSE);
-    api_.webkit_settings_set_enable_developer_extras(settings, FALSE);
-    api_.webkit_settings_set_enable_media_stream(settings, FALSE);
-    api_.webkit_settings_set_media_playback_requires_user_gesture(settings, TRUE);
     // GTK offscreen windows cannot present a browser compositor surface. The
     // public snapshot API paints into CPU memory; Flutter owns the GL upload.
-    api_.webkit_settings_set_hardware_acceleration_policy(
-        settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+    crisp_ebook::ConfigureWebKitSettings(api_, settings);
     content_ = api_.webkit_web_view_get_user_content_manager(webview_);
     g_signal_connect(content_, "script-message-received::CrispEbookMessage", G_CALLBACK(Message), this);
     if (!api_.webkit_user_content_manager_register_script_message_handler(content_, "CrispEbookMessage")) {
@@ -646,6 +648,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   }
   void Emit(const char* type, const std::string& data) {
     if (closed_) return;
+    if (std::strcmp(type, "error") == 0) readiness_->Invalidate();
     g_autoptr(FlValue) event = fl_value_new_map();
     fl_value_set_string_take(event, "id", fl_value_new_int(id_));
     Put(event, "type", type);
@@ -686,7 +689,10 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     auto view = evaluation->view.lock();
     if (evaluation->call != nullptr) {
       if (view == nullptr || view->closed_) Error(evaluation->call, "The Linux reader closed before the command completed.");
-      else if (error != nullptr) Error(evaluation->call, error->message);
+      else if (error != nullptr) {
+        view->readiness_->Invalidate();
+        Error(evaluation->call, error->message);
+      }
       else fl_method_call_respond_success(evaluation->call, nullptr, nullptr);
       g_object_unref(evaluation->call);
     } else if (view != nullptr && !view->closed_ && error != nullptr &&
@@ -798,7 +804,8 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     return TRUE;
   }
   static void Terminated(WebKitWebView*, WebKitWebProcessTerminationReason, gpointer data) {
-    static_cast<ReaderView*>(data)->Emit("error", "The Linux browser process stopped. Reopen the book or use the portable reader.");
+    auto* self = static_cast<ReaderView*>(data);
+    self->Emit("error", "The Linux browser process stopped. Reopen the book or use the portable reader.");
   }
   static gboolean Permission(WebKitWebView*, WebKitPermissionRequest* request, gpointer data) {
     static_cast<ReaderView*>(data)->api_.webkit_permission_request_deny(request); return TRUE;
@@ -827,6 +834,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   FlTextureRegistrar* registrar_;
   TexturePool& textures_;
   WebKitApi& api_;
+  std::shared_ptr<crisp_ebook::RuntimeProbe> readiness_;
   WebKitWebContext* context_ = nullptr;
   WebKitWebView* webview_ = nullptr;
   WebKitUserContentManager* content_ = nullptr;
@@ -852,11 +860,13 @@ class Plugin {
   Plugin(FlMethodChannel* channel, FlTextureRegistrar* registrar)
       : channel_(channel), registrar_(FL_TEXTURE_REGISTRAR(g_object_ref(registrar)))
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
-        , textures_(registrar_)
+        , textures_(registrar_), readiness_(std::make_shared<crisp_ebook::RuntimeProbe>(ProbeExecutable()))
 #endif
         {}
   ~Plugin() {
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
+    *alive_ = false;
+    readiness_->Cancel();
     for (auto& entry : views_) entry.second->Close();
     views_.clear();
 #endif
@@ -867,22 +877,16 @@ class Plugin {
     const std::string method = fl_method_call_get_name(call);
     FlValue* args = fl_method_call_get_args(call);
     if (method == "probe") {
+#ifdef CRISP_EBOOK_HAS_WEBKITGTK
+      CheckReadiness(call, false);
+#else
       g_autoptr(FlValue) status = fl_value_new_map();
       Put(status, "runtime", kRuntime);
-#ifdef CRISP_EBOOK_HAS_WEBKITGTK
-      auto& api = WebKitApi::Get();
-      const bool software = g_strcmp0(g_getenv("FLUTTER_LINUX_RENDERER"), "software") == 0;
-      const bool available = api.available && !software && gdk_display_get_default() != nullptr;
-      fl_value_set_string_take(status, "available", fl_value_new_bool(available));
-      if (!api.version.empty()) Put(status, "version", api.version);
-      if (!available) Put(status, "reason", software ?
-          "The embedded Linux reader requires Flutter's OpenGL renderer. The portable reader is available in software-rendering mode." :
-          api.reason.empty() ? "A graphical Linux session is required." : api.reason);
-#else
       fl_value_set_string_take(status, "available", fl_value_new_bool(false));
       Put(status, "reason", "This build has no WebKitGTK4.1 host. Rebuild with libwebkit2gtk-4.1-dev (2.48.4 or newer).");
+      fl_method_call_respond_success(call, status, nullptr);
 #endif
-      fl_method_call_respond_success(call, status, nullptr); return;
+      return;
     }
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
     if (method == "stats") {
@@ -895,21 +899,8 @@ class Plugin {
       fl_method_call_respond_success(call, stats, nullptr); return;
     }
     if (method == "create") {
-      auto& api = WebKitApi::Get();
-      if (!api.available) { Error(call, api.reason); return; }
-      if (g_strcmp0(g_getenv("FLUTTER_LINUX_RENDERER"), "software") == 0) {
-        Error(call, "The embedded Linux reader requires Flutter's OpenGL renderer."); return;
-      }
-      if (views_.size() >= 4) { Error(call, "The Linux reader has reached its four-view limit."); return; }
-      const int64_t id = next_id_++;
-      auto view = std::make_shared<ReaderView>(id, channel_, registrar_, textures_);
-      std::string error;
-      if (!view->Initialize(&error)) { Error(call, error); return; }
-      views_.emplace(id, view);
-      g_autoptr(FlValue) result = fl_value_new_map();
-      fl_value_set_string_take(result, "id", fl_value_new_int(id));
-      fl_value_set_string_take(result, "textureId", fl_value_new_int(view->texture_id()));
-      fl_method_call_respond_success(call, result, nullptr); return;
+      CheckReadiness(call, true);
+      return;
     }
     auto found = views_.find(Integer(args, "id", -1));
     if (method == "dispose") {
@@ -937,10 +928,61 @@ class Plugin {
   }
 
  private:
+#ifdef CRISP_EBOOK_HAS_WEBKITGTK
+  void CheckReadiness(FlMethodCall* call, bool create) {
+    auto request = std::shared_ptr<FlMethodCall>(FL_METHOD_CALL(g_object_ref(call)),
+                                               [](FlMethodCall* value) { g_object_unref(value); });
+    auto alive = alive_;
+    auto reply = [this, alive, request, create](bool available, const std::string& reason) {
+      if (!*alive) return;
+      if (create) {
+        if (!available) { Error(request.get(), reason); return; }
+        CreateReadyView(request.get());
+        return;
+      }
+      g_autoptr(FlValue) status = fl_value_new_map();
+      Put(status, "runtime", kRuntime);
+      fl_value_set_string_take(status, "available", fl_value_new_bool(available));
+      const auto& api = WebKitApi::Get();
+      if (!api.version.empty()) Put(status, "version", api.version);
+      if (!available) Put(status, "reason", reason);
+      fl_method_call_respond_success(request.get(), status, nullptr);
+    };
+    auto& api = WebKitApi::Get();
+    if (!api.available) { reply(false, api.reason); return; }
+    if (g_strcmp0(g_getenv("FLUTTER_LINUX_RENDERER"), "software") == 0) {
+      reply(false, "The embedded Linux reader requires Flutter's OpenGL renderer. The portable reader is available in software-rendering mode.");
+      return;
+    }
+    if (gdk_display_get_default() == nullptr) {
+      reply(false, "A graphical Linux session is required."); return;
+    }
+    readiness_->Check(std::move(reply));
+  }
+
+  void CreateReadyView(FlMethodCall* call) {
+    if (views_.size() >= 4) { Error(call, "The Linux reader has reached its four-view limit."); return; }
+    const int64_t id = next_id_++;
+    auto view = std::make_shared<ReaderView>(id, channel_, registrar_, textures_, readiness_);
+    std::string error;
+    if (!view->Initialize(&error)) {
+      readiness_->Invalidate();
+      Error(call, error);
+      return;
+    }
+    views_.emplace(id, view);
+    g_autoptr(FlValue) result = fl_value_new_map();
+    fl_value_set_string_take(result, "id", fl_value_new_int(id));
+    fl_value_set_string_take(result, "textureId", fl_value_new_int(view->texture_id()));
+    fl_method_call_respond_success(call, result, nullptr);
+  }
+#endif
   [[maybe_unused]] FlMethodChannel* channel_;
   FlTextureRegistrar* registrar_;
 #ifdef CRISP_EBOOK_HAS_WEBKITGTK
   TexturePool textures_;
+  std::shared_ptr<crisp_ebook::RuntimeProbe> readiness_;
+  std::shared_ptr<bool> alive_ = std::make_shared<bool>(true);
   int64_t next_id_ = 1;
   std::map<int64_t, std::shared_ptr<ReaderView>> views_;
 #endif

@@ -22,12 +22,19 @@ Older releases are rejected by the runtime probe even if their APIs appear
 compatible. That known older crash is separate from any failure on a newer
 runtime, which still requires its own native diagnostics and verification.
 
-`packages/crisp_ebook_reader/linux/CMakeLists.txt` checks for those headers. If
-they are absent, or `CRISP_EBOOK_WEBKITGTK=OFF` is set in CMake, it compiles a small
-plugin that reports the enhanced host as unavailable. The application remains
+`packages/crisp_ebook_reader/linux/CMakeLists.txt` checks for those headers and
+**CMake 3.19 or newer**. If either is absent, or `CRISP_EBOOK_WEBKITGTK=OFF` is set,
+it compiles a small plugin that reports the enhanced host as unavailable. The application remains
 buildable and launchable. GTK, GModule and the enhanced host's epoxy OpenGL
 interface are ordinary system dependencies; WebKit and JavaScriptCore are
-resolved on demand through `GModule`, with no hard browser-library dependency.
+resolved on demand through `GModule`, with no hard browser-library dependency
+in the application or plugin.
+
+The enhanced build also installs `lib/crisp_ebook_webkit_probe` beside the
+plugin. This separate executable is linked to the system browser runtime. Its
+installation is deferred until after Flutter recreates the bundle, preserving
+executable permissions. Keep the helper with the bundle when packaging it;
+an absent or non-executable helper makes the enhanced host unavailable.
 
 For an enhanced build on Ubuntu/Debian, install the maintained system package:
 
@@ -54,6 +61,32 @@ The distribution remains responsible for WebKit security updates. WebKit has
 [LGPL and BSD portions](https://webkit.org/licensing-webkit/); this integration
 does not vendor or modify its engine. That technical packaging choice does not
 replace the application's release and license review.
+
+## Isolated startup check
+
+Loading a WebKit shared library does not prove its sandboxed subprocesses can
+start. Some environments reject a required namespace or D-Bus proxy operation;
+WebKit can treat that as fatal to its embedding process. Before creating a
+reader view, the plugin launches the bundled helper with the same graphical
+session, ephemeral context, enabled sandbox and view settings. The helper
+loads only a fixed trusted page, checks JavaScript execution and verifies a
+painted snapshot. It receives no publication, URL, account or source path.
+
+The check runs asynchronously with an eight-second parent deadline, so Flutter
+can continue responding. A crash, rejected startup, missing helper or timeout
+returns an unavailable-host result and keeps the portable reader usable. On
+every exit, timeout or plugin disposal, the app stops remaining members of the
+helper's process group and reaps the direct child. It observes exit before
+reaping so the leader's PID cannot be reused during cleanup. Core dumps are
+disabled for this disposable process; native
+stdout/stderr are discarded. No browser sandbox or host security policy is
+weakened to obtain a successful result.
+
+Concurrent callers share the check. Results are cached for at most two seconds
+and real reader load, rendering or process errors invalidate them. Readiness
+reduces known process-launch failures; it cannot guarantee that a later native
+operation or changing system state will succeed. The real rendering and input
+gate below remains required.
 
 ## Native boundary and lifecycle
 
@@ -105,6 +138,14 @@ JavaScriptCore `DT_NEEDED` entry. Finally the enhanced job builds a fresh probe
 application while headers are present, removes the optional runtime on that
 disposable runner, and launches the **already-built** executable successfully
 with an unavailable-host result. No rebuilding after removal is allowed.
+
+The standalone `test/linux/runtime_probe_test.cc` exercises actual child
+processes for coalescing, short cache expiry/invalidation, abnormal exit,
+missing/non-executable helpers, timeout, disposal and process-group cleanup.
+An independent `EXPECT_RUNTIME_BLOCKED=true` integration mode requires an
+installed runtime whose sandboxed startup is rejected, verifies that direct
+view creation fails safely, and checks that Flutter remains responsive. That
+fallback result is separate from successful enhanced publication rendering.
 
 Passing Dart analysis or source inspection is insufficient native proof. The
 workflow's actual compile, framebuffer, input and runtime-absence results must
