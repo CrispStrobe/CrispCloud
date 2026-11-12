@@ -16,12 +16,14 @@ enum ArchiveEndpointFormat {
   tarZstd,
   tarLz4,
   tarLzma,
+  tarCompress,
   gzip,
   bzip2,
   xz,
   zstd,
   lz4,
   lzma,
+  compress,
   ar,
   cpio,
   xar,
@@ -73,9 +75,106 @@ class ArchiveEndpointCapabilities {
     ArchiveEndpointFormat.zstd,
     ArchiveEndpointFormat.lz4,
     ArchiveEndpointFormat.lzma,
+    ArchiveEndpointFormat.compress,
   }.contains(format);
   bool get repacksWholeContainer => true;
   bool get supportsDurableDrafts => false;
+}
+
+/// Durable, password-free evidence that a separate destination was published
+/// before this archive may remove its source members. Recovery rechecks the
+/// captured destination through the same persistent storage authority.
+class ArchivePublicationDependency {
+  ArchivePublicationDependency({
+    required this.receiptId,
+    required this.storage,
+    required FileItem file,
+    required this.sha256,
+    required this.accessPolicySha256,
+  }) : file = file.copyWith(
+         metadata: file.metadata == null
+             ? null
+             : Map.unmodifiable(Map<String, dynamic>.of(file.metadata!)),
+       ) {
+    if (!_id.hasMatch(receiptId) ||
+        !storage.persistent ||
+        file.path == null ||
+        file.path!.isEmpty ||
+        file.path!.contains('\u0000') ||
+        utf8.encode(file.path!).length > 16 * 1024 ||
+        file.isFolder ||
+        file.isSymlink == true ||
+        file.size == null ||
+        file.size! < 0 ||
+        file.size! > ArchivePublicationRecord.maximumContainerBytes ||
+        !_hash.hasMatch(sha256) ||
+        !_hash.hasMatch(accessPolicySha256)) {
+      throw const FormatException('Invalid archive destination dependency.');
+    }
+  }
+
+  static final _id = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+  );
+  static final _hash = RegExp(r'^[a-f0-9]{64}$');
+  final String receiptId;
+  final StorageReference storage;
+  final FileItem file;
+  final String sha256;
+  final String accessPolicySha256;
+
+  factory ArchivePublicationDependency.fromReceipt(
+    ArchivePublicationReceipt receipt,
+  ) {
+    final record = receipt.record;
+    if (record.published == null ||
+        record.accessPolicySha256 == null ||
+        receipt.file.path != record.original.path ||
+        receipt.file.size != record.candidateBytes ||
+        !const {
+          ArchivePublicationPhase.published,
+          ArchivePublicationPhase.cleaningBackup,
+          ArchivePublicationPhase.cleaningCandidate,
+          ArchivePublicationPhase.complete,
+        }.contains(record.phase)) {
+      throw StateError(
+        'Source removal requires a durably verified destination receipt.',
+      );
+    }
+    return ArchivePublicationDependency(
+      receiptId: record.id,
+      storage: record.storage,
+      file: receipt.file,
+      sha256: receipt.sha256,
+      accessPolicySha256: record.accessPolicySha256!,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'version': 1,
+    'receiptId': receiptId,
+    'storage': storage.toJson(),
+    'file': transferFileJson(file),
+    'sha256': sha256,
+    'accessPolicySha256': accessPolicySha256,
+  };
+
+  factory ArchivePublicationDependency.fromJson(Map<String, dynamic> json) {
+    if (json['version'] != 1) {
+      throw const FormatException('Unknown archive dependency version.');
+    }
+    return ArchivePublicationDependency(
+      receiptId: json['receiptId'] as String,
+      storage: StorageReference.fromJson(
+        Map<String, dynamic>.from(json['storage'] as Map),
+      ),
+      file: transferFileFromJson(
+        Map<String, dynamic>.from(json['file'] as Map),
+      ),
+      sha256: json['sha256'] as String,
+      accessPolicySha256: json['accessPolicySha256'] as String,
+    );
+  }
 }
 
 /// Password-free authority for one bounded publication. Paths are generated
@@ -94,6 +193,7 @@ class ArchivePublicationRecord {
     this.candidate,
     this.published,
     this.accessPolicySha256,
+    this.dependency,
     this.message,
   }) {
     if (!RegExp(
@@ -116,6 +216,14 @@ class ArchivePublicationRecord {
         (message != null && utf8.encode(message!).length > 16 * 1024)) {
       throw const FormatException('Invalid archive publication evidence.');
     }
+    if (dependency != null &&
+        (dependency!.storage != storage ||
+            dependency!.receiptId == id ||
+            dependency!.file.path == original.path)) {
+      throw const FormatException(
+        'Archive source publication needs a distinct destination on the same storage.',
+      );
+    }
   }
 
   static const maximumContainerBytes = 256 * 1024 * 1024;
@@ -132,6 +240,7 @@ class ArchivePublicationRecord {
   final FileItem? candidate;
   final FileItem? published;
   final String? accessPolicySha256;
+  final ArchivePublicationDependency? dependency;
   final String? message;
 
   bool get isFinished =>
@@ -151,6 +260,7 @@ class ArchivePublicationRecord {
     String? accessPolicySha256,
     String? message,
     bool clearMessage = false,
+    bool clearPublished = false,
   }) => ArchivePublicationRecord(
     id: id,
     storage: storage,
@@ -162,13 +272,16 @@ class ArchivePublicationRecord {
     createdAt: createdAt,
     backup: backup ?? this.backup,
     candidate: candidate ?? this.candidate,
-    published: published ?? this.published,
+    published: clearPublished ? null : published ?? this.published,
     accessPolicySha256: accessPolicySha256 ?? this.accessPolicySha256,
+    dependency: dependency,
     message: clearMessage ? null : message ?? this.message,
   );
 
   Map<String, dynamic> toJson() => {
-    'version': 1,
+    // Older apps must refuse a guarded source publication rather than silently
+    // ignore its dependency and recover it as an independent archive edit.
+    'version': dependency == null ? 1 : 2,
     'id': id,
     'storage': storage.toJson(),
     'original': transferFileJson(original),
@@ -181,11 +294,13 @@ class ArchivePublicationRecord {
     if (candidate != null) 'candidate': transferFileJson(candidate!),
     if (published != null) 'published': transferFileJson(published!),
     if (accessPolicySha256 != null) 'accessPolicySha256': accessPolicySha256,
+    if (dependency != null) 'dependency': dependency!.toJson(),
     if (message != null) 'message': message,
   };
 
   factory ArchivePublicationRecord.fromJson(Map<String, dynamic> json) {
-    if (json['version'] != 1) {
+    if (json['version'] != 1 && json['version'] != 2 ||
+        (json['version'] == 2) != (json['dependency'] != null)) {
       throw const FormatException('Unknown archive publication version.');
     }
     FileItem file(Object? value) =>
@@ -205,6 +320,11 @@ class ArchivePublicationRecord {
       candidate: json['candidate'] == null ? null : file(json['candidate']),
       published: json['published'] == null ? null : file(json['published']),
       accessPolicySha256: json['accessPolicySha256'] as String?,
+      dependency: json['dependency'] == null
+          ? null
+          : ArchivePublicationDependency.fromJson(
+              Map<String, dynamic>.from(json['dependency'] as Map),
+            ),
       message: json['message'] as String?,
     );
   }

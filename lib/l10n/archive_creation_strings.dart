@@ -56,6 +56,27 @@ String archiveCreationError(BuildContext context, Object error) {
 }
 
 const _messages = <String, List<String>>{
+  'UNIX compress — one file': [
+    'UNIX compress — eine Datei',
+    'UNIX compress — un fichier',
+    'UNIX compress — un archivo',
+    'UNIX compress — um ficheiro',
+    'UNIX compress — 单个文件',
+    'UNIX compress — 単一ファイル',
+    'UNIX compress — 파일 하나',
+    'UNIX compress — ملف واحد',
+  ],
+  'UNIX compress uses 12-bit dictionaries for Fast, 14-bit for Normal and 16-bit for Maximum. The format has no content checksum or decoded length.':
+      [
+        'UNIX compress verwendet 12-Bit-Wörterbücher für Schnell, 14-Bit für Normal und 16-Bit für Maximal. Das Format speichert weder Inhaltsprüfsummen noch die dekomprimierte Größe.',
+        'UNIX compress utilise des dictionnaires de 12 bits en mode Rapide, 14 bits en mode Normal et 16 bits en mode Maximum. Le format ne stocke ni somme de contrôle du contenu ni taille décompressée.',
+        'UNIX compress usa diccionarios de 12 bits en Rápida, 14 bits en Normal y 16 bits en Máxima. El formato no almacena suma de comprobación del contenido ni tamaño descomprimido.',
+        'UNIX compress usa dicionários de 12 bits em Rápida, 14 bits em Normal e 16 bits em Máxima. O formato não guarda soma de verificação do conteúdo nem tamanho descomprimido.',
+        'UNIX compress 在快速模式下使用 12 位字典，标准模式使用 14 位，最大模式使用 16 位。该格式不存储内容校验和或解压后的大小。',
+        'UNIX compressは高速で12ビット、標準で14ビット、最大で16ビットの辞書を使用します。この形式は内容のチェックサムや展開後のサイズを保存しません。',
+        'UNIX compress는 빠르게에서 12비트, 보통에서 14비트, 최대에서 16비트 사전을 사용합니다. 이 형식은 내용 체크섬이나 압축 해제된 크기를 저장하지 않습니다.',
+        'يستخدم UNIX compress قواميس 12 بت للوضع السريع، و14 بت للوضع العادي، و16 بت للوضع الأقصى. لا تحفظ الصيغة مجموع تحقق للمحتوى أو الحجم بعد فك الضغط.',
+      ],
   'CPIO (binary, little-endian)': [
     'CPIO (binär, Little Endian)',
     'CPIO (binaire, petit-boutiste)',

@@ -14,6 +14,7 @@ const _suffixes = <ArchiveCompressionKind, String>{
   ArchiveCompressionKind.zstd: 'zst',
   ArchiveCompressionKind.lz4: 'lz4',
   ArchiveCompressionKind.lzma: 'lzma',
+  ArchiveCompressionKind.compress: 'Z',
 };
 
 final _payload = Uint8List.fromList('ordinary member contents'.codeUnits);
@@ -322,7 +323,7 @@ void main() {
   }
 
   test(
-    'readonly UNIX compress around 7z cannot rewrite a misleading .7z filename',
+    'UNIX compress around 7z cannot rewrite a misleading .7z filename',
     () async {
       await _inspect(
         _literalCompress(await _sevenZip()),

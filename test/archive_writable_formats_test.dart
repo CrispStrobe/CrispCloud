@@ -206,6 +206,13 @@ void main() {
         const koni.TarWriteFormat(),
         compression: ArchiveCompressionKind.lzma,
       ),
+    for (final suffix in ['tar.Z', 'taz'])
+      _WritableCase(
+        suffix,
+        ArchiveEndpointFormat.tarCompress,
+        const koni.TarWriteFormat(),
+        compression: ArchiveCompressionKind.compress,
+      ),
   ];
 
   for (final kind in cases) {
@@ -332,6 +339,7 @@ void main() {
     ('zstd', ArchiveEndpointFormat.zstd, ArchiveCompressionKind.zstd),
     ('lz4', ArchiveEndpointFormat.lz4, ArchiveCompressionKind.lz4),
     ('lzma', ArchiveEndpointFormat.lzma, ArchiveCompressionKind.lzma),
+    ('Z', ArchiveEndpointFormat.compress, ArchiveCompressionKind.compress),
   ]) {
     test(
       '${kind.$1} replaces exactly one payload without changing its wrapper',

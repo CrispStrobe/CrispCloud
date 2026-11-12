@@ -19,6 +19,7 @@ Future<bool> deleteNativeArchiveRecoveryFile(
   required String recoverySha256,
   required String publishedSha256,
   required TransferCheckpoint checkpoint,
+  TransferCheckpoint? beforeDelete,
 }) async {
   if (backend is! LocalOperationBackend) return false;
   final path = recovery.path!, destination = published.path!;
@@ -96,6 +97,7 @@ Future<bool> deleteNativeArchiveRecoveryFile(
         throw StateError('Recovery cleanup contents changed.');
       }
       await checkpoint();
+      await beforeDelete?.call();
       parents();
       if (!same(before, snapshot(path, recovery)) ||
           !same(destinationBefore, snapshot(destination, published))) {

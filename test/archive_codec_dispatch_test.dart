@@ -29,7 +29,7 @@ void main() {
     ('taz', 'codec-container.tar.Z'),
   ]) {
     test(
-      '$suffix discovers independent wrapped TAR content and remains read-only',
+      '$suffix discovers independent wrapped TAR content with its writer policy',
       () async {
         final bytes = _file(nativeName);
         final archive = await openViewerArchive(bytes, name: 'tree.$suffix');
@@ -57,7 +57,7 @@ void main() {
             archive,
             null,
           )).reason,
-          isNotNull,
+          suffix == 'tar.lz' ? isNotNull : isNull,
         );
       },
     );

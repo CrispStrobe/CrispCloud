@@ -9,4 +9,5 @@ Future<bool> deleteNativeArchiveRecoveryFile(
   required String recoverySha256,
   required String publishedSha256,
   required TransferCheckpoint checkpoint,
+  TransferCheckpoint? beforeDelete,
 }) async => false;

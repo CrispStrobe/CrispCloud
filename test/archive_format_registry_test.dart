@@ -280,12 +280,14 @@ void main() {
           'tar-zstd',
           'tar-lz4',
           'tar-lzma',
+          'tar-compress',
           'gzip',
           'bzip2',
           'xz',
           'zstd',
           'lz4',
           'lzma',
+          'compress',
           'iso',
           'dmg',
           'hfs',
@@ -314,12 +316,14 @@ void main() {
           'tar-lz4',
           'tar-lzma',
           'gzip',
+          'tar-compress',
           'bzip2',
           'xz',
           'zstd',
           'lz4',
           'lzma',
           'iso',
+          'compress',
           'ar',
           'deb',
           'cpio',
@@ -328,18 +332,19 @@ void main() {
       );
     });
 
-    test('Lzip and UNIX compress remain explicitly read-only', () {
-      for (final name in [
-        'file.lz',
-        'files.tar.lz',
-        'file.Z',
-        'files.tar.Z',
-        'files.taz',
-      ]) {
+    test('Lzip remains read-only and UNIX compress has bounded writers', () {
+      for (final name in ['file.lz', 'files.tar.lz']) {
         final format = archiveFormatForName(name)!;
         expect(format.canCreate, isFalse, reason: name);
         expect(format.canModify, isFalse, reason: name);
         expect(format.notes, contains('Read-only'), reason: name);
+      }
+      for (final name in ['file.Z', 'files.tar.Z', 'files.taz']) {
+        final format = archiveFormatForName(name)!;
+        expect(format.canCreate, isTrue, reason: name);
+        expect(format.canModify, isTrue, reason: name);
+        expect(format.notes, contains('no content checksum'), reason: name);
+        expect(format.notes, contains('14-bit block coding'), reason: name);
       }
       expect(
         archiveFormatForName('file.lzma')!.notes,

@@ -392,7 +392,7 @@ Future<ViewerArchive> _openCompressedSource(
       );
     } else if (compression == 'z') {
       notices.add(
-        'UNIX compress has no stored checksum or decoded length. Successful LZW decoding cannot detect every bit change or truncation at a valid code boundary. This format is read-only.',
+        'UNIX compress has no stored checksum or decoded length. Successful LZW decoding cannot detect every bit change or truncation at a valid code boundary. Eligible rewrites use 14-bit block coding.',
       );
     }
   }

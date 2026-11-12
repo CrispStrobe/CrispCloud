@@ -40,6 +40,7 @@ class ArchiveEndpointPolicy {
     ArchiveEndpointFormat.zstd,
     ArchiveEndpointFormat.lz4,
     ArchiveEndpointFormat.lzma,
+    ArchiveEndpointFormat.compress,
   }.contains(format);
 
   ArchiveCompressionKind? get compression => switch (format) {
@@ -55,6 +56,8 @@ class ArchiveEndpointPolicy {
     ArchiveEndpointFormat.lz4 => ArchiveCompressionKind.lz4,
     ArchiveEndpointFormat.tarLzma ||
     ArchiveEndpointFormat.lzma => ArchiveCompressionKind.lzma,
+    ArchiveEndpointFormat.tarCompress ||
+    ArchiveEndpointFormat.compress => ArchiveCompressionKind.compress,
     _ => null,
   };
 
@@ -80,12 +83,14 @@ class ArchiveEndpointPolicy {
       'tar-zstd' => ArchiveEndpointFormat.tarZstd,
       'tar-lz4' => ArchiveEndpointFormat.tarLz4,
       'tar-lzma' => ArchiveEndpointFormat.tarLzma,
+      'tar-compress' => ArchiveEndpointFormat.tarCompress,
       'gzip' => ArchiveEndpointFormat.gzip,
       'bzip2' => ArchiveEndpointFormat.bzip2,
       'xz' => ArchiveEndpointFormat.xz,
       'zstd' => ArchiveEndpointFormat.zstd,
       'lz4' => ArchiveEndpointFormat.lz4,
       'lzma' => ArchiveEndpointFormat.lzma,
+      'compress' => ArchiveEndpointFormat.compress,
       'ar' || 'deb' => ArchiveEndpointFormat.ar,
       'cpio' => ArchiveEndpointFormat.cpio,
       'xar' when lower.endsWith('.xar') => ArchiveEndpointFormat.xar,
@@ -113,7 +118,8 @@ class ArchiveEndpointPolicy {
       ArchiveEndpointFormat.tarXz ||
       ArchiveEndpointFormat.tarZstd ||
       ArchiveEndpointFormat.tarLz4 ||
-      ArchiveEndpointFormat.tarLzma => 'tar',
+      ArchiveEndpointFormat.tarLzma ||
+      ArchiveEndpointFormat.tarCompress => 'tar',
       ArchiveEndpointFormat.readOnly => null,
       _ => format.name,
     };
@@ -371,6 +377,7 @@ class ArchiveEndpointPolicy {
       ArchiveEndpointFormat.tarZstd ||
       ArchiveEndpointFormat.tarLz4 ||
       ArchiveEndpointFormat.tarLzma ||
+      ArchiveEndpointFormat.tarCompress ||
       ArchiveEndpointFormat.ar ||
       ArchiveEndpointFormat.cpio ||
       ArchiveEndpointFormat.xar ||

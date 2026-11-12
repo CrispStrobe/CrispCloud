@@ -67,6 +67,7 @@ Future<ArchiveRewriteInspection> inspectTarRewrite(
         ArchiveCompressionKind.zstd => 'zst',
         ArchiveCompressionKind.lz4 => 'lz4',
         ArchiveCompressionKind.lzma => 'lzma',
+        ArchiveCompressionKind.compress => 'Z',
       };
       bytes = decompressSingleFile(bytes, 'payload.$suffix').data;
     }
