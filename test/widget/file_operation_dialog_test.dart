@@ -223,6 +223,11 @@ void main() {
     double textScale = 1,
     FileOperationBackend? sourceBackend,
     PanelFileOrigin? sourceOrigin,
+    PanelFileOrigin? destinationOrigin,
+    String? destinationPath,
+    PanelSide? lockedDestinationSide,
+    void Function(FileOperationPlan)? onPreparedPlan,
+    Future<void> Function(FileOperationPlan)? onForegroundPlan,
     bool inRoute = false,
   }) async {
     tester.view.physicalSize = size;
@@ -235,6 +240,11 @@ void main() {
       kind: kind,
       sourceBackend: sourceBackend,
       sourceOrigin: sourceOrigin,
+      destinationOrigin: destinationOrigin,
+      destinationPath: destinationPath,
+      lockedDestinationSide: lockedDestinationSide,
+      onPreparedPlan: onPreparedPlan,
+      onForegroundPlan: onForegroundPlan,
     );
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -545,6 +555,123 @@ void main() {
           'reads: ${cloud.reads}; uploads: ${cloud.uploads}; renames: ${cloud.renamed}',
     );
   }
+
+  testWidgets(
+    'a captured gathering destination stays locked and reports its settled foreground plan',
+    (tester) async {
+      final panel = container.read(panelProvider(PanelSide.remote));
+      final source = panel.captureOperationOrigin(files);
+      FileOperationPlan? prepared;
+      FileOperationPlan? settled;
+      await open(
+        tester,
+        sourceOrigin: source,
+        destinationOrigin: panel.captureCurrentOrigin(),
+        destinationPath: '/target',
+        lockedDestinationSide: PanelSide.remote,
+        onPreparedPlan: (plan) => prepared = plan,
+        onForegroundPlan: (plan) async => settled = plan,
+      );
+      expect(
+        tester.widget<TextField>(field('Destination directory')).enabled,
+        isFalse,
+      );
+      final storage = tester.widget<DropdownButton<PanelSide>>(
+        find.descendant(
+          of: find.byType(DropdownButtonFormField<PanelSide>),
+          matching: find.byType(DropdownButton<PanelSide>),
+        ),
+      );
+      expect(storage.onChanged, isNull);
+      expect(storage.items, hasLength(1));
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+      await tester.pumpAndSettle();
+      expect(prepared?.targetDirectory, '/target');
+      expect(settled, isNull);
+      await runOperation(tester, FileOperationKind.copy);
+      expect(identical(settled, prepared), isTrue);
+      expect(
+        settled!.entries.every(
+          (entry) => entry.outcome == FileOperationOutcome.copied,
+        ),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'an original-evidence validator can reject a preview before writes or completion cleanup',
+    (tester) async {
+      var settled = 0;
+      await open(
+        tester,
+        onPreparedPlan: (_) => throw StateError('Captured original changed'),
+        onForegroundPlan: (_) async {
+          settled++;
+        },
+      );
+      await useCloudDestination(tester);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Captured original changed'), findsOneWidget);
+      expect(
+        tester.widget<FilledButton>(start(FileOperationKind.copy)).onPressed,
+        isNull,
+      );
+      expect(cloud.uploads, isEmpty);
+      expect(settled, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'failed foreground outcome persistence stops before another source group',
+    (tester) async {
+      final inputFocus = FocusNode();
+      addTearDown(inputFocus.dispose);
+      final host = await mountReviewHost(tester, inputFocus);
+      final panel = container.read(panelProvider(PanelSide.remote));
+      final first = files.singleWhere((file) => file.path == '/one.txt');
+      final second = files.singleWhere((file) => file.path == '/two.bin');
+      var reports = 0;
+      final review = showFileOperationDialog(
+        host.context,
+        host.ref,
+        PanelSide.remote,
+        files,
+        kind: FileOperationKind.copy,
+        sourceGroups: {
+          panel.captureOperationOrigin([first]): [first],
+          panel.captureOperationOrigin([second]): [second],
+        },
+        destinationOrigin: panel.captureCurrentOrigin(),
+        destinationPath: '/target',
+        lockedDestinationSide: PanelSide.remote,
+        onForegroundPlan: (_) async {
+          reports++;
+          throw StateError('Unable to save gathering outcome');
+        },
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Preview'));
+      await tester.pumpAndSettle();
+      await runOperation(tester, FileOperationKind.copy);
+      expect(reports, 1);
+      expect(
+        find.textContaining('Unable to save gathering outcome'),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(TextButton, 'Close'));
+      await tester.pumpAndSettle();
+      expect(await review, isNull);
+      expect(find.byType(FileOperationDialog), findsNothing);
+      expect(cloud.files.containsKey('/target/one.txt'), isTrue);
+      expect(cloud.files.containsKey('/target/two.bin'), isFalse);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets(
     'a cancelled transfer preview preserves the preceding selection memory',

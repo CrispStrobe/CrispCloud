@@ -77,6 +77,8 @@ import '../widgets/file_view_editor_dialog.dart';
 import '../widgets/custom_command_dialog.dart';
 import '../widgets/command_entry_dialog.dart';
 import '../l10n/command_entry_strings.dart';
+import '../widgets/gathering_stack_dialog.dart';
+import '../l10n/gathering_stack_strings.dart';
 import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
@@ -522,6 +524,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
     );
     route('columns', context.commanderTr('Columns and view'), 'columns');
     route('customCommands', context.commanderTr('Custom commands'), 'commands');
+    add(
+      'gatherSelection',
+      GatheringStackStrings(context).text('gather'),
+      () => addPanelSelectionToGatheringStack(
+        context,
+        ref,
+        ref.read(activePanelProvider),
+      ),
+      available: () =>
+          _activePanel(ref).selection.isNotEmpty &&
+          !_activePanel(ref).isInArchive,
+    );
+    route(
+      'gatheringStack',
+      GatheringStackStrings(context).text('title'),
+      'gathering_stack',
+    );
     route('extensions', context.extensionTr('Extensions'), 'extensions');
     route(
       'synchronizedBrowsing',
@@ -1958,6 +1977,18 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showCustomCommandsDialog(context, ref, ref.read(activePanelProvider));
       case 'command_entry':
         if (commandEntryAvailable(ref)) showCommandEntryDialog(context, ref);
+      case 'gather_selection':
+        addPanelSelectionToGatheringStack(
+          context,
+          ref,
+          ref.read(activePanelProvider),
+        );
+      case 'gathering_stack':
+        showGatheringStackDialog(
+          context,
+          ref,
+          destinationSide: ref.read(activePanelProvider),
+        );
       case 'extensions':
         showExtensionsDialog(context, ref, ref.read(activePanelProvider));
       case 'multi_rename':
@@ -2111,6 +2142,23 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       tooltip: l.moreActions,
       onSelected: (value) => _runOverflowAction(context, value),
       itemBuilder: (context) => <PopupMenuEntry<String>>[
+        PopupMenuItem(
+          value: 'gather_selection',
+          enabled:
+              _activePanel(ref).selection.isNotEmpty &&
+              !_activePanel(ref).isInArchive,
+          child: _overflowItem(
+            Icons.playlist_add,
+            GatheringStackStrings(context).text('gather'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'gathering_stack',
+          child: _overflowItem(
+            Icons.layers_outlined,
+            GatheringStackStrings(context).text('title'),
+          ),
+        ),
         PopupMenuItem(
           value: 'command_entry',
           enabled: commandEntryAvailable(ref),

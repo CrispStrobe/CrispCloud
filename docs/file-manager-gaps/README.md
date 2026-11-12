@@ -30,11 +30,11 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 
 ## Current progress
 
-Ten implementation increments are preserved on remote feature branches:
-**five closed scopes** (G02, G03, G13, G27, G37) and **five implemented features
+Eleven implementation increments are preserved on remote feature branches:
+**six closed scopes** (G02, G03, G05, G13, G27, G37) and **five implemented features
 with target-runtime/live-server acceptance pending** (G01, G04, G09, G12, G25).
-The remaining 41 items
-comprise **29 implementation gaps, 10 research prerequisites and two
+The remaining 40 items
+comprise **28 implementation gaps, 10 research prerequisites and two
 cross-cutting acceptance items**. The acceptance work also applies to delivered
 features where their specific boundary names a target-runtime check.
 
@@ -46,8 +46,8 @@ The current stack contains the original scope and every incremental checkpoint.
 Continuation work from `403e942d` is recorded in
 [the active increment plan](continuation-20261112.md). G25 has verified native
 loopback/recovery coverage, and G09 has verified command/keyboard coverage.
-G05 and G49 remain in progress until their
-separate regression evidence and remote checkpoints are recorded.
+G05's reviewed reference workflow is closed with regression evidence.
+G49 remains in progress until its separate remote checkpoint is recorded.
 
 ## Lane index
 
@@ -68,7 +68,7 @@ separate regression evidence and remote checkpoints are recorded.
 | [G02](01-workspace-and-interaction.md#g02) | Direct Quick Open actions | Closed: direct saved-item workflow | New network discovery remains G30 |
 | [G03](01-workspace-and-interaction.md#g03) | Conflict previews and details | Closed: bounded preview scope | Platform decoder support remains explicit |
 | [G04](01-workspace-and-interaction.md#g04) | Configurable main menus | Implemented / target-runtime acceptance pending | Native menu presentation and keyboard dispatch under G50/G51 |
-| [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Implementing | G01; existing collections |
+| [G05](01-workspace-and-interaction.md#g05) | Gathering stack | Closed: reviewed reference workflow | Explicit collection commands; native drag-out remains G06 |
 | [G06](01-workspace-and-interaction.md#g06) | Native outgoing drag | Scoped | G01; native bridge |
 | [G07](01-workspace-and-interaction.md#g07) | General file tags | Scoped | Stable file identity; native metadata bridge |
 | [G08](01-workspace-and-interaction.md#g08) | Favorite synchronization | Scoped | Versioned favorites; selected sync backend |
@@ -142,8 +142,9 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G13 file encoding/decoding | `feature/file-conversion-20261112` · implementation `ebede8d` · PR #67 | 80 tests passed across codec, service/native-filesystem and dialog suites; no analyzer findings in new files | Closed for documented UUE/XXE and single-part MIME formats on supported exclusive-output backends |
 | Integrated validation | `feature/file-conversion-20261112` · code checkpoint `ebede8d` | Full analysis: 0 errors, 96 warnings, 1,038 infos; JavaScript release web build passed with version/hash; optional WebAssembly dry run exited 247 | [Detailed evidence and limits](validation-20261112.md) |
 | Continuation scope | `feature/gap-extension-scope-20261112` · `cd14477` · PR #69 | G05/G09/G25/G49 boundaries and staged validation plan | Scope preserved remotely |
-| G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, verified cleanup follow-up · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
-| G09 command entry | `feature/command-entry-20261112` | 152 tests passed across eight command/context/keyboard suites; 62 passed in the final service/dialog/context gate | Implemented; native argument/permission/keyboard acceptance pending |
+| G25 FTP byte-offset resume | `feature/ftp-download-resume-20261112` · initial `6b122d6`, cleanup `5b2f1fa` · PR #70 | 285 tests passed across eight transfer/FTP suites; 89 passed in the final three-suite empty-stage/crash gate | Implemented; live-server and signed-target acceptance pending |
+| G09 command entry | `feature/command-entry-20261112` · `50a9547` · PR #71 | 152 tests passed across eight command/context/keyboard suites; 62 passed in the final service/dialog/context gate | Implemented; native argument/permission/keyboard acceptance pending |
+| G05 gathering stack | `feature/gathering-stack-20261112` | 56 service/widget/operation-dialog tests passed; focused analysis clean | Closed for the reviewed reference workflow |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

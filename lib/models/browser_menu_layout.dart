@@ -340,6 +340,8 @@ class BrowserMenuLayout {
           'workspaces',
           'columns',
           'customCommands',
+          'gatherSelection',
+          'gatheringStack',
           'extensions',
           'synchronizedBrowsing',
         ]),

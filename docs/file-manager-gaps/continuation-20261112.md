@@ -97,3 +97,30 @@ transport, Linux/macOS permissions and symlinks, signed/store restrictions and
 actual keyboard dispatch remain G50 acceptance. The [feature guide](../command-entry.md)
 states the finite interpreter-option model and the remaining path-based launch
 race explicitly.
+
+The command-entry code checkpoint is `50a9547` on
+`feature/command-entry-20261112` in
+[PR #71](https://github.com/CrispStrobe/CrispCloud/pull/71), stacked on the FTP
+cleanup checkpoint `5b2f1fa`.
+
+## G05 — Persistent gathering stack
+
+The dedicated stack retains original references from explicitly gathered
+selections across folders and accounts. Same-named items remain distinct.
+Refresh exposes missing, unavailable and replaced originals; reordering and
+removal change references only. A complete overview pins the destination before
+the normal per-account foreground transfer reviews. Confirmed root outcomes
+remove successful references; canceled, skipped, filtered, failed and untouched
+items stay available. Gather tickets protect newer user intent from old results.
+
+The final combined gate passed **56 tests** across the stack service, stack
+dialog and existing operation dialog. It covers durable state, failed writes,
+source/destination lifetime, complete folder outcomes, partial transfers,
+superseded cleanup, cancellation, translated controls and narrow enlarged
+German/Arabic layouts. Focused analysis is clean, with no new dependency.
+
+Status is **closed for the reviewed reference workflow**. The stack does not
+own file contents, stage them for recovery or make grouped accounts atomic.
+It currently gathers through explicit selection commands. Native outgoing drag
+is G06; actual signed/browser access grants remain G50/G51 acceptance. See
+[gathering stack](../gathering-stack.md).

@@ -156,7 +156,7 @@ platform-menu model passing tests does not establish signed application behavior
 
 ### Gathering stack
 
-**Status:** Implementing. **Dependencies:** G01; existing collections.
+**Status:** Closed for the reviewed reference workflow. **Dependencies:** G01; existing collections.
 
 **Scope:** Gather source-bound references from different folders and transfer them through one reviewed plan.
 
@@ -171,6 +171,26 @@ platform-menu model passing tests does not establish signed application behavior
 - Partial completion removes only confirmed successes and keeps failed or untouched references available.
 
 **Starting points:** FileCollectionService; panel collection origins; FileOperationService.
+
+**Delivered increment:** A persistent, bounded stack gathers explicitly selected
+references from independent folders/accounts, keeps same-named originals
+distinct, and supports refresh, removal and reordering. A complete overview
+captures the destination before the ordinary per-account copy/move reviews.
+Only confirmed successful roots leave the stack; partial, canceled, skipped,
+filtered, missing or failed roots remain. New gather tickets prevent old
+completion callbacks from removing later intent. See [gathering stack](../gathering-stack.md).
+
+**Observed evidence:** **56 tests passed** across the stack service, stack
+dialogs and existing operation-dialog regressions. Coverage includes saved
+references, original-source changes, fixed destinations, partial folder/move
+outcomes, failed publication, stale-review cleanup, cancellation and enlarged
+German/Arabic layouts. Focused analysis of all new files and the modified
+operation dialog has no findings. No dependency was added.
+
+**Boundary retained:** This surface adds references through explicit selection
+commands. It does not stage file contents or promise atomic transfer across
+accounts. Transfers use foreground reviews; native drag-out and signed/browser
+grant acceptance retain their separate G06/G50/G51 boundaries.
 
 ## G06
 
