@@ -192,21 +192,33 @@ Map<String, Object?> inspectWord(WmlDocument doc) {
         {
           'grid': t.grid,
           'style': t.properties.styleId,
+          'gridAddressingSupported': WordTable.supportsGridAddressing(t),
           'rows': [
             for (final row in t.rows)
               {
                 'height': row.height,
                 'cantSplit': row.cantSplit,
+                'gridBefore': row.gridBefore,
+                'gridAfter': row.gridAfter,
                 'cells': [
-                  for (final cell in row.cells)
+                  for (var column = 0; column < row.cells.length; column++)
                     {
-                      'width': cell.width,
-                      'span': cell.gridSpan,
-                      'merge': cell.vMerge.name,
-                      'fill': cell.fillColor,
+                      'column': column,
+                      'gridColumn':
+                          row.gridBefore + WordTable.gridStart(row, column),
+                      'endGridColumn':
+                          row.gridBefore +
+                          WordTable.gridStart(row, column) +
+                          row.cells[column].gridSpan -
+                          1,
+                      'width': row.cells[column].width,
+                      'span': row.cells[column].gridSpan,
+                      'merge': row.cells[column].vMerge.name,
+                      'fill': row.cells[column].fillColor,
                       'paragraphs': [
                         for (final para
-                            in cell.blocks.whereType<WmlParagraph>())
+                            in row.cells[column].blocks
+                                .whereType<WmlParagraph>())
                           p(para),
                       ],
                     },

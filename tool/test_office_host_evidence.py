@@ -57,10 +57,12 @@ class HostEvidenceTest(unittest.TestCase):
 
     def test_extra_output_and_invalid_zip_fail(self):
         self.populate()
-        extra = self.root / 'build/fidelity-host/unreviewed.docx'
-        extra.write_bytes(b'unreviewed')
-        self.assertTrue(evidence.inspect(self.root)['failures'])
-        extra.unlink()
+        for directory in ('fidelity-host', 'fidelity-custom-tabs'):
+            with self.subTest(directory=directory):
+                extra = self.root / 'build' / directory / 'unreviewed.docx'
+                extra.write_bytes(b'unreviewed')
+                self.assertTrue(evidence.inspect(self.root)['failures'])
+                extra.unlink()
         (self.root / evidence.expected_paths()[0]).write_bytes(b'not a zip')
         self.assertTrue(evidence.inspect(self.root)['failures'])
 

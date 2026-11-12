@@ -276,9 +276,15 @@ void _assertRibbonExport(Uint8List bytes, Uint8List pickedImage) {
   expect(
     properties
         .findAllElements('tab', namespace: _wordNs)
-        .map((node) => node.getAttribute('pos', namespace: _wordNs))
+        .map(
+          (node) => (
+            node.getAttribute('pos', namespace: _wordNs),
+            node.getAttribute('val', namespace: _wordNs),
+            node.getAttribute('leader', namespace: _wordNs) ?? 'none',
+          ),
+        )
         .toList(),
-    ['1440', '2880'],
+    [('1440', 'center', 'dot'), ('2880', 'decimal', 'underscore')],
   );
   expect(
     paragraph
@@ -540,12 +546,32 @@ void main() {
           'Space before (pt)': '6',
           'Space after (pt)': '18',
           'Line spacing': '1.5',
-          'Tab stops (pt, comma separated)': '72, 144',
         }.entries) {
           await tester.enterText(
             find.widgetWithText(TextField, entry.key),
             entry.value,
           );
+        }
+        for (var index = 0; index < 2; index++) {
+          final add = find.byKey(const ValueKey<String>('word-tab-add'));
+          await tester.ensureVisible(add);
+          await _tapSettled(tester, add);
+          final field = find.byKey(
+            ValueKey<String>('word-tab-position-$index'),
+          );
+          await tester.ensureVisible(field);
+          await tester.enterText(field, '${72 * (index + 1)}');
+        }
+        for (final (key, label) in [
+          ('alignment-0', 'Center'),
+          ('leader-0', 'Dots'),
+          ('alignment-1', 'Decimal'),
+          ('leader-1', 'Underline'),
+        ]) {
+          final field = find.byKey(ValueKey<String>('word-tab-$key'));
+          await tester.ensureVisible(field);
+          await _tapSettled(tester, field);
+          await _tapSettled(tester, find.text(label).last);
         }
         await _tapSettled(tester, find.widgetWithText(ElevatedButton, 'Apply'));
 

@@ -62,7 +62,7 @@ const wordOperations = <String, List<String>>{
   'listClear': ['paragraph'],
   'listRestart': ['paragraph', 'at'],
   'hyperlink': ['paragraph', 'run', 'target', ..._storyFields],
-  'tableCellText': ['table', 'row', 'column', 'text'],
+  'tableCellText': ['table', 'row', 'column', 'gridColumn', 'text'],
   'headerFooterText': ['section', 'story', 'paragraph', 'text'],
   'sectionFormat': [
     'section',
@@ -436,9 +436,9 @@ void applyStep(
       final run = s.item('run', paragraph().inlines.whereType<WmlRun>());
       run.hyperlink = WmlHyperlink.fromTarget(s.string('target'));
     case 'tableCellText':
-      final row = s.item('row', table().rows);
-      final cell = s.item('column', row.cells);
+      final cell = wordStepCell(table(), s).cell;
       final text = s.string('text');
+      checkWordCellReplacement(doc, cell);
       cell.blocks
         ..clear()
         ..add(WmlParagraph(inlines: <WmlInline>[WmlRun(text: text)]));

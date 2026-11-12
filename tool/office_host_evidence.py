@@ -98,7 +98,8 @@ def inspect(root):
     if len(used_bases) > 1:
         failures.append('Required host files are spread across different artifact roots')
     for base in used_bases:
-        for directory in ('build/fidelity-host', 'build/fidelity'):
+        for directory in ('build/fidelity-host', 'build/fidelity',
+                          'build/fidelity-custom-tabs'):
             for file in (base / directory).rglob('*'):
                 if (file.is_file() and file.suffix.lower() in OFFICE
                         and file.relative_to(base).as_posix() not in expected):

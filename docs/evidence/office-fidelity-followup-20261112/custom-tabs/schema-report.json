@@ -1,0 +1,21 @@
+{
+  "Files": 3,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "CrispCloud/build/fidelity-custom-tabs/host-tabs-1.docx",
+      "Sha256": "534a5bc4e639d042f7fbed4107fb2012418e335d2924d1fc658221fa84bb608c",
+      "Errors": []
+    },
+    {
+      "File": "CrispCloud/build/fidelity-custom-tabs/host-tabs-2.docx",
+      "Sha256": "a8eef92d5206e2acc208b7e8b74782e87c2799aa281b305f0d1bab79a86281b7",
+      "Errors": []
+    },
+    {
+      "File": "CrispCloud/build/fidelity-custom-tabs/host-tabs-3.docx",
+      "Sha256": "767d703e473dd9bed8ede832035192da75d7b7493e7830d7e3f7dc9c6a11aac0",
+      "Errors": []
+    }
+  ]
+}

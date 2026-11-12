@@ -143,6 +143,74 @@ abstract final class WordTable {
     return null;
   }
 
+  /// Whether logical addressing can safely resolve every modeled grid slot.
+  ///
+  /// Omitted row cells are retained as native metadata, but are not synthesized
+  /// here. Ragged rows, nonpositive spans and orphaned or mismatched vertical
+  /// continuations are rejected instead of guessing a cell owner.
+  static bool supportsGridAddressing(WmlTable table) {
+    final columns = columnCount(table);
+    if (columns == 0 || table.rows.isEmpty) return false;
+    for (var r = 0; r < table.rows.length; r++) {
+      final row = table.rows[r];
+      if (row.gridBefore != 0 || row.gridAfter != 0) return false;
+      var grid = 0;
+      for (final cell in row.cells) {
+        if (cell.gridSpan < 1) return false;
+        if (cell.vMerge == WmlVMerge.cont) {
+          if (r == 0) return false;
+          final previous = table.rows[r - 1];
+          final above = cellIndexAtGrid(previous, grid);
+          if (above == null ||
+              gridStart(previous, above) != grid ||
+              previous.cells[above].gridSpan != cell.gridSpan ||
+              previous.cells[above].vMerge == WmlVMerge.none) {
+            return false;
+          }
+        }
+        grid += cell.gridSpan;
+      }
+      if (grid != columns) return false;
+    }
+    return true;
+  }
+
+  /// Native row omissions have no editable cell at the omitted positions.
+  static bool hasRowOmissions(WmlTable table) =>
+      table.rows.any((row) => row.gridBefore != 0 || row.gridAfter != 0);
+
+  static void _assertNoRowOmissions(WmlTable table) {
+    if (hasRowOmissions(table)) {
+      throw UnsupportedError(
+        'Table structure and sizing edits with omitted row cells are unsupported',
+      );
+    }
+  }
+
+  /// Resolve a logical slot to the visible cell that owns its merged region.
+  ///
+  /// The returned row/column are physical indexes. All horizontal slots and
+  /// vertical continuation rows in a merge resolve to the same master cell.
+  /// Out-of-range positions return `null`; unsupported topology is an error.
+  static ({int row, int col, WmlTableCell cell})? cellAtGrid(
+    WmlTable table,
+    int row,
+    int gridColumn,
+  ) {
+    if (!supportsGridAddressing(table)) {
+      throw ArgumentError('Table does not have a supported rectangular grid');
+    }
+    if (row < 0 || row >= table.rows.length || gridColumn < 0) return null;
+    final col = cellIndexAtGrid(table.rows[row], gridColumn);
+    if (col == null) return null;
+    final origin = _mergeOrigin(table, row, col);
+    return (
+      row: origin.row,
+      col: origin.col,
+      cell: table.rows[origin.row].cells[origin.col],
+    );
+  }
+
   /// columnCount API.
   static int columnCount(WmlTable table) {
     var max = table.grid.length;
@@ -212,7 +280,9 @@ abstract final class WordTable {
       var col = 0;
       for (final WmlTableCell cell in table.rows[r].cells) {
         final int span = spanOf(cell);
-        if (col >= g0 && col + span - 1 <= g1) {
+        if (col >= g0 &&
+            col + span - 1 <= g1 &&
+            cell.vMerge != WmlVMerge.cont) {
           count++;
         }
         col += span;
@@ -223,6 +293,7 @@ abstract final class WordTable {
 
   /// canMerge API.
   static bool canMerge(WmlTable table, int r0, int g0, int r1, int g1) {
+    if (!supportsGridAddressing(table)) return false;
     if (r1 < r0 || g1 < g0) {
       return false;
     }
@@ -235,6 +306,14 @@ abstract final class WordTable {
     for (int r = r0; r <= r1; r++) {
       if (!_coversExactly(table.rows[r], g0, g1)) {
         return false;
+      }
+      final row = table.rows[r];
+      for (var c = 0; c < row.cells.length; c++) {
+        final start = gridStart(row, c);
+        if (start < g0 || start > g1) continue;
+        final origin = _mergeOrigin(table, r, c);
+        final end = _mergeEndRow(table, origin.row, origin.col);
+        if (origin.row < r0 || end > r1) return false;
       }
     }
     return true;
@@ -258,12 +337,20 @@ abstract final class WordTable {
     for (int r = r0; r <= r1; r++) {
       final WmlTableRow row = table.rows[r];
       WmlTableCell? first;
+      final List<WmlBlock> continuedBlocks = <WmlBlock>[];
       final List<int> drop = <int>[];
       var col = 0;
       for (int i = 0; i < row.cells.length; i++) {
         final WmlTableCell cell = row.cells[i];
         final int cellSpan = spanOf(cell);
         if (col >= g0 && col + cellSpan - 1 <= g1) {
+          if (cell.vMerge == WmlVMerge.cont) {
+            // Continuation stories are hidden, including their mandatory empty
+            // paragraph. Keep their nodes in the continued row rather than
+            // making them new visible paragraphs in the merged master.
+            continuedBlocks.addAll(cell.blocks);
+            cell.blocks.clear();
+          }
           if (first == null) {
             first = cell;
           } else {
@@ -277,16 +364,22 @@ abstract final class WordTable {
         continue;
       }
       first.gridSpan = span;
-      if (r1 > r0) {
-        first.vMerge = r == r0 ? WmlVMerge.restart : WmlVMerge.cont;
-      }
+      first.vMerge = r1 > r0
+          ? (r == r0 ? WmlVMerge.restart : WmlVMerge.cont)
+          : WmlVMerge.none;
       if (r == r0) {
         master = first;
       } else if (master != null) {
         _appendCellContent(master, first);
         first.blocks
           ..clear()
-          ..add(WmlParagraph(inlines: <WmlInline>[WmlRun()]));
+          ..addAll(
+            continuedBlocks.isEmpty
+                ? [
+                    WmlParagraph(inlines: <WmlInline>[WmlRun()]),
+                  ]
+                : continuedBlocks,
+          );
       }
       for (int i = drop.length - 1; i >= 0; i--) {
         row.cells.removeAt(drop[i]);
@@ -296,6 +389,7 @@ abstract final class WordTable {
 
   /// canUnmerge API.
   static bool canUnmerge(WmlTable table, int row, int col) {
+    if (!supportsGridAddressing(table)) return false;
     if (row < 0 || row >= table.rows.length) {
       return false;
     }
@@ -328,6 +422,19 @@ abstract final class WordTable {
     return (row: r0, col: c0);
   }
 
+  static int _mergeEndRow(WmlTable table, int row, int col) {
+    final head = table.rows[row].cells[col];
+    if (head.vMerge != WmlVMerge.restart) return row;
+    final grid = gridStart(table.rows[row], col);
+    var end = row;
+    for (var r = row + 1; r < table.rows.length; r++) {
+      final c = cellIndexAtGrid(table.rows[r], grid);
+      if (c == null || table.rows[r].cells[c].vMerge != WmlVMerge.cont) break;
+      end = r;
+    }
+    return end;
+  }
+
   /// unmerge API.
   static void unmerge(WmlTable table, int row, int col) {
     if (!canUnmerge(table, row, col)) {
@@ -337,16 +444,7 @@ abstract final class WordTable {
     final WmlTableCell head = table.rows[origin.row].cells[origin.col];
     final int g0 = gridStart(table.rows[origin.row], origin.col);
     final int span = spanOf(head);
-    var r1 = origin.row;
-    if (head.vMerge == WmlVMerge.restart) {
-      for (int r = origin.row + 1; r < table.rows.length; r++) {
-        final int? i = cellIndexAtGrid(table.rows[r], g0);
-        if (i == null || table.rows[r].cells[i].vMerge != WmlVMerge.cont) {
-          break;
-        }
-        r1 = r;
-      }
-    }
+    final r1 = _mergeEndRow(table, origin.row, origin.col);
     for (int r = origin.row; r <= r1; r++) {
       final int? i = cellIndexAtGrid(table.rows[r], g0);
       if (i == null) {
@@ -376,6 +474,7 @@ abstract final class WordTable {
 
   /// insertRow API.
   static void insertRow(WmlTable table, int index) {
+    _assertNoRowOmissions(table);
     final int cols = columnCount(table);
     if (cols <= 0) {
       table.grid.add(120);
@@ -402,6 +501,7 @@ abstract final class WordTable {
 
   /// insertColumn API.
   static void insertColumn(WmlTable table, int index) {
+    _assertNoRowOmissions(table);
     final int cols = columnCount(table);
     final int at = index.clamp(0, cols);
     final int source = at > 0 ? at - 1 : 0;
@@ -443,6 +543,7 @@ abstract final class WordTable {
 
   /// autoFitContents API.
   static void autoFitContents(WmlTable table) {
+    _assertNoRowOmissions(table);
     final int cols = columnCount(table);
     if (cols <= 0) {
       return;
@@ -481,6 +582,7 @@ abstract final class WordTable {
 
   /// autoFitWindow API.
   static void autoFitWindow(WmlTable table, double contentWidth) {
+    _assertNoRowOmissions(table);
     final int cols = columnCount(table);
     if (cols <= 0 || contentWidth <= 0) {
       return;
@@ -501,6 +603,7 @@ abstract final class WordTable {
 
   /// autoFitFixed API.
   static void autoFitFixed(WmlTable table) {
+    _assertNoRowOmissions(table);
     final int cols = columnCount(table);
     while (table.grid.length < cols) {
       table.grid.add(120);
@@ -514,6 +617,7 @@ abstract final class WordTable {
 
   /// constrainToWidth API.
   static void constrainToWidth(WmlTable table, double maxWidth) {
+    _assertNoRowOmissions(table);
     if (gridWidth(table) > maxWidth + 0.5) {
       autoFitWindow(table, maxWidth);
     }
@@ -521,6 +625,7 @@ abstract final class WordTable {
 
   /// deleteRow API.
   static void deleteRow(WmlTable table, int index) {
+    _assertNoRowOmissions(table);
     if (table.rows.length <= 1 || index < 0 || index >= table.rows.length) {
       return;
     }
@@ -529,6 +634,7 @@ abstract final class WordTable {
 
   /// deleteColumn API.
   static void deleteColumn(WmlTable table, int index) {
+    _assertNoRowOmissions(table);
     final int cols = columnCount(table);
     if (cols <= 1 || index < 0 || index >= cols) {
       return;

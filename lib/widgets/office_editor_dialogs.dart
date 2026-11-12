@@ -567,7 +567,7 @@ typedef WordParagraphChoice = ({
   WmlLineSpacingRule lineSpacingRule,
   int dropCapLines,
   String borderColor,
-  List<double> tabStops,
+  List<WmlTabStop> tabStops,
   bool keepTogether,
   bool pageBreakBefore,
 });
@@ -605,9 +605,7 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
   final TextEditingController border = TextEditingController(
     text: current.borderColor ?? '',
   );
-  final TextEditingController tabStops = TextEditingController(
-    text: current.tabs.map((WmlTabStop t) => t.position.toString()).join(', '),
-  );
+  List<WmlTabStop>? tabStops = List<WmlTabStop>.unmodifiable(current.tabs);
   bool keepTogether = current.keepTogether;
   bool pageBreakBefore = current.pageBreakBefore;
 
@@ -757,13 +755,10 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                       ],
                     ),
                     const SizedBox(height: 10),
-                    TextField(
-                      controller: tabStops,
-                      decoration: InputDecoration(
-                        labelText: ctx.tr('Tab stops (pt, comma separated)'),
-                        isDense: true,
-                        border: const OutlineInputBorder(),
-                      ),
+                    WordTabStopsEditor(
+                      initialValue: current.tabs,
+                      translate: ctx.tr,
+                      onChanged: (value) => tabStops = value,
                     ),
                     const SizedBox(height: 6),
                     SwitchListTile(
@@ -809,16 +804,12 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                     return value;
                   }
 
-                  final positions = tabStops.text.trim().isEmpty
-                      ? <double?>[]
-                      : tabStops.text
-                            .split(',')
-                            .map((value) => double.tryParse(value.trim()))
-                            .toList();
-                  // An invalid token must not silently delete an imported tab.
-                  final validTabs = positions.every(
-                    (value) => value != null && value.isFinite && value >= 0,
-                  );
+                  // The shared editor keeps invalid drafts visible. Applying
+                  // an earlier valid value would silently discard current input.
+                  final tabs = tabStops;
+                  if (tabs == null) {
+                    return;
+                  }
                   final String borderColor = border.text
                       .trim()
                       .replaceAll('#', '')
@@ -862,9 +853,7 @@ Future<WordParagraphChoice?> showWordParagraphDialog(
                             RegExp(r'^[0-9A-F]{6}$').hasMatch(borderColor)
                         ? borderColor
                         : current.borderColor ?? '',
-                    tabStops: validTabs
-                        ? positions.cast<double>()
-                        : current.tabs.map((tab) => tab.position).toList(),
+                    tabStops: tabs,
                     keepTogether: keepTogether,
                     pageBreakBefore: pageBreakBefore,
                   ));

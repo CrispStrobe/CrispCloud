@@ -73,6 +73,47 @@ class PixelEvidenceTests(unittest.TestCase):
 
 
 class CycleComparisonTests(unittest.TestCase):
+    def test_omitted_table_grid_requires_matching_native_source(self):
+        for folder in ('fidelity-table-grid', 'engine/fidelity-table-grid'):
+            with self.subTest(folder=folder):
+                cycles = [f'{folder}/omitted-{cycle}.docx' for cycle in range(1, 4)]
+                source = f'{folder}/omitted-source.docx'
+                files = [source, *cycles]
+                records = {name: record(name) for name in files}
+                passing = render.cycle_coverage(files, records)
+                self.assertEqual(passing['failures'], [])
+                self.assertEqual(passing['baseline_comparisons'], 1)
+                for changes in ({'text': 'Lost native omitted cell geometry'},
+                                {'pixels': ['2' * 64]}, {'pages': 2}):
+                    broken = dict(records, **{source: record(source, **changes)})
+                    self.assertEqual(len(render.cycle_coverage(files, broken)['failures']), 1)
+                self.assertEqual(len(render.cycle_coverage(cycles, records)['failures']), 1)
+
+    def test_omitted_grid_edits_require_the_authored_postedit_expectation(self):
+        for folder in ('fidelity-table-grid', 'engine/fidelity-table-grid'):
+            with self.subTest(folder=folder):
+                cycles = [f'{folder}/omitted-edited-{cycle}.docx'
+                          for cycle in range(1, 4)]
+                expected = f'{folder}/omitted-edited-expected.docx'
+                original = f'{folder}/omitted-source.docx'
+                files = [original, expected, *cycles]
+                records = {name: record(name, text='Still editable') for name in files}
+                records[original] = record(original, text='First physical')
+                passing = render.cycle_coverage(files, records)
+                self.assertEqual(passing['failures'], [])
+                self.assertEqual(passing['baseline_comparisons'], 1)
+                self.assertEqual(passing['cycle_comparisons'][0]['baseline'], expected)
+                for changes in ({'text': 'Wrong replacement'},
+                                {'pixels': ['2' * 64]}, {'pages': 2}):
+                    broken = dict(records, **{expected: record(expected, **changes)})
+                    self.assertEqual(len(render.cycle_coverage(files, broken)['failures']), 1)
+                without_expected = [original, *cycles]
+                self.assertEqual(len(render.cycle_coverage(without_expected, records)['failures']), 1)
+                # A repeated but unchanged export must not satisfy an edit.
+                unchanged = {name: record(name, text='First physical') for name in files}
+                unchanged[expected] = record(expected, text='Still editable')
+                self.assertEqual(len(render.cycle_coverage(files, unchanged)['failures']), 1)
+
     def test_complete_zero_and_one_based_series_pass(self):
         for cycles in ([0, 1, 2], [1, 2, 3]):
             files = [f'case-{n}.docx' for n in cycles]

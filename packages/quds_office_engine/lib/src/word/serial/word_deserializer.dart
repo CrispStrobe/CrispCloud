@@ -1614,7 +1614,22 @@ class WordDeserializer {
       if (reader.eventType != XmlEventType.startElement) {
         continue;
       }
-      if (reader.localName == 'cantSplit') {
+      if ((reader.localName == 'gridBefore' ||
+              reader.localName == 'gridAfter') &&
+          reader.namespaceUri == OfficeNamespaces.w &&
+          reader.depth == depth + 2) {
+        final value = int.tryParse(
+          reader.getAttribute('val', namespaceUri: OfficeNamespaces.w) ?? '',
+        );
+        if (value == null || value < 0) {
+          throw FormatException('Invalid table row ${reader.localName}');
+        }
+        if (reader.localName == 'gridBefore') {
+          row.gridBefore = value;
+        } else {
+          row.gridAfter = value;
+        }
+      } else if (reader.localName == 'cantSplit') {
         row.cantSplit = true;
       } else if (reader.localName == 'trHeight') {
         final String? raw = reader.getAttribute(

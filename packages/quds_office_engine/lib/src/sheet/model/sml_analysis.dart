@@ -278,6 +278,7 @@ abstract final class SmlAnalysis {
           ..value = src.value
           ..formula = src.formula
           ..styleIndex = src.styleIndex
+          ..hasExplicitStyleIndex = src.hasExplicitStyleIndex
           ..fillRgb = src.fillRgb
           ..fontRgb = src.fontRgb
           ..fontBold = src.fontBold
@@ -333,6 +334,7 @@ abstract final class SmlAnalysis {
       value: src.value,
       formula: src.formula,
       styleIndex: src.styleIndex,
+      hasExplicitStyleIndex: src.hasExplicitStyleIndex,
       horizontalAlign: src.horizontalAlign,
       fillRgb: src.fillRgb,
       fontRgb: src.fontRgb,

@@ -18,10 +18,18 @@ const wordStructureOperations = <String, List<String>>{
   'tableRowDelete': ['table', 'row'],
   'tableColumnInsert': ['table', 'column'],
   'tableColumnDelete': ['table', 'column'],
-  'tableMerge': ['table', 'row', 'column', 'endRow', 'endColumn'],
-  'tableUnmerge': ['table', 'row', 'column'],
+  'tableMerge': [
+    'table',
+    'row',
+    'column',
+    'gridColumn',
+    'endRow',
+    'endColumn',
+    'endGridColumn',
+  ],
+  'tableUnmerge': ['table', 'row', 'column', 'gridColumn'],
   'tableRowFormat': ['table', 'row', 'height', 'cantSplit'],
-  'tableCellFormat': ['table', 'row', 'column', 'fill', 'width'],
+  'tableCellFormat': ['table', 'row', 'column', 'gridColumn', 'fill', 'width'],
   'tocAdd': [
     'section',
     'index',
@@ -89,6 +97,57 @@ Iterable<WmlBlock> bodyBlocks(WmlDocument doc) sync* {
   for (final section in doc.sections) {
     yield* WordTree.descendants(section.blocks);
   }
+}
+
+/// A legacy physical `column` or an explicit logical `gridColumn`, never both.
+({int row, int col, WmlTableCell cell}) wordStepCell(
+  WmlTable table,
+  StepInput step,
+) {
+  final row = step.integer('row', max: table.rows.length - 1);
+  if (step.has('column') && step.has('gridColumn')) {
+    throw ArgumentError('Choose column or gridColumn, not both');
+  }
+  if (step.has('gridColumn')) {
+    final column = step.integer('gridColumn');
+    final selected = WordTable.cellAtGrid(table, row, column);
+    if (selected == null) throw ArgumentError('gridColumn is outside the row');
+    return selected;
+  }
+  final column = step.integer('column', max: table.rows[row].cells.length - 1);
+  return (row: row, col: column, cell: table.rows[row].cells[column]);
+}
+
+int _mergeColumn(StepInput step, int max, {bool end = false}) {
+  final legacy = end ? 'endColumn' : 'column';
+  final explicit = end ? 'endGridColumn' : 'gridColumn';
+  if (step.has(legacy) && step.has(explicit)) {
+    throw ArgumentError('Choose $legacy or $explicit, not both');
+  }
+  return step.integer(step.has(explicit) ? explicit : legacy, max: max);
+}
+
+/// Whole-cell replacement must not strand anchors or tracked-change owners.
+void checkWordCellReplacement(WmlDocument doc, WmlTableCell cell) {
+  final removed = _removedParagraphs(cell.blocks);
+  _checkBookmarkRemoval(doc, removed);
+  final body = doc.paragraphs.toList(growable: false);
+  for (final revision in doc.revisions) {
+    if (revision.accepted != null) continue;
+    final target =
+        revision.targetParagraph ??
+        (revision.paragraphIndex >= 0 && revision.paragraphIndex < body.length
+            ? body[revision.paragraphIndex]
+            : null);
+    if (removed.contains(target)) {
+      throw ArgumentError(
+        'Resolve tracked changes in the cell before replacing its story',
+      );
+    }
+  }
+  // Bind legacy indexes only after all rejection checks pass. Later paragraphs
+  // retain their identities if replacing this story changes paragraph counts.
+  WordRevisions.capture(doc);
 }
 
 void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
@@ -206,25 +265,20 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
     case 'tableMerge':
       final t = table();
       final row = s.integer('row', max: t.rows.length - 1);
-      final col = s.integer('column', max: WordTable.columnCount(t) - 1);
+      final col = _mergeColumn(s, WordTable.columnCount(t) - 1);
       final endRow = s.integer('endRow', min: row, max: t.rows.length - 1);
-      final endCol = s.integer(
-        'endColumn',
-        min: col,
-        max: WordTable.columnCount(t) - 1,
-      );
+      final endCol = _mergeColumn(s, WordTable.columnCount(t) - 1, end: true);
       if (!WordTable.canMerge(t, row, col, endRow, endCol)) {
         throw ArgumentError('Range cannot be merged');
       }
       WordTable.merge(t, row, col, endRow, endCol);
     case 'tableUnmerge':
       final t = table();
-      final row = s.integer('row', max: t.rows.length - 1);
-      final col = s.integer('column', max: t.rows[row].cells.length - 1);
-      if (!WordTable.canUnmerge(t, row, col)) {
+      final selected = wordStepCell(t, s);
+      if (!WordTable.canUnmerge(t, selected.row, selected.col)) {
         throw ArgumentError('Cell is not merged');
       }
-      WordTable.unmerge(t, row, col);
+      WordTable.unmerge(t, selected.row, selected.col);
     case 'tableRowFormat':
       final row = s.item('row', table().rows);
       final height = s.has('height')
@@ -235,7 +289,7 @@ void applyWordStructureStep(WmlDocument doc, Map<String, Object?> values) {
         ..height = height
         ..cantSplit = cantSplit;
     case 'tableCellFormat':
-      final cell = s.item('column', s.item('row', table().rows).cells);
+      final cell = wordStepCell(table(), s).cell;
       final fill = s.has('fill')
           ? (values['fill'] == null ? null : s.color('fill'))
           : cell.fillColor;
@@ -400,6 +454,8 @@ void _plainGrid(WmlTable t) {
   final columns = WordTable.columnCount(t);
   if (t.rows.any(
     (r) =>
+        r.gridBefore != 0 ||
+        r.gridAfter != 0 ||
         r.cells.length != columns ||
         r.cells.any((c) => c.gridSpan != 1 || c.vMerge != WmlVMerge.none),
   )) {
