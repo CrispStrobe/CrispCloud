@@ -1,0 +1,563 @@
+{
+  "sourceSha256": "0afe11e2355151b75a66d41e0bd1ec64aea5326e0a53c5b757775596f2cc5a30",
+  "officeVersion": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "implementationBaseCommit": "f0a245e6dd4596cfb75646c06665346c16190b62",
+  "workingTreeChanges": [
+    " M lib/src/legacy_word_media_model.dart",
+    " M lib/src/legacy_word_media_parser.dart",
+    " M lib/src/word_media_writer.dart",
+    " M test/fixtures/word_native/POSITION-SOURCES.md",
+    "?? doc/blip-store-count-recovery.md",
+    "?? test/fixtures/word_native/word16-page-origin-lo-blip-count.doc",
+    "?? test/legacy_word_blip_store_count_test.dart",
+    "?? tool/fidelity/blip_store_probe.py"
+  ],
+  "scope": "Successful bounded reimport and image retention; rendering differences remain explicit.",
+  "cycles": [
+    {
+      "index": 0,
+      "binarySha256": "0afe11e2355151b75a66d41e0bd1ec64aea5326e0a53c5b757775596f2cc5a30",
+      "convertedSha256": "e567b4f0ed898e5c43fcb2d9d821bd7be0907931872799ecfd70bd6582bc2387",
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 7,
+          "tables": 1,
+          "cells": 15,
+          "paragraphs": 18,
+          "images": 2,
+          "drawingReferences": 2,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "imageSha256": [
+        "650e7a5670c022a4f4a9a3490e8bb23b0d4e0bcc1f4622b586d11344f14d8053",
+        "6f16361f4b7fd643bb8c1bc8787e45b393e288fc384a6314c41f553afd17c818"
+      ],
+      "binaryRender": {
+        "pdfSha256": "2514682fc30ad84ca81f868845fa26d38539f49302f060e35e86313cd70c133c",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  193.146,
+                  92.486764,
+                  201.762,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "c28a412c1f72dd59048ff419a00ad2de5ac0a688da1135297d6284efe22b5905"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "ad56ea3218e45a1b763151125ce5a8a99a80e9d62a2765024f85f2531280bb33",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  194.592,
+                  92.486764,
+                  203.208,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "97f654f24e1974c4ae17e51b05e412fa30c8beccb44de34feaef351400ffa86d"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "renderComparison": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 1.4460000000000264,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "binaryUnchanged": true
+    },
+    {
+      "index": 1,
+      "binarySha256": "a3bc00aa9238ea9d616341bcd53b392bdf8900a8737031cb6dd63b8f6b2c70ba",
+      "convertedSha256": "3cf2783d29d5fe78407e5a291ef715adf2393b905ac1ff7144dfc47da2a3fd22",
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 7,
+          "tables": 1,
+          "cells": 15,
+          "paragraphs": 18,
+          "images": 2,
+          "drawingReferences": 2,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "imageSha256": [
+        "650e7a5670c022a4f4a9a3490e8bb23b0d4e0bcc1f4622b586d11344f14d8053",
+        "6f16361f4b7fd643bb8c1bc8787e45b393e288fc384a6314c41f553afd17c818"
+      ],
+      "binaryRender": {
+        "pdfSha256": "35d8f22cb16b5b14c6ce5633a962de52b83fa230ee3e22bad4530472c0f3099b",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  193.146,
+                  92.486764,
+                  201.762,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "2e334b6989028c58686956200b0812aeafa271b752c3d522c5cb0a623875f8b5"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "8aad5e9cce7ef12d771c2032d2347496bd51427be76af2db5c5d1fda649c0ee3",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  194.592,
+                  92.486764,
+                  203.208,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "97f654f24e1974c4ae17e51b05e412fa30c8beccb44de34feaef351400ffa86d"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "renderComparison": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 1.4460000000000264,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "binaryUnchanged": true
+    },
+    {
+      "index": 2,
+      "binarySha256": "77177a62ab8bc870cf07070cd81c9161d7dbc6085ed986ac8fd02adf47cc138e",
+      "convertedSha256": "c302aa298108f1dd98144848a739c58a6b222ae51bd207216afe0a879beddcff",
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 7,
+          "tables": 1,
+          "cells": 15,
+          "paragraphs": 18,
+          "images": 2,
+          "drawingReferences": 2,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "imageSha256": [
+        "650e7a5670c022a4f4a9a3490e8bb23b0d4e0bcc1f4622b586d11344f14d8053",
+        "6f16361f4b7fd643bb8c1bc8787e45b393e288fc384a6314c41f553afd17c818"
+      ],
+      "binaryRender": {
+        "pdfSha256": "c23329458e6964db3241c448175c1513dfa8fb94ba061532ad8d72c85e5b0b52",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  193.146,
+                  92.486764,
+                  201.762,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "1f325c1365663526490a770371dbfba0c92d1dff2fbe1d127e31333c27b73900"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "f92501e4982203dcdb27624d34b5319195bfa8e8af59eeccac00cda847642bb7",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  194.592,
+                  92.486764,
+                  203.208,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "c2060774c6421f539079d0737249dca9c6fe7a1f29ddb8f2e011d4c0ed8e74ec"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "renderComparison": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 1.4460000000000264,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "binaryUnchanged": true
+    },
+    {
+      "index": 3,
+      "binarySha256": "8ca88b8e65570fa7ededb922cf3cdcbeab3f7c7fadaf723f1ea8a44bd85e4b2d",
+      "convertedSha256": "5c581a5a0f1c5d10182f066f2d29bc934129b15d8a8938439c9cb1a0752e3a36",
+      "conversion": {
+        "counts": {
+          "evidenceArtifacts": 7,
+          "tables": 1,
+          "cells": 15,
+          "paragraphs": 18,
+          "images": 2,
+          "drawingReferences": 2,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted"
+        ],
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false
+      },
+      "imageSha256": [
+        "650e7a5670c022a4f4a9a3490e8bb23b0d4e0bcc1f4622b586d11344f14d8053",
+        "6f16361f4b7fd643bb8c1bc8787e45b393e288fc384a6314c41f553afd17c818"
+      ],
+      "binaryRender": {
+        "pdfSha256": "3d254005d538e88e4fd0d4ad9087d105dea0f7d7abbed73cc5d27b15c3442ced",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  193.146,
+                  92.486764,
+                  201.762,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "1080b485412ff85bc919c8a1460df7173d000bcf379fe99847a8ad99e38b85d8"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "convertedRender": {
+        "pdfSha256": "501b875564020d8435ab1db1c887cfbb14ab56222b05d3797a60f40017525840",
+        "pages": [
+          {
+            "size": [
+              595.303937,
+              841.889764
+            ],
+            "words": [
+              {
+                "text": "Zufahrt",
+                "box": [
+                  170.2,
+                  92.486764,
+                  191.158,
+                  100.658764
+                ]
+              },
+              {
+                "text": "f\u00fcr",
+                "box": [
+                  194.592,
+                  92.486764,
+                  203.208,
+                  100.658764
+                ]
+              },
+              {
+                "text": "Rollstuhlfahrer",
+                "box": [
+                  170.2,
+                  100.486764,
+                  214.852,
+                  108.658764
+                ]
+              }
+            ]
+          }
+        ],
+        "text": "Zufahrt f\u00fcr\nRollstuhlfahrer\n\f",
+        "rasterSha256": [
+          "8f3b9c2a008db9111cac06bed3564746780de86de6ac6d81b954ec7c9a8cd614"
+        ],
+        "rasterDpi": 72,
+        "rasterColorSpace": "RGB"
+      },
+      "renderComparison": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 1.4460000000000264,
+        "tolerancePoints": 0.25,
+        "matchesWithinTolerance": false,
+        "rasterSettingsMatch": true,
+        "rasterExactlyMatches": false,
+        "layoutTextExactlyMatches": true,
+        "exactOnThisRenderer": false
+      },
+      "binaryUnchanged": true
+    }
+  ],
+  "sourceUnchanged": true
+}

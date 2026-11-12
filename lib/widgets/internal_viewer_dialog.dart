@@ -72,6 +72,7 @@ import 'syntax_line_view.dart';
 import '../services/syntax_line_highlighting.dart';
 import 'hex_viewer.dart';
 import 'internal_viewer_views.dart';
+import 'office_html_widget_factory.dart';
 import 'pptx_slide_viewer.dart';
 import 'preview_media.dart';
 import 'xml_tree_view.dart';
@@ -3294,6 +3295,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               padding: const EdgeInsets.all(12),
               child: HtmlWidget(
                 safeHtml,
+                factoryBuilder: OfficeHtmlWidgetFactory.new,
                 textStyle: TextStyle(fontSize: 13 * _zoom, height: 1.45),
                 onTapUrl: (_) => true,
               ),

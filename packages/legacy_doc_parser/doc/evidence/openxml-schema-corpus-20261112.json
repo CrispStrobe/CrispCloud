@@ -1,0 +1,909 @@
+{
+  "cases": [
+    {
+      "name": "table-origin/default",
+      "output": "table-origin/default-converted.docx",
+      "outputSha256": "cdcbd869a91472f68e82d1a3af4208d93a265ea633ab514d14fccc742bfddacc",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/default.doc",
+      "sourceSha256": "de2e0ef43a0d44d9bd923513890be55d1f418ab43de14574638316300a53e035"
+    },
+    {
+      "name": "table-origin/zero-margin",
+      "output": "table-origin/zero-margin-converted.docx",
+      "outputSha256": "44ec9e5673e27ef72c5d260a88daabbc5bc8c93ac320eab5a0e3f7f78a556496",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/zero-margin.doc",
+      "sourceSha256": "94d22e0dfb78b0335d142f58658c8b84f083446f4acd2279aa58d1e058ccb9ba"
+    },
+    {
+      "name": "table-origin/wide-margin",
+      "output": "table-origin/wide-margin-converted.docx",
+      "outputSha256": "5f4ebd146b50ef27191887ffbdfd252a4ac9c986275f0fadb0e0173fa8139702",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/wide-margin.doc",
+      "sourceSha256": "0545f9c4d8c99abe06f2e7e64799733e2be4eb5b01dd5b7e566e559c1ed03aaf"
+    },
+    {
+      "name": "table-origin/negative-origin",
+      "output": "table-origin/negative-origin-converted.docx",
+      "outputSha256": "1eef4e3e46b9ce42f6eddd10720c45f53f307887335b4981dc0886f17292deab",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/negative-origin.doc",
+      "sourceSha256": "11759b637ae15eeae99e81ce516cf7d7ccb3dc3d82e25e181c7ad2b222cd5506"
+    },
+    {
+      "name": "table-origin/positive-origin",
+      "output": "table-origin/positive-origin-converted.docx",
+      "outputSha256": "64151092c3abf1eea8107422566aed06cefc3cfaded7befc67edccb0874a99bb",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/positive-origin.doc",
+      "sourceSha256": "e776104ed25fc8a8be9ac51a3decc1f7643b798617e2dda4354dcfa1fe8fc254"
+    },
+    {
+      "name": "table-origin/independent-gap",
+      "output": "table-origin/independent-gap-converted.docx",
+      "outputSha256": "e5ea7123ccfd23f075feba5d401477067a2d73765513ecddbb57bfa72ef1ea97",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/independent-gap.doc",
+      "sourceSha256": "7bed0156e41cf86960410fb11c8cc140aed7b9bc6c4d86ef0ec17bab2c12883a"
+    },
+    {
+      "name": "table-origin/cell-margin",
+      "output": "table-origin/cell-margin-converted.docx",
+      "outputSha256": "5f4ebd146b50ef27191887ffbdfd252a4ac9c986275f0fadb0e0173fa8139702",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/cell-margin.doc",
+      "sourceSha256": "5a8d39ee78c2d1391cc71da72700435a1cfca3e7bdc0a0937beb58bd4b8b0f62"
+    },
+    {
+      "name": "table-origin/nested",
+      "output": "table-origin/nested-converted.docx",
+      "outputSha256": "f12491677ef8c1b413f1316316be7acf27657866a57764e48e38032e6c55c0d6",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/nested.doc",
+      "sourceSha256": "b5ccf1dd6a8177cd41b25a26dab328947b3a86b7aace6f511cf49c944d204e34"
+    },
+    {
+      "name": "table-origin/nested-wide",
+      "output": "table-origin/nested-wide-converted.docx",
+      "outputSha256": "03ada1a99945a3867abd261bd2fa73d31aae06fa29907a8881066d56979b49a3",
+      "producer": "tool/fidelity/table_origin_fixture.dart",
+      "source": "table-origin/nested-wide.doc",
+      "sourceSha256": "0aeeb8e22de0b0fc0ea5cbd4dbabfdd1d3bf1d9171385f3c4194345a69f3aa9d"
+    },
+    {
+      "name": "table-text-conditions",
+      "output": "table-text/table-text-conditions.docx",
+      "outputSha256": "6078345392eb7cf5176dd3f199c2ba53da2e2a99bf19d50545199de3e440ce3c",
+      "producer": "tool/fidelity/table_text_fixture.dart",
+      "source": "table-text/table-text-conditions.doc",
+      "sourceSha256": "a7e17bca401d7e68d16980fb953ccfaf560e4450b841a0ea680149c3811a2b29"
+    },
+    {
+      "name": "table-text-relative-toggles",
+      "output": "table-text/table-text-relative-toggles.docx",
+      "outputSha256": "ff79f5a67b46ad8234375d8dbe5fb70fcdf430a6a7fa69a258c5402b322f2549",
+      "producer": "tool/fidelity/table_text_fixture.dart",
+      "source": "table-text/table-text-relative-toggles.doc",
+      "sourceSha256": "f09050f3def0a4ec8ce2f36139a37486f3311f1bb97e28fccf17c8173ed83019"
+    },
+    {
+      "name": "shapes/rect",
+      "output": "shapes/rect.docx",
+      "outputSha256": "98c96369391b5a6cf3ade77d7676df4433d6f8ed40fc6209eddf40adf21cdec1",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/rect.doc",
+      "sourceSha256": "99b2cb2455c6ad88528438d4dde5efc76edc1a568efd65645f92d1af4d2c67ae"
+    },
+    {
+      "name": "shapes/ellipse",
+      "output": "shapes/ellipse.docx",
+      "outputSha256": "7b37495f2a83379593ee8e10e4b1bd7f84d94a8f79ae0cc86347396332f8bf9b",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/ellipse.doc",
+      "sourceSha256": "818abb382a0fb74ccf0feeb9e9adb1870bf43277c8955f573adf56464502d5f7"
+    },
+    {
+      "name": "shapes/line",
+      "output": "shapes/line.docx",
+      "outputSha256": "cfec87a5e967afc058982b7f6567a636018d2db0d90e570964fe8b0ca36d5fb8",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line.doc",
+      "sourceSha256": "90e6fd68b2da56b99e659e257c1acbe18cf7fed66a8d73913c45390d6314af9a"
+    },
+    {
+      "name": "shapes/custom",
+      "output": "shapes/custom.docx",
+      "outputSha256": "20c24856ccc712eaef274afab9d03141036767850a86821fddade16e52f63762",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/custom.doc",
+      "sourceSha256": "9e89d70e643393195f2835c3eeaf9cfa8c96dbfc1e1f2cba624f15471cba2993"
+    },
+    {
+      "name": "shapes/line-h-none",
+      "output": "shapes/line-h-none.docx",
+      "outputSha256": "72cec435d8dd57fe173d33e285f51d25dbfdf44d144826e3095b38644fb63210",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-h-none.doc",
+      "sourceSha256": "16ba2c86917e8ad4e62ce6593419c3173d34ccfb85b28a7f3137162d8cadcc8d"
+    },
+    {
+      "name": "shapes/line-h-x",
+      "output": "shapes/line-h-x.docx",
+      "outputSha256": "0accc270f594c3b36959a9c579b514950e1f6903d6b1966f41955e870c13777f",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-h-x.doc",
+      "sourceSha256": "a78b5b731b4df2a6712edaa081f11daae9bf51b794aac012953604ebeda45ba2"
+    },
+    {
+      "name": "shapes/line-h-y",
+      "output": "shapes/line-h-y.docx",
+      "outputSha256": "9ad6df3f5a59d428b3249b3fdd4dcc2cbf39c0df4c79e45385ca711509fa03da",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-h-y.doc",
+      "sourceSha256": "ea249fd1ffb048ccda76afaee95c2cc0530d995a65a4440c7ca178231d2e819c"
+    },
+    {
+      "name": "shapes/line-h-xy",
+      "output": "shapes/line-h-xy.docx",
+      "outputSha256": "e5ced01a3ba765c4773a9a80e68387e012dc70562c22a9f2ac10f11b97221335",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-h-xy.doc",
+      "sourceSha256": "e75eda255dacd09b30ea6f1eaec0ff7bbbdc60fbfe01926b40c617398dab69b6"
+    },
+    {
+      "name": "shapes/line-v-none",
+      "output": "shapes/line-v-none.docx",
+      "outputSha256": "5e153e7bb71f9beb505adee8babfc93a9abf2ca20cf3ae7d01ba28667b3f4afe",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-v-none.doc",
+      "sourceSha256": "771ff10420392d529633662f0eecb82433abfe195912ea48fc5296511a1e1a45"
+    },
+    {
+      "name": "shapes/line-v-x",
+      "output": "shapes/line-v-x.docx",
+      "outputSha256": "b85cfab971d333fc4801200386761236d88d3060759fda30ab4b120e400253d4",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-v-x.doc",
+      "sourceSha256": "bbf09d9ee8b7410d9f9941ed9e6b8d8329ebcddc7eed67095323f00c755627ae"
+    },
+    {
+      "name": "shapes/line-v-y",
+      "output": "shapes/line-v-y.docx",
+      "outputSha256": "cdc0b5f4c9f602a2182c2407eceb7773c1680ac1cd52a29c57a296251307a8c1",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-v-y.doc",
+      "sourceSha256": "f44386f00868764658aea514cd7a9c6d0cc928e598f99c17bb3b43e7d2062d22"
+    },
+    {
+      "name": "shapes/line-v-xy",
+      "output": "shapes/line-v-xy.docx",
+      "outputSha256": "defdc8db9436a6c80adf0b49849da14dffcb58d023e009ff0c9ee15e5e349008",
+      "producer": "tool/fidelity/shape_probe.dart",
+      "source": "shapes/line-v-xy.doc",
+      "sourceSha256": "43bda53c0aa3eb1656745b7abc5da2da906a6b8fa3a0818141e67b6325aa5338"
+    },
+    {
+      "name": "metafiles/emf32-alternate",
+      "output": "metafiles/emf32-alternate.docx",
+      "outputSha256": "bf96964f91e1b69b812810cbcf8c7cb23faee248c91ef1126a7e18bc70c40746",
+      "producer": "tool/fidelity/metafile_probe.dart",
+      "source": "metafiles/emf32-alternate.doc",
+      "sourceSha256": "1c47303bc0cad3a9b9b31766c459108f62b249654fa1585e31369e86d573c233"
+    },
+    {
+      "name": "metafiles/emf32-winding",
+      "output": "metafiles/emf32-winding.docx",
+      "outputSha256": "e15c5eb2e5ef6ee382a9f0ad4c22200f1a86de0661f0742032c0173e8866dff5",
+      "producer": "tool/fidelity/metafile_probe.dart",
+      "source": "metafiles/emf32-winding.doc",
+      "sourceSha256": "94f2ab7cb2151c47abe1a3b86e3cfb221833a5eca39f05b0784c98dd4ec015cc"
+    },
+    {
+      "name": "metafiles/emf16-alternate",
+      "output": "metafiles/emf16-alternate.docx",
+      "outputSha256": "9b8cfce42471496082e2a8e2ffa4d824116e5c6122cc3ec93bcfbfe3116f624a",
+      "producer": "tool/fidelity/metafile_probe.dart",
+      "source": "metafiles/emf16-alternate.doc",
+      "sourceSha256": "1233239c88a89fd980419383bba7832f5c5009e627ab091186043d7460129b66"
+    },
+    {
+      "name": "metafiles/emf16-winding",
+      "output": "metafiles/emf16-winding.docx",
+      "outputSha256": "3103f1d796a8204a5d9bc44fdfb97cd066e8bd76861a82d84e32c081322f7645",
+      "producer": "tool/fidelity/metafile_probe.dart",
+      "source": "metafiles/emf16-winding.doc",
+      "sourceSha256": "f604c939ed80e7aeb55611f17912878e1ceef66c524140b6216bfd175404ffd1"
+    },
+    {
+      "name": "metafiles/wmf-alternate",
+      "output": "metafiles/wmf-alternate.docx",
+      "outputSha256": "7e1a761512dd6581f5ac7e574d1900acda2343c909b53e39de7e2e151e82060a",
+      "producer": "tool/fidelity/metafile_probe.dart",
+      "source": "metafiles/wmf-alternate.doc",
+      "sourceSha256": "23e09be7c09d7949c3c7ac3d3c75181a0e0c880d607a42ac4822b7e369cb156e"
+    },
+    {
+      "name": "metafiles/wmf-winding",
+      "output": "metafiles/wmf-winding.docx",
+      "outputSha256": "f274d9755c49f96b82f0584eeb70bd791b8f34f0b55c9ff530d4245e9e59a191",
+      "producer": "tool/fidelity/metafile_probe.dart",
+      "source": "metafiles/wmf-winding.doc",
+      "sourceSha256": "beba0ba36c09f1d4a0edbf1200ba55d41e5de485a80c553071dbf781e28c4ed4"
+    },
+    {
+      "name": "reviews/numbering-change",
+      "output": "reviews/numbering-change.docx",
+      "outputSha256": "782fc8bebb763df2b8b049d29a418d4ac32f71320931ca841077bd3f630cc94f",
+      "producer": "tool/fidelity/review_schema_fixture.dart",
+      "source": "reviews/numbering-change.doc",
+      "sourceSha256": "537981c2110554ebdab598c5105b0e8b9c7749af7fe3af37eedb9786367c3825"
+    },
+    {
+      "name": "reviews/numbering-insertion",
+      "output": "reviews/numbering-insertion.docx",
+      "outputSha256": "01966d9cd6897d164c62de4b430d2300a052e2a49b4b5d6fa4fa361645838f5c",
+      "producer": "tool/fidelity/review_schema_fixture.dart",
+      "source": "reviews/numbering-insertion.doc",
+      "sourceSha256": "21888e2d0ed450c091c89b77389c03d518b4aaf8e7424680def3dd84bbd65864"
+    },
+    {
+      "name": "reviews/listnum-display-change",
+      "output": "reviews/listnum-display-change.docx",
+      "outputSha256": "a19cd83b1a3a9366bec75d92884d17e286218fabb2e95aee85b34ad201429628",
+      "producer": "tool/fidelity/review_schema_fixture.dart",
+      "source": "reviews/listnum-display-change.doc",
+      "sourceSha256": "16be7df0067311d46d369f96c14e5044999dea237dfacc60d83e0c7967ca0cb5"
+    },
+    {
+      "name": "section-review",
+      "output": "section-review.docx",
+      "outputSha256": "72110759277f3ba8604c3350a3243a01bd7a0789451c005d2bc48a5533047128",
+      "producer": "tool/fidelity/section_review_fixture.dart",
+      "source": "section-review.doc",
+      "sourceSha256": "3f9955f4ddb65742da0f251c3cdf8ae0934defbfcd7c415a7954bfce37eafe32"
+    },
+    {
+      "name": "native-inputs/formatting",
+      "output": "native-inputs/formatting.docx",
+      "outputSha256": "fd9d245d9e34944a443d0059a7615d0eb12cd0b0a69ab33ea5d7936d6deec0ec",
+      "producer": "test/fixtures/word_native/formatting.doc",
+      "source": "native-inputs/formatting.doc",
+      "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+    },
+    {
+      "name": "native-inputs/linked-textboxes",
+      "output": "native-inputs/linked-textboxes.docx",
+      "outputSha256": "11452b6e5e53a0d300b210aa0cc2da46c7674ce8558531cfc53c79878ad02f19",
+      "producer": "test/fixtures/word_native/linked-textboxes.doc",
+      "source": "native-inputs/linked-textboxes.doc",
+      "sourceSha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119"
+    }
+  ],
+  "controls": {
+    "negative": {
+      "errors": 2,
+      "files": 2,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "negative-controls.json",
+      "reportSha256": "4d0d49caeb15f8c7b4a36cccc0226f4c52f3b870f6d1a9c6499329fbee730e12"
+    },
+    "positive": {
+      "errors": 0,
+      "files": 1,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "positive-control.json",
+      "reportSha256": "f2e07805fb10e2c7c043ae8cbf4404ced3f2e0fca5cfe765cfa80289db3ae30e"
+    },
+    "sdkSelfTestPassed": true
+  },
+  "dart": {
+    "executableSha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+    "version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\""
+  },
+  "determinism": {
+    "cases": 35,
+    "files": 86,
+    "passed": true,
+    "sha256ByRelativePath": {
+      "manifest.json": "87e7f157879e359409c204c20874d8bd37b20b0b378be376cef5c92c2c56a9e5",
+      "metafiles/emf16-alternate.doc": "1233239c88a89fd980419383bba7832f5c5009e627ab091186043d7460129b66",
+      "metafiles/emf16-alternate.docx": "9b8cfce42471496082e2a8e2ffa4d824116e5c6122cc3ec93bcfbfe3116f624a",
+      "metafiles/emf16-alternate.emf": "d6b113bb7f4874b063eff29a4271f73aaf5f271400b6c38de658f1e8a05fae9e",
+      "metafiles/emf16-alternate.svg": "c48b62dcede0d4d3f642ee5871b03f90d92849e14c3546dac4a45bf24f20ed72",
+      "metafiles/emf16-winding.doc": "f604c939ed80e7aeb55611f17912878e1ceef66c524140b6216bfd175404ffd1",
+      "metafiles/emf16-winding.docx": "3103f1d796a8204a5d9bc44fdfb97cd066e8bd76861a82d84e32c081322f7645",
+      "metafiles/emf16-winding.emf": "cb29bc27a571db914982fb75d72cf31398c61ff687a7237955cb5adbaf0f1986",
+      "metafiles/emf16-winding.svg": "41b31751585a2b044ac750502360d56f6d195e61efb6e1d9d28e67d307e37ee9",
+      "metafiles/emf32-alternate.doc": "1c47303bc0cad3a9b9b31766c459108f62b249654fa1585e31369e86d573c233",
+      "metafiles/emf32-alternate.docx": "bf96964f91e1b69b812810cbcf8c7cb23faee248c91ef1126a7e18bc70c40746",
+      "metafiles/emf32-alternate.emf": "bbe1f1a93c2e5af3ae32f5eb088e0ac74bae3e45ad2d14c8130e7d4882bde9d1",
+      "metafiles/emf32-alternate.svg": "c48b62dcede0d4d3f642ee5871b03f90d92849e14c3546dac4a45bf24f20ed72",
+      "metafiles/emf32-winding.doc": "94f2ab7cb2151c47abe1a3b86e3cfb221833a5eca39f05b0784c98dd4ec015cc",
+      "metafiles/emf32-winding.docx": "e15c5eb2e5ef6ee382a9f0ad4c22200f1a86de0661f0742032c0173e8866dff5",
+      "metafiles/emf32-winding.emf": "7d19c42579c1ba9637c94f0253e702d33204d1a87576ae330d1b3f4667cd63a8",
+      "metafiles/emf32-winding.svg": "41b31751585a2b044ac750502360d56f6d195e61efb6e1d9d28e67d307e37ee9",
+      "metafiles/wmf-alternate.doc": "23e09be7c09d7949c3c7ac3d3c75181a0e0c880d607a42ac4822b7e369cb156e",
+      "metafiles/wmf-alternate.docx": "7e1a761512dd6581f5ac7e574d1900acda2343c909b53e39de7e2e151e82060a",
+      "metafiles/wmf-alternate.svg": "362c3c12b022def7985afb543e84d55496d3e7de780bf5bad61ac63b948a4029",
+      "metafiles/wmf-alternate.wmf": "afe4dff7b93ae8e00dc890424637bf4c0f2c45d65f160c6a4cdfc6b843422e5f",
+      "metafiles/wmf-winding.doc": "beba0ba36c09f1d4a0edbf1200ba55d41e5de485a80c553071dbf781e28c4ed4",
+      "metafiles/wmf-winding.docx": "f274d9755c49f96b82f0584eeb70bd791b8f34f0b55c9ff530d4245e9e59a191",
+      "metafiles/wmf-winding.svg": "2988dc55d64581f3b8e88d4377b3adad20350669e76c85aae0dcec9aeea2468b",
+      "metafiles/wmf-winding.wmf": "075f4b000888bcbddbf89e615ef79fe4e53ad13a42da51ebf779dce39337acac",
+      "native-inputs/formatting.doc": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "native-inputs/formatting.docx": "fd9d245d9e34944a443d0059a7615d0eb12cd0b0a69ab33ea5d7936d6deec0ec",
+      "native-inputs/linked-textboxes.doc": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "native-inputs/linked-textboxes.docx": "11452b6e5e53a0d300b210aa0cc2da46c7674ce8558531cfc53c79878ad02f19",
+      "reviews/listnum-display-change.doc": "16be7df0067311d46d369f96c14e5044999dea237dfacc60d83e0c7967ca0cb5",
+      "reviews/listnum-display-change.docx": "a19cd83b1a3a9366bec75d92884d17e286218fabb2e95aee85b34ad201429628",
+      "reviews/numbering-change.doc": "537981c2110554ebdab598c5105b0e8b9c7749af7fe3af37eedb9786367c3825",
+      "reviews/numbering-change.docx": "782fc8bebb763df2b8b049d29a418d4ac32f71320931ca841077bd3f630cc94f",
+      "reviews/numbering-insertion.doc": "21888e2d0ed450c091c89b77389c03d518b4aaf8e7424680def3dd84bbd65864",
+      "reviews/numbering-insertion.docx": "01966d9cd6897d164c62de4b430d2300a052e2a49b4b5d6fa4fa361645838f5c",
+      "section-review.doc": "3f9955f4ddb65742da0f251c3cdf8ae0934defbfcd7c415a7954bfce37eafe32",
+      "section-review.docx": "72110759277f3ba8604c3350a3243a01bd7a0789451c005d2bc48a5533047128",
+      "shapes/custom.doc": "9e89d70e643393195f2835c3eeaf9cfa8c96dbfc1e1f2cba624f15471cba2993",
+      "shapes/custom.docx": "20c24856ccc712eaef274afab9d03141036767850a86821fddade16e52f63762",
+      "shapes/ellipse.doc": "818abb382a0fb74ccf0feeb9e9adb1870bf43277c8955f573adf56464502d5f7",
+      "shapes/ellipse.docx": "7b37495f2a83379593ee8e10e4b1bd7f84d94a8f79ae0cc86347396332f8bf9b",
+      "shapes/line-h-none.doc": "16ba2c86917e8ad4e62ce6593419c3173d34ccfb85b28a7f3137162d8cadcc8d",
+      "shapes/line-h-none.docx": "72cec435d8dd57fe173d33e285f51d25dbfdf44d144826e3095b38644fb63210",
+      "shapes/line-h-x.doc": "a78b5b731b4df2a6712edaa081f11daae9bf51b794aac012953604ebeda45ba2",
+      "shapes/line-h-x.docx": "0accc270f594c3b36959a9c579b514950e1f6903d6b1966f41955e870c13777f",
+      "shapes/line-h-xy.doc": "e75eda255dacd09b30ea6f1eaec0ff7bbbdc60fbfe01926b40c617398dab69b6",
+      "shapes/line-h-xy.docx": "e5ced01a3ba765c4773a9a80e68387e012dc70562c22a9f2ac10f11b97221335",
+      "shapes/line-h-y.doc": "ea249fd1ffb048ccda76afaee95c2cc0530d995a65a4440c7ca178231d2e819c",
+      "shapes/line-h-y.docx": "9ad6df3f5a59d428b3249b3fdd4dcc2cbf39c0df4c79e45385ca711509fa03da",
+      "shapes/line-v-none.doc": "771ff10420392d529633662f0eecb82433abfe195912ea48fc5296511a1e1a45",
+      "shapes/line-v-none.docx": "5e153e7bb71f9beb505adee8babfc93a9abf2ca20cf3ae7d01ba28667b3f4afe",
+      "shapes/line-v-x.doc": "bbf09d9ee8b7410d9f9941ed9e6b8d8329ebcddc7eed67095323f00c755627ae",
+      "shapes/line-v-x.docx": "b85cfab971d333fc4801200386761236d88d3060759fda30ab4b120e400253d4",
+      "shapes/line-v-xy.doc": "43bda53c0aa3eb1656745b7abc5da2da906a6b8fa3a0818141e67b6325aa5338",
+      "shapes/line-v-xy.docx": "defdc8db9436a6c80adf0b49849da14dffcb58d023e009ff0c9ee15e5e349008",
+      "shapes/line-v-y.doc": "f44386f00868764658aea514cd7a9c6d0cc928e598f99c17bb3b43e7d2062d22",
+      "shapes/line-v-y.docx": "cdc0b5f4c9f602a2182c2407eceb7773c1680ac1cd52a29c57a296251307a8c1",
+      "shapes/line.doc": "90e6fd68b2da56b99e659e257c1acbe18cf7fed66a8d73913c45390d6314af9a",
+      "shapes/line.docx": "cfec87a5e967afc058982b7f6567a636018d2db0d90e570964fe8b0ca36d5fb8",
+      "shapes/rect.doc": "99b2cb2455c6ad88528438d4dde5efc76edc1a568efd65645f92d1af4d2c67ae",
+      "shapes/rect.docx": "98c96369391b5a6cf3ade77d7676df4433d6f8ed40fc6209eddf40adf21cdec1",
+      "table-origin/cell-margin-converted.docx": "5f4ebd146b50ef27191887ffbdfd252a4ac9c986275f0fadb0e0173fa8139702",
+      "table-origin/cell-margin.doc": "5a8d39ee78c2d1391cc71da72700435a1cfca3e7bdc0a0937beb58bd4b8b0f62",
+      "table-origin/default-converted.docx": "cdcbd869a91472f68e82d1a3af4208d93a265ea633ab514d14fccc742bfddacc",
+      "table-origin/default.doc": "de2e0ef43a0d44d9bd923513890be55d1f418ab43de14574638316300a53e035",
+      "table-origin/independent-gap-converted.docx": "e5ea7123ccfd23f075feba5d401477067a2d73765513ecddbb57bfa72ef1ea97",
+      "table-origin/independent-gap.doc": "7bed0156e41cf86960410fb11c8cc140aed7b9bc6c4d86ef0ec17bab2c12883a",
+      "table-origin/manifest.json": "1f45e704a2f9e93376dac592b9cbd6d4a91eef64c280f7c72afbeaea1dc5cee5",
+      "table-origin/negative-origin-converted.docx": "1eef4e3e46b9ce42f6eddd10720c45f53f307887335b4981dc0886f17292deab",
+      "table-origin/negative-origin.doc": "11759b637ae15eeae99e81ce516cf7d7ccb3dc3d82e25e181c7ad2b222cd5506",
+      "table-origin/nested-converted.docx": "f12491677ef8c1b413f1316316be7acf27657866a57764e48e38032e6c55c0d6",
+      "table-origin/nested-wide-converted.docx": "03ada1a99945a3867abd261bd2fa73d31aae06fa29907a8881066d56979b49a3",
+      "table-origin/nested-wide.doc": "0aeeb8e22de0b0fc0ea5cbd4dbabfdd1d3bf1d9171385f3c4194345a69f3aa9d",
+      "table-origin/nested.doc": "b5ccf1dd6a8177cd41b25a26dab328947b3a86b7aace6f511cf49c944d204e34",
+      "table-origin/positive-origin-converted.docx": "64151092c3abf1eea8107422566aed06cefc3cfaded7befc67edccb0874a99bb",
+      "table-origin/positive-origin.doc": "e776104ed25fc8a8be9ac51a3decc1f7643b798617e2dda4354dcfa1fe8fc254",
+      "table-origin/wide-margin-converted.docx": "5f4ebd146b50ef27191887ffbdfd252a4ac9c986275f0fadb0e0173fa8139702",
+      "table-origin/wide-margin.doc": "0545f9c4d8c99abe06f2e7e64799733e2be4eb5b01dd5b7e566e559c1ed03aaf",
+      "table-origin/zero-margin-converted.docx": "44ec9e5673e27ef72c5d260a88daabbc5bc8c93ac320eab5a0e3f7f78a556496",
+      "table-origin/zero-margin.doc": "94d22e0dfb78b0335d142f58658c8b84f083446f4acd2279aa58d1e058ccb9ba",
+      "table-text/table-text-conditions.doc": "a7e17bca401d7e68d16980fb953ccfaf560e4450b841a0ea680149c3811a2b29",
+      "table-text/table-text-conditions.docx": "6078345392eb7cf5176dd3f199c2ba53da2e2a99bf19d50545199de3e440ce3c",
+      "table-text/table-text-conditions.json": "9287e755f1eb8c9c5e8e2249b875832fe16f7c100e2e2e9f871f7bb0a9e5cf15",
+      "table-text/table-text-relative-toggles.doc": "f09050f3def0a4ec8ce2f36139a37486f3311f1bb97e28fccf17c8173ed83019",
+      "table-text/table-text-relative-toggles.docx": "ff79f5a67b46ad8234375d8dbe5fb70fcdf430a6a7fa69a258c5402b322f2549",
+      "table-text/table-text-relative-toggles.json": "9287e755f1eb8c9c5e8e2249b875832fe16f7c100e2e2e9f871f7bb0a9e5cf15"
+    }
+  },
+  "gateReportSha256": "db7225d20deb4fcbb3efba615763fa3a4691a920ad414e76a931b4a40bf4d7f5",
+  "notes": [
+    "All35packages have zero SDK errors; this is a schema gate, not a layout or complete fidelity claim.",
+    "Built fresh from byte-identical Quds35230d3862fbfc268ac7b5fa2a243e9f6a347057sources with .NET8 and hash-pinned SDK3.3.0packages.",
+    "Two complete corpus generations matched every retained binary source, DOCX output, and metadata file byte-for-byte.",
+    "The production gate fails on missing/duplicated/stale file receipts, contradictory counts, accepted negative controls, package exceptions, and mutated inputs.",
+    "Local standard MSBuild publish is unavailable because this host cannot create its named mutex; this run uses the documented fresh direct SDK compiler mode. CI uses standard dotnet publish."
+  ],
+  "parserGitHeadAtRun": "c8f2d5ca8467d881a574aaabf8abdd96294c08ae",
+  "passed": true,
+  "schemaReports": [
+    {
+      "Errors": [],
+      "File": "metafiles/emf16-alternate.docx",
+      "Sha256": "9b8cfce42471496082e2a8e2ffa4d824116e5c6122cc3ec93bcfbfe3116f624a"
+    },
+    {
+      "Errors": [],
+      "File": "metafiles/emf16-winding.docx",
+      "Sha256": "3103f1d796a8204a5d9bc44fdfb97cd066e8bd76861a82d84e32c081322f7645"
+    },
+    {
+      "Errors": [],
+      "File": "metafiles/emf32-alternate.docx",
+      "Sha256": "bf96964f91e1b69b812810cbcf8c7cb23faee248c91ef1126a7e18bc70c40746"
+    },
+    {
+      "Errors": [],
+      "File": "metafiles/emf32-winding.docx",
+      "Sha256": "e15c5eb2e5ef6ee382a9f0ad4c22200f1a86de0661f0742032c0173e8866dff5"
+    },
+    {
+      "Errors": [],
+      "File": "metafiles/wmf-alternate.docx",
+      "Sha256": "7e1a761512dd6581f5ac7e574d1900acda2343c909b53e39de7e2e151e82060a"
+    },
+    {
+      "Errors": [],
+      "File": "metafiles/wmf-winding.docx",
+      "Sha256": "f274d9755c49f96b82f0584eeb70bd791b8f34f0b55c9ff530d4245e9e59a191"
+    },
+    {
+      "Errors": [],
+      "File": "native-inputs/formatting.docx",
+      "Sha256": "fd9d245d9e34944a443d0059a7615d0eb12cd0b0a69ab33ea5d7936d6deec0ec"
+    },
+    {
+      "Errors": [],
+      "File": "native-inputs/linked-textboxes.docx",
+      "Sha256": "11452b6e5e53a0d300b210aa0cc2da46c7674ce8558531cfc53c79878ad02f19"
+    },
+    {
+      "Errors": [],
+      "File": "reviews/listnum-display-change.docx",
+      "Sha256": "a19cd83b1a3a9366bec75d92884d17e286218fabb2e95aee85b34ad201429628"
+    },
+    {
+      "Errors": [],
+      "File": "reviews/numbering-change.docx",
+      "Sha256": "782fc8bebb763df2b8b049d29a418d4ac32f71320931ca841077bd3f630cc94f"
+    },
+    {
+      "Errors": [],
+      "File": "reviews/numbering-insertion.docx",
+      "Sha256": "01966d9cd6897d164c62de4b430d2300a052e2a49b4b5d6fa4fa361645838f5c"
+    },
+    {
+      "Errors": [],
+      "File": "section-review.docx",
+      "Sha256": "72110759277f3ba8604c3350a3243a01bd7a0789451c005d2bc48a5533047128"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/custom.docx",
+      "Sha256": "20c24856ccc712eaef274afab9d03141036767850a86821fddade16e52f63762"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/ellipse.docx",
+      "Sha256": "7b37495f2a83379593ee8e10e4b1bd7f84d94a8f79ae0cc86347396332f8bf9b"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-h-none.docx",
+      "Sha256": "72cec435d8dd57fe173d33e285f51d25dbfdf44d144826e3095b38644fb63210"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-h-x.docx",
+      "Sha256": "0accc270f594c3b36959a9c579b514950e1f6903d6b1966f41955e870c13777f"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-h-xy.docx",
+      "Sha256": "e5ced01a3ba765c4773a9a80e68387e012dc70562c22a9f2ac10f11b97221335"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-h-y.docx",
+      "Sha256": "9ad6df3f5a59d428b3249b3fdd4dcc2cbf39c0df4c79e45385ca711509fa03da"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-v-none.docx",
+      "Sha256": "5e153e7bb71f9beb505adee8babfc93a9abf2ca20cf3ae7d01ba28667b3f4afe"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-v-x.docx",
+      "Sha256": "b85cfab971d333fc4801200386761236d88d3060759fda30ab4b120e400253d4"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-v-xy.docx",
+      "Sha256": "defdc8db9436a6c80adf0b49849da14dffcb58d023e009ff0c9ee15e5e349008"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line-v-y.docx",
+      "Sha256": "cdc0b5f4c9f602a2182c2407eceb7773c1680ac1cd52a29c57a296251307a8c1"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/line.docx",
+      "Sha256": "cfec87a5e967afc058982b7f6567a636018d2db0d90e570964fe8b0ca36d5fb8"
+    },
+    {
+      "Errors": [],
+      "File": "shapes/rect.docx",
+      "Sha256": "98c96369391b5a6cf3ade77d7676df4433d6f8ed40fc6209eddf40adf21cdec1"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/cell-margin-converted.docx",
+      "Sha256": "5f4ebd146b50ef27191887ffbdfd252a4ac9c986275f0fadb0e0173fa8139702"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/default-converted.docx",
+      "Sha256": "cdcbd869a91472f68e82d1a3af4208d93a265ea633ab514d14fccc742bfddacc"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/independent-gap-converted.docx",
+      "Sha256": "e5ea7123ccfd23f075feba5d401477067a2d73765513ecddbb57bfa72ef1ea97"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/negative-origin-converted.docx",
+      "Sha256": "1eef4e3e46b9ce42f6eddd10720c45f53f307887335b4981dc0886f17292deab"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/nested-converted.docx",
+      "Sha256": "f12491677ef8c1b413f1316316be7acf27657866a57764e48e38032e6c55c0d6"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/nested-wide-converted.docx",
+      "Sha256": "03ada1a99945a3867abd261bd2fa73d31aae06fa29907a8881066d56979b49a3"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/positive-origin-converted.docx",
+      "Sha256": "64151092c3abf1eea8107422566aed06cefc3cfaded7befc67edccb0874a99bb"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/wide-margin-converted.docx",
+      "Sha256": "5f4ebd146b50ef27191887ffbdfd252a4ac9c986275f0fadb0e0173fa8139702"
+    },
+    {
+      "Errors": [],
+      "File": "table-origin/zero-margin-converted.docx",
+      "Sha256": "44ec9e5673e27ef72c5d260a88daabbc5bc8c93ac320eab5a0e3f7f78a556496"
+    },
+    {
+      "Errors": [],
+      "File": "table-text/table-text-conditions.docx",
+      "Sha256": "6078345392eb7cf5176dd3f199c2ba53da2e2a99bf19d50545199de3e440ce3c"
+    },
+    {
+      "Errors": [],
+      "File": "table-text/table-text-relative-toggles.docx",
+      "Sha256": "ff79f5a67b46ad8234375d8dbe5fb70fcdf430a6a7fa69a258c5402b322f2549"
+    }
+  ],
+  "scope": "Open XML SDK Office2019 schema/semantic validation; no layout or review-rendering claim",
+  "sources": {
+    "aggregateSha256": "7aa690392315b13ad40db4c7ee3e8974bdee97a9b858ceac994f33280d871737",
+    "files": {
+      ".dart_tool/package_config.json": "3f73572664c912da489cc10ca5d0db504273c36ce91d9d87c87690de6a73ea53",
+      "lib/legacy_doc_parser.dart": "5ef8f92595c74eae08b104a750559fff9dd8b62f39d989ecef74ebd881f2e0a1",
+      "lib/src/bounded_cfb_reader.dart": "bac6a6f35a5a85a4ec7394b9af8b38b4e97463137a056da8d1e3641b72a847b0",
+      "lib/src/compound/byte_source.dart": "d984a3971d08d0ef7ff4351a2aea999dd34344e67045c62d574026020f9ee051",
+      "lib/src/compound/cfbf_reader.dart": "a31bd15585d4fcc65595a82987ac420f62d26bfe38c89cbe11db257e67f920d9",
+      "lib/src/compound/cfbf_writer.dart": "bb50688e5c748a2b4233b683d5f61c6344ab61d4999d53ca8f9509775f47059e",
+      "lib/src/conversion.dart": "770771b552218679fe3a5c87dace16f9acc5dc0b0fa216f60dd55f890d875fb5",
+      "lib/src/legacy_word_binary_source.dart": "f2e0a0ffba3c61d0ea97c2d4fc5165b4f27cf360ab85e8aa18c58b61f0f1f0c2",
+      "lib/src/legacy_word_compatibility.dart": "c82c73dd557ef7406e914235877f005b4b2760e635ded5e00243e46b0d366c2a",
+      "lib/src/legacy_word_compatibility_parser.dart": "01c11adb30b9af788e42ecb644a37782ab7cab0d3bb15eb07a2cc1abe9e5ddfe",
+      "lib/src/legacy_word_decorations.dart": "fcfee3253857e367c1c586592340c77431f80540bf5d75321611b0882cc0cbed",
+      "lib/src/legacy_word_document.dart": "9c84e371c9f0ded06bf7b413d6811985a91ba9407a273d9ccec66c69b2432e23",
+      "lib/src/legacy_word_fields.dart": "17b8a4e781417772593612b79afd746c2f2b52b508b82313d45dd5b222e589e4",
+      "lib/src/legacy_word_format_tables.dart": "ce1d2b7bd6f78aef04fa7077559e91e97c624e39625a90a867776f488ecedb3a",
+      "lib/src/legacy_word_layout_model.dart": "5265dc95d230b2516d82a37474a31796bdcd9baf9d3cfccb7d49a8a717770a1e",
+      "lib/src/legacy_word_layout_parser.dart": "ba8e01fa0f3dcfbba6666a592416adbe698facb6bcde304138674032a07b9793",
+      "lib/src/legacy_word_lists.dart": "5cf6d72ba9a9fa469d38d0eb4c8f8f646f3cab130cba31fc14d246c7e1c14aa2",
+      "lib/src/legacy_word_media_model.dart": "ea42d1582a9e410cefdbdf31525aad81fc0d33b37e66a004df197b66ea6cf690",
+      "lib/src/legacy_word_media_parser.dart": "4588d0a20a60120c40359dc376f1c337e9d193246eb8515118729d4a00e71460",
+      "lib/src/legacy_word_metafile.dart": "68b8f05ce9303ca5c00d4ace75ee96241a9742064352cb7b40627658f8177698",
+      "lib/src/legacy_word_metafile_render.dart": "2d0a811b15e465e3f02a5810230126c5d49f7a1c0ec038c2b0ce19548cfba565",
+      "lib/src/legacy_word_officeart_model.dart": "bd29b6ab7f802238af5f2dea73d0aa22be8666cea7061e9164a58932e492c11a",
+      "lib/src/legacy_word_officeart_parser.dart": "47058c469f86283e6a1c29bddb58eface3d5a90932e7f23463cf936e3b6b7353",
+      "lib/src/legacy_word_revisions.dart": "11ba51dc92df8931dd97935640c6a8422ff7b448d3ef492c92bd4c62881e7e1f",
+      "lib/src/legacy_word_sprms.dart": "1e26fdaef13a14edc10693b9d1c21c2d2388d2f360fb61d0c6de33b06f37e64b",
+      "lib/src/legacy_word_stories.dart": "40543a228a1b2cdac915b53cdaecd15432ffcee4972f12bede1679d3e62193b0",
+      "lib/src/legacy_word_structured_conversion.dart": "ec8ad5d622773fb56ac531018ae6149ec7a452bf8de1377f38b80b4e2f9e3440",
+      "lib/src/legacy_word_structured_model.dart": "b797884ffa1133a89bb820c6dc53e9830e2d09e33271858d4e235a7f4f0783af",
+      "lib/src/legacy_word_structured_parser.dart": "71d633e29ab207926418a1e95022cb43b7417697d7c9fc5005b5134934393896",
+      "lib/src/legacy_word_structured_render.dart": "c62657d1ceeb494c162f53b1f1d50ca7359065d31c668e03e3a210c1ce094700",
+      "lib/src/legacy_word_table_model.dart": "65e2cb093cd58b553ffb373b80590cbb5ed74d0ba2d2da606638e2c0c882deff",
+      "lib/src/legacy_word_table_styles.dart": "d4bd282afe0688d4e525ecab44b7b3babc1fc4cbe6f1d41b324aa6fa15bf0a24",
+      "lib/src/legacy_word_table_text.dart": "6093b88e8dd4a55ce8e7bb269086c4c02eafce44e7276bd6debf903c3aee4653",
+      "lib/src/legacy_word_tables.dart": "1f4b7568574f5784b327b662452d24bc336dad65c2a2703d188b5615583823ae",
+      "lib/src/opc_package_writer.dart": "6852b0de555c609ace9c7bddb29de27e0a2e46e642c69c853cd49beeb66cf97c",
+      "lib/src/word_comment_writer.dart": "1d6d02c61fd87b75e174760fe08a9c0dcfe31ab604298ee274f027c7a7fc6997",
+      "lib/src/word_compatibility_writer.dart": "0e7d54c6948198165236f561c018243a64c0b89d6d112b553d6b9357f97452d8",
+      "lib/src/word_decoration_writer.dart": "8a6354c2e4970a2c504db2623885f5250765a49d8414ebf0da76e3e1ac3a1281",
+      "lib/src/word_layout_writer.dart": "ffcb9e9ac14b3adfc8966aa5dbdb50f95f6d697c41e4fb35293b33d16cf68254",
+      "lib/src/word_media_writer.dart": "a3695fe7c575645de70b468815d41b15f1b93cc8c0e2b6de328c5d7951c051e0",
+      "lib/src/word_revision_writer.dart": "842b227cf1bab48f1e788ceb2747f4b843cd8a28a37f6915e82596562c007da6",
+      "lib/src/word_shape_writer.dart": "9e6c0288f3694aa9a2872c295a00beb5a955c8b275f639cc4208ad8674b2ef5d",
+      "lib/src/word_story_writer.dart": "2024b9e13fd5033e9468c1dc8730d6c3d36748aee07a0d317761a707adaea718",
+      "lib/src/word_table_style_writer.dart": "9847e9c8309877ecf9eda169eebae413be2cacf01b418fb16ad2af72f0ad51d1",
+      "lib/src/word_table_text_writer.dart": "9309fdd3cc60fae53e385792d4bd84a64a35af6ca79cf35e844df4f7964d0206",
+      "lib/src/word_textbox_writer.dart": "8b8496540858c76b443568bd364cf90c3ce38c706323427784174523499b67fe",
+      "pubspec.lock": "7d0056c7466e4aad98ccec568b25d10dac8f3fac0a7eb6511ac3e2d6272ca829",
+      "pubspec.yaml": "e377855d3104e4c278672e3a6e5f6ff494e6303809bb8cf3a23a0736b60b8fe3",
+      "test/fixtures/word_native/formatting.doc": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "test/fixtures/word_native/linked-textboxes.doc": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "test/support/decorated_word_fixture.dart": "7c0390f61159ac6b7f541eff4cc0c5e8adf09f5998aa165f8f41374530e5a3b7",
+      "test/support/legacy_word_fixture.dart": "69d0897a8193b39c998b6175e86ddcf3dc4c763e9e0c06dc8e9e625ed801b475",
+      "test/support/linked_textbox_fixture.dart": "25628f4a13cfbda957a865cf2dc9ebf0a59dfe4741e10db68f06fe1bdcf96bf0",
+      "test/support/list_word_fixture.dart": "5e6772021f1cda55abec91b9b04d13edd3d9b8fd9102ff3057fd12c8a8b9ac12",
+      "test/support/media_word_fixture.dart": "eef79c9d11684dfdbad94edc4d21b5f99bd17a5bd18d399bde054d548a9fc599",
+      "test/support/metafile_fixture.dart": "32e80a6769e97b6ed13700f1e8cb15ce99112757f10aa01e695069ad4dfbf16a",
+      "test/support/officeart_shape_fixture.dart": "bcb92506081010182ddd0780f54245bd418e44f27f9b556c5e137abe130bb85c",
+      "test/support/story_word_fixture.dart": "6e75a78d4b298ae7324d82d68b546b57fc3ee21f70246c77ab67f6fb7d57498f",
+      "test/support/structured_word_fixture.dart": "f424c1027609bf6fb869501eb080d96ae13e040f41a7d80f1816933bb2d63a81",
+      "test/support/table_word_fixture.dart": "3f42cb3a38bc2ea42cd4a7fcbe883545b8d196265151926823e1f3db0e172728",
+      "tool/fidelity/convert.dart": "4c8eefede4babfc2179f701b49055a5a416638d11fef05393c60f665fe1c8018",
+      "tool/fidelity/metafile_probe.dart": "3f2c1732d4c61b6077a0bddb44cd86282fa1009a7b48b0d70bee5eb1d6afd6ff",
+      "tool/fidelity/review_schema_fixture.dart": "d6fc33f0477325d9c241ff082a0a1eaa172dc8639947fa9b8b671fcc2e0d8793",
+      "tool/fidelity/schema.py": "5c253f38d63a70f1d6e5461d90011bf11585064b42f27f6ec63080cd12a27cf4",
+      "tool/fidelity/schema_corpus.dart": "914093cd6fe9f4cb7cfbaa20c14a81d1a60a4e41cabd3ac0a79d6d9e786c6f73",
+      "tool/fidelity/section_review_fixture.dart": "c4a104cb1f1a554428440ec36a0777e7b24c888c26e1f374b4422ed5ac53353d",
+      "tool/fidelity/shape_probe.dart": "f4aac17461c2d995b56c8d33a02c8c729594b413709e978b5fa85b496eab8b43",
+      "tool/fidelity/table_origin_fixture.dart": "48af1ba6caf08a3f78d239b0e719e2c0af9a4cd6ae78fff7c909c33e3b19b535",
+      "tool/fidelity/table_text_fixture.dart": "adab533a32961ed721c5fbe7427b68e932bea471c596109740175cff2aa48098",
+      "tool/fidelity/textbox_probe.dart": "c652951956821c635ff81ee4494d81399819dfdc7774e0d7ab93e9f32cd683a8",
+      "tool/office-validation/LICENSE.quds": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685",
+      "tool/office-validation/OfficeValidation.csproj": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
+      "tool/office-validation/Program.cs": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+      "tool/office-validation/README.md": "5bee5bbe851d9ba5283d0101735d24e674e0a63d5e2066756608c6788a0d0c26",
+      "tool/office-validation/upstream.json": "8895213aa99314df3a55e59d39118d14a32c68b4e03903246b2a25534c31ffca"
+    }
+  },
+  "sourcesUnchanged": true,
+  "validation": {
+    "errors": 0,
+    "files": 35,
+    "hashesVerified": true,
+    "inputsUnchanged": true,
+    "report": "schema-validation.json",
+    "reportSha256": "0a6b225e29d2d6828361a744718e6357b32ae1ab623baebc506026c52e2429cb"
+  },
+  "validatorBuild": {
+    "artifacts": {
+      "DocumentFormat.OpenXml.Framework.dll": "5b8c2b9ca1aa70539af0b8054d649bd09fdce4dec812b263ab511b13789c8589",
+      "DocumentFormat.OpenXml.dll": "72e8f6e3e3527d7e6ee29f2f9182ef1b39a4de6da355a33013c0940efb24d87e",
+      "ImplicitUsings.g.cs": "11f71a1fd24dc89f70a05a80adbe066abec9030d4edb092b98e109760b0e0a0d",
+      "OfficeValidation.dll": "698a090f1ba04ef8a844eea2614c9378c3713aa74101a4bf5e0c00e0588085c1",
+      "OfficeValidation.runtimeconfig.json": "ec2341a13d45274f021c456e4f4bd06618224beb9d045057b3d55efbf4caa705",
+      "System.IO.Packaging.dll": "12ddc8bff279fad856551a74894dc52b80fa437d5d2b32722e70ae6899217b7c"
+    },
+    "compilerResponseSha256": "603f8db55838ecc54c157bce254ff283d227072bc48c5e5c7535b86a26a68c14",
+    "compilerSha256": "1b1253cf4fb6ba61db478c9aee3711d8941daec264e57243fae76f5e0465f293",
+    "compilerVersion": "4.11.0-3.25569.22 (3fb752d4)",
+    "dotnetSha256": "c74333747814ad5fdf5fe643393922001ff2e9019b53e8c075115ee26c9afef2",
+    "frameworkVersion": "8.0.34",
+    "implicitImportsSdkSourceSha256": "1cb4c9a0a55a062a7b7d4336ac76eff17e0228adb3dc769439d994beba0c467c",
+    "implicitImportsSha256": "11f71a1fd24dc89f70a05a80adbe066abec9030d4edb092b98e109760b0e0a0d",
+    "installedRuntimes": "Microsoft.AspNetCore.App 8.0.34 [/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/dotnet/shared/Microsoft.AspNetCore.App]\nMicrosoft.NETCore.App 8.0.34 [/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/dotnet/shared/Microsoft.NETCore.App]",
+    "mode": "direct-sdk-compiler",
+    "packages": [
+      {
+        "assemblySha256": "72e8f6e3e3527d7e6ee29f2f9182ef1b39a4de6da355a33013c0940efb24d87e",
+        "id": "DocumentFormat.OpenXml",
+        "nupkgSha256": "53a74167552d886f0e312540db12c86a6133a83bd698795f3be6e25fc091b9e7",
+        "version": "3.3.0"
+      },
+      {
+        "assemblySha256": "5b8c2b9ca1aa70539af0b8054d649bd09fdce4dec812b263ab511b13789c8589",
+        "id": "DocumentFormat.OpenXml.Framework",
+        "nupkgSha256": "5f539f1602b642198ec6ed3ec567eac3fff62309f6ec65e28db2751a488ec30d",
+        "version": "3.3.0"
+      },
+      {
+        "assemblySha256": "12ddc8bff279fad856551a74894dc52b80fa437d5d2b32722e70ae6899217b7c",
+        "id": "System.IO.Packaging",
+        "nupkgSha256": "c5fd0101fa90bc84e89a906cbdfa7188bb6cffab11404cdd8cd0377ffabfbd8e",
+        "version": "8.0.1"
+      }
+    ],
+    "referenceAssemblies": {
+      "Microsoft.CSharp.dll": "3b9693678237541c6d09aa4962627f4dd7273bb4a4002f5f6ef3d38115d7eed0",
+      "Microsoft.VisualBasic.Core.dll": "4f8197402fd151c69b3cea0c0fcc6684d78a9a4c7b4c7bb1dd2f9237c17d948c",
+      "Microsoft.VisualBasic.dll": "cf0a4cf681b0bcf35918f14e953eba684b8aa703646e972567f33c2d86160911",
+      "Microsoft.Win32.Primitives.dll": "6ad3125a88d64f37a3501804b8a34976bd3a966d38e97282b332abe8e02eb234",
+      "Microsoft.Win32.Registry.dll": "1cd18b43cf9053c6d16a4272ecd1b630d51a83b0384474152aefa207670c6016",
+      "System.AppContext.dll": "653d7260a32a23ce4f3da78e28afd58c89b97d5191c6db9db2d795cea2bef032",
+      "System.Buffers.dll": "ab44ba0bc077af06c374b86a0930f788d5955302cb826cffb6e25a045d0366d7",
+      "System.Collections.Concurrent.dll": "a787cb0d5a0120cc179bbdd2bb8e11fe9838c6694ec8a4708ac369036d981406",
+      "System.Collections.Immutable.dll": "7183e0bcfef5946ace4096b089070d47eac1fdcc1426efd2a7cec5562df3ec29",
+      "System.Collections.NonGeneric.dll": "e05573c68b95d98021e1668482a0a9cc3022d74dc79c98c17ba42a0ffaba28f1",
+      "System.Collections.Specialized.dll": "5a19f007f27b862d600e080c9286338b7378efb79a233b80f6304a6544876197",
+      "System.Collections.dll": "cb54edcb2fc207a13093eb9083ca0a8ba2bcda7527c7e461dd79d064025d1176",
+      "System.ComponentModel.Annotations.dll": "d3ae35c4f51a10f222f52e64539677a4620c40fc4aded2223a0f298d0bc3a528",
+      "System.ComponentModel.DataAnnotations.dll": "c8a059fbdd023e83ea0980dc22c4245c5834e2c99a1c24d4f652134e7caa0714",
+      "System.ComponentModel.EventBasedAsync.dll": "07c7db61b17b21d80c2d386d9c4696114fadc80e948543e495f61a16ec94a8ac",
+      "System.ComponentModel.Primitives.dll": "45c0dbcf4533bc06674ef68f5b51e57299a68a494f67a2803922ebfa98a13e4c",
+      "System.ComponentModel.TypeConverter.dll": "ac70f55afa56ae1d3d5eae23259608f04d228580e10c00c729738b020295bb78",
+      "System.ComponentModel.dll": "82fecb61a233b49248968df47d5f3d1fcb3db73ccacaf9482bbab2c04cb3c176",
+      "System.Configuration.dll": "4fef5887f46089f5576fccb4cecc11eb999a59628b6b5bbd65d93fb0a8367a00",
+      "System.Console.dll": "c04fa6526558be398321d58f6a80fbad24da74b5a1029254818c00a1f434f1de",
+      "System.Core.dll": "0df556f1ab14cf37c45d933b64259986d083af89cc4a10adad96e78acb350b97",
+      "System.Data.Common.dll": "e1a3b6423753b2aeb16546847a7d5600aa62102ffb0cbadc62a07a93a7033442",
+      "System.Data.DataSetExtensions.dll": "5ff2b4b1a6073d9effe0be357e2e129cb69a23a31c5bde0938f475055ebc6431",
+      "System.Data.dll": "8dd653ffa9e8c0966d3722fb25c3ab84303a18834bcbcd4d8b2b3cbb2758c1d2",
+      "System.Diagnostics.Contracts.dll": "89c981008d1ab77d5e2c0e78207c57d27afe1a22076ddddbb73bf91715914333",
+      "System.Diagnostics.Debug.dll": "420371db3d1693e6fe8e6ab68ac29a0801c9eda9d86291e7809a48497fe427ee",
+      "System.Diagnostics.DiagnosticSource.dll": "971fb32c73ede0b647ee0c50c5bd5e92e8a432af2855be32f9679be2b4fcd02e",
+      "System.Diagnostics.FileVersionInfo.dll": "bb6a8373b7fccf653b4f2e2bcec39babb0426a32d7d2eacf66a8bdc3e3b4002f",
+      "System.Diagnostics.Process.dll": "fc4a89bb75d45813f136cca0797b84699c10c3a4148c1b8004fa64a17a5a5041",
+      "System.Diagnostics.StackTrace.dll": "0260ae4d2fbadd9c6b2a79158244d01678ca057a149bbb744100ac6c666931a5",
+      "System.Diagnostics.TextWriterTraceListener.dll": "ef2265fb4e92272eb7a709474104e6a7661685679d2117c83b6afac5de23245e",
+      "System.Diagnostics.Tools.dll": "25c189a9e8530512862a8fd48fc4735de493edf32e4493bb30e9c8fc23910a35",
+      "System.Diagnostics.TraceSource.dll": "e7fa86ca47a31b18ad7002910cb52be3449c2ced7c241df7be92fbc027e76f4a",
+      "System.Diagnostics.Tracing.dll": "ef0caff5d492bb6bb1371c8794113079f3d3e41ea382c58aa6578681f2eaeec8",
+      "System.Drawing.Primitives.dll": "6951d00bc5fa97db56a052ff5aa6224fdf4e1012a700580b511e039258fe91f9",
+      "System.Drawing.dll": "2b6e637a260e80cef27d9f6f884f3c28fd8243d0b6f60b6c8e499cdda2234358",
+      "System.Dynamic.Runtime.dll": "9d001586f521f9092a53629c28a9b0167e9029ca6e312244af15536920252318",
+      "System.Formats.Asn1.dll": "19cc4c82c37101ed6b2082d0f9428551cde9e01f70a1904ee57c1025ec24d0b7",
+      "System.Formats.Tar.dll": "38232f6fba845c09c6c344f2ee695e30092187778df04bc68b8e53518f25eb5d",
+      "System.Globalization.Calendars.dll": "309601921d40708a0f6a909bb3e1b5c278112233f3ddd84f5103bbf24d96a10b",
+      "System.Globalization.Extensions.dll": "03edce24632575fbff75d3a4b80fd530d0520838b2d0460822e7810554efe86a",
+      "System.Globalization.dll": "11cac0cbf223baae0dde7d4bd3ca3e9c7de81f440fdd2f6847fa7870659285bd",
+      "System.IO.Compression.Brotli.dll": "422d26453f75dd15417e2139823a3c52299f29426325df74b3c5b2caecaa374b",
+      "System.IO.Compression.FileSystem.dll": "d02e2de8262913f8752a7d1cbf0af1824fca3795fe7f1ee542dbd55a7b1538b1",
+      "System.IO.Compression.ZipFile.dll": "feca0efa424dcbc05fa456a05070e81d7eca7084a5da72115bdcc912e9628601",
+      "System.IO.Compression.dll": "6085c78075aa573507c81313cc837181e3b7f6a83640b6dc3ecf46d99e3c2ce1",
+      "System.IO.FileSystem.AccessControl.dll": "b9da36cfc834564973ab848e1e322b04c759bf6c3da204341ad03196ecaede12",
+      "System.IO.FileSystem.DriveInfo.dll": "1ad645a8c163a259d178560b3617d3a63ef444940f45ddb8a92bd7a9dd2d2509",
+      "System.IO.FileSystem.Primitives.dll": "5fc745b41e624742cec43b136b52ab8813dc1e21dd0453d067a483cbad8be87a",
+      "System.IO.FileSystem.Watcher.dll": "3b8f4a777f8f2e493de9671043ede32c5350baefdec0e65e14d3e576e0d7a7c6",
+      "System.IO.FileSystem.dll": "412e8a01ead54f97a7f6be8739466b649b301c5f6b6189ebb46fb6e929726985",
+      "System.IO.IsolatedStorage.dll": "755c1c788e93ad2588ddfd6c3e1bd040c38df8d871f60d1b3adca1e7039b7e30",
+      "System.IO.MemoryMappedFiles.dll": "afc1b7233d8bd7daec901a8a849f75d7ade3796b1428129357a1c14551515378",
+      "System.IO.Pipes.AccessControl.dll": "4bc34b30a99677d5c5a3632ae11bca9c408d60ea24b2547982b47a8c8075a7d4",
+      "System.IO.Pipes.dll": "903d97ada12e7d7dd1d667307db412319b426785f461d6e7a656fd4e7eec9190",
+      "System.IO.UnmanagedMemoryStream.dll": "d41e7c5072bf1e2a7f466656c6830ebef5ba14b01d0e10232d1e4f0566ec9cb1",
+      "System.IO.dll": "e3d8fc2f1247a25277ad55eea76b3cb716f0fd22bd91e6f171506dc39ecb47f5",
+      "System.Linq.Expressions.dll": "3ad451edadb23c694389d2f9f8570f54472a25b60819fc2b5216dfb9078f43d4",
+      "System.Linq.Parallel.dll": "fc0eb4295b14d07601a822084d3b9276b7c251af9c38a123fcf720ac3c330732",
+      "System.Linq.Queryable.dll": "884f7d9f4c8c3aef3cb75122de6a2f6208258d175545a6f989d3abcdaf9749a7",
+      "System.Linq.dll": "99774e49091d27bf701037ad964100973024cced62e1afea296b59dc7a93058b",
+      "System.Memory.dll": "ab5976de91dc352afd192d79a1cf5fe9d09a12e64383b78d9aac95413c35cfc2",
+      "System.Net.Http.Json.dll": "00cccd3fbff67036992ae75a6a78511b10799462e870bf046439ad2aeda5159d",
+      "System.Net.Http.dll": "981b91f03abc72042c3108d1f1501b32f0ff46e21f57dca791f9db05db7c2791",
+      "System.Net.HttpListener.dll": "636a9d96923002ae706566159f8fe63fc54a2a39039726513888aeb0c9f52eca",
+      "System.Net.Mail.dll": "023d10f129c06fb44b05b7b22cbd80e55baf93fe625c6aa6a8b02221406510ae",
+      "System.Net.NameResolution.dll": "e7311b2e7d18d17192088622942506db942d2ce734ff63daccf5b79bfd3590aa",
+      "System.Net.NetworkInformation.dll": "11145ae8fe621bd7defadda97cdb66d810e23aaae9c4e44bf12a52827f0638e6",
+      "System.Net.Ping.dll": "6f7fa17ed5b52a693aef11757c63bd596903a0862e3d39abdef1554d8ea3a70d",
+      "System.Net.Primitives.dll": "f3c86d752e375bddab63c48f1a724bd84f8a1501871d2cfa62a80dcfba25eff4",
+      "System.Net.Quic.dll": "5629ba88b040f88361d3669ede8e50d14554dec0c86444b14aadd1610885a2dd",
+      "System.Net.Requests.dll": "b6df171d195e18e93d2dee5ba56ad6d61525c3acbfbf095b87c039ea59b9dedf",
+      "System.Net.Security.dll": "6791eb0b18337c814eae7836772a9fb8dcd125ec39b3835c2b52fad5a40d01fc",
+      "System.Net.ServicePoint.dll": "7596496b6d9d586bee8b468a8bb555bf6c01f5c9cfc4dfb300b2be7d9be21e24",
+      "System.Net.Sockets.dll": "dde6a938da43090dba48f15fe2e8aea6b2b20fd70026eea63ca21297e64b52ad",
+      "System.Net.WebClient.dll": "afbc24aaf0409c8bcf7641067abc263bbeef50084bbe69a90490aacdca0c674e",
+      "System.Net.WebHeaderCollection.dll": "a59d6b6fcef2624081b357d51cc87d4f5a4277e53af0f985561142ad33ed275e",
+      "System.Net.WebProxy.dll": "8bb33aef6e33429994a7e16cf8dc180ba534bce26457175d1b0dc20ad92cc909",
+      "System.Net.WebSockets.Client.dll": "17fa659a7c24b20074fa447ca71cc87521ffcff57e3e601cb2c98d2af8a03320",
+      "System.Net.WebSockets.dll": "725b50e515f2879cae72ac458a9fe9322e4c1aef1d9442167a63c75e7b082e10",
+      "System.Net.dll": "78559f94d7d189f34ff4c29dc593e3ca22ac5511da31efdc66f57e9cbc4c3969",
+      "System.Numerics.Vectors.dll": "9b4e6cde97fa04ee32ef6f310bf8d71c1bf927e9f4cca70636ce9cd345c91647",
+      "System.Numerics.dll": "b3b841ae76e30067bc75bc2142db4eb5e4cc248cf3011ec9de4f4ad73d569c33",
+      "System.ObjectModel.dll": "6087b7aef0d9ce64b8ea84883460457a40a1095213f8144247f6e4540132c6e0",
+      "System.Reflection.DispatchProxy.dll": "decc8c5339de0f7a2cdc9de50f03a29458676c97b2b08fb5f3baf395c819ece9",
+      "System.Reflection.Emit.ILGeneration.dll": "387d695335068747a742b128853c8175dbf0f4249c9c0bb035516fa8de7177b5",
+      "System.Reflection.Emit.Lightweight.dll": "101897799f1a71f3f5d80011ddf36e037d2d811e4b93463bc6fc39ece5612610",
+      "System.Reflection.Emit.dll": "742c3e84abcc44ac1d2792bbe5f166e9a9799c783f51876fb6951d220e16231b",
+      "System.Reflection.Extensions.dll": "6e936c3abddfe0262b836bc13e938ae0f90021253a4e1d4fbeb2a65127bb62dd",
+      "System.Reflection.Metadata.dll": "66b9d953095715c0fea28a0c23a1b5eb06cdedb7c6beb187105123b29e0ca4c5",
+      "System.Reflection.Primitives.dll": "0d93fa7d19c3696d26560e0da02743f3ef39231be3bd6c6f79f89c17752d5587",
+      "System.Reflection.TypeExtensions.dll": "e0cef963bdae79c73cccd45980c7da5a5e61ffae87642dcaa5ccc0c7be29a773",
+      "System.Reflection.dll": "434727aec8738537b63669375493dd91cd2e8df4c6b8a5dc76231de0e7c381f0",
+      "System.Resources.Reader.dll": "199b84bfdc8e46c76f377582270e72985576604671696444b0382598d395ba35",
+      "System.Resources.ResourceManager.dll": "abd731176693842b5f63d61afd4aa6dc53056d1ca274d23ff361a24b3dba221f",
+      "System.Resources.Writer.dll": "476391e462fff641d7996434355ae391929a40e217db7d12601b96031fc4df39",
+      "System.Runtime.CompilerServices.Unsafe.dll": "bbeb3a69b1b68afae23b64ab9315b866709ffe20d62139156a94fee7e47279a1",
+      "System.Runtime.CompilerServices.VisualC.dll": "4b85834bc49f90b37ad34982dfa032321f5dc6fe3a2d2ecc4bcfdd58b1b72a6d",
+      "System.Runtime.Extensions.dll": "5d38d0b028215adb6e26931a2d0d5d96fd48a2e3dfe3bf28f768a2dfd9970296",
+      "System.Runtime.Handles.dll": "3fac02be30bb1d443188601f8ea9d45ae0ebde4ca51b1e5ff9fcd724823db56f",
+      "System.Runtime.InteropServices.JavaScript.dll": "a8089c92015fa530c605d6e56ac79789a59104d7d50dd2c9c5c84a027b2ab5e9",
+      "System.Runtime.InteropServices.RuntimeInformation.dll": "2923230377831f959dd141271dedd289b682fa61afac03fd407b81b2973ed928",
+      "System.Runtime.InteropServices.dll": "42a30109545f016ef7a1f5b45660256e2508062ce9320241ea9c2539a693f6e3",
+      "System.Runtime.Intrinsics.dll": "567adafe96b8ae1f6e9dd3d6d94a7787b4f784fd0e916b5ba2b3d8ce3e7929aa",
+      "System.Runtime.Loader.dll": "57c904e10335eb429adb5e82d3eeb5c138aa8da008c42b84df22acbc6bbee4eb",
+      "System.Runtime.Numerics.dll": "080654130e97013dccaa6af29f67d7f2dca6c004c91d976bb6337675a92a3c05",
+      "System.Runtime.Serialization.Formatters.dll": "5662e38fe2f37c05f03bb31ba08389e958b928bd535f163f018bb39e92f66e08",
+      "System.Runtime.Serialization.Json.dll": "fb30320f6a303d5b0cb13ea35e89142be5e215444e4addeff6c3edecc7e39363",
+      "System.Runtime.Serialization.Primitives.dll": "114d642940f91f9e0fc6c111d32e2b7a6056d2ada105be2f0fd0759a9dbd622f",
+      "System.Runtime.Serialization.Xml.dll": "6714e6333198021b5e3e17b30a155db71a1262afd434141bc7a3eef6593104af",
+      "System.Runtime.Serialization.dll": "0ed92f377b1594dcf04b08b6eefb975508a5c2e53c0825e3ab1ae07fc6465ef0",
+      "System.Runtime.dll": "ba725bc030f40e702e630daf4781de9b2ea79aec799639ed9383e3b0d34a0bd4",
+      "System.Security.AccessControl.dll": "a3a0398106054b740e24839f81f86aad66c80934b9c305a00aecf2fc5cddcbcb",
+      "System.Security.Claims.dll": "faace38df12d3df547c4fa02cfd8151636082653eb270718fd031ee494833a73",
+      "System.Security.Cryptography.Algorithms.dll": "6e4987f4e42375e6aa2973554cf75f7b17507e5809247bb950d3beb683e315cc",
+      "System.Security.Cryptography.Cng.dll": "5b5459d06e93c9356123de04e4f58ca614927869f54a21ab8c91aeef4d410af7",
+      "System.Security.Cryptography.Csp.dll": "78587e1c01f69d3128c6a767dddfbd67ed1de58e0a856d1c3f49c2d692a0de6c",
+      "System.Security.Cryptography.Encoding.dll": "59c4e312a991e2c6a5b0563fbad3d35e44c0a1a539925b41b1f6c2093388e0a3",
+      "System.Security.Cryptography.OpenSsl.dll": "f3b2455cccb12da070bad73d685f6bc3efd097ed62cafaae600d901484964439",
+      "System.Security.Cryptography.Primitives.dll": "01dbcc9ff1bf3669a8432bcb681b51f810b4bdf9294f4a6719f4b8a4bc5a330b",
+      "System.Security.Cryptography.X509Certificates.dll": "69f09579c1acfce5a2d78dcede8133af532f0bfb667405541bc112a559561202",
+      "System.Security.Cryptography.dll": "a6ae98e03774ce79ed601f386779b786e9a647f19ff548aa2c0b7c09961441d4",
+      "System.Security.Principal.Windows.dll": "62cccb7108e18defaf1c3daa6fd780c1b71ac9c05de2da19751b8658ae8caef2",
+      "System.Security.Principal.dll": "759d6da994535591c08a4fce4c1e3bbfb4a46e7fd37ecfc8cbbdeea4ad49706c",
+      "System.Security.SecureString.dll": "dc5cd813d55beb01f4c68d011d7b910c2b4800d94feb7f42a5f3493b9043b2bf",
+      "System.Security.dll": "f5757ffe106ecdc52df555738a6cc9209f0141ce218837811c9c223784827ec1",
+      "System.ServiceModel.Web.dll": "4137b4ee75ad1809a22e2f9b4a4a3e35c9cdd6198071f8a7579d4659887a688e",
+      "System.ServiceProcess.dll": "b47c5afeb15010f333e0ecb655f99feac27da235e0eecc11d070e1bf7f534eba",
+      "System.Text.Encoding.CodePages.dll": "ea3eff35151a181729156dfe1483e49605af814ef32e5ed5ec4a60eb622f6fa0",
+      "System.Text.Encoding.Extensions.dll": "2ba59c5befb3277bcfa42129e3f2fe9f37a28d852060bd99b61072c7c9997d85",
+      "System.Text.Encoding.dll": "d1fc5808ee1addc1bdc1e323945e0834eb50058135005e01575d7cff05ba09e8",
+      "System.Text.Encodings.Web.dll": "54d47bb6ca3f6d86675cf1da6763fb23e40c5938d6216f64d51a749cc09c4ff0",
+      "System.Text.Json.dll": "788a5891ed7be9997e80cd09f2a69bfc230941c5686483e31cbd7f52419c0c6c",
+      "System.Text.RegularExpressions.dll": "66b9bbd9a2aa866b0f96ab13bf1d4d95d487d8a9504ffc79df412d28a403d41c",
+      "System.Threading.Channels.dll": "aed740c025f6c0fd52de525dce2c9b6747e0b86594680419f9524c28eab92edd",
+      "System.Threading.Overlapped.dll": "a87c94a706b8d2efd0a28f26faa1275eb1042f49f420fd32b32b1bec877caa83",
+      "System.Threading.Tasks.Dataflow.dll": "8d50167ed88fd0d8a34b6c7f989620c4827e874aaad0cbd5919ce18bf7176316",
+      "System.Threading.Tasks.Extensions.dll": "e0c404955c0d4c235deec9daf4869c63ea3945b346511bd9b94ffc6cc487fa79",
+      "System.Threading.Tasks.Parallel.dll": "54b87d499caac34bc16345a2f16b0aaeebdf1f9ec943ab9f4b97d13bb45de896",
+      "System.Threading.Tasks.dll": "96cc77cb6f41671c4be2012bab96ff3865ea61dec7072daf6c9f7317d1f50620",
+      "System.Threading.Thread.dll": "98a48ecc6cf157a35655542d7c4866d666c753e5e76d50bc905b80c606299ef3",
+      "System.Threading.ThreadPool.dll": "c73ff197069b9d1e9fdedef5ff0a039678231d2f1ddb4bc3564e3243d8150e95",
+      "System.Threading.Timer.dll": "8df4c88cce6c1fba88fa3f6bb85faeb545b523dd29f7d2b79bbc76c1b3b44a69",
+      "System.Threading.dll": "be526d849a63c55a5a00aefc639e1ed0ca0c598c3a555112da6a0747cbb6fbb1",
+      "System.Transactions.Local.dll": "381d5d0e6b375ab17dea9759d60524df3db46db251159eefd638128393868c71",
+      "System.Transactions.dll": "14b05d4511995358f9782ef5ff95fb02fa9dd3cad96849c616ce6fc5301751ac",
+      "System.ValueTuple.dll": "f820c29ce57048616f822ee7e85761817223445511c07710ff179c8b1bf2209a",
+      "System.Web.HttpUtility.dll": "1bc6712b5b9ed1ecdda6afc3bbc4e0d9b7910ef1675ed9282d3d442d75f6435c",
+      "System.Web.dll": "af79aac3dab75e9d951cecdb1d35be96dfda49d85f21bd6d043eb6d0f2052e35",
+      "System.Windows.dll": "126322f5f7c4a0cfeeb25245e76c6cff40cb99638398b0447b4a433ab70e8024",
+      "System.Xml.Linq.dll": "17486462e25473d884f62c7de10e61bef755ca55fbcd67ad85cc64fb7b0c042c",
+      "System.Xml.ReaderWriter.dll": "6d6490251c74073c1c24becdcf500c3b10e121f92dd6fec11b529b4521d012ec",
+      "System.Xml.Serialization.dll": "7c0d7d525fe9c2fc5b2e540952d49eb311d683957e49808e771d7af09eeb994e",
+      "System.Xml.XDocument.dll": "5e40eaac5f674a9a3e5f15acd3833cb42666406dd744f989dd9a20c2776ba950",
+      "System.Xml.XPath.XDocument.dll": "1cf357cc69589e45427d525b8c702ccd9cc13b1e6b04257b92314fe537b2661d",
+      "System.Xml.XPath.dll": "ff15cd3679b15da5fd1bb6923506dfa2c0cf8d8b868ff386974ed7472b0c0c40",
+      "System.Xml.XmlDocument.dll": "14e5d2920407843519e74423f3de4cf2841b163172fc6d5e20309978996203f7",
+      "System.Xml.XmlSerializer.dll": "eeb13ce7154565beebffadb0996fc2db738b1a12d211c14474cbe5ef1b77b407",
+      "System.Xml.dll": "bf102c2232ee93fbe6f7d13001b53dff3fd8b633bc68765d69ac2ca0ba82cdd4",
+      "System.dll": "01e48cb48b97dcd577c7bcc034b7f9578b8d2b05565dae47fef29d15e7c4283a",
+      "WindowsBase.dll": "4ac923397cee958ca7f89043c9b4e1114ac92684a02563900936bf2945983c96",
+      "mscorlib.dll": "70d02c084b02b0d610621a3a933de3d07e34002d66cafbe3d1c8820a2d913ef7",
+      "netstandard.dll": "66ef0365ad96ebfd481ef4ae0dee23c1bc6114fe5d30556cd408b8f557181fc2"
+    },
+    "sdkVersion": "8.0.428",
+    "upstream": {
+      "commit": "35230d3862fbfc268ac7b5fa2a243e9f6a347057",
+      "files": {
+        "LICENSE.quds": {
+          "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685",
+          "sourcePath": "LICENSE"
+        },
+        "OfficeValidation.csproj": {
+          "sha256": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
+          "sourcePath": "tool/office-validation/OfficeValidation.csproj"
+        },
+        "Program.cs": {
+          "sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+          "sourcePath": "tool/office-validation/Program.cs"
+        }
+      },
+      "license": "MIT",
+      "modifications": "None. All three files are byte-for-byte copies of the named source commit.",
+      "repository": "https://github.com/CrispStrobe/quds_office_suite",
+      "sdkPackage": {
+        "id": "DocumentFormat.OpenXml",
+        "version": "3.3.0"
+      },
+      "validationVersion": "Office2019",
+      "version": 1
+    }
+  },
+  "version": 1
+}

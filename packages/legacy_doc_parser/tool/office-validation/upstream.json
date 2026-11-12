@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "repository": "https://github.com/CrispStrobe/quds_office_suite",
+  "commit": "35230d3862fbfc268ac7b5fa2a243e9f6a347057",
+  "license": "MIT",
+  "sdkPackage": {
+    "id": "DocumentFormat.OpenXml",
+    "version": "3.3.0"
+  },
+  "validationVersion": "Office2019",
+  "files": {
+    "Program.cs": {
+      "sourcePath": "tool/office-validation/Program.cs",
+      "sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880"
+    },
+    "OfficeValidation.csproj": {
+      "sourcePath": "tool/office-validation/OfficeValidation.csproj",
+      "sha256": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27"
+    },
+    "LICENSE.quds": {
+      "sourcePath": "LICENSE",
+      "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685"
+    }
+  },
+  "modifications": "None. All three files are byte-for-byte copies of the named source commit."
+}

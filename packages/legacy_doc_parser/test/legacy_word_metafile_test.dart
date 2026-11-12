@@ -11,12 +11,106 @@ import 'package:test/test.dart';
 import 'support/media_word_fixture.dart';
 import 'support/metafile_fixture.dart';
 import 'support/structured_word_fixture.dart';
+import '../tool/fidelity/metafile_records.dart';
 
 LegacyWordDocument _document(Uint8List blip) => parseLegacyWordDocument(
   inlinePictureWordFixture(picture: inlinePictureData(blip: blip)),
 );
 
 void main() {
+  test(
+    'OfficeArt physical bounds never replace EMF device-coordinate bounds',
+    () {
+      final document = _document(
+        metafileBlip(
+          authoredEmfVectors(),
+          mutateHeader: (header) {
+            header.setInt32(12, 15876, Endian.little);
+            header.setInt32(16, 9526, Endian.little);
+          },
+        ),
+      );
+      final info = document.media.assets.single.metafile!;
+      expect(info.bounds.width, 600);
+      expect(info.bounds.height, 360);
+      expect(info.officeArtBounds!.width, 15876);
+      expect(info.officeArtBounds!.height, 9526);
+      expect(info.previewSvg, contains('viewBox="0 0 600 360"'));
+    },
+  );
+
+  test(
+    'nonplaceable WMF derives its canvas from explicit initial window mapping',
+    () {
+      final raw = Uint8List.sublistView(authoredWmfVectors(), 22);
+      final document = _document(
+        metafileBlip(
+          raw,
+          emf: false,
+          mutateHeader: (header) {
+            header.setInt32(12, 3969, Endian.little);
+            header.setInt32(16, 2646, Endian.little);
+          },
+        ),
+      );
+      final info = document.media.assets.single.metafile!;
+      expect(info.bounds.width, 600);
+      expect(info.bounds.height, 360);
+      expect(info.officeArtBounds!.width, 3969);
+      expect(info.previewSvg, contains('viewBox="0 0 600 360"'));
+      expect(info.previewSvg, contains('matrix(1 0 0 1 50 40)'));
+      expect(info.nativeEmbeddingAllowed, isTrue);
+    },
+  );
+
+  test(
+    'ambiguous nonplaceable WMF remains native without an invented SVG canvas',
+    () {
+      for (final setup in <List<Uint8List>>[
+        [],
+        [
+          wmfRecord(0x0103, wordU16(8)),
+          wmfRecord(0x020c, [...wordU16(100), ...wordU16(200)]),
+          wmfRecord(0x020e, [...wordU16(500), ...wordU16(600)]),
+        ],
+      ]) {
+        final raw = wmfFixture(
+          records: [
+            ...setup,
+            wmfRecord(0x041b, [
+              for (final n in [80, 180, 20, 30]) ...wordU16(n),
+            ]),
+          ],
+        );
+        final info = _document(
+          metafileBlip(raw, emf: false),
+        ).media.assets.single.metafile!;
+        expect(info.previewSvg, isNull);
+        expect(info.nativeEmbeddingAllowed, isTrue);
+        expect(info.officeArtBounds!.width, 200);
+        // A caller supplying a known device-coordinate canvas remains supported.
+        expect(
+          parseLegacyWordMetafile(
+            raw,
+            format: LegacyWordImageFormat.wmf,
+            bounds: const LegacyWordVectorBounds(0, 0, 200, 100),
+          ).hasCompletePreview,
+          isTrue,
+        );
+      }
+    },
+  );
+
+  test('malformed initial WMF mapping fails within its own record extent', () {
+    final raw = wmfFixture(
+      records: [wmfRecord(0x0103, wordU16(8)), wmfRecord(0x020c, wordU16(100))],
+    );
+    expect(
+      () => _document(metafileBlip(raw, emf: false)),
+      throwsFormatException,
+    );
+  });
+
   for (final emf in [true, false]) {
     for (final compressed in [true, false]) {
       for (final twoUids in [true, false]) {

@@ -26,7 +26,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser
-      ref: df59af6181eeaf4e0ae55ddcc318fdc7bb76ada0
+      ref: 77b6b1d6b3edc52e314b64043fc2e6d7585fe4d7
 ```
 
 The example pins a tested development checkpoint. When updating, choose a
@@ -160,6 +160,27 @@ This Source Code Form is subject to the terms of the Mozilla Public License,
 v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
 one at https://mozilla.org/MPL/2.0/.
 
-The integrated preservation work includes nested tables, bounded EMF/WMF media, paragraph pagination controls, formatting revisions and comment threads. See [fidelity oracles](doc/fidelity-oracles.md), [layout](doc/layout-fidelity.md), [media](doc/media-fidelity.md) and [revisions/comments](doc/revisions-comments.md) for the supported contracts and remaining losses. The integration passed 252 Dart tests, source/package-graph oracles and the JavaScript acceptance runner on macOS; native Word layout remains a separately measured boundary.
+The preservation work includes nested and conditional tables, preferred cell
+widths, list continuation, bounded EMF/WMF media, packed OfficeArt paths,
+paragraph and note layout, linked textbox reflow, comment threads and supported
+revision histories. Supported row height, splitting and header revisions retain
+editable previous properties with independently checked accept/reject
+projections. Header history that can change conditional table formatting remains
+diagnosed evidence because restoring the header flag alone cannot restore all
+previous cell and text formatting. Bounded picture-frame flips, floating quarter
+turns, direct outlines and simple offset shadows have separate authored native
+rendering controls.
+See the [eight-area fidelity ledger](doc/fidelity-status.md) and
+[oracle guide](doc/fidelity-oracles.md) for the supported contracts and remaining
+losses. Versioned evidence retains complete native results, including failures;
+matching pixels, valid packages and preserved semantics are separate checks.
+
+CI runs the portable Dart and JavaScript tests, Python structural/mutation
+oracles, and a freshly built independent Open XML SDK validation gate. The SDK
+corpus has an exact, deterministic inventory and positive/negative controls.
+Native rendering additionally requires an installed Office application and
+records its version, fonts, source hashes and successive round trips.
+[The clean 8060ac1 receipt](doc/evidence/8060ac1/README.md) is a reproducible
+historical checkpoint; later fixes do not overwrite its original findings.
 
 The current preservation increment also retains supported Word compatibility flags and OfficeArt text-box layout and supplies bounded vector previews. Unsupported drawing records remain explicit retained evidence; the parser does not claim exact native layout for every legacy drawing.

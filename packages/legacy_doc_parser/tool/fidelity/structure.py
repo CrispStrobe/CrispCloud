@@ -18,6 +18,7 @@ O = 'urn:schemas-microsoft-com:office:office'
 W14 = 'http://schemas.microsoft.com/office/word/2010/wordml'
 W15 = 'http://schemas.microsoft.com/office/word/2012/wordml'
 WPS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape'
+R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 NS = {'w': W, 'v': V, 'o': O, 'w14': W14, 'w15': W15, 'wps': WPS}
 PROPERTY_TAGS = {'pPr', 'rPr', 'tblPr', 'tblPrEx', 'trPr', 'tcPr', 'sectPr'}
 CHANGE_TAGS = {'ins', 'del', 'moveFrom', 'moveTo', 'rPrChange', 'pPrChange',
@@ -49,7 +50,8 @@ def properties(node, *, exclude=(), omit_attributes=()):
     if node is None:
         return None
     attrs = {qname(key): value for key, value in sorted(node.attrib.items())
-             if key not in omit_attributes and not key.startswith('{' + W + '}rsid')}
+             if key not in omit_attributes and not key.startswith('{' + W + '}rsid') and
+             not (node.tag in (tag('headerReference'), tag('footerReference')) and key == '{' + R + '}id')}
     result = {'tag': qname(node.tag), 'attributes': attrs,
               'children': [properties(child, exclude=exclude,
                                       omit_attributes=omit_attributes)
@@ -122,15 +124,19 @@ def css(style):
 
 
 def validate_parents(parents, label):
+    visited = set()
     for start in parents:
+        if start in visited:
+            continue
         seen, current = set(), start
-        while current is not None:
+        while current is not None and current not in visited:
             if current in seen:
                 raise ValueError('Cyclic ' + label)
             seen.add(current)
             if current not in parents:
                 raise ValueError('Unresolved ' + label)
             current = parents[current]
+        visited.update(seen)
 
 
 def paragraph_id(value):
@@ -152,8 +158,12 @@ def on_off(value, default=False):
 
 
 class StructureOracle:
-    def __init__(self, parts, main, relationships):
+    def __init__(self, parts, main, relationships, *, read_xml=None):
         self.parts, self.main, self.relationships = parts, main, relationships
+        # The package oracle supplies its bounded, namespace-aware MC reader
+        # for auxiliary parts too. Never reparse unselected Choice/Fallback
+        # contents after the shared projection has selected one branch.
+        self.read_xml = read_xml or (lambda owner: ET.fromstring(parts[owner]))
         self.styles_root = self.related(main, 'styles')
         self.styles = indexed([] if self.styles_root is None else self.styles_root.findall(tag('style')),
                               tag('styleId'), 'style id')
@@ -171,7 +181,7 @@ class StructureOracle:
                       if r['type'] == kind and not r['external']]
         if len(candidates) > 1:
             raise ValueError('Duplicate ' + kind + ' relationship')
-        return ET.fromstring(self.parts[candidates[0]['target']]) if candidates else None
+        return self.read_xml(candidates[0]['target']) if candidates else None
 
     def style_chain(self, identifier):
         chain, seen = [], set()

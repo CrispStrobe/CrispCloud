@@ -342,7 +342,7 @@ void main() {
   });
 
   test(
-    'marks independent instances that share an unresolved source sequence',
+    'compatible instances share their source sequence without an override',
     () {
       final definitions = [
         for (final id in [1, 2])
@@ -362,10 +362,10 @@ void main() {
         _item(0),
         _item(2, id: 2),
       ], numberingDefinitions: definitions);
-      expect(_labels(html), ['1.', '1.']);
+      expect(_labels(html), ['1.', '2.']);
       expect(
-        RegExp('data-word-numbering="instance-approximation"').allMatches(html),
-        hasLength(2),
+        html,
+        isNot(contains('data-word-numbering="instance-approximation"')),
       );
     },
   );

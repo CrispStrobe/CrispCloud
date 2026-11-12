@@ -60,9 +60,17 @@ Unknown commands, clipping, text, palette colors, pattern brushes, non-copy
 raster operations and unsupported mapping modes make the **entire SVG
 unavailable**. The parser reports their record types; it never displays a
 misleading partially drawn image. The independently validated original
-metafile may still be eligible for native Office embedding. A standalone
-WMF needs caller-supplied or placeable-header bounds for a portable preview;
-OfficeArt BLIPs already supply their own bounds.
+metafile may still be eligible for native Office embedding.
+
+The playback `bounds` use device coordinates and remain distinct from
+`officeArtBounds`, the original producer-dependent presentation/clipping
+rectangle. An OfficeArt physical-unit rectangle must not replace an EMF
+header's device canvas. A standalone WMF can use explicit caller bounds or a
+placeable header. Without either, a normalized canvas is accepted only when
+an explicit initial anisotropic mapping mode and nonzero window extent precede
+painting. Ambiguous viewport or saved-context setup prevents this inference;
+window origins are replayed separately. These rules retain the raw OfficeArt
+rectangle without guessing its units as SVG pixels.
 
 SVG contains fixed generated tags, numeric coordinates and resolved RGB
 colors. It never copies source markup, URLs, scripts, font files or external
@@ -92,19 +100,28 @@ unrelated inherited flags. Source complex properties remain bounds-checked
 views of the exact retained OfficeArt artifact.
 
 Supported geometry includes rectangle, rounded rectangle, ellipse and line
-presets, plus explicit 32-bit custom vertices connected by straight segments,
-cubic Beziers, moves and closes. Nonempty segment records take precedence over
+presets, plus explicit 32-bit and bounded packed signed 16-bit custom vertices
+connected by straight segments, cubic Beziers, moves and closes. Nonempty segment records take precedence over
 `shapePath`, as the binary specification requires. Vertex counts and segment
 consumption are checked before constructing paths. The geometry subset does
-not guess compressed POINT coordinates, unresolved guide formulas, adjusted
+not guess unsigned packed arc coordinates, unresolved guide formulas, adjusted
 presets or escape/client-escape segments. These remain retained evidence with
-an unsupported-drawing diagnostic.
+an unsupported-drawing diagnostic. The [packed vertex contract](packed-vertices.md)
+records the exact array boundary, independent source implementations and native
+full-width/packed DOC comparison.
 
 The model also exposes direct RGB fill/line colors and opacity, line width,
 dash/join/cap identifiers, and offset-shadow properties. Palette/system colors,
 gradients, pattern fills, perspective/3-D settings and unmapped appearance
 properties remain explicit `unsupportedProperties`, never relabeled as a
 plain RGB style. Parsed data and native rendering support are separate.
+
+Ordinary image frames now have a separately verified DrawingML appearance
+path for FSP flips, absolute floating quarter turns, direct solid outlines
+and simple offset shadows. Its independent authored/native controls, exact
+results and remaining vertical-flip raster difference are recorded in
+[image-appearance.md](image-appearance.md). This does not relax the editable
+shape gate below or claim arbitrary OfficeArt effects.
 
 ### Editable native shape output
 

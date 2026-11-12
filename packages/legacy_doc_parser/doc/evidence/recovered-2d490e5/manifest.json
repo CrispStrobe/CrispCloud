@@ -1,0 +1,52 @@
+{
+  "sourceRepository": "CrispStrobe/legacy-doc-parser",
+  "sourceCommit": "2d490e5490f7d549deb36573a5ac26fc5f875cfa",
+  "scope": "Historical measurements from the separately saved continuation; not a certification of the reconciled parser. Original report inputs and hashes remain unchanged.",
+  "files": [
+    {
+      "originalPath": "doc/measurements/2026-11-12/baseline-b037473-report.json.gz",
+      "retainedPath": "measurements/2026-11-12/baseline-b037473-report.json.gz",
+      "sha256": "9e282741da254daec13cd81e58aa7b4e16d92ea0a3ae1ecb8e63b9d4e22879da"
+    },
+    {
+      "originalPath": "doc/measurements/2026-11-12/native-report.json.gz",
+      "retainedPath": "measurements/2026-11-12/native-report.json.gz",
+      "sha256": "a1259582fe81c2aac3d0ebb7e9aee7e479dd7e9baddf3c577d1d06441ae2816d"
+    },
+    {
+      "originalPath": "doc/measurements/2026-11-12/officeart-outline-comparison.png",
+      "retainedPath": "measurements/2026-11-12/officeart-outline-comparison.png",
+      "sha256": "5792290baad2a0d62fbaed50b6c470315b90693a5866b6bf4826bb8cdb0ddf11"
+    },
+    {
+      "originalPath": "doc/measurements/2026-11-12/parser-source.json",
+      "retainedPath": "measurements/2026-11-12/parser-source.json",
+      "sha256": "d499baee758efa351c2631dff32506164a03ecb4685b8e897386b1927bf6ec18"
+    },
+    {
+      "originalPath": "doc/measurements/2026-11-12/summary.json",
+      "retainedPath": "measurements/2026-11-12/summary.json",
+      "sha256": "fc53d7e019ee5533b676094d09ec09a1211634753b6c4acf9c72e68097eb97f6"
+    },
+    {
+      "originalPath": "doc/fidelity-results.md",
+      "retainedPath": "fidelity-results.md",
+      "sha256": "71f3805f0e94a500c4cad18a6fd1860fbb720546cbcef79946fad6c28ea23b44"
+    },
+    {
+      "originalPath": "doc/fidelity-status.md",
+      "retainedPath": "fidelity-status.md",
+      "sha256": "ee5cb943c871ad9b8deaac25e46fddcd6514ad47a4f59207d6bd67bcbb17fdd3"
+    },
+    {
+      "originalPath": "doc/metafile-native-check.json",
+      "retainedPath": "metafile-native-check.json",
+      "sha256": "a75b2779737c87d284e9a442bf77c6ed6bfbb897774c2850539f57fb9be53ed0"
+    },
+    {
+      "originalPath": "doc/vml-dash-fidelity.md",
+      "retainedPath": "vml-dash-fidelity.md",
+      "sha256": "75e752f9c1c430779c69343169481a114b346be53d3612d362561b82de97227a"
+    }
+  ]
+}

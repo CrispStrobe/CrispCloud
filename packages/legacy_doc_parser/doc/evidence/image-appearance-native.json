@@ -1,0 +1,2483 @@
+{
+  "officeVersion": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "implementationBaseCommit": "a5951c94200c847cca288e7f77768ef422c67b40",
+  "workingTreeChanges": [
+    " M lib/src/conversion.dart",
+    " M lib/src/legacy_word_officeart_parser.dart",
+    " M lib/src/word_media_writer.dart",
+    " M lib/src/word_officeart_position_writer.dart",
+    "?? lib/src/word_image_appearance_writer.dart",
+    "?? test/legacy_word_image_appearance_test.dart",
+    "?? tool/fidelity/image_appearance_cases.py",
+    "?? tool/fidelity/image_appearance_probe.dart",
+    "?? tool/fidelity/image_appearance_render.py"
+  ],
+  "scope": "Quarter-turn image frames, FSP flips, direct line and simple offset shadow; native DOC interpretation loss is measured separately.",
+  "tolerances": {
+    "quadrantBoundsPoints": 0.5,
+    "normalizedCentroid": 0.025,
+    "shadowMedianRgb": 2
+  },
+  "cases": {
+    "inline-horizontal": {
+      "sourceSha256": {
+        "authored": "e32b01fa6a1a4dd940719058d7735003e9f5bc487ec0034349a5746b270d993a",
+        "binary": "d7e50ad0b14d4b7d54e74c2ff86e7f9c449ddf8f1aa432f679b1d2e346ecc084",
+        "converted": "1ec82796cd9e6d841828d885ff82ca7f0a4795cc2078bb7c9e9fe24d289516d8"
+      },
+      "sourceModel": {
+        "pictures": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "widthTwips": 1440,
+            "heightTwips": 720,
+            "shape": {
+              "rotationFixed16": 0,
+              "flipHorizontal": true,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                387
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "widthEmu": null,
+                "opacityFixed16": null,
+                "dash": null,
+                "join": null,
+                "cap": null
+              }
+            }
+          }
+        ],
+        "drawings": [],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects",
+          "revisions"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "3801248df0bfb0dd90778dfebfaff2bb251152a9dbd8a254a15d896f8512db54",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "fca17154f0185acee63e4dcf7448ad55d3f3402c314c65182809f16d09888f0a",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "a3d32cf5339ea19fecb3816080d9c8472e16fd8f13769139a195b596ab43b71b",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "d2dd9e8eceed1f6ba6b3113ec3ffa4a6e61994bdea4dd2de58879ed5095e718d",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.75
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.75
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2485,
+            "yellow": 2485
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                72.0,
+                72.0,
+                143.9499969482422,
+                72.04998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                72.0,
+                72.04998779296875,
+                72.05000305175781,
+                107.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "dc1e0cea4a9265006831cf7863d5f6f25c8d7947b3078f50c6c6761a0a5d25a4",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "fca17154f0185acee63e4dcf7448ad55d3f3402c314c65182809f16d09888f0a",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.00694444444444442,
+        "rgbChangedPixels": 288,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.00694444444444442,
+        "rgbChangedPixels": 288,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-control": {
+      "sourceSha256": {
+        "authored": "f711de49af61b5cdfb50b067c8c1e322fa7971f442545baf572da50b837db193",
+        "binary": "7aceb29ba68b38e6865a03e1929e982c80dea008ecc03cf9fe47df56ada8f7e9",
+        "converted": "f14323f2dba1c55625d6df985149cf0d1bf80e21c6035319eab31d9ebf2bceee"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1440,
+              1440,
+              2879,
+              2159
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 0,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                387,
+                900,
+                901,
+                902,
+                903,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "widthEmu": null,
+                "opacityFixed16": null,
+                "dash": null,
+                "join": null,
+                "cap": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "76c2ac1e389199869bfec466e81b1f53fdeb2f244cc61e9cc988035d8e76580f",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "54237be5f9a57fc83bf60253b8cc9defa4b5293bf4d5e30c602407119a1f3546",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "green": [
+              0.75,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.75,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "7031df3dd8fcb5911e03c3f8aa9c53081df07345cd508f347ce124f6648f1587",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "54237be5f9a57fc83bf60253b8cc9defa4b5293bf4d5e30c602407119a1f3546",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "green": [
+              0.75,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.75,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "converted": {
+          "pdfSha256": "3466e4857b09b56d11e786ec4bc83befbb53b338f242c74e266142962ab1067a",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "54237be5f9a57fc83bf60253b8cc9defa4b5293bf4d5e30c602407119a1f3546",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "green": [
+              0.75,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.75,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-horizontal": {
+      "sourceSha256": {
+        "authored": "1980e4738929db6379345e14d929755e131f0a9d93099f0ba31c654dd94dcd6b",
+        "binary": "1128b0fddba0ad0dc4856cdb7b3fcaad78c5d82bc28edaee4a62c37a033f5996",
+        "converted": "9ce0549c369fcd789068ba5077d414bd25280b35cbacd07e183a30f44b4baa39"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1440,
+              1440,
+              2879,
+              2159
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 0,
+              "flipHorizontal": true,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                387,
+                900,
+                901,
+                902,
+                903,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "widthEmu": null,
+                "opacityFixed16": null,
+                "dash": null,
+                "join": null,
+                "cap": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "9485b58d84e0c88f92ab02322bf65b937a06860cab106cd21aeb9a2b5ec0b045",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "fca17154f0185acee63e4dcf7448ad55d3f3402c314c65182809f16d09888f0a",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "ede9a1dedbf7b6d0f6c6450ad2928436044b39d04f80412cd864424faf1c9c08",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "fca17154f0185acee63e4dcf7448ad55d3f3402c314c65182809f16d09888f0a",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "converted": {
+          "pdfSha256": "f91810f2df2afc79731d709d5236bb7574249d56cf86d06ba8ce76401df302d0",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "fca17154f0185acee63e4dcf7448ad55d3f3402c314c65182809f16d09888f0a",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.7430555555555556
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.7430555555555556
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-vertical": {
+      "sourceSha256": {
+        "authored": "db000f69cd4543e618cfa5bc227ebcc4c73124325cbc448a85122de6043b568b",
+        "binary": "124a32bd3331a317a695a987df1eb4ec53b099bb97fdf44def845e50bfed082d",
+        "converted": "3b6672ac65c8e093b730b9889d6b12c9af271ce27ce9d2eccc884622e8205655"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1440,
+              1440,
+              2880,
+              2160
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 11796480,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                384,
+                450,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": "3465A4",
+                "widthEmu": null,
+                "opacityFixed16": 65536,
+                "dash": null,
+                "join": 2,
+                "cap": 2
+              },
+              "shadow": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "opacityFixed16": null,
+                "offsetXEmu": null,
+                "offsetYEmu": null,
+                "obscured": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "94818341799cfcb714109ac1a43df1f3be47c902621d7d5b07758a8c4261f42b",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "f4d58f78f26d4407bbcb9ea0251d69bbd0b24de19e0c7b9f5173fdd3fc4cde97",
+          "quadrantBoundsPoints": [
+            72.0,
+            71.5,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.7465753424657534
+            ],
+            "green": [
+              0.75,
+              0.7465753424657534
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.23972602739726026
+            ],
+            "yellow": [
+              0.75,
+              0.23972602739726026
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2556,
+            "green": 2556,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "8a7e4d3faace2e41481720d67ff5abe55db233cefa275a9e399b8a3d55b04ca6",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "d2dd9e8eceed1f6ba6b3113ec3ffa4a6e61994bdea4dd2de58879ed5095e718d",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.75,
+              0.2361111111111111
+            ],
+            "green": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.75,
+              0.75
+            ],
+            "yellow": [
+              0.24305555555555555,
+              0.75
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2485,
+            "yellow": 2485
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                72.0,
+                72.0,
+                143.9499969482422,
+                72.04998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                72.0,
+                72.04998779296875,
+                72.05000305175781,
+                107.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "dd33bc86e32e5764099f436263f3948eb11e3dbdfad3411b1cdbc0f84937d7e6",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "4393aec21971700b992dfb19703246a0b542bac82ef492c19a2c25c4d8979047",
+          "quadrantBoundsPoints": [
+            72.0,
+            71.5,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.23086399474375816,
+              0.7614410262872091
+            ],
+            "green": [
+              0.7601691738132058,
+              0.7541930749987001
+            ],
+            "blue": [
+              0.22597427541991205,
+              0.21655202147882482
+            ],
+            "yellow": [
+              0.7669666467095744,
+              0.2245357413068752
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2283,
+            "green": 2371,
+            "blue": 2097,
+            "yellow": 2227
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.5104642313546424,
+        "rgbChangedPixels": 10512,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.023174005918435436,
+        "rgbChangedPixels": 8664,
+        "rgbExactlyMatches": false
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.5334479785211752,
+        "rgbChangedPixels": 10512,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-both": {
+      "sourceSha256": {
+        "authored": "1fa7409ba0c1f4c36f5e692a6dadb11a9e93615b73300d24706ecebc16405831",
+        "binary": "e41b88bf5d0397490cad0d4c011b1df9da7f6d8bbd1e3a5ce63053ae84f12495",
+        "converted": "5bf97286706f6d0f03f1004cb6c87cddc9690f0c7ba61a2d15e3749d356e647b"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1440,
+              1440,
+              2880,
+              2160
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 11796480,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                384,
+                450,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": "3465A4",
+                "widthEmu": null,
+                "opacityFixed16": 65536,
+                "dash": null,
+                "join": 2,
+                "cap": 2
+              },
+              "shadow": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "opacityFixed16": null,
+                "offsetXEmu": null,
+                "offsetYEmu": null,
+                "obscured": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "75784b641ed928c915d05e5faff43920672303e11f1285c0f5c5921c5eb66073",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "860adc8cc970f5977b47be472ab628e5469ec5e7d518233011583ba87569dc20",
+          "quadrantBoundsPoints": [
+            72.0,
+            71.5,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.7637540453074434,
+              0.7607878223651596
+            ],
+            "green": [
+              0.23288638174234974,
+              0.7541930749987001
+            ],
+            "blue": [
+              0.7670812801356435,
+              0.21655202147882482
+            ],
+            "yellow": [
+              0.22608890884598112,
+              0.2245357413068752
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2266,
+            "green": 2371,
+            "blue": 2097,
+            "yellow": 2227
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "d3e1a8bb654c23454deb2deb4884d334548fcccdacd4e5bb625bb44f7924b0fe",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "9e862002811845a07b41a2ef89c88e44813669652a226f42fd4ad068f39d351b",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.2361111111111111
+            ],
+            "green": [
+              0.75,
+              0.2361111111111111
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.75
+            ],
+            "yellow": [
+              0.75,
+              0.75
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2485,
+            "green": 2485,
+            "blue": 2485,
+            "yellow": 2485
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                72.0,
+                72.0,
+                143.9499969482422,
+                72.04998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                72.0,
+                72.04998779296875,
+                72.05000305175781,
+                107.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "fb9d973f66abde9d9d4b5bddaacd0efd9a01a97e5cd684e98d4dec873c192655",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "860adc8cc970f5977b47be472ab628e5469ec5e7d518233011583ba87569dc20",
+          "quadrantBoundsPoints": [
+            72.0,
+            71.5,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.7637540453074434,
+              0.7607878223651596
+            ],
+            "green": [
+              0.23288638174234974,
+              0.7541930749987001
+            ],
+            "blue": [
+              0.7670812801356435,
+              0.21655202147882482
+            ],
+            "yellow": [
+              0.22608890884598112,
+              0.2245357413068752
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2266,
+            "green": 2371,
+            "blue": 2097,
+            "yellow": 2227
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.5334479785211752,
+        "rgbChangedPixels": 10512,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.5334479785211752,
+        "rgbChangedPixels": 10512,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-quarter": {
+      "sourceSha256": {
+        "authored": "382b1b9a0392d99d85b2821ac583de103921c9e56b83471ed2d38f4813851c12",
+        "binary": "3d377117b97485ad212b917b44ac43471176ec39ad5502a61459151843104b8d",
+        "converted": "966b5a7995893f41856433506b7ef9bb05bd2103232c676fdea01cac0e4d480b"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1800,
+              1080,
+              2520,
+              2520
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 5898240,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                384,
+                450,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": "3465A4",
+                "widthEmu": null,
+                "opacityFixed16": 65536,
+                "dash": null,
+                "join": 2,
+                "cap": 2
+              },
+              "shadow": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "opacityFixed16": null,
+                "offsetXEmu": null,
+                "offsetYEmu": null,
+                "obscured": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "56ab6ef5fa2e86be67eecb5298a370b212da5452dd047e97f4c719cdcb09c685",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "3418416aa0007ed84aadac38176068af0ec7b1693cbd5cce303a02ba48365e74",
+          "quadrantBoundsPoints": [
+            90.0,
+            53.5,
+            126.0,
+            126.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.7571002590800214,
+              0.2281202117814828
+            ],
+            "green": [
+              0.756569069069069,
+              0.7629618495024502
+            ],
+            "blue": [
+              0.21858696213647416,
+              0.22924702223504714
+            ],
+            "yellow": [
+              0.22208922328621364,
+              0.766306586788685
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2273,
+            "green": 2294,
+            "blue": 2151,
+            "yellow": 2193
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "9237ebbcd644c95b31fb7d5e6607db4c8211705c9c1a676b8bf16822ee7b4aad",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "8019961c3d309dd59d180eee28ebff9646e847825fba8fd3a8b234a6961992f7",
+          "quadrantBoundsPoints": [
+            90.0,
+            54.0,
+            126.0,
+            126.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.2465277777777778
+            ],
+            "green": [
+              0.7430555555555556,
+              0.2465277777777778
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7465277777777778
+            ],
+            "yellow": [
+              0.7430555555555556,
+              0.7465277777777778
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2592,
+            "green": 2592,
+            "blue": 2592,
+            "yellow": 2592
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                90.0,
+                54.0,
+                125.94999694824219,
+                54.04998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                90.0,
+                54.04998779296875,
+                90.05000305175781,
+                125.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "36ee8e1e1c6044013f2421d30817d6e6393ee453fea72c06d98a51923f33f159",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "3418416aa0007ed84aadac38176068af0ec7b1693cbd5cce303a02ba48365e74",
+          "quadrantBoundsPoints": [
+            90.0,
+            53.5,
+            126.0,
+            126.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.7571002590800214,
+              0.2281202117814828
+            ],
+            "green": [
+              0.756569069069069,
+              0.7629618495024502
+            ],
+            "blue": [
+              0.21858696213647416,
+              0.22924702223504714
+            ],
+            "yellow": [
+              0.22208922328621364,
+              0.766306586788685
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2273,
+            "green": 2294,
+            "blue": 2151,
+            "yellow": 2193
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.520966332269342,
+        "rgbChangedPixels": 10440,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.520966332269342,
+        "rgbChangedPixels": 10440,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-negative-quarter": {
+      "sourceSha256": {
+        "authored": "7774b156d5c1b5d7d3fc4b6abaf97d2a8f4825c72bab9a643b65869da5ea63ae",
+        "binary": "dbb33350affd52a05769a6df47f4ce0f7f1af22ed45a47e18efcda8351d0b087",
+        "converted": "eb34ff6abf850ca96d89f3385756233035b9d96b365f0d4d519e8b95b072e19b"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1800,
+              1080,
+              2520,
+              2520
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 17694720,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                384,
+                450,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": "3465A4",
+                "widthEmu": null,
+                "opacityFixed16": 65536,
+                "dash": null,
+                "join": 2,
+                "cap": 2
+              },
+              "shadow": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "opacityFixed16": null,
+                "offsetXEmu": null,
+                "offsetYEmu": null,
+                "obscured": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "31e982c1c430024dcb2d58d1148601da168f64748ca01b0ef972df0b12c8ce68",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "12c41551c4a8517a94848c6ba1f116fb20a1d99fccbc6d86f10e293acf3f011e",
+          "quadrantBoundsPoints": [
+            90.0,
+            53.5,
+            126.0,
+            126.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.21869673020300617,
+              0.763872457076901
+            ],
+            "green": [
+              0.2299234135667396,
+              0.2293005357277597
+            ],
+            "blue": [
+              0.7654719095267875,
+              0.7652972763149382
+            ],
+            "yellow": [
+              0.7578770977053672,
+              0.22793847462002156
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2151,
+            "green": 2285,
+            "blue": 2132,
+            "yellow": 2271
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "e5c8ab4737e59666555195a7bac983b51a7fc62177c3b3504c4a04b7f5a7ed53",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "8019961c3d309dd59d180eee28ebff9646e847825fba8fd3a8b234a6961992f7",
+          "quadrantBoundsPoints": [
+            90.0,
+            54.0,
+            126.0,
+            126.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24305555555555555,
+              0.2465277777777778
+            ],
+            "green": [
+              0.7430555555555556,
+              0.2465277777777778
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7465277777777778
+            ],
+            "yellow": [
+              0.7430555555555556,
+              0.7465277777777778
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2592,
+            "green": 2592,
+            "blue": 2592,
+            "yellow": 2592
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                90.0,
+                54.0,
+                125.94999694824219,
+                54.04998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                90.0,
+                54.04998779296875,
+                90.05000305175781,
+                125.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "73f04ec4df2b0a4cc1081c8bbebba1d9e4384ceb68dfc00353f87ca7c5b38902",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "12c41551c4a8517a94848c6ba1f116fb20a1d99fccbc6d86f10e293acf3f011e",
+          "quadrantBoundsPoints": [
+            90.0,
+            53.5,
+            126.0,
+            126.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.21869673020300617,
+              0.763872457076901
+            ],
+            "green": [
+              0.2299234135667396,
+              0.2293005357277597
+            ],
+            "blue": [
+              0.7654719095267875,
+              0.7652972763149382
+            ],
+            "yellow": [
+              0.7578770977053672,
+              0.22793847462002156
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2151,
+            "green": 2285,
+            "blue": 2132,
+            "yellow": 2271
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.5224163539712319,
+        "rgbChangedPixels": 10440,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.5,
+        "maximumNormalizedCentroidDrift": 0.5224163539712319,
+        "rgbChangedPixels": 10440,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-margin-quarter": {
+      "sourceSha256": {
+        "authored": "82cfd9daf1610cde7847ae1ae09f1228718cfcb48a5cbddc7034387bf7cdd53d",
+        "binary": "5d048f733e60d7617a982744e61e52ae6c0ca008bef50bbce146b401de52140a",
+        "converted": "4e5bd1e7fc7beb8b97b10313aa284fdc6b4ff0e1256846b3ae035fc4dc5dd11b"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              -207,
+              -643,
+              513,
+              797
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 0,
+            "verticalRelativeTo": 0,
+            "shape": {
+              "rotationFixed16": 5898240,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                384,
+                450,
+                959
+              ],
+              "line": {
+                "enabled": false,
+                "type": null,
+                "color": "3465A4",
+                "widthEmu": null,
+                "opacityFixed16": 65536,
+                "dash": null,
+                "join": 2,
+                "cap": 2
+              },
+              "shadow": {
+                "enabled": false,
+                "type": null,
+                "color": null,
+                "opacityFixed16": null,
+                "offsetXEmu": null,
+                "offsetYEmu": null,
+                "obscured": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "ff671d7d5ffcd3f94b7b3f1e6f1d1fff31e0d83ab408f6e6a199298928fa547c",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "b4fe8e549d7f113c24a29574f2adc9fc486610c3071e276d572ce2a07b199ebf",
+          "quadrantBoundsPoints": [
+            61.5,
+            39.5,
+            98.0,
+            112.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.7603884290550715,
+              0.22820489491402052
+            ],
+            "green": [
+              0.7534420932111286,
+              0.763293491141574
+            ],
+            "blue": [
+              0.20912980335204304,
+              0.2302473405131245
+            ],
+            "yellow": [
+              0.2240196822889772,
+              0.7666518847006651
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2274,
+            "green": 2357,
+            "blue": 2094,
+            "yellow": 2255
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        },
+        "binary": {
+          "pdfSha256": "7ea42ad5d854de6a3eb4e5e682ec0a31cca7a7ddbb22d68f7cbe1231eb833ba4",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "262df95ad1533d21705524c2abd57f96b309139c78505438756b90eaac36cd77",
+          "quadrantBoundsPoints": [
+            61.5,
+            39.5,
+            98.0,
+            112.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.2465753424657534,
+              0.2482758620689655
+            ],
+            "green": [
+              0.7465753424657534,
+              0.2482758620689655
+            ],
+            "blue": [
+              0.2465753424657534,
+              0.7482758620689656
+            ],
+            "yellow": [
+              0.7465753424657534,
+              0.7482758620689656
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2701,
+            "green": 2628,
+            "blue": 2664,
+            "yellow": 2592
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                61.70000076293945,
+                111.79998779296875,
+                97.6500015258789,
+                111.8499755859375
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                97.5999984741211,
+                39.89996337890625,
+                97.6500015258789,
+                111.79998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "58cbdd6c96afae00c23e181d80d1b20e345ad5b24430ed5e442009b8ee75b4c1",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "b4fe8e549d7f113c24a29574f2adc9fc486610c3071e276d572ce2a07b199ebf",
+          "quadrantBoundsPoints": [
+            61.5,
+            39.5,
+            98.0,
+            112.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.7603884290550715,
+              0.22820489491402052
+            ],
+            "green": [
+              0.7534420932111286,
+              0.763293491141574
+            ],
+            "blue": [
+              0.20912980335204304,
+              0.2302473405131245
+            ],
+            "yellow": [
+              0.2240196822889772,
+              0.7666518847006651
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2274,
+            "green": 2357,
+            "blue": 2094,
+            "yellow": 2255
+          },
+          "magentaPixels": 0,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": []
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.5225556601767762,
+        "rgbChangedPixels": 10585,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.5225556601767762,
+        "rgbChangedPixels": 10585,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    },
+    "floating-outline-shadow": {
+      "sourceSha256": {
+        "authored": "9d0fe61f2f16625f19b7631a94dd05c4e18c64aedadd07e8b606eead5d38bc2d",
+        "binary": "9ed7726abe4c65e92a304276719ef81aa484d20339e838f1a12e9ab528ddb299",
+        "converted": "dc1876623336a8cb5dd9b09ae5835e4c639c1a6c324e0fd4c8ca3339a0758bc3"
+      },
+      "sourceModel": {
+        "pictures": [],
+        "drawings": [
+          {
+            "cp": 0,
+            "imageId": "image-1",
+            "shapeId": 1026,
+            "anchorTwips": [
+              1440,
+              1440,
+              2880,
+              2160
+            ],
+            "horizontalOrigin": 2,
+            "verticalOrigin": 2,
+            "horizontalRelativeTo": 1,
+            "verticalRelativeTo": 1,
+            "shape": {
+              "rotationFixed16": 0,
+              "flipHorizontal": false,
+              "flipVertical": false,
+              "unsupportedProperties": [
+                384,
+                450,
+                959
+              ],
+              "line": {
+                "enabled": true,
+                "type": null,
+                "color": "FF00FF",
+                "widthEmu": 25560,
+                "opacityFixed16": 65536,
+                "dash": 2,
+                "join": 2,
+                "cap": 2
+              },
+              "shadow": {
+                "enabled": true,
+                "type": null,
+                "color": "445566",
+                "opacityFixed16": 32786,
+                "offsetXEmu": 38160,
+                "offsetYEmu": 50040,
+                "obscured": null
+              }
+            }
+          }
+        ],
+        "counts": {
+          "evidenceArtifacts": 6,
+          "images": 1,
+          "drawingReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ]
+      },
+      "render": {
+        "authored": {
+          "pdfSha256": "3168bd3d571249695153df870ca1f315cbed5e7623eac9761ffdb95bb848c0af",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "45dda7845c1d365962d5d2da22042f3e2b0d76dd2a99fd7a14082dba807d16e5",
+          "quadrantBoundsPoints": [
+            72.0,
+            71.5,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.2431051390541672,
+              0.24305423483831698
+            ],
+            "green": [
+              0.7499504165013884,
+              0.24305423483831698
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7465753424657534
+            ],
+            "yellow": [
+              0.75,
+              0.7465753424657534
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2521,
+            "green": 2521,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 896,
+          "shadowPixels": 1336,
+          "medianShadowRgb": [
+            162.0,
+            170.0,
+            179.0
+          ],
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                75.0,
+                75.95001220703125,
+                147.0,
+                111.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                0.2666666805744171,
+                0.3333333432674408,
+                0.4000000059604645
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "s",
+              "rect": [
+                74.0,
+                74.95001220703125,
+                148.0,
+                112.95001220703125
+              ],
+              "color": [
+                0.2666666805744171,
+                0.3333333432674408,
+                0.4000000059604645
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[ 2 2 ] 0"
+            },
+            {
+              "type": "s",
+              "rect": [
+                71.0,
+                71.0,
+                145.0,
+                109.0
+              ],
+              "color": [
+                1.0,
+                0.0,
+                1.0
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[ 2 2 ] 0"
+            }
+          ]
+        },
+        "binary": {
+          "pdfSha256": "1995230ccf93cad632ce4ec75da31df53314ab07f8cf97bf1bc1c11810fe1b96",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "86429689a4f9997b260a80081ec15180b1b83322682562eddb1aed45106acbff",
+          "quadrantBoundsPoints": [
+            72.0,
+            72.0,
+            140.5,
+            104.5
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.24452554744525548,
+              0.23076923076923078
+            ],
+            "green": [
+              0.7518248175182481,
+              0.23076923076923078
+            ],
+            "blue": [
+              0.24452554744525548,
+              0.7461538461538462
+            ],
+            "yellow": [
+              0.7518248175182481,
+              0.7461538461538462
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2108,
+            "green": 2077,
+            "blue": 2176,
+            "yellow": 2144
+          },
+          "magentaPixels": 1680,
+          "shadowPixels": 0,
+          "medianShadowRgb": null,
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                69.94999694824219,
+                69.95001220703125,
+                142.5500030517578,
+                72.0
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                69.94999694824219,
+                104.5,
+                142.5500030517578,
+                106.54998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                69.94999694824219,
+                71.95001220703125,
+                72.0,
+                104.54998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                140.5,
+                71.95001220703125,
+                142.5500030517578,
+                104.54998779296875
+              ],
+              "color": null,
+              "fill": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                73.44999694824219,
+                106.45001220703125,
+                145.9499969482422,
+                109.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                0.2666666805744171,
+                0.3333333432674408,
+                0.4000000059604645
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "f",
+              "rect": [
+                142.4499969482422,
+                73.45001220703125,
+                145.9499969482422,
+                106.5
+              ],
+              "color": null,
+              "fill": [
+                0.2666666805744171,
+                0.3333333432674408,
+                0.4000000059604645
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "s",
+              "rect": [
+                70.0,
+                71.0,
+                142.5,
+                71.0
+              ],
+              "color": [
+                1.0,
+                0.0,
+                1.0
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[] 0"
+            },
+            {
+              "type": "s",
+              "rect": [
+                141.5,
+                70.0,
+                141.5,
+                106.5
+              ],
+              "color": [
+                1.0,
+                0.0,
+                1.0
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[] 0"
+            },
+            {
+              "type": "s",
+              "rect": [
+                70.0,
+                105.5,
+                142.5,
+                105.5
+              ],
+              "color": [
+                1.0,
+                0.0,
+                1.0
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[] 0"
+            },
+            {
+              "type": "s",
+              "rect": [
+                71.0,
+                70.0,
+                71.0,
+                106.5
+              ],
+              "color": [
+                1.0,
+                0.0,
+                1.0
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[] 0"
+            }
+          ]
+        },
+        "converted": {
+          "pdfSha256": "1486ac7e30a4627a256edc39a2c07bc1d0c1d5dea4f19ae65bc059d20a466970",
+          "pagePoints": [
+            612.0,
+            792.0
+          ],
+          "rasterDpi": 144,
+          "rasterSha256": "45dda7845c1d365962d5d2da22042f3e2b0d76dd2a99fd7a14082dba807d16e5",
+          "quadrantBoundsPoints": [
+            72.0,
+            71.5,
+            144.0,
+            108.0
+          ],
+          "normalizedColorCentroids": {
+            "red": [
+              0.2431051390541672,
+              0.24305423483831698
+            ],
+            "green": [
+              0.7499504165013884,
+              0.24305423483831698
+            ],
+            "blue": [
+              0.24305555555555555,
+              0.7465753424657534
+            ],
+            "yellow": [
+              0.75,
+              0.7465753424657534
+            ]
+          },
+          "quadrantPixels": {
+            "red": 2521,
+            "green": 2521,
+            "blue": 2556,
+            "yellow": 2556
+          },
+          "magentaPixels": 896,
+          "shadowPixels": 1336,
+          "medianShadowRgb": [
+            162.0,
+            170.0,
+            179.0
+          ],
+          "paths": [
+            {
+              "type": "f",
+              "rect": [
+                75.0,
+                75.95001220703125,
+                147.0,
+                111.95001220703125
+              ],
+              "color": null,
+              "fill": [
+                0.2666666805744171,
+                0.3333333432674408,
+                0.4000000059604645
+              ],
+              "width": null,
+              "dashes": null
+            },
+            {
+              "type": "s",
+              "rect": [
+                74.0,
+                74.95001220703125,
+                148.0,
+                112.95001220703125
+              ],
+              "color": [
+                0.2666666805744171,
+                0.3333333432674408,
+                0.4000000059604645
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[ 2 2 ] 0"
+            },
+            {
+              "type": "s",
+              "rect": [
+                71.0,
+                71.0,
+                145.0,
+                109.0
+              ],
+              "color": [
+                1.0,
+                0.0,
+                1.0
+              ],
+              "fill": null,
+              "width": 2.0,
+              "dashes": "[ 2 2 ] 0"
+            }
+          ]
+        }
+      },
+      "authoredToBinary": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 3.5,
+        "maximumNormalizedCentroidDrift": 0.012285004069086197,
+        "rgbChangedPixels": 5005,
+        "rgbExactlyMatches": false
+      },
+      "authoredToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 0.0,
+        "maximumNormalizedCentroidDrift": 0.0,
+        "rgbChangedPixels": 0,
+        "rgbExactlyMatches": true
+      },
+      "binaryToConverted": {
+        "samePageDimensions": true,
+        "maximumQuadrantBoundDriftPoints": 3.5,
+        "maximumNormalizedCentroidDrift": 0.012285004069086197,
+        "rgbChangedPixels": 5005,
+        "rgbExactlyMatches": false
+      },
+      "supportedChecksPass": true,
+      "sourceFilesUnchanged": true
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "legacy-doc-parser/officeart-position-source-evidence",
+  "version": 1,
+  "retrievedDate": "2026-11-12",
+  "attribution": "LibreOffice QA contributors",
+  "license": "MPL-2.0; upstream COPYING.MPL copied to test/fixtures/word_native/COPYING.LibreOffice",
+  "method": "Original public binary fixtures, bounded CFB stream reads and raw FOPT/SPA observations; no native Word execution or signature validation claimed.",
+  "interpretation": "Word-specific zero-based relative origins; generic MS-ODRAW one-based table disagrees. Microsoft RTF and independent WW8 importer corroborate the raw Word binary evidence.",
+  "fixtures": [
+    {
+      "path": "test/fixtures/word_native/word14-margin-origin.doc",
+      "bytes": 55296,
+      "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+      "upstreamRepository": "LibreOffice/core",
+      "upstreamCommit": "9a3be2502bf7762400fd0b655b6e42714cf2bb36",
+      "upstreamPath": "sw/qa/extras/ww8export/data/tdf101826_xattrTextBoxFill.doc",
+      "upstreamUrl": "https://github.com/LibreOffice/core/blob/9a3be2502bf7762400fd0b655b6e42714cf2bb36/sw/qa/extras/ww8export/data/tdf101826_xattrTextBoxFill.doc",
+      "gitBlobSha": "206f4830958aac1e3fa429b74edd4697d5876f13",
+      "applicationMetadata": "Microsoft Office Word",
+      "applicationMajorVersion": 14,
+      "metadataIsNotSignature": true,
+      "propertyStream": "1Table",
+      "observations": [
+        {
+          "shapeId": 1028,
+          "propertyId": "0x0390",
+          "propertyValue": 0,
+          "tablePropertyOffset": 16168,
+          "spaOffset": 28138,
+          "spaHorizontalOrigin": 0,
+          "sourceLeftTwips": 5460
+        }
+      ],
+      "initialImportStatusAt49959f9": "existing FormatException: Missing or invalid Word textbox ranges. Raw bounded evidence only.",
+      "fullImportStatus": "Passes with recoveredGlobalTextboxSentinel; all six real textbox ranges remain bounded and independently validated."
+    },
+    {
+      "path": "test/fixtures/word_native/word16-page-origin.doc",
+      "bytes": 63488,
+      "sha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "upstreamRepository": "LibreOffice/core",
+      "upstreamCommit": "9a3be2502bf7762400fd0b655b6e42714cf2bb36",
+      "upstreamPath": "sw/qa/extras/ww8import/data/tdf124601.doc",
+      "upstreamUrl": "https://github.com/LibreOffice/core/blob/9a3be2502bf7762400fd0b655b6e42714cf2bb36/sw/qa/extras/ww8import/data/tdf124601.doc",
+      "gitBlobSha": "a07bae1f01494e746f56591a7afaf20ab8c4c958",
+      "applicationMetadata": "Microsoft Office Word",
+      "applicationMajorVersion": 16,
+      "metadataIsNotSignature": true,
+      "propertyStream": "1Table",
+      "observations": [
+        {
+          "shapeId": 1026,
+          "propertyId": "0x0392",
+          "propertyValue": 1,
+          "tablePropertyOffset": 6233,
+          "spaVerticalOrigin": 1,
+          "sourceTopTwips": 45
+        },
+        {
+          "shapeId": 1027,
+          "propertyId": "0x0392",
+          "propertyValue": 1,
+          "tablePropertyOffset": 10600,
+          "spaVerticalOrigin": 1,
+          "sourceTopTwips": 594
+        }
+      ],
+      "fullImportStatus": "passes"
+    }
+  ]
+}

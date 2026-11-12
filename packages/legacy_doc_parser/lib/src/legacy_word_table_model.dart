@@ -29,19 +29,54 @@ enum LegacyWordTableBorderSide {
 
 enum LegacyWordCellAlignment { top, center, bottom }
 
+/// The five text flow modes defined by MS-DOC TextFlow, using native XML names.
+enum LegacyWordCellTextDirection { lrTb, tbRl, btLr, lrTbV, tbRlV }
+
+/// MS-DOC Fts units for a preferred table/cell width. Percentages use 1/50th
+/// of a percent; twips are 1/20th of a point. Nil and auto remain distinct.
+enum LegacyWordTableWidthUnit { nil, auto, percent, twips }
+
+class LegacyWordTableWidth {
+  const LegacyWordTableWidth({required this.unit, this.value = 0});
+  final LegacyWordTableWidthUnit unit;
+  final int value;
+}
+
 /// A supported set of cell properties. Null and absent entries inherit.
 class LegacyWordTableCellFormat {
   const LegacyWordTableCellFormat({
     this.shading,
     this.borders = const {},
     this.verticalAlignment,
-    this.noWrap,
+    bool? noWrap,
+    this.preferredWidth,
     this.margins = const {},
-  });
+    this.textDirection,
+    this.fitText,
+    this.hideMark,
+  }) : noWrapPreference = noWrap;
   final LegacyWordShading? shading;
   final Map<LegacyWordTableBorderSide, LegacyWordBorder> borders;
   final LegacyWordCellAlignment? verticalAlignment;
-  final bool? noWrap;
+
+  /// The source preference before preferred-width context is evaluated.
+  /// Keeping this separate permits a later TCellWidth to reactivate it.
+  final bool? noWrapPreference;
+
+  /// A dxa preferred width suppresses the binary single-line preference.
+  /// It does not change the source preference retained above.
+  bool? get noWrap => noWrapPreference == null
+      ? null
+      : preferredWidth?.unit == LegacyWordTableWidthUnit.twips
+      ? false
+      : noWrapPreference;
+
+  /// Preferred width is independent of the physical grid interval retained
+  /// by LegacyWordTableCell.widthTwips.
+  final LegacyWordTableWidth? preferredWidth;
+  final LegacyWordCellTextDirection? textDirection;
+  final bool? fitText;
+  final bool? hideMark;
 
   /// Missing sides inherit; a present null retains an explicit nil width.
   final Map<LegacyWordBorderSide, int?> margins;
@@ -95,6 +130,7 @@ enum LegacyWordTableCharacterProperty {
   verticalAlign,
   position,
   spacing,
+  kerning,
 }
 
 /// Supported native text differences, with explicit source-property masks.

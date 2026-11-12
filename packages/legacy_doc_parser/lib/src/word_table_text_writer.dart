@@ -178,6 +178,11 @@ extension _WordTableTextWriter on _StructuredWordWriter {
     if (has('spacing')) {
       xml.add('<w:spacing w:val="${style.spacingTwips ?? 0}"/>');
     }
+    if (has('kerning')) {
+      xml.add(
+        '<w:kern w:val="${_StructuredWordWriter._kerningThreshold(style)}"/>',
+      );
+    }
     if (has('position')) {
       xml.add('<w:position w:val="${style.positionHalfPoints ?? 0}"/>');
     }

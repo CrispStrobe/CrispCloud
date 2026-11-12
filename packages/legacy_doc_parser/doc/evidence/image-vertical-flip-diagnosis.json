@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "scope": "Diagnosis of the retained vertical-flip native PDF discrepancy; no production change or replacement of the original comparison.",
+  "implementationCommit": "5e71b0d51fe4b56f9b5043182f5b81317b31b3e4",
+  "officeVersion": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "rasterDpi": 144,
+  "originalReceipt": {
+    "path": "doc/evidence/image-appearance-native.json",
+    "sha256": "7c3d7c737feed587e0de2ab721dd05c823258384989354dd9da7997f8711e2a5",
+    "byteExactPreservationVerified": true
+  },
+  "inputProvenance": {
+    "retainedAuthoredAndBinary": "test/fixtures/fidelity/image-appearance/{authored,binary}/<case>.{docx,doc}",
+    "fixtureManifest": "test/fixtures/fidelity/image-appearance/manifest.json",
+    "independentAuthor": "tool/fidelity/image_appearance_cases.py",
+    "converter": "tool/fidelity/image_appearance_probe.dart"
+  },
+  "geometry": {
+    "verticalAuthoredAndConvertedAnchor": {
+      "position": {
+        "H": {
+          "relativeFrom": "page",
+          "offsetEmu": 914400
+        },
+        "V": {
+          "relativeFrom": "page",
+          "offsetEmu": 914400
+        }
+      },
+      "extentEmu": {
+        "cx": "914400",
+        "cy": "457200"
+      }
+    },
+    "imageRectanglePointsForEveryDefaultAndDiagnosticExport": [
+      72.0,
+      71.95001220703125,
+      144.0,
+      107.95001220703125
+    ],
+    "numberOfIdenticalExportRectangles": 8,
+    "authoredTransformAttributes": {
+      "flipV": "1"
+    },
+    "convertedTransformAttributes": {
+      "rot": "10800000"
+    },
+    "sourceFspaTwips": [
+      1440,
+      1440,
+      2880,
+      2160
+    ]
+  },
+  "decodedSourcePixelComparison": {
+    "convertedPixelsExactlyEqualHorizontalReflectionOfAuthored": true,
+    "matchingPixels": 3200,
+    "maximumChannelDifference": 0,
+    "imageSizePixels": [
+      80,
+      40
+    ],
+    "authoredUniqueRgb": 4,
+    "nativeUniqueRgb": 4,
+    "authoredImageSha256": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a",
+    "nativeImageSha256": "81b3502db1a9967354d5e21283d573beb77f61d4719301c1db0f27cebcac998e",
+    "authoredDecodedPixelsSha256": "0c1137f9b39d2e51597206946cd094e83843c54df16d058828a6e3112ced5df5",
+    "nativeDecodedPixelsSha256": "c5692a1de47abe6c2fd0876a3e655d685fc4fce09eb497958a25c88c1567fbe6",
+    "transformIdentity": "R(180 degrees) * H = V about the same center."
+  },
+  "defaultExportAndCanonicalization": {
+    "pdfFilter": "pdf:writer_pdf_Export",
+    "optionsChanged": false,
+    "canonicalization": "In a disposable converted DOCX, replace rot=10800000 with rotation zero and toggle both flipH and flipV. Both tested inputs originally had neither flip flag.",
+    "verification": "All other document.xml semantics, all other ZIP member bytes including PNG, anchor, extent, crop and paint are unchanged. Source files remain unchanged.",
+    "cases": {
+      "floating-vertical": {
+        "inputSha256": {
+          "authored": "db000f69cd4543e618cfa5bc227ebcc4c73124325cbc448a85122de6043b568b",
+          "binary": "124a32bd3331a317a695a987df1eb4ec53b099bb97fdf44def845e50bfed082d",
+          "converted": "3b6672ac65c8e093b730b9889d6b12c9af271ce27ce9d2eccc884622e8205655"
+        },
+        "canonicalizedDocxSha256": "880b26d4f6fe94accc034b0b2e8ed1a67c141ed210b3dafc7f979065064daa82",
+        "defaultExport": {
+          "authored": {
+            "pdfSha256": "94818341799cfcb714109ac1a43df1f3be47c902621d7d5b07758a8c4261f42b",
+            "rasterSha256": "f4d58f78f26d4407bbcb9ea0251d69bbd0b24de19e0c7b9f5173fdd3fc4cde97",
+            "imageEncoding": "png",
+            "hasSoftMask": false,
+            "decodedImageSizePixels": [
+              80,
+              40
+            ],
+            "decodedImageUniqueRgb": 4,
+            "decodedImagePixelsSha256": "4e577027443666ccccceaaf63e993866f44f9d749d7cf33b0d8c40eb418379d5"
+          },
+          "converted": {
+            "pdfSha256": "dd33bc86e32e5764099f436263f3948eb11e3dbdfad3411b1cdbc0f84937d7e6",
+            "rasterSha256": "4393aec21971700b992dfb19703246a0b542bac82ef492c19a2c25c4d8979047",
+            "imageEncoding": "jpeg",
+            "hasSoftMask": true,
+            "decodedImageSizePixels": [
+              80,
+              40
+            ],
+            "decodedImageUniqueRgb": 135,
+            "decodedImagePixelsSha256": "5844802b207168d5749bc5838a16e2d03d12aa59694bbfc2005fdf5f7cf7f0fc"
+          },
+          "canonicalized": {
+            "pdfSha256": "13038628e0b359d55fe131833e7358cfe867e44bb6a8d48c54d4d305fcc875c8",
+            "rasterSha256": "4393aec21971700b992dfb19703246a0b542bac82ef492c19a2c25c4d8979047",
+            "imageEncoding": "jpeg",
+            "hasSoftMask": true,
+            "decodedImageSizePixels": [
+              80,
+              40
+            ],
+            "decodedImageUniqueRgb": 135,
+            "decodedImagePixelsSha256": "5844802b207168d5749bc5838a16e2d03d12aa59694bbfc2005fdf5f7cf7f0fc"
+          }
+        },
+        "authoredToConverted": {
+          "samePageDimensions": true,
+          "maximumQuadrantBoundDriftPoints": 0.0,
+          "maximumNormalizedCentroidDrift": 0.023174005918435436,
+          "rgbChangedPixels": 8664,
+          "rgbExactlyMatches": false
+        },
+        "authoredToCanonicalized": {
+          "samePageDimensions": true,
+          "maximumQuadrantBoundDriftPoints": 0.0,
+          "maximumNormalizedCentroidDrift": 0.023174005918435436,
+          "rgbChangedPixels": 8664,
+          "rgbExactlyMatches": false
+        },
+        "convertedToCanonicalized": {
+          "samePageDimensions": true,
+          "maximumQuadrantBoundDriftPoints": 0.0,
+          "maximumNormalizedCentroidDrift": 0.0,
+          "rgbChangedPixels": 0,
+          "rgbExactlyMatches": true
+        },
+        "unchangedNativeImageSha256": "81b3502db1a9967354d5e21283d573beb77f61d4719301c1db0f27cebcac998e"
+      },
+      "floating-both": {
+        "inputSha256": {
+          "authored": "1fa7409ba0c1f4c36f5e692a6dadb11a9e93615b73300d24706ecebc16405831",
+          "binary": "e41b88bf5d0397490cad0d4c011b1df9da7f6d8bbd1e3a5ce63053ae84f12495",
+          "converted": "5bf97286706f6d0f03f1004cb6c87cddc9690f0c7ba61a2d15e3749d356e647b"
+        },
+        "canonicalizedDocxSha256": "594baef1cf4c01434d155a49f55643343566701744b808e6417c66a20c2bd615",
+        "defaultExport": {
+          "authored": {
+            "pdfSha256": "75784b641ed928c915d05e5faff43920672303e11f1285c0f5c5921c5eb66073",
+            "rasterSha256": "860adc8cc970f5977b47be472ab628e5469ec5e7d518233011583ba87569dc20",
+            "imageEncoding": "jpeg",
+            "hasSoftMask": true,
+            "decodedImageSizePixels": [
+              80,
+              40
+            ],
+            "decodedImageUniqueRgb": 135,
+            "decodedImagePixelsSha256": "ec473139d390e876fb1bcd73d54b7db43388bf28f385876754ca5612cdeb3f66"
+          },
+          "converted": {
+            "pdfSha256": "fb9d973f66abde9d9d4b5bddaacd0efd9a01a97e5cd684e98d4dec873c192655",
+            "rasterSha256": "860adc8cc970f5977b47be472ab628e5469ec5e7d518233011583ba87569dc20",
+            "imageEncoding": "jpeg",
+            "hasSoftMask": true,
+            "decodedImageSizePixels": [
+              80,
+              40
+            ],
+            "decodedImageUniqueRgb": 135,
+            "decodedImagePixelsSha256": "ec473139d390e876fb1bcd73d54b7db43388bf28f385876754ca5612cdeb3f66"
+          },
+          "canonicalized": {
+            "pdfSha256": "6f194f8c157bd8ec000e6099aabfb82607a9ccba5c660338e1402d4390c11584",
+            "rasterSha256": "860adc8cc970f5977b47be472ab628e5469ec5e7d518233011583ba87569dc20",
+            "imageEncoding": "jpeg",
+            "hasSoftMask": true,
+            "decodedImageSizePixels": [
+              80,
+              40
+            ],
+            "decodedImageUniqueRgb": 135,
+            "decodedImagePixelsSha256": "ec473139d390e876fb1bcd73d54b7db43388bf28f385876754ca5612cdeb3f66"
+          }
+        },
+        "authoredToConverted": {
+          "samePageDimensions": true,
+          "maximumQuadrantBoundDriftPoints": 0.0,
+          "maximumNormalizedCentroidDrift": 0.0,
+          "rgbChangedPixels": 0,
+          "rgbExactlyMatches": true
+        },
+        "authoredToCanonicalized": {
+          "samePageDimensions": true,
+          "maximumQuadrantBoundDriftPoints": 0.0,
+          "maximumNormalizedCentroidDrift": 0.0,
+          "rgbChangedPixels": 0,
+          "rgbExactlyMatches": true
+        },
+        "convertedToCanonicalized": {
+          "samePageDimensions": true,
+          "maximumQuadrantBoundDriftPoints": 0.0,
+          "maximumNormalizedCentroidDrift": 0.0,
+          "rgbChangedPixels": 0,
+          "rgbExactlyMatches": true
+        },
+        "unchangedNativeImageSha256": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+      }
+    }
+  },
+  "separateLosslessDiagnostic": {
+    "case": "floating-vertical",
+    "originalGateChanged": false,
+    "pdfFilter": "pdf:writer_pdf_Export:{\"UseLosslessCompression\":{\"type\":\"boolean\",\"value\":\"true\"}}",
+    "inputsIdenticalToDefaultExports": true,
+    "outputs": {
+      "authored": {
+        "pdfSha256": "7af3244c16e9b47abba30708714cf65c0b185136480a1641667e2a844ac8fef3",
+        "rasterSha256": "f4d58f78f26d4407bbcb9ea0251d69bbd0b24de19e0c7b9f5173fdd3fc4cde97",
+        "imageEncoding": "png",
+        "hasSoftMask": false,
+        "decodedImageSizePixels": [
+          80,
+          40
+        ],
+        "decodedImageUniqueRgb": 4,
+        "decodedImagePixelsSha256": "4e577027443666ccccceaaf63e993866f44f9d749d7cf33b0d8c40eb418379d5"
+      },
+      "converted": {
+        "pdfSha256": "70b07058ce363d9cbea9e19370f223e6084dd29b8b1b052d915fb19212ef5414",
+        "rasterSha256": "f4d58f78f26d4407bbcb9ea0251d69bbd0b24de19e0c7b9f5173fdd3fc4cde97",
+        "imageEncoding": "png",
+        "hasSoftMask": true,
+        "decodedImageSizePixels": [
+          80,
+          40
+        ],
+        "decodedImageUniqueRgb": 4,
+        "decodedImagePixelsSha256": "4e577027443666ccccceaaf63e993866f44f9d749d7cf33b0d8c40eb418379d5"
+      }
+    },
+    "authoredToConverted": {
+      "samePageDimensions": true,
+      "maximumQuadrantBoundDriftPoints": 0.0,
+      "maximumNormalizedCentroidDrift": 0.0,
+      "rgbChangedPixels": 0,
+      "rgbExactlyMatches": true
+    }
+  },
+  "conclusion": {
+    "causeForThisFixture": "Default native PDF export chooses JPEG with a soft mask for the converted half-turn representation; the independent vertical-flip control is exported as PNG without a mask. Geometry is exact and the lossless diagnostic has identical decoded image pixels and full-page RGB.",
+    "dualFlipCanonicalizationUseful": false,
+    "reasonNoProductionChange": "Dual flips produce exactly the same default PDF pixels and JPEG image hash as the current half turn. The existing converter preserves the native PNG and an equivalent transform; changing export settings or source pixels would not be a conversion fix.",
+    "originalDefaultComparisonStillRgbExact": false,
+    "productionOrOracleChanged": false
+  }
+}

@@ -26,9 +26,13 @@ do not execute objects, evaluate fields, run VBA, or fetch linked resources.
 | VBA signatures | Named `StwUser` values `Sign`, `SigAgile`, `SigV3`, including the original count prefix. | Opaque signature evidence with its original stream extent. No signature decoding, verification or active signature relationship is produced. |
 | Other field binary data | Referenced `NilPICFAndBinData` extent retained. | Opaque bytes; no field-type evaluation. |
 
-The formatted HTML preview is a text/table preview. The media catalog supplies
-assets and placement metadata to consumers and to the separate DOCX/DOCM
-writer; it does not insert arbitrary original markup into HTML.
+The formatted HTML preview displays bounded referenced PNG/JPEG assets and
+complete generated EMF/WMF previews through fixed data-image markup. Floating
+images are labeled as anchor approximations; cropped, unsupported, or oversized
+assets receive placeholders. Image budgets are shared across stories without
+consuming space reserved for text. See the [HTML contract](html-preview.md).
+The separate DOCX/DOCM writer retains native placement and immutable assets;
+arbitrary original markup and external picture paths never enter HTML.
 
 ## Exact bytes versus reconstructed containers
 

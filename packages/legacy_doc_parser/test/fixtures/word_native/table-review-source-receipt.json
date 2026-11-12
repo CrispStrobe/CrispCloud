@@ -1,0 +1,18 @@
+{
+  "schema": "legacy-doc-parser/table-review-source-receipt",
+  "version": 1,
+  "notice": "Independently authored binary controls, not native output goldens. Changes require re-review of source construction.",
+  "producer": "tool/fidelity/table_review_fixture.dart",
+  "sourceHelper": "test/support/table_review_fixture.dart",
+  "sources": {
+    "table-review-header-accepted.doc": "25c6e3cc1a314bbcf64e2b6b0ede34669314fb6554331f03362d9ae05e3eacfa",
+    "table-review-header-rejected.doc": "7d8eb20c11b66e0d05ec642691f1f256c787475fe8600b08cbf34074cc4c7777",
+    "table-review-header-review.doc": "dfa10c46e5090cdb110302198163faa729f1a5158e799e7cf97e83d1272d89e3",
+    "table-review-height-accepted.doc": "efebb7be5d9fa3a732247ac3abae2b56c9c151e17473a909792d975f2604b2d0",
+    "table-review-height-rejected.doc": "cdbaa3a860273f1ea8c93f90589c1ac6a2ad2984d8d6af452279a4fcca464736",
+    "table-review-height-review.doc": "f4669042f05f818aac427dce01f96f015674f3fa0d21734ac2cc739474f3770a",
+    "table-review-split-accepted.doc": "6b17f32954fe1731a3892bef4644c2d2faffc7c74dba1116695d852c6f571cef",
+    "table-review-split-rejected.doc": "f6403f8beea0dc31752a977cabb287a238ca5f33f6def278a6d300ec52003efe",
+    "table-review-split-review.doc": "30b7adb060fefa16477057c8d39436b3d4fc60d573d21a3eb1d42e0bc98a002a"
+  }
+}

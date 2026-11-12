@@ -41,8 +41,6 @@ extension _WordShapes on _StructuredWordWriter {
         shape.rotationFixed16.abs() > 360 * 65536) {
       _tooComplex();
     }
-    final horizontal = ['margin', 'page', 'text'][drawing.horizontalOrigin];
-    final vertical = ['margin', 'page', 'text'][drawing.verticalOrigin];
     final zeroExtentLine =
         geometry.preset == 'line' &&
         (drawing.leftTwips == drawing.rightTwips ||
@@ -78,8 +76,7 @@ extension _WordShapes on _StructuredWordWriter {
       );
     }
     _xml.add(
-      'mso-position-horizontal-relative:$horizontal;'
-      'mso-position-vertical-relative:$vertical;'
+      '${_officeArtVmlPosition(drawing)}'
       'z-index:${drawing.behindText ? -1 : drawing.shapeId}',
     );
     if (shape.rotationFixed16 != 0) {
@@ -121,7 +118,7 @@ extension _WordShapes on _StructuredWordWriter {
     final side = ['both', 'left', 'right', 'largest'][drawing.wrapSide];
     _xml.add(
       '<w10:wrap xmlns:w10="urn:schemas-microsoft-com:office:word" '
-      'type="$wrap" side="$side" anchorx="$horizontal" anchory="$vertical"/>'
+      'type="$wrap" side="$side"${_officeArtVmlWrapOrigins(drawing)}/>'
       '</v:$element></w:pict>',
     );
     _mediaEnd(drawing.presentation);

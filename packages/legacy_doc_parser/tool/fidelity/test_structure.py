@@ -90,7 +90,7 @@ class StructuralOracleTest(unittest.TestCase):
 
     def test_style_cycle_and_unresolved_style_fail(self):
         cyclic = '<w:style w:type="table" w:styleId="Child"><w:basedOn w:val="Child"/></w:style>'
-        with self.assertRaisesRegex(ValueError, 'Cyclic style'):
+        with self.assertRaisesRegex(ValueError, 'Cyclic.*style'):
             self.package(self.table(), {'styles': ('s/styles.xml', styles(cyclic))})
         with self.assertRaisesRegex(ValueError, 'Unresolved style'):
             self.package(self.table())
@@ -176,7 +176,7 @@ class StructuralOracleTest(unittest.TestCase):
         source = self.package(paragraph('Body'), auxiliary)
         path, extension = auxiliary['commentsExtended']
         auxiliary['commentsExtended'] = (path, extension.replace('00ABCD01', '00abcd01').replace('w15:done="1"', 'w15:done="on"'))
-        self.assertEqual(source['structure'], self.package(paragraph('Body'), auxiliary)['structure'])
+        self.assertEqual([], compare_semantics(source, self.package(paragraph('Body'), auxiliary)))
 
     def test_prior_section_snapshot_does_not_add_a_current_section(self):
         body = paragraph('Body') + ('<w:sectPr><w:pgSz w:w="12240" w:h="15840"/>'

@@ -1,0 +1,1753 @@
+{
+  "baselineReport": {
+    "gzipSha256": "9e282741da254daec13cd81e58aa7b4e16d92ea0a3ae1ecb8e63b9d4e22879da",
+    "parserCommit": "b03747396878518d0d623599baf9b376df776e3d",
+    "path": "baseline-b037473-report.json.gz",
+    "purpose": "Complete measurements before the controlled VML dash spelling correction; not relabeled as current results."
+  },
+  "cases": [
+    {
+      "binaryDocSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "bridgeChangedProperties": [],
+      "converter": {
+        "counts": {
+          "cells": 4,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 4,
+          "footers": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "images": 1,
+          "numberingDefinitions": 7,
+          "numberingInstances": 7,
+          "paragraphs": 16,
+          "pictureReferences": 1,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "pagination",
+        "tables",
+        "images",
+        "stories",
+        "footnotes"
+      ],
+      "id": "formatting",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "4d047d43078290209f383c2bfa2813b4a8f547688748de207a2b3213e32074eb",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 11.901999999999987,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "sectionStories",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "status": "matched",
+        "tolerancePoints": 0.25
+      },
+      "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "2d2943d799d3a48430a90bff0bee68d7ab30fc2e5c26666d793160439e1f483d",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "endnotes": 1,
+          "evidenceArtifacts": 8,
+          "footers": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "images": 1,
+          "numberingDefinitions": 2,
+          "numberingInstances": 2,
+          "paragraphs": 15,
+          "pictureReferences": 1,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects",
+          "fieldsLists"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults",
+          "imagesOmitted",
+          "recoveredNonconformingProperties",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "pagination",
+        "tables",
+        "lists",
+        "stories",
+        "images"
+      ],
+      "id": "word",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 5.320600000000013,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "66b158a84893ac5f55a1e7267be83df70dcdd8db44416c021c85ba2af90773db",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 18.902,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "sectionStories",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "externalLinks",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "501bdd2f897b9a0d417988903b3a378bac958cacbcba5f842736802a5d47af1b",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+      "bridgeChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "revisions",
+        "tables",
+        "alternatives",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure",
+        "counts.sectPrChange"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 3,
+          "footnotes": 1,
+          "headers": 6,
+          "paragraphs": 16,
+          "sections": 2,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredNonconformingProperties",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "pagination",
+        "sections",
+        "columns",
+        "comments"
+      ],
+      "id": "word-compatibility",
+      "nativeConversionPagination": {
+        "actualPages": 2,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 2,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "2da3d49fa0f4b1baa81eb88fa8512e242c1666bfbc6b6cc94f5ae276d1f954aa",
+      "pagination": {
+        "actualPages": 2,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 2,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "sectionStories",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "8fccf5c41ac4f51136635322933065ecc786e1365709a7a10edb8734024049fe",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.tbl",
+        "counts.tc",
+        "counts.tr"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 4,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 3,
+          "footnotes": 1,
+          "paragraphs": 6,
+          "sections": 1,
+          "tables": 2
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredTableStoryBoundary",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "tables",
+        "borders",
+        "conditional-table-styles"
+      ],
+      "id": "table-borders",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "57db8c6166a4352860fe95743f7bb736f5d40650633ad23db9284aa06083f1be",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 74.42699999999999,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.tbl",
+        "counts.tc",
+        "counts.tr"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "563e9bd799cf413d6324b86320b2e719ecc23df6f2d172ba594b03dfe121aa0c",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 12,
+          "footers": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "images": 9,
+          "paragraphs": 11,
+          "pictureReferences": 9,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "images",
+        "stories",
+        "floating-drawings"
+      ],
+      "id": "story-media",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "7fc569d992239617b4749d0d0cae5ebcf4eb3fa2faafb7b9cfa4a696c77ee56d",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "3267ee707daac2a409e9bd1d796572949fb9e7e7891ac71ec14dcdefb59cb219",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "705bb49428dc44e09f80ac53748f7597bc3d46f5447d0daca066a4f44c8d6874",
+      "bridgeChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "comments",
+        "commentAnchors",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.comment",
+        "counts.commentThreads"
+      ],
+      "converter": {
+        "counts": {
+          "comments": 2,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 5,
+          "paragraphs": 5,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting"
+        ]
+      },
+      "features": [
+        "threaded-comments"
+      ],
+      "id": "comment-threads",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "32a972a652e7e53295aff69df4a2f963ab3251d601b6dec6353ffef0eac12f02",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "comments",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+      "bridgeChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.tbl",
+        "counts.tc",
+        "counts.tr",
+        "counts.txbxContent"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "endnotes": 3,
+          "evidenceArtifacts": 3,
+          "footnotes": 6,
+          "paragraphs": 14,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "footnotes",
+        "endnotes",
+        "pagination"
+      ],
+      "id": "note-markers",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "d7e6382c409d06b651759376a1447d77289092443dd596c51c429ea3a5272e3e",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.tbl",
+        "counts.tc",
+        "counts.tr",
+        "counts.txbxContent"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+      "bridgeChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "bookmarks": 16,
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "endnotes": 1,
+          "evidenceArtifacts": 4,
+          "footers": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "paragraphs": 16,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "fieldsLists"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "bookmarks",
+        "references"
+      ],
+      "id": "bookmarks",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "a00c770ca6b66c5804845e4f3f4273c325c55e34a29c37ca765dd145c380b849",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 3.0500000000000114,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "sectionStories",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "02ffc92fa910622066deabe1fbc1676ebcbe07034ad8f410484cf83908f78ab8",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "paragraphs": 12,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "content-controls",
+        "revisions"
+      ],
+      "id": "content-controls",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "aa1948ec33b16fe1d51ad4cbbba229010d0066b413064ac0ac9db9da2fdeaec3",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "sectionStories",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "69481e76b39ad83411ff018be3b30914723d23d90a728159053608422c30bea3",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 3,
+          "footnotes": 1,
+          "headers": 3,
+          "paragraphs": 12,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "content-controls",
+        "form-fields"
+      ],
+      "id": "content-controls-legacy",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "dae88df50d6e7066f3f40908d21eb59652185d64fd2d33d73b1739fcfcced5a5",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "sectionStories",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "compatibility",
+        "sectionStories",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "2833e0d3ef3e00ba626177fb2f40ddf51744611be1a324a3a6aabdb01926aaab",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "4b5d31bb21b87c311242c6dc17c84515749e37ed8baf9af20541c2504a0ac496",
+      "bridgeChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "cells": 1,
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 3,
+          "footnotes": 1,
+          "paragraphs": 11,
+          "sections": 1,
+          "tables": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "embedded-content"
+      ],
+      "id": "word-altchunk",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "28a1b518e053dde2f0f4980cb41bc2e61e7ea1f57818801a9e041e14692c1170",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "tables",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "f623604dfab5865907c70d7e2e933970bca4f1e6e892187025c083f32784b05b",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 5,
+          "paragraphs": 3,
+          "sections": 1,
+          "textboxes": 2
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredTextboxChainLength",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "linked-textbox-reflow",
+        "pagination"
+      ],
+      "id": "linked-textboxes",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.05000000000001137,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "2a60349293d4ebbba3d64e88053e594d9b1a3403ac81a6b76cd8cac79b633c9f",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "e1032597da63f7dce5a956d7296d5817b17e76c03ee73c77a37b6304da190148",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict"
+      ],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "drawingReferences": 3,
+          "editableShapes": 3,
+          "evidenceArtifacts": 5,
+          "paragraphs": 1,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects",
+          "revisions"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "revisionMetadataIncomplete",
+          "recoveredLegacyNoteSettings",
+          "terminalMarkFormattingUnavailable"
+        ]
+      },
+      "features": [
+        "officeart-geometry",
+        "officeart-effects",
+        "floating-drawings"
+      ],
+      "id": "officeart-shapes",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "c1276a1880814b5ffc3946f19f5d81ceae5aefd3a0a6028f80c23ca34f57fba4",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "f95be8f8d4283f7d2fd4cfc178cbd108300ea99b1be9a14ab1dd56bf1897f53b",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "bridgeChangedProperties": [],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 5,
+          "paragraphs": 3,
+          "sections": 1,
+          "textboxes": 2
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredTextboxChainLength",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "linked-textbox-reflow",
+        "pagination"
+      ],
+      "id": "linked-textboxes-native",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.05000000000001137,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "a9d26a02c36b20613a2997fd49ac6556426a48ec9be7eec8f05473e47a7026e9",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "sourceGolden": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "status": "matched",
+        "tolerancePoints": 0.25
+      },
+      "sourceSha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "f4e274400fefc5428d473aa14132d832fcc80d7e57bbdc60a55eaf1d31a466d8",
+      "bridgeChangedProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "paragraphs": 3,
+          "pictureReferences": 1,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects",
+          "revisions"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted",
+          "revisionMetadataIncomplete",
+          "recoveredLegacyNoteSettings",
+          "terminalMarkFormattingUnavailable"
+        ]
+      },
+      "features": [
+        "metafile-rendering",
+        "images",
+        "pagination"
+      ],
+      "id": "emf-vectors",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "fbc1fdf45f1efa01d686b35bfe8c98e570d1b16b1d7b4d770d8f1db9a7041549",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.049999999999954525,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "68c1368568e8a5664e5aa0bc770d14b8da64b6c436747c647d24a1757f7fbe59",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "da2cc5f74733278364c7d52dc8cf83ac4e6cc4615a3d4a855b3722bd7e2ecc67",
+      "bridgeChangedProperties": [
+        "sections",
+        "imageDigests",
+        "paragraphs",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "paragraphs": 3,
+          "pictureReferences": 1,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects",
+          "revisions"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted",
+          "revisionMetadataIncomplete",
+          "recoveredLegacyNoteSettings",
+          "terminalMarkFormattingUnavailable"
+        ]
+      },
+      "features": [
+        "metafile-rendering",
+        "images",
+        "pagination"
+      ],
+      "id": "wmf-vectors",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "eb4df29cd8878fb841abe8ac49250ef686e116993bb955510a442903ca6fd1fc",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "fcf94d85aa01ce7f30b0c7551535e264a329af2f8e7ab57adc6c098040c0112f",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "bridgeChangedProperties": [],
+      "converter": {
+        "counts": {
+          "compatibilityFlags": 60,
+          "evidenceArtifacts": 5,
+          "paragraphs": 10,
+          "sections": 1,
+          "textboxes": 2
+        },
+        "limitations": [
+          "partialFormatting",
+          "embeddedObjects"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredTextboxChainLength",
+          "recoveredLegacyNoteSettings"
+        ]
+      },
+      "features": [
+        "linked-textbox-reflow",
+        "pagination"
+      ],
+      "id": "linked-textboxes-compact",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 288.05,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "e97c0e08ac5e229a1faebdd8142fe19b03c7c455a2e0b3489755e725bd7ee4d2",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "textboxes",
+        "alternatives",
+        "compatibility",
+        "styleDefaults",
+        "structure",
+        "counts.drawing",
+        "counts.pict",
+        "counts.txbxContent"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "04c12a92a08341111d0bcc29075503e3e9e0642e4b52af3deb256df902f37119",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "bridgeChangedProperties": [],
+      "converter": {
+        "counts": {
+          "numberingDefinitions": 1,
+          "numberingInstances": 1,
+          "paragraphs": 5,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": []
+      },
+      "features": [
+        "list-continuation",
+        "pagination"
+      ],
+      "id": "list-continue",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "bddebbc9c738fdda02e8e5eebf17056fb625a312f822733e9c62e59764a79ff6",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 24.909236000000007,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "numbering",
+        "compatibility",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "sourceUnchanged": true,
+      "status": "measured"
+    },
+    {
+      "binaryDocSha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "bridgeChangedProperties": [],
+      "converter": {
+        "counts": {
+          "numberingDefinitions": 2,
+          "numberingInstances": 2,
+          "paragraphs": 6,
+          "sections": 1
+        },
+        "limitations": [
+          "partialFormatting",
+          "fieldsLists"
+        ],
+        "signatureValidityClaimed": false,
+        "warnings": [
+          "numberingNotReconstructed"
+        ]
+      },
+      "features": [
+        "list-continuation",
+        "pagination"
+      ],
+      "id": "list-restart",
+      "nativeConversionPagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "nativeDocxSha256": "dd3da96d8e6ff3904d24a095eba61fee24b3ab8b94035162c5abcd4cb69b4278",
+      "pagination": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 26.809235999999984,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "roundtripChangedProperties": [
+        "stories",
+        "sections",
+        "paragraphs",
+        "numbering",
+        "compatibility",
+        "structure"
+      ],
+      "semanticChangedProperties": [
+        "sections",
+        "paragraphs",
+        "numbering",
+        "compatibility",
+        "styleDefaults",
+        "structure"
+      ],
+      "sourceGolden": {
+        "status": "not-recorded"
+      },
+      "sourceSha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "sourceUnchanged": true,
+      "status": "measured"
+    }
+  ],
+  "corpusSha256": "3f9dc53a714066c7a17b17ea7c8633bd6ad4c1a243bd16469216fa4f14b46f65",
+  "corpusUnchanged": true,
+  "dartVersion": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745",
+  "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+  "fullReport": {
+    "complete": true,
+    "gzipBytes": 180477,
+    "gzipSha256": "a1259582fe81c2aac3d0ebb7e9aee7e479dd7e9baddf3c577d1d06441ae2816d",
+    "jsonBytes": 3972169,
+    "jsonSha256": "36d9b34316531a634cf0e87ce79ba87eb3b88301d011a9e0eec2b22458291071",
+    "path": "native-report.json.gz"
+  },
+  "method": "Independent DOC render + native DOCX + parser DOCX + second binary import. No automatic golden update.",
+  "outlineComparison": {
+    "afterParserCommit": "c8848d2b7323636d922ed211dfc911534f3acc9f",
+    "beforeParserCommit": "b03747396878518d0d623599baf9b376df776e3d",
+    "cropPixels": {
+      "x": [
+        55,
+        200
+      ],
+      "y": [
+        120,
+        225
+      ]
+    },
+    "display": "Nearest-neighbor display of 72 DPI raster crops; no color changes; not a golden",
+    "path": "officeart-outline-comparison.png",
+    "sha256": "5792290baad2a0d62fbaed50b6c470315b90693a5866b6bf4826bb8cdb0ddf11",
+    "sourceRasterSha256": {
+      "after": "c546d486eb9990145679e6984f58f927c8401b7b00314046a7d3fd25e88ff220",
+      "before": "dce7d4ba6a14cf9f2ac2821f9725bd603992d2bb4b4e3c48d79b77d39ac17e5f",
+      "source": "b924342214a67c272880ed0c7a8222d88a2315a7952eb1d5201a5daac84efc4a"
+    }
+  },
+  "parserCommit": "c8848d2b7323636d922ed211dfc911534f3acc9f",
+  "parserExecutableSha256": "056f178e542eba10253fa8b905c90d7bd9925401fbc0f9a4032edaf5f853ae21",
+  "parserSourceSha256": "b13997101aa83a8dd49a40bc3b779dc937cbbd6ac3e1dd3acff702e9775e3626",
+  "parserSourceUnchanged": true,
+  "parserWorktreeDirty": false,
+  "rasterizerVersion": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+  "recordedDate": "2026-11-12",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "schema": "legacy-doc-parser/fidelity-measurement-summary",
+  "textExtractorVersion": "pdftotext version 25.03.0\nCopyright 2005-2025 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC",
+  "totals": {
+    "cases": 19,
+    "casesWithRoundtripDifferences": 19,
+    "casesWithSemanticDifferences": 19,
+    "exactOnThisRenderer": 7,
+    "executionErrors": 0,
+    "matchedSourceGoldens": 2,
+    "samePageCount": 19,
+    "unchangedSources": 19
+  },
+  "verification": {
+    "corpusHashesVerified": 19,
+    "dartAnalyzer": "no issues",
+    "dartTestsPassed": 406,
+    "javascriptMediaAssertionsPassed": 40,
+    "microsoftWordRun": false,
+    "openXmlSdkValidatorRun": false,
+    "pubPublishDryRunWarnings": 0,
+    "pythonOracleTestsPassed": 41,
+    "reviewedSourceGoldensVerified": 2,
+    "trackedDartFormat": "102 files; 0 changed"
+  },
+  "version": 1
+}

@@ -38,6 +38,7 @@ import '../services/ebook_file_store.dart' show isEbookFileName;
 import '../l10n/ebook_strings.dart';
 import 'code_highlighting.dart';
 import 'email_message_view.dart';
+import 'office_html_widget_factory.dart';
 import 'internal_viewer_dialog.dart';
 import 'keepass_editor_dialog.dart';
 import '../l10n/keepass_strings.dart';
@@ -919,7 +920,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 Text(note, style: theme.textTheme.bodySmall),
                 const Divider(),
               ],
-              HtmlWidget(safeHtml, onTapUrl: (_) => true),
+              HtmlWidget(
+                safeHtml,
+                factoryBuilder: OfficeHtmlWidgetFactory.new,
+                onTapUrl: (_) => true,
+              ),
             ],
           ),
         ),

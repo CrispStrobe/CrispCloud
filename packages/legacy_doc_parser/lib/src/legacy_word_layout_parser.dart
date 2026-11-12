@@ -204,27 +204,31 @@ LegacyWordSectionLayout _sectionLayout(_Props properties) {
   );
 }
 
-const _noteFormats = <int, String>{
-  0: 'decimal',
-  1: 'upperRoman',
-  2: 'lowerRoman',
-  3: 'upperLetter',
-  4: 'lowerLetter',
-  9: 'chicago',
-  22: 'decimalZero',
-};
-
 void _applyNoteNumberFormat(
   _Props output,
   String kind,
   int code,
   Set<LegacyWordWarning> warnings,
 ) {
+  // MS-DOC 2.6.4 / Dop97 use the fixed MSONFC table. Word substitutes decimal
+  // for bullet note labels (MS-OE376 2.1.310). The legacy 0x28 code also maps
+  // to decimal in MS-OSHARED; retain a limitation rather than claim its
+  // application-specific appearance was recovered.
+  final fallback = code == 0x17 || code == 0x28;
+  final format = code == 0xff
+      ? 'none'
+      : fallback
+      ? 'decimal'
+      : code < legacyWordMsonfcFormats.length
+      ? legacyWordMsonfcFormats[code]
+      : null;
   output['${kind}FormatCode'] = code;
-  output['${kind}Format'] = _noteFormats[code];
-  if (!_noteFormats.containsKey(code)) {
+  output['${kind}Format'] = format;
+  output['${kind}FormatFallback'] = fallback;
+  if (format == null || fallback) {
     output['_unsupportedSection'] = true;
     warnings.add(LegacyWordWarning.unsupportedFormatting);
+    warnings.add(LegacyWordWarning.unsupportedNoteNumberFormat);
   }
 }
 
@@ -244,6 +248,7 @@ LegacyWordNoteNumbering _noteNumbering(_Props properties, String kind) {
     restart: restart,
     sourceFormatCode: properties['${kind}FormatCode'] as int?,
     sourceContinuousOffset: offset,
+    usesDecimalFallback: properties['${kind}FormatFallback'] == true,
   );
 }
 

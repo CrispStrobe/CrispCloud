@@ -1,0 +1,276 @@
+{
+  "baseCommit": "613db6c",
+  "cases": [
+    {
+      "convertedSha256": "68887a6e6d2c0031fc4e2f9a993cab434408f8b4e3889b73ea3dde9db8b747cb",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "tc80-nil",
+      "nativeSha256": "afa452409454703c7b7cda67d33bcb7efddf33ddae41293fd0193f11ca64b65b",
+      "sourceSha256": "a326ae026d5784dbf71d1656c17bbb835a309899a9b87e4d01b4df05059a86dc"
+    },
+    {
+      "convertedSha256": "68887a6e6d2c0031fc4e2f9a993cab434408f8b4e3889b73ea3dde9db8b747cb",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-nil",
+      "nativeSha256": "afa452409454703c7b7cda67d33bcb7efddf33ddae41293fd0193f11ca64b65b",
+      "sourceSha256": "a9da789415267cfec8caf2beb290ce106216fdf545347e971a77da6dedb0b9a4"
+    },
+    {
+      "convertedSha256": "4d73352c3d11b9b284c56154b1028743b8f4714a9aba4d651cf7edc6ec4a2cb1",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "tc80-auto",
+      "nativeSha256": "58787ff758627702273c24f5c504170cb5f7fcfa43c94715c4058fe8fd7ef857",
+      "sourceSha256": "369e7e2df74a1b4eb20a0f8b92190d9c1f6ed5b978fa8c4f4063d3e482672284"
+    },
+    {
+      "convertedSha256": "4d73352c3d11b9b284c56154b1028743b8f4714a9aba4d651cf7edc6ec4a2cb1",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-auto",
+      "nativeSha256": "58787ff758627702273c24f5c504170cb5f7fcfa43c94715c4058fe8fd7ef857",
+      "sourceSha256": "becbddc06b057b9e679122443827ab8db57688cac14b89b86b4e412e10caa363"
+    },
+    {
+      "convertedSha256": "b62e2d7a07528cb301bc2b7ced97a35b18ed7295cf0570dddf161ffd37ebbe40",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "tc80-percent",
+      "nativeSha256": "5d134f37899d533f27f95c40040ae3d9a4b2d08195b23de9d458827184369a29",
+      "sourceSha256": "9aeb7f1693be47a4546bbb4670463260041a2318f09e2227b004819868c134b5"
+    },
+    {
+      "convertedSha256": "b62e2d7a07528cb301bc2b7ced97a35b18ed7295cf0570dddf161ffd37ebbe40",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-percent",
+      "nativeSha256": "5d134f37899d533f27f95c40040ae3d9a4b2d08195b23de9d458827184369a29",
+      "sourceSha256": "76ef9b70f80f8a6d26980204abdeb6ce79c0b7b8c55174bfa8a1ee3ebb1e2b05"
+    },
+    {
+      "convertedSha256": "2dd1e070967a432f3113a82205bbf9c683cca0cdabc5a70b67aac687a47f681e",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "tc80-dxa",
+      "nativeSha256": "5d134f37899d533f27f95c40040ae3d9a4b2d08195b23de9d458827184369a29",
+      "sourceSha256": "779bfdfcf49982b45bfc424823330b3717ce874a8ed4ae08bb5030e46098e00e"
+    },
+    {
+      "convertedSha256": "2dd1e070967a432f3113a82205bbf9c683cca0cdabc5a70b67aac687a47f681e",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-dxa",
+      "nativeSha256": "5d134f37899d533f27f95c40040ae3d9a4b2d08195b23de9d458827184369a29",
+      "sourceSha256": "1b7ec3476c0aa0b0987d0e515b1d50891ff3c51e2d9f75044ef3e37754d860f6"
+    },
+    {
+      "convertedSha256": "55c68625894103485e13d8c625256f4b5f90e421ea1daf21fc3f28e935d256bc",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "tc80-narrow",
+      "nativeSha256": "826db5592fbc3068cf5b2ba210528dd5514ec152e1f9f0edd48f5380f7b160dd",
+      "sourceSha256": "fa3a3141f6fd1e2cc79eecdc1133f152f88d7ee3d377252f06c84ade3fdaf024"
+    },
+    {
+      "convertedSha256": "55c68625894103485e13d8c625256f4b5f90e421ea1daf21fc3f28e935d256bc",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-narrow",
+      "nativeSha256": "826db5592fbc3068cf5b2ba210528dd5514ec152e1f9f0edd48f5380f7b160dd",
+      "sourceSha256": "a46060815eb1e540200eab2686832e045d7625031a346c426f17fbd073a9d126"
+    },
+    {
+      "convertedSha256": "4d73352c3d11b9b284c56154b1028743b8f4714a9aba4d651cf7edc6ec4a2cb1",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "dxa-to-auto",
+      "nativeSha256": "826db5592fbc3068cf5b2ba210528dd5514ec152e1f9f0edd48f5380f7b160dd",
+      "sourceSha256": "023c89fac39788b2672ed3961c48c55464b5b4a424056752699ef393572c3b46"
+    },
+    {
+      "convertedSha256": "2dd1e070967a432f3113a82205bbf9c683cca0cdabc5a70b67aac687a47f681e",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "auto-to-dxa",
+      "nativeSha256": "826db5592fbc3068cf5b2ba210528dd5514ec152e1f9f0edd48f5380f7b160dd",
+      "sourceSha256": "6253844c03ac5105ec83ca705fad82108e7a82f5535cffb80d11338652f9073f"
+    },
+    {
+      "convertedSha256": "82dee52b396171f910e89b8e2e4c002389555e257360cf104deb7e720b20471e",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-reset",
+      "nativeSha256": "f358d9c40344810e2fd11a4319bc6897dfa989de4896038456d8df12b2f16d4b",
+      "sourceSha256": "2f496b178abcb0058afe8d357b8ec1eda48f5821a7e65ef3f81d95892203d2a4"
+    },
+    {
+      "convertedSha256": "2c56a1168d5761a2cc1fe5956a43fde95eb30fe3b7ea9d2422e272b4a61e3009",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 164.51999999999998,
+        "samePages": false,
+        "sameWords": false
+      },
+      "name": "style-auto",
+      "nativeSha256": "4fcb04c827bbe2c44234768c2ccfedd3d8d49b99a990fd2ce4fa6982e43f7d16",
+      "sourceSha256": "43e1ed4eb91eabf9bab882b1ca1fc1e5075ec0ce7727e64d67a7ba0eec52c21b"
+    },
+    {
+      "convertedSha256": "1c50a1920971217c86ce31a0c7f19038407154ed2f15003289198e56e91203e0",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 164.51999999999998,
+        "samePages": false,
+        "sameWords": false
+      },
+      "name": "style-dxa",
+      "nativeSha256": "4fcb04c827bbe2c44234768c2ccfedd3d8d49b99a990fd2ce4fa6982e43f7d16",
+      "sourceSha256": "dd883dfaa14d8fe5e713ecdc56e8696987196cea42dacec42ce7a352b130457a"
+    },
+    {
+      "convertedSha256": "c08db50863eec3bd8951052e7b45bf3bc1d45e5fed84301e906d2575b3ed0551",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "tc80-asymmetric",
+      "nativeSha256": "e7ca8bd5ddf611ce745d0b3c66695eed2fd90448f1cdad49dc5f4326b3240fc6",
+      "sourceSha256": "93995890d17d2380b9d393e23a8f4668cd4845f8a4342aa3b3e11e9c904d4d3b"
+    },
+    {
+      "convertedSha256": "c08db50863eec3bd8951052e7b45bf3bc1d45e5fed84301e906d2575b3ed0551",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "range-asymmetric",
+      "nativeSha256": "e7ca8bd5ddf611ce745d0b3c66695eed2fd90448f1cdad49dc5f4326b3240fc6",
+      "sourceSha256": "c09f5ffe5ac4073d7c683cd4f1099e68942b13aefca8bafbd7c44a13ffe6ad96"
+    },
+    {
+      "convertedSha256": "d27adeab86b2c66a700befd669e16addb15754e514626351a6acd6f39d7603fe",
+      "layoutComparison": {
+        "maxWordDeltaPoints": 0.0,
+        "samePages": true,
+        "sameWords": true
+      },
+      "name": "grid-asymmetric-control",
+      "nativeSha256": "0127ccee5440c52fee9a31d9119e96df8a7db93fd9bb750b566a03b8e366cb79",
+      "sourceSha256": "ab1f6cf1c722580ea40010d1ed8f7272ba0f7d33bdc2b8adbd737e3f5be0c3b4"
+    }
+  ],
+  "existingNativeGoldenChecks": {
+    "borders": {
+      "cases": 12,
+      "goldenFailures": [],
+      "reportSha256": "66bc9d92ef1ab6f7ceda25a9a21aaeb7f2f0077136c803e28e6eff9a4563f939"
+    },
+    "layout": {
+      "cases": 8,
+      "goldenFailures": [],
+      "reportSha256": "dd66104ae2003102b94b4102ab8d34b89a99c79068200db4b9f715c0beaf4d0e"
+    },
+    "origin": {
+      "cases": 9,
+      "goldenFailures": [],
+      "reportSha256": "463bf51e63fb37bf15d940e3f37ae99fc77e9bda68fdd5661ae9568ddc314a7c"
+    }
+  },
+  "focusedDartLogSha256": "0b8f52fb2a3f216c5e3fc754a784b3004b4a6f0213d447dfe286238d346781e6",
+  "focusedDartTests": 125,
+  "limitations": [
+    "The native bridge normalizes preferred widths to grid dxa values and removes noWrap. Layout agreement cannot establish preservation of those source distinctions.",
+    "TInsert-only style cases are flattened by the native importer and are not counted as native rendering matches.",
+    "No Microsoft Word execution was available for authored width fixtures."
+  ],
+  "productionAndFixtureSha256": {
+    "lib/src/legacy_word_sprms.dart": "85ba4d12489f6ed8a73bab7d39c8ce9144e22d1e0887621a12b524e35799b1a6",
+    "lib/src/legacy_word_table_model.dart": "91a11e4327468ca56bf445cf76df63761b57cf85314dd6eb9ff4499d5d91404b",
+    "lib/src/legacy_word_table_operations.dart": "3c5ee6009319cfc2aebb72d9744f72c754dcbaabaca076dd83cb830c7f67c5ff",
+    "lib/src/legacy_word_table_styles.dart": "1dae4de14f705e0fc6850f87bd445bfe572debc7ac39894d69df343c24c0dc28",
+    "lib/src/word_table_writer.dart": "04cdee110cdb21bcaf7ce628538a7e367c843b100b19222dbf6c433472d17896",
+    "test/legacy_word_table_width_test.dart": "95d24de4585a4c0ae71f5286af31e6581e2b9f4ce95d82680f5144f5d71d18ab",
+    "test/support/table_width_fixture.dart": "0d7fe09f6f1a778db6eaca2511c2017d4e646b0a767bf2a77b3b3c3b98129f40",
+    "tool/fidelity/table_width_fixture.dart": "b42db830c016f562ff1aaa45993fb7a6586a382ea610b0966738a2010f486f78",
+    "tool/fidelity/table_width_probe.py": "0839a18c01d1c791bcb522830057f15bfbe1fdc72795637597c8e4c1914108e6",
+    "tool/fidelity/test_table_width_probe.py": "a2d7af5f0ce012e6cc6456cc42e0869c41dbbf7d94d11e14fbba8f0a31d860a2"
+  },
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "reviewedGoldenSha256": "f87b824cd1a08b5ecd100ef50f7f7e5a026d89b6bf7d9bf271bd7159591da67d",
+  "schema": "legacy-doc-parser/table-preferred-width-check",
+  "validator": {
+    "artifactSha256": "698a090f1ba04ef8a844eea2614c9378c3713aa74101a4bf5e0c00e0588085c1",
+    "buildScope": "Reused independently built, positive/negative-control-checked validator from the 49959f9 isolated validation; root runs a fresh whole-corpus gate after integration.",
+    "failures": 0,
+    "files": 18,
+    "rawReportSha256": "d698dd0dc7dcdff9681e23f7f02dd42cc2758a1bc943d648cb6bffbb18e1c0af",
+    "upstream": {
+      "commit": "35230d3862fbfc268ac7b5fa2a243e9f6a347057",
+      "files": {
+        "LICENSE.quds": {
+          "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685",
+          "sourcePath": "LICENSE"
+        },
+        "OfficeValidation.csproj": {
+          "sha256": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
+          "sourcePath": "tool/office-validation/OfficeValidation.csproj"
+        },
+        "Program.cs": {
+          "sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+          "sourcePath": "tool/office-validation/Program.cs"
+        }
+      },
+      "license": "MIT",
+      "modifications": "None. All three files are byte-for-byte copies of the named source commit.",
+      "repository": "https://github.com/CrispStrobe/quds_office_suite",
+      "sdkPackage": {
+        "id": "DocumentFormat.OpenXml",
+        "version": "3.3.0"
+      },
+      "validationVersion": "Office2019",
+      "version": 1
+    }
+  },
+  "version": 1
+}

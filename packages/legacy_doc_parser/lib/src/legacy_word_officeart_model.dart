@@ -114,6 +114,22 @@ class LegacyWordOfficeArtText {
   final bool? fitShapeToText, autoTextMargin;
 }
 
+/// Raw Word FOPT positioning properties. The Word producers represented by
+/// the native corpus use 0=margin, 1=page, 2=column/paragraph, 3=character/line.
+/// These differ from the one-based generic MS-ODRAW enum table. Values outside
+/// the supported ranges survive here and are diagnosed, never reinterpreted.
+/// The original SPA origins and signed offsets remain on the drawing.
+class LegacyWordOfficeArtPosition {
+  const LegacyWordOfficeArtPosition({
+    this.horizontalMode,
+    this.verticalMode,
+    this.horizontalRelativeTo,
+    this.verticalRelativeTo,
+  });
+  final int? horizontalMode, verticalMode;
+  final int? horizontalRelativeTo, verticalRelativeTo;
+}
+
 /// Only the stream version and its declared byte extent are inspected. A
 /// matching header does not validate packets, properties or pen strokes.
 enum LegacyWordInkHeaderStatus {
@@ -190,6 +206,7 @@ class LegacyWordOfficeArtShape {
     this.line,
     this.shadow,
     this.text,
+    this.position,
     this.ink,
     this.discussionAnchor = false,
     List<int> unsupportedProperties = const [],
@@ -208,6 +225,7 @@ class LegacyWordOfficeArtShape {
   final LegacyWordOfficeArtLine? line;
   final LegacyWordOfficeArtShadow? shadow;
   final LegacyWordOfficeArtText? text;
+  final LegacyWordOfficeArtPosition? position;
   final LegacyWordOfficeArtInk? ink;
 
   /// MS-ODRAW idDiscussAnchor equals 1. This is not a comment identifier.

@@ -218,6 +218,9 @@ extension _WordMedia on _StructuredWordWriter {
         'source': _sourceMetadata(notice.source),
       });
       switch (notice.issue) {
+        case LegacyWordMediaIssue.recoveredVertexArrayLength:
+        case LegacyWordMediaIssue.recoveredBlipStoreCount:
+          limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordMediaIssue.unsupportedImage:
           limitations.add(LegacyWordConversionLimitation.images);
         case LegacyWordMediaIssue.externalPictureNotFetched:
@@ -310,6 +313,8 @@ extension _WordMedia on _StructuredWordWriter {
       id,
       cx,
       cy,
+      shape: picture.shape,
+      transform: _imageTransform(picture.shape),
       crop: [
         picture.cropLeftFixed16,
         picture.cropTopFixed16,
@@ -347,21 +352,43 @@ extension _WordMedia on _StructuredWordWriter {
       drawing.wrapSide <= 3;
 
   void _drawing(LegacyWordDrawing drawing, LegacyWordImageAsset asset) {
-    final width = (drawing.rightTwips - drawing.leftTwips) * 635;
-    final height = (drawing.bottomTwips - drawing.topTwips) * 635;
+    final sourceWidth = (drawing.rightTwips - drawing.leftTwips) * 635;
+    final sourceHeight = (drawing.bottomTwips - drawing.topTwips) * 635;
+    final position = drawing.shape?.position;
+    final transform = _imageTransform(
+      drawing.shape,
+      floatingAbsolute:
+          (position?.horizontalMode ?? 0) == 0 &&
+          (position?.verticalMode ?? 0) == 0 &&
+          [
+            position?.horizontalRelativeTo,
+            position?.verticalRelativeTo,
+          ].every((value) => value == null || (value >= 0 && value <= 3)),
+    );
+    final width = transform.swapsAxes ? sourceHeight : sourceWidth;
+    final height = transform.swapsAxes ? sourceWidth : sourceHeight;
+    final x = drawing.leftTwips * 635 + ((sourceWidth - width) / 2).round();
+    final y = drawing.topTwips * 635 + ((sourceHeight - height) / 2).round();
+    if (x < -0x80000000 ||
+        x > 0x7fffffff ||
+        y < -0x80000000 ||
+        y > 0x7fffffff) {
+      _tooComplex();
+    }
     final id = ++_drawingId;
-    final horizontal = ['margin', 'page', 'column'][drawing.horizontalOrigin];
-    final vertical = ['margin', 'page', 'paragraph'][drawing.verticalOrigin];
     _mediaStart(drawing.presentation);
     _xml.add(
       '<w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" '
       'simplePos="0" relativeHeight="$id" behindDoc="${drawing.behindText ? 1 : 0}" '
       'locked="${drawing.anchorLocked ? 1 : 0}" layoutInCell="1" allowOverlap="1">'
-      '<wp:simplePos x="0" y="0"/>'
-      '<wp:positionH relativeFrom="$horizontal"><wp:posOffset>${drawing.leftTwips * 635}</wp:posOffset></wp:positionH>'
-      '<wp:positionV relativeFrom="$vertical"><wp:posOffset>${drawing.topTwips * 635}</wp:posOffset></wp:positionV>'
-      '<wp:extent cx="$width" cy="$height"/>',
+      '<wp:simplePos x="0" y="0"/>',
     );
+    _officeArtDrawingPosition(
+      drawing,
+      horizontalOffsetEmu: x,
+      verticalOffsetEmu: y,
+    );
+    _xml.add('<wp:extent cx="$width" cy="$height"/>');
     if (drawing.wrapMode == 3) {
       _xml.add('<wp:wrapNone/>');
     } else if (drawing.wrapMode == 1) {
@@ -384,6 +411,8 @@ extension _WordMedia on _StructuredWordWriter {
       id,
       width,
       height,
+      shape: drawing.shape,
+      transform: transform,
       crop: [
         drawing.cropLeftFixed16,
         drawing.cropTopFixed16,
@@ -401,6 +430,8 @@ extension _WordMedia on _StructuredWordWriter {
     int id,
     int cx,
     int cy, {
+    LegacyWordOfficeArtShape? shape,
+    _ImageTransform transform = const _ImageTransform(),
     List<int> crop = const [0, 0, 0, 0],
   }) {
     final relation = _imageRelation(asset);
@@ -420,10 +451,11 @@ extension _WordMedia on _StructuredWordWriter {
     }
     _xml.add(
       '<a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
-      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="$cx" cy="$cy"/></a:xfrm>'
-      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
-      '</pic:pic></a:graphicData></a:graphic>',
+      '<pic:spPr><a:xfrm${transform.attributes}><a:off x="0" y="0"/><a:ext cx="$cx" cy="$cy"/></a:xfrm>'
+      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>',
     );
+    _imageAppearance(shape);
+    _xml.add('</pic:spPr></pic:pic></a:graphicData></a:graphic>');
   }
 
   void _embeddedObject(LegacyWordEmbeddedObject object, String path) {
@@ -715,6 +747,15 @@ Map<String, Object?> _drawingMetadata(LegacyWordDrawing drawing) => {
   ],
   'horizontalOrigin': drawing.horizontalOrigin,
   'verticalOrigin': drawing.verticalOrigin,
+  if (drawing.shape?.position case final position?)
+    'officeArtPosition': {
+      'horizontalMode': position.horizontalMode,
+      'verticalMode': position.verticalMode,
+      'horizontalRelativeTo': position.horizontalRelativeTo,
+      'verticalRelativeTo': position.verticalRelativeTo,
+      'semantics': 'WordFoptZeroBased',
+      'unsupportedProperties': drawing.shape!.unsupportedProperties,
+    },
   'wrapMode': drawing.wrapMode,
   'wrapSide': drawing.wrapSide,
   'behindText': drawing.behindText,

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "observation": "doNotExpandShiftReturn false: explicit element versus documented default omission",
+  "observedDate": "2026-11-12",
+  "renderer": {
+    "name": "LibreOfficeDev",
+    "version": "26.8.0.0.alpha0",
+    "revision": "2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "filter": "doc:MS Word 97",
+    "profile": "Fresh isolated profile with macros and document-link updates disabled"
+  },
+  "source": {
+    "path": "test/fixtures/word_native/formatting.doc",
+    "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+    "bytes": 21504,
+    "copts80": "0x00002000",
+    "extendedCoptsWords": ["0x00002000", "0x10000008", "0x00000000"]
+  },
+  "controlledDifference": {
+    "partNamesEqual": true,
+    "changedParts": ["word/settings.xml"],
+    "exactBytesRemoved": "<w:doNotExpandShiftReturn w:val=\"0\"/>",
+    "allOtherUncompressedPartBytesEqual": true
+  },
+  "explicitFalse": {
+    "docxSha256": "62bde0e0c06c84f91bc42235d0624ffd062200e0f24148d9b108f1982063b268",
+    "docxBytes": 14041,
+    "roundtripDocSha256": "199b774ac4896f8d5e34d30f15661a4ef8ac66bb219611097fa906a5abb4c8ab",
+    "roundtripDocBytes": 17920,
+    "copts80": "0x00000000",
+    "extendedCoptsWords": ["0x00000000", "0x10000008", "0x00000000"]
+  },
+  "omittedFalse": {
+    "docxSha256": "d9fbc4932165babca15b5c45e4277598ce0bb5b72ef7731f15065d959b4c3fa2",
+    "docxBytes": 13424,
+    "roundtripDocSha256": "84172ba56bfad0f7b97288216aeae1b42b383f21004a2a56203c3f02ed334466",
+    "roundtripDocBytes": 17920,
+    "copts80": "0x00002000",
+    "extendedCoptsWords": ["0x00002000", "0x10000008", "0x00000000"]
+  },
+  "reproduction": [
+    "Convert the authored formatting.doc fixture to DOCX using the package, preserving its parsed compatibility values.",
+    "Create two copies whose only uncompressed part difference is the exact doNotExpandShiftReturn element above, present with val=0 versus absent.",
+    "Convert each DOCX independently with the pinned LibreOffice revision, a fresh isolated profile, and doc:MS Word 97 filter.",
+    "Read the referenced DOP and compare its Copts80 word at offset 84 and extended Copts words at offsets 508, 512 and 516."
+  ],
+  "limitations": [
+    "Hashes identify this observed experiment, not stable output goldens; native metadata and ZIP serialization may differ on another run.",
+    "This verifies one boolean setting on one renderer and fixture. It does not establish pagination equivalence or other compatibility defaults.",
+    "The parsed source model and inert source-block evidence retain explicit false independently of native XML omission."
+  ]
+}
