@@ -1,13 +1,38 @@
 # Legacy Word parser development integration
 
-The current continuation uses canonical standalone parser
-`730812534e8dc045d6d97f600218228f05c51b97` through the guarded standalone
-mirror. The existing Quds source remains
-`74960237cea7c560f3db7ee96ca37641c4438567`; its engine/editor bytes are unchanged.
-The Git dependency, path override, upstream metadata and all 823 managed Office
-file hashes agree. The exact pins remain authoritative in
-`packages/legacy_doc_parser/UPSTREAM.json` and
-`tool/office_fidelity_manifest.json`.
+The integration pins are recorded in `packages/legacy_doc_parser/UPSTREAM.json` and `tool/office_fidelity_manifest.json`; historical receipts retain their original source identities.
+
+## Latest fidelity checkpoint
+
+The [d14f03f integration receipt](evidence/legacy-doc-parser-20261112/parser-d14f03f/README.md)
+records the completed continuation after the historical development checks
+below. The current app runtime passes 142 Word conversion/UI tests across
+17 suites, 101 Python harness tests, portable DOC/RTF/PPT/MSG JavaScript checks
+and installed-Office acceptance with independent PDF checks. Source files and
+prepared output remain unchanged by inspection/preview.
+
+The canonical parser retains the full 24-input, three-cycle native run: all
+24 initial imports and 72 repeat imports complete, all initial page counts
+agree, six initial renders are exact, and both reviewed source goldens match.
+Its integrated independent SDK gate accepts all 218 required outputs. Complete
+reports, exact DOC/DOCX artifacts and the earlier failed receipts remain in the
+mirrored package. The shared-header failure is closed for these exact inputs;
+the separate native header/table controls remain unsupported.
+
+The eight broader fidelity areas remain bounded contracts. Current limits and
+attribution are recorded in the package's `doc/fidelity-status.md`; equal page
+counts, valid schema and successful app checks do not establish full editing
+semantics or exact pagination. Microsoft Word was not executed.
+
+The current development continuation consumes canonical standalone parser
+`ba5f5b0cdd540bd0c03f62aabc88faadd8660e0b` through Quds integration
+`a9f7c1a3ee8e9ffea7d65f781fb5584540ebb41d`. The exact upstream parser passes
+666 Dart tests, 110 Python oracle controls and the independent 153-output Open
+XML SDK gate. The [current app integration receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
+records source verification, 32 inspection tests, 19 sync controls, JavaScript
+acceptance and 13 actual installed-Office checks. Earlier results below retain
+their original source identity; this development update does not requalify a
+frozen release.
 
 This parser checkpoint recovers bounded native header/footer stories ending in
 closed tables, with an explicit warning. It adds lossless per-page native raster

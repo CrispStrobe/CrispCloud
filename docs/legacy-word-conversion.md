@@ -489,3 +489,16 @@ The standalone package's publication dry run passed with **zero warnings**.
 All 46 package Dart files passed both the local formatter and the exact
 formatter revision used by hosted Dart 3.14.0; analysis was clean. Publishing
 to pub.dev remains a later release action.
+
+
+### Completed native fidelity continuation
+
+The [current parser/app receipt](evidence/legacy-doc-parser-20261112/parser-d14f03f/README.md)
+binds the `d14f03f` source pin to 142 Word conversion/UI tests, 101 Python
+harness checks, portable JavaScript and installed-Office acceptance. The
+canonical parser retains all 24 initial imports and 72 native repeat imports,
+including the previously failing first-header case, plus the complete
+218-output independent schema gate. These scoped results supersede the earlier
+acceptance counts for this continuation while preserving every historical
+receipt. Exact pagination and complete OfficeArt, ink and revision semantics
+remain explicitly open in the package's fidelity contracts.

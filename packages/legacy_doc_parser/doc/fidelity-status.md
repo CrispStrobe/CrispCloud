@@ -18,6 +18,26 @@ every Word document or every renderer.
 
 ## Evidence is versioned
 
+The [integrated acceptance receipt](evidence/combined-47b9c95/README.md)
+retains the clean main-source gate: 809 Dart tests, 162 Python tests, 51
+JavaScript media checks and all 218 required SDK outputs. All 194 earlier schema
+cases survive alongside the 24 textbox-table controls. A test-only follow-up
+also checks the generated fixture manifests against the emitted package XML
+in 13 focused tests; the producer and runtime are unchanged.
+
+The [completed 24-input checkpoint](evidence/e90f38f/README.md), reproducible
+from pushed `c3fa95e`, imports every original input and completes all 72 repeat
+imports without execution errors. All 24 initial page counts agree; six initial
+RGB/text/geometry comparisons are exact and both reviewed source goldens match.
+The earlier first-header failure is closed for these retained source bytes.
+The complete corrected-oracle report, all 288 emitted DOC/DOCX files, portable
+checks and 194-output SDK gate are sealed with hashes. Strict structural
+comparisons still report differences; this is not a full-fidelity certificate.
+The runtime in integrated `47b9c95` is byte-identical to this measured runtime.
+The [native-backed textbox-table rollback](evidence/textbox-table-context-20261112/README.md)
+remains in place: a candidate that matched native DOCX export moved source
+content by 12 points, so that change was retracted rather than accepted as a fix.
+
 The shared-shape extension in the [header recovery contract](header-textbox-aliases.md)
 handles the first-header failure recorded below. Two occurrences retain the same
 source shape ID and separate anchor CPs, rectangles and wrapping flags; only a

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "appBaseCommit": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+  "appCodeAndTestsUnchangedFromBase": true,
+  "parserCommit": "d14f03f198a9735c660d0f8ae18ba6fc316fcf25",
+  "suiteCommit": "78ed85f5fd19d44f672dee11420fed261c974f4a",
+  "parserManifestEntries": 476,
+  "officeManagedFiles": 897,
+  "ebookGitCommit": "c98e05307f537397a4fad26b75883ac387fefebf",
+  "ebookFilesVerified": 279,
+  "flutterTests": 142,
+  "flutterSuites": 17,
+  "pythonHarnessTests": 101,
+  "portableJavaScriptFormats": [
+    "DOC",
+    "RTF",
+    "PPT",
+    "MSG"
+  ],
+  "installedOfficeRoutes": [
+    "built-in DOCX",
+    "native DOCX",
+    "native DOCM"
+  ],
+  "releasePubspecRestored": true,
+  "dependencyLockUnchanged": true,
+  "testConfiguration": "Existing system SQLite wrapper and retained Clang; optional ebook hook disabled only during local Word tests. Native ebook conversion not validated by these tests.",
+  "sourceIdentity": "App and parser/engine/editor runtime bytes equal public app base; source-sync guards bind final exact Git revisions and modes. Only test, evidence, documentation and pin metadata changed after acceptance.",
+  "sourceBinding": {
+    "inventory_sha256": "97eefcfba5be069db36068fd49029f82e69e061840f79e74b75aa8e3d514992c",
+    "pubspec_lock_sha256": "81915cfd1d62de2777a4717723eb05998c8588e77be55bef4e0249465e7350b8",
+    "reviewed_source_sha256": "8363ea907f2aa8a48f1b0db4932c98b294c441d53b7377324f4e8ff2e60e338f"
+  },
+  "files": {
+    "pubspec.yaml": "6a1ab363bc2efb6292735ea9c8cb8bd2fd39ebdf3157bdb31b38d615a51f572f",
+    "pubspec.lock": "81915cfd1d62de2777a4717723eb05998c8588e77be55bef4e0249465e7350b8",
+    "tool/office_fidelity_manifest.json": "7adaf56fe4f0e2d7d483ad68942947c56975e91db2f42d31c49eb1a42e8a9c0f",
+    "packages/legacy_doc_parser/UPSTREAM.json": "b674c898953ced6ef12d85cd7dfc24ef23c5673a0465072473322cce9c4491eb",
+    "docs/ebook-source-manifest.json": "88445234a438799143d52f2efebe3e8cbe3afd49d760d225cb620e6be870fcef",
+    "docs/apple-export-policy.json": "437dcbe401a60f214edd0237be5ad8d6c2e020963285ad24141fef715c03b7c5"
+  },
+  "checks": {
+    "focused": {
+      "archive": "focused.log.gz",
+      "sha256": "ab39ebf5cb9ce5ee46393b862b046155f182b83b6b5aebd972be5af5cddbfba9",
+      "uncompressedSha256": "4b4897e619c760fd488a8a3d472c2b6c3179b6b53b8e5a8726889a96e8aef778",
+      "uncompressedBytes": 28342
+    },
+    "python": {
+      "archive": "python.log.gz",
+      "sha256": "7cdaea07dc7683645061d05bc868293ae0ae5db59a16443f5dec1610a395fe1f",
+      "uncompressedSha256": "332954a61bc3ea628ffb03f36907038b1affab9f4332fc3605ec7d9d22dbecee",
+      "uncompressedBytes": 1532
+    },
+    "native": {
+      "archive": "native.log.gz",
+      "sha256": "37d2fb2e2f162f04b8c0fbb05eabb17300a41eb00233dc8e2ae6c4bdc395db18",
+      "uncompressedSha256": "67e2d92c396a46aa8c7c91e35f1bb64577dc24cd3bc5406b12204e9bd757424e",
+      "uncompressedBytes": 4250
+    },
+    "web": {
+      "archive": "web.log.gz",
+      "sha256": "71e83ea871ca4a11658046695f2c1c7caf216ae278eca41e1c95741306bf1939",
+      "uncompressedSha256": "4e68205a5bdfe1dec79140323aa57c2949882e11747d275f5e99563e8351b869",
+      "uncompressedBytes": 262
+    },
+    "source-verification": {
+      "archive": "source-verification.log.gz",
+      "sha256": "86999bfa78ccdafbbf8e85a28974c0fe6dab0cf6670601c9df71af89b3eb5f2e",
+      "uncompressedSha256": "cc2173cae66c2c0ecefca99603056f602a700f4aa7e2b92c2cb09dac7830c609",
+      "uncompressedBytes": 202
+    },
+    "ebook-verification": {
+      "archive": "ebook-verification.log.gz",
+      "sha256": "ad23bf09cdbf89d329fddd194a3a47d9b5e4a35de4336c4ad893396319f83166",
+      "uncompressedSha256": "e5042b7d0732cff541a5e7fab8f601495a7371ed7699a360e01194b942c9c337",
+      "uncompressedBytes": 335
+    },
+    "source-binding": {
+      "archive": "source-binding.log.gz",
+      "sha256": "cf0e80b24019084c429ecef83bf415ed576ccc0dd678a1356e526d44c26080f3",
+      "uncompressedSha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177",
+      "uncompressedBytes": 72
+    }
+  },
+  "upstreamNativeBoundary": "24 initial imports and 72 repeat imports completed, with all initial page counts equal and six exact initial renders. Structural differences and two separate unsupported native header/table controls remain. Microsoft Word not executed."
+}
