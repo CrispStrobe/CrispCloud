@@ -30,6 +30,7 @@ import '../l10n/provider_operation_strings.dart';
 import '../l10n/office_editor_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../services/office_editor_menu.dart';
+import '../services/word_package_preservation.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
 
@@ -42,6 +43,7 @@ const Set<String> kOfficeExtensions = <String>{
   'docx',
   'docm',
   'dotx',
+  'dotm',
   'xlsx',
   'xlsm',
   'xltx',
@@ -52,6 +54,7 @@ const Set<String> kOfficeExtensions = <String>{
   'ods',
   'odp',
   'doc',
+  'dot',
   'xls',
   'ppt',
   'pps',
@@ -65,7 +68,10 @@ bool isOfficeFileName(String name) {
 
 bool _isEditableOoxml(String name) {
   final ext = name.split('.').last.toLowerCase();
-  return ext == 'docx' || ext == 'xlsx' || ext == 'pptx';
+  return ext == 'docx' ||
+      WordPackagePreservation.contentTypesByExtension.containsKey(ext) ||
+      ext == 'xlsx' ||
+      ext == 'pptx';
 }
 
 Future<void> showOfficeEditorDialog(
@@ -111,6 +117,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
   OfficeEditorKind _kind = OfficeEditorKind.unsupported;
   Uint8List? _loadedBytes;
   CapturedFileTarget? _target;
+  WordPackagePreservation? _wordPreservation;
   bool _loading = true;
   bool _saving = false;
   bool _dirty = false;
@@ -175,6 +182,9 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (!_isEditableOoxml(name)) return OfficeEditorKind.unsupported;
     switch (ext) {
       case 'docx':
+      case 'docm':
+      case 'dotx':
+      case 'dotm':
         return OfficeEditorKind.word;
       case 'xlsx':
         return OfficeEditorKind.sheet;
@@ -213,6 +223,11 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         return;
       }
 
+      _wordPreservation = await WordPackagePreservation.capture(
+        bytes,
+        widget.file.name,
+      );
+      if (!mounted) return;
       final controller = switch (kind) {
         OfficeEditorKind.word => WordEditorController.fromBytes(
           bytes,
@@ -255,7 +270,8 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '${context.tr('Could not open this document')}: '
+        _error =
+            '${context.tr('Could not open this document')}: '
             '${localizedFileBytesError(context, e)}';
       });
     }
@@ -285,6 +301,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       // revision or dismiss it through Save and Close.
       final savedRevision = _editRevision;
       final bytes = await controller.saveBytesAsync();
+      await _wordPreservation?.validateSaved(bytes);
       final target = _target;
       if (target == null) {
         throw StateError(
@@ -315,8 +332,10 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${context.tr('Save failed')}: '
-              '${localizedProviderError(context, e)}'),
+          content: Text(
+            '${context.tr('Save failed')}: '
+            '${localizedProviderError(context, e)}',
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
