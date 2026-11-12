@@ -799,7 +799,8 @@
     "tool/testflight_external.rb",
     "tool/update_ebook_sources.py",
     "tool/verify_ebook_sources.py",
-    "tool/verify_office_fidelity.py"
+    "tool/verify_office_fidelity.py",
+    "windows/CMakeLists.txt"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",

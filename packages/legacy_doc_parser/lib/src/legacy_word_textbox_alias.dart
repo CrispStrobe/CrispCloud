@@ -33,9 +33,14 @@ class WordHeaderTextboxAliases {
       end = story.endCp;
     }
     for (final drawing in media.drawings) {
-      final key = (drawing.headerStory, drawing.shapeId);
+      final key = (drawing.headerStory, drawing.shapeId, drawing.anchorCp);
       if (_drawings.containsKey(key)) _invalid = true;
       _drawings[key] = drawing;
+      _shapeCounts.update(
+        (drawing.headerStory, drawing.shapeId),
+        (count) => count + 1,
+        ifAbsent: () => 1,
+      );
       final id = (drawing.textboxId ?? 0) >> 16;
       if (id > 0) {
         final reference = (drawing.headerStory, id);
@@ -82,7 +87,8 @@ class WordHeaderTextboxAliases {
 
   final _stories = <String, LegacyWordStory>{};
   final _ranges = <LegacyWordStory>[];
-  final _drawings = <(bool, int), LegacyWordDrawing>{};
+  final _drawings = <(bool, int, int), LegacyWordDrawing>{};
+  final _shapeCounts = <(bool, int), int>{};
   final _referenceCounts = <(bool, int), int>{};
   final _plainTextboxes = <String>{};
   final _unsafe = <(int, int)>[];
@@ -108,17 +114,22 @@ class WordHeaderTextboxAliases {
       return null;
     }
     final first = occurrences[0], second = occurrences[1];
-    if (first.shapeId == second.shapeId || first.anchorCp == second.anchorCp) {
+    if (first.anchorCp == second.anchorCp) {
       return null;
     }
-    final primary = first.shapeId == reference.shapeId ? first : second;
+    final primary =
+        first.shapeId == reference.shapeId &&
+            first.anchorCp == reference.anchorCp
+        ? first
+        : second;
     final alias = identical(primary, first) ? second : first;
     if (primary.shapeId != reference.shapeId ||
         primary.anchorCp != reference.anchorCp) {
       return null;
     }
     for (final occurrence in occurrences) {
-      final drawing = _drawings[(true, occurrence.shapeId)];
+      final drawing =
+          _drawings[(true, occurrence.shapeId, occurrence.anchorCp)];
       final shape = drawing?.shape;
       if (occurrence.chainIndex != 0 ||
           (occurrence.nextShapeId ?? 0) != 0 ||
@@ -132,9 +143,24 @@ class WordHeaderTextboxAliases {
           drawing.presentation.deleted ||
           drawing.presentation.insertionRevision != null ||
           drawing.presentation.deletionRevision != null ||
+          _shapeCounts[(true, occurrence.shapeId)] !=
+              (first.shapeId == second.shapeId ? 2 : 1) ||
           shape == null ||
           shape.type != 202 ||
           (shape.sourceFlags & 0x3f) != 0) {
+        return null;
+      }
+    }
+    if (first.shapeId == second.shapeId) {
+      final a = _drawings[(true, first.shapeId, first.anchorCp)]!;
+      final b = _drawings[(true, second.shapeId, second.anchorCp)]!;
+      // A native DOC export can retain two distinct header SPA occurrences
+      // of one OfficeArt FSP. They must share the actual decoded payload;
+      // equal numeric IDs never authorize conflicting shapes or images.
+      if (!identical(a.shape, b.shape) ||
+          a.officeArtArtifactId != b.officeArtArtifactId ||
+          a.imageId != null ||
+          b.imageId != null) {
         return null;
       }
     }
@@ -225,4 +251,5 @@ class WordHeaderTextboxAliasPair {
   );
   final LegacyWordTextboxAnchor primary, alias;
   final LegacyWordStory primaryOwner, aliasOwner;
+  bool get sharedShape => primary.shapeId == alias.shapeId;
 }

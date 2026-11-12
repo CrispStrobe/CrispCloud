@@ -1,7 +1,7 @@
 name: crisp_cloud
 description: Flutter/Dart Cloud storage client
 publish_to: 'none'
-version: 1.2.5+18
+version: 1.2.6+19
 
 environment:
   # Keep the application and CI toolchain compatible with dart_pdf_editor.
@@ -12,7 +12,7 @@ dependencies:
   crisperbooks:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 5c49682143a44e14bc0eea10c52e769bc4a4c03a
+      ref: c98e05307f537397a4fad26b75883ac387fefebf
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -91,7 +91,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser.git
-      ref: 564388c5a88ac89410e87012644f36a2848260ff
+      ref: 47b9c95c061178fec69d0d546bf12948ccca0709
 
   # File Handling
   cross_file: ^0.3.3+8
@@ -210,17 +210,17 @@ dependency_overrides:
   crisp_ebook:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 5c49682143a44e14bc0eea10c52e769bc4a4c03a
+      ref: c98e05307f537397a4fad26b75883ac387fefebf
       path: packages/crisp_ebook
   crisp_ebook_reader:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 5c49682143a44e14bc0eea10c52e769bc4a4c03a
+      ref: c98e05307f537397a4fad26b75883ac387fefebf
       path: packages/crisp_ebook_reader
   crisp_ebook_conversion:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 5c49682143a44e14bc0eea10c52e769bc4a4c03a
+      ref: c98e05307f537397a4fad26b75883ac387fefebf
       path: packages/crisp_ebook_conversion
   # MIT 0.10.0 runtime with cancellable mobile cursor reveal on disposal.
   # Source provenance and the narrow patch are in packages/re_editor/UPSTREAM.md.

@@ -60,6 +60,36 @@ extension _WordMedia on _StructuredWordWriter {
       _event(owner, picture.cp, 50, () => _picture(picture, asset));
     }
     final shapeIds = <(bool, int)>{};
+    Set<int>? sharedHeaderShapes;
+    Set<int> validatedSharedHeaderShapes() {
+      final validator = WordHeaderTextboxAliases(
+        stories: document.stories,
+        media: media,
+        fields: document.fields,
+        bookmarks: document.bookmarks,
+        notes: document.noteReferences,
+        comments: document.commentReferences,
+      );
+      final allowed = <int>{};
+      for (final reference in document.textboxReferences) {
+        if (reference.anchors.length != 1 ||
+            reference.headerAliases.length != 1) {
+          continue;
+        }
+        final pair = validator.resolve(reference, [
+          ...reference.anchors,
+          ...reference.headerAliases,
+        ]);
+        if (pair != null &&
+            pair.sharedShape &&
+            pair.primary == reference.anchors.single &&
+            pair.alias == reference.headerAliases.single) {
+          allowed.add(pair.primary.shapeId);
+        }
+      }
+      return allowed;
+    }
+
     final textboxShapes = {
       for (final reference in document.textboxReferences)
         if (reference.shapeId != null)
@@ -71,7 +101,11 @@ extension _WordMedia on _StructuredWordWriter {
     };
     for (final drawing in media.drawings) {
       if (!shapeIds.add((drawing.headerStory, drawing.shapeId))) {
-        throw const FormatException('Duplicate Word drawing identity.');
+        sharedHeaderShapes ??= validatedSharedHeaderShapes();
+        if (!drawing.headerStory ||
+            !sharedHeaderShapes.contains(drawing.shapeId)) {
+          throw const FormatException('Duplicate Word drawing identity.');
+        }
       }
       final owner = _storyAt(drawing.anchorCp);
       _preserveInk(drawing.shape, {
@@ -495,10 +529,16 @@ extension _WordMedia on _StructuredWordWriter {
 
   void _prepareTextboxes() {
     if (document.textboxReferences.length > 20000) _tooComplex();
-    final drawings = <(bool, int), LegacyWordDrawing>{};
+    final drawings = <(bool, int, int), LegacyWordDrawing>{};
+    final firstDrawings = <(bool, int), LegacyWordDrawing>{};
     final drawingStories = <(bool, int), LegacyWordDrawing>{};
     for (final drawing in document.media.drawings) {
-      drawings[(drawing.headerStory, drawing.shapeId)] = drawing;
+      drawings[(drawing.headerStory, drawing.shapeId, drawing.anchorCp)] =
+          drawing;
+      firstDrawings.putIfAbsent((
+        drawing.headerStory,
+        drawing.shapeId,
+      ), () => drawing);
       final storyIndex = (drawing.textboxId ?? 0) >> 16;
       if (storyIndex > 0) {
         drawingStories.putIfAbsent((
@@ -543,7 +583,8 @@ extension _WordMedia on _StructuredWordWriter {
           throw const FormatException('Invalid Word header textbox alias.');
         }
         for (final occurrence in [aliasPair.primary, aliasPair.alias]) {
-          final shape = drawings[(true, occurrence.shapeId)]!;
+          final shape =
+              drawings[(true, occurrence.shapeId, occurrence.anchorCp)]!;
           if (!_displayPosition(occurrence.anchorCp) || !_validDrawing(shape)) {
             throw const FormatException(
               'Unsupported Word header textbox alias placement.',
@@ -552,7 +593,12 @@ extension _WordMedia on _StructuredWordWriter {
         }
       }
       final drawing =
-          drawings[(reference.inHeaderFooter, reference.shapeId)] ??
+          drawings[(
+            reference.inHeaderFooter,
+            reference.shapeId,
+            reference.anchorCp,
+          )] ??
+          firstDrawings[(reference.inHeaderFooter, reference.shapeId)] ??
           drawingStories[(reference.inHeaderFooter, reference.id)];
       final cp = reference.anchorCp ?? drawing?.anchorCp;
       final owner = cp == null ? null : _storyAt(cp);
@@ -578,7 +624,12 @@ extension _WordMedia on _StructuredWordWriter {
       if (chain.length > 4096) _tooComplex();
       final resolved = <(LegacyWordDrawing, int, String)>[];
       for (final anchor in chain) {
-        final shape = drawings[(reference.inHeaderFooter, anchor.shapeId)];
+        final shape =
+            drawings[(
+              reference.inHeaderFooter,
+              anchor.shapeId,
+              anchor.anchorCp,
+            )];
         final owner = _storyAt(anchor.anchorCp);
         if (shape == null ||
             owner == null ||
@@ -616,7 +667,7 @@ extension _WordMedia on _StructuredWordWriter {
       }
       if (aliasPair != null) {
         final alias = aliasPair.alias;
-        final aliasShape = drawings[(true, alias.shapeId)]!;
+        final aliasShape = drawings[(true, alias.shapeId, alias.anchorCp)]!;
         _event(
           aliasPair.aliasOwner.id,
           alias.anchorCp,
@@ -630,6 +681,7 @@ extension _WordMedia on _StructuredWordWriter {
           'startCp': story.startCp,
           'endCp': story.endCp,
           'chainLength': reference.chainLength,
+          'sharedShape': aliasPair.sharedShape,
           'occurrences': [
             for (final (anchor, owner) in [
               (aliasPair.primary, aliasPair.primaryOwner),

@@ -53,9 +53,11 @@ first-page-header flag on the user's behalf.
 
 The parser and public-model writer use the same corroboration checks:
 
-- Exactly two real shapes reference one `cTxbx=1` record. Both have chain index
-  zero, no next-shape link, distinct IDs and distinct anchor CPs. One matches the
-  FTXBXS first-shape identity and anchor exactly.
+- Exactly two real anchor occurrences reference one `cTxbx=1` record. Both have
+  chain index zero, no next-shape link and distinct anchor CPs. One matches the
+  FTXBXS first-shape identity and anchor exactly. They either have distinct shape
+  IDs, or share the same decoded OfficeArt shape and artifact without an image
+  reference. A reused numeric ID never authorizes two conflicting payloads.
 - The shapes lie in separate normal and first headers of the same section.
   Main-story duplicates, duplicates within one header, footer aliases,
   cross-section aliases and additional occurrences are not recovered.
@@ -77,6 +79,69 @@ The parser and public-model writer use the same corroboration checks:
 identify the recovery and retain both owning header stories, source IDs and CPs.
 The output emits neither an invented `mso-next-textbox` link nor a second copy
 inside one frame. The existing contiguous-chain validation remains in force.
+
+## Shared shape after a native DOC round trip
+
+The complete `8367ce0` native run exposed a further occurrence case. The first
+DOC re-export of `header-textbox-first-enabled` retained header-relative anchor
+CPs 2 and 5, but both SPAs referenced shape 1025 and OfficeArt contained only one
+textbox shape. The FTXBXS still had `cTxbx=1`, `lid=1025`, and one real text range.
+The parser previously stopped at `Ambiguous Word shape anchor.` The exact red
+input is retained as `test/fixtures/word_native/header-textbox-first-roundtrip.doc`,
+SHA256 `8beb2137004158fe373f032be53cfbbd802b237b308aa87b1802a6f2a979973d`.
+
+[MS-DOC PlcfSpa](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/e98fe93c-d57f-4d9b-a519-30e6acbdd414)
+requires distinct anchor CPs and associates each with a SPA.
+[MS-DOC Spa](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/26fcafc0-554b-46bc-aebf-c755276c77a4)
+identifies its OfficeArt shape through `lid` and supplies the occurrence's
+rectangle and wrapping flags. Those definitions do not justify a global
+one-anchor-per-shape rule, but they also do not establish arbitrary shared
+textbox editing semantics. Recovery therefore remains inside the normal/first,
+single-frame, plain-content boundary above.
+
+Parser and writer resolve each occurrence by `(headerStory, shapeId, anchorCp)`.
+The two source rectangles differ: `[1447,1447,4311,1871]` and
+`[1454,1454,4304,1864]` twips. Both survive separately, including their different
+front/behind flags. The model retains the actual shape ID 1025 in both places;
+the VML element identifiers append the source CP to distinguish package
+occurrences. The additional warning `recoveredHeaderTextboxShapeAlias` and
+`sharedShape: true` evidence disclose this recovery. Same-header/main-story
+duplicates, a third occurrence, duplicate FSP records, unresolved references,
+flow chains and identity-bearing content still fail the applicable guards.
+
+An export-ID hypothesis was tested independently. The unchanged VML, an added
+`o:spid`, standard `_x0000_s1025`/`_x0000_s1026` IDs, and both changes together
+all produced the **same failed DOC hash** above. No ID spelling change is
+claimed to cure the native exporter behavior.
+
+The focused regression suite passes **185 Dart tests** and **12 Python tests**;
+analysis and formatting are clean. All seven retained first-enabled controls
+pass their initial import and three successive DOC re-exports: **28 parser
+imports and 28 independent native DOCX projections** preserve both header
+occurrences and the exact expected paragraph sequence. All 29 parser outputs
+(those 28 plus the retained red input) pass Open XML SDK validation, with its
+positive, invalid-XML, wrong-package-type and exact-discovery controls passing.
+These measurements certify the bounded content/occurrence recovery. Native
+frame-size and position changes remain measured layout limitations.
+
+The [native receipt](evidence/header-shared-shape-native.json.gz),
+[SDK receipt](evidence/header-shared-shape-schema.json),
+[archive manifest](evidence/header-shared-shape-audit.json) and
+[exact inputs/results](evidence/header-shared-shape-inputs.tar.xz) retain the red
+input, all cycle DOC/DOCX files, rejected ID controls and measured source.
+The measured snapshot is honestly recorded as a dirty worktree based on
+`d28be0a`; all production and probe source hashes remained unchanged during
+measurement. Reproduce the seven-case check from the earlier sealed controls:
+
+```sh
+python3 -m tarfile -e doc/evidence/header-textbox-alias-inputs.tar.xz \
+  build/header-alias-evidence
+python3 tool/fidelity/header_textbox_roundtrip_probe.py \
+  --office /path/to/soffice --dart /path/to/dart \
+  --controls build/header-alias-evidence/results \
+  --receipt doc/evidence/header-textbox-alias-native.json.gz \
+  --output build/header-shared-shape-recheck
+```
 
 ## Reproduction
 

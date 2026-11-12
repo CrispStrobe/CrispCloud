@@ -803,14 +803,9 @@ extension _WordStories on _StructuredWordWriter {
       throw const FormatException('Recursive Word story reference.');
     }
     final oldXml = _xml, oldPart = _part, oldStory = _storyId;
-    final oldTableDepth = _tableDepth;
     _xml = xml;
     _part = part;
     _storyId = story.id;
-    // A textbox is a separate story even when its shape is anchored in a
-    // table cell. Its first table keeps top-level indentation; only tables
-    // nested inside that story use the nested-table origin rule.
-    _tableDepth = 0;
     try {
       action();
       _finishStoryEvents();
@@ -818,7 +813,6 @@ extension _WordStories on _StructuredWordWriter {
       _xml = oldXml;
       _part = oldPart;
       _storyId = oldStory;
-      _tableDepth = oldTableDepth;
       _renderingStories.remove(story.id);
     }
   }
@@ -859,6 +853,7 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.terminalMarkFormattingUnavailable:
         case LegacyWordWarning.recoveredGlobalTextboxSentinel:
         case LegacyWordWarning.recoveredHeaderTextboxAlias:
+        case LegacyWordWarning.recoveredHeaderTextboxShapeAlias:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

@@ -1,5 +1,10 @@
 ## 0.1.0-dev.1
 
+- Preserve corroborated occurrences of one shared header shape by source anchor
+  CP, including native DOC re-exports. Keep each occurrence's geometry and
+  wrapping flags and reject ambiguous payloads, links and revision histories.
+- Distinguish textual tabs from tab-stop properties in semantic oracles, retain
+  genuine boundary controls and use content-only revision/comment offsets.
 - Recover corroborated single-frame textbox occurrences in normal and first
   headers while retaining real shape identities and a one-frame flow chain.
   Reject identity-bearing shared content and revision-bearing frame occurrences;

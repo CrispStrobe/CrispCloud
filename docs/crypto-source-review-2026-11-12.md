@@ -1136,3 +1136,5 @@ remain unchanged; this is a technical source update.
   "reviewed_source_sha256": "073469fab02b20c3d950190f93b57539b06b6f490ee775ea4e9610d9b81099cf"
 }
 ```
+
+The 1.2.6 snapshot consumes the native-backed textbox rollback and shared-header parser guards, plus the complete CrisperBooks tree with corrected acceptance harnesses. The Windows-only scoped WebView compiler definition introduces no cryptographic behavior.

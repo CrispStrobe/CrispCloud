@@ -51,6 +51,10 @@ enum LegacyWordWarning {
   /// header occurrences, corroborated by their stored shapes and CPs.
   recoveredHeaderTextboxAlias,
 
+  /// Two separate normal/first-header SPA occurrences share one OfficeArt
+  /// shape. Their actual shape ID and individual anchor CPs are retained.
+  recoveredHeaderTextboxShapeAlias,
+
   /// A note format is unknown or requires a disclosed decimal fallback.
   /// The original MSONFC code remains available on the note numbering model.
   unsupportedNoteNumberFormat,
@@ -267,6 +271,7 @@ class LegacyWordTextboxReference {
 
   /// Corroborated, separate header occurrences of a single-frame text range.
   /// These retain their source chain index zero and are not text-flow links.
+  /// A shared source shape is distinguished by its original anchor CP.
   /// The converter revalidates the bounded normal/first-header recovery.
   final List<LegacyWordTextboxAnchor> headerAliases;
 }

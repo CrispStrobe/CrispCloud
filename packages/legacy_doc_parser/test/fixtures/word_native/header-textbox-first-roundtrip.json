@@ -1,0 +1,44 @@
+{
+  "schema": "legacy-doc-parser/native-fixture-provenance",
+  "version": 1,
+  "fixture": "test/fixtures/word_native/header-textbox-first-roundtrip.doc",
+  "sha256": "8beb2137004158fe373f032be53cfbbd802b237b308aa87b1802a6f2a979973d",
+  "bytes": 10752,
+  "authorship": "Derived from the repository-authored header paragraph controls; original authored content is MPL-2.0.",
+  "sourceCommit": "8367ce004f2a40d99fbae1eabc00d0053ceb1dab",
+  "nativeRenderer": "LibreOffice 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "sourceBinary": {
+    "path": "test/fixtures/word_native/header-textbox-first-enabled.doc",
+    "sha256": "587d2223311f734c768e88473eccba829dfb048afd9a471a1f2c3ea20071afd1"
+  },
+  "parserDocxSha256": "98ca503956f5ffe48795c01154f849de832120bb28894535d813ca5fc118efce",
+  "stage": "Parser DOCX -> native DOC, roundtrip-01/binary/converted.doc",
+  "sealedRun": "doc/evidence/8367ce0/native-files.tar.xz",
+  "failureBeforeRecovery": "FormatException: Ambiguous Word shape anchor.",
+  "observations": {
+    "headerRelativeAnchorCPs": [
+      2,
+      5
+    ],
+    "globalAnchorCPs": [
+      7,
+      10
+    ],
+    "shapeIDs": [
+      1025,
+      1025
+    ],
+    "officeArtShapeIDs": [
+      1025
+    ],
+    "clientTextbox": 65536,
+    "ftxbxsCount": 1,
+    "ftxbxsLid": 1025,
+    "ftxbxsCPs": [
+      0,
+      7,
+      8
+    ]
+  },
+  "reproduce": "Run tool/fidelity/run.py with the existing header-textbox-first-enabled case and at least one roundtrip cycle at source8367ce0 (runtime tree matches d28be0a)."
+}

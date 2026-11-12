@@ -90,6 +90,7 @@ EXPECTED_CASES = frozenset([
     "native-inputs/officeart-shapes",
     "native-inputs/header-textbox-duplicate-chain",
     "native-inputs/header-textbox-first-enabled",
+    "native-inputs/header-textbox-first-roundtrip",
     *(f"header-alias/header-alias-{kind}" for kind in (
         "content", "empty", "leading-blank", "interior-blank", "trailing-blank",
         "two-trailing-blanks", "two-content-paragraphs")),

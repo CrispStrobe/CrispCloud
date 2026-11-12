@@ -54,7 +54,7 @@ void main() {
     for (final margin in [null, 0, 240]) {
       for (final nested in [false, true]) {
         test(
-          '${header ? 'header' : 'body'} textbox margin $margin, nested $nested is independent of its anchor table',
+          '${header ? 'header' : 'body'} textbox margin $margin, nested $nested keeps its containing table context',
           () {
             final free = _convert(
               header: header,
@@ -74,10 +74,10 @@ void main() {
             final anchoredBox = anchored
                 .findAllElements('txbxContent', namespace: _w)
                 .single;
-            final expected = [480 + (margin ?? 108), if (nested) 240];
-            expect(_indents(freeBox), expected);
+            final expected = [480, if (nested) 240];
+            expect(_indents(freeBox), [480 + (margin ?? 108), if (nested) 240]);
             expect(_indents(anchoredBox), expected);
-            expect(anchoredBox.toXmlString(), freeBox.toXmlString());
+            expect(anchoredBox.innerText, freeBox.innerText);
             // The genuine nested anchor table follows the textbox event.
             // Its 360-twip indent checks restoration of the enclosing depth.
             expect(_indents(anchored), [960, ...expected, if (!nested) 360]);

@@ -12,6 +12,7 @@ Uint8List headerTextboxAliasFixture({
   String rawText = 'ALPHA\r\r',
   int count = 1,
   int lid = 1025,
+  int firstStory = 1,
   int secondIndex = 0,
   int secondStory = 1,
   int? firstNext,
@@ -20,6 +21,10 @@ Uint8List headerTextboxAliasFixture({
   bool mainStory = false,
   bool firstFooter = false,
   bool extraOccurrence = false,
+  bool sharedShape = false,
+  bool duplicateShapeRecord = false,
+  (int, int, int, int)? secondBounds,
+  int? secondFlags,
   int shapeFlags = 0xa00,
   int shapeType = 202,
   List<int> textProperties = const [],
@@ -28,10 +33,12 @@ Uint8List headerTextboxAliasFixture({
   final anchors = [2, sameHeader ? 3 : 5, if (extraOccurrence) 6];
   final headers = sameHeader
       ? '\r\r\x08\x08\r\r\r\r\r'
-      : '\r\r\x08\r\r\x08\r\r\r';
+      : '\r\r\x08\r\r\x08${extraOccurrence ? '\x08' : '\r'}\r\r';
   List<int> shape(int index) {
-    final id = 1025 + index;
-    final encoded = index == 0 ? 0x10000 : (secondStory << 16) | secondIndex;
+    final id = sharedShape ? 1025 : 1025 + index;
+    final encoded = index == 0
+        ? firstStory << 16
+        : (secondStory << 16) | secondIndex;
     final next = index == 0 ? firstNext : secondNext;
     return officeArtRecord(0xf004, [
       ...officeArtRecord(
@@ -99,12 +106,12 @@ Uint8List headerTextboxAliasFixture({
         [...anchors, 0xffffffff],
         [
           for (var i = 0; i < anchors.length; i++) ...[
-            ...wordU32(1025 + i),
-            ...wordU32(1440),
-            ...wordU32(1440),
-            ...wordU32(4320),
-            ...wordU32(1880),
-            ...wordU16(0x6a),
+            ...wordU32(sharedShape ? 1025 : 1025 + i),
+            ...wordU32(i == 1 ? secondBounds?.$1 ?? 1440 : 1440),
+            ...wordU32(i == 1 ? secondBounds?.$2 ?? 1440 : 1440),
+            ...wordU32(i == 1 ? secondBounds?.$3 ?? 4320 : 4320),
+            ...wordU32(i == 1 ? secondBounds?.$4 ?? 1880 : 1880),
+            ...wordU16(i == 1 ? secondFlags ?? 0x6a : 0x6a),
             ...wordU32(0),
           ],
         ],
@@ -115,7 +122,8 @@ Uint8List headerTextboxAliasFixture({
         ...officeArtRecord(
           0xf002,
           officeArtRecord(0xf003, [
-            for (var i = 0; i < anchors.length; i++) ...shape(i),
+            for (var i = 0; i < anchors.length; i++)
+              if (!sharedShape || i == 0 || duplicateShapeRecord) ...shape(i),
           ], version: 15),
           version: 15,
         ),

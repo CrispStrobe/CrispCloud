@@ -45,7 +45,7 @@ void main(List<String> arguments) {
             'sourceOriginTwips': 480,
             'effectiveMarginTwips': margin ?? 108,
             'expectedTextboxIndentsTwips': [
-              480 + (margin ?? 108),
+              480 + (anchored ? 0 : margin ?? 108),
               if (nested) 240,
             ],
             'expectedAnchorIndentsTwips': [

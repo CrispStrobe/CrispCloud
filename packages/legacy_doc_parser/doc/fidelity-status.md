@@ -18,6 +18,19 @@ every Word document or every renderer.
 
 ## Evidence is versioned
 
+The shared-shape extension in the [header recovery contract](header-textbox-aliases.md)
+handles the first-header failure recorded below. Two occurrences retain the same
+source shape ID and separate anchor CPs, rectangles and wrapping flags; only a
+corroborated plain single-frame normal/first-header pair can use this recovery.
+Seven retained controls pass 28 initial/cycle imports and 28 native projections,
+with 29 schema-valid outputs. Native changes to frame geometry remain visible.
+
+The [text-context oracle correction](evidence/oracle-text-context/README.md)
+separates run content from property subtrees, fixes revision/comment offsets and
+retains genuine boundary tabs, breaks and spaces. Snapshot version 4 identifies
+the corrected measurements. The sealed earlier reports retain their original
+bytes and oracle versions; their false tab differences are not parser data loss.
+
 The [clean 24-input checkpoint](evidence/8367ce0/README.md), reproducible from
 pushed `d28be0a`, passes all 24 initial imports and page-count comparisons, with
 six exact initial renders and both reviewed source goldens. Twenty-three cases

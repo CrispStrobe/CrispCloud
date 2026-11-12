@@ -18,12 +18,21 @@ extension _WordTextboxes on _StructuredWordWriter {
     final width = (drawing.rightTwips - drawing.leftTwips) / 20;
     final height = (drawing.bottomTwips - drawing.topTwips) / 20;
     final prefix = reference.inHeaderFooter ? 'Header' : '';
+    // Distinct package identifiers derive from the two original source
+    // occurrences. The binary shape ID itself remains unchanged in the model
+    // and evidence; a shared header shape never becomes an invented chain.
+    final occurrenceSuffix =
+        reference.headerAliases.any(
+          (alias) => alias.shapeId == reference.shapeId,
+        )
+        ? 'Cp${drawing.anchorCp}'
+        : '';
     final next = nextShape == null
         ? null
         : '_legacy${prefix}TextboxShape$nextShape';
     _mediaStart(drawing.presentation);
     _xml.add(
-      '<w:pict><v:rect id="_legacy${prefix}TextboxShape${drawing.shapeId}" '
+      '<w:pict><v:rect id="_legacy${prefix}TextboxShape${drawing.shapeId}$occurrenceSuffix" '
       'style="position:absolute;margin-left:${drawing.leftTwips / 20}pt;'
       'margin-top:${drawing.topTwips / 20}pt;width:${width}pt;height:${height}pt;'
       '${_officeArtVmlPosition(drawing)}'

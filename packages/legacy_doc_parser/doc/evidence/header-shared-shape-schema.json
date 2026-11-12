@@ -1,0 +1,151 @@
+{
+  "Files": 29,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "build/header-shared-shape-schema/inputs/content-cycle-00.docx",
+      "Sha256": "8c69a4dcecde5466ae552873444644009feb934f48720f524d793f4f7d04c9d8",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/content-cycle-01.docx",
+      "Sha256": "e504a8cd6cafbc8061352a874231b5b025d8b41b732d04960ee92c17696c288d",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/content-cycle-02.docx",
+      "Sha256": "ad16bdb7f77952620d7d4f534da6e0f9d850c8592ed857db9b34cbc12ed28b87",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/content-cycle-03.docx",
+      "Sha256": "05e2df2875753169139d5b603d20a7f0a3cc2c4b7c0e9f8bf85c531eb8b7563b",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/empty-cycle-00.docx",
+      "Sha256": "5970e4bd12934b18902e5c117514f8d7cd31e2353ffcbc9d42e517ae498067ea",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/empty-cycle-01.docx",
+      "Sha256": "78f0625d257f3f58b36d89c241989d7126b9875b8a279fa2531d2069bdce3092",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/empty-cycle-02.docx",
+      "Sha256": "f309ca40d72518eb46c8edcd46c3ea1c366ba4b194f8c36b41da5345f3fe1438",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/empty-cycle-03.docx",
+      "Sha256": "58fdc22df60dd1e1552d47ef3430059f260f8e03890fdb444d9b79c2a3e83506",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/interior-blank-cycle-00.docx",
+      "Sha256": "04d48265b48cc6ac3b09d8c60dcf9a4e97c75dc4971c61995403b82ba50eec32",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/interior-blank-cycle-01.docx",
+      "Sha256": "84b258aac4664fba2b2854f7d631e05ffbde3d07507f67c5ec1f0115eeb22261",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/interior-blank-cycle-02.docx",
+      "Sha256": "4a5cfc63dc6797f2fb121b120cb2ff249e648ea1b1fa56dfd78366d74ac9a4df",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/interior-blank-cycle-03.docx",
+      "Sha256": "19760ce39b1aef34d88810727b3cfdc9ec27cc12bd93f0518cfd7724cd5ee80a",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/leading-blank-cycle-00.docx",
+      "Sha256": "bca00afe5fcef23989c0f9787a75bf7550c91bfa1e433bcc3e21b721830a064e",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/leading-blank-cycle-01.docx",
+      "Sha256": "2b20f96c4a6a0dc2d0431991731134acd984766d7592ca949bd0ad4450d8ac6c",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/leading-blank-cycle-02.docx",
+      "Sha256": "790803ba72e749d40b1c0f1f31b79a1951b5a5bf326d0138be2c8fb67276c22f",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/leading-blank-cycle-03.docx",
+      "Sha256": "8cd5f95c9a1782b0fc953708fc475d16f11f75da21a8aca175fb0134a0d177e9",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/retained-first-roundtrip.docx",
+      "Sha256": "e504a8cd6cafbc8061352a874231b5b025d8b41b732d04960ee92c17696c288d",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/trailing-blank-cycle-00.docx",
+      "Sha256": "190b3c1e15140010aada68f0b7335275cda0cdd880f55e9ca278620c8d743090",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/trailing-blank-cycle-01.docx",
+      "Sha256": "8aa657e9d86ec3d17d1a6e28d5744e426b4cb37fa57355aa466b824c30531de0",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/trailing-blank-cycle-02.docx",
+      "Sha256": "99150ae8e0baca5db7aa37353975f384721148645ff32d4f5fc020cd2baf8a45",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/trailing-blank-cycle-03.docx",
+      "Sha256": "b373e1ffb844cb54ca55252b8373f696c86c72d2a77252414b088d885845f0b9",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-content-paragraphs-cycle-00.docx",
+      "Sha256": "207d21d4f5d751ca0be8bff9af5e299982f3a0a07dfa3349b84860dcc0a76016",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-content-paragraphs-cycle-01.docx",
+      "Sha256": "fb0b7c3f645888cdd2df8a23d6017ad026d6141a9b5fbce3a1ab4c60f5c0dba7",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-content-paragraphs-cycle-02.docx",
+      "Sha256": "34089a6887ccfc7df60d4898e3f3ba5199543d1de3ed75455a60036cc850cbd0",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-content-paragraphs-cycle-03.docx",
+      "Sha256": "f36da0eb8d50b1d6b8c9f138d8d263493525ffe64961094f58a5b719045b0e2f",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-trailing-blanks-cycle-00.docx",
+      "Sha256": "fdfc76a10d4c337dd0fdbd397d020826601a06175c19b65bb22d7e89bbba1a06",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-trailing-blanks-cycle-01.docx",
+      "Sha256": "07c25f82964670b321326903f4c855003d1103453e29618513d843e1af96345b",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-trailing-blanks-cycle-02.docx",
+      "Sha256": "1643076fb9258c45ccd3ef20e14dcfff87cfb83ca248391db4db58282af7c422",
+      "Errors": []
+    },
+    {
+      "File": "build/header-shared-shape-schema/inputs/two-trailing-blanks-cycle-03.docx",
+      "Sha256": "4a0e6976b9b7192ad10c635ccd6931c5aeffd467be5bc0ae70ead6ae0fa0aac7",
+      "Errors": []
+    }
+  ]
+}

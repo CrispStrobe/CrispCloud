@@ -229,6 +229,7 @@ class SchemaGateTest(unittest.TestCase):
                                     if name.startswith("header-alias/")})
         self.assertIn("native-inputs/header-textbox-duplicate-chain", schema.EXPECTED_CASES)
         self.assertIn("native-inputs/header-textbox-first-enabled", schema.EXPECTED_CASES)
+        self.assertIn("native-inputs/header-textbox-first-roundtrip", schema.EXPECTED_CASES)
 
     def test_corpus_rejects_unregistered_inputs_aliases_and_escape(self):
         directory, manifest = self.make_corpus()

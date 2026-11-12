@@ -417,16 +417,24 @@ extension _WordStories on _StructuredWordParser {
     final anchorBase = header ? _storyBase(1) : 0;
     final anchors = _plc(header ? 41 : 40, 26, anchorLength);
     final byShape = <int, int>{};
+    final repeatedShapes = <int>{};
     if (anchors != null) {
       for (var i = 0; i < anchors.count; i++) {
         final shape = anchors.data.u32(i * 26);
         if (byShape.containsKey(shape)) {
-          throw const FormatException('Ambiguous Word shape anchor.');
+          if (!header || !repeatedShapes.add(shape)) {
+            throw const FormatException('Ambiguous Word shape anchor.');
+          }
+          // Keep the first source occurrence as the FTXBXS anchor. Only a
+          // single-frame header reference may defer this ambiguity, and the
+          // complete normal/first-header pair is checked after media parsing.
+          continue;
         }
         byShape[shape] = anchorBase + anchors.cps[i];
       }
     }
     final base = _storyBase(index);
+    final repeatedReferences = <int>{};
     for (var i = 0; i < plc.count - 1; i++) {
       final first = base + plc.cps[i], guardEnd = base + plc.cps[i + 1];
       final reusable = plc.data.u16(i * 22 + 8);
@@ -447,6 +455,10 @@ extension _WordStories on _StructuredWordParser {
       final shape = plc.data.u32(i * 22 + 14), count = plc.data.u32(i * 22);
       if (count == 0 || count > 4096 || !byShape.containsKey(shape)) {
         throw const FormatException('Unresolved Word textbox shape reference.');
+      }
+      if (repeatedShapes.contains(shape) &&
+          (count != 1 || !repeatedReferences.add(shape))) {
+        throw const FormatException('Ambiguous Word shape anchor.');
       }
       if (count > 1) warnings.add(LegacyWordWarning.unsupportedFormatting);
       final id = '${header ? 'header-textbox' : 'textbox'}-${i + 1}';
@@ -469,6 +481,9 @@ extension _WordStories on _StructuredWordParser {
         end,
       );
     }
+    if (repeatedReferences.length != repeatedShapes.length) {
+      throw const FormatException('Ambiguous Word shape anchor.');
+    }
   }
 
   void _linkTextboxDrawings(LegacyWordMediaCatalog media) {
@@ -478,8 +493,18 @@ extension _WordStories on _StructuredWordParser {
       final reference = textboxReferences[i];
       references[(reference.inHeaderFooter, reference.id)] = i;
     }
-    final usedShapes = <(bool, int)>{};
+    final usedOccurrences = <(bool, int, int)>{};
+    final usedShapes = <(bool, int)>{}, repeatedShapes = <(bool, int)>{};
+    final recoveredRepeatedShapes = <(bool, int)>{};
     for (final drawing in media.drawings) {
+      final shapeKey = (drawing.headerStory, drawing.shapeId);
+      if (!usedShapes.add(shapeKey)) {
+        if (!drawing.headerStory || !repeatedShapes.add(shapeKey)) {
+          throw const FormatException(
+            'Invalid Word drawing-to-textbox reference.',
+          );
+        }
+      }
       final encoded = drawing.textboxId;
       if (encoded == null || encoded == 0) continue;
       final id = encoded >> 16, chainIndex = encoded & 0xffff;
@@ -487,7 +512,11 @@ extension _WordStories on _StructuredWordParser {
       final index = references[key];
       if (index == null ||
           chainIndex >= 4096 ||
-          !usedShapes.add((drawing.headerStory, drawing.shapeId))) {
+          !usedOccurrences.add((
+            drawing.headerStory,
+            drawing.shapeId,
+            drawing.anchorCp,
+          ))) {
         throw const FormatException(
           'Invalid Word drawing-to-textbox reference.',
         );
@@ -531,9 +560,21 @@ extension _WordStories on _StructuredWordParser {
             headerAliases: List.unmodifiable([pair.alias]),
           );
           warnings.add(LegacyWordWarning.recoveredHeaderTextboxAlias);
+          if (pair.sharedShape) {
+            recoveredRepeatedShapes.add((true, pair.primary.shapeId));
+            warnings.add(LegacyWordWarning.recoveredHeaderTextboxShapeAlias);
+          }
           warnings.add(LegacyWordWarning.unsupportedFormatting);
           continue;
         }
+        throw const FormatException(
+          'Invalid Word drawing-to-textbox reference.',
+        );
+      }
+      if (anchors.any(
+        (anchor) =>
+            repeatedShapes.contains((reference.inHeaderFooter, anchor.shapeId)),
+      )) {
         throw const FormatException(
           'Invalid Word drawing-to-textbox reference.',
         );
@@ -585,6 +626,9 @@ extension _WordStories on _StructuredWordParser {
         declaredChainLength: recoverDeclaredOne ? reference.chainLength : null,
         anchors: List.unmodifiable(anchors),
       );
+    }
+    if (repeatedShapes.length != recoveredRepeatedShapes.length) {
+      throw const FormatException('Invalid Word drawing-to-textbox reference.');
     }
   }
 

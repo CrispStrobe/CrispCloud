@@ -426,6 +426,7 @@ void main(List<String> arguments) {
     'poi-simple-table2',
     'header-textbox-duplicate-chain',
     'header-textbox-first-enabled',
+    'header-textbox-first-roundtrip',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }
