@@ -1,5 +1,6 @@
 // Portable runtime verification: compile with `dart compile js` and run the
 // result in Node (or run this file directly in Dart). No dart:io/Flutter imports.
+// ignore_for_file: avoid_print
 import 'dart:convert';
 import 'dart:typed_data';
 
