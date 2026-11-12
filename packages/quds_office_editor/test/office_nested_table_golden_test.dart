@@ -120,12 +120,14 @@ Future<void> _expectPicturePixels(WidgetTester tester) async {
             // backgrounds. These checks reject blank frame text and a page number
             // painted at the document edge outside its cell.
             if (dark && x >= 445 && x < 630 && y >= 510 && y < 552) frameInk++;
-            if (dark && x >= 422 && x < 438 && y >= 267 && y < 292)
+            if (dark && x >= 422 && x < 438 && y >= 267 && y < 292) {
               pageNumberInk++;
+            }
             if ((data.getUint8(offset) - 11).abs() <= 2 &&
                 (data.getUint8(offset + 1) - 177).abs() <= 2 &&
-                (data.getUint8(offset + 2) - 59).abs() <= 2)
+                (data.getUint8(offset + 2) - 59).abs() <= 2) {
               green++;
+            }
           }
           if (green >= 100 && frameInk >= 40 && pageNumberInk >= 5) return true;
           await Future<void>.delayed(const Duration(milliseconds: 20));
