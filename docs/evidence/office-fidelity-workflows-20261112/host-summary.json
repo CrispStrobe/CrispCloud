@@ -2,9 +2,9 @@
   "schema_version": 1,
   "status": "passed",
   "scope": "CrispCloud portable-engine and host integration gate; native acceptance is recorded separately.",
-  "created_at_utc": "2026-11-12T15:00:33.618042+00:00",
-  "app_commit": "1c57245d9174fdd68dba6f6a499eae840e54fed1",
-  "suite_source_pin": "3e4502152d4b6c99d164f621b5271ba4b0a7ec71",
+  "created_at_utc": "2026-11-12T15:26:46.412647+00:00",
+  "app_commit": "0bbb7f1fc5ed2a1be8ef7a94acf23ce7c4f7d715",
+  "suite_source_pin": "c8d5ba3cfddf8c6fd3fa736deab992be1e0cc3aa",
   "pinned_vendor_files": 378,
   "working_tree_clean": true,
   "gate": {
@@ -15,8 +15,8 @@
       "bash",
       "tool/check_office_fidelity.sh"
     ],
-    "log_path": "/workspace/scratch/dcd413fa34f4/host-final3-integration.log",
-    "log_sha256": "e942241e22c09e3e45aeb61f1d204febc06e78a78c6a622429f03850b7a1663b"
+    "log_path": "/workspace/scratch/dcd413fa34f4/host-final4-integration.log",
+    "log_sha256": "eb9a0bf1f1420b78c18aabcae4a107f8b3ddd6f0059b08fb657507e38a6fb191"
   },
   "tests": {
     "portable_engine_dart_passed": 963,
@@ -37,14 +37,14 @@
       "expected": 305,
       "failures": 0,
       "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/packages/quds_office_engine/build/fidelity-inventory.json",
-      "receipt_sha256": "75a9551cd450309ea49814d311e2b697a396c5be1cc6137c59af0a0307986a7a"
+      "receipt_sha256": "487da3b024a701434d86cd9133a20a2b7a11f8355d38278e633863f35345eccb"
     },
     "host": {
       "verified": 104,
       "expected": 104,
       "failures": 0,
       "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/inventory.json",
-      "receipt_sha256": "a319de1c03dacd5ed0efe85a2d0568d151b520b52c5f252e62bd9781725cb547"
+      "receipt_sha256": "0e6753c6897839a30a23d1cde9761ec79faef438d2b8a8410a12908e2487e29a"
     }
   },
   "coverage": {
@@ -58,14 +58,14 @@
     "instrumented_source_files": 10,
     "uninstrumented_files": [],
     "collection_input_files": 2133,
-    "input_tree_sha256": "b84ffc5870e775323c068bba1c32f4608294f1e3dd62ea151009948b0677f228",
+    "input_tree_sha256": "82044cbdb4910b38ec13469c27be339abe16ef635401b28882085fade78a913c",
     "source_tree_sha256": "84c5d97423bfc8de8d4d921cc25530172efbbac99044aee132d5554e055e9b6e",
-    "lcov_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/lcov.info",
-    "lcov_sha256": "2d1b0733f71288f04000e5bf1377bf57c6ffd138db0b978042317ffdb3dc50f9",
-    "report_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/gaps.json",
-    "report_sha256": "0c82400138692888b713cee6bf714d57d9228809f39f3dce1b682301c283f9b2",
-    "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/collection-receipt.json",
-    "receipt_sha256": "f89fe6b403fb4316961303e1dc34c5f28e2886a5de0b5ee0f7e3668f36f007d1",
+    "lcov_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/lcov.info",
+    "lcov_sha256": "20da0f2e0f2449edfc5ab6ca82d7e13e72e9379af27785c840ea8c3cb6ebe08c",
+    "report_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/gaps.json",
+    "report_sha256": "3dd5e80ba14ffd595b7c6cfe60d2468fae60c210c894852a305192db8bf3b730",
+    "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/collection-receipt.json",
+    "receipt_sha256": "1719d1814b2ac77684fadc4bdc94db3f0a2289459400466da1f57f00d45d0601",
     "files": [
       {
         "path": "lib/services/office_document_service.dart",
@@ -143,6 +143,10 @@
     "pubspec_restored": true,
     "pubspec_before_and_after_sha256": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
     "collection_pubspec_sha256": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "post_restore_changed_inputs": [
+      "pubspec.yaml"
+    ],
+    "restored_pubspec_reconstructs_collected_hook_hash": true,
     "verification_context": "Receipt verified inside the SQLite wrapper before it restored pubspec.yaml."
   }
 }

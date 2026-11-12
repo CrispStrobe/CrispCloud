@@ -2,16 +2,16 @@
   "schema_version": 1,
   "status": "complete",
   "returncode": 0,
-  "started_at": "2026-11-12T14:58:40.464415+00:00",
-  "completed_at": "2026-11-12T14:59:27.605005+00:00",
+  "started_at": "2026-11-12T15:25:21.142287+00:00",
+  "completed_at": "2026-11-12T15:25:57.898085+00:00",
   "host_root": "/workspace/scratch/dcd413fa34f4/CrispCloud",
-  "coverage_directory": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3",
+  "coverage_directory": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4",
   "command": [
     "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/flutter",
     "test",
     "--no-pub",
     "--coverage",
-    "--coverage-path=/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/lcov.info",
+    "--coverage-path=/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-4/lcov.info",
     "test/office_fidelity_workflow_test.dart",
     "test/office_formatting_preservation_test.dart",
     "test/office_roundtrip_preservation_test.dart",
@@ -2158,10 +2158,10 @@
     "tool/collect_office_host_coverage.py": "e5fe34adb2c9394b1ed3113b5566688d888f649bff325aae00c9dce0c6e59776",
     "tool/office-validation/OfficeValidation.csproj": "e9e7985f8af8396d5b0dea81555e3c8ca51b7dba1af68a0e2cd4d2b238347e27",
     "tool/office-validation/Program.cs": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
-    "tool/office-validation/render.py": "060d8aae6c59ff7f216e90a5898b5955a9d3d719608f8e4b6ac248e0b9c6bf78",
+    "tool/office-validation/render.py": "c35e3934005b3c603fff58a9ce27fe5dde814d7dc89aab2af55f4a43a2772a37",
     "tool/office-validation/test_native_render_limitations.py": "ffc4e367871bf40079b2b2868af6b146de5bcfe13b50a17bdede2f2b3398308b",
-    "tool/office-validation/test_render.py": "18018abd56e2d9477f350dbef94f164fb92c953f44b5ff53646f40816ab82567",
-    "tool/office_fidelity_manifest.json": "7b925dcd8c33fc5d90e3a0dd300acea8439baea6dda5bd25a92d2f9bceea7354",
+    "tool/office-validation/test_render.py": "1240da7faa78bf10b5e219ee4a5d6a7b2b5ae57b1f604c544c3476c52d7b5c83",
+    "tool/office_fidelity_manifest.json": "0932a4cc070abbb859c5b971f295f0cbff758fd9f2745385e1a1230c29714496",
     "tool/office_host_coverage.py": "9b336d23dda2244fe57df433139f75f7d7165f6db4c6dc307a7b5caa01c4009c",
     "tool/office_host_evidence.json": "19f7c29225d28d54107cc1608bf6c14ce02ee0d26947272c333eef1fcca3be59",
     "tool/office_host_evidence.py": "9a2c0a12077e358587e711b46982b16b46e422217a0ce55f7750077c90eba637",
@@ -2174,8 +2174,8 @@
     "tool/verify_office_fidelity.py": "f265a094e7d3730376c1237bb51a77c6f20c4c2839c78cc18d572454340e3028",
     "tool/with_ci_system_sqlite.py": "c47c0767392478e32c856b12e4f704682edc84d04b55dc2374e680a535ac1806"
   },
-  "input_tree_sha256": "b84ffc5870e775323c068bba1c32f4608294f1e3dd62ea151009948b0677f228",
+  "input_tree_sha256": "82044cbdb4910b38ec13469c27be339abe16ef635401b28882085fade78a913c",
   "coverage_sha256": {
-    "lcov.info": "2d1b0733f71288f04000e5bf1377bf57c6ffd138db0b978042317ffdb3dc50f9"
+    "lcov.info": "20da0f2e0f2449edfc5ab6ca82d7e13e72e9379af27785c840ea8c3cb6ebe08c"
   }
 }

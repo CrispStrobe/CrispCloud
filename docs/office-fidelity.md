@@ -31,8 +31,8 @@ Historical workflow checkpoint (before this integration):
 
 The [workflow acceptance evidence](evidence/office-fidelity-workflows-20261112/README.md)
 records the successful app run at
-`1c57245d9174fdd68dba6f6a499eae840e54fed1`, pinning suite
-`3e4502152d4b6c99d164f621b5271ba4b0a7ec71` through 378 verified files.
+`0bbb7f1fc5ed2a1be8ef7a94acf23ce7c4f7d715`, pinning suite
+`c8d5ba3cfddf8c6fd3fa736deab992be1e0cc3aa` through 378 verified files.
 It passed 154 actual-host Flutter tests across 21 files, required all 104 host
 exports, and passed the vendored 963-test Dart / 389-control Python portable
 gate. Open XML SDK accepted all 409 app/engine package instances with zero
