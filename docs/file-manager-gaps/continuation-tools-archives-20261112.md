@@ -42,10 +42,11 @@ branch, followed by its validation and acceptance-status update.
 ## Validation and checkpoints
 
 Implementation and observed gates are appended as each increment is completed.
-G11 is **implemented / native acceptance pending**. G10 and G18 remain
-**implementing** until their complete workflows and checkpoints are recorded.
+G11 is **implemented / native acceptance pending** and G10 is **implemented /
+native and live acceptance pending**. G18 remains **implementing** until its
+complete workflow and checkpoint are recorded.
 The baseline had seven closed scopes and five implemented scopes with named
-acceptance pending; G11 raises the latter count to six.
+acceptance pending; G11 and G10 raise the latter count to seven.
 
 ### Private staging foundation
 
@@ -139,3 +140,37 @@ unperformed live tests. Two exclusive moves have an original-name absence
 window and are not described as atomic replacement. Durable packing drafts
 remain G21. G18 stays implementing while endpoint transactions, host routing
 and recovery UI are connected.
+
+Remote checkpoint: `005771bd53f2cd437cb70b23ebe83c224792bd00` on
+`feature/archive-publication-recovery-20261112`,
+[draft PR 78](https://github.com/CrispStrobe/CrispCloud/pull/78).
+
+### G10 — external remote editing
+
+The [external editing workflow](../external-remote-editing.md) now joins private
+retained copies, reviewed executable/arguments, initially-off upload consent,
+serialized watched generations, exact-source recovery, explicit conflict
+replacement and uncertain-commit reconciliation. Dropbox is the initial
+revision-guarded publication adapter. Other bounded-download sources expose
+independent local editing/export. A copied/exported local file never marks the
+remote original saved. Tools, configurable menus, overflow and verified popup
+captures use the actual original source independently of pane labels.
+
+Observed gates: **62 distinct core/provider/export/lifecycle/native-staging
+checks**, **16 dialog checks**, **10 source/popup capture checks**, **4
+full-browser checks**, and **33 offline guide/reader checks**. Total: **125
+distinct passing checks across 11 suites**. The final five lifecycle checks were
+rerun after the cleanup corrections. Earlier failed runs identified a quiet
+native watcher cancellation hang, a specific-error classification issue and
+cleanup/shutdown catalog races. Those were fixed without weakening publication
+or retained-content checks. A final lifecycle assertion was aligned with the
+implemented immediate reopening of surviving private files.
+
+Focused feature analysis is clean, and English/German/French guides validate
+with 23 aligned current topics. Files/generations remain limited to 64 MiB;
+native/live acceptance and further original-publication provider contracts stay
+explicit. No dependency was added.
+
+Remote code checkpoint: `c5ddfffd011dbaf61c3cbd3dc8f7efc1c5f52e2f` on
+`feature/external-remote-editing-20261112`,
+[draft PR 80](https://github.com/CrispStrobe/CrispCloud/pull/80).

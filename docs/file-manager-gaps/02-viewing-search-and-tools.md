@@ -10,7 +10,7 @@ capability. Required live/device checks remain visible after code implementation
 
 ### External remote editing
 
-**Status:** Implementing. **Dependencies:** Captured editor session; conflict review.
+**Status:** Implemented / native and live acceptance pending. **Dependencies:** Captured editor session; conflict review.
 
 **Scope:** Watch a staged remote file and safely upload edits to the captured original source.
 
@@ -25,6 +25,32 @@ capability. Required live/device checks remain visible after code implementation
 - Editor exit, app crash, offline save and retry retain recoverable edits and avoid duplicate or wrong-account uploads.
 
 **Starting points:** Existing editor save identity/recovery; local process launcher; operation queue.
+
+**Delivered:** [External remote editing](../external-remote-editing.md) adds
+private retained files, literal executable preferences, separate launch and
+automatic-upload consent, watched serialized generations, conditional original
+publication, conflict review, uncertain-result reconciliation, independent
+export and explicit cleanup. Tools, configurable menus, overflow and verified
+file context menus expose the workflow. Navigation leaves launched sessions
+bound to their original accounts; disconnect/replacement cannot redirect them.
+
+**Observed validation:** 125 distinct checks passed across 11 focused core,
+native staging, lifecycle, dialog, captured-source, full-browser and help
+suites. The final five lifecycle cases cover failed cleanup, failed pause
+persistence, concurrent close/discard and retained recovery. Quiet native watch
+cancellation and error classification were corrected. Three guides retain 23
+aligned topics and current reviewed digests. Code checkpoint `c5ddfff` is saved
+on `feature/external-remote-editing-20261112`, draft PR #80.
+
+**Remaining boundaries:** Conditional uploads initially support Dropbox's
+existing revision contract; other bounded-download sources provide independent
+editable/exportable copies. Additional original-write providers require their
+own proven publication contracts. Files/generations are limited to 64 MiB;
+per-kind recovery admits 256 sessions with 64 KiB manifests, without promising
+a total disk quota for files created or enlarged by external applications.
+Native installed-editor, actual live-provider metadata/conflict/restart and
+signed-platform access/lease acceptance remain G50. Browser/mobile and the
+Mac App Store build do not launch external processes.
 
 ## G11
 

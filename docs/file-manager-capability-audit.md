@@ -110,7 +110,7 @@ grants. The link is transient and is not restored after restarting the app.
 | View archive members | Implemented with limits | `lib/services/archive_viewer_service.dart`; bounded extraction and original member identity. |
 | Syntax-highlighted internal editor | Implemented | F4 code editor, newline/encoding controls, guarded original-account saves and recovery. |
 | Remote editing in built-in editors | Implemented | Captured target and external-change checks. |
-| External editor with automatic remote upload on save | Missing | External application launch is currently limited to verified native local files. |
+| External editor with automatic remote upload on save | Implemented / native and live acceptance pending | **Added in G10.** Private retained sessions, explicit launch/upload consent, serialized save generations, Dropbox revision-guarded publication, conflict/restart recovery and independent export. Other bounded-download sources provide copies only. See [external remote editing](external-remote-editing.md). |
 | Image comparison | Implemented / native acceptance pending | Gallery offers linked image comparison. G11 adds configured text/image tools, private copies of captured local/remote pairs, explicit launch review and retained-session cleanup. See [external comparison](external-comparison.md); installed GUI-tool acceptance remains per desktop OS. |
 
 ## File operations and search
@@ -187,7 +187,7 @@ explicitly implemented or closed entry claims delivered behavior.
 | Folder-to-archive sync and archive-to-archive transfer | Add writable archive endpoints to comparison/transfer planning, preserve passwords and container identity, and verify/repack the original container before reporting success. |
 | Larger background archive jobs | Move bounded packing to a cancellable worker or streaming spool, add durable queue/recovery behavior, and validate output without whole-container buffering. |
 | Additional archive formats | Review reader/writer capability, limits, licensing and malformed-input handling individually. Read-only support does not imply editable or creatable archives. |
-| External editor with remote save/upload | Stage a source-bound file, track editor changes and require safe conflict handling before uploading to the original account/path. |
+| External editor with remote save/upload | **Implemented in G10** for the retained-copy workflow and initial Dropbox conditional-publication contract. Further providers need separately verified original-write semantics; native/live acceptance remains explicit. |
 | FTP resume, FXP and additional proxy modes | **G25 download resume implemented:** negotiated offsets plus verified source/prefix/assembled contents and retained-stage cleanup. Record selected live-server acceptance; implement FXP and direct-protocol proxy modes independently. |
 | Favorite synchronization | Define account, encryption and merge semantics for portable favorites without copying local access grants or credentials to another computer. |
 | Git integration | Add repository discovery, per-file status and reviewed add/commit/push/pull actions with command cancellation and credential handling. |
@@ -260,11 +260,11 @@ separate [FTP API boundary](ftp-transport.md).
 
 ## Follow-up gap closure validation
 
-All 51 gap scopes are recorded in six lane documents. Twelve implementation
+All 51 gap scopes are recorded in six lane documents. Fourteen implementation
 increments are preserved on remote feature branches: seven closed scopes
-(G02, G03, G05, G13, G27, G37, G49), and five implemented features with named
-target-runtime/live-server acceptance pending (G01, G04, G09, G12, G25).
-The remaining 39 items are 27 scoped implementations, ten research prerequisites
+(G02, G03, G05, G13, G27, G37, G49), and seven implemented features with named
+target-runtime/live-server acceptance pending (G01, G04, G09, G10, G11, G12, G25).
+The remaining 37 items are 25 implementation gaps, ten research prerequisites
 and two cross-cutting acceptance items.
 
 The [earlier validation record](file-manager-gaps/validation-20261112.md) and
@@ -297,3 +297,12 @@ bytes match their reviewed digests. The automatic optional WebAssembly probe
 again exited 247. Native/live/browser acceptance and complete hosted CI evidence
 remain open. The [transport bandwidth design](file-manager-gaps/transfer-bandwidth-design.md)
 records the next G29 implementation boundaries without claiming it implemented.
+
+The [external tools/archive continuation](file-manager-gaps/continuation-tools-archives-20261112.md)
+adds G11 private-copy text/image comparison and G10 retained remote editing.
+Their respective focused gates passed 119 and 125 checks; the suites overlap
+and those counts are not a combined total. Source/launch review, native watcher
+shutdown, failed cleanup and exact-source recovery have separate regression
+coverage. Installed external tools, live Dropbox publication and signed/native
+acceptance remain open. G18 archive publication has a verified native foundation
+while endpoint and format-preservation work continues.
