@@ -104,18 +104,24 @@ Future<ViewerArchive> openDmgArchive(
 
     final members = <ViewerArchiveMember>[];
     final reads = <Future<Uint8List> Function(int)>[];
+    final streams = <Stream<List<int>> Function(int)>[];
     final notices = <String>[
       'Read-only disk image. Files are data forks; filesystem permissions, '
           'resource forks and extended attributes are not restored.',
       'Compressed-block checksums are checked on read. Whole-image checksums '
           'and publisher signatures are not verified.',
     ];
-    void add(ViewerArchiveMember member, Future<Uint8List> Function(int) read) {
+    void add(
+      ViewerArchiveMember member,
+      Future<Uint8List> Function(int) read,
+      Stream<List<int>> Function(int) stream,
+    ) {
       if (members.length >= 200000) {
         _bad('The disk image has too many members.');
       }
       members.add(member);
       reads.add(read);
+      streams.add(stream);
     }
 
     for (final partition in partitions) {
@@ -150,6 +156,12 @@ Future<ViewerArchive> openDmgArchive(
           final bytes = await partition.read(0, partition.length);
           partition.verifyChecksum(bytes);
           return bytes;
+        },
+        (chunkSize) async* {
+          if (partition.length > maxMemberBytes) {
+            _bad('The partition image exceeds the member extraction limit.');
+          }
+          yield* partition.openRead(chunkSize);
         },
       );
 
@@ -196,6 +208,11 @@ Future<ViewerArchive> openDmgArchive(
               posixMode: member.posixMode,
             ),
             (limit) => opened.readMember(member, maxBytes: limit),
+            (chunkSize) => opened.openMember(
+              member,
+              maxBytes: maxMemberBytes,
+              chunkSize: chunkSize,
+            ),
           );
         }
       }
@@ -212,6 +229,7 @@ Future<ViewerArchive> openDmgArchive(
       notices: notices,
       read: (member, limit) =>
           reads[member.index](limit < maxMemberBytes ? limit : maxMemberBytes),
+      streamReader: (member, chunkSize) => streams[member.index](chunkSize),
       close: () async {
         for (final child in children) {
           await child.close();
@@ -548,6 +566,29 @@ class _DmgPartition implements koni.ByteSource {
       );
     }
     if (actual != checksum) {
+      _bad('The extracted partition checksum does not match.');
+    }
+  }
+
+  /// Reads positional chunks and checks the same partition CRC as the buffered
+  /// API. Unallocated BLOCK_IGNORE sectors are output as zeros but excluded
+  /// from the checksum; no whole-partition allocation is needed.
+  Stream<List<int>> openRead(int chunkSize) async* {
+    var actual = 0;
+    for (final chunk in chunks) {
+      for (var within = 0; within < chunk.length; within += chunkSize) {
+        final remaining = chunk.length - within;
+        final bytes = await read(
+          chunk.start + within,
+          remaining < chunkSize ? remaining : chunkSize,
+        );
+        if (checksum != null && chunk.type != 2) {
+          actual = ar.getCrc32(bytes, actual);
+        }
+        yield bytes;
+      }
+    }
+    if (checksum != null && actual != checksum) {
       _bad('The extracted partition checksum does not match.');
     }
   }

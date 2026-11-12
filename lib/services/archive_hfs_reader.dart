@@ -286,6 +286,27 @@ class _HfsReader {
         }
         return _readFork(fork, 0, fork.size);
       },
+      streamReader: (member, chunkSize) async* {
+        final record = ordered[member.index];
+        if (record.directory || record.special) {
+          _unsupported('Only regular HFS data forks can be streamed.');
+        }
+        final fork = record.fork!;
+        if (fork.size > maxMemberBytes) {
+          _unsupported('The HFS file exceeds the member reading limit.');
+        }
+        if (fork.needsOverflow) {
+          _unsupported('This fork needs the extents overflow B-tree.');
+        }
+        for (var offset = 0; offset < fork.size; offset += chunkSize) {
+          final remaining = fork.size - offset;
+          yield await _readFork(
+            fork,
+            offset,
+            remaining < chunkSize ? remaining : chunkSize,
+          );
+        }
+      },
       close: source.close,
     );
   }

@@ -76,6 +76,11 @@ Future<ViewerArchive> openViewerArchiveSource(
       members: archive.members,
       notices: [note, ...archive.notices],
       read: (member, limit) => archive.readMember(member, maxBytes: limit),
+      streamReader: (member, chunkSize) => archive.openMember(
+        member,
+        maxBytes: maxMemberBytes,
+        chunkSize: chunkSize,
+      ),
       close: archive.close,
     );
   } catch (_) {
