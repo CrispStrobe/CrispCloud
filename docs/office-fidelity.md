@@ -14,6 +14,17 @@ source hashes. Historical counts and receipts are preserved in
 [the previous guide](office-fidelity-before-workflows-20261112.md) and
 the named evidence documents; they do not measure this branch's changed code.
 
+The [current acceptance evidence](evidence/office-fidelity-workflows-20261112/README.md)
+records the successful app run at
+`1c57245d9174fdd68dba6f6a499eae840e54fed1`, pinning suite
+`3e4502152d4b6c99d164f621b5271ba4b0a7ec71` through 378 verified files.
+It passed 154 actual-host Flutter tests across 21 files, required all 104 host
+exports, and passed the vendored 963-test Dart / 389-control Python portable
+gate. Open XML SDK accepted all 409 app/engine package instances with zero
+errors. Host line execution is 2,540 of 3,782 instrumented lines (67.2%);
+all ten scoped files are present, and the report retains all 1,242 unhit lines.
+Native rendering and its limitations are recorded separately in that evidence.
+
 ## What is checked
 
 | Layer | Scope and evidence |

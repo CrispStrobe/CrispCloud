@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "CrispCloud portable-engine and host integration gate; native acceptance is recorded separately.",
+  "created_at_utc": "2026-11-12T15:00:33.618042+00:00",
+  "app_commit": "1c57245d9174fdd68dba6f6a499eae840e54fed1",
+  "suite_source_pin": "3e4502152d4b6c99d164f621b5271ba4b0a7ec71",
+  "pinned_vendor_files": 378,
+  "working_tree_clean": true,
+  "gate": {
+    "exit_code": 0,
+    "command": [
+      "python3",
+      "tool/with_ci_system_sqlite.py",
+      "bash",
+      "tool/check_office_fidelity.sh"
+    ],
+    "log_path": "/workspace/scratch/dcd413fa34f4/host-final3-integration.log",
+    "log_sha256": "e942241e22c09e3e45aeb61f1d204febc06e78a78c6a622429f03850b7a1663b"
+  },
+  "tests": {
+    "portable_engine_dart_passed": 963,
+    "actual_host_flutter_passed": 154,
+    "actual_host_test_files": 21,
+    "sync_controls_passed": 7,
+    "portable_engine_python_controls_passed": 389,
+    "host_evidence_controls_passed": 12,
+    "host_provenance_controls_passed": 31
+  },
+  "operation_audit": {
+    "public_operations_with_executable_scenarios": 67,
+    "open_data_loss_probes": 0
+  },
+  "inventories": {
+    "portable_engine": {
+      "verified": 305,
+      "expected": 305,
+      "failures": 0,
+      "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/packages/quds_office_engine/build/fidelity-inventory.json",
+      "receipt_sha256": "75a9551cd450309ea49814d311e2b697a396c5be1cc6137c59af0a0307986a7a"
+    },
+    "host": {
+      "verified": 104,
+      "expected": 104,
+      "failures": 0,
+      "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/inventory.json",
+      "receipt_sha256": "a319de1c03dacd5ed0efe85a2d0568d151b520b52c5f252e62bd9781725cb547"
+    }
+  },
+  "coverage": {
+    "measurement": "executed instrumented host lines; not branch coverage",
+    "collection_verified": true,
+    "covered_lines": 2540,
+    "instrumented_lines": 3782,
+    "coverage_percent": 67.1602,
+    "unhit_instrumented_lines": 1242,
+    "scoped_source_files": 10,
+    "instrumented_source_files": 10,
+    "uninstrumented_files": [],
+    "collection_input_files": 2133,
+    "input_tree_sha256": "b84ffc5870e775323c068bba1c32f4608294f1e3dd62ea151009948b0677f228",
+    "source_tree_sha256": "84c5d97423bfc8de8d4d921cc25530172efbbac99044aee132d5554e055e9b6e",
+    "lcov_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/lcov.info",
+    "lcov_sha256": "2d1b0733f71288f04000e5bf1377bf57c6ffd138db0b978042317ffdb3dc50f9",
+    "report_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/gaps.json",
+    "report_sha256": "0c82400138692888b713cee6bf714d57d9228809f39f3dce1b682301c283f9b2",
+    "receipt_path": "/workspace/scratch/dcd413fa34f4/CrispCloud/build/fidelity-host/coverage/workflows-final-3/collection-receipt.json",
+    "receipt_sha256": "f89fe6b403fb4316961303e1dc34c5f28e2886a5de0b5ee0f7e3668f36f007d1",
+    "files": [
+      {
+        "path": "lib/services/office_document_service.dart",
+        "covered_lines": 482,
+        "instrumented_lines": 595,
+        "unhit_instrumented_lines": 113
+      },
+      {
+        "path": "lib/services/office_editor_menu.dart",
+        "covered_lines": 3,
+        "instrumented_lines": 3,
+        "unhit_instrumented_lines": 0
+      },
+      {
+        "path": "lib/services/office_package_parts.dart",
+        "covered_lines": 43,
+        "instrumented_lines": 43,
+        "unhit_instrumented_lines": 0
+      },
+      {
+        "path": "lib/services/office_pdf_service.dart",
+        "covered_lines": 15,
+        "instrumented_lines": 18,
+        "unhit_instrumented_lines": 3
+      },
+      {
+        "path": "lib/services/office_picture.dart",
+        "covered_lines": 29,
+        "instrumented_lines": 29,
+        "unhit_instrumented_lines": 0
+      },
+      {
+        "path": "lib/services/office_search_text.dart",
+        "covered_lines": 209,
+        "instrumented_lines": 214,
+        "unhit_instrumented_lines": 5
+      },
+      {
+        "path": "lib/widgets/office_editor_dialog.dart",
+        "covered_lines": 197,
+        "instrumented_lines": 269,
+        "unhit_instrumented_lines": 72
+      },
+      {
+        "path": "lib/widgets/office_editor_dialogs.dart",
+        "covered_lines": 416,
+        "instrumented_lines": 543,
+        "unhit_instrumented_lines": 127
+      },
+      {
+        "path": "lib/widgets/office_editor_find_bar.dart",
+        "covered_lines": 87,
+        "instrumented_lines": 149,
+        "unhit_instrumented_lines": 62
+      },
+      {
+        "path": "lib/widgets/office_editor_ribbon.dart",
+        "covered_lines": 1059,
+        "instrumented_lines": 1919,
+        "unhit_instrumented_lines": 860
+      }
+    ]
+  },
+  "runtime": {
+    "executable": "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/flutter",
+    "executable_sha256": "7d486c33b30a0cf1ea5146231c68bb8f966cdb4e087c5cd8b37e14513f536e7d",
+    "flutter_version": "3.47.8",
+    "dart_sdk_version": "3.13.7",
+    "framework_revision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "engine_revision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "sqlite_version": "3.46.1"
+  },
+  "effective_ci_config": {
+    "sqlite_system_hook_used": true,
+    "pubspec_restored": true,
+    "pubspec_before_and_after_sha256": "8ac1390a24171cca345a60abd2745007f334190d8d356f0ac1e8f73918bd954a",
+    "collection_pubspec_sha256": "54e2a604f148bf153c2d28a219cee9c8ee8f564d0880b0d8fdb2253a72fc0c0f",
+    "verification_context": "Receipt verified inside the SQLite wrapper before it restored pubspec.yaml."
+  }
+}

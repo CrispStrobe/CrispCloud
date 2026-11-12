@@ -1,0 +1,2051 @@
+{
+  "Files": 409,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/after-late-edits.docx",
+      "Sha256": "1e95ec75f4ea925dad8e7f81c80b57a475cf3b5f91622ec2e49733f657f38204",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/before-late-edits.docx",
+      "Sha256": "0b523e03009d282534d9fdd885ad50c24f6062dd626d5546615a6eb70b90a59d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/close-after-late-edit.docx",
+      "Sha256": "61eff971cb382ca4f2d5039f375131d5eca4d78c14cde1ea4598ddbaf09a7501",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/close-before-late-edit.docx",
+      "Sha256": "27289328e75d6b8fcffa7d14d9b2d776feabeb207bc56cd3479832acbb36286d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/comment-action-1.docx",
+      "Sha256": "5a2ebfdcfee07df4cf7fb9510876221cb3f327d85cd3df440ad3a9bae6e930f8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/comment-action-2.docx",
+      "Sha256": "ca1ecde7e10757ffe22e29014c7daaf22a9e5c16dca365c28e93f859bf30c6a8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/comment-action-3.docx",
+      "Sha256": "c12f4c37b27091eee5d9ef9c0e3551d7dd0fd71f91cebf72b5c129b44ba10297",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/failed-upload-attempt.docx",
+      "Sha256": "41ef5bd939425969468ce4695050ddd09fc7b2c1b8e960564c7a2c5b3523a3e1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-family-1.docx",
+      "Sha256": "b3f2c0558d9ce4d8b56f64aeeb257fa6e39ec8fa9909c06a63fdd79fbac5ee9a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-family-2.docx",
+      "Sha256": "3e4f36f3d3a4137ada88b360f6b9834be25bc387a8a61551004356e4a9d48c2e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-family-3.docx",
+      "Sha256": "ecab8abf4af5ea05dc2d97395de92a432d227292b0c7ec30a68d878f2d5f7a29",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-family-current-1.docx",
+      "Sha256": "daa227b8a239114d9ce04e97152e426592336a8bd424c6657ac53933a26c3571",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-family-current-2.docx",
+      "Sha256": "8c4e941220ee65c2c557753453e82ba4bab84dd449b9e274175b2a71e1ede736",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-family-current-3.docx",
+      "Sha256": "4c763b5b5f499879a122bb17b312773afee57243d363510e7be2853ae64e4a5f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-italic-1.docx",
+      "Sha256": "f5a4e9a6065920d9606b91957bcee8efdc74a51fc61e889dfd238e14ac8b66f2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-italic-2.docx",
+      "Sha256": "7f23d6d691a6e7dc9ff51856054e2222db6ba6194ccf206501a6864a9313566a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-italic-3.docx",
+      "Sha256": "e19ee604ec68ba54157b1306a59a98e26ef1fa516e0df9588ef6cfdfe38627a0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-14-1.docx",
+      "Sha256": "0ea29f3b824852a0d76d4392010e7267f43158b413fb12a0ff4d0b325c568f4e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-14-2.docx",
+      "Sha256": "8201a62db0bade3648141b38ce40fc3280becb2035268a3e310287ab1dbc0bfb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-14-3.docx",
+      "Sha256": "2a0795d3ae35d8fa25e7386a1bad2e346e1e77fed8ba4c8df97237289c6f8796",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-21-1.docx",
+      "Sha256": "5957772b2071a5d8a289daa5f5af6d589928974377f55051aca43a4f10afc66a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-21-2.docx",
+      "Sha256": "fe16aecc99875a1da2961ca32575e9db88070af9d51a2f2e5016e21cc69b3369",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-21-3.docx",
+      "Sha256": "ebcdd6380eebf1e3758b8b5f33c03986024ad09809609bd740be3469c684fc96",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-288-1.docx",
+      "Sha256": "a657020e1019b3aa9fc98c0ba89016d8095baebc8c3560f2070ecb8c49099a8e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-288-2.docx",
+      "Sha256": "71f1c95f62bfc7c0ccfe10e1b4c88fb55c84f6e0fbc830cd5f81e68827465e25",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-noop-288-3.docx",
+      "Sha256": "7c97c53edbc37594b6def3b8e34b8d645827f70faa509af3feb126b2520271fe",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-size-1.docx",
+      "Sha256": "599931b85243fa56287e21ad5418144fc9c0af836885d388bde452892325f326",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-size-2.docx",
+      "Sha256": "40056a7c124d257a82ef62277013fafd1298567e4751e42364a00bbee62fb643",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-size-3.docx",
+      "Sha256": "16e6dcf6a3ffbfd91542e126fb0444b3b4d2fb216a460f0035482cf0b4a0a4a9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-size-current-1.docx",
+      "Sha256": "cc9b5d64d18c80456217f84719fc181049cf378c71cd69670fba8bd5f0f2c578",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-size-current-2.docx",
+      "Sha256": "7407a097e37b721aee5bb42926c93e68c756e5f682b9b2a62d2c84386391b724",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-size-current-3.docx",
+      "Sha256": "7e0bcea5d6909bb110ecb8fe76b2413babc9c9eb921d8f8f5c8d362525c99979",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-underline-current-1.docx",
+      "Sha256": "b4593506b492f57802e0bc46744c5b9764560bb1a24beb4ff99e89759a83fdaa",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-underline-current-2.docx",
+      "Sha256": "d74d7f351e6546dc0edbee92d9709c18c27da912597bdcd42e620d207cbea31a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/font-underline-current-3.docx",
+      "Sha256": "d9b1a112081f7acead28f5e4a2ff9dedaa19ac8fb420c1ef91a47101de2a48a8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/header-font-1.docx",
+      "Sha256": "58968701daf54227f1f0a5edc1605d7ad3eea302049ffdd053a12ce0af5103cb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/header-font-2.docx",
+      "Sha256": "05c2f725fcb2f142dff71d11dd1c92249cb5113eb9cf7ea496c485ceaa9bc519",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/header-font-3.docx",
+      "Sha256": "cdfd1f0763a8a420493b9912d43b0b1b98a8808e475188d464801bac24a2bf0e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/header-paragraph-edit-1.docx",
+      "Sha256": "012e62b3f404d290aea3cdef064176659cfb12d0dd76e6126fa781b2e68585b4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/header-paragraph-edit-2.docx",
+      "Sha256": "fe299c921f0b0e43bc4f2f93d93d2562ede61d942a899fb1bb406e4908d44f42",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/header-paragraph-edit-3.docx",
+      "Sha256": "c7531d562f024a520ef3b025cea390e04491f899ba978bc145da6c8c555c6fe9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/hyperlink-selection-1.docx",
+      "Sha256": "2ff2b5a0fed2ed7a69b4bef8543211e99ed30a281fb08c34ea6ad17bd675de2c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/hyperlink-selection-2.docx",
+      "Sha256": "b4fdf151b6e900a9a43f7d2c9eab8d238eeb7c626c454e2bb2a0cf1db98b4887",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/hyperlink-selection-3.docx",
+      "Sha256": "47662581093064819078a9ecfdaba0ed66bd7c1286b08fa883e686b482bed1a6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/margins-edit-1.docx",
+      "Sha256": "418bd8210fdab610212189881e0badf9132997b4736380f0bcc7e243f243eab9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/margins-edit-2.docx",
+      "Sha256": "8c17b01bc107169d79cabc298b74ab18b3f1a37706d456081ec7da21284abe29",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/margins-edit-3.docx",
+      "Sha256": "58b032053b5f5afc4c0bd79e96e13dc280e7f7f91d7dc449aa8109cce3c54e2f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/margins-noop-1.docx",
+      "Sha256": "f67e274fc4ce939a28c34359c36f55ca5fa696846cf8e31edfd00d6fd3617f1b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/margins-noop-2.docx",
+      "Sha256": "56990cebfc6ca1a4cba82351ecada924a0058047a4be4598c5876d75811baaf4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/margins-noop-3.docx",
+      "Sha256": "a0c6268bf08ae5af8d000e5aec1dbacdf701a6115742a91d8cc3907cd616896d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/paragraph-edit-1.docx",
+      "Sha256": "c3cdc6d3f0f76cc6f98d759607a7e4c062788c9772834f815c027551b3c8a1b8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/paragraph-edit-2.docx",
+      "Sha256": "a8c69ecacf65a39482f3eed1241f4eb5d135af9618f4fba74de9b69330d8fed8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/paragraph-edit-3.docx",
+      "Sha256": "31658227717ebb4d48128c79e099839898ae26af49de39b3935c10b769aa62b3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/paragraph-noop-1.docx",
+      "Sha256": "8196d517cd085a4e6ec79b2d31a943aecd599d7755d27100a4910c6e9e4bafa6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/paragraph-noop-2.docx",
+      "Sha256": "f845d144fa0e37515458e9fe5d7f32e95ddd7a1b768ccaa31b85262e618d81e0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/paragraph-noop-3.docx",
+      "Sha256": "63c0ea474144bce38783c990e5f8c4eeea4d73b177de22cd54f1ea92fef95e53",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/retry-after-failure.docx",
+      "Sha256": "2163f77df658f7b28f6e8c25e9ec59c97e0ccb365c31279c71414e9f45e419b0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/ribbon-edits-1.docx",
+      "Sha256": "17be1bb7c455d01b286c6011a14137fc757062314429f4a033df23f23af82a92",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/ribbon-edits-2.docx",
+      "Sha256": "0486b3cfa7cfe3b998a8d7db281ee8007e29e992fc226d9cc1b0929107752e5a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/ribbon-edits-3.docx",
+      "Sha256": "c55cc2f635befa6294feacca5b2695dc1d70fa9c30d435b70473181fc2d00549",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/sections-1.docx",
+      "Sha256": "f350ccf4efc439c26e1ec89c16f35117fd6629d82ac0eecef349a8bbdcb9f245",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/sections-2.docx",
+      "Sha256": "49644d730c2d54858c926e61ec16f2aef00baafc6e461ea83492bf547b064b12",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/sections-3.docx",
+      "Sha256": "492b126a9ff6b81eb8db250d994cff1c2f9e83658462f808b8455e50348ce9f7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/selection-save.docx",
+      "Sha256": "39dbc5e9ded7253d1488d8aa5adc91f5ff983bd7148e272e8ed535dae5bb8f9f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-bounds-1.pptx",
+      "Sha256": "af4033e50f4f83ef3c7ed40a88396ae55150104f5c5a0471f4566e400aa1697f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-bounds-2.pptx",
+      "Sha256": "c188d4d2fe0ceb29bead993b7edc97b1103be7c208e0d850615ee3f41e8530fd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-bounds-3.pptx",
+      "Sha256": "d6348dc8492a6ce5448cda4e25312993590b70b679a864b7712b6952e86c2345",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-landscape-1.pptx",
+      "Sha256": "e808d1e2ab2e6823b903f5583070f57c4b8764d07c05aee52088ee1475d058c1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-landscape-2.pptx",
+      "Sha256": "3b4a0ce9c453df3cdd3cced371f9b86b0b16d31dd639af429f7d1f10392b7d8c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-landscape-3.pptx",
+      "Sha256": "e27a5343ed35890af292b41720b832485d6fbeb20baec2074852c4ca49c4bf17",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-portrait-1.pptx",
+      "Sha256": "fab986ecf17dd1f2c2726dba4e687f6ba5cba50f5f3bc4734b081bc42c873844",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-portrait-2.pptx",
+      "Sha256": "6bbb98c662c936fec655919e7aa559212e6e48be7d5eaaf6f404133cf91a7147",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-portrait-3.pptx",
+      "Sha256": "807a86990c8a6a7fa7af544a3dfe5d5c97478045b18506b50062d759845a952b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-square-1.pptx",
+      "Sha256": "9b1b5091bf934e4ec93091867d393f2fb4784418843064bab5bb385cb0a0851a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-square-2.pptx",
+      "Sha256": "9828ff53470e11e4c71745fa8e2370bf31d231cd2e350d96355b7c5b513ee364",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/slide-picture-square-3.pptx",
+      "Sha256": "a29be3aa551c196ec713e9893812a4ab2d2ce1da37a504c0cf3d01a35e5eb18c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/table-action-1.docx",
+      "Sha256": "79d796aa4f6bfa8c1d750b0e76995dc482e086eec20872758fa248dbcfda5d13",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/table-action-2.docx",
+      "Sha256": "94a9491b2d132ee97e77af8c8a7eca4f1de2cf9b862289d6cc156c8867d3f8fe",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/table-action-3.docx",
+      "Sha256": "06c9caa3012b4d0fe5bed8c110f61884ec7daf7d868f2ecfd9a439a1c0e3ec54",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/text-breaks-1.docx",
+      "Sha256": "b22a5d8acae6342d120145144e8642a67dae6475a2b27efb4154beef467bf2c9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/text-breaks-2.docx",
+      "Sha256": "5537b02d769f46af6c3ea32234e3c791a872e61a4f91dec038c5a2212b6f577a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/text-breaks-3.docx",
+      "Sha256": "2ce71f7b45f5a0edcff3865b1f730ce3dcb0b7b552b553ef048c3930b387ee88",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/toc-action-1.docx",
+      "Sha256": "c60aeb0a0127c5b7161c64e72237044e773b4be3187c1828e92971f365248979",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/toc-action-2.docx",
+      "Sha256": "4556f143d547fd3832f975e491efb39f0e176e87a5b4479e0faf5f1a3bc26012",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/toc-action-3.docx",
+      "Sha256": "9925801ce0cbb86e2cfcc92073c0b0b3e8444d7abe0c505cae9e64a6057afa54",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-bounds-1.docx",
+      "Sha256": "5c622b0bc0bdd5935086ab2ae2d31bc0c4657f99fddeb443f9fdd7f03d5b330c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-bounds-2.docx",
+      "Sha256": "e4bb899e86de193a5f84827b9406391a925197e12d2297a21fa0dbfb215d6792",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-bounds-3.docx",
+      "Sha256": "63ced0fc499393556580c0d454012d1064c03fe6378c9e90027114dd0231133c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-gif-1.docx",
+      "Sha256": "de3f9ae61cca23052304eaadc33d32950f07fa766738203620b6072dc6248a58",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-gif-2.docx",
+      "Sha256": "b10d55e81cfbae8513d099fae059e2a5ef515fc6f48b226cdd0822ca07cf2f48",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-gif-3.docx",
+      "Sha256": "387a07f353253f1f62f851f76425bcbd490b187c8c05b7a4b6cfbbf29d28bd4d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-jpeg-1.docx",
+      "Sha256": "8a8dce10c38f206c94079ccfdfc3bdc2d7f7d32460cb57c80f874d0f434d3574",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-jpeg-2.docx",
+      "Sha256": "68d1e9dfb36c7d0b2462e91d118a6e9a225e84f66f13c958d736530cac2a8da2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-jpeg-3.docx",
+      "Sha256": "2a965308c4192b31496805dc8337ca2f91271187ef018cc900ceca9ead0d46e0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-landscape-1.docx",
+      "Sha256": "78b0ac1d5db95da83f20674ea5fa15c99e1d8f6775b6b00c7c5984e043278186",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-landscape-2.docx",
+      "Sha256": "9106d906bb2884fe9b3f7b5d4127867b6f2f8b198a1da7df662391854ca817c1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-landscape-3.docx",
+      "Sha256": "1dc74c55829e92c60600318c717d3783612766f1dff8fbc4992413094d3725e6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-portrait-1.docx",
+      "Sha256": "26ca1bf2ad2e62010d76a3422a4e05b0837c5b23e0b64c78ef9d52a7e7a1e159",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-portrait-2.docx",
+      "Sha256": "29433b8f58e4c6dcf29da1b3e41e604dbba926dbfa18b31bce796267c2f92877",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-portrait-3.docx",
+      "Sha256": "1f173d13ca7ed87f195f8804da618ad6add4451e0fe865bd567fbbe636468797",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-square-1.docx",
+      "Sha256": "94e5b473fd8ed914f8788ae7a57ed6464c6733cac5e37ebb1d457949d31ec647",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-square-2.docx",
+      "Sha256": "e5941f5142d55ac04d083dfbc08fe55d58d490abba96fe3339b88d1a9cb6c01f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity-host/word-picture-square-3.docx",
+      "Sha256": "6859e488b0cdf491df917a064ba519413d08495755ed4f5754e9b524f8cac9e7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/CrispCloud/build/fidelity/unchanged-controller.docx",
+      "Sha256": "660cf9f4a5bbfdeffb9873f9e4d8ca01311786ff4844e52f1db0dcd5c923b6fa",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-altchunk/altchunk-imported-1.docx",
+      "Sha256": "2cc2e4d3fae35a21c3cd40e37d84a2a4bb0fc3546f4d311a2f045f95a76c0acd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-altchunk/altchunk-imported-2.docx",
+      "Sha256": "7688bb3fbc07d3380e25416cbc6fab1596e351b5794b1eb11349cf097906bd04",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-altchunk/altchunk-imported-3.docx",
+      "Sha256": "4be9a33b02b803485f8fc22430fd61bf545a9f9923b3c4ccdcdaa1998390c310",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-altchunk/altchunk-moved-1.docx",
+      "Sha256": "c4711708c840217a317eb2c00bf290eace8c2d147988c382de859b39581bf3b6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-altchunk/altchunk-moved-2.docx",
+      "Sha256": "a63cb90b3d423161ee9d82afca96f2e43ce1439cb52f2edcd3622c61e2cdfa97",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-altchunk/altchunk-moved-3.docx",
+      "Sha256": "492dee3932c628d6ec58bf7cd36ea32e0f009dedc347a0d9f0a53e8b14d37633",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/edited-1.docx",
+      "Sha256": "5cbbd397b73131bbbf67be917c0a2f84411268c4bf14ed7700dcaf04306334b8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/edited-2.docx",
+      "Sha256": "729eabef2ecf271635f92e5f02d5df2ef6160926a15d666c7eac898919488a5c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/edited-3.docx",
+      "Sha256": "3d873784b7b9b33af937e7f6fc5f9ef2629de2e39bcd4d38202df0debcf3337a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/imported-1.docx",
+      "Sha256": "ca2dcd3e556ed649ba93f97b4ccf2c97a3e9da0c60b12f36a0f041375595fa64",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/imported-2.docx",
+      "Sha256": "de215769340bf02de942f2e1febf3eebbe75c262d50f1b90a643fc984bb06c3c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/imported-3.docx",
+      "Sha256": "3ba52f2bdc372b92b711f540d2f6a835c6a5619a975e2e919bbe3279316a9c7f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-controls/source.docx",
+      "Sha256": "fba38173b5148646d8cd00d1f18baffaf4a5bed829bc8d02583dacfbf75ddf4e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/edited-1.docx",
+      "Sha256": "0d88feaac5ad69b701c49949c654af373e3226be4106ffe7c66a39495ce04e80",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/edited-2.docx",
+      "Sha256": "9e6eb341a8c0e4c687b24b18b09a580163d87ca05c1d21dd8f15ee1129fe68c1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/edited-3.docx",
+      "Sha256": "870a64546f4170ce2b80d10ec406a5bc4182927cc4e7d152b19fd0036a7d5f9b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/imported-1.docx",
+      "Sha256": "f8b318e67142733d5e1303cae37f2796b597c20dc86d6d1da4de50f42c685b7f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/imported-2.docx",
+      "Sha256": "6fed89860318b783a97b0f22ffeabe1f3da464ab6a4fbb4792fd714966de4ec5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/imported-3.docx",
+      "Sha256": "003479d759efce4ae9acdffb7657550e4c8c9d0fc03db3aafd2fc3d6665d9af1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-aux-header-footer/source.docx",
+      "Sha256": "2d26c7e85810e0c1ed50483ed16e02e2d03c43f83b182e819571f1e0a66c7036",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bibliography/direct-1.docx",
+      "Sha256": "d2507a081afdb6582d7848b19ef2e9e3e6e0ba7e38886e94dd4af9b0122bb785",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bibliography/direct-2.docx",
+      "Sha256": "62d32a698fa6c06547f00d1dd65fc986a48ea2aff599161d14e9b4f16db43053",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bibliography/direct-3.docx",
+      "Sha256": "9e544011520ea2009c253816d8d60f27b9adacbf842857d512788c526067fde5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bibliography/isolate-1.docx",
+      "Sha256": "937ace5f9c935975d5e4e28d5b27ca808b5ce4584009e91712f1328eef56efb8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bibliography/isolate-2.docx",
+      "Sha256": "cafdba97c0d8b6adb46476d0e21474269294c52f4ee9a9a71b34e13666b41cb0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bibliography/isolate-3.docx",
+      "Sha256": "8325d5522dea27acc864d32a2859877ea382b10a76d7302dd0cb2edb0b724464",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-edited-1.docx",
+      "Sha256": "3c7b663deefb76567b5207c2b490edbd977dad4fb121c09be104d6cadf0cff5e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-edited-2.docx",
+      "Sha256": "27cefacfc0d6b8558088e04dddd15681889380eb22153e49b5c1c78172a4e7e0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-edited-3.docx",
+      "Sha256": "88e690018b84897ca2d82fa92b149976c8f9c1e9613d63d5aa63f4dc1169d226",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-imported-1.docx",
+      "Sha256": "06181fbd94864837aecb5078a00326321890c48d6e098ac5a663f3056066926a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-imported-2.docx",
+      "Sha256": "3544b1f83c0712affdec0a535c951b2af4ee36fe3bae5ecc28fda15ac1acceb2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-imported-3.docx",
+      "Sha256": "f09e35c32be956b40dc6168853fe2fed85743a178872e8089935d8e573063a96",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks-legacy/bookmarks-source.docx",
+      "Sha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/cloned-1.docx",
+      "Sha256": "fd7ab3473c35bea4c2eaf67f4bb2c66959b7635a90e98f6cd24ced851aaa0494",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/cloned-2.docx",
+      "Sha256": "a99a6c70a3e8dbc1a2f816bca28f9fae8e567be8f09e7ffcc8e457aece1a83f5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/cloned-3.docx",
+      "Sha256": "8f740ce98cf297a11073bf8d55855582eb25db0cbca61f3d183f5a7d49fed01c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/edited-1.docx",
+      "Sha256": "ffbd300746915bf90a91e3c30365b01ac4165336b3a7cfdeccc536b75035dec7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/edited-2.docx",
+      "Sha256": "40dbb3f87fa6ddbba29dc7173fdeb62e52d719683c6610bf57b49195b16a0f7b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/edited-3.docx",
+      "Sha256": "687866c8ca306d1ce8cfa1e54fc11fb63918d9e203a3e51f27557f736d6d2c9f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/frame-1.docx",
+      "Sha256": "36f94338869900df5b5380cdd07ac2949bcfab5c3695b1125697e99044cf446e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/frame-2.docx",
+      "Sha256": "2833c321362354c8fc14f9521f3f7f7fb9a93ccc50450eebe0364069f92867aa",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/frame-3.docx",
+      "Sha256": "6122745f12126320592d7433ecd559f4f755c172965c950b603c898faa11c7cd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/frame-source.docx",
+      "Sha256": "84efbba2da2751e303d812860309a701b71b6424ed13c811474f37081ce3d01a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/imported-1.docx",
+      "Sha256": "2042e4facaa2299e4bc6a75e95794404780922c6a8946f4bae29d90f774c3070",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/imported-2.docx",
+      "Sha256": "76705079e91879d16e08061cdee508ab06c95597b4ef3bf231fc6904864d4721",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/imported-3.docx",
+      "Sha256": "df99665890f7c818c47cde34322c7fbf10024a1c91692d95e1b60a2a6cb953f3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-bookmarks/source.docx",
+      "Sha256": "b469fc9d8ffc372e8dd6d84fc506acd19e47074262f9717e1fc0c6995758ea83",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-edited-1.docx",
+      "Sha256": "d2e3141d6681cfc5d8f2ec38b67e9aedd4f41e8cd5da7fe1d9e6580d8ed12086",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-edited-2.docx",
+      "Sha256": "1efa125d948bf228ad5ca8b349b4fc2d36f14a9da4f4628d698a2858e2251d07",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-edited-3.docx",
+      "Sha256": "00d3fc68c12199a1667725ecad91228c88b225f3e6db0a572674994bebfb7c08",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-imported-1.docx",
+      "Sha256": "3839a5059bf1123833af5d736decbe30a35c542b51a32983e319c232870ef3a9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-imported-2.docx",
+      "Sha256": "cdc55b90a440028b12f5f6213ac4f51832d42c8ee48d6a4e993feac27264fcfd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-imported-3.docx",
+      "Sha256": "fa38baf2f792315534a79156ec44ba821b1f1582501ec68e7c01e016b8214a83",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-comment-threads/threads-source.docx",
+      "Sha256": "d1763533e3733a93398a0cea7043b9d188f98f5a403ff5b7f3ed5869d654e9a4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-edited-1.docx",
+      "Sha256": "bdbdc833cf914776db52cc4416a9d97c2f90d15aced9c12aded8a37bbf8f3a75",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-edited-2.docx",
+      "Sha256": "9517f2705de67ef01343e5f842f6ea27082ba2e3255c591959f7d7b61990925c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-edited-3.docx",
+      "Sha256": "beaa04cada782692ee25537c10e10198581bdb13351c9b1261455f983ad22110",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-imported-1.docx",
+      "Sha256": "a46f4c3a3f209a6f37206ee0bbedb78d9cab83700b91bdad78360b11312bc813",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-imported-2.docx",
+      "Sha256": "555de8d1187cd446510cfd4a00a5b07e9b8ccc976a2c8ede21ba4a7d068c0eca",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-imported-3.docx",
+      "Sha256": "571e77a4228e3b131d03dad97e73a4e465853d02faf280025361b81b730d906f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/controls-source.docx",
+      "Sha256": "a59cb0915fdadaa579bd28f028da5be1df2c8e036362e8e1fe21b789053b5e29",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/legacy-frame-1.docx",
+      "Sha256": "40e42d2d176887021ee2d6d14a7615329225bec4680e792c37a63f3b58152a8c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/legacy-frame-2.docx",
+      "Sha256": "0d02f56bca705163aa713b0e45e35fa171dc8c0b9d4cf4906bf83a9daceb3f74",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls-legacy/legacy-frame-3.docx",
+      "Sha256": "973ea26bef8d594184809e0df7acdc68a6b48806cb20e4d6904b4c4c54ccf389",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/direct-1.docx",
+      "Sha256": "8e1259b782679ac8306506fa67471e4f69c242e18281308f8b3d6b9c390c30c8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/direct-2.docx",
+      "Sha256": "3386b348684426cfe1a5bda52588498e1b81ae3501d75d4f0eb3096247fc8029",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/direct-3.docx",
+      "Sha256": "6f325f92810c03dfa5ad451687208772e0c8371b38cf603eee04f0efd63d45db",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/imported-1.docx",
+      "Sha256": "5374a37e115148200ade964b7d5c17638190f029e15395e483ff4bbbc3411010",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/imported-2.docx",
+      "Sha256": "b337387aad05c50d4e7b1f0d6954c73fbd2df231d399c4c1963b5683b35db3d4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/imported-3.docx",
+      "Sha256": "85fb70eb55be6313e1c1bd76cd0297a4a36a2b7c7189d4dd5a12c22fc681803c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/isolate-1.docx",
+      "Sha256": "a628d72afc29d6c99bb2e3af754ff6f1f6e3ac8eb767424c6024b8fbe2e56aba",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/isolate-2.docx",
+      "Sha256": "0f9c36c114b247a90b55b1242aad62a9fbf6276baa3e9b9efeb311eeb5271534",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/isolate-3.docx",
+      "Sha256": "ac8f0de33942fd0ddab09b26a740c2054d4d1ee625ef1a80a0de33439ad104b9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-content-controls/source.docx",
+      "Sha256": "5af5646742521142abb6295e0962e84a21de75f5959d66aa524f43ab48c11a40",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/none-1.docx",
+      "Sha256": "c10bd373906f9b9a0cd27877c1d4bf3e12bbc74a402d64be165811911fd3d806",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/none-2.docx",
+      "Sha256": "781ef92d25e462f34ba8cfb210d46104a3eff36347d46750199f0b71e49ad097",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/none-3.docx",
+      "Sha256": "2c7d7fcdcad7d4409e256177d913287b764a6cf7e26b2fbabc98a52459c92b55",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/none-source.docx",
+      "Sha256": "956a75351e281d6fcaea42829e79262c4567eba6113ea67a82fc191a61d35543",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/square-1.docx",
+      "Sha256": "e85a61c3d8345f00c986e7c21b52593237fccebfa0749ecec6ec7beb9736b02b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/square-2.docx",
+      "Sha256": "19cd143155fc39d78d43a4ec22cc123ed928860f3d93adc56b56d6533894d7ef",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/square-3.docx",
+      "Sha256": "45911e83cf8e76403fdbbb22b73ca3d6ac250ea861823fd2d44f2dc26b173662",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/square-source.docx",
+      "Sha256": "cc13ec6ed3be7cfe0c37c56c0bcfd5fea15b4d5e0901ca896f18b111690ad567",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/topBottom-1.docx",
+      "Sha256": "598192d27cbfd83afef33d3ddab766438edb02b146f85d4b683964ce73920bd2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/topBottom-2.docx",
+      "Sha256": "e2fe0b235a04cec5cbe4744239bd20f008393a5da48ca6e922cd11aa56ba635b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/topBottom-3.docx",
+      "Sha256": "0c0133b473e0c5ac79cf65c4d21ca1940928000c515a9e2ab10ae4eb031d7d68",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-frame-wrap/topBottom-source.docx",
+      "Sha256": "e14aaadf28e887ae68c5492226c9d42d3954485be35511ec539bf27fe9bbf0ba",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-image/replaced-1.docx",
+      "Sha256": "cbbb6e80ae30c8e8c3f1d8f232269a9634ff928c98b27ab13711d3c80a1488bc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-image/replaced-2.docx",
+      "Sha256": "be4ed8720fa43a7dd7dd9197a4476b4c69d55fd3228c557b05bdec145af1fd3d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-image/replaced-3.docx",
+      "Sha256": "ecdd21c961f0be3b5477bd4bc5631dcb467bdc4966831f7d0283157f88ea35e4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-inline-fields/direct-1.docx",
+      "Sha256": "037bfcbaa1b42f08662be844d287764a9b03507064868a863fd3abe3f717b957",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-inline-fields/direct-2.docx",
+      "Sha256": "9bea40ed58a4163fd46d388d3346a50a2b91dddb134a7512c66c653e1ef1c2bf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-inline-fields/direct-3.docx",
+      "Sha256": "16253f2fcee25aa2b559ea0c301ea6fd687bfe32e210e9aeb19c07c809f857a1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-inline-fields/isolate-1.docx",
+      "Sha256": "b892e2078bf04fde1229240822212951d02cc5eba83f09d34370841ee416271a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-inline-fields/isolate-2.docx",
+      "Sha256": "fb54822bd159450f53e311a640433cf2cd17274570c469b604d9aa0c26934fe9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-inline-fields/isolate-3.docx",
+      "Sha256": "901651831d4202aa4c8c78c6a5f01d062f76796ffc9838f99fb2eebebf4a31a4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-lists/restarted-0.docx",
+      "Sha256": "23acd9d214b2034a274418efd4402c95196979b9ac8d9cb996039789409a58f3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-lists/restarted-1.docx",
+      "Sha256": "34cfe708e6ffde00531b8d162b27943309fa67dfd222c2f679c0a0483a5a06c3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-lists/restarted-2.docx",
+      "Sha256": "60af246fceb6ce636b3b4d0db059ff727c4f1f981d900ebec2c321d81aa6c1f8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/created-pivot-1.xlsx",
+      "Sha256": "652ffb22e72f2b5f43056d541cf47f1e95243d85af718b83e5f22caf4151cb26",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/created-pivot-2.xlsx",
+      "Sha256": "793c583801a45516d17091f13b933fde2a0c5fb45bc62558afff4dfdb0a8bda4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/created-pivot-3.xlsx",
+      "Sha256": "829564ed8e36b2f5601ab35bbadb281e6116d1b513bc04c857a622f113fccf66",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-sheet-edited-1.xlsx",
+      "Sha256": "8e028154a271a37238d99165a9b55609ea34fb4b49202da4b102a4d404bc5a8f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-sheet-edited-2.xlsx",
+      "Sha256": "d88f9420c5b78e822430383df66ca90c7356c2abefb40c05027a3f9c358d0e84",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-sheet-edited-3.xlsx",
+      "Sha256": "c3c4541054d0e41b704bba3295515454753f2447154db1c4cebbe51d2c20d678",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-sheet-imported-1.xlsx",
+      "Sha256": "d3d6b78bb7a53a405500696cdb371c0e7eef4052444f88c5dba9d05f0293180b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-sheet-imported-2.xlsx",
+      "Sha256": "b9a7accfb1b3abf47ea841b92ed0aac0f9a759860ae376f21bf48c91bcb47db9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-sheet-imported-3.xlsx",
+      "Sha256": "446d3f7b944177a658f51021e62ba9a77429e833a28421b40a4927e3966b0e6d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-slides-1.pptx",
+      "Sha256": "76c49f12dac6ce761cbce2b3a7eb8bb98179603c2886269ac26e2b02654261d5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-slides-2.pptx",
+      "Sha256": "19a9145bd5c9fa923c5ca7d5c6a156d71ae8b58875fa82c6b0a4236a68116654",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-slides-3.pptx",
+      "Sha256": "9c10b6151bf0782cec4b78908d0434bb47bfa60a9bf98780185d15eb75277879",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-slides-edited-1.pptx",
+      "Sha256": "fc35a2fe2711c2be7253f28f440cb5ecc4f94d20e9bfc5a73e6a73aada03ce09",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-slides-edited-2.pptx",
+      "Sha256": "93f61325cba70630a510a9ae2c60e2f8a1be53bceef82d3a63c486ce80eb0f3f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-native/native-slides-edited-3.pptx",
+      "Sha256": "7498d1f396151943e7eac2bc2fb88b6239a77ed87a29075f1d0084be47637148",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-edited-1.docx",
+      "Sha256": "5dc6be4843a9d286f58702e9d2047ccec20c74d57d803cbd9a71d74096b436f6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-edited-2.docx",
+      "Sha256": "032f54e17b93f0bbd42a0ae2e714f195ed8cc14c78ee04d9e9309403ebcfd0ae",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-edited-3.docx",
+      "Sha256": "85c0607e2addeebaa4222a3157bcc060e2943ae72c27702a73457b45d7341d5f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-imported-1.docx",
+      "Sha256": "04311bdc70bf268ab5a21f2f874f9ebc06b8bcc0da8fe223f3a7a99820c2b661",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-imported-2.docx",
+      "Sha256": "7d694247b9ceaf168a4c2854fd56a3022abaec1716c1e9ab0d957663719a0203",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-imported-3.docx",
+      "Sha256": "3cb30b71c259239ae5d56c9caff01731b391b5b98dfc61017093f7c09fcadbcd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers-legacy/markers-source.docx",
+      "Sha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/cloned-1.docx",
+      "Sha256": "e514bb09dcf64bd3b14b731312486e23fec2adba31421aa11065af8f8fef3e09",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/cloned-2.docx",
+      "Sha256": "263dedc5903129e167466309e656eb5dc6f4b686f0a1f6c8dceb55c9d1a88628",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/cloned-3.docx",
+      "Sha256": "91a293b898d7fe2216ac46b38d9e235afbca8b655373a60de9cc83c014e4b140",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/edited-1.docx",
+      "Sha256": "c8aabd10b5ed3a273c5b625ec3ddfc96b5ec872392934750bd72a06116e445d2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/edited-2.docx",
+      "Sha256": "c70108fe72f284b1b087d0e2171d9ce205bd7c2ea836ccfb8fdce2828edbc04f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/edited-3.docx",
+      "Sha256": "5ecfb06ce737fef00a66a27479388bb62beb1e8d7ad4e378aa18a4758ca2dfe8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/imported-1.docx",
+      "Sha256": "b9047cfbfdadd54e78fabb4a6b0a1d5d9acb191279332ead8d21dca6eaaea3d2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/imported-2.docx",
+      "Sha256": "fe5d703b242e22c618b72e1962ffda419b8cdae727504f5cefaa27aeb6471a99",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/imported-3.docx",
+      "Sha256": "03cf711b69e3067274c315d00e02285ced43ef595ea6a94fda7e153a5d59454d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-note-markers/source.docx",
+      "Sha256": "24d80e959d01435191ccaaa6d31bed1e214becbddef6eef8b87b69d79d357a48",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/edited-1.docx",
+      "Sha256": "2fda52d1956d8c6318a42209c018533cdbba537ac6e607b6074483200807fc5c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/edited-2.docx",
+      "Sha256": "4aeb37e6141a9c154db935d3ff775e67b25149d808fee039ea9ba268b3670601",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/edited-3.docx",
+      "Sha256": "5999e0bd2e205b1a93afd7a01633e6898b5ee8e4af8ba60dba38c542ab3ba12b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/source.docx",
+      "Sha256": "11550ac3f3c06bd4093b61bf16cc879827587a53c1cf0abaf8dcbdffc19da59e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/unchanged-1.docx",
+      "Sha256": "3d4217027192a047c83fe97655b10a79418625e3624e13b5f77701f0da76ccc0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/unchanged-2.docx",
+      "Sha256": "1225e5c519e2f1e957be49f69d3641767efb4287edf29d249f05f5ad0be8e51e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-notes/unchanged-3.docx",
+      "Sha256": "b912f309518969c99dc4abf72019b2f4571ad8dc20ddcad694bb92e28c5ead98",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-opaque/opaque-1.docx",
+      "Sha256": "708d6d6a9fcda4ed911cd40a7b1a2e595683e40bcd778bf3ed7ff9a385e5e333",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-opaque/opaque-2.docx",
+      "Sha256": "c8499e6b6d42a9d09bc46b6e46eaf61917dd2bde1e4b683e6cd865f7ebb5dc4e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-opaque/opaque-3.docx",
+      "Sha256": "ec2880ddaa7c6859871ff3e6d120c356f2488ff46b6cee03e82325154c157280",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-revision-stories/direct-1.docx",
+      "Sha256": "66a02ce69cdbe49ceaf7b7dc598052c1d380e301c02def5d580a7f3c77ccb869",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-revision-stories/direct-2.docx",
+      "Sha256": "bf22f133c05bad7db830d7e628c653eaa3cb1ebc336ea6068340ac12938200b5",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-revision-stories/direct-3.docx",
+      "Sha256": "5ed7018885cb2f96752cd142eb1555ed6370d3678a7d84d8a47bc4dc93ab2039",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-revision-stories/isolate-1.docx",
+      "Sha256": "e6c78d0dc6722bfbd7e1d20f44b882466fbe5d1cfba55fcceec4a26eecb9486d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-revision-stories/isolate-2.docx",
+      "Sha256": "f908e522e8229d6a033989dac41f11594baece14a55fca123f48f63bc38d8596",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-revision-stories/isolate-3.docx",
+      "Sha256": "e3ff6641822a7d7045f79997bf22afd2c4d47490d32510de967a00de7d1679ce",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-schema/column-metadata-1.xlsx",
+      "Sha256": "bbfcbae082432e91e8fe3b38506a68a36e6cffcd909233bf5cf07e609d7eeea3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-schema/column-metadata-2.xlsx",
+      "Sha256": "b1e9eb64155bb2a3e4c777df077bcfe9efdf78996c7be4e1011b18e4c900ecb7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-schema/column-metadata-3.xlsx",
+      "Sha256": "a2dafbd4d46e64270bf11922368d7d52d7cbe33f0a55efda366a3a4785ca2271",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-schema/sheet-style-1.xlsx",
+      "Sha256": "e6bb0affd73997e104fd56951a227c93b9355c253867761996f695f25ed0e9e6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-schema/sheet-style-2.xlsx",
+      "Sha256": "a0b4f5901f64d72ed59f42a694203076fbf3b3eb966014bf3984d9b765dd3d11",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-schema/sheet-style-3.xlsx",
+      "Sha256": "c82555ad2be1bfd8eba7808519ddc7b0448338ee32a51cd5a1bbae83f66240b7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-script.docx",
+      "Sha256": "4c21d017d4ac1f115c0e9f42c1123693cf8d4bbf70a4c14ff6131f8dd828967a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/sheet/edited.xlsx",
+      "Sha256": "bd6c9e0772547677580d2e34179aad5dad7d524fe17e68b459b90f5bb3e1f992",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/sheet/roundtrip-1.xlsx",
+      "Sha256": "df2b7d1db5fe4d7e6533596502ffe7f4b31c6ebe029816a484c576813617b12b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/sheet/roundtrip-2.xlsx",
+      "Sha256": "09e22d770ca64206d31cb2ee9fb59365d2ac99f4e7070eee88ace36944f44879",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/sheet/roundtrip-3.xlsx",
+      "Sha256": "bf8b81e57e55324ead5850b870bb5375714fe70ec4169adf69fdcfa0d25a4fff",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/slide/edited.pptx",
+      "Sha256": "b8fb90a4741cb14586358563fb1d24745b3c01820a660ab0f4f7c3efd033db9a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/slide/roundtrip-1.pptx",
+      "Sha256": "8e5b22ac2ae220585a571117d888b9b856962111ca96cc854030a2c9c5d8be35",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/slide/roundtrip-2.pptx",
+      "Sha256": "0150fe2a23e8a9e178a961e71f4e4da486b6195c7a64223a209468599d569a22",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/slide/roundtrip-3.pptx",
+      "Sha256": "924feff28f30c118c377e1f6d19b01f48f3ed0034805679f9b58868533e7c488",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/word/edited.docx",
+      "Sha256": "a30eb80e85ac80c0b58c9546699b5a7a7101d08023bb3ea26119dde62e64ea33",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/word/roundtrip-1.docx",
+      "Sha256": "0f9aca6655a4b7b7b78202edb8eb4279d9eaff6d067156c1c4f973f910ed3325",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/word/roundtrip-2.docx",
+      "Sha256": "61dcdcc397c4fac66459625fc8a3f9998542ebc393cd21934df9b32f531bfb86",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-scripted/word/roundtrip-3.docx",
+      "Sha256": "d123df57b18441e328cb1cf7d52c054e343e7008b470b1051a8b3470ebf62ace",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-section-clones/section-clone-1.docx",
+      "Sha256": "cf072c3e12646117015a8e8627ec495c990af1936f6268b929b2986adabe0568",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-section-clones/section-clone-2.docx",
+      "Sha256": "1a58213a330b6c42a69f5c59be3518fd917bc1bf8c6411960d55ae7a5ff3219f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-section-clones/section-clone-3.docx",
+      "Sha256": "1e705be511b4c7fba546d9a2db14b77915a44a90648b12d8b41fcb754b0830be",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-sheet-rename/renamed-1.xlsx",
+      "Sha256": "42791b85c58b8bc3c02be70ba9bd8eb615919ffa5e6ad6d5fefbdb072b74dce4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-sheet-rename/renamed-2.xlsx",
+      "Sha256": "a67bd86acf078e87f86c16724da25383da205b3d6287d054f186f73cdbe82730",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-sheet-rename/renamed-3.xlsx",
+      "Sha256": "e871d115445f2fd6aa8f8d3cd8fdf1135b272679b4848119c0a61eb067775ae7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-sheet-rename/source.xlsx",
+      "Sha256": "561a2ebf80b6f02e8b1fc00648230b341ff68e1a3ee501ea026b9e69c35fc24b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/backward-1.pptx",
+      "Sha256": "482f0428920e21c7e2d55a6b0a8f4641a0c024a6cf6eac233c9f33b693ea08ca",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/backward-2.pptx",
+      "Sha256": "a0c6f7f2422549e2de9fb4438ea99fe54edacdd3e164ef33a99c332003890a56",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/backward-3.pptx",
+      "Sha256": "31d31b323bd6b52006c1809466e8d0592d86bc73e49b716ec14c2c2577e0eddc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/emptied-1.pptx",
+      "Sha256": "e0ee74bd433e174c770c591c72f83a15f5f0ef9700741d8a68be7f0273b35f84",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/emptied-2.pptx",
+      "Sha256": "d3f7937d9a70f081029e5c356df5e9fa8e592b8c7c9137fcff2ed4bdbf3cf17f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/emptied-3.pptx",
+      "Sha256": "768da490e1e416cde2aae2462d6cbcc3fcd37341783aa316a492588e3ca5fafd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/forward-1.pptx",
+      "Sha256": "37ab09861a334cbbc805c25d675b133dbba6a2acc14e183008203a48ebdcecab",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/forward-2.pptx",
+      "Sha256": "53274af0968b7bc75354f13f453c06db57af811d2b3a87c7dea00832d84f9c26",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/forward-3.pptx",
+      "Sha256": "d33b95faebaa21df43970d9cae638ef8c4996ab07cca5732dc32f2e82edc0510",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/source.pptx",
+      "Sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/unchanged-1.pptx",
+      "Sha256": "4328c051501c1201291c137bc6c0664adc2167ee32baac17217af41a0f73d97c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/unchanged-2.pptx",
+      "Sha256": "4acae35e452238bd12512ac46bf1c0334742571517059867796145e2685c9512",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/unchanged-3.pptx",
+      "Sha256": "553544b9898a44d9b07a174db688d58745fbc1db6c78f9cf0a4517743fcdfeb6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/within-1.pptx",
+      "Sha256": "4ffb7d1f9f26d73394a8d67362fd2c88de753197e1bdff0a263ebdf7962184b2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/within-2.pptx",
+      "Sha256": "be8bc9c677355a612eb1c95109a0ee2d250f818a42aec19cffe7b32612ffcd00",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/direct/within-3.pptx",
+      "Sha256": "3c269e055f354b8ea453f92e4366410ba8496bf143fd67b7f36ff9d93a1254bd",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/backward-1.pptx",
+      "Sha256": "9da8af2102aa8d0e8585012ac2581651d87ecae9e9dba4b263cd2abd315d951b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/backward-2.pptx",
+      "Sha256": "33b78bfbe6f1b79700bba225719581573ef8c05abacbcc0a20a62b328fc24b2f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/backward-3.pptx",
+      "Sha256": "4a234fb2e14f6f4c449c3e84337d35faf6ccd88c4bd69794a9b56bbc2c21a10b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/emptied-1.pptx",
+      "Sha256": "1f71c282bccc275215db2c32dcf59bea311ac87cbe428d52f0a3ff32033f6fa4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/emptied-2.pptx",
+      "Sha256": "0c6c05cf3ba83f1d996fa6c46d1f8833999cd768689f36c3a3e15727b3fcd2eb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/emptied-3.pptx",
+      "Sha256": "e850507ae9a192258a5dda72beba54da0494e8f10b1db1a0d99488d2b1b843d6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/forward-1.pptx",
+      "Sha256": "e3398fab34d818c0dc2641e0a802cbdb66155188872b7bdac61a8b6b69dc77ae",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/forward-2.pptx",
+      "Sha256": "d55d3d6aa90ad722240beae39a4131a24557622b341c3649044eb8801e788e8c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/forward-3.pptx",
+      "Sha256": "9e494443f140efd29182ccb14c57d2f204d832bc332788bc51e76f210a4f247d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/source.pptx",
+      "Sha256": "fbbaacf2b6bbc657568bb3e507e062a949ce5304d2f77fb51bd3c9f3ec5bb39c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/unchanged-1.pptx",
+      "Sha256": "c088f66294cfb279877d84d28f5e486c2e17cde6adf93c68fc1fbd30ffbc8920",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/unchanged-2.pptx",
+      "Sha256": "858a4390a11457df9c6af2caf91c3b8c698c3fc1eb5fd7e8441c9cee2b9cb9e2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/unchanged-3.pptx",
+      "Sha256": "afa9cc10ae52fcf79d5af0f70999ef4e906c856a12d94aedde147a04f60971e8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/within-1.pptx",
+      "Sha256": "ad6cafc0665f2a22bc692286cd5d2f4848de5262489bfd74361eed3ca9e26e3b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/within-2.pptx",
+      "Sha256": "067ed15792058662299b7c54efb40bf58ea72938e52c07b63aa1519f6b365853",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-sections/isolate/within-3.pptx",
+      "Sha256": "d67ce629d8a26a96f5ab57ea9043c90d38eabfacc545b61b225ee4b40c17762f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-text/rich-edited-1.pptx",
+      "Sha256": "1ab9b8a8bb34851ee87e87718d1a6010b82cc58397dc4e5cedd410200d4cbd1c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-text/rich-edited-2.pptx",
+      "Sha256": "afe4be3dd8606362be1cc084bfb7619e7c870f6800caf35b018f1c7ecdc2e2ee",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-text/rich-edited-3.pptx",
+      "Sha256": "517a4f84cb2997501bd1d5f0c19fe225aef22ff842c6ecc68161c57483e7b5e6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-text/rich-imported-1.pptx",
+      "Sha256": "e63a3ed31dd9b507a17f7b37856cb8a77d895a7e09ddfa70915ab4df8fdd7611",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-text/rich-imported-2.pptx",
+      "Sha256": "8c68b7ea494f746ff7dfd95ef912a28ca390f69f2970b38169e82c77e9de1fb3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-slide-text/rich-imported-3.pptx",
+      "Sha256": "26a282a29ca0a6d0359aecabbfe4e4f0c5552d5ca95f4e8b2ebcbf333bf88677",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/relocated-edited-1.docx",
+      "Sha256": "8d2b2a764f94e0d2f6025d336952707706c53b4810a71934405ac66c5e2f1530",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/relocated-edited-2.docx",
+      "Sha256": "f3c884c90ea2b8d036e887b9b15d7e9ee837ac366baea0d4643f8c332538e2b7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/relocated-edited-3.docx",
+      "Sha256": "996c6356854e7d18e99d732fd7880d88b360ebdd9ad0766f69d7fd78067df0eb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/story-edited-1.docx",
+      "Sha256": "370d8f5d3aede260459f58df68aabc966a57bdf7e095d574de918cc747c246bb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/story-edited-2.docx",
+      "Sha256": "1c8f896052730fcb0cc847c56273ecde1505924981b021578aba6381fb68494a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/story-edited-3.docx",
+      "Sha256": "85065a6ab55cdafba990dd7bb841f4d4cb37a0188375f701f32b0cf2b75c6800",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/story-imported-1.docx",
+      "Sha256": "1c11f7ad70aa585b0595bbef387283c8d6d7a6a0f9ad47f38198533afd40013d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/story-imported-2.docx",
+      "Sha256": "8f27c87eca0bdd05f567743f80ca730197c41b2aace27ac98f44ac0ee02dda8b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-story-media/story-imported-3.docx",
+      "Sha256": "8dc60b627b9126dd7daf40a1c321047db4ca07a316d2dc14044f7da2cab54c1d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/create/edited.docx",
+      "Sha256": "8e226e73e3e32c0553fd8267b58bdca8d1ce4c365a709615a3c322540140aef4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/create/roundtrip-1.docx",
+      "Sha256": "6ca95d69607fc3acad3675e62c2b13341d9cd07930e7af8f3b600510c5a8cc5e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/create/roundtrip-2.docx",
+      "Sha256": "3b4e8cf9f8f61b5e23ae311298fa0ae1aee8620653ed5283e15ed74a14d75827",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/create/roundtrip-3.docx",
+      "Sha256": "8588b29d3b3ab85432df01a9ce7fc3b7d1ee6055f8f9945cb94ee0e733d1ae08",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/edit/edited.docx",
+      "Sha256": "72e4a680fac8aa88822cd1c9cbac75dcbdd8f852caa0bf0a6c0bb3fa44188960",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/edit/roundtrip-1.docx",
+      "Sha256": "7810b37a4f25758f365c3c31639ede23de8d4dddd542788ac08e7c4db132236f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/edit/roundtrip-2.docx",
+      "Sha256": "4dd394f4cf39bbeb4df2d6ce3ff04f1c7458fad44e1be50addb1ebdef852762a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/edit/roundtrip-3.docx",
+      "Sha256": "a3e1fd520cbf3c4b46bd418a80b7989cd4fbf4d7dc743e342d5ed20aecdb54fc",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/remove/edited.docx",
+      "Sha256": "d009122528f88223f197a9bbeb9307cddd663d5f1c74bbb12c56a8220ab2cdd9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/remove/roundtrip-1.docx",
+      "Sha256": "40e33f6b1fea43698cb34fdb0cc3a6ef4894586f8a21dbdab4831441bdcc46b4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/remove/roundtrip-2.docx",
+      "Sha256": "fb41ccf2f79cce7965c7565d583bf797262107b9ecf7d4b196c0883ac203c73a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/remove/roundtrip-3.docx",
+      "Sha256": "1cefeba58481f8197f8459bc8b1ae35ac4d122b3a65a9b0d6f8e7195ee539caf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-structure/source.docx",
+      "Sha256": "19d3d78dd6823d8b2ad7173f0eb82be7b2ccf4224d50fdb889dee758ab64e88f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-style-toggles/toggle-1.docx",
+      "Sha256": "b8cdbf1c4c3b59e7be2e33f55527e65cb4c3b7d3c7d0f7671d5dfc059b6cb1d3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-style-toggles/toggle-2.docx",
+      "Sha256": "8009432ed4a33665423009da84ea138baf4cf5f7e923bb2ce0cb4f49eb017d21",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-style-toggles/toggle-3.docx",
+      "Sha256": "92602329677179cf37981fbd5d56adc77ba5f3df8d27d993bce0451c5edcbc4c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-styles/edited-1.docx",
+      "Sha256": "7b101a64727c58e70c87a83e86b8b55fe239aba744faad9a7cd8ebb6c936b13b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-styles/edited-2.docx",
+      "Sha256": "70eb3a91a3da831393bf86787ec018039026726cfad0cd46912e3cec8feb8951",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-styles/edited-3.docx",
+      "Sha256": "0b8c539454a20f70358186fe20bdd5dcd1ea8d8516005be82397526ed6c169be",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-styles/unchanged-1.docx",
+      "Sha256": "3f6b8819b24879e94481841e61cd6cf0a265588e706edef65db1fecceb7ef989",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-styles/unchanged-2.docx",
+      "Sha256": "6caeaaa1cce417d65a7e111cee2bd858b3fa2a74de079284c6dbe6df7b8459bf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-styles/unchanged-3.docx",
+      "Sha256": "c8f28681a50dd01d5af39fe9dbf1d0dff0a8358df89b8551c438ec0202f12a9a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-borders/tables-edited-1.docx",
+      "Sha256": "a6b745157b7c672adfb88c2831cbdbb9226737622054052450a9e986d5c26242",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-borders/tables-edited-2.docx",
+      "Sha256": "69a26fd3ff80e94d8c8c3747f680bf2912e3e6c0368070e05dce2a7cb1f7c39b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-borders/tables-edited-3.docx",
+      "Sha256": "8d5a6b5475eaf9f262fe7675c9b0b26e8c991c4bb77f98ae5cafb666e45b8916",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-borders/tables-imported-1.docx",
+      "Sha256": "2aae88c46ae5804a475f6c0a62e17e4716e46f3a1c5c78ceb5a2b4c41fe65e45",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-borders/tables-imported-2.docx",
+      "Sha256": "2e98b6ece3df443562f53e733ada7a9cc38ecff011da2a8d0e848da958646681",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-borders/tables-imported-3.docx",
+      "Sha256": "e437c66235a6dbf9624ce2c97469bebcf94c7ce2a557fa4b5bb543d1dd628f2f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/format-1.docx",
+      "Sha256": "f8d7b8e61b8929f3c755d6364293ce1fb74d27fd0706443d1478eb109911bb3c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/format-2.docx",
+      "Sha256": "0c9b36b528f80145ca6964164b4b6f583d4f2c52900bbeac56375a0ca97c473f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/format-3.docx",
+      "Sha256": "6c946e31bbbcadf4712d3fc468e8ea48efc4d2db0601c728be70009e07c0a1a7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/replace-1.docx",
+      "Sha256": "06aa69fc1d31048d5b6892e3424c0f5fd77edac2aef592b3f322dc21a29d646d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/replace-2.docx",
+      "Sha256": "8398c31892bc469e4c17149e148007679da0a83a1b78497c40804ab018c4f62f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/replace-3.docx",
+      "Sha256": "c2b47ac43a3fe711279ce47201f8fc18be96baa866d7201e45836f0bdc24c26a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/unchanged-1.docx",
+      "Sha256": "24d2701b308fe31d19fae851cca980a9e6451319eea027fd9c5590a98b8b07b2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/unchanged-2.docx",
+      "Sha256": "5d52efc314e377587648161e79d48f35bdcc451f097918975ec888e848903f9f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/unchanged-3.docx",
+      "Sha256": "1c7d591f4cbc8360db55358151ec0be97ada36c058742c818db05a0d21aee58e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/unmerge-1.docx",
+      "Sha256": "b5424f0c6777106a2459cf595fd7854e64ffe4214350eca85905802cbc845c40",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/unmerge-2.docx",
+      "Sha256": "6508896a294c6c9df12a4b2383eef48476906cd44fd30399759127282e909553",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/direct/unmerge-3.docx",
+      "Sha256": "c14f95e20ae48fbdd9c4a176469c7a35807d6a96fada3a1adc6cb3c9bacff37f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/expected-format.docx",
+      "Sha256": "675e0a606bb5b625a61e63c7b89695b8d372a6b6ccae18060400d215a9632d2e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/expected-replace.docx",
+      "Sha256": "5ddbd51e2d59cf1a9644ff005a838f94a7f607570f4f40029a1d0e4baad74bfb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/expected-unmerge.docx",
+      "Sha256": "9c89a26640c653e71bdeda0d987afb5259d3fec7f63426d48db98401abef5533",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/format-1.docx",
+      "Sha256": "aa80a895eb3e376a7af70a8ffccf240823d2aa2bc4ded6d19aa5f9d69ab16b0e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/format-2.docx",
+      "Sha256": "a2b35e6560034981f5d58fc586ee4c53ffad4d14ad56ff291629468ec60a8182",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/format-3.docx",
+      "Sha256": "ac0d9c4549dffbb8ebfedc53bc9bfd177f3e150348f040f3c66ce4eb13936635",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/replace-1.docx",
+      "Sha256": "a3633d94cbe2b6f996eb5967ea23f7c9712051e815219c5af5d028248cdfcc02",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/replace-2.docx",
+      "Sha256": "cee566615020971f6f16c1e171a8f9d87a18058d0953be740fe3dd2ead5014b0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/replace-3.docx",
+      "Sha256": "aa9e021fa557a82e4f4896c2f701fa95d8222648f627b9b11ea76a092394e4e3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/unchanged-1.docx",
+      "Sha256": "f479a17dbc17487ff140af345ab396d556c8eaa1644d7164ae9b07ea27358f52",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/unchanged-2.docx",
+      "Sha256": "27c78afa1d827d009431ed277f4f843b912b6c975e2e2ea3d0dcf44d69327561",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/unchanged-3.docx",
+      "Sha256": "acebd37a87a6d1ac3a41d79487e60278c55a9298be14b9be7701ba0d49653c38",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/unmerge-1.docx",
+      "Sha256": "d891153b27f02c7f62aba635bbda4c642b2857b2532cdcdf6da7ad4c68120b41",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/unmerge-2.docx",
+      "Sha256": "07791e2834a8e8233e5061c9fa3e66c2cd51b6fededdd9022f6a380357210e7c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/isolate/unmerge-3.docx",
+      "Sha256": "2b722bf22a6342718cdb176fb6bd68d10e8ecf0491e72bab07715703359ab9a7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-table-grid/source.docx",
+      "Sha256": "51de42cf2c0568dd7ff98717109755ab8a2d3e9bb091986e60e1ef97eb00053a",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-compatibility/compatibility-edited-1.docx",
+      "Sha256": "3d08a0fce4efe0b75865fee4101e7f13888978548f85f9979e28a94ed477324e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-compatibility/compatibility-edited-2.docx",
+      "Sha256": "cd16ff2ead3a407fd8e51dff2765de29385ef67322e38c559a408eb8b911ca03",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-compatibility/compatibility-edited-3.docx",
+      "Sha256": "553108500876d59604f82e1654b977cee93f84f98321b1f8066d7607945a0b63",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-compatibility/compatibility-imported-1.docx",
+      "Sha256": "8aa9d438ece0873474eaebed674bd02c9a21db0dc7d8e0280f220e24ab86bd23",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-compatibility/compatibility-imported-2.docx",
+      "Sha256": "a75d4aa9321269bf3c1768613014d85a3610334d7b7efc47c30a0b4e7ad81ccf",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-compatibility/compatibility-imported-3.docx",
+      "Sha256": "23b82d3f1122ea8ac098453f59055b538ec97998fdd428be6ef8bc15ba6a2cef",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-edits/breaks-1.docx",
+      "Sha256": "a219460b27408b5745cab97088502a3cd4a545e755f4d86bdb076880400291a1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-edits/breaks-2.docx",
+      "Sha256": "a8786dde709f3b6b8a24ada987e129b02b559eb0f328da5855cb807dc452fbef",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-edits/breaks-3.docx",
+      "Sha256": "2cf6dc5c02ac75f5d26c84069885b238fbd139e09dbf0e4156cd55259dae2d61",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-edits/styles-1.docx",
+      "Sha256": "477d900065994376160f8da79e8752c45bf835434f6b18b247b6e0b48c03689d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-edits/styles-2.docx",
+      "Sha256": "2b3c73dd9ea4080f054bd0d199202c05780fcd12b0defe07c65333a602533bcb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity-word-edits/styles-3.docx",
+      "Sha256": "97f2dfeba9c4c9d62488a165d18c831f9f53f888106f5fa5e201318e563f1303",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/edited-1.docx",
+      "Sha256": "bbb3b11ace14a83e45ab5d507558d3de329fbcd4b74c6e0a040403a0a43b53c0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/edited-2.docx",
+      "Sha256": "6be904deb3119de353b12c93a287f8e9c8adcda86bb517ab9710efaaea8fa37c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/edited-3.docx",
+      "Sha256": "8bb52ddab19d17aaa693872ed594563da5a704f2358f70b61cb563d054da01e6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/sheet-edited-1.xlsx",
+      "Sha256": "7fd0968f8211c6197444fba53bd9e9272b9fe9739f60824c157329bfa4c1349e",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/sheet-edited-2.xlsx",
+      "Sha256": "5827eafc147b32d14f81ba78677195e95a081c0c0a62c7e71926e546011b9bcb",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/sheet-edited-3.xlsx",
+      "Sha256": "373bec90c872b0a7b190d4247e5901b476f45bd10a945bb6505db3ed579c8026",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/sheet-imported-1.xlsx",
+      "Sha256": "c60380b0c65d48d76abb9d779404dcc6c05ac30633adc93c00a79bd1cc94de82",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/sheet-imported-2.xlsx",
+      "Sha256": "066041a419b4fccf14b347a287f1c12748c6b50df60f8b13a53b70f82def3817",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/sheet-imported-3.xlsx",
+      "Sha256": "d713036b8c69fef40772f17cba8f567a30d46907ca8a1e2ff10d8424d9711197",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/slide-edited-1.pptx",
+      "Sha256": "6dad51f2d796cde4a4f7214dedf702500864f81ad995ae631d52fe04908c8bd3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/slide-edited-2.pptx",
+      "Sha256": "fc4ea6e366b227cb391e4e10ac02b77238eb9764c89664f0c7bd19186ba2ce8d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/slide-edited-3.pptx",
+      "Sha256": "017babbeb1fabb6e41516d1d5171283fbd647d001d3fe36701d9c0b87c4abae2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/slide-imported-1.pptx",
+      "Sha256": "6fb2c05b35dfde6693da362e954de25fcf8942d3ec64bcdd0cdcb1e8f8fbead1",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/slide-imported-2.pptx",
+      "Sha256": "23f61ba99a5fa5dfa93aa7cc8900aaec0ed2ec0dccfdef42804dfeb7c795af38",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/slide-imported-3.pptx",
+      "Sha256": "05fe24a048f91b75d0a5ab50cc4e5e85594143f9b63c4702d8a52197f8406cae",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/unchanged-1.docx",
+      "Sha256": "00879fb998d0af85723ccfe98d7b4859b56d8b42d5363aa5576bc0bef7c93810",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/unchanged-2.docx",
+      "Sha256": "d91440c48760c90121e8cd6922a398e6b493026f2b0fe1132de9b0a5ca546399",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/dcd413fa34f4/verification-workflows-final-20261112/app-evidence-accepted/quds_office_engine/fidelity/unchanged-3.docx",
+      "Sha256": "fa1314ce1ff3a8d6a8e4d655ed74113fc49982a90878dbf3f8907e8de9c7a3b6",
+      "Errors": []
+    }
+  ]
+}
