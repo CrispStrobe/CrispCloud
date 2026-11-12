@@ -289,4 +289,76 @@ void main() {
       );
     });
   });
+
+  group('cloud bridge stem', () {
+    test('RustTarget names the cloud library per OS', () {
+      expect(
+        RustTarget.of(
+          os: 'macos',
+          architecture: 'arm64',
+          stem: cloudBridgeStem,
+        )!.fileName,
+        'libcrisp_cloud_bridge.dylib',
+      );
+      expect(
+        RustTarget.of(
+          os: 'linux',
+          architecture: 'x64',
+          stem: cloudBridgeStem,
+        )!.cargoOutput,
+        'libcrisp_cloud_bridge.so',
+      );
+      expect(
+        RustTarget.of(
+          os: 'windows',
+          architecture: 'x64',
+          stem: cloudBridgeStem,
+        )!.fileName,
+        'crisp_cloud_bridge.dll',
+      );
+      expect(
+        RustTarget.of(
+          os: 'ios',
+          architecture: 'arm64',
+          iosSimulator: true,
+          stem: cloudBridgeStem,
+        )!.triple,
+        'aarch64-apple-ios-sim',
+      );
+      // The default stays the SMB bridge.
+      expect(
+        RustTarget.of(os: 'macos', architecture: 'x64')!.fileName,
+        'libcrisp_smb_bridge.dylib',
+      );
+    });
+
+    test('bundled candidates use the cloud stem and never the SMB one', () {
+      for (final os in ['macos', 'linux', 'windows', 'ios', 'android']) {
+        final candidates = bundledRustLibraryCandidates(
+          os: os,
+          executable: os == 'windows'
+              ? r'C:\app\CrispCloud.exe'
+              : '/app/CrispCloud.app/Contents/MacOS/CrispCloud',
+          workingDirectory: os == 'windows' ? r'C:\repo' : '/repo',
+          stem: cloudBridgeStem,
+        );
+        expect(candidates, isNotEmpty, reason: os);
+        expect(
+          candidates.every((p) => p.contains('crisp_cloud_bridge')),
+          isTrue,
+          reason: os,
+        );
+      }
+      expect(
+        bundledRustLibraryCandidates(
+          os: 'macos',
+          executable: '/a/CrispCloud.app/Contents/MacOS/CrispCloud',
+          stem: cloudBridgeStem,
+        ),
+        contains(
+          '/a/CrispCloud.app/Contents/MacOS/../Frameworks/libcrisp_cloud_bridge.dylib',
+        ),
+      );
+    });
+  });
 }

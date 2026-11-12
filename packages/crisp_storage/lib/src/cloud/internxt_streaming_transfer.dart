@@ -80,6 +80,74 @@ class InternxtTransferSession {
 /// Bounds encrypted transfer memory independently of object or multipart size.
 /// Implements the Internxt 0.2.3 start/finish/register protocol with no automatic
 /// retries of mutations. SDK crypto is reused; its buffered transfer APIs are not.
+/// Internxt refuses zero-byte files on every plan ("You can not have empty
+/// files"); raised before any request.
+class InternxtEmptyFileUnsupported extends StateError {
+  InternxtEmptyFileUnsupported()
+    : super('Internxt does not support empty files.');
+}
+
+/// A drive/network request answered with an unexpected HTTP status.
+class InternxtHttpStatusError extends StateError {
+  InternxtHttpStatusError(String operation, this.status)
+    : super('$operation failed ($status).');
+  final int status;
+
+  /// Worth retrying: rate limiting and server-side failures.
+  bool get isTransient => status == 408 || status == 429 || status >= 500;
+}
+
+/// Listing row with the full file name. The drive stores names without the
+/// extension (`plainName` + `type`); the Rust engine and every caller use the
+/// complete name, so `name` becomes `<plainName>.<type>` (also for "x.bin"
+/// stored as plainName "x.bin" + type "bin", and for the extension "file").
+/// `fileType` is preserved.
+Map<String, dynamic> internxtListingFile(Map<dynamic, dynamic> file) {
+  final row = Map<String, dynamic>.from(file);
+  final name = (row['name'] ?? row['plainName'] ?? '').toString();
+  final extension = (row['fileType'] ?? '').toString();
+  row['name'] = extension.isEmpty ? name : '$name.$extension';
+  return row;
+}
+
+/// Internxt's folder listing lags a moment behind a finished upload. Files
+/// this process uploaded stay visible in [InternxtStreamingTransfer.list]
+/// until the listing contains them, for at most [ttl].
+class InternxtRecentUploads {
+  InternxtRecentUploads._();
+  static const ttl = Duration(seconds: 30);
+  static final _byFolder = <String, List<(Map<String, dynamic>, DateTime)>>{};
+
+  static void add(String folderUuid, Map<String, dynamic> file) {
+    final list = _byFolder.putIfAbsent(folderUuid, () => []);
+    list.removeWhere((e) => e.$1['uuid'] == file['uuid']);
+    list.add((file, DateTime.now()));
+  }
+
+  /// [files] plus recent uploads the listing does not show yet.
+  static List<dynamic> merge(
+    String folderUuid,
+    List<dynamic> files, {
+    DateTime? now,
+  }) {
+    final list = _byFolder[folderUuid];
+    if (list == null) return files;
+    final at = now ?? DateTime.now();
+    final listed = {
+      for (final f in files)
+        if (f is Map) f['uuid'],
+    };
+    list.removeWhere(
+      (e) => at.difference(e.$2) >= ttl || listed.contains(e.$1['uuid']),
+    );
+    if (list.isEmpty) _byFolder.remove(folderUuid);
+    return [...files, for (final e in list) e.$1];
+  }
+
+  /// Tests only.
+  static void clear() => _byFolder.clear();
+}
+
 class InternxtStreamingTransfer {
   const InternxtStreamingTransfer({
     this.multipartMinimum = 100 * 1024 * 1024,
@@ -166,7 +234,7 @@ class InternxtStreamingTransfer {
       session.checkCurrent();
       if (response.statusCode != 200 &&
           !(method == 'POST' && response.statusCode == 201)) {
-        throw StateError('$operation failed (${response.statusCode}).');
+        throw InternxtHttpStatusError(operation, response.statusCode);
       }
       try {
         return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
@@ -239,7 +307,13 @@ class InternxtStreamingTransfer {
         client: client,
       );
       session.checkCurrent();
-      return {'folders': folders, 'files': files};
+      return {
+        'folders': folders,
+        'files': [
+          for (final file in InternxtRecentUploads.merge(id, files))
+            if (file is Map) internxtListingFile(file),
+        ],
+      };
     } catch (_) {
       session.checkCurrent();
       throw StateError('Internxt could not list the selected folder.');
@@ -355,6 +429,7 @@ class InternxtStreamingTransfer {
     if (length < 0 || length > maxUploadSize) {
       throw ArgumentError.value(length, 'length', 'Expected 0–20 GiB.');
     }
+    if (length == 0) throw InternxtEmptyFileUnsupported();
     if (multipartMinimum <= 0 || preferredPartSize <= 0) {
       throw StateError('Invalid multipart settings.');
     }
@@ -512,29 +587,27 @@ class InternxtStreamingTransfer {
       final fileId = _id(finished['id'], 'network file identity');
       final plainName = p.posix.basenameWithoutExtension(name),
           type = p.posix.extension(name).replaceFirst('.', '');
-      final created = await _json(
-        session,
-        _endpoint(session.driveUrl, ['files']),
-        method: 'POST',
-        operation: 'Internxt file registration',
-        body: {
-          'folderUuid': folder,
-          'plainName': plainName,
-          'type': type,
-          'size': length,
-          'bucket': session.bucket,
-          'fileId': fileId,
-          'encryptVersion': 'Aes03',
-          'name': '',
-          'creationTime': null,
-          'modificationTime': null,
-        },
-      );
+      final created = await _registerFile(session, folder, {
+        'folderUuid': folder,
+        'plainName': plainName,
+        'type': type,
+        'size': length,
+        'bucket': session.bucket,
+        'fileId': fileId,
+        'encryptVersion': 'Aes03',
+        'name': '',
+        'creationTime': null,
+        'modificationTime': null,
+      });
       final uuid = _id(created['uuid'], 'created file identity');
-      final confirmed = await _json(
-        session,
-        _endpoint(session.driveUrl, ['files', uuid, 'meta']),
-        operation: 'Internxt upload verification',
+      // The drive reads lag its writes: right after registration the new
+      // file's metadata can still answer 404 for a moment.
+      final confirmed = await _retryingNotFound(
+        () => _json(
+          session,
+          _endpoint(session.driveUrl, ['files', uuid, 'meta']),
+          operation: 'Internxt upload verification',
+        ),
       );
       if (confirmed['fileId'] != fileId ||
           confirmed['bucket'] != session.bucket ||
@@ -547,9 +620,115 @@ class InternxtStreamingTransfer {
         );
       }
       session.checkCurrent();
+      InternxtRecentUploads.add(folder, {
+        'type': 'file',
+        'name': plainName,
+        'fileType': type,
+        'uuid': uuid,
+        'size': length,
+        'bucket': session.bucket,
+        'fileId': fileId,
+        'folderUuid': folder,
+      });
       onProgress?.call(length, length);
     } finally {
       await spool.dispose();
+    }
+  }
+
+  /// Delays between attempts when freshly written metadata is not yet
+  /// readable. Overridable for tests.
+  static List<Duration> readAfterWriteDelays = const [
+    Duration(milliseconds: 250),
+    Duration(milliseconds: 500),
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+  ];
+
+  /// Waits before re-checking and retrying a failed `POST /files`.
+  static List<Duration> registrationRetryDelays = const [
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+  ];
+
+  /// Retry [read] while it answers 404, then give up with the last error.
+  static Future<T> _retryingNotFound<T>(Future<T> Function() read) async {
+    for (final delay in readAfterWriteDelays) {
+      try {
+        return await read();
+      } on InternxtHttpStatusError catch (error) {
+        if (error.status != 404) rethrow;
+        await Future<void>.delayed(delay);
+      }
+    }
+    return read();
+  }
+
+  /// `POST /files`, retried on transient failures. Before each retry the
+  /// destination is checked for the entry, because a request that failed on
+  /// the way back may already have created it (as the Python reference
+  /// client does); a retry must never register the file twice.
+  Future<Map<String, dynamic>> _registerFile(
+    InternxtTransferSession session,
+    String folder,
+    Map<String, dynamic> body,
+  ) async {
+    Object? lastError;
+    for (
+      var attempt = 0;
+      attempt <= registrationRetryDelays.length;
+      attempt++
+    ) {
+      if (attempt > 0) {
+        await Future<void>.delayed(registrationRetryDelays[attempt - 1]);
+        final existing = await _findRegistered(session, folder, body);
+        if (existing != null) return existing;
+      }
+      try {
+        return await _json(
+          session,
+          _endpoint(session.driveUrl, ['files']),
+          method: 'POST',
+          operation: 'Internxt file registration',
+          body: body,
+        );
+      } on InternxtHttpStatusError catch (error) {
+        if (!error.isTransient) rethrow;
+        lastError = error;
+      } on http.ClientException catch (error) {
+        lastError = error;
+      }
+    }
+    throw StateError('Internxt file registration failed: $lastError');
+  }
+
+  Future<Map<String, dynamic>?> _findRegistered(
+    InternxtTransferSession session,
+    String folder,
+    Map<String, dynamic> body,
+  ) async {
+    final client = _MetadataClient(session.checkCurrent);
+    try {
+      final files = await sdk_drive.listFolderFiles(
+        _endpoint(session.driveUrl, []).toString(),
+        session.token,
+        {},
+        folder,
+        detailed: true,
+        client: client,
+      );
+      for (final file in files) {
+        if (file['fileId'] == body['fileId']) {
+          return Map<String, dynamic>.from(file);
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close();
     }
   }
 

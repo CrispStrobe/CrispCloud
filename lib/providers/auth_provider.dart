@@ -308,8 +308,8 @@ class AuthNotifier extends ChangeNotifier {
           final adapter = _cloudClient as InternxtClientAdapter;
           final rawCreds = await adapter.config.readCredentials();
           final creds = rawCreds?.cast<String, String>();
-          if (creds == null || creds['token'] == null) return;
-          adapter.setAuth(creds);
+          // Rust-format sessions restore only through the Rust engine.
+          if (creds == null || !await adapter.restoreSavedSession(creds)) return;
           _userEmail = creds['email'];
           _isConnected = true;
           notifyListeners();
@@ -317,8 +317,7 @@ class AuthNotifier extends ChangeNotifier {
           final adapter = _cloudClient as FilenClientAdapter;
           final creds = await adapter.filenConfig.readCredentials();
           if (creds == null || creds['email'] == null) return;
-          if (creds['apiKey'] != null && creds['apiKey']!.isNotEmpty) {
-            adapter.client.setAuth(creds);
+          if (await adapter.restoreSavedSession(creds)) {
             _userEmail = creds['email'];
             _isConnected = true;
             notifyListeners();

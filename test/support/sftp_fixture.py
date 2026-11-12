@@ -11,7 +11,9 @@ import paramiko
 
 root = Path(sys.argv[1]).resolve()
 auth_mode = sys.argv[2] if len(sys.argv) > 2 else 'password'
-interactive = auth_mode == 'interactive'
+interactive = auth_mode in ('interactive', 'interactive-openssh')
+# OpenSSH with PAM prefixes the prompt with the account: "(user@host) Password: ".
+interactive_prompt = '(reader@127.0.0.1) Password: ' if auth_mode == 'interactive-openssh' else 'Password: '
 client_key = None
 if auth_mode == 'publickey':
     client_key = paramiko.RSAKey.generate(2048)
@@ -42,7 +44,7 @@ class Auth(paramiko.ServerInterface):
         return paramiko.AUTH_SUCCESSFUL if username == 'reader' and client_key is not None and offered.asbytes() == client_key.asbytes() else paramiko.AUTH_FAILED
     def check_auth_interactive(self, username, submethods):
         self.username = username
-        return paramiko.InteractiveQuery('', '', ('Password: ', False))
+        return paramiko.InteractiveQuery('', '', (interactive_prompt, False))
     def check_auth_interactive_response(self, responses):
         return self.check_auth_password(self.username, responses[0] if len(responses) == 1 else '')
     def check_channel_request(self, kind, channel_id):
