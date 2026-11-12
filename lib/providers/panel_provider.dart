@@ -3674,7 +3674,13 @@ class PanelNotifier extends ChangeNotifier {
     try {
       captureArchiveOrigin();
       final frame = _archiveFrames.last;
-      _files = frame.session.list(frame.source.innerPath);
+      // Navigation belongs to the pane, not the archive member namespace.
+      // Keep a parent row even at the archive root (including empty archives)
+      // so Enter/double-click can leave this frame just like Backspace does.
+      _files = [
+        FileItem(name: '..', path: '..', isFolder: true),
+        ...frame.session.list(frame.source.innerPath),
+      ];
       _selection.clear();
       _lastSelected = null;
       _itemToScrollTo = null;
@@ -5921,7 +5927,9 @@ class PanelNotifier extends ChangeNotifier {
     // If we're inside an archive, navigate within it
     if (isInArchive) {
       if (!_isCurrentArchiveRow(item)) return;
-      if (item.isFolder && item.path != null) {
+      if (item.name == '..') {
+        await navigateUpArchive();
+      } else if (item.isFolder && item.path != null) {
         await _navigateArchive(item.path!);
       } else if (ArchiveService.isArchive(item.name)) {
         await _enterNestedArchive(item);
