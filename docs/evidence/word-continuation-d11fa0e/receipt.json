@@ -1,0 +1,331 @@
+{
+  "artifacts": {
+    "cohort-adapters.json.gz": {
+      "bytes": 3021,
+      "compressedBytes": 1147,
+      "compressedSha256": "e5c40371da8fc597128a9fc281ec8669f0748b80340a4b50eef4558831b4ff4c",
+      "originalName": "cohort-adapters.json",
+      "sha256": "4152c36f79c5457e2ec641ddf5755e61c2d29632c26690e30c123db154204d27"
+    },
+    "cohort-console.log.gz": {
+      "bytes": 998,
+      "compressedBytes": 259,
+      "compressedSha256": "6e1f64583152598f738b235379aa1300cab01abe270311d67a9b2b509a66d9a2",
+      "originalName": "cohort-console.log",
+      "sha256": "921d1dc314bd16675228d7ce92fc56a73a5d4319c5276ebd7704f9e26e81387d"
+    },
+    "cohort-events.jsonl.gz": {
+      "bytes": 53432,
+      "compressedBytes": 6459,
+      "compressedSha256": "3486dbec404e3d038ca2ccb21da6ef7ccc6ad227116aeb8bb93c092d210f0163",
+      "originalName": "cohort-events.jsonl",
+      "sha256": "694e6f6d7d2096534de5c6ddefe846f8157b9952deb3ea484effc46af6f72ec3"
+    },
+    "cohort-inputs-after.json.gz": {
+      "bytes": 224457,
+      "compressedBytes": 62429,
+      "compressedSha256": "ae8de502ede0937d6a26ddbb3e7949157bf2b0012a35435932801f958777fb4c",
+      "originalName": "cohort-inputs-after.json",
+      "sha256": "9276402adb574939927834cd0f22bc57aaf6055e4fc3b4140bce5b474a90dd58"
+    },
+    "cohort-inputs-before.json.gz": {
+      "bytes": 224457,
+      "compressedBytes": 62429,
+      "compressedSha256": "ae8de502ede0937d6a26ddbb3e7949157bf2b0012a35435932801f958777fb4c",
+      "originalName": "cohort-inputs-before.json",
+      "sha256": "9276402adb574939927834cd0f22bc57aaf6055e4fc3b4140bce5b474a90dd58"
+    },
+    "cohort-package_config.json.gz": {
+      "bytes": 16098,
+      "compressedBytes": 1313,
+      "compressedSha256": "8d14f35f324c84f3a5d91fa75a4a821193bbebe61010560bba3c9cdfd3591474",
+      "originalName": "cohort-package_config.json",
+      "sha256": "998ca9b506c30a89d15b3a2b31408150ece494b2ed5e5a04f34b1c90fd8f1857"
+    },
+    "cohort-pub-get.log.gz": {
+      "bytes": 574,
+      "compressedBytes": 294,
+      "compressedSha256": "6f2a540146aa9781be0177b1298fbf43efb8b26091992133edba9289a7d76883",
+      "originalName": "cohort-pub-get.log",
+      "sha256": "d784f2ec9187f68502fbcf926b094ae3b9631170b20378c81bde306447e1deac"
+    },
+    "cohort-pubspec.lock.gz": {
+      "bytes": 15276,
+      "compressedBytes": 3945,
+      "compressedSha256": "b7785d9733b3126801e2f6c80fe7a5f252bbc77293252123a462aed818b28a68",
+      "originalName": "cohort-pubspec.lock",
+      "sha256": "495d8f2a497ef1e80570128b5aaa09d01377fa9596d63222decc87264757c530"
+    },
+    "cohort-pubspec.yaml.gz": {
+      "bytes": 432,
+      "compressedBytes": 258,
+      "compressedSha256": "598de53c95890adcaafcae17934338347c9e44cb88482dfbf8188d9f42fb5c23",
+      "originalName": "cohort-pubspec.yaml",
+      "sha256": "53ef3b95045a58b627abf6b506d712c4db75984a1b0b1ea61ef7dc037de8eb00"
+    },
+    "cohort-summary.json.gz": {
+      "bytes": 3145,
+      "compressedBytes": 1076,
+      "compressedSha256": "8f4a8155a0fc1820c18f23de448129f0f7d1b9ff6414f8497c2b5adc7cdaa403",
+      "originalName": "cohort-summary.json",
+      "sha256": "4abc9709694e36ad0010f218216bc05ee3a4f9beb225b8bf170e0d58e526a411"
+    },
+    "cohort-tests.log.gz": {
+      "bytes": 13595,
+      "compressedBytes": 2838,
+      "compressedSha256": "5c005404b383774a41b458fc8822ad79e48dbe4b4f9c2c77e6be7d99f3f67d48",
+      "originalName": "cohort-tests.log",
+      "sha256": "3cad8b394b117fc32e01a513099174d845cd1841fdb97f6ba33c1be5948b4786"
+    },
+    "cohort-word_cohort.py.gz": {
+      "bytes": 11816,
+      "compressedBytes": 3913,
+      "compressedSha256": "960418f804882bc8b72daadc1a6139585a71c198f7d6bdfac27a6088643d4a14",
+      "originalName": "cohort-word_cohort.py",
+      "sha256": "0991a5fb2ea48d40aa58fe63c70240a030da4cb5208a91f607d67b55c5dab01b"
+    },
+    "native.json.gz": {
+      "bytes": 921,
+      "compressedBytes": 432,
+      "compressedSha256": "fd08f23e6335b4201b52d1dfe2cd31f3df53b2486c5a9ab42286042ec6d80ee8",
+      "originalName": "native.json",
+      "sha256": "fc4ebfa4d83c34c39ef0b38d82f84978b666adb8f6d483e0f289be05a175cfb3"
+    },
+    "native.stderr.log.gz": {
+      "bytes": 0,
+      "compressedBytes": 20,
+      "compressedSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "originalName": "native.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "portable-web.log.gz": {
+      "bytes": 683,
+      "compressedBytes": 412,
+      "compressedSha256": "c347cfa39c9a88dcc200d68081db5a6bf76da447a00b3e17ec199e5febe75794",
+      "originalName": "portable-web.log",
+      "sha256": "a8b65b95d6def05db3827da21c2a1e97f051f15536acc6bf632c7772559d2437"
+    },
+    "smoke.dart.gz": {
+      "bytes": 66516,
+      "compressedBytes": 33147,
+      "compressedSha256": "95248901e5ac2d66e5f66cd28ff34eb52ddaf18ea6e39a0de978ee04a37e0263",
+      "originalName": "smoke.dart",
+      "sha256": "e6b067557936d35665246360e9d27c737bc125e57c6a7b6d20289c795715ea91"
+    },
+    "source-verification.log.gz": {
+      "bytes": 203,
+      "compressedBytes": 177,
+      "compressedSha256": "85230b40530cb9c22dc316d96c74c474484c5c42353428efa09522d3b90323db",
+      "originalName": "source-verification.log",
+      "sha256": "fdd337dfd4f27ebf54471727e606650836139ded5bbda5bc3188ec2945aabedd"
+    },
+    "sync-applied.json.gz": {
+      "bytes": 5559,
+      "compressedBytes": 847,
+      "compressedSha256": "78e3370effba9f6c897bf5d38bfc329f5fac1e85283d306a62ebd024b1f44cd0",
+      "originalName": "sync-applied.json",
+      "sha256": "b3aad4f80ed0781e03a64ac815641f252702824be020116074a0fc40cdef3645"
+    },
+    "sync-controls.log.gz": {
+      "bytes": 123,
+      "compressedBytes": 55,
+      "compressedSha256": "a0d0de0fe940ac2697b4861445ad35715c7d09387bb579e32dd5fcaa79ffc970",
+      "originalName": "sync-controls.log",
+      "sha256": "8c18882837f8a1aa07263a1035251429991d0ca1036dbc183844a5a6f5efd18f"
+    },
+    "sync-plan.json.gz": {
+      "bytes": 5560,
+      "compressedBytes": 848,
+      "compressedSha256": "e5a5c815675f618582e6b0f1bf52f5b3d5fe871c9cb28ce121d1f8f347f022cc",
+      "originalName": "sync-plan.json",
+      "sha256": "ae7c1e9af61f979ace0ad173afe5deb804157b10d589a3a73178d909d6ad693a"
+    }
+  },
+  "capturedInputCount": 1176,
+  "cohort": {
+    "cohortCompleteWithoutSkips": true,
+    "excludedSuites": {
+      "test/legacy_word_previous_regressions_test.dart": "Imports preview_media.dart, Flutter material/services and video_player; cannot run unchanged using a data-only test import adapter."
+    },
+    "executedSuiteCount": 8,
+    "finishedUtc": "2026-11-12T22:31:30.490800+00:00",
+    "sourceAndDependenciesUnchanged": true,
+    "startedUtc": "2026-11-12T22:31:12.816058+00:00",
+    "success": true,
+    "suites": {
+      "installed_office_converter_test.dart": {
+        "failed": 0,
+        "passed": 13,
+        "skipped": 0
+      },
+      "legacy_word_document_test.dart": {
+        "failed": 0,
+        "passed": 9,
+        "skipped": 0
+      },
+      "legacy_word_sprm_regression_test.dart": {
+        "failed": 0,
+        "passed": 6,
+        "skipped": 0
+      },
+      "legacy_word_structured_bounds_test.dart": {
+        "failed": 0,
+        "passed": 4,
+        "skipped": 0
+      },
+      "legacy_word_structured_conversion_test.dart": {
+        "failed": 0,
+        "passed": 9,
+        "skipped": 0
+      },
+      "legacy_word_structured_document_test.dart": {
+        "failed": 0,
+        "passed": 16,
+        "skipped": 0
+      },
+      "legacy_word_structured_render_test.dart": {
+        "failed": 0,
+        "passed": 7,
+        "skipped": 0
+      },
+      "word_conversion_inspection_test.dart": {
+        "failed": 0,
+        "passed": 43,
+        "skipped": 0
+      }
+    },
+    "testCount": 107
+  },
+  "dartExecutableSha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb",
+  "dartVersion": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "extraInputHashes": {
+    "docs/evidence/word-continuation-7308125/run_word_cohort.py": {
+      "bytes": 11816,
+      "sha256": "0991a5fb2ea48d40aa58fe63c70240a030da4cb5208a91f607d67b55c5dab01b"
+    },
+    "packages/legacy_doc_parser/UPSTREAM.json": {
+      "bytes": 125,
+      "sha256": "0e729ca5fea146292fb8175a69a4a26a5d24cee26f15e4cebe08611d662de640"
+    },
+    "pubspec.lock": {
+      "bytes": 62941,
+      "sha256": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5"
+    },
+    "pubspec.yaml": {
+      "bytes": 10756,
+      "sha256": "d7ef757d3ee25e2f51f6da6d57ad8fe0bb5979356d913d07f57d9270413654b7"
+    },
+    "test/fixtures/legacy_powerpoint/current-slides.ppt.gz": {
+      "bytes": 26320,
+      "sha256": "f6cdb049854471226e344d21552c432b620c71e37be25cc1a177b6474be2ef04"
+    },
+    "test/fixtures/word_native/formatting.doc": {
+      "bytes": 21504,
+      "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "bytes": 154682,
+      "sha256": "73a56698e66fb1830c9e89df3072d2c2a4c94865575e21d4fb5c6b3bfaaa3e8d"
+    },
+    "tool/sync_legacy_doc_parser.py": {
+      "bytes": 8587,
+      "sha256": "0fac0952344ae88de00a942d343f59b084e9c32fa99db85dd79132ed6d7d81fc"
+    },
+    "tool/sync_office_fidelity.py": {
+      "bytes": 8859,
+      "sha256": "dcf6f70382e7762ddf1e83c95125dcd8b4c900850e0e1aac98e10dbe08f8beaa"
+    },
+    "tool/verify_legacy_word_structured.dart": {
+      "bytes": 5222,
+      "sha256": "0ac8e7960d291725650fcca37ab54aa76f82e86e29c1ff576dc9fba012c63369"
+    },
+    "tool/verify_office_fidelity.py": {
+      "bytes": 3202,
+      "sha256": "0daca723935aaac11f156888624231539a9b40715bf476cca41dabfb0539fda5"
+    },
+    "tool/verify_portable_office_web.py": {
+      "bytes": 5000,
+      "sha256": "1c4c6f4de9fca0cac680e98edd4c193f6e61e6251ac16c4ba0608f37e5bac798"
+    }
+  },
+  "limitations": [
+    "Data-only adapter replaces the flutter_test import in copied suites; Flutter widgets, full application builds and native ebook hooks were not executed.",
+    "The Flutter version probe was blocked by automatic review because it unexpectedly targeted 169.254.169.254; that probe was not retried.",
+    "Native acceptance checks one authored fixture with LibreOffice/Poppler, does not establish Microsoft Word or exact pagination, and deletes its temporary PDF by existing tool design.",
+    "The 13 fake-process installed-converter tests in the cohort are separate from the 13 actual native checks.",
+    "These development checkpoints do not qualify release evidence or modify release policy."
+  ],
+  "measuredAppTree": "2b4ae797ad366544c70a1ade33682b875d228e98",
+  "measuredLocalAppCommit": "6a6e526e6d26689be654b01db6f4adaa67fe0ca9",
+  "measuredWorktreeStatus": "",
+  "nativeChecks": {
+    "checks": {
+      "bold": true,
+      "fontColor": true,
+      "fontSize": true,
+      "headersAndFootersPreserved": true,
+      "imagesPreserved": true,
+      "independentPdfImage": true,
+      "independentPdfInfo": true,
+      "independentPdfText": true,
+      "notesPreserved": true,
+      "pageDimensions": true,
+      "preparedPackageUnchanged": true,
+      "sourceUnchanged": true,
+      "tableAndCells": true
+    },
+    "counts": {
+      "cells": 4,
+      "comments": 0,
+      "endnotes": 0,
+      "footers": 3,
+      "footnotes": 1,
+      "headers": 3,
+      "images": 1,
+      "objects": 0,
+      "paragraphs": 18,
+      "revisions": 0,
+      "sections": 1,
+      "signatures": 0,
+      "tables": 1,
+      "vba": 0
+    },
+    "docxSha256": "e4882b79caccf0aa31f12280836b0d97debdd8ce89dd7aed0168509c35480ef4",
+    "engine": "LibreOffice",
+    "limitations": [
+      "partialFormatting"
+    ],
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+  },
+  "officeFileCount": 1045,
+  "parser": {
+    "commit": "d11fa0e297f8058c8048c71537f2392457baa624",
+    "repository": "CrispStrobe/legacy-doc-parser"
+  },
+  "parserFileCount": 624,
+  "portableSmoke": {
+    "formats": [
+      "DOC",
+      "RTF",
+      "PPT",
+      "MSG"
+    ],
+    "note": "Uses the exact production smoke template and fixtures with the cohort package configuration; no application manifest or test assertions changed.",
+    "packageConfiguration": "cohort-package_config.json.gz",
+    "passed": true,
+    "source": "smoke.dart.gz"
+  },
+  "qudsCommit": "71bb109e81217ed55c534881304a44ae8fa608d5",
+  "recordedUtc": "2026-11-12T22:33:10.754105+00:00",
+  "remoteEquivalentCheckpoint": {
+    "commit": "5bd46861c892ec1b654e0644e22b4cb87f16f715",
+    "note": "Published through the GitHub Git Data API after measurement; parent and tree match the measured local commit, while API author/committer metadata gives a different commit identity.",
+    "tree": "2b4ae797ad366544c70a1ade33682b875d228e98"
+  },
+  "syncControls": {
+    "passed": 24
+  },
+  "unchangedNonParserFileCount": 421,
+  "verificationHelperSha256": "57f782eb71e32c2675581b13789256419a020f9ac780cbd5640c57f750d2d0de",
+  "version": 1
+}

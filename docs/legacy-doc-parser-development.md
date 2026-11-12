@@ -2,7 +2,24 @@
 
 The integration pins are recorded in `packages/legacy_doc_parser/UPSTREAM.json` and `tool/office_fidelity_manifest.json`; historical receipts retain their original source identities.
 
-## Latest fidelity checkpoint
+## Current continuation checkpoint
+
+The [d11fa0e continuation receipt](evidence/word-continuation-d11fa0e/README.md)
+records the guarded adoption of the integrated parser fixes on app main's
+current source. Remote app checkpoint `5bd46861` has exactly the measured
+Git tree: all 624 parser source files match upstream, all 421 non-parser Office
+files and the Quds pin remain unchanged, and all 1,045 managed files verify.
+The app passes 107 data-only Word tests, 24 synchronization controls, the
+production DOC/RTF/PPT/MSG JavaScript smoke, and 13 actual LibreOffice/Poppler
+checks. Complete logs and all 1,176 unchanged captured input hashes are retained.
+The receipt distinguishes the measured local commit from its same-tree remote
+publication. It does not claim Flutter widget execution or a release build.
+
+The following sections retain earlier source-specific results. Current source
+pins remain authoritative in the upstream record and Office manifest above;
+historical counts do not automatically qualify a later parser revision.
+
+## Earlier integrated fidelity checkpoint
 
 The [d14f03f integration receipt](evidence/legacy-doc-parser-20261112/parser-d14f03f/README.md)
 records the completed continuation after the historical development checks
