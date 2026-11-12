@@ -38,6 +38,7 @@ external void _bundledFree(Pointer<Utf8> data);
 EbookConversionBackend createBackend({
   String? executablePath,
   String? libraryPath,
+  Uri? webWorkerUri,
   required Duration timeout,
   required EbookConversionLimits limits,
 }) => _IoBackend(executablePath, libraryPath, timeout, limits);

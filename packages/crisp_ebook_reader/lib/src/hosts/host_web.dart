@@ -12,12 +12,13 @@ Widget buildEbookHost({
   required void Function(EbookHostSender sender) onConnected,
   required void Function(EbookJson message) onMessage,
   required void Function(String message) onError,
-}) => _WebHost(
-  session: session,
-  onConnected: onConnected,
-  onMessage: onMessage,
-  onError: onError,
-);
+}) =>
+    _WebHost(
+      session: session,
+      onConnected: onConnected,
+      onMessage: onMessage,
+      onError: onError,
+    );
 
 class _WebHost extends StatefulWidget {
   const _WebHost({
@@ -81,7 +82,8 @@ class _WebHostState extends State<_WebHost> {
     frame.style.setProperty('height', '100%');
     widget.onConnected((message) async {
       if (mounted) {
-        frame.contentWindow?.postMessage(jsonEncode(message).toJS, _origin.toJS);
+        frame.contentWindow
+            ?.postMessage(jsonEncode(message).toJS, _origin.toJS);
       }
     });
     frame.src = _uri.replace(fragment: widget.session).toString();
@@ -101,7 +103,7 @@ class _WebHostState extends State<_WebHost> {
   // session-specific global factory here would retain closed reader states
   // and their book buffers for the rest of the browser application's lifetime.
   Widget build(BuildContext context) => HtmlElementView.fromTagName(
-    tagName: 'iframe',
-    onElementCreated: _createElement,
-  );
+        tagName: 'iframe',
+        onElementCreated: _createElement,
+      );
 }

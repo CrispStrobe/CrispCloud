@@ -101,21 +101,21 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
       // completing. Disposal or a fast native reply must not produce an
       // unhandled asynchronous error between sending and awaiting the reply.
       unawaited(Future<void>.sync(() => sender({
-          'id': id,
-          'channel': 'crisp-ebook-v1',
-          'session': _session,
-          'method': method,
-          'args': args,
-        })).catchError((Object error, StackTrace stack) {
-          if (!completer.isCompleted) completer.completeError(error, stack);
-        }));
+            'id': id,
+            'channel': 'crisp-ebook-v1',
+            'session': _session,
+            'method': method,
+            'args': args,
+          })).catchError((Object error, StackTrace stack) {
+        if (!completer.isCompleted) completer.completeError(error, stack);
+      }));
       return await completer.future.timeout(
         Duration(
           seconds: method == 'exportPublication'
               ? 180
               : method == 'open'
-              ? 90
-              : 45,
+                  ? 90
+                  : 45,
         ),
       );
     } finally {
@@ -220,30 +220,30 @@ class _CrispEbookReaderState extends State<CrispEbookReader> {
 
   @override
   Widget build(BuildContext context) => Stack(
-    children: [
-      Positioned.fill(
-        child: KeyedSubtree(
-          key: ValueKey(_session),
-          child: createEbookHost(
-            session: _session,
-            onConnected: (sender) => _send = sender,
-            onMessage: _message,
-            onError: _fail,
-          ),
-        ),
-      ),
-      if (_error != null)
-        Positioned.fill(
-          child: ColoredBox(
-            color: Theme.of(context).colorScheme.surface,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center),
+        children: [
+          Positioned.fill(
+            child: KeyedSubtree(
+              key: ValueKey(_session),
+              child: createEbookHost(
+                session: _session,
+                onConnected: (sender) => _send = sender,
+                onMessage: _message,
+                onError: _fail,
               ),
             ),
           ),
-        ),
-    ],
-  );
+          if (_error != null)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Theme.of(context).colorScheme.surface,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(_error!, textAlign: TextAlign.center),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
 }

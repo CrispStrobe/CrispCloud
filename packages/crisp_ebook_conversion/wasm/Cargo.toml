@@ -1,0 +1,25 @@
+[package]
+name = "crisp_kindling_metadata_wasm"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kindling-mobi = { path = "../native/vendor/kindling", version = "=0.46.2" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# The vendored CSS dependency graph contains getrandom 0.3 even though the
+# metadata path never requests randomness. Enable its documented Wasm build.
+getrandom = { version = "=0.3.4", features = ["wasm_js"] }
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+panic = "abort"
+strip = true
+

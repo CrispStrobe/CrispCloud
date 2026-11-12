@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import {readFileSync, existsSync, mkdtempSync, rmSync} from 'node:fs'
 import {dirname, join, resolve, extname} from 'node:path'
+import {tmpdir} from 'node:os'
 import {fileURLToPath} from 'node:url'
 import {spawnSync} from 'node:child_process'
 import {createRequire} from 'node:module'
@@ -9,7 +10,9 @@ const require = createRequire(import.meta.url)
 const {chromium} = require('playwright')
 const here = dirname(fileURLToPath(import.meta.url))
 const assets = resolve(here, '../../assets')
-const temporary = mkdtempSync(join(here, '.tmp-'))
+// Chromium creates a Unix-domain socket below TMPDIR. A repository-relative
+// directory exceeds the socket path limit in GitHub's nested checkout path.
+const temporary = mkdtempSync(join(tmpdir(), 'ce-'))
 process.env.TMPDIR = temporary
 const generated = spawnSync('python3', [join(here,'make_fixtures.py'),temporary], {encoding:'utf8'})
 assert.equal(generated.status, 0, generated.stderr)

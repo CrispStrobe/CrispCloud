@@ -14,12 +14,13 @@ Widget buildEbookHost({
   required void Function(EbookHostSender sender) onConnected,
   required void Function(EbookJson message) onMessage,
   required void Function(String message) onError,
-}) => _NativeHost(
-  session: session,
-  onConnected: onConnected,
-  onMessage: onMessage,
-  onError: onError,
-);
+}) =>
+    _NativeHost(
+      session: session,
+      onConnected: onConnected,
+      onMessage: onMessage,
+      onError: onError,
+    );
 
 class _NativeHost extends StatefulWidget {
   const _NativeHost({
@@ -45,7 +46,8 @@ class _NativeHostState extends State<_NativeHost> {
     super.initState();
     _server = EbookAssetServer(widget.session);
     if (Platform.isLinux) {
-      _error = 'The enhanced ebook reader is unavailable on Linux. Use the app’s chapter reader and EPUB editor.';
+      _error =
+          'The enhanced ebook reader is unavailable on Linux. Use the app’s chapter reader and EPUB editor.';
     } else {
       unawaited(_start());
     }
@@ -147,7 +149,8 @@ class _NativeHostState extends State<_NativeHost> {
         }
       },
       shouldOverrideUrlLoading: (controller, action) async {
-        if (action.isForMainFrame && !_isHostUrl(action.request.url.toString())) {
+        if (action.isForMainFrame &&
+            !_isHostUrl(action.request.url.toString())) {
           return NavigationActionPolicy.CANCEL;
         }
         final url = action.request.url?.toString() ?? '';

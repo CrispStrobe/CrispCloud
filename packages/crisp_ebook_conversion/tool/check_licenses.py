@@ -55,16 +55,19 @@ def digest(path):
 
 def inventory():
     cargo = os.environ.get("CARGO", "cargo")
-    data = json.loads(subprocess.check_output([
-        cargo, "metadata", "--locked", "--format-version", "1",
-        "--manifest-path", str(ROOT / "native/Cargo.toml"),
-    ]))
-    resolved = {node["id"] for node in data["resolve"]["nodes"]}
+    dependencies = {}
+    for manifest in ["native/Cargo.toml", "wasm/Cargo.toml"]:
+        data = json.loads(subprocess.check_output([
+            cargo, "metadata", "--locked", "--format-version", "1",
+            "--manifest-path", str(ROOT / manifest),
+        ]))
+        resolved = {node["id"] for node in data["resolve"]["nodes"]}
+        dependencies.update((package["id"], package) for package in data["packages"]
+                            if package["id"] in resolved)
     packages = []
     notices = []
-    for package in sorted(data["packages"], key=lambda p: (p["name"], p["version"])):
-        if package["id"] not in resolved:
-            continue
+    local_bridges = {"crisp_kindling_bridge", "crisp_kindling_metadata_wasm"}
+    for package in sorted(dependencies.values(), key=lambda p: (p["name"], p["version"])):
         expression = package.get("license")
         if expression not in GRANTS:
             raise SystemExit(f"Unreviewed license: {package['name']} {package['version']} {expression}")
@@ -74,7 +77,7 @@ def inventory():
             and p.name.upper().startswith(("LICENSE", "LICENCE", "COPYING", "NOTICE", "COPYRIGHT")))
         # A bridge root includes a vendored crate; only its own license belongs
         # to this row. The vendored crate has a separate row.
-        if package["name"] == "crisp_kindling_bridge":
+        if package["name"] in local_bridges:
             files = [ROOT / "LICENSE"]
         if not files and package["name"] == "r-efi":
             files = [base / "AUTHORS"]
@@ -95,7 +98,7 @@ def inventory():
         evidence = []
         for path in files:
             name = (str(path.relative_to(ROOT)) if upstream_notice else
-                path.name if package["name"] == "crisp_kindling_bridge" else str(path.relative_to(base)))
+                path.name if package["name"] in local_bridges else str(path.relative_to(base)))
             evidence.append({"path": name, "sha256": digest(path),
                 **({"upstream_url": upstream_notice} if upstream_notice else {})})
             # Normalize only trailing layout whitespace in the combined notice;
@@ -113,8 +116,9 @@ def inventory():
         })
     return {
         "schema": 1,
-        "scope": "Every resolved native Cargo dependency, including platform and build dependencies.",
+        "scope": "Every resolved native and metadata-Wasm Cargo dependency, including platform and build dependencies.",
         "cargo_lock_sha256": digest(ROOT / "native/Cargo.lock"),
+        "wasm_cargo_lock_sha256": digest(ROOT / "wasm/Cargo.lock"),
         "packages": packages,
     }, "\n".join(notices)
 
@@ -132,5 +136,5 @@ if __name__ == "__main__":
         notices.write_text(text)
     elif json.loads(report.read_text()) != data or notices.read_text() != text:
         raise SystemExit("License inventory/notices changed. Review and record before shipping.")
-    print(f"Verified reviewed grants for {len(data['packages'])} resolved native packages.")
+    print(f"Verified reviewed grants for {len(data['packages'])} resolved native/Wasm packages.")
 

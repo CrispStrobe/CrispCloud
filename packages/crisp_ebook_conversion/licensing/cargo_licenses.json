@@ -1,7 +1,8 @@
 {
   "schema": 1,
-  "scope": "Every resolved native Cargo dependency, including platform and build dependencies.",
+  "scope": "Every resolved native and metadata-Wasm Cargo dependency, including platform and build dependencies.",
   "cargo_lock_sha256": "7b93a17226266f14453151b7b415f301cc390bc489a36c2f1627e6832b8317f7",
+  "wasm_cargo_lock_sha256": "7ee800e03c18eb43a993ced6b851b2f91f37a43146af4ee4c2532de68568194a",
   "packages": [
     {
       "name": "adler2",
@@ -463,6 +464,20 @@
     },
     {
       "name": "crisp_kindling_bridge",
+      "version": "0.1.0",
+      "source": "vendored/local",
+      "source_url": "https://github.com/CrispStrobe/CrispCloud/tree/feature/ebook-reader-editor/packages/crisp_ebook_conversion",
+      "license_expression": "MIT",
+      "selected_grant": "MIT",
+      "evidence": [
+        {
+          "path": "LICENSE",
+          "sha256": "bdc33899b8f3d00ba32c0bc400f0eeb9610f3f0ade015716221eaa383eac8b2f"
+        }
+      ]
+    },
+    {
+      "name": "crisp_kindling_metadata_wasm",
       "version": "0.1.0",
       "source": "vendored/local",
       "source_url": "https://github.com/CrispStrobe/CrispCloud/tree/feature/ebook-reader-editor/packages/crisp_ebook_conversion",

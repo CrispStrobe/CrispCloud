@@ -19,7 +19,7 @@ MOBI, AZW, AZW3, FB2, FBZ or CBZ file with EPUB bytes.
 | Input | Reading and editing |
 | --- | --- |
 | EPUB 2 / EPUB 3 | Read; edit metadata, contents, source and resources; save to the original or a copy. |
-| MOBI / AZW / AZW3 | Enhanced reader for unencrypted MOBI/KF8 content; convert to a new EPUB for content editing. Native builds with the converter also offer a title/author metadata-copy operation. |
+| MOBI / AZW / AZW3 | Enhanced reader for unencrypted MOBI/KF8 content; convert to a new EPUB for content editing. Edit ten metadata fields in a separate Kindle copy on native builds or in the browser. |
 | FB2 / FBZ | Enhanced FictionBook reader, including supported zipped input; convert to a new EPUB. |
 | CBZ | Enhanced comic reader; conversion retains page images and fixed-layout dimensions in a new EPUB. |
 | PDF | Uses CrispCloud's existing [PDF viewer and editor](pdf-editor.md). |
@@ -32,18 +32,42 @@ bookmarks, highlights with notes, reading progress, and appearance settings.
 Progress, annotations and appearance are stored on this device or browser
 profile, separately from the ebook. They are tied to the source and its exact
 content version; edits do not silently reuse highlights at changed positions.
+The portable and enhanced readers keep separate position records because their
+location formats differ.
 
 | Platform | Reader | EPUB editor | Import into EPUB | Kindle export / metadata copy |
 | --- | --- | --- | --- | --- |
 | Android, iOS, macOS, Windows | Enhanced reader using the platform WebView; its runtime must be available. | Yes | Supported enhanced-reader formats | Available when the native converter is bundled and loads successfully. |
-| Web | Enhanced reader in a Flutter asset iframe. | Yes | Supported enhanced-reader formats | Unavailable; EPUB export/download remains available. |
-| Linux | Portable Flutter EPUB chapter reader with chapter navigation, text-size controls, local raster images and chapter-position restoration. | Yes | No MOBI/FB2/CBZ import through the enhanced reader on Linux. | Available with the native converter, including EPUB-to-Kindle export. |
+| Web | Enhanced reader in a Flutter asset iframe. | Yes | Supported enhanced-reader formats | Metadata copies use the bundled offline Wasm worker. Full Kindle export and cover replacement require a native build. |
+| Linux | Portable Flutter EPUB reader with chapter and anchor navigation, search, bookmarks, appearance controls, local raster images and position restoration. | Yes | No MOBI/FB2/CBZ import through the enhanced reader on Linux. | Available with the native converter, including EPUB-to-Kindle export and metadata copies. |
 
-Linux does not bundle CEF. Its chapter reader does not provide the enhanced
-reader's pagination, full book CSS/fixed-layout fidelity, search, bookmarks or
-highlight tools. EPUB editing and the legacy text fallback remain available.
+Linux does not bundle CEF. Its chapter reader uses continuous scrolling and does
+not provide the enhanced reader's pagination, full book CSS/fixed-layout
+fidelity, or saved highlight and note tools. EPUB editing and the legacy text
+fallback remain available.
 The platform table describes the implemented paths; device rendering still
 requires the platform smoke checks described below.
+
+### Portable EPUB reading on Linux
+
+Use the shared **Search** field to find literal text across chapters without
+case sensitivity. Selecting a result opens the matching text block. Internal
+links and contents entries can jump to anchors in the current or another
+chapter, including Unicode anchors and archive paths containing literal percent
+characters. Added search anchors exist only in the display copy.
+
+**Add bookmark** records the current chapter and position; the bookmarks panel
+reopens or removes saved positions. Reading progress restores an anchor or an
+approximate scroll position within the chapter. **Appearance** saves font size,
+serif/sans-serif/monospace selection, line spacing, and light/sepia/dark theme.
+These settings and bookmarks persist locally for the same book version.
+
+Portable search returns up to **200 results** in the app. Queries are limited
+to 1,000 characters; a search examines at most 2,000 chapters or 32 MiB of
+chapter data and skips individual chapters larger than 2 MiB. The interface
+reports skipped chapters and search-budget limits. Chapter display retains the
+8 MiB text limit and additionally bounds markup complexity. A search result
+does not create a saved highlight.
 
 ### Use the legacy text fallback
 
@@ -75,10 +99,28 @@ custom nested table of contents. **Rebuild contents from chapters** explicitly
 replaces it with a list based on the current reading order.
 
 **Resources** exposes the packaged XHTML, CSS and other text resources in
-**Source** mode. For reflowable XHTML, **Text** mode corrects simple text blocks;
-blocks containing inline formatting or embedded content remain protected there
-and can be edited in Source. This is a bounded prose editor, without a general
-word-processor formatting toolbar. Fixed-layout books use Source mode.
+**Source** mode. For reflowable XHTML, **Text** mode offers two correction paths:
+
+- A plain paragraph opens in one multiline field. New lines become XHTML line
+  breaks, retaining the paragraph's attributes and identifiers.
+- A formatted paragraph exposes its existing text segments with a preview and
+  labels for recognized emphasis, links and other inline formatting. Correcting
+  text inside a link preserves its destination; correcting emphasized text keeps
+  the original wrappers, publisher spans and attributes.
+
+Images, mathematical/foreign markup, ruby annotations, comments and other
+protected content remain in place. Breaks carrying their own identifiers or
+attributes also remain protected. Use **Source** to alter these structures, add
+formatting, or edit complex nested containers. The preview shows recognized
+formatting; the book's full CSS remains available through **Read**. Fixed-layout
+books use Source mode.
+
+**Apply** commits the paragraph's changes as one undo step. The editor checks
+the complete chapter version before applying, so a changed chapter cannot
+receive an old paragraph draft by mistake. A rejected or failed application
+keeps entered text in the dialog. An unchanged paragraph leaves the package
+clean. This is a bounded correction surface, without a general word-processor
+formatting toolbar.
 
 Supported PNG/JPEG image resources can open the image editor. Other binary
 resources can be replaced. Package-control resources and encrypted resources
@@ -108,9 +150,43 @@ choice. Unsaved book edits are held in memory, not automatically recovered after
 an app crash or shutdown.
 
 Kindle conversion can change typography, navigation and unsupported features.
-Review the conversion notes and the exported book. **Edit Kindle metadata**
-currently exposes title and authors in the app and exports a separate copy;
-the underlying package's broader metadata API is not a broader UI promise.
+Review the conversion notes and the exported book.
+
+### Edit Kindle metadata
+
+Choose **Edit Kindle metadata** from the ebook menu. The dialog exposes
+**title, authors, publisher, description, language, ISBN, ASIN, publication
+date, subjects, and identifier**. Authors and subjects accept one value per line.
+
+Each field starts at **Keep**, which preserves the stored value even when that
+value is not displayed. Choose **Set** to replace a value, or **Clear** to remove
+it explicitly. An empty Set field is rejected instead of silently clearing
+metadata. Unselected fields and the existing Kindle text/resource records are
+retained. The selected metadata is limited to 120 KiB in the app.
+
+New metadata text respects each section's existing UTF-8 or Windows-1252
+encoding. Unsupported encodings or characters that cannot be represented
+losslessly produce an explicit error; the converter does not relabel the
+unchanged book body. Title changes reconcile the header title and EXTH fields,
+including books that did not originally have an EXTH metadata block.
+
+The operation exports or downloads a separate `-metadata` copy. If conversion
+fails, a warning is declined, or the export is canceled, the dialog retains its
+field choices and text for retry. **Cancel operation** stops the current request;
+it does not overwrite the original book.
+
+In a native build with cover capability, **Replace cover** accepts a bounded PNG
+or JPEG replacement for an existing Kindle cover. **Remove replacement** clears
+the pending replacement and keeps the book's existing cover. Full EPUB-to-Kindle
+export and Kindle cover replacement require the native converter.
+
+Browser metadata editing runs offline in a bundled WebAssembly worker, using
+the same metadata byte engine as native builds. It supports unencrypted AZW3,
+dual MOBI and legacy MOBI files. No book is uploaded to a conversion service.
+The operation is offered only when the worker and Wasm asset load successfully.
+Cancellation or timeout terminates that request's worker and discards partial
+output. Browser/device memory limits can still prevent a job from completing;
+the input and entered metadata remain available for retry.
 
 ## Limits
 
@@ -118,6 +194,11 @@ The app opens input files up to **64 MiB**, allows EPUB output up to **128 MiB**
 and limits an edited text resource to **8 MiB**. Package and conversion libraries
 also apply entry-count, expanded-size, XML, image and encoding bounds; their
 READMEs give the exact budgets.
+
+The structured paragraph editor permits up to **1,024 text/protected segments**
+per paragraph. Plain-text line-break expansion is checked before allocation,
+and the resulting chapter must fit its XML node and size budgets. Larger or
+unsupported structures remain accessible in Source mode.
 
 Signed EPUBs are read-only. Standard IDPF/Adobe font obfuscation is distinguished
 from DRM and preserved without changing its publication identifier. Unsupported
@@ -153,17 +234,27 @@ validation, and retain Source mode for complex or unsupported content.
   EPUBCheck, native conversion, independent reader parsing, browser probes and
   focused application tests. The package READMEs contain local commands.
 
-Verification on **12 November 2026** included 30 passing core tests, 76 passing
-focused app/service/widget tests, and clean targeted application analysis.
-The actual application JavaScript release build also passed with
-`flutter build web --release --no-pub --no-wasm-dry-run`.
-The actual Foliate normalization → core import → EPUB save/reopen pipeline
-retained metadata, Unicode, nested contents, links and unchanged non-XHTML
-resources. Its source fixture plus AZW3, dual-MOBI and legacy-MOBI imported EPUBs
-passed **EPUBCheck 5.4.0 with zero errors and warnings**.
+Verification of the scope extension on **12 November 2026** included **46 core
+tests**, **27 native-converter Dart tests**, **4 Rust bridge tests**, **3 embedded
+reader controller tests**, and a complete **102-test application/service/widget
+run**, including the seven focused prose-dialog tests. The compiled
+Dart browser metadata adapter passed 24 assertions through 11 actual Node
+workers using the bundled Wasm. Native/Wasm metadata parity is checked against
+the same Kindle fixtures. See the
+[extension verification record](recovery/ebook-extension-2026-11-12.md) for the
+current release-build and hosted platform-check status.
+
+The four core fixtures, including a formatted-text correction, pass **EPUBCheck
+5.4.0 with zero fatal errors, errors or warnings**. The previously verified
+Foliate normalization → core import → EPUB save/reopen pipeline also retained
+metadata, Unicode, nested contents, links and non-XHTML resource bytes. Its
+source fixture plus AZW3, dual-MOBI and legacy-MOBI imported EPUBs passed the same
+independent validator.
 
 Those fixtures are authored integration samples, not a publisher compatibility
 corpus. The local Chromium renderer probe was blocked before browser startup by
 the execution environment's socket restriction. Parser and widget results do
-not establish full browser layout or six-platform device verification. Run the
-browser and native smoke checks in a suitable environment before a release.
+not establish full browser layout, actual browser worker loading, or six-platform
+device verification. Run the hosted browser and native smoke checks before a
+release; the [recovery record](recovery/ebook-extension-2026-11-12.md) separates
+completed local checks from pending platform checks.

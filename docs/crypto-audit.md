@@ -363,6 +363,156 @@ correctly rejected the stale source fingerprint. The refreshed policy still
 requires a successful hosted source-evidence check at its committed revision;
 the hash review alone is not recorded as a passing hosted gate.
 
+## 12 November 2026: ebook technical inventory extension
+
+This review adds the ebook core, bundled reader and native/browser Kindle
+metadata paths to [the source inventory](crypto-inventory.json). It records
+implemented algorithms and the application paths that reach or reject them.
+The existing provider records and export-policy decisions are retained. The
+per-feature `source_reviewed_on` dates identify this bounded addition; the
+inventory's earlier review date remains the date of its pre-existing records.
+This is not a renewed audit of unrelated application cryptography or a legal
+classification of the extended application.
+
+### Algorithms used by supported operations
+
+| Operation | Verified implementation and purpose | Reachability |
+| --- | --- | --- |
+| EPUB identifiers, prose edits and local annotations | [`document.dart`](../packages/crisp_ebook/lib/src/document.dart), [`prose.dart`](../packages/crisp_ebook/lib/src/prose.dart) and [`ebook_annotations.dart`](../lib/services/ebook_annotations.dart) use Dart `crypto.sha256` for publication identifier suffixes, stale-edit fingerprints, and a document-identity plus exact-source-version preference key. | Normal creation/editing and annotation persistence. These hashes do not encrypt the publication or its annotations; annotations use `SharedPreferences`. |
+| Reader bridge session | [`reader.dart`](../packages/crisp_ebook_reader/lib/src/reader.dart) generates 24 random bytes using `Random.secure()`, then base64url-encodes them. | Each embedded reader session, together with the native/web host's message-source checks. This is an unpredictable session identifier, not an ebook encryption key. |
+| EPUB font compatibility | `EpubDocument.readDecodedBytes`, foliate's [`deobfuscators`](../packages/crisp_ebook_reader/assets/foliate/epub.js), and Kindling's [`fonts::deobfuscate`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/fonts.rs) implement IDPF SHA-1/1040-byte XOR and Adobe UUID-key/1024-byte XOR. Dart uses `crypto.sha1`, foliate uses WebCrypto `subtle.digest('SHA-1')`, and Kindling has its own full SHA-1 implementation. | Supported font-resource reading/import/export. Original Dart document bytes remain obfuscated; native Kindle output writes compressed FONT records without XOR. Unknown encryption methods are rejected, and native EPUB export also rejects `META-INF/rights.xml`. |
+| MOBI font compatibility | [`mobi.js`'s `getFont`](../packages/crisp_ebook_reader/assets/foliate/mobi.js) reads the XOR key from the FONT record and reverses XOR over 1024 bytes when the key length is 16, otherwise 1040 bytes, before decompression. | Font resources in supported unencrypted MOBI/KF8 books. The reader rejects nonzero PalmDOC encryption before book decompression. |
+| Kindle format hashes | Kindling's [`exth.rs`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/exth.rs), [`mobi.rs`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi.rs) and [`mobi_rewrite.rs`](../packages/crisp_ebook_conversion/native/vendor/kindling/src/mobi_rewrite.rs) contain full MD5 implementations. Uses include EXTH 542's first four MD5 bytes of the title, native export identifiers, and font-signature ordering. | Native export and title metadata changes. The browser byte API also reaches `md5_first4` when it changes a title. These are compatibility fields, not authentication checks or confidentiality protection. |
+
+The portable Linux search, bookmarks and appearance changes add no cipher,
+password derivation or credential store. ZIP CRC-32 checks in the core and
+reader are format-integrity checks and are not cryptographic authentication.
+The font compatibility functions above do not implement general DRM decryption.
+
+### Crypto present in ZIP dependencies but blocked by ebook entry points
+
+The pinned [zip.js asset](../packages/crisp_ebook_reader/assets/foliate/vendor/zip.js)
+contains the SJCL-derived `sha1`, `hmacSha1`, `pbkdf2`, `aes` and `ctrGladman`
+implementations. The WinZip path selects 16-, 24- or 32-byte AES keys, uses
+PBKDF2-HMAC-SHA1 with 1,000 iterations, and truncates HMAC-SHA1 to 10 bytes.
+PBKDF2 first tries WebCrypto and has a JavaScript fallback. Traditional PKWARE
+ZipCrypto is also present. The bundled encryption stream uses
+`crypto.getRandomValues` when available and contains a `Math.random`-based
+fallback. That fallback is not a secure RNG and is not used by a supported
+ebook operation.
+
+[`view.js`'s `makeZipLoader`](../packages/crisp_ebook_reader/assets/foliate/view.js)
+inspects all central-directory entries and rejects `entry.encrypted` before
+calling any entry's `getData`. It never supplies a password, and disables the
+zip.js worker path. The package therefore still ships the password-crypto
+code as asset bytes while its ebook loading path rejects access to it. The
+Dart [ZIP container](../packages/crisp_ebook/lib/src/zip_container.dart)
+independently rejects encrypted flags. This differs from the existing archive
+viewer, whose reachable password compatibility remains inventoried separately.
+
+The native bridge and vendored Kindling manifests use Rust `zip` 9.3.0 with
+default features disabled and DEFLATE features selected; `aes-crypto` is not
+enabled. The resolved native and Wasm locks do not contain the optional `aes`,
+`hmac`, `pbkdf2` or `sha1` crates. Rust `zip` nevertheless contains ZipCrypto
+source. Inspection of its pinned source confirms that passwordless reads reject
+encrypted entries in `ZipFileData::make_reader`; the bridge uses those
+passwordless `by_index` calls. Disabled AES is not evidence that all source in
+the dependency is free of cryptography. The exact Rust crate archive checksum
+is recorded in the [native lock](../packages/crisp_ebook_conversion/native/Cargo.lock)
+and [Wasm lock](../packages/crisp_ebook_conversion/wasm/Cargo.lock).
+
+### Browser metadata artifact and dependency scope
+
+The [Wasm entry point](../packages/crisp_ebook_conversion/wasm/src/lib.rs) calls
+`rewrite_mobi_metadata_bytes`, with `doc_type` and `cover_image` set to `None`.
+It therefore does not call font conversion or the optional embedded source-ZIP
+extraction path. The shared rewriter rejects nonzero PalmDOC encryption and
+DRM EXTH records 401/402/403 in either the primary or KF8 section before writing
+output. It retains the MD5 title-hash operation described above.
+
+The broader resolved dependency graph still includes `ahash` 0.8.12,
+`getrandom` 0.3.4 and 0.4.3, `rand` 0.8.8, `rand_core` 0.6.4, and
+`wasm-bindgen` 0.2.121. The [Wasm manifest](../packages/crisp_ebook_conversion/wasm/Cargo.toml)
+enables `getrandom` 0.3.4's `wasm_js` feature so the upstream graph can compile.
+This dependency presence does not establish that an RNG is called by the
+metadata operation. Direct inspection with `WebAssembly.Module.imports` returned
+an empty list for the bundled `kindling_metadata.wasm`; the
+[runtime](../packages/crisp_ebook_conversion/assets/metadata_runtime.js) also
+rejects any module with imports before instantiation. This verifies the absence
+of browser/WASI imports for that artifact, not the absence of internal MD5 or
+every possible algorithm in transitive source.
+
+The [worker](../packages/crisp_ebook_conversion/assets/metadata_worker.js) loads
+the sibling bundled Wasm asset. The default Dart backend requires a same-origin
+worker URL. [WASM.json](../packages/crisp_ebook_conversion/WASM.json) binds the
+asset, runtime, worker and build inputs; the inventory additionally lists those
+exact files and both Cargo locks for the source-evidence fingerprint. Native
+prebuilt/executable/library overrides and custom worker assets require their
+own content/provenance review. Matching a version or ABI string does not prove
+an override has the reviewed implementation.
+
+### Resolved reader-plugin and build-hook delta
+
+The [dated source review](crypto-source-review-2026-11-12.md#resolved-dependency-delta)
+records the exact [root lock](../pubspec.lock) comparison with main `4946a9a`.
+Alongside the three local ebook packages, it adds `flutter_inappwebview` 6.1.5,
+Android 1.1.3, iOS/macOS/web 1.1.2, Windows 0.6.0, platform interface 1.3.0+1
+and internal annotations 1.3.0; `code_assets` changes from 2.1.0 to 2.2.0.
+No other locked package entry changes. The added Dart manifests declare no
+new `crypto`, `cryptography`, ASN.1 or X.509 package dependency. This does not
+mean that the plugin family has no certificate-related code.
+
+The following observations use the exact cached package versions above. Paths
+are relative to each named package's source archive, whose checksum is recorded
+in the root lock.
+
+| Source examined | Technical finding |
+| --- | --- |
+| `flutter_inappwebview_platform_interface`: `lib/src/x509_certificate/` | The package includes its own ASN.1 DER decoder, sequence-encoding helper, OID tables and X.509 field/extension accessors. `X509PublicKey` extracts encoded EC bytes or an RSA modulus; these branches do not perform elliptic-curve or RSA operations. `X509Certificate.checkValidity` compares dates only. No signature verification, certificate-chain validation, cipher, digest or key-derivation implementation was found in these helpers. Algorithm names in the OID table describe encoded certificate fields. |
+| `flutter_inappwebview_android`: `android/build.gradle`, `android/src/main/java/com/pichillilorenzo/flutter_inappwebview_android/Util.java`, and `webview/in_app_webview/InAppWebViewClient.java` under that Java source root | Client-certificate loading calls Java `KeyStore`; certificate decoding calls `CertificateFactory.getInstance("X.509")`. SSL errors and client-certificate responses are passed to Android WebView APIs. The Gradle manifest declares AndroidX WebKit 1.12.0, Browser 1.8.0, AppCompat 1.6.1 and SwipeRefreshLayout 1.1.0, with no explicit third-party crypto-library dependency. |
+| `flutter_inappwebview_ios` and `flutter_inappwebview_macos`: their platform `.podspec`, `Classes/Types/URLProtectionSpace.swift`, `Classes/Types/SecCertificate.swift`, and `Classes/InAppWebView/InAppWebView.swift` | The implementations use WebKit/Foundation/Security objects: `SecTrustEvaluate`, `SecCertificateCopyData`, `SecPKCS12Import`, and `URLCredential` with trust or client identity. The podspecs declare Flutter/FlutterMacOS and OrderedSet `~>6.0.3`; they do not declare a separate crypto pod or vendored crypto framework. |
+| `flutter_inappwebview_windows`: `windows/CMakeLists.txt` and `windows/in_app_webview/in_app_webview.cpp` | The plugin uses WebView2, including its `Network.getCertificate` protocol method. CMake fetches Microsoft.Web.WebView2 1.0.2792.45, Microsoft.Windows.ImplementationLibrary 1.0.231216.1 and nlohmann.json 3.11.2. Its explicit bundled-library list is empty. These facts describe the adapter and declared build inputs, not the internals of the WebView2 runtime. |
+| `flutter_inappwebview_web`: `lib/web/in_app_web_view_web_element.dart`; `flutter_inappwebview_internal_annotations`: `lib/src/` | The web adapter uses browser iframe and `XMLHttpRequest` APIs. The annotations package contains generator annotations and supporting constants; it has no runtime package dependencies. Neither replaces the browser's transport implementation. |
+
+The Android and Apple adapters expose callbacks capable of accepting a server
+trust challenge or supplying a client identity. Platform delegation alone is
+therefore not a claim that every possible plugin configuration enforces the
+same trust policy. The current [native ebook host](../packages/crisp_ebook_reader/lib/src/hosts/host_native.dart)
+does not configure those callbacks.
+
+`code_assets` 2.2.0 provides build/link-hook protocol models and output
+validation: see `lib/code_assets.dart`, `lib/src/code_assets/extension.dart`,
+`code_asset.dart`, `link_mode.dart` and `native_library_validation.dart` within
+that package. Its direct dependencies are `collection`, `hooks` and `logging`.
+The 2.2.0 change adds complete Apple deployment-version representation. The
+ebook converter imports this API in its [build hook](../packages/crisp_ebook_conversion/hook/build.dart)
+and hook configuration helper; the converter's runtime exports do not import
+that helper. The package describes and validates native-library assets rather
+than implementing the conversion or its cryptography. Libraries emitted by
+hooks still require their own review, as the Kindling paths do above.
+
+This is a source/manifests review of the pinned adapter packages. Downloaded
+Gradle/CocoaPods/NuGet transitive artifacts, platform TLS implementations,
+WebView runtimes and final application binaries were not rebuilt or audited
+by this dependency-delta check. Their contents cannot be inferred solely from
+the absence of a newly named Dart crypto dependency.
+
+### Meaning of the existing export-policy status
+
+`documentation.status: not_required` in the existing Apple policy records the
+conditional source assessment described in its reference. It is not an Apple
+approval or a government decision; `compliance_code` remains absent. This
+technical addition changes no encryption declaration, documentation decision,
+France setting, TestFlight audience or distribution-history record.
+
+The source preflight binds three separate inputs: the inventory JSON, the
+resolved root `pubspec.lock`, and a canonical SHA-256 map of every
+`reviewed_files` entry. Its previous stale-lock failure is therefore expected
+after a dependency change. These bindings must reflect the completed reviewed
+source and resolved lock; merely copying fresh hashes does not establish a
+classification or release approval. Artifact inspection and any required live
+submission checks remain separate from this technical inventory.
+
 ## Validation and build evidence
 
 The PR's **Crypto release evidence** job checks the inventory and failure paths

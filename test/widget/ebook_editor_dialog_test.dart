@@ -6,17 +6,22 @@ import 'package:archive/archive.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/ebook_device_export.dart';
+import 'package:crisp_cloud/services/ebook_annotations.dart';
 import 'package:crisp_cloud/services/ebook_editor_menu.dart';
 import 'package:crisp_cloud/services/ebook_file_store.dart';
 import 'package:crisp_cloud/services/pdf_file_store.dart';
 import 'package:crisp_cloud/widgets/ebook_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/ebook_chapter_reader.dart';
+import 'package:crisp_cloud/widgets/ebook_prose_editor.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_ebook/crisp_ebook.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:xml/xml.dart';
 
 class _Store implements PdfFileStore {
   _Store()
@@ -60,6 +65,8 @@ Future<ProviderContainer> _open(
   EbookDeviceExporter? exporter,
   EbookDocumentLoader? documentLoader,
   bool expectDocument = true,
+  bool portableReader = false,
+  bool startEditing = true,
 }) async {
   tester.view.physicalSize = const Size(1200, 900);
   tester.view.devicePixelRatio = 1;
@@ -81,14 +88,15 @@ Future<ProviderContainer> _open(
                   child: EbookEditorDialog(
                     file: FileItem(name: 'original.epub', isFolder: false),
                     side: PanelSide.local,
-                    startEditing: true,
+                    startEditing: startEditing,
                     storeOverride: EbookFileStore(store),
                     deviceExporterOverride: exporter,
                     documentLoaderOverride:
                         documentLoader ??
                         (bytes) async => EpubDocument.open(bytes),
-                    readerBuilderOverride: (_, _, _, _) =>
-                        const Text('Reader preview'),
+                    readerBuilderOverride: portableReader
+                        ? null
+                        : (_, _, _, _) => const Text('Reader preview'),
                   ),
                 ),
               ),
@@ -102,7 +110,8 @@ Future<ProviderContainer> _open(
   await tester.tap(find.text('Open book'));
   await tester.pumpAndSettle();
   expect(find.byType(EbookEditorDialog), findsOneWidget);
-  if (expectDocument) expect(find.text('Original'), findsOneWidget);
+  if (expectDocument && startEditing)
+    expect(find.text('Original'), findsOneWidget);
   return container;
 }
 
@@ -117,6 +126,178 @@ Finder get _close => find.descendant(
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'formatted prose integrates with undo, redo and original-file save',
+    (tester) async {
+      final store = _Store();
+      final book = EpubDocument.open(store.input);
+      final path = book.chapters.first.path;
+      book.updateText(
+        path,
+        '<html xmlns="http://www.w3.org/1999/xhtml">'
+        '<head><title>Text</title></head><body><p id="p">Before '
+        '<em id="em">tyop</em> <a href="#p">link</a></p></body></html>',
+      );
+      store.input = book.toBytes();
+      final container = await _open(tester, store);
+      await tester.tap(find.text('Resources'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Text').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Before tyop link'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EbookProseEditorDialog), findsOneWidget);
+      final field = find.byKey(const ValueKey('ebook-prose-segment-1'));
+      await tester.ensureVisible(field);
+      await tester.enterText(field, 'typo');
+      await tester.pump();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(EbookProseEditorDialog),
+          matching: find.widgetWithText(FilledButton, 'Apply'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(ListTile, 'Before typo link'), findsOneWidget);
+      container
+          .read(ebookEditorMenuProvider)!
+          .perform(EbookEditorMenuAction.undo);
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(ListTile, 'Before tyop link'), findsOneWidget);
+      container
+          .read(ebookEditorMenuProvider)!
+          .perform(EbookEditorMenuAction.redo);
+      await tester.pumpAndSettle();
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      final saved = EpubDocument.open(store.writes.single);
+      final xml = XmlDocument.parse(saved.readText(path));
+      final emphasis = xml.descendants.whereType<XmlElement>().singleWhere(
+        (e) => e.name.local == 'em',
+      );
+      final link = xml.descendants.whereType<XmlElement>().singleWhere(
+        (e) => e.name.local == 'a',
+      );
+      expect(emphasis.innerText, 'typo');
+      expect(emphasis.getAttribute('id'), 'em');
+      expect(link.getAttribute('href'), '#p');
+    },
+  );
+
+  testWidgets('plain paragraph mode retains newline authoring through save', (
+    tester,
+  ) async {
+    final store = _Store();
+    final book = EpubDocument.open(store.input);
+    final path = book.chapters.first.path;
+    book.updateText(
+      path,
+      '<html xmlns="http://www.w3.org/1999/xhtml">'
+      '<head><title>Text</title></head><body><p>First</p></body></html>',
+    );
+    store.input = book.toBytes();
+    await _open(tester, store);
+    await tester.tap(find.text('Resources'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Text').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ListTile, 'First'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('ebook-prose-plain-text')),
+      'First\nSecond',
+    );
+    await tester.pump();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(EbookProseEditorDialog),
+        matching: find.widgetWithText(FilledButton, 'Apply'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(_save);
+    await tester.pumpAndSettle();
+    final saved = EpubDocument.open(store.writes.single);
+    expect(saved.readText(path), contains('First<br/>Second'));
+  });
+
+  testWidgets(
+    'portable reader shares search, immediate bookmarks and persisted appearance',
+    (tester) async {
+      final store = _Store();
+      final book = EpubDocument.open(store.input);
+      book.addChapter(title: 'Second chapter', text: 'Only in second chapter');
+      store.input = book.toBytes();
+      await _open(tester, store, portableReader: true);
+      await tester.tap(find.text('Read').first);
+      await tester.pumpAndSettle();
+      expect(find.byType(EbookChapterReader), findsOneWidget);
+      final addBookmark = find.byWidgetPredicate(
+        (widget) => widget is IconButton && widget.tooltip == 'Add bookmark',
+      );
+      expect(tester.widget<IconButton>(addBookmark).onPressed, isNotNull);
+      await tester.tap(addBookmark);
+      await tester.pump(const Duration(milliseconds: 600));
+      final search = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == 'Search',
+      );
+      await tester.enterText(search, 'Only in second');
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      final result = find.byWidgetPredicate(
+        (w) =>
+            w is ListTile &&
+            w.title is Text &&
+            ((w.title as Text).data?.contains('Only in second') ?? false),
+      );
+      expect(result, findsOneWidget);
+      await tester.tap(result);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Appearance'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is DropdownButton<String> && w.value == 'light',
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('dark').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Apply'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
+      final annotations = await EbookAnnotations.open(
+        'account-one:/books/original.epub:chapter-reader',
+        store.input,
+      );
+      expect(annotations.bookmarks, hasLength(1));
+      expect(annotations.bookmarks.single.cfi, startsWith('crisp-reader:v1:'));
+      expect(annotations.location!.sectionIndex, 1);
+      expect(annotations.appearance.theme, 'dark');
+      expect(annotations.appearance.flow, 'scrolled');
+      await tester.tap(_close);
+      await tester.pumpAndSettle();
+      await _open(tester, store, portableReader: true, startEditing: false);
+      await tester.pumpAndSettle();
+      final reader = tester.widget<EbookChapterReader>(
+        find.byType(EbookChapterReader),
+      );
+      expect(reader.appearance.theme, 'dark');
+      expect(reader.initialLocation, annotations.location!.cfi);
+      await tester.tap(find.byTooltip('Bookmarks'));
+      await tester.pumpAndSettle();
+      final bookmark = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(ListTile),
+      );
+      expect(bookmark, findsOneWidget);
+      await tester.tap(bookmark);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.linux),
+  );
 
   test('ebook routing uses only complete supported extensions', () {
     for (final name in [

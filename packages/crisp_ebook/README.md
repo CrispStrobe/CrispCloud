@@ -30,10 +30,36 @@ TOC; call `updateToc()` to explicitly regenerate it. Removing a chapter retains
 its XHTML resource by default to preserve existing links. Explicit resource
 deletion is rejected while other resources still refer to it.
 
-`readProse` / `updateProseBlock` implement bounded visual correction of simple
-text blocks. A block with inline markup or embedded content is read-only in
-that mode and remains editable in source mode. Fixed-layout books use source
-mode. The visual helper never silently flattens formatting, IDs or classes.
+### Formatting-preserving text correction
+
+`readStructuredProse` exposes immutable text/protected segments from supported
+innermost XHTML paragraphs. `updateStructuredProseBlock` changes selected
+existing XML text nodes while retaining emphasis, links, destinations, IDs,
+publisher spans, namespace prefixes and unknown attributes:
+
+```dart
+final block = book.readStructuredProse(chapter.path).firstWhere(
+  (block) => block.segments.any((segment) => segment.editable),
+);
+final segment = block.segments.firstWhere((segment) => segment.editable);
+book.updateStructuredProseBlock(block, {segment.index: 'Corrected text'});
+```
+
+Each block carries a complete resource fingerprint. An application validates
+the entire replacement batch and rejects stale resources or protected segments
+before publishing a mutation. Re-read the blocks after applying a change.
+No-op applications retain the original bytes and clean state.
+
+For a block with `allowsLineBreakEditing`, `updateStructuredProseText` accepts a
+single multiline value and creates XHTML `br` elements for newlines. It checks
+line-break expansion before allocating nodes and validates the resulting XML
+against the resource's node, depth and byte budgets. This path rejects formatted
+blocks; it cannot silently flatten inline structure.
+
+Images, ruby, foreign/unknown markup, comments, CDATA and attributed line breaks
+are protected. The structured surface is capped at 1,024 segments per paragraph.
+Use source mode for structural changes and fixed-layout books. The earlier
+`readProse` / `updateProseBlock` API remains available for simple text blocks.
 
 ## Preservation and validation
 
@@ -78,9 +104,10 @@ dart test
 dart run tool/generate_fixtures.dart /path/to/fixtures
 ```
 
-The generator emits a new book, a book with a nonstandard OPF path and opaque
-extra resources, and an edited copy. It checks exact no-op and unchanged-resource
-preservation before writing these fixtures for external EPUBCheck/reader tests.
+The generator emits four books: a new book, a book with a nonstandard OPF path
+and opaque extra resources, an edited copy, and a formatted-text correction.
+It checks exact no-op, unchanged-resource and inline-structure preservation
+before writing these fixtures for external EPUBCheck/reader tests.
 
 The regression suite also checks that chapter deletion preserves landmarks and
 NCX page-list targets, empty contents groups are pruned, and mixed or conflicting
