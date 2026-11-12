@@ -33,6 +33,8 @@ const {checkSectionResourceLifecycle} = await import('./resource_lifecycle.mjs')
 await checkSectionResourceLifecycle()
 const {checkReaderSearch} = await import('./reader_search.mjs')
 await checkReaderSearch()
+const {checkReaderSelection} = await import('./reader_selection.mjs')
+await checkReaderSelection()
 const {exportPublication} = await import('../../assets/normalize.js')
 const {imageDimensions} = await import('../../assets/image_dimensions.js')
 const strictXhtml = (text, name = 'XHTML') => {

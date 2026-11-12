@@ -480,3 +480,41 @@ sandboxed frames. This is a plausible explanation for a missing selection event,
 not yet the demonstrated cause of this native failure. The diagnostic run will
 distinguish absent native focus/selection from a missing JavaScript notification.
 The book sandbox and existing acceptance requirements are retained.
+
+### Observed cause and compatibility increment
+
+Diagnostic run [43244906294](https://github.com/CrispStrobe/CrispCloud/actions/runs/43244906294)
+at `7e20b40` completed. Both Ubuntu 24.04 targets passed, including nine package
+tests and complete process cleanup. Ubuntu 22.04 reported a mapped/viewable GTK
+surface, a focused book document, one native SelectAll command and a real
+noncollapsed selection range. The unchanged CFI assertion then timed out. This
+establishes the missing child-document notification, rather than missing native
+focus or selection, as the observed failure.
+
+The compatibility increment adds a bounded selection observer in the trusted
+parent. It reads only current renderer documents, uses trusted load events for
+fixed-layout section indices, deduplicates endpoints, resets on collapse and
+stops on replacement/disposal/pagehide. It keeps ordinary single-range native
+whitespace while bounding long, fragmented and multi-range quotes to the
+first-range prefix. Existing book sandboxes and vendor bytes are unchanged.
+
+Bare Linux left/right keys now use the existing session-checked command bridge
+and navigation queue, preserving Foliate's reading-direction logic. Their GTK
+edges are suppressed to prevent duplicate page turns. Forwarded key releases
+remain balanced when modifiers change or focus moves to another Flutter widget.
+The focused real-host regression for that transition passes; the native CFI,
+clipboard, pointer-selection, two-reader and modal assertions are unchanged.
+
+The integrated application's earlier `e20e2cc` run completed Windows conversion
+successfully. Its other four jobs were canceled before execution, alongside
+other repository workflows; the API does not establish a cause. The complete
+shared-runtime fix therefore needs a fresh main workflow as well as its native
+run. Canceled jobs are not counted as verification.
+
+The final local checks passed in both normal and forced compatibility modes,
+including the five Kindle fixtures, selection lifecycle/bounds cases and key
+direction checks. The real Dart-host key-transition regression and focused
+analysis passed. The source review now binds 296 paths and 20 feature records,
+adding only the parent selection helper; its existing source check and the
+owned-file whitespace check passed. The new actual Chromium assertions and
+full Linux interaction result remain the next acceptance evidence.

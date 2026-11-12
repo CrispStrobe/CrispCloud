@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {normalizeAppearance, appearanceStyle, readingCapabilities, progressFraction,
     navigationHistory, navigateHistory, createNavigationQueue,
-    guardRendererLifecycle} from '../../assets/reader_controls.js'
+    guardRendererLifecycle, readerKeyDirection} from '../../assets/reader_controls.js'
 import {SectionProgress} from '../../assets/foliate/progress.js'
 
 // Run with the parser suite's DOM and the actual pinned Foliate View class.
@@ -31,6 +31,13 @@ export async function checkReadingControls(View) {
     assert.equal(progressFraction(0.375), 0.375)
     for (const invalid of [NaN, Infinity, -Infinity, '0.5', null])
         assert.throws(() => progressFraction(invalid), /finite/)
+    assert.equal(readerKeyDirection({key:'ArrowLeft'}), 'goLeft')
+    assert.equal(readerKeyDirection({key:'ArrowRight'}), 'goRight')
+    for (const flag of ['altKey','ctrlKey','metaKey','shiftKey'])
+        assert.equal(readerKeyDirection({key:'ArrowRight', [flag]:true}), null)
+    for (const key of ['ArrowUp','PageDown','a','',null])
+        assert.equal(readerKeyDirection({key}), null)
+    assert.equal(readerKeyDirection(null), null)
 
     const progress = new SectionProgress([
         {size:100}, {size:100, linear:'no'}, {size:300},

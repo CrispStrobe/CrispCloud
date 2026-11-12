@@ -111,6 +111,42 @@ void main() {
         {'id': 1, 'focused': true});
     expect(errors, isEmpty);
 
+    calls.clear();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowRight);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    expect(
+      calls.where((call) => call.method == 'key').map((call) => call.arguments),
+      [
+        {'id': 1, 'name': 'Right', 'pressed': true, 'modifiers': 0},
+        {'id': 1, 'name': 'Right', 'pressed': false, 'modifiers': 2},
+        {'id': 1, 'name': 'Right', 'pressed': true, 'modifiers': 1},
+        {'id': 1, 'name': 'Right', 'pressed': false, 'modifiers': 1},
+      ],
+      reason: 'Changing modifiers must not strand a previously forwarded key.',
+    );
+
+    calls.clear();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowLeft);
+    FocusManager.instance.primaryFocus!.unfocus();
+    await tester.pump();
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.arrowLeft);
+    expect(
+      calls.where((call) => call.method == 'key').map((call) => call.arguments),
+      [
+        {'id': 1, 'name': 'Left', 'pressed': true, 'modifiers': 0},
+        {'id': 1, 'name': 'Left', 'pressed': false, 'modifiers': 0},
+      ],
+      reason: 'A held native key must be released exactly once before blur.',
+    );
+    expect(calls.where((call) => call.method == 'focus').single.arguments,
+        {'id': 1, 'focused': false});
+    expect(calls.last.method, 'focus');
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.runAsync(
         () async => Future<void>.delayed(const Duration(milliseconds: 10)));

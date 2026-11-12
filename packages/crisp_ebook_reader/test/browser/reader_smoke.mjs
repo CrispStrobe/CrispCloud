@@ -66,6 +66,8 @@ try {
         return message.result
     }
     const open = path => command('open', {filename:path.split('/').pop(),data:readFileSync(path).toString('base64')})
+    assert.equal(await command('hostKey', {key:'ArrowRight'}), false,
+        'Host input before a book is ready is ignored')
     const info = await open(join(temporary,'fixture.epub'))
     assert.equal(info.title, 'Crisp reader fixture')
     assert.equal(info.sectionCount, 2)
@@ -83,6 +85,30 @@ try {
     await command('next')
     await page.waitForFunction(cfi =>
         window.__messages.filter(message => message.event === 'location').at(-1)?.data.cfi !== cfi, initialLocation.cfi)
+    const arrowOrigin = await lastEvent('location')
+    assert.equal(await command('hostKey', {key:'ArrowRight', ctrlKey:true}), false)
+    assert.equal(await command('hostKey', {key:'PageDown'}), false)
+    await page.evaluate(() => window.crispEbookHost.receive({
+        id:-2, method:'hostKey', args:{key:'ArrowRight'},
+        session:'wrong-session', channel:'crisp-ebook-v1',
+    }))
+    assert.equal(await page.evaluate(() => window.__messages.some(message => message.id === -2)), false)
+    assert.equal((await lastEvent('location')).cfi, arrowOrigin.cfi,
+        'Modified, unsupported and unauthenticated keys must not turn pages')
+    // Exercise the exact reserved-id envelope used by the Linux native host.
+    await page.evaluate(() => window.crispEbookHost.receive({
+        id:-1, method:'hostKey', args:{key:'ArrowRight'},
+        session:'browser-test', channel:'crisp-ebook-v1',
+    }))
+    await page.waitForFunction(cfi =>
+        window.__messages.filter(message => message.event === 'location').at(-1)?.data.cfi !== cfi, arrowOrigin.cfi)
+    assert.equal(await page.evaluate(() => window.__messages.find(message => message.id === -1)?.result), true)
+    const arrowDestination = await lastEvent('location')
+    assert.equal(await command('hostKey', {key:'ArrowLeft'}), true)
+    await page.waitForFunction(cfi =>
+        window.__messages.filter(message => message.event === 'location').at(-1)?.data.cfi !== cfi, arrowDestination.cfi)
+    assert(Math.abs((await lastEvent('location')).fraction - arrowOrigin.fraction) < 0.03,
+        'Parent-routed arrows must preserve the renderer page direction')
     const historyOrigin = await lastEvent('location')
     assert.equal((await lastEvent('history')).canGoBack, false, 'Page turns must not add Back entries')
     const tocEntries = items => items.flatMap(item => [item, ...tocEntries(item.children)])
@@ -133,6 +159,36 @@ try {
     assert.equal(await headingCfi(), anchorBeforeStyle, 'Appearance must preserve publication CFI nodes')
     await command('appearance', {usePublisherStyles:true})
     assert.equal((await renderedOptions()).fontFamily, 'serif')
+    // Stop child selection callbacks in Chromium to reproduce WebKit's
+    // script-disabled iframe behavior without weakening the real sandbox.
+    const selectedHeading = await page.evaluate(() => {
+        const view = document.querySelector('foliate-view')
+        const {doc, index} = view.renderer.getContents()[0]
+        window.__blockedSelectionEvents = 0
+        window.__selectionBlocker = event => {
+            ++window.__blockedSelectionEvents
+            event.stopImmediatePropagation()
+        }
+        window.__selectionDocument = doc
+        doc.addEventListener('selectionchange', window.__selectionBlocker, true)
+        const range = doc.createRange()
+        range.selectNodeContents(doc.querySelector('h1'))
+        const selection = doc.getSelection()
+        selection.removeAllRanges()
+        selection.addRange(range)
+        return {text:selection.toString(), cfi:view.getCFI(index, range), sectionIndex:index}
+    })
+    await page.waitForFunction(expected => window.__messages.some(message =>
+        message.event === 'selection' && message.data.cfi === expected), selectedHeading.cfi)
+    assert.deepEqual(await lastEvent('selection'), selectedHeading,
+        'The parent observer must report the real text, section and CFI without child callbacks')
+    assert((await page.evaluate(() => window.__blockedSelectionEvents)) > 0)
+    await page.evaluate(() => {
+        window.__selectionDocument.removeEventListener('selectionchange', window.__selectionBlocker, true)
+        window.__selectionDocument.getSelection().removeAllRanges()
+        delete window.__selectionDocument
+        delete window.__selectionBlocker
+    })
     const frames = page.frames().filter(frame => frame.url().startsWith('blob:'))
     assert(frames.length > 0,'Publication must render in a dedicated frame')
     for (const frame of frames) {
@@ -237,7 +293,7 @@ try {
         console.log(`PASS ${file}: ${info.sectionCount} chapters, ${payload.resources.length} resources, ${payload.warnings.length} warnings`)
     }
     assert.deepEqual(errors,[], errors.join('\n'))
-    console.log('PASS EPUB/FB2/CBZ render, TOC, search, progress/history, publisher styles, CFI-preserving appearance, fixed-layout capabilities, highlights, offline normalization, link/image/CSS preservation, script isolation and DRM rejection')
+    console.log('PASS EPUB/FB2/CBZ render, TOC, search, progress/history, authenticated host arrows, parent selection without child callbacks, publisher styles, CFI-preserving appearance, fixed-layout capabilities, highlights, offline normalization, link/image/CSS preservation, script isolation and DRM rejection')
 } finally {
     await browser?.close()
     await new Promise(resolve => server.close(resolve))

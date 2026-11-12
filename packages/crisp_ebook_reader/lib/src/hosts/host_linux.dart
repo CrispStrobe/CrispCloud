@@ -49,6 +49,7 @@ class _LinuxHostState extends State<_LinuxHost> {
   late final EbookAssetServer _server = EbookAssetServer(widget.session);
   final _focus = FocusNode(debugLabel: 'ebook-linux-content');
   final _pointerButtons = <int, int>{};
+  final _pressedKeyNames = <LogicalKeyboardKey, String>{};
   int? _id;
   int? _texture;
   String? _error;
@@ -231,6 +232,18 @@ class _LinuxHostState extends State<_LinuxHost> {
   }
 
   KeyEventResult _key(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) {
+      final name = _pressedKeyNames.remove(event.logicalKey);
+      if (name == null) return KeyEventResult.ignored;
+      // A modifier may have changed since key-down. Always balance a key that
+      // this host forwarded, even when the new modifier would reject its press.
+      unawaited(_invoke('key', {
+        'name': name,
+        'pressed': false,
+        'modifiers': _modifiers,
+      }));
+      return KeyEventResult.handled;
+    }
     final names = <LogicalKeyboardKey, String>{
       LogicalKeyboardKey.arrowLeft: 'Left',
       LogicalKeyboardKey.arrowRight: 'Right',
@@ -255,12 +268,30 @@ class _LinuxHostState extends State<_LinuxHost> {
             ? event.logicalKey.keyLabel.toLowerCase()
             : null);
     if (name == null) return KeyEventResult.ignored;
+    _pressedKeyNames[event.logicalKey] = name;
     unawaited(_invoke('key', {
       'name': name,
-      'pressed': event is! KeyUpEvent,
+      'pressed': true,
       'modifiers': modifier,
     }));
     return KeyEventResult.handled;
+  }
+
+  void _focusChanged(bool focused) {
+    if (!focused) {
+      // Key-up will be delivered to the newly focused Flutter widget. Release
+      // native keys before blurring this view so it retains no held-key route.
+      final names = _pressedKeyNames.values.toList();
+      _pressedKeyNames.clear();
+      for (final name in names) {
+        unawaited(_invoke('key', {
+          'name': name,
+          'pressed': false,
+          'modifiers': _modifiers,
+        }));
+      }
+    }
+    unawaited(_invoke('focus', {'focused': focused}));
   }
 
   @override
@@ -288,8 +319,7 @@ class _LinuxHostState extends State<_LinuxHost> {
       return Focus(
         focusNode: _focus,
         onKeyEvent: _key,
-        onFocusChange: (focused) =>
-            unawaited(_invoke('focus', {'focused': focused})),
+        onFocusChange: _focusChanged,
         child: MouseRegion(
           cursor: _cursor,
           onHover: (event) => _pointer('move', event),

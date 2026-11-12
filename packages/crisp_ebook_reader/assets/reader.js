@@ -5,17 +5,19 @@ import {safeResourceTransform, secureSections} from './security.js'
 import {exportPublication, metadataOf} from './normalize.js'
 import {normalizeAppearance, appearanceStyle, readingCapabilities, progressFraction,
     navigationHistory, navigateHistory, createNavigationQueue,
-    guardRendererLifecycle} from './reader_controls.js'
+    guardRendererLifecycle, readerKeyDirection} from './reader_controls.js'
 import {createReaderSearch} from './reader_search.js'
+import {createReaderSelection} from './reader_selection.js'
 
 const session = decodeURIComponent(location.hash.slice(1))
 const status = document.getElementById('status')
 let book = null, view = null, filename = '', sourceFormat = '', cleanupSections = null
 let opened = false, appearance = normalizeAppearance(), searchSession = null
+let selectionObserver = null
 const highlights = new Map()
 const enqueueNavigation = createNavigationQueue()
 const navigationMethods = new Set(['open','next','previous','goTo','goToFraction',
-    'historyBack','historyForward','appearance'])
+    'historyBack','historyForward','appearance','hostKey'])
 const expectedParent = location.origin
 const serialize = value => JSON.stringify({...value, session, channel:'crisp-ebook-v1'})
 const send = value => {
@@ -65,6 +67,8 @@ async function open(args) {
     opened = true
     searchSession?.dispose()
     searchSession = null
+    selectionObserver?.dispose()
+    selectionObserver = null
     const previousView = view
     view = null
     if (previousView) { previousView.close(); previousView.remove() }
@@ -89,6 +93,8 @@ async function open(args) {
     document.getElementById('reader').append(view)
     const currentView = view
     searchSession = createReaderSearch(currentView)
+    selectionObserver = createReaderSelection(currentView,
+        data => send({event:'selection', data}), {isCurrent:() => view === currentView})
     currentView.history.addEventListener('index-change', () => {
         if (view === currentView)
             send({event:'history', data:navigationHistory(currentView)})
@@ -99,23 +105,10 @@ async function open(args) {
         const href = String(event.detail.href_ ?? '')
         if (/^(https?:|mailto:)/i.test(href)) send({event:'externalLink', data:href})
     })
-    view.addEventListener('load', ({detail:{doc,index}}) => {
+    view.addEventListener('load', ({detail:{doc}}) => {
         if (view !== currentView) return
-        let selectionTimer
-        doc.addEventListener('selectionchange', () => {
-            clearTimeout(selectionTimer)
-            selectionTimer = setTimeout(() => {
-                if (view !== currentView) return
-                const selection = doc.getSelection()
-                if (!selection?.rangeCount || selection.isCollapsed) return
-                send({event:'selection', data:{text:selection.toString().slice(0, 20000),
-                    cfi:currentView.getCFI(index, selection.getRangeAt(0)), sectionIndex:index}})
-            }, 150)
-        })
         doc.addEventListener('keydown', event => {
-            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-            const direction = event.key === 'ArrowRight' ? 'goRight'
-                : event.key === 'ArrowLeft' ? 'goLeft' : null
+            const direction = readerKeyDirection(event)
             if (direction) {
                 event.preventDefault()
                 enqueueNavigation(() => view === currentView ? currentView[direction]() : null)
@@ -154,6 +147,15 @@ const methods = {
     open,
     next:async () => { requireBook(); await view.next() },
     previous:async () => { requireBook(); await view.prev() },
+    // Native texture hosts cannot rely on WebKit invoking listeners installed
+    // in a script-disabled book. This uses the same authenticated command
+    // envelope and navigation queue; the host suppresses duplicate GDK keys.
+    hostKey:async args => {
+        const direction = readerKeyDirection(args)
+        if (!direction || !book || !view?.renderer) return false
+        await view[direction]()
+        return true
+    },
     goTo:async ({target}) => { requireBook(); await view.goTo(target) },
     goToFraction:async ({fraction}) => {
         requireBook()
@@ -205,6 +207,7 @@ window.addEventListener('unhandledrejection', event => {
 })
 window.addEventListener('pagehide', () => {
     searchSession?.dispose()
+    selectionObserver?.dispose()
     cleanupSections?.()
     book?.destroy?.()
     view = null

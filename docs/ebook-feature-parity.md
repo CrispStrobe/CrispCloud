@@ -43,6 +43,18 @@ navigation and disposal. The startup check is not a rendering/input test, and
 does not prevent every possible later browser or graphics failure. An unavailable runtime is a fallback result, never a
 passing enhanced-reader check. See the recovery record for the latest results.
 
+The real native test also exposed a browser-engine difference:
+[WebKit issue 218086](https://bugs.webkit.org/show_bug.cgi?id=218086) suppresses
+some parent-installed listeners inside script-disabled publication frames.
+The diagnostic run proved that the book was focused and its text was selected,
+while the expected selection event never reached the reader bridge. The
+compatibility increment therefore observes existing selections from the trusted
+reader page and routes bare Linux left/right keys through the existing
+authenticated navigation queue. Publication scripts remain disabled and the
+vendored engine is unchanged. This increment needs its real native/browser
+acceptance run; other WebKit paths that depend on child-frame listeners, such
+as publication-link interception, still need explicit qualification.
+
 ## What “the same experience” requires
 
 There are three different targets:
@@ -95,6 +107,13 @@ matching screenshots alone would not make it an equivalent reader.
   and geometry changes that cannot be honored; the portable reader does not
   advertise Foliate-only features.
 - Copying the selected text from the shared toolbar.
+
+Selection notifications are bounded and deduplicated before text extraction.
+Ordinary single-range selections retain native rendered whitespace. Very large,
+fragmented or multi-range selections provide a bounded first-range text prefix
+with that range's CFI; native Linux Ctrl+C continues to use WebKit's clipboard
+command. The observer stops on book replacement or page teardown and does not
+keep a strong registry of unloaded chapter documents.
 
 Reader styles do not remove or rewrite the publication's CFI-bearing content
 nodes. Appearance settings remain separate from saved book content. The public

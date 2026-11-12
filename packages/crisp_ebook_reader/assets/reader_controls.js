@@ -77,6 +77,12 @@ export function progressFraction(value) {
     return Math.max(0, Math.min(1, value))
 }
 
+export function readerKeyDirection(event) {
+    if (!event || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return null
+    return event.key === 'ArrowRight' ? 'goRight'
+        : event.key === 'ArrowLeft' ? 'goLeft' : null
+}
+
 export const navigationHistory = view => ({
     canGoBack:view?.history?.canGoBack === true,
     canGoForward:view?.history?.canGoForward === true,

@@ -329,6 +329,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     origin_ = "http://127.0.0.1:" + std::to_string(g_uri_get_port(uri));
     document_url_ = origin_ + path;
     url_ = url;
+    session_ = session;
     // The bridge is installed only in the trusted top-level document. Neither
     // book frames nor subsequent navigations receive this host capability.
     std::string source = "if(location.href==='" + url_ + "'){Object.defineProperty(window,'CrispEbookMessage',"
@@ -373,6 +374,10 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
 
   void Focus(bool focused) {
     focused_ = focused;
+    if (!focused) {
+      parent_navigation_keys_ = 0;
+      native_navigation_keys_ = 0;
+    }
     if (focused) gtk_widget_grab_focus(GTK_WIDGET(webview_));
     GdkEvent* event = gdk_event_new(GDK_FOCUS_CHANGE);
     event->focus_change.window = EventWindow();
@@ -458,6 +463,33 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     const guint modifiers = Modifiers(args);
     const bool pressed = Boolean(args, "pressed");
     if (pressed) ++key_presses_;
+    const unsigned navigation_key = name == "Left" ? 1 : name == "Right" ? 2 : 0;
+    if (navigation_key != 0) {
+      // Script-disabled publication frames on WebKit can suppress even the
+      // parent's key listeners (WebKit bug 218086). Send bare page-turn keys
+      // to the authenticated trusted parent; never enable publication scripts.
+      // Keep each held key on its initial route until release, so changing a
+      // modifier during auto-repeat cannot leave GTK with an unmatched key.
+      if (pressed && ((parent_navigation_keys_ | native_navigation_keys_) & navigation_key) == 0) {
+        if (modifiers == 0) parent_navigation_keys_ |= navigation_key;
+        else native_navigation_keys_ |= navigation_key;
+      }
+      const bool parent_key = (parent_navigation_keys_ & navigation_key) != 0;
+      if (!pressed) {
+        parent_navigation_keys_ &= ~navigation_key;
+        native_navigation_keys_ &= ~navigation_key;
+      }
+      if (parent_key) {
+        if (pressed && modifiers == 0 && IsDocument(api_.webkit_web_view_get_uri(webview_))) {
+          const char* key = name == "Left" ? "ArrowLeft" : "ArrowRight";
+          // Start() restricts session_ to base64url characters. Negative IDs
+          // cannot collide with the Dart controller's positive request IDs.
+          Evaluate("window.crispEbookHost?.receive({channel:'crisp-ebook-v1',session:'" +
+              session_ + "',id:-1,method:'hostKey',args:{key:'" + key + "'}})");
+        }
+        return;  // Suppress both GTK press and release: no duplicate page turn.
+      }
+    }
     if (pressed && (modifiers & (GDK_CONTROL_MASK | GDK_META_MASK)) != 0) {
       if (name == "c" || name == "a") {
         if (name == "a") ++select_all_commands_;
@@ -747,6 +779,8 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   int64_t pointer_presses_ = 0;
   int64_t key_presses_ = 0;
   int64_t select_all_commands_ = 0;
+  unsigned parent_navigation_keys_ = 0;
+  unsigned native_navigation_keys_ = 0;
   GCancellable* cancellable_ = nullptr;
   guint timer_ = 0;
   bool closed_ = false;
@@ -757,6 +791,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   gint64 busy_until_ = 0;
   gint64 last_snapshot_ = 0;
   std::string url_;
+  std::string session_;
   std::string document_url_;
   std::string origin_;
 };

@@ -1305,3 +1305,101 @@ reviewed-source digest changes; every other policy byte, inventory entry,
 validator source and acceptance rule is preserved. Broader test suites were
 not repeated for this diagnostic source-binding update. Native integration
 results remain attached to their actual checkpoint and runner.
+
+## Parent selection observation and native page keys
+
+This delta starts from saved diagnostic checkpoint
+`7e20b40c1b797d463704106c881b9e84415f4fd7`. The observed native view was
+focused and had a non-collapsed DOM selection, but its child-document event
+path did not report a Foliate CFI. The reviewed change observes that selection
+from the trusted reader parent while retaining the existing publication-script
+restrictions. It also routes native bare Left/Right keys through the shared
+reader's navigation command path.
+
+The inventory retains all 295 previous paths and all 20 feature records. Only
+`packages/crisp_ebook_reader/assets/reader_selection.js` is added, producing
+**296 unique paths**. The preceding canonical source map reproduces the
+recorded `dbe95c84` fingerprint. Of its entries, exactly four change:
+
+| Runtime source | Reviewed change |
+| --- | --- |
+| `packages/crisp_ebook_reader/assets/reader.js` | Creates and disposes the parent selection observer; adds the allowlisted `hostKey` method to the existing ordered navigation queue. |
+| `packages/crisp_ebook_reader/assets/reader_controls.js` | Maps only unmodified Left/Right arrow names to the existing direction-aware Foliate methods. |
+| `packages/crisp_ebook_reader/lib/src/hosts/host_linux.dart` | Tracks forwarded keys, delivers their matching releases despite later modifier changes, and releases held keys before blur. |
+| `packages/crisp_ebook_reader/linux/crisp_ebook_reader_plugin.cc` | Retains the validated session for fixed native page-key commands and keeps each key's initial parent/native route until release. |
+| New `packages/crisp_ebook_reader/assets/reader_selection.js` | Observes current sanitized documents with bounded initial text extraction, unchanged-endpoint deduplication and explicit disposal. |
+
+The observer samples at most eight current documents, with their section
+indices supplied by the trusted renderer's load events. It compares the first
+range's endpoints before performing text extraction or CFI conversion. A
+changed range's DOM-text scan has a 20,000 UTF-16-code-unit limit and a
+4,096-step traversal budget, including parent ascents. Large text nodes are
+read through bounded `substringData`, without first materializing their full
+contents. Native rendered-whitespace conversion is used only after a completed
+bounded scan and only when the selection has exactly one range. Multi-range
+quotes use the bounded first range that the CFI describes; later ranges cannot
+trigger an unbounded `Selection.toString()` call. Long or highly fragmented
+quotes are prefixes, not a promise to export the complete selected text.
+
+The 150 ms event debounce and 200 ms parent poll share the same deduplication
+state. Weak maps retain no strong collection of old documents. Current-view
+checks suppress callbacks after replacement, including checks after CFI
+conversion. Disposal stops both timers, removes the view and current-document
+listeners, clears document state and drops references to the view/current
+predicate. Publication scripts remain disabled. Existing native copy behavior
+is unaffected; the observer emits the existing selection event with text,
+CFI and section index rather than adding an external destination.
+
+The native adapter interpolates only the already-validated base64url session
+and fixed arrow names into a fixed `hostKey` command. It uses the existing
+session and channel checks and serialized navigation queue. Request ID `-1`
+is separate from Dart's incrementing positive request IDs; its reply is ignored
+when no pending request matches. The native path requires focus and the trusted
+reader document. Bare-arrow presses and releases stay on the parent route,
+while modified keys retain the existing GTK route; changing modifiers during
+a held key cannot create a mismatched release. Dart's tracked-key map is
+bounded by its existing key allowlist. Held-key state is cleared on blur,
+and release messages precede native focus loss.
+
+All five runtime files match their authors' final frozen hashes, including the
+revised selection helper SHA-256
+`e7c428073c4eb6bc0b948a55a97de30a1d4e124f648400fe0ef88eeb04ea54be`.
+The other 291 previously bound files are unchanged. Direct source comparison
+also confirms unchanged vendor bytes, sanitization, CSP, asset-server routing,
+WebKit runtime settings, package manifests, dependency lock and validators.
+The delta adds no cryptographic primitive, dependency, credential flow or
+network destination. Earlier unrelated review records retain their original
+scope and evidence.
+
+The browser owner reported passing normal and forced-fallback parser runs,
+including all five Kindle fixtures, parent observation without child callbacks,
+large/fragmented text bounds, the multi-range regression, and replacement and
+disposal checks. The multi-range regression makes `Selection.toString()` throw
+and still asserts delivery of the correct first-range quote and section. The
+native owner reported one passing focused widget test and clean analysis;
+its mocked channel covers first-shortcut focus, modifier changes and exactly
+one release before blur. These results do not substitute for actual browser
+or native selection/navigation execution, whose new checkpoint gates remain
+pending at this source review.
+
+The current fingerprints are:
+
+```json
+{
+  "inventory_sha256": "c4a59bd1eb0da60134d3a016a8bcca5d5f2d2bbe5c3d2ba1b9f36dbc9ebc134f",
+  "pubspec_lock_sha256": "e4af3d0674ff75b84ea258f7ed72a3d89c071eaad7cabac37d40b6997b32a9f1",
+  "reviewed_source_sha256": "d289823b13be0039398ee4c2193aaceb74764dde80451de5819d82c3c57c717a"
+}
+```
+
+Only the inventory and reviewed-source fingerprint values change in the policy;
+every other policy byte is retained, including the root-lock fingerprint and
+all application, declaration, documentation, France and TestFlight fields.
+Validator sources and acceptance rules are unchanged.
+
+The existing `crypto_release_evidence.py --check` passed against these exact
+296-path inventory, dependency-lock and reviewed-source bindings. All four
+review/policy files pass `git diff --check` and contain no conflict markers.
+Structural checks preserve every previous inventory path, the historical
+source-review text and every policy byte except the two fingerprint values.
+No unrelated test suite was repeated for this source-review update.

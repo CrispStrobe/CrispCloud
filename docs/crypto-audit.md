@@ -748,7 +748,7 @@ decisions and validator rules are retained.
 
 The subsequent base synchronization combines saved canary checkpoint
 `3ccfee41d139485d48b4d5ad7d90e500e31bfea2` with
-`5dce28e8c64b2557d3e42ef305da916e3bfcd91f`. The current inventory has **295
+`5dce28e8c64b2557d3e42ef305da916e3bfcd91f`. That synchronized inventory has **295
 unique paths and 20 feature records**. It retains the incoming KeePass, FTP,
 archive, dependency and other recorded review evidence, all 230 canary-branch
 paths, and the existing exclusion of the three absent alternate Linux runtime
@@ -764,6 +764,41 @@ inherits the incoming work's review scope and evidence without claiming a new
 independent audit of unrelated implementations. Policy decisions are preserved
 exactly, and actual builds, runtime acceptance and distribution checks remain
 tied to their recorded source revisions.
+
+### Parent selection observation and native page keys
+
+The next reviewed increment starts from diagnostic checkpoint `7e20b40c`.
+It adds only `packages/crisp_ebook_reader/assets/reader_selection.js` to the
+inventory, which now contains **296 unique paths and 20 feature records**.
+Four previously bound files change: `reader.js`, `reader_controls.js`,
+`host_linux.dart` and `crisp_ebook_reader_plugin.cc`. The other 291 bound
+files and the complete dependency lock remain unchanged.
+
+The trusted parent observes selections in at most eight current sanitized
+publication documents. It compares range endpoints before extracting text or
+computing the existing Foliate CFI. The initial DOM-text scan is limited to
+20,000 UTF-16 code units and 4,096 traversal steps. Ordinary short single-range
+selections retain native rendered whitespace; long, highly fragmented or
+multi-range selections use the bounded first-range text instead. Both the
+quote and CFI refer to that first range. Weak maps, current-view checks and
+explicit timer/listener disposal avoid retaining or reporting a closed book.
+This adds an observation path for an existing selection event; it does not
+enable publication scripts or introduce a new recipient or storage backend.
+
+Native bare Left/Right keys use the existing session/channel-checked command
+bridge and serialized navigation queue. The fixed method accepts only the two
+arrow names and calls Foliate's direction-aware navigation. Negative request
+ID `-1` cannot complete an ordinary positive-ID Dart request. Each held key
+retains its initial parent/native route until release; Dart forwards matching
+releases across modifier changes and before focus loss. Modified shortcuts
+continue through the existing native input path.
+
+Vendor sources, sanitization, CSP, the asset server, WebKit sandbox/settings,
+dependency manifests and cryptographic operations are unchanged. The
+[source-binding record](crypto-source-review-2026-11-12.md#parent-selection-observation-and-native-page-keys)
+records the focused parser and mocked-input results separately from the
+pending browser/native runtime gates. The two technical policy fingerprints
+are refreshed; all declaration and distribution decisions remain unchanged.
 
 ### Meaning of the existing export-policy status
 
