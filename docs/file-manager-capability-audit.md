@@ -1,17 +1,18 @@
 # File manager capability audit and implementation
 
 Audit date: 12 November 2026. Baseline: `4946a9a29b4cec0dd8a2efd3cb0b3200d620f39c`.
-Working branch: `feature/file-manager-capabilities-20261112`.
+Initial implementation branch: `feature/file-manager-capabilities-20261112`.
+Follow-up branches and current evidence: [gap closure register](file-manager-gaps/README.md).
 
 This audit compares the requested workflow ideas with application code and
-focused tests. The **baseline status** columns describe the commit above;
-changes delivered on this branch are identified separately. **Implemented**
+focused tests. The initial increment table retains the historical baseline;
+the feature matrices describe the current stacked implementation. **Implemented**
 means that an application workflow exists in source, not that every provider,
 platform or file size has passed live acceptance. Historical checklists are not
 used as proof. Repeated requests are consolidated below. Observed validation
 results and remaining acceptance limits are recorded at the end of this file.
 
-## Implementation increments
+## Initial implementation increments
 
 | Increment | Baseline | Branch review status | Delivered behavior and evidence |
 | --- | --- | --- | --- |
@@ -69,11 +70,11 @@ grants. The link is transient and is not restored after restarting the app.
 
 ## Workspace, display and navigation
 
-| Requested workflow | Baseline status | Current review state, evidence and boundary |
+| Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
 | Dual panes, tabs, brief/details/grid/thumbnail views | Implemented | `lib/widgets/file_panel.dart`, `lib/models/file_view_configuration.dart`; independent local or remote pane sources. |
 | History, favorites and saved workspaces | Implemented | `lib/providers/bookmarks_provider.dart`, `lib/providers/workspace_provider.dart`; source-bound tabs, groups and paired bookmarks. |
-| Synchronized browsing | Missing | **Added.** `lib/services/synchronized_browsing_service.dart`, provider and pane controls map relative navigation between captured roots. Missing counterparts stop the link without creating folders. See [synchronized browsing](synchronized-browsing.md). |
+| Synchronized browsing | Implemented | `lib/services/synchronized_browsing_service.dart`, provider and pane controls map relative navigation between captured roots. Missing counterparts stop the link without creating folders. See [synchronized browsing](synchronized-browsing.md). |
 | Configurable buttons and external commands with arguments | Implemented | `lib/widgets/file_command_toolbar.dart`, `lib/services/custom_toolbar_command_service.dart`; saved command/argument templates and review. |
 | Configurable main menu | Implemented / target-runtime acceptance pending | **Added in G04.** Saved command-based menu trees, user-command references, preview/reset/import/export and mandatory recovery controls; native presentation remains a target-runtime check. See [main menus](main-menus.md). |
 | Command line and terminal | Implemented with platform limits | `lib/widgets/terminal_panel.dart`, `docs/terminal.md`; desktop PTY/ConPTY, SSH and sandbox-specific shells. Exact legacy key conventions differ. |
@@ -97,11 +98,11 @@ grants. The link is transient and is not restored after restarting the app.
 
 ## Viewing and editing
 
-| Requested workflow | Baseline status | Current review state, evidence and boundary |
+| Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
 | Text, hex and binary viewing | Implemented with limits | `lib/services/internal_viewer_service.dart`, `lib/widgets/internal_viewer_dialog.dart`; bounded pages and full-stream search. Remote staging has a 2 GiB cap; rich renderers have smaller limits. |
 | UTF-8 and Unicode | Implemented | UTF-8/16/32 plus Latin-1; encoding controls and streaming boundary handling. |
-| DOS/Windows legacy text encodings | Missing | **Added.** `lib/services/legacy_text_encoding.dart`, `editor_document.dart`, `viewer_text_decoder.dart`, `viewer_search_service.dart` and `search_content_matcher.dart` share explicit CP437/Windows-1252 behavior. Strict editing rejects unrepresentable characters; there is no code-page auto-detection. Existing [editor](code-editor.md) and [file-operation/search](commander-file-operations.md) limits remain. |
+| DOS/Windows legacy text encodings | Implemented | `lib/services/legacy_text_encoding.dart`, `editor_document.dart`, `viewer_text_decoder.dart`, `viewer_search_service.dart` and `search_content_matcher.dart` share explicit CP437/Windows-1252 behavior. Strict editing rejects unrepresentable characters; there is no code-page auto-detection. Existing [editor](code-editor.md) and [file-operation/search](commander-file-operations.md) limits remain. |
 | Adjustable viewer font/line display | Implemented | Viewer controls include text scale and line/byte display options. |
 | Images, HTML, PDF, documents, audio and video | Implemented with format/platform limits | Preview pane and internal viewer; additional embedded editors are independent features. |
 | View archive members | Implemented with limits | `lib/services/archive_viewer_service.dart`; bounded extraction and original member identity. |
@@ -112,7 +113,7 @@ grants. The link is transient and is not restored after restarting the app.
 
 ## File operations and search
 
-| Requested workflow | Baseline status | Current review state, evidence and boundary |
+| Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
 | Recursive copy/move/delete/rename | Implemented | `lib/services/file_operation_service.dart`; reviewed plans, staging, capability checks, cancellation and recovery. |
 | Text comparison, merge and binary comparison | Implemented with limits | `lib/services/file_comparison_service.dart`, diff viewer; text merge capped at 8 MiB, binary comparison streams full contents. |
@@ -122,23 +123,24 @@ grants. The link is transient and is not restored after restarting the app.
 | Split/combine large files | Implemented | `lib/services/file_split_service.dart`; manifests, hashes and reviewed restart recovery. |
 | Duplicate file search | Implemented | Size prefilter followed by full SHA-256 verification in `duplicate_finder_service.dart`. |
 | Name/extension/size/date/content selection and search | Implemented | Shared criteria, wildcard/regex modes, saved searches and selections. |
-| Restore selection before the last operation | Partial | **Added.** Automatic delayed capture for accepted copy/move jobs and successful delete/trash/rename/archive creation; Restore Selection in the menu/palette and configurable Numpad `/`. Missing or replaced original rows are skipped. See [selection memory](selection-memory.md). |
+| Restore selection before the last operation | Implemented | Automatic delayed capture for accepted copy/move jobs and successful delete/trash/rename/archive creation; Restore Selection in the menu/palette and configurable Numpad `/`. Missing or replaced original rows are skipped. See [selection memory](selection-memory.md). |
 | Full text search across roots and archives | Implemented with limits | Literal streaming search; bounded regex/document/archive extraction. Traversal limits are reported; arbitrary nested/encrypted archive search is incomplete. |
 | Multi-rename with rules, editable names and presets | Implemented | Masks, regex, counters, pipelines, collisions/cycles, journals and whole-batch undo. |
-| Overwrite previews and custom details | Partial | Conflict choices, sizes/times, text/hash comparison exist; image thumbnails/custom metadata are absent from that dialog. |
+| Overwrite previews and custom details | Implemented for bounded previews | **Added in G03.** Paired bounded image thumbnails and safe metadata retain original source identities and reject stale versions. Existing decisions and text/hash comparisons remain. See [conflict review](conflict-review.md). |
 | OS access rights | Partial | Ordinary permissions, grants and native metadata are respected; no root/UAC elevation broker. |
 
 ## Connections, sharing and transfers
 
-| Requested workflow | Baseline status | Current review state, evidence and boundary |
+| Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
 | SFTP, WebDAV, S3, B2, Drive, OneDrive, Dropbox, SMB | Implemented | Provider adapters and conformance tests; support varies by platform and backend capability. |
 | Multiple connections and cross-server copies | Implemented | Independent source identities and client-mediated streams. |
 | FTP and implicit FTPS | Implemented | `ftp_client_adapter.dart`, `ftp_transfer_session.dart`; implicit TLS still begins before the greeting. Certificate/data-protection enforcement covers transfer and metadata paths. **G37 adds physical TCP/TLS cleanup on deadline or owner close/logout**, proven by peer-closure fixtures. See [FTP transport](ftp-transport.md). |
-| Explicit FTP over TLS | Missing | **Added.** Saved security mode, localized selector and port migration; `AUTH TLS` before login, followed by verified TLS and protected passive data channels. Failed negotiation and invalid certificates stop the connection. |
+| Explicit FTP over TLS | Implemented | Saved security mode, localized selector and port migration; `AUTH TLS` before login, followed by verified TLS and protected passive data channels. Failed negotiation and invalid certificates stop the connection. |
 | HTTP proxy for HTTP cloud traffic | Implemented | `lib/services/proxy_service.dart`; does not automatically cover direct FTP/SSH sockets. |
-| SOCKS5 | Incorrectly exposed | **Added and verified.** `socks5_connector.dart`, `socks5_socket.dart` and `proxy_service.dart` implement native HTTP/HTTPS tunneling instead of the baseline HTTP `PROXY` directive. Scope includes CONNECT, remote DNS, optional password authentication and configured host bypasses; no SOCKS4, UDP, direct FTP/SSH/SMB or browser transport claim. |
-| SOCKS4 and FTP/SFTP-specific proxies | Missing | Separate socket/protocol adapters are required. |
+| SOCKS5 | Implemented for native HTTP/HTTPS | The shared `socks_connector.dart` transport retains the `socks5_connector.dart` entry point for native HTTP/HTTPS tunneling. Scope includes CONNECT, remote DNS, optional password authentication and configured host bypasses. UDP, direct FTP/SSH/SMB and browser transport remain outside this setting. |
+| SOCKS4/4a HTTP routing | Implemented for native HTTP/HTTPS | **Added in G27.** Explicit local IPv4 versus remote DNS, bounded user IDs, strict HTTPS trust and no automatic fallback. All 197 focused proxy/security tests passed, including the native-parser host validation regression; see [proxy routing](proxy-routing.md). |
+| FTP/SFTP-specific proxies | Missing | Separate protocol/socket adapters remain scoped in G28. |
 | FXP | Missing | Cross-server copies currently pass through the application. |
 | Resume downloads | Provider-specific | SFTP/SMB and selected cloud adapters have range/resume paths; FTP transfer has no byte-offset restart. Journal recovery is not equivalent to byte resume. |
 | Queues, download later, background operations, priority/reorder | Implemented | Durable transfer jobs, scheduled start, waiting/conflict states and history. |
@@ -153,13 +155,13 @@ grants. The link is transient and is not restored after restarting the app.
 
 ## Archive coverage
 
-| Requested workflow | Baseline status | Current review state, evidence and boundary |
+| Requested workflow | Current status | Evidence and boundary |
 | --- | --- | --- |
 | Browse local/remote archives like folders | Implemented with limits | ZIP, TAR/TGZ, 7z, RAR; bounded BZ2/XZ/ZSTD streams/containers. Native input up to 2 GiB, browser input up to 256 MiB, smaller member/edit budgets. |
 | Edit/add/rename/delete/repack archive members | Implemented for selected formats | `lib/services/archive_workspace.dart`; ZIP, 7z, TAR and TGZ/TAR.GZ, verified original-container saves. |
-| Create an archive | Partial | **Expanded.** The native local context action opens a reviewed ZIP/7z/TAR/TAR.GZ dialog with a captured selection and destination. Source hashes, decoded contents and staged output are checked before exclusive publication. See [archive creation](archive-creation.md). |
+| Create an archive | Implemented for bounded native local inputs | The native local context action opens a reviewed ZIP/7z/TAR/TAR.GZ dialog with a captured selection and destination. Source hashes, decoded contents and staged output are checked before exclusive publication. Remote/browser creation remains G23. See [archive creation](archive-creation.md). |
 | Password-protected archive input | Implemented | ZIP/7z/RAR reading and encrypted ZIP/7z repack preserve original protection. |
-| Password/compression settings for new archives | Missing | **Added.** ZIP/TAR.GZ compression levels, 7z compression methods, ZIP/7z AES-256 and optional 7z filename encryption. TAR/TAR.GZ do not offer password protection. Passwords are not persisted. Exact limits are in [archive creation](archive-creation.md). |
+| Password/compression settings for new archives | Implemented for supported formats | ZIP/TAR.GZ compression levels, 7z compression methods, ZIP/7z AES-256 and optional 7z filename encryption. TAR/TAR.GZ do not offer password protection. Passwords are not persisted. Exact limits are in [archive creation](archive-creation.md). |
 | Large archive packing in a background worker | Missing | Current creation/repack is bounded and in-process, not a queued streaming worker. |
 | Direct archive-to-archive transfer | Missing | Copy-out exists; writable archive endpoints are not connected to the general transfer planner. |
 | Additional packer plugins and legacy binary plugins | Partial/missing | First-party extension/custom-command interfaces exist; no legacy binary plugin ABI or general external-packer bridge. |
@@ -167,11 +169,11 @@ grants. The link is transient and is not restored after restarting the app.
 
 ## Remaining implementation opportunities
 
-The complete follow-up scope is maintained in the [gap closure register](file-manager-gaps/README.md): 51 stable items across six implementation lanes, each with dependencies, explicit boundaries and acceptance checks. Follow that register for ongoing implementation status; baseline columns above retain their historical meaning.
+The complete follow-up scope is maintained in the [gap closure register](file-manager-gaps/README.md): 51 stable items across six implementation lanes, each with dependencies, explicit boundaries and acceptance checks. Follow that register for ongoing implementation status and separately named acceptance requirements.
 
-The following gaps can be developed within the current application design.
-They are proposals, not delivered features or promises that the existing
-implementation already handles their edge cases.
+The selected lanes below record delivered increments alongside concrete work
+still needed. A scoped item is a proposal with acceptance criteria; only an
+explicitly implemented or closed entry claims delivered behavior.
 
 | Opportunity | Concrete work still needed |
 | --- | --- |
@@ -206,7 +208,7 @@ transfer requires a separate legacy hardware/runtime project. Legacy binary
 plugin compatibility requires an ABI host and platform/bitness isolation; the
 application's own extension interfaces do not supply that compatibility.
 
-## Validation record
+## Initial implementation validation record
 
 The final integrated feature suite passed **538 tests across 30 test files** on
 Flutter **3.47.8** and Dart **3.13.7**. A separate navigation/workspace regression

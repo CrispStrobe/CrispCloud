@@ -191,6 +191,32 @@ void main() {
     socket.destroy();
   });
 
+  test(
+    'closing an active upload finishes its sink and observes cleanup errors',
+    () async {
+      final proxy = await _proxy(stallAfterConnect: true);
+      final task = await Socks5Connector(
+        host: '127.0.0.1',
+        port: proxy.port,
+      ).connect(Uri.parse('http://remote.invalid'));
+      final socket = await task.socket;
+      final source = StreamController<List<int>>(
+        onCancel: () =>
+            Future<void>.error(StateError('Upstream cleanup failed.')),
+      );
+      final rejected = expectLater(
+        socket.addStream(source.stream),
+        throwsA(isA<SocketException>()),
+      );
+      source.add([1, 2, 3]);
+      await proxy.tunnelData.future.timeout(const Duration(seconds: 2));
+      socket.destroy();
+      await rejected;
+      await socket.done.timeout(const Duration(seconds: 2));
+      await proxy.firstClosed.future.timeout(const Duration(seconds: 2));
+    },
+  );
+
   for (final certificate in [
     'wrong-host.pem',
     'expired.pem',
@@ -442,7 +468,7 @@ void main() {
 
   test('unsupported or malformed configured proxy URLs block routing', () {
     for (final url in [
-      'socks4://localhost:1080',
+      'socks6://localhost:1080',
       'https://localhost:8080',
       'unexpected://localhost:1080',
       'socks5://user@localhost:1080',

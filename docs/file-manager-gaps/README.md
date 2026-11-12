@@ -69,7 +69,7 @@ preserve earlier feature branches and do not rewrite or merge the main branch.
 | [G24](03-archives-and-containers.md#g24) | External packer adapters | Scoped | G17 extension isolation |
 | [G25](04-connections-and-transfers.md#g25) | FTP byte-offset resume | Scoped | Existing transfer recovery |
 | [G26](04-connections-and-transfers.md#g26) | Server-to-server FTP transfer | Scoped | G25 transfer evidence; server support |
-| [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Scoped | Existing SOCKS5 connector boundaries |
+| [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Closed: native HTTP/HTTPS scope | Direct-protocol proxy work remains G28 |
 | [G28](04-connections-and-transfers.md#g28) | Direct-protocol proxy routing | Scoped | Per-protocol socket factories |
 | [G29](04-connections-and-transfers.md#g29) | Global transfer bandwidth limits | Scoped | Shared transfer scheduler |
 | [G30](04-connections-and-transfers.md#g30) | Network volume discovery | Scoped | Native discovery adapters |
@@ -115,7 +115,8 @@ wait for unavailable legacy hardware or a platform-specific entitlement.
 | G01 incoming drops | `feature/incoming-drop-routing-20261112` · `a452b7a` · PR #61 | 118 tests passed across six drop/operation suites and the terminal service suite; focused analysis clean | Implemented; real OS/browser drag acceptance pending |
 | G02 direct Quick Open | `feature/quick-open-actions-20261112` · `baccf47` · PR #63 | 193 tests passed across nine navigation/rename suites and three conversion suites; focused analysis has no errors/warnings | Closed for the direct saved-item workflow |
 | G37 FTP transport lifetime | `feature/ftp-transport-lifetime-20261112` · `c8f4561` · PR #64 | 145 tests passed across nine FTP/SOCKS/TLS suites, including 24 native lifetime cases | Closed for owned transport cleanup; queue API boundary documented |
-| G04 configurable menus | `feature/configurable-menus-20261112` | 96 tests passed across 11 menu, screen, keyboard, navigation and SQLite-runtime suites | Implemented; native presentation and keyboard acceptance pending |
+| G04 configurable menus | `feature/configurable-menus-20261112` · `55dd210` · PR #65 | 96 tests passed across 11 menu, screen, keyboard, navigation and SQLite-runtime suites | Implemented; native presentation and keyboard acceptance pending |
+| G27 SOCKS4/4a HTTP routing | `feature/socks4-http-routing-20261112` · implementation `8c1c4fd` · PR #66 | 197 tests passed across six proxy/security/TLS suites including the final host-validation delta; focused analysis and independent review clean | Closed for native HTTP/HTTPS routing |
 
 Implementation status is updated only after the corresponding code and tests
 are preserved remotely. Test counts from overlapping runs are not added together.

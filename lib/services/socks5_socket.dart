@@ -1,4 +1,4 @@
-part of 'socks5_connector.dart';
+part of 'socks_connector.dart';
 
 /// Converts raw socket readiness into the byte stream/sink expected by
 /// HttpClient. Keeping the raw transport lets cancellation close a pending TLS
@@ -27,6 +27,7 @@ class _SocksRawSocket extends Stream<Uint8List> implements Socket {
   late final _RawSocketConsumer _consumer;
   late final IOSink _sink;
   Completer<void>? _writable;
+  Future<void>? _bindingReleased;
   bool _destroyed = false;
   bool _detached = false;
   bool _sendClosed = false;
@@ -59,8 +60,7 @@ class _SocksRawSocket extends Stream<Uint8List> implements Socket {
     _finish(error, trace);
   }
 
-  void _closedEvent() =>
-      _finish(const SocketException('SOCKS5 socket closed.'));
+  void _closedEvent() => _finish(const SocketException('SOCKS socket closed.'));
 
   void _finish(Object error, [StackTrace? trace]) {
     if (_destroyed || _detached) return;
@@ -69,17 +69,42 @@ class _SocksRawSocket extends Stream<Uint8List> implements Socket {
     _writable = null;
     waiting?.completeError(error, trace);
     _consumer.abort(error, trace);
-    unawaited(raw.close());
+    _ignoreCleanup(raw.close());
     if (!_input.isClosed) unawaited(_input.close());
-    // Finish the IOSink even if it was idle at the moment of cancellation.
-    unawaited(_sink.close().then<void>((_) {}, onError: (Object _) {}));
+    // Aborting the consumer releases an active addStream/flush asynchronously.
+    // Close TCP immediately, then finish IOSink once that binding unwinds.
+    unawaited(_closeSinkAfterBinding());
+  }
+
+  Future<void> _closeSinkAfterBinding() async {
+    await _bindingReleased;
+    try {
+      await _sink.close();
+    } catch (_) {
+      // Preserve the original failure reported to the active writer.
+    }
+  }
+
+  Future<void> _bindSink(Future<dynamic> Function() operation) async {
+    if (_bindingReleased != null) {
+      await operation();
+      return;
+    }
+    final released = Completer<void>();
+    _bindingReleased = released.future;
+    try {
+      await operation();
+    } finally {
+      _bindingReleased = null;
+      released.complete();
+    }
   }
 
   Future<void> _write(List<int> bytes) async {
     var offset = 0;
     while (offset < bytes.length) {
       if (_destroyed || _detached || _sendClosed) {
-        throw const SocketException('SOCKS5 socket is closed for writing.');
+        throw const SocketException('SOCKS socket is closed for writing.');
       }
       final written = raw.write(bytes, offset, bytes.length - offset);
       offset += written;
@@ -103,6 +128,7 @@ class _SocksRawSocket extends Stream<Uint8List> implements Socket {
     raw.readEventsEnabled = false;
     raw.writeEventsEnabled = false;
     if (!_input.isClosed) unawaited(_input.close());
+    _ignoreCleanup(_sink.close());
     return _events;
   }
 
@@ -119,7 +145,7 @@ class _SocksRawSocket extends Stream<Uint8List> implements Socket {
     cancelOnError: cancelOnError,
   );
   @override
-  void destroy() => _finish(const SocketException('SOCKS5 socket destroyed.'));
+  void destroy() => _finish(const SocketException('SOCKS socket destroyed.'));
   @override
   Encoding get encoding => _sink.encoding;
   @override
@@ -130,9 +156,10 @@ class _SocksRawSocket extends Stream<Uint8List> implements Socket {
   void addError(Object error, [StackTrace? stackTrace]) =>
       throw UnsupportedError('Cannot send errors on a socket.');
   @override
-  Future<void> addStream(Stream<List<int>> stream) => _sink.addStream(stream);
+  Future<void> addStream(Stream<List<int>> stream) =>
+      _bindSink(() => _sink.addStream(stream));
   @override
-  Future<void> flush() => _sink.flush();
+  Future<void> flush() => _bindSink(_sink.flush);
   @override
   Future<void> close() async {
     await _sink.close();
@@ -234,7 +261,7 @@ class _RawSocketConsumer implements StreamConsumer<List<int>> {
     _completion = null;
     final source = _source;
     _source = null;
-    if (source != null) unawaited(source.cancel());
+    if (source != null) _ignoreCleanup(source.cancel());
     if (completed != null && !completed.isCompleted) {
       completed.completeError(error, trace);
     }
