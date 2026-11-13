@@ -157,7 +157,7 @@ void main() {
           utf8.decode(await workspace.read('/incoming.txt')),
           'captured import',
         );
-        workspace.rename('/folder', '/renamed');
+        workspace.rename('/folder', 'renamed');
         workspace.remove(['/remove.txt']);
         workspace.createDirectory(
           '/new-empty',
@@ -282,7 +282,7 @@ void main() {
         expect(workspace.encrypted, isTrue);
         expect(workspace.maxMemberBytes, kArchiveReadLimit);
         if (!workspace.canUpdate) return;
-        workspace.rename('/original.txt', '/renamed.txt');
+        workspace.rename('/original.txt', 'renamed.txt');
         final review = await workspace.review();
         expect(review.spool, isNull);
         expect(review.bytes, isNotEmpty);
@@ -332,7 +332,7 @@ void main() {
     final original = await file.readAsBytes();
     final workspace = await open(file);
     if (!workspace.canUpdate) return;
-    workspace.rename('/folder', '/renamed');
+    workspace.rename('/folder', 'renamed');
     var checkpoints = 0;
     await expectLater(
       workspace.review(isCancelled: () => ++checkpoints >= 5),
@@ -385,13 +385,17 @@ void main() {
         ],
       );
       final workspace = await open(file);
-      if (!workspace.canUpdate) return;
+      expect(
+        workspace.canUpdate,
+        isTrue,
+        reason: 'The explicit large-file acceptance gate must publish.',
+      );
       expect(workspace.list().single.size, size);
       await expectLater(
         workspace.read('/large.bin'),
         throwsA(isA<ArchiveViewException>()),
       );
-      workspace.rename('/large.bin', '/renamed.bin');
+      workspace.rename('/large.bin', 'renamed.bin');
       final review = await workspace.review();
       expect(review.spool?.isSealed, isTrue);
       expect(() => review.bytes, throwsStateError);

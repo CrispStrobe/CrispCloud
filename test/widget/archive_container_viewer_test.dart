@@ -188,10 +188,18 @@ Future<void> _waitFor(
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 10)),
     );
-    await tester.pump();
+    // Production readers and integrity checks yield with zero-delay timers.
+    // Advance the fake clock as well as allowing the real file I/O above.
+    await tester.pump(const Duration(milliseconds: 1));
     if (ready()) return;
   }
-  expect(ready(), isTrue, reason: 'The asynchronous viewer operation stalled.');
+  expect(
+    ready(),
+    isTrue,
+    reason:
+        'The asynchronous viewer operation stalled. Visible text: '
+        '${tester.widgetList<Text>(find.byType(Text)).map((text) => text.data ?? text.textSpan?.toPlainText()).join(" | ")}',
+  );
 }
 
 ChoiceChip _chip(WidgetTester tester, String label) =>

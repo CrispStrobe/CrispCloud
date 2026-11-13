@@ -540,6 +540,45 @@ String _innerContainerName(String name) {
   return stripped == name ? '$name.uncompressed' : stripped;
 }
 
+Future<bool> _requiresHeaderPassword(koni.ByteSource source, int limit) async {
+  if (source.length < 6) return false;
+  final borrowed = ArchiveSliceSource(
+    source,
+    offset: 0,
+    length: source.length,
+    ownsParent: false,
+  );
+  try {
+    if (!_hasMagic(await borrowed.read(0, 6), 0, const [
+      0x37,
+      0x7a,
+      0xbc,
+      0xaf,
+      0x27,
+      0x1c,
+    ])) {
+      return false;
+    }
+    final public = await koni.builtInFormats.openReader(
+      borrowed,
+      options: koni.ArchiveReadOptions(
+        maxEntrySize: limit,
+        maxEntryCount: 200000,
+        maxContainerDecodeSize: limit,
+      ),
+    );
+    await public.close();
+    return false;
+  } on koni.EncryptedArchiveException {
+    return true;
+  } catch (_) {
+    // Corruption without evidence of encryption retains the original error.
+    return false;
+  } finally {
+    await borrowed.close();
+  }
+}
+
 Future<ViewerArchive> _openWithKoni(
   koni.ByteSource source, {
   String? password,
@@ -575,7 +614,21 @@ Future<ViewerArchive> _openWithKoni(
       arguments: {'limit': _mb(maxMemberBytes), 'detail': e.message},
     );
   } on koni.ArchiveException catch (e) {
+    // A 7z encrypted header has no independent password verifier. Decrypting
+    // with a wrong password can fail as a codec/header error instead. Only
+    // offer a password retry when opening this same bounded source without a
+    // password independently confirms header encryption.
+    final encryptedHeader =
+        password != null &&
+        await _requiresHeaderPassword(source, maxMemberBytes);
     await source.close();
+    if (encryptedHeader) {
+      throw const ArchivePasswordRequiredException(
+        'The password is wrong or the archive header is corrupt.',
+        code: ArchiveMessageCode.wrongOrCorrupt,
+        wrongPassword: true,
+      );
+    }
     throw ArchiveViewException(
       'Unsupported or corrupt archive: ${e.message}',
       code: ArchiveMessageCode.corrupt,

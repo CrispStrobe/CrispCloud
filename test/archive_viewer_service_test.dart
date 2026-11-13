@@ -36,10 +36,7 @@ Uint8List _tarZst() => Uint8List.fromList(ZstdEncoder().encode(_tar()));
 Uint8List _fixture(String name) =>
     File('test/fixtures/archives/$name').readAsBytesSync();
 
-Future<ViewerArchiveMember> _member(
-  ViewerArchive archive,
-  String name,
-) async {
+Future<ViewerArchiveMember> _member(ViewerArchive archive, String name) async {
   final matches = archive.members.where((m) => m.name == name).toList();
   expect(matches, isNotEmpty, reason: 'missing member $name');
   return matches.first;
@@ -85,16 +82,14 @@ void main() {
     });
 
     test('tar.gz', () async {
-      final archive = await openViewerArchive(
-        _tarGz(),
-        name: 'sample.tar.gz',
-      );
+      final archive = await openViewerArchive(_tarGz(), name: 'sample.tar.gz');
       addTearDown(archive.close);
       expect(
-          utf8.decode(await archive.readMember(
-            await _member(archive, 'hello.txt'),
-          )),
-          'hello archive');
+        utf8.decode(
+          await archive.readMember(await _member(archive, 'hello.txt')),
+        ),
+        'hello archive',
+      );
     });
 
     test('tar.bz2', () async {
@@ -153,7 +148,9 @@ void main() {
       expect(names, contains('日本語/ページ001.txt'));
       final member = await _member(archive, 'hello.txt');
       expect(
-          utf8.decode(await archive.readMember(member)).trim(), 'hello, 7z!');
+        utf8.decode(await archive.readMember(member)).trim(),
+        'hello, 7z!',
+      );
     });
 
     test('encrypted archive requests a password on member read', () async {
@@ -175,7 +172,9 @@ void main() {
       addTearDown(archive.close);
       final member = await _member(archive, 'hello.txt');
       expect(
-          utf8.decode(await archive.readMember(member)).trim(), 'hello, 7z!');
+        utf8.decode(await archive.readMember(member)).trim(),
+        'hello, 7z!',
+      );
     });
 
     test('unsupported compression reports a typed error (no hang)', () async {
@@ -190,6 +189,41 @@ void main() {
         throwsA(isA<ArchiveViewException>()),
       );
     });
+
+    test('wrong encrypted-header password remains retryable', () async {
+      await expectLater(
+        openViewerArchive(
+          _fixture('header_encrypted.7z'),
+          name: 'header_encrypted.7z',
+          password: 'incorrect password',
+        ),
+        throwsA(
+          isA<ArchivePasswordRequiredException>().having(
+            (error) => error.wrongPassword,
+            'wrongPassword',
+            isTrue,
+          ),
+        ),
+      );
+    });
+
+    test(
+      'damaged public 7z metadata does not request a password retry',
+      () async {
+        final bytes = Uint8List.fromList(_fixture('sample.7z'));
+        bytes[bytes.length - 1] ^= 1;
+        await expectLater(
+          openViewerArchive(bytes, name: 'sample.7z', password: 'unused'),
+          throwsA(
+            isA<ArchiveViewException>().having(
+              (error) => error is ArchivePasswordRequiredException,
+              'passwordRequired',
+              isFalse,
+            ),
+          ),
+        );
+      },
+    );
 
     test('encrypted headers require the password at open', () async {
       final bytes = _fixture('header_encrypted.7z');
@@ -244,7 +278,9 @@ void main() {
       addTearDown(archive.close);
       final member = await _member(archive, 'hello.txt');
       expect(
-          utf8.decode(await archive.readMember(member)).trim(), 'hello, rar!');
+        utf8.decode(await archive.readMember(member)).trim(),
+        'hello, rar!',
+      );
     });
 
     test('wrong RAR4 password is reported as a password failure', () async {
@@ -305,8 +341,10 @@ void main() {
 
     test('archive member size cap is enforced', () async {
       final bytes = Uint8List.fromList(
-        ZipEncoder().encode(Archive()
-          ..addFile(ArchiveFile.bytes('big.bin', Uint8List(64 * 1024)))),
+        ZipEncoder().encode(
+          Archive()
+            ..addFile(ArchiveFile.bytes('big.bin', Uint8List(64 * 1024))),
+        ),
       );
       final archive = await openViewerArchive(
         bytes,
@@ -327,9 +365,7 @@ void main() {
       const xml =
           '<w:document><w:body><w:p><w:t>Hello office</w:t></w:p></w:body></w:document>';
       final archive = Archive()
-        ..addFile(
-          ArchiveFile.bytes('word/document.xml', utf8.encode(xml)),
-        );
+        ..addFile(ArchiveFile.bytes('word/document.xml', utf8.encode(xml)));
       final bytes = Uint8List.fromList(ZipEncoder().encode(archive));
 
       expect(

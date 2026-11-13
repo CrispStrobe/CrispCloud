@@ -64,9 +64,8 @@ jobs:
   analyze:
     name: Analyze + Test (Linux)
     runs-on: ubuntu-latest
-    # The full suite plus plugin contracts can reach 20 minutes before cache
-    # cleanup finishes; leave room to report the completed test result.
-    timeout-minutes: 30
+    # Include native streamed archive regressions and leave time for reports.
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v5
