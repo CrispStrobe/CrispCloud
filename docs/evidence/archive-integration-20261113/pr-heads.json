@@ -1,0 +1,546 @@
+{
+  "schema_version": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "baseline_main": "223fb771d2f8980f7425e7e2ecbe5d7953670592",
+  "integration_candidate": "5d0814fdf8dfa2257e3000d1d3e3792864a4901e",
+  "evidence_note": "Reconstructed from a fresh all-state GitHub connector search during the same integration session; excludes new integration PR #100. This lists the 89 pull requests in the initial audit cohort, not an original timestamped API snapshot. Original audit found 85 heads in baseline main, with #14, #84, #95, #97 outstanding.",
+  "excluded_new_pull_requests": [
+    100
+  ],
+  "pull_requests": [
+    {
+      "number": 5,
+      "head_sha": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "head_ref": "feature/pdf-editor-integration",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/5"
+    },
+    {
+      "number": 6,
+      "head_sha": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "head_ref": "feature/pdf-editor-integration",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/6"
+    },
+    {
+      "number": 7,
+      "head_sha": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "head_ref": "feature/f4-pro-image-editor",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/7"
+    },
+    {
+      "number": 8,
+      "head_sha": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "head_ref": "fix/issues-integration",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/8"
+    },
+    {
+      "number": 9,
+      "head_sha": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "head_ref": "feature/image-editor-completion",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/9"
+    },
+    {
+      "number": 10,
+      "head_sha": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "head_ref": "feature/media-editing",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/10"
+    },
+    {
+      "number": 11,
+      "head_sha": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "head_ref": "feat/image-gallery-tiles",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/11"
+    },
+    {
+      "number": 12,
+      "head_sha": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "head_ref": "feature/commander-file-operations",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/12"
+    },
+    {
+      "number": 13,
+      "head_sha": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "head_ref": "feature/commander-workflow-polish",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/13"
+    },
+    {
+      "number": 14,
+      "head_sha": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "head_ref": "feature/commander-review-20261105",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/14"
+    },
+    {
+      "number": 15,
+      "head_sha": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "head_ref": "feature/commander-file-operations",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/15"
+    },
+    {
+      "number": 16,
+      "head_sha": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "head_ref": "feature/madedit2-hex-editor",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/16"
+    },
+    {
+      "number": 17,
+      "head_sha": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "head_ref": "feat/real-terminal",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/17"
+    },
+    {
+      "number": 18,
+      "head_sha": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "head_ref": "fix/hex-runtime-polish",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/18"
+    },
+    {
+      "number": 19,
+      "head_sha": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "head_ref": "feat/copy-move-job-manager",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/19"
+    },
+    {
+      "number": 20,
+      "head_sha": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "head_ref": "feature/madedit2-hex-editor",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/20"
+    },
+    {
+      "number": 21,
+      "head_sha": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "head_ref": "integrate/open-prs-20261106",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/21"
+    },
+    {
+      "number": 22,
+      "head_sha": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "head_ref": "fix/runtime-followups",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/22"
+    },
+    {
+      "number": 23,
+      "head_sha": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "head_ref": "feat/ios-embedded-shell",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/23"
+    },
+    {
+      "number": 24,
+      "head_sha": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "head_ref": "fix/native-process-and-export",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/24"
+    },
+    {
+      "number": 25,
+      "head_sha": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "head_ref": "feat/crypto-export-audit",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/25"
+    },
+    {
+      "number": 26,
+      "head_sha": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "head_ref": "feat/credential-storage-backends",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/26"
+    },
+    {
+      "number": 27,
+      "head_sha": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "head_ref": "fix/credential-main-review-20261107",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/27"
+    },
+    {
+      "number": 28,
+      "head_sha": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "head_ref": "feature/storage-analyzer-2026-11-07",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/28"
+    },
+    {
+      "number": 29,
+      "head_sha": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "head_ref": "fix/macos-startup-smoke-first-run",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/29"
+    },
+    {
+      "number": 30,
+      "head_sha": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "head_ref": "docs/testflight-export-blocker",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/30"
+    },
+    {
+      "number": 31,
+      "head_sha": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "head_ref": "docs/export-route-decision",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/31"
+    },
+    {
+      "number": 32,
+      "head_sha": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "head_ref": "fix/apple-export-france-excluded",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/32"
+    },
+    {
+      "number": 33,
+      "head_sha": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "head_ref": "fix/crypto-gate-france-exempt",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/33"
+    },
+    {
+      "number": 34,
+      "head_sha": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "head_ref": "security/crypto-export-compliance-2026-11-08",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/34"
+    },
+    {
+      "number": 35,
+      "head_sha": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "head_ref": "docs/export-build10-condition",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/35"
+    },
+    {
+      "number": 36,
+      "head_sha": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "head_ref": "docs/build11-status",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/36"
+    },
+    {
+      "number": 37,
+      "head_sha": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "head_ref": "fix/smb2-ci-cache",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/37"
+    },
+    {
+      "number": 38,
+      "head_sha": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "head_ref": "fix/sqlite-ci-cache",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/38"
+    },
+    {
+      "number": 39,
+      "head_sha": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "head_ref": "fix/prime-gh-token",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/39"
+    },
+    {
+      "number": 40,
+      "head_sha": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "head_ref": "feature/file-manager-ux-20261110",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/40"
+    },
+    {
+      "number": 41,
+      "head_sha": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "head_ref": "fix/startup-storage-choices",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/41"
+    },
+    {
+      "number": 42,
+      "head_sha": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "head_ref": "fix/keychain-picker-access",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/42"
+    },
+    {
+      "number": 43,
+      "head_sha": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "head_ref": "chore/macos-local-signing",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/43"
+    },
+    {
+      "number": 45,
+      "head_sha": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "head_ref": "release/build-12",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/45"
+    },
+    {
+      "number": 47,
+      "head_sha": "be318f380fc47f94975a35c0924c89190d46f990",
+      "head_ref": "chore/store-screenshots",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/47"
+    },
+    {
+      "number": 49,
+      "head_sha": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "head_ref": "fix/store-screenshots-capture",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/49"
+    },
+    {
+      "number": 50,
+      "head_sha": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "head_ref": "fix/store-screenshots-content",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/50"
+    },
+    {
+      "number": 51,
+      "head_sha": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "head_ref": "fix/sign-script-keychain",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/51"
+    },
+    {
+      "number": 52,
+      "head_sha": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "head_ref": "feature/rust-smb-bundled",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/52"
+    },
+    {
+      "number": 53,
+      "head_sha": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "head_ref": "feature/ebook-reader-editor",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/53"
+    },
+    {
+      "number": 54,
+      "head_sha": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "head_ref": "feature/file-manager-capabilities-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/54"
+    },
+    {
+      "number": 55,
+      "head_sha": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/55"
+    },
+    {
+      "number": 56,
+      "head_sha": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "head_ref": "fix/remote-posix-paths",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/56"
+    },
+    {
+      "number": 57,
+      "head_sha": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "head_ref": "feature/rust-cloud-engines",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/57"
+    },
+    {
+      "number": 58,
+      "head_sha": "9887b53272d5f747cae9f73b363748985937ad05",
+      "head_ref": "feature/file-manager-gap-closure-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/58"
+    },
+    {
+      "number": 59,
+      "head_sha": "132f70e746aa9815a51a046ab02e83393d084622",
+      "head_ref": "feature/conflict-review-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/59"
+    },
+    {
+      "number": 60,
+      "head_sha": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "head_ref": "feature/external-terminal-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/60"
+    },
+    {
+      "number": 61,
+      "head_sha": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "head_ref": "feature/incoming-drop-routing-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/61"
+    },
+    {
+      "number": 62,
+      "head_sha": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "head_ref": "fix/ci-format-analyze",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/62"
+    },
+    {
+      "number": 63,
+      "head_sha": "baccf470e946fc86fde41c96443423006eac2be7",
+      "head_ref": "feature/quick-open-actions-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/63"
+    },
+    {
+      "number": 64,
+      "head_sha": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "head_ref": "feature/ftp-transport-lifetime-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/64"
+    },
+    {
+      "number": 65,
+      "head_sha": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "head_ref": "feature/configurable-menus-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/65"
+    },
+    {
+      "number": 66,
+      "head_sha": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "head_ref": "feature/socks4-http-routing-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/66"
+    },
+    {
+      "number": 67,
+      "head_sha": "403e942dc99779883210125a01841ef209e19d2e",
+      "head_ref": "feature/file-conversion-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/67"
+    },
+    {
+      "number": 68,
+      "head_sha": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "head_ref": "feature/office-fidelity-gap-closure-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/68"
+    },
+    {
+      "number": 69,
+      "head_sha": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "head_ref": "feature/gap-extension-scope-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/69"
+    },
+    {
+      "number": 70,
+      "head_sha": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "head_ref": "feature/ftp-download-resume-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/70"
+    },
+    {
+      "number": 71,
+      "head_sha": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "head_ref": "feature/command-entry-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/71"
+    },
+    {
+      "number": 72,
+      "head_sha": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "head_ref": "feature/gathering-stack-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/72"
+    },
+    {
+      "number": 73,
+      "head_sha": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "head_ref": "feature/localized-help-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/73"
+    },
+    {
+      "number": 74,
+      "head_sha": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "head_ref": "feature/external-tools-archive-scope-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/74"
+    },
+    {
+      "number": 75,
+      "head_sha": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "head_ref": "feature/private-tool-staging-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/75"
+    },
+    {
+      "number": 76,
+      "head_sha": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "head_ref": "feature/conditional-remote-publication-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/76"
+    },
+    {
+      "number": 77,
+      "head_sha": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "head_ref": "feature/external-comparison-tools-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/77"
+    },
+    {
+      "number": 78,
+      "head_sha": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "head_ref": "feature/archive-publication-recovery-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/78"
+    },
+    {
+      "number": 79,
+      "head_sha": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "head_ref": "feature/office-fidelity-followup-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/79"
+    },
+    {
+      "number": 80,
+      "head_sha": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "head_ref": "feature/external-remote-editing-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/80"
+    },
+    {
+      "number": 81,
+      "head_sha": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "head_ref": "feature/writable-archive-endpoints-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/81"
+    },
+    {
+      "number": 82,
+      "head_sha": "085495527e0ab02f52eeded928d54cb766b79910",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/82"
+    },
+    {
+      "number": 83,
+      "head_sha": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "head_ref": "feature/viewer-spool-lifecycle-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/83"
+    },
+    {
+      "number": 84,
+      "head_sha": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "head_ref": "feature/ebook-parity-canary-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/84"
+    },
+    {
+      "number": 85,
+      "head_sha": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "head_ref": "feature/office-fidelity-expansion-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/85"
+    },
+    {
+      "number": 86,
+      "head_sha": "120f839ab9091bdbedf326621347ee737140e043",
+      "head_ref": "feature/archive-containers-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/86"
+    },
+    {
+      "number": 87,
+      "head_sha": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/87"
+    },
+    {
+      "number": 88,
+      "head_sha": "b100cd751688f13609a8829180b487b381588d14",
+      "head_ref": "feature/office-fidelity-oracles-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/88"
+    },
+    {
+      "number": 89,
+      "head_sha": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "head_ref": "feature/archive-writers-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/89"
+    },
+    {
+      "number": 90,
+      "head_sha": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "head_ref": "feature/archive-package-readers-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/90"
+    },
+    {
+      "number": 91,
+      "head_sha": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/91"
+    },
+    {
+      "number": 92,
+      "head_sha": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "head_ref": "feature/archive-workflows-codecs-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/92"
+    },
+    {
+      "number": 93,
+      "head_sha": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "head_ref": "feature/archive-rearrange-cpio-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/93"
+    },
+    {
+      "number": 94,
+      "head_sha": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/94"
+    },
+    {
+      "number": 95,
+      "head_sha": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "head_ref": "feature/apache-file-viewer-20261113",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/95"
+    },
+    {
+      "number": 97,
+      "head_sha": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "head_ref": "feature/archive-commander-parity-20261113",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/97"
+    }
+  ]
+}

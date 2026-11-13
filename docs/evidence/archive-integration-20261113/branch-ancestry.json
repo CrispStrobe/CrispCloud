@@ -1,0 +1,82 @@
+{
+  "baseline": "223fb771d2f8980f7425e7e2ecbe5d7953670592",
+  "candidate": "5d0814fdf8dfa2257e3000d1d3e3792864a4901e",
+  "original_live_heads": [
+    {
+      "branch": "checkpoint/app-final-next-20261113",
+      "head": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "checkpoint/app-layout-next-20261113",
+      "head": "6f2e3245b7971d620410a65e75bf54b04132319a",
+      "ancestor_of_baseline": true,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "checkpoint/app-oracle-rollout-20261113",
+      "head": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "checkpoint/ebook-native-input-20261112",
+      "head": "7e20b40c1b797d463704106c881b9e84415f4fd7",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/apache-file-viewer-20261113",
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/archive-commander-parity-20261113",
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/archive-iso-rar-dmg-20261113",
+      "head": "8d17b8d28b45d987a1bb6bf8d6dae62ee000bfa2",
+      "ancestor_of_baseline": true,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/archive-operation-queue-20261113",
+      "head": "2f38835ae8c9eff9955994f80ca9e309bceda994",
+      "ancestor_of_baseline": true,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/ebook-parity-canary-20261112",
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/office-fidelity-gaps-20261113",
+      "head": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "feature/office-fidelity-oracle-validation-20261113",
+      "head": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+      "ancestor_of_baseline": false,
+      "ancestor_of_candidate": true
+    },
+    {
+      "branch": "main",
+      "head": "223fb771d2f8980f7425e7e2ecbe5d7953670592",
+      "ancestor_of_baseline": true,
+      "ancestor_of_candidate": true
+    }
+  ],
+  "cohort_note": "The original 12-head cohort excludes the integration branch created in this continuation. PR inventory is a same-session reconstruction excluding newly created PR100, not a timestamped original API capture.",
+  "original_pr_inventory_sha256": "21fa125c001d3b21fe4e288414f84913b5fefef1e42706386142ccd62251fcc8",
+  "parser_pin": "840f8af1f645cd6ed85277ba6e619dc120d99277",
+  "ebook_pin": "ac9925c46c982a545a18bc8d5616b5d874da51c9"
+}
