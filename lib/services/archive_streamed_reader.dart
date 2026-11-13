@@ -32,12 +32,16 @@ class StreamedArchiveOpen {
 /// Opens the common writable container formats without collecting their input
 /// or members. The caller transfers source ownership, including on failure.
 /// ZIP/7z metadata stays bounded; gzip is validated into a private TAR spool.
+/// Read-only ISO viewers can omit the full preservation scan with
+/// [inspectIsoForRewrite]. Such a handle has an explicitly read-only policy;
+/// workspace opens and candidate verification retain the default full scan.
 Future<StreamedArchiveOpen> openStreamedArchiveSource(
   koni.ByteSource source, {
   required String name,
   String? password,
   int maxBytes = kArchiveStreamingLimit,
   bool Function()? isCancelled,
+  bool inspectIsoForRewrite = true,
 }) async {
   ArchiveOutputSpool? decoded;
   koni.ByteSource? decodedSource;
@@ -233,13 +237,17 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       );
       reason ??= inspection.reason;
     } else if (format == ArchiveEndpointFormat.iso) {
-      inspection = await inspectIsoRewriteSource(
-        input,
-        inner,
-        maxBytes: maxBytes,
-        isCancelled: isCancelled,
-      );
-      reason ??= inspection.reason;
+      if (inspectIsoForRewrite) {
+        inspection = await inspectIsoRewriteSource(
+          input,
+          inner,
+          maxBytes: maxBytes,
+          isCancelled: isCancelled,
+        );
+        reason ??= inspection.reason;
+      } else {
+        reason = 'ISO rewriting requires a complete preservation inspection.';
+      }
     } else if (format == ArchiveEndpointFormat.rar) {
       inspection = await inspectStoredRarRewriteSource(
         input,

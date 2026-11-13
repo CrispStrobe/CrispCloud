@@ -45,6 +45,7 @@ Future<ViewerArchive> openViewerArchiveFile(
           name: name,
           password: password,
           isCancelled: isCancelled,
+          inspectIsoForRewrite: false,
         );
         return await accept(opened.archive);
       }

@@ -39,6 +39,8 @@ and bounded buffered/nested routes, so a rename does not round a retained
 subsecond modification time. DMG workspace paths use the same frozen HFS
 Unicode normalization as the image writer, including accented-name lookups and
 canonical-equivalent collision checks.
+Folder comparison and import previews use those same destination keys while
+retaining the exact physical source paths for verification and move cleanup.
 
 ## Commander comparison
 
@@ -78,6 +80,10 @@ every unclaimed range and trailing byte. It skips the payload extents of regular
 files. Boot records, nonzero system areas, hybrid/UDF bridges, extra sessions,
 unknown application metadata, links and unsupported extent layouts cannot
 silently disappear during a rewrite.
+
+Read-only ISO viewing indexes the directories without performing this full
+write-preservation scan. Its reader handle carries a read-only policy; opening
+a writable workspace and verifying a replacement still run the complete scan.
 
 After the candidate is opened and inspected again,
 `verifyIsoRewritePreservation` compares the planned primary/Joliet descriptors,

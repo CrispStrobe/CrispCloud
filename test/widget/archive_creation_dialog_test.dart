@@ -146,19 +146,35 @@ void main() {
     );
     if (target == current) return;
     await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
     await tester.tap(field);
     await tester.pumpAndSettle();
-    // The format menu lazily builds rows outside its visible viewport.
-    // Scroll toward the target before ensureVisible asks for its element.
-    await tester.scrollUntilVisible(
-      find.text(label),
-      target.index < current.index ? -180 : 180,
-      scrollable: find.byType(Scrollable).last,
+    final menu = find.byType(ListView);
+    expect(menu, findsOneWidget);
+    final scrollable = find.descendant(
+      of: menu,
+      matching: find.byType(Scrollable),
     );
-    await tester.ensureVisible(find.text(label).last);
+    expect(scrollable, findsOneWidget);
+    // Wrapped labels have variable heights. Flutter estimates the menu's
+    // initial offset using minimum-height rows, so enum order does not tell us
+    // whether a target is above or below the actual viewport. Start at its
+    // real beginning and search the popup, independently of the form scroller.
+    final position = tester.state<ScrollableState>(scrollable).position;
+    position.jumpTo(position.minScrollExtent);
     await tester.pumpAndSettle();
-    await tester.tap(find.text(label).last);
+    final option = find.descendant(of: menu, matching: find.text(label));
+    await tester.scrollUntilVisible(option, 180, scrollable: scrollable);
+    await tester.ensureVisible(option);
     await tester.pumpAndSettle();
+    await tester.tap(option);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<DropdownButtonFormField<ArchiveCreationFormat>>(field)
+          .initialValue,
+      target,
+    );
   }
 
   String name(WidgetTester tester) => tester

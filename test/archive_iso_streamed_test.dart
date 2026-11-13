@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/archive_iso_reader.dart';
 import 'package:crisp_cloud/services/archive_iso_writer.dart';
+import 'package:crisp_cloud/services/archive_streamed_reader.dart';
 import 'package:crisp_cloud/services/archive_types.dart';
 import 'package:crisp_cloud/services/archive_write_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,6 +79,34 @@ _SparseIsoSource _largeIso() {
 }
 
 void main() {
+  test('read-only ISO viewing indexes metadata without scanning unclaimed image data', () async {
+    final fixture = IsoFixture();
+    const imageBytes = 80 * 1024 * 1024;
+    isoBoth32(fixture.bytes, 16 * 2048 + 80, imageBytes ~/ 2048);
+    final source = _SparseIsoSource(fixture.bytes, imageBytes)
+      ..poisonOffset = imageBytes - 1;
+    final opened = await openStreamedArchiveSource(
+      source,
+      name: 'large.iso',
+      inspectIsoForRewrite: false,
+    );
+    addTearDown(opened.archive.close);
+    expect(opened.policy.reason, isNotNull);
+    expect(opened.policy.inspection, isNull);
+    expect(opened.archive.maxStreamingMemberBytes, kArchiveStreamingLimit);
+    expect(
+      source.reads.every((read) => read.$1 + read.$2 <= fixture.bytes.length),
+      isTrue,
+    );
+    expect(source.closed, isFalse);
+    final member = opened.archive.members.singleWhere(
+      (member) => member.name == 'HELLO.TXT',
+    );
+    expect(utf8.decode(await opened.archive.readMember(member)), 'hello iso');
+    await opened.archive.close();
+    expect(source.closed, isTrue);
+  });
+
   test(
     'source ISO inspection matches buffered policy without reading payloads',
     () async {

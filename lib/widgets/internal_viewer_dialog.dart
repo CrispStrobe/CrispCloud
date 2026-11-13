@@ -1081,6 +1081,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             name: name,
             password: password,
             isCancelled: () => !isCurrent(),
+            inspectIsoForRewrite: false,
           )).archive;
           // Preservation restrictions govern edits, not F3's read-only view.
         } on ArchiveViewException catch (error) {
