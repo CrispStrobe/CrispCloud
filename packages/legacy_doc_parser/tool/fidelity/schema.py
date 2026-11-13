@@ -21,6 +21,8 @@ EXPECTED_CASES = frozenset([
     *(f"ink-strokes/{name}-{mode}" for name in (
         "polyline-solid", "single-dot", "paint-ellipse-alpha", "multiple-strokes",
         "pressure-ramp", "signed-quantization") for mode in ("compressed", "uncompressed")),
+    *(f"ink-strokes/{name}" for name in (
+        "affine-transform", "compact-translate", "pressure-2047-full", "pressure-2047-compact")),
     *(f"table-origin/{name}" for name in (
         "default", "zero-margin", "wide-margin", "negative-origin",
         "positive-origin", "independent-gap", "cell-margin", "nested", "nested-wide")),
@@ -115,6 +117,9 @@ EXPECTED_CASES = frozenset([
     *(f"textbox-tables/textbox-{story}-{margin}-{nesting}-{anchor}"
       for story in ("main", "header") for margin in ("default", "zero", "wide")
       for nesting in ("flat", "nested") for anchor in ("paragraph", "table")),
+    *(f"textbox-fills/{name}" for name in (
+        "gradient-hundred", "gradient-axial", "gradient-alpha", "picture",
+        "texture", "pattern", "unknown-gradient", "unknown-bitmap")),
 ])
 PACKAGES = (
     ("DocumentFormat.OpenXml", "3.3.0",
@@ -146,7 +151,7 @@ def source_snapshot(root: Path = ROOT) -> dict:
     for pattern in ("lib/**/*.dart", "test/support/**/*.dart", "tool/fidelity/*.dart",
                     "tool/fidelity/schema.py", "tool/office-validation/*",
                     "test/fixtures/word_native/*.doc", "test/fixtures/fidelity/image-appearance/**/*",
-                    "test/fixtures/ink_wpf/**/*",
+                    "test/fixtures/ink_wpf/**/*", "test/fixtures/ink_wpf_headers/**/*",
                     "test/fixtures/fidelity/officeart-shapes.doc",
                     "pubspec.yaml", "pubspec.lock",
                     ".dart_tool/package_config.json"):

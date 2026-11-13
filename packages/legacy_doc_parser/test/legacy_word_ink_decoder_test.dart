@@ -123,7 +123,7 @@ void main() {
     'unsupported transform and compression retain distinct inert status',
     () {
       expect(
-        decodeLegacyWordInk(_frame([17, 0, 0, 0, 64])).status,
+        decodeLegacyWordInk(_frame([19, 0])).status,
         LegacyWordInkDecodeStatus.unsupported,
       );
       expect(

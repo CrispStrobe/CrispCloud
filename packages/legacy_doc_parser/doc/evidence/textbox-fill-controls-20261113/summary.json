@@ -1,0 +1,1690 @@
+{
+  "initialObservations": 7,
+  "repeatCycles": 15,
+  "runs": {
+    "probe-1": {
+      "cases": [
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binarySha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [],
+          "id": "gradient-hundred",
+          "sourceSha256": "1af0978135b571c6afca5a0cf4458e8ff20a1655d1d22766c6d045391159f689"
+        }
+      ],
+      "status": "complete"
+    },
+    "probe-2": {
+      "cases": [
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": false,
+            "matchesWithinTolerance": false,
+            "maximumWordDriftPoints": 1.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binaryPath": "binary/controlled.doc",
+          "binarySha256": "97f1c066ce41ea9c96e5e103f3726192d45b1bf0484a5d553485b5a7c190c43d",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [],
+          "id": "gradient-hundred",
+          "nativeExportSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+          "sourceControl": {
+            "applied": true,
+            "command": [
+              "/workspace/scratch/c1ca2a1344e9/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+              "run",
+              "/workspace/scratch/c1ca2a1344e9/parser-textbox-next/tool/fidelity/textbox_property_control.dart",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-2/gradient-hundred/binary/authored.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-2/gradient-hundred/binary/controlled.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-2/gradient-hundred/source-properties.json"
+            ],
+            "control": "single-textbox-fopt-properties",
+            "input": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-2/gradient-hundred/binary/authored.doc",
+            "inputSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+            "newOfficeArt": {
+              "length": 451,
+              "offset": 2356
+            },
+            "output": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-2/gradient-hundred/binary/controlled.doc",
+            "outputSha256": "97f1c066ce41ea9c96e5e103f3726192d45b1bf0484a5d553485b5a7c190c43d",
+            "priorOfficeArt": {
+              "length": 433,
+              "offset": 604
+            },
+            "propertiesSha256": "b05d2c1be3c93d91c150af9aed8299a451a485f0d7dd3b1245553b8bf47fab4e",
+            "removedOperands": [
+              {
+                "complexBytes": 0,
+                "oldValue": 8421529,
+                "property": 385
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 8355686,
+                "property": 387
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 1048592,
+                "property": 447
+              }
+            ],
+            "requestedProperties": {
+              "180": 7,
+              "181": 13408614,
+              "183": 3368652,
+              "18b": 0,
+              "18c": 100,
+              "1bf": 3145776
+            },
+            "sourceCoordinatesChanged": false,
+            "tableStream": "1Table"
+          },
+          "sourceSha256": "1af0978135b571c6afca5a0cf4458e8ff20a1655d1d22766c6d045391159f689"
+        }
+      ],
+      "status": "complete"
+    },
+    "probe-3": {
+      "cases": [
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": false,
+            "matchesWithinTolerance": false,
+            "maximumWordDriftPoints": 1.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binaryPath": "binary/controlled.doc",
+          "binarySha256": "6d3dd69c7f8783600236e0cc53b54c46bf6fffc1e25c2abbdfc40bbc8319d0da",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "da3c94732db6c3cf0608844081894fd55079d17616b5117c0344482e78cd5876",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "85b4a9b9c1e39a288b527d4b37dbf399d1c68eee2e906875bd2a00598c06e9c0",
+              "index": 1
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "9c16878e4d1ba9e35039fa636a9be6b2428d8613dd3441ad1bfa15bef0327a46",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "4c654e1f1ffea3bce74e0c86ac61996a715bfaeed9628a3aa52e9e8e603cc904",
+              "index": 2
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "5dcc866693df65f734f54e19b609be8fda179b4dce0d96b3bda959a52082c21d",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "877a71794a3ae00268be7ea757fc64715f1b4e1bb29101fa931b537a32bb7ee7",
+              "index": 3
+            }
+          ],
+          "id": "gradient-zero",
+          "nativeExportSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+          "sourceControl": {
+            "applied": true,
+            "command": [
+              "/workspace/scratch/c1ca2a1344e9/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+              "run",
+              "/workspace/scratch/c1ca2a1344e9/parser-textbox-next/tool/fidelity/textbox_property_control.dart",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-zero/binary/authored.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-zero/binary/controlled.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-zero/source-properties.json"
+            ],
+            "control": "single-textbox-fopt-properties",
+            "input": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-zero/binary/authored.doc",
+            "inputSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+            "newOfficeArt": {
+              "length": 451,
+              "offset": 2356
+            },
+            "output": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-zero/binary/controlled.doc",
+            "outputSha256": "6d3dd69c7f8783600236e0cc53b54c46bf6fffc1e25c2abbdfc40bbc8319d0da",
+            "priorOfficeArt": {
+              "length": 433,
+              "offset": 604
+            },
+            "propertiesSha256": "794a74d86e8e0756ce24d26dc9519c47bf9a5416c18eff297c1c8e16bc8711ce",
+            "removedOperands": [
+              {
+                "complexBytes": 0,
+                "oldValue": 8421529,
+                "property": 385
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 8355686,
+                "property": 387
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 1048592,
+                "property": 447
+              }
+            ],
+            "requestedProperties": {
+              "180": 7,
+              "181": 13408614,
+              "183": 3368652,
+              "18b": 0,
+              "18c": 0,
+              "1bf": 3145776
+            },
+            "sourceCoordinatesChanged": false,
+            "tableStream": "1Table"
+          },
+          "sourceSha256": "51aa2f37cb3c4f50272b85c6ea019994390049435c288340e1740e5d4b2b5b9a"
+        },
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": false,
+            "matchesWithinTolerance": false,
+            "maximumWordDriftPoints": 1.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binaryPath": "binary/controlled.doc",
+          "binarySha256": "97f1c066ce41ea9c96e5e103f3726192d45b1bf0484a5d553485b5a7c190c43d",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "da3c94732db6c3cf0608844081894fd55079d17616b5117c0344482e78cd5876",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "85b4a9b9c1e39a288b527d4b37dbf399d1c68eee2e906875bd2a00598c06e9c0",
+              "index": 1
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "9c16878e4d1ba9e35039fa636a9be6b2428d8613dd3441ad1bfa15bef0327a46",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "4c654e1f1ffea3bce74e0c86ac61996a715bfaeed9628a3aa52e9e8e603cc904",
+              "index": 2
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "5dcc866693df65f734f54e19b609be8fda179b4dce0d96b3bda959a52082c21d",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "877a71794a3ae00268be7ea757fc64715f1b4e1bb29101fa931b537a32bb7ee7",
+              "index": 3
+            }
+          ],
+          "id": "gradient-hundred",
+          "nativeExportSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+          "sourceControl": {
+            "applied": true,
+            "command": [
+              "/workspace/scratch/c1ca2a1344e9/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+              "run",
+              "/workspace/scratch/c1ca2a1344e9/parser-textbox-next/tool/fidelity/textbox_property_control.dart",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-hundred/binary/authored.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-hundred/binary/controlled.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-hundred/source-properties.json"
+            ],
+            "control": "single-textbox-fopt-properties",
+            "input": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-hundred/binary/authored.doc",
+            "inputSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+            "newOfficeArt": {
+              "length": 451,
+              "offset": 2356
+            },
+            "output": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-hundred/binary/controlled.doc",
+            "outputSha256": "97f1c066ce41ea9c96e5e103f3726192d45b1bf0484a5d553485b5a7c190c43d",
+            "priorOfficeArt": {
+              "length": 433,
+              "offset": 604
+            },
+            "propertiesSha256": "b05d2c1be3c93d91c150af9aed8299a451a485f0d7dd3b1245553b8bf47fab4e",
+            "removedOperands": [
+              {
+                "complexBytes": 0,
+                "oldValue": 8421529,
+                "property": 385
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 8355686,
+                "property": 387
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 1048592,
+                "property": 447
+              }
+            ],
+            "requestedProperties": {
+              "180": 7,
+              "181": 13408614,
+              "183": 3368652,
+              "18b": 0,
+              "18c": 100,
+              "1bf": 3145776
+            },
+            "sourceCoordinatesChanged": false,
+            "tableStream": "1Table"
+          },
+          "sourceSha256": "1af0978135b571c6afca5a0cf4458e8ff20a1655d1d22766c6d045391159f689"
+        },
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": false,
+            "matchesWithinTolerance": false,
+            "maximumWordDriftPoints": 1.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binaryPath": "binary/controlled.doc",
+          "binarySha256": "d1cf94412d534ce6eeca79337e96fde428286adda9a33b872d2723c129b6244b",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "da3c94732db6c3cf0608844081894fd55079d17616b5117c0344482e78cd5876",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "85b4a9b9c1e39a288b527d4b37dbf399d1c68eee2e906875bd2a00598c06e9c0",
+              "index": 1
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "9c16878e4d1ba9e35039fa636a9be6b2428d8613dd3441ad1bfa15bef0327a46",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "4c654e1f1ffea3bce74e0c86ac61996a715bfaeed9628a3aa52e9e8e603cc904",
+              "index": 2
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "5dcc866693df65f734f54e19b609be8fda179b4dce0d96b3bda959a52082c21d",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "877a71794a3ae00268be7ea757fc64715f1b4e1bb29101fa931b537a32bb7ee7",
+              "index": 3
+            }
+          ],
+          "id": "gradient-diagonal",
+          "nativeExportSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+          "sourceControl": {
+            "applied": true,
+            "command": [
+              "/workspace/scratch/c1ca2a1344e9/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+              "run",
+              "/workspace/scratch/c1ca2a1344e9/parser-textbox-next/tool/fidelity/textbox_property_control.dart",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-diagonal/binary/authored.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-diagonal/binary/controlled.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-diagonal/source-properties.json"
+            ],
+            "control": "single-textbox-fopt-properties",
+            "input": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-diagonal/binary/authored.doc",
+            "inputSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+            "newOfficeArt": {
+              "length": 451,
+              "offset": 2356
+            },
+            "output": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-diagonal/binary/controlled.doc",
+            "outputSha256": "d1cf94412d534ce6eeca79337e96fde428286adda9a33b872d2723c129b6244b",
+            "priorOfficeArt": {
+              "length": 433,
+              "offset": 604
+            },
+            "propertiesSha256": "88c7d7b0368a19d553c83da26b6f1c23d6a35ca16e1b71074590a4cd283f847e",
+            "removedOperands": [
+              {
+                "complexBytes": 0,
+                "oldValue": 8421529,
+                "property": 385
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 8355686,
+                "property": 387
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 1048592,
+                "property": 447
+              }
+            ],
+            "requestedProperties": {
+              "180": 7,
+              "181": 13408614,
+              "183": 3368652,
+              "18b": 2949120,
+              "18c": 0,
+              "1bf": 3145744
+            },
+            "sourceCoordinatesChanged": false,
+            "tableStream": "1Table"
+          },
+          "sourceSha256": "0fb4e5109ff51ef52954ffe2830cff2c31108b6cb0131c302f9ee5e337239449"
+        },
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": false,
+            "matchesWithinTolerance": false,
+            "maximumWordDriftPoints": 1.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binaryPath": "binary/controlled.doc",
+          "binarySha256": "9692c4e07ef64428fc25b772bb7e36b67224f208991ac91339a9365737a2919e",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "da3c94732db6c3cf0608844081894fd55079d17616b5117c0344482e78cd5876",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "85b4a9b9c1e39a288b527d4b37dbf399d1c68eee2e906875bd2a00598c06e9c0",
+              "index": 1
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "9c16878e4d1ba9e35039fa636a9be6b2428d8613dd3441ad1bfa15bef0327a46",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "4c654e1f1ffea3bce74e0c86ac61996a715bfaeed9628a3aa52e9e8e603cc904",
+              "index": 2
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "5dcc866693df65f734f54e19b609be8fda179b4dce0d96b3bda959a52082c21d",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "877a71794a3ae00268be7ea757fc64715f1b4e1bb29101fa931b537a32bb7ee7",
+              "index": 3
+            }
+          ],
+          "id": "gradient-axial",
+          "nativeExportSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+          "sourceControl": {
+            "applied": true,
+            "command": [
+              "/workspace/scratch/c1ca2a1344e9/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+              "run",
+              "/workspace/scratch/c1ca2a1344e9/parser-textbox-next/tool/fidelity/textbox_property_control.dart",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-axial/binary/authored.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-axial/binary/controlled.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-axial/source-properties.json"
+            ],
+            "control": "single-textbox-fopt-properties",
+            "input": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-axial/binary/authored.doc",
+            "inputSha256": "a4ebd22e781ebac712bdea7625d2df008c8d362508543e6b2c0031ed92f48c08",
+            "newOfficeArt": {
+              "length": 451,
+              "offset": 2356
+            },
+            "output": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-axial/binary/controlled.doc",
+            "outputSha256": "9692c4e07ef64428fc25b772bb7e36b67224f208991ac91339a9365737a2919e",
+            "priorOfficeArt": {
+              "length": 433,
+              "offset": 604
+            },
+            "propertiesSha256": "e175d2c141914865710a650ef5810dc3e28c3786e70f7f2ad90a82bcb6f102b1",
+            "removedOperands": [
+              {
+                "complexBytes": 0,
+                "oldValue": 8421529,
+                "property": 385
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 8355686,
+                "property": 387
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 1048592,
+                "property": 447
+              }
+            ],
+            "requestedProperties": {
+              "180": 7,
+              "181": 13408614,
+              "183": 3368652,
+              "18b": -2949120,
+              "18c": -50,
+              "1bf": 3145744
+            },
+            "sourceCoordinatesChanged": false,
+            "tableStream": "1Table"
+          },
+          "sourceSha256": "4bfa23e3e568f43fb43afc77549c5d5eee4a0f814bff2ae6c6657d5b14a4204f"
+        },
+        {
+          "authoredToBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "baselineAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": false,
+            "matchesWithinTolerance": false,
+            "maximumWordDriftPoints": 1.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "binaryPath": "binary/controlled.doc",
+          "binarySha256": "a0b86e363cf58dbc78a034b7ab6e29b66f801cc08898fb57ecfa6174b88731b9",
+          "candidateAgainstAuthored": {
+            "actualPages": 1,
+            "exactOnThisRenderer": true,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": true,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "candidateAgainstBinary": {
+            "actualPages": 1,
+            "exactOnThisRenderer": false,
+            "layoutTextExactlyMatches": true,
+            "matchesWithinTolerance": true,
+            "maximumWordDriftPoints": 0.0,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "rasterExactlyMatches": false,
+            "rasterSettingsMatch": true,
+            "referencePages": 1,
+            "tolerancePoints": 0.25
+          },
+          "cycles": [
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "2adbbdc4d9b847948f272113822238875c30cf5dfd54800d7f9aa207dbb197d2",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "68ba945c6f5ff02536fd4d3ae781e2a3c9240d71b988fae6981f3885aad6a52a",
+              "index": 1
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "e3de125c00d6136d30fb10199dce3661233305a446a90acf607706a6f7809bba",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "cd097051b5104fc588dbef9a4f12221a9c15fe1cc9692a5c24f12bc2bef32240",
+              "index": 2
+            },
+            {
+              "againstBinary": {
+                "actualPages": 1,
+                "exactOnThisRenderer": true,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": true,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstFirst": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "againstPrevious": {
+                "actualPages": 1,
+                "exactOnThisRenderer": false,
+                "layoutTextExactlyMatches": true,
+                "matchesWithinTolerance": true,
+                "maximumWordDriftPoints": 0.0,
+                "pageDimensionsMatch": true,
+                "pageTextMatches": true,
+                "rasterExactlyMatches": false,
+                "rasterSettingsMatch": true,
+                "referencePages": 1,
+                "tolerancePoints": 0.25
+              },
+              "binarySha256": "d607079943b6cb387f8eb2b8d1574145f6aeca74f708a2337458d7a5904cc55b",
+              "converter": {
+                "counts": {
+                  "compatibilityFlags": 61,
+                  "evidenceArtifacts": 5,
+                  "paragraphs": 2,
+                  "sections": 1,
+                  "textboxes": 1
+                },
+                "limitations": [
+                  "partialFormatting",
+                  "embeddedObjects"
+                ],
+                "signatureValidityClaimed": false,
+                "warnings": [
+                  "unsupportedFormatting",
+                  "floatingObjectsOmitted"
+                ]
+              },
+              "docxSha256": "e173ee6a7acd1c9a127d9623d042be1f65a0168cd4bc0101158fdfd58e3e664d",
+              "index": 3
+            }
+          ],
+          "id": "gradient-opacity",
+          "nativeExportSha256": "3c6d045d1db85b4d0a22bdfaab12d21a4c40555d602e121f52a613abf4ca763e",
+          "sourceControl": {
+            "applied": true,
+            "command": [
+              "/workspace/scratch/c1ca2a1344e9/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+              "run",
+              "/workspace/scratch/c1ca2a1344e9/parser-textbox-next/tool/fidelity/textbox_property_control.dart",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-opacity/binary/authored.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-opacity/binary/controlled.doc",
+              "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-opacity/source-properties.json"
+            ],
+            "control": "single-textbox-fopt-properties",
+            "input": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-opacity/binary/authored.doc",
+            "inputSha256": "3c6d045d1db85b4d0a22bdfaab12d21a4c40555d602e121f52a613abf4ca763e",
+            "newOfficeArt": {
+              "length": 463,
+              "offset": 2362
+            },
+            "output": "/workspace/scratch/c1ca2a1344e9/textbox-next-fill-probe-3/gradient-opacity/binary/controlled.doc",
+            "outputSha256": "a0b86e363cf58dbc78a034b7ab6e29b66f801cc08898fb57ecfa6174b88731b9",
+            "priorOfficeArt": {
+              "length": 439,
+              "offset": 604
+            },
+            "propertiesSha256": "779041e9e7036e8edad71e23bdc72a8e51e29848fd2987f761d08ea0f8e8a26e",
+            "removedOperands": [
+              {
+                "complexBytes": 0,
+                "oldValue": 8421529,
+                "property": 385
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 49807,
+                "property": 386
+              },
+              {
+                "complexBytes": 0,
+                "oldValue": 8355686,
+                "property": 387
+              }
+            ],
+            "requestedProperties": {
+              "180": 7,
+              "181": 13408614,
+              "182": 32768,
+              "183": 3368652,
+              "184": 16384,
+              "18b": 0,
+              "18c": 100
+            },
+            "sourceCoordinatesChanged": false,
+            "tableStream": "1Table"
+          },
+          "sourceSha256": "c74fce5a6cc267fc7b1533f99cfe591bea0038fe34f699712ee3a97330b3dd65"
+        }
+      ],
+      "status": "complete"
+    }
+  },
+  "schema": "legacy-doc-parser/textbox-gradient-evidence",
+  "scope": "Source-hashed exploratory builds based on ae8a938b; original working-tree identities are retained. Probe 1 exposes native DOC export flattening; probes 2 and 3 use separately retained source FOPT controls.",
+  "version": 1
+}

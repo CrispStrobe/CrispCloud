@@ -6,7 +6,9 @@ Local, cloud and network storage. Automated unit, widget and native protocol tes
 
 Credential-storage recovery identifies the selected store, its path where available,
 the failed operation and native status, with copyable original stack traces.
-Startup and unlock failures offer Retry, access restoration where supported, and
+Locked custom macOS keychains use the system unlock dialog with the saved file
+grant; their passwords stay in macOS. Startup and unlock failures offer Retry,
+access restoration for a genuinely missing grant, and
 an explicit choice of another store without deleting the original credentials.
 See [credential storage](docs/credential-storage.md).
 

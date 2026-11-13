@@ -1,0 +1,28 @@
+{
+  "maximumCoordinateDeltaHimetric": 0,
+  "maximumPressureFactorDelta": 8.157038378087123E-10,
+  "pressureMetricMatchesDeclaration": true,
+  "coordinatesMatchSourceFormulaWithinTolerance": true,
+  "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+  "observedPressurePropertyValues": [
+    0,
+    127,
+    511,
+    895,
+    1023
+  ],
+  "observedPressureFactors": [
+    0,
+    0.12414467,
+    0.49951124,
+    0.8748778,
+    1
+  ],
+  "observedPressureMetric": {
+    "minimum": 0,
+    "maximum": 1023,
+    "unit": "None",
+    "resolution": 1
+  },
+  "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+}

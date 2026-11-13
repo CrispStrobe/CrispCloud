@@ -321,7 +321,7 @@ void main() {
     }
 
     PlatformException denied() => PlatformException(
-      code: 'custom_keychain_unavailable',
+      code: 'custom_keychain_access_required',
       message: 'Could not open the selected keychain.',
     );
 
@@ -367,22 +367,46 @@ void main() {
       expect(find.textContaining('Restore access or unlock it'), findsNothing);
     });
 
-    testWidgets('a locked keychain says so instead of opening a picker', (
-      tester,
-    ) async {
-      final (result, calls) = await run(
-        tester,
-        handler: (call) => throw PlatformException(
-          code: 'custom_keychain_locked',
-          message: 'locked',
-        ),
-      );
-      expect(result, isNull);
-      expect(calls, ['initialize:$listed']);
-      expect(
-        find.textContaining('Unlock it in Keychain Access'),
-        findsOneWidget,
-      );
-    });
+    for (final code in [
+      'custom_keychain_unavailable',
+      'custom_keychain_unlock_cancelled',
+    ]) {
+      testWidgets('$code never requests another file grant', (tester) async {
+        final (result, calls) = await run(
+          tester,
+          handler: (call) {
+            if (code == 'custom_keychain_unlock_cancelled' &&
+                call.method == 'initialize') {
+              throw PlatformException(code: 'custom_keychain_locked');
+            }
+            throw PlatformException(code: code, message: 'Native failure');
+          },
+        );
+        expect(result, isNull);
+        expect(
+          calls,
+          code == 'custom_keychain_unlock_cancelled'
+              ? ['initialize:$listed', 'unlock:$listed']
+              : ['initialize:$listed'],
+        );
+        expect(find.textContaining(code), findsWidgets);
+      });
+    }
+
+    testWidgets(
+      'a locked keychain requests native unlock without another picker',
+      (tester) async {
+        final (result, calls) = await run(
+          tester,
+          handler: (call) => throw PlatformException(
+            code: 'custom_keychain_locked',
+            message: 'locked',
+          ),
+        );
+        expect(result, isNull);
+        expect(calls, ['initialize:$listed', 'unlock:$listed']);
+        expect(find.textContaining('locked'), findsWidgets);
+      },
+    );
   });
 }

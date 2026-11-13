@@ -327,7 +327,7 @@ extension _WordMedia on _StructuredWordWriter {
     if (path == null) {
       path = 'word/media/image${_mediaParts.length + 1}.${asset.extension}';
       _mediaParts[asset.id] = path;
-      _package.addBytes(path, asset.contentType, asset.bytes);
+      _package.addBytes(path, asset.contentType, asset.embeddingBytes);
       _count('images');
     }
     return _package.relate(

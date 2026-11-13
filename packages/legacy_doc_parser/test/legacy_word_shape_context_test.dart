@@ -66,7 +66,7 @@ void main() {
 
   test('active or unresolved background colors retain strict paint guards', () {
     for (final values in [
-      for (final type in [1, 2, 3, 7, 10]) {0x0180: type, 0x0183: 0xffffff},
+      for (final type in [1, 2, 3, 8, 10]) {0x0180: type, 0x0183: 0xffffff},
       for (final type in [1, 2, 3, 5]) {0x01c4: type, 0x01c2: 0xffffff},
       {0x01ff: 0x02000200, 0x01c2: 0xffffff},
     ]) {

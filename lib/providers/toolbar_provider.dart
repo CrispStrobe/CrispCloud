@@ -140,7 +140,7 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
   int _revision = 0;
 
   _ColumnWidthsNotifier(this._sideKey)
-    : super({'size': 62.0, 'date': 78.0, 'ext': 40.0}) {
+    : super({'size': 96.0, 'date': 78.0, 'ext': 40.0}) {
     _load();
   }
 
@@ -157,7 +157,7 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
         if (mounted && _revision == 0) state = widths;
         return;
       }
-      final size = prefs.getDouble('col_${_sideKey}_size') ?? 62.0;
+      final size = prefs.getDouble('col_${_sideKey}_size') ?? 96.0;
       final date = prefs.getDouble('col_${_sideKey}_date') ?? 78.0;
       final ext = prefs.getDouble('col_${_sideKey}_ext') ?? 40.0;
       if (mounted && _revision == 0) {
@@ -199,7 +199,7 @@ class _ColumnWidthsNotifier extends StateNotifier<Map<String, double>> {
     final current = state[col] ?? defaultWidth ?? 0;
     if (current <= 0) {
       // Restore to default
-      final defaults = {'size': 62.0, 'date': 78.0, 'ext': 40.0};
+      final defaults = {'size': 96.0, 'date': 78.0, 'ext': 40.0};
       setWidth(col, current < 0 ? -current : defaults[col] ?? 62.0);
     } else {
       // Hide: store as negative (remember last width)

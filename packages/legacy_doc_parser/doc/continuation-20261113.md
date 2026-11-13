@@ -1,5 +1,9 @@
 # Office fidelity continuation — 13 November 2026
 
+This is the retained first-pass handoff. The [follow-up handoff](continuation-20261113-followup.md)
+supersedes its integration guidance and next-work status. Exact identities,
+measurements and rejected controls below remain historical.
+
 The current implementation and reproducible evidence are saved incrementally on
 `feature/office-fidelity-gaps-20261113` in both
 [`CrispStrobe/legacy-doc-parser`](https://github.com/CrispStrobe/legacy-doc-parser/tree/feature/office-fidelity-gaps-20261113)

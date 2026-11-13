@@ -301,3 +301,18 @@ to recover access. Session mode imports no persistent credentials.
 The macOS startup smoke test waits for credential preflight, an authorized vault
 unlock screen, or verified first-run setup. Rendering the application shell by
 itself no longer qualifies as a successful launch.
+
+### Saved file permission and keychain unlock are separate
+
+A custom-keychain file grant is retained as a security-scoped bookmark. Locking
+the encrypted keychain, including macOS lock-on-sleep, does not erase that grant.
+CrispCloud now requests Security.framework's own unlock dialog when the selected
+file is locked, then retries the same operation once. The password stays inside
+macOS. Concurrent reads share the request; cancellation preserves the selection
+and suppresses further automatic prompts until an explicit Retry.
+
+The app does not change the keychain's sleep/timeout policy, default keychain or
+search list. A file picker is offered only for an actual missing file-access
+grant. Missing files, permission errors inside the keychain and cancelled unlocks
+retain their native diagnostics instead of being misclassified as a new grant.
+During resume, the protected browser remains covered until its policy is read.

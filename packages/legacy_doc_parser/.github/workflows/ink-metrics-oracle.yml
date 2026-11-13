@@ -1,0 +1,62 @@
+name: Independent WPF ink transforms and metrics
+
+on:
+  push:
+    branches:
+      - checkpoint/ink-metrics-oracle-20261113
+    paths:
+      - .github/workflows/ink-metrics-oracle.yml
+      - tool/ink_metrics_oracle/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wpf-isf-headers:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: tool/ink_metrics_oracle
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.428'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Record installed runtime and exact clean source
+        run: |
+          New-Item -ItemType Directory -Force ../../build/ink-metrics-logs | Out-Null
+          dotnet --info | Out-File -Encoding utf8 ../../build/ink-metrics-logs/dotnet-info.txt
+          python --version | Out-File -Encoding utf8 ../../build/ink-metrics-logs/python-info.txt
+          git rev-parse HEAD 'HEAD^{tree}' | Out-File -Encoding utf8 ../../build/ink-metrics-logs/git-identity.txt
+          git status --porcelain | Out-File -Encoding utf8 ../../build/ink-metrics-logs/git-before.txt
+          if (git status --porcelain) { throw 'Expected a clean source checkout.' }
+      - name: Author minimal recorded ISF header controls
+        run: |
+          python author_controls.py ../../build/ink-metrics-input $env:GITHUB_SHA 2>&1 | Tee-Object ../../build/ink-metrics-logs/author.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build isolated actual WPF oracle
+        run: |
+          dotnet build InkMetricsOracle.csproj --configuration Release --output ../../build/ink-metrics-bin --property:BaseIntermediateOutputPath=../../build/ink-metrics-obj/ 2>&1 | Tee-Object ../../build/ink-metrics-logs/build.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Decode render and record native differences
+        run: |
+          & ../../build/ink-metrics-bin/InkMetricsOracle.exe ../../build/ink-metrics-input ../../build/ink-metrics $env:GITHUB_SHA 2>&1 | Tee-Object ../../build/ink-metrics-logs/run.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git status --porcelain | Out-File -Encoding utf8 ../../build/ink-metrics-logs/git-after.txt
+          if (git status --porcelain) { throw 'Oracle changed the source checkout.' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-wpf-isf-headers-${{ github.sha }}
+          path: |
+            build/ink-metrics/
+            build/ink-metrics-logs/
+            build/ink-metrics-input/
+          if-no-files-found: error
+          retention-days: 30

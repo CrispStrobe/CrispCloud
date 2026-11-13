@@ -1,0 +1,36 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "e8adaa97e5da4052291a2f8eda5f906489b7d7540d8c941ecc0ef5802ffc3e55",
+      "size": 3901
+    },
+    {
+      "path": "hosted-ci.json",
+      "sha256": "d7140f76c443eb053332fe795b752342a3903eded4088c02d9c0cb3da49595e6",
+      "size": 20440
+    },
+    {
+      "path": "seal_validation_evidence.py",
+      "sha256": "d4672b5787a9d7be2252924956a909556af369a485500fda2c0809b650e2b298",
+      "size": 30412
+    },
+    {
+      "path": "validation-artifacts.manifest.json",
+      "sha256": "7bdfc40a3dd2ee9c8a5a313fae5e1ed0b5807990bba9c0cb14a94381511aa696",
+      "size": 225215
+    },
+    {
+      "path": "validation-artifacts.tar.xz",
+      "sha256": "904af808f1fca38a373d6f9bd0bab7c34e4cf359c711f72c9c0835480dc4b95f",
+      "size": 1326444
+    },
+    {
+      "path": "verification.json",
+      "sha256": "c4d729acf28038e8c8628ab61a3df1c1277d7084c765dc53a73ca6770f76d0f5",
+      "size": 630
+    }
+  ],
+  "sourceCommit": "74420eb2e0ec14401a0db5bcbb30ab6d202a2340",
+  "sourceTree": "ac78b144d90bca0f44993d94ae0fd1c8115ce072"
+}

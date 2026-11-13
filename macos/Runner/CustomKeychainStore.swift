@@ -19,9 +19,14 @@ final class CustomKeychainStore {
   static let bookmarksPreference = "com.crispcloud.custom-keychain-bookmarks.v1"
 
   private let defaults: UserDefaults
+  private let requestUnlock: (SecKeychain) -> OSStatus
 
-  init(defaults: UserDefaults = .standard) {
+  init(defaults: UserDefaults = .standard,
+       requestUnlock: @escaping (SecKeychain) -> OSStatus = {
+         SecKeychainUnlock($0, 0, nil, false)
+       }) {
     self.defaults = defaults
+    self.requestUnlock = requestUnlock
   }
 
   static func fileURL(for path: String) throws -> URL {
@@ -285,7 +290,14 @@ final class CustomKeychainStore {
     }
   }
 
-  private func withKeychain<T>(path: String, operation: (SecKeychain) throws -> T) throws -> T {
+  /// Uses Security.framework's own password dialog. No password enters Dart,
+  /// preferences or logs, and the selected file/bookmark is never replaced.
+  func unlock(path: String) throws {
+    try withKeychain(path: path, unlockIfNeeded: true) { _ in () }
+  }
+
+  private func withKeychain<T>(path: String, unlockIfNeeded: Bool = false,
+                              operation: (SecKeychain) throws -> T) throws -> T {
     let url = try accessibleURL(for: path)
     let accessing = url.startAccessingSecurityScopedResource()
     defer { if accessing { url.stopAccessingSecurityScopedResource() } }
@@ -299,19 +311,33 @@ final class CustomKeychainStore {
     var state: SecKeychainStatus = 0
     let checked = SecKeychainGetStatus(keychain, &state)
     guard checked == errSecSuccess else { throw securityError(checked, operation: "open") }
+    if state & SecKeychainStatus(kSecUnlockStateStatus) == 0 && unlockIfNeeded {
+      let unlocked = requestUnlock(keychain)
+      guard unlocked == errSecSuccess else {
+        let cancelled = unlocked == errSecUserCanceled
+        let reason = SecCopyErrorMessageString(unlocked, nil) as String? ?? "Unknown security error"
+        throw CustomKeychainStoreError(
+          code: cancelled ? "custom_keychain_unlock_cancelled" : "custom_keychain_unlock_failed",
+          message: "Could not unlock the selected keychain: \(reason). The saved file-access grant is unchanged.",
+          status: unlocked)
+      }
+      let rechecked = SecKeychainGetStatus(keychain, &state)
+      guard rechecked == errSecSuccess else { throw securityError(rechecked, operation: "check unlock state of") }
+    }
     guard state & SecKeychainStatus(kSecUnlockStateStatus) != 0 else {
       throw CustomKeychainStoreError(
         code: "custom_keychain_locked",
-        message: "The selected keychain is locked. Unlock it in Keychain Access and retry.",
+        message: "macOS locked the selected keychain. Retry to request its system unlock dialog. The saved file-access grant is unchanged.",
         status: errSecInteractionNotAllowed)
     }
     return try operation(keychain)
   }
 
   private func securityError(_ status: OSStatus, operation: String) -> CustomKeychainStoreError {
-    CustomKeychainStoreError(
+    let reason = SecCopyErrorMessageString(status, nil) as String? ?? "Unknown security error"
+    return CustomKeychainStoreError(
       code: "custom_keychain_unavailable",
-      message: "Could not \(operation) the selected keychain. Check its permissions and use Browse to grant access.",
+      message: "Could not \(operation) the selected keychain: \(reason).",
       status: status)
   }
 

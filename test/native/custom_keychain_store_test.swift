@@ -259,7 +259,32 @@ private struct CustomKeychainStoreTests {
       try store.write(path: first.path, key: key, value: "locked write")
     }
     try expectStoreError("custom_keychain_locked") { try store.deleteAll(path: first.path) }
-    try first.unlock()
+    var unlockRequests = 0
+    let cancelledUnlock = CustomKeychainStore(defaults: defaults, requestUnlock: { reference in
+      unlockRequests += 1
+      return errSecUserCanceled
+    })
+    try expectStoreError("custom_keychain_unlock_cancelled") {
+      try cancelledUnlock.unlock(path: first.path)
+    }
+    try expect(unlockRequests == 1, "A cancelled unlock was repeated")
+    try expectStoreError("custom_keychain_locked") { try store.initialize(path: first.path) }
+    let sameFileUnlock = CustomKeychainStore(defaults: defaults, requestUnlock: { reference in
+      unlockRequests += 1
+      guard let selected = try? keychainPath(reference),
+            URL(fileURLWithPath: selected).resolvingSymlinksInPath() ==
+              URL(fileURLWithPath: first.path).resolvingSymlinksInPath()
+      else { return errSecParam }
+      do { try first.unlock(); return errSecSuccess } catch { return errSecAuthFailed }
+    })
+    try sameFileUnlock.unlock(path: first.path)
+    try store.initialize(path: first.path)
+    try sameFileUnlock.unlock(path: first.path)
+    try expect(unlockRequests == 2, "An unlocked keychain requested another password")
+    try expect(try store.read(path: second.path, key: key) == "second value",
+               "Unlocking selected file affected another keychain")
+    try expect(try PreferencesSnapshot.capture() == originalPreferences,
+               "Unlock changed the user's default keychain or search list")
 
     let firstURL = URL(fileURLWithPath: first.path)
     let firstSelectionKey = try CustomKeychainStore.fileURL(for: first.path).path

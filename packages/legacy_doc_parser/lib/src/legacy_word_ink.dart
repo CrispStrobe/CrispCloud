@@ -21,18 +21,74 @@ class LegacyWordInkDecodeResult {
       strokes.fold(0, (count, stroke) => count + stroke.points.length);
 }
 
+/// A source tablet-to-ink transform. Tag 20 has a zero linear matrix in ISF;
+/// an ordinary translation instead uses tag 16 with an identity linear matrix.
+class LegacyWordInkTransform {
+  const LegacyWordInkTransform._(
+    this.recordTag,
+    this.doublePrecision,
+    this.m11,
+    this.m12,
+    this.m21,
+    this.m22,
+    this.dx,
+    this.dy,
+  );
+  static const identity = LegacyWordInkTransform._(
+    null,
+    false,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+  );
+  final int? recordTag;
+  final bool doublePrecision;
+  final double m11, m12, m21, m22, dx, dy;
+  double x(int x, int y) => x * m11 + y * m21 + dx;
+  double y(int x, int y) => x * m12 + y * m22 + dy;
+}
+
+/// The preserved logical pressure range. This bounded decoder supports
+/// zero-based unitless ranges at unit resolution; other metrics stay inert.
+class LegacyWordInkPressureMetric {
+  const LegacyWordInkPressureMetric._(
+    this.minimum,
+    this.maximum,
+    this.unit,
+    this.resolution,
+  );
+  static const standard = LegacyWordInkPressureMetric._(0, 1023, 0, 1);
+  final int minimum, maximum, unit;
+  final double resolution;
+}
+
 /// Coordinates and pen dimensions use HIMETRIC (1/100 millimeter), before
 /// any OfficeArt placement. A decoded collection does not establish how a
 /// containing Word shape positions, clips or associates it with a comment.
 class LegacyWordInkPoint {
-  const LegacyWordInkPoint(this.xHimetric, this.yHimetric, this.normalPressure);
-  final int xHimetric, yHimetric;
+  const LegacyWordInkPoint(
+    this.packetX,
+    this.packetY,
+    this.normalPressure, {
+    this.transform = LegacyWordInkTransform.identity,
+    this.pressureMetric = LegacyWordInkPressureMetric.standard,
+  });
+
+  /// Original integer packet coordinates, before the source transform.
+  final int packetX, packetY;
+  final LegacyWordInkTransform transform;
+  final LegacyWordInkPressureMetric pressureMetric;
+  double get xHimetric => transform.x(packetX, packetY);
+  double get yHimetric => transform.y(packetX, packetY);
 
   /// Null preserves an absent pressure channel. ISF's default factor is 0.5.
-  /// Explicit supported pressure packets use the default 0..1023 metric.
+  /// Explicit samples retain the selected source pressure metric.
   final int? normalPressure;
   double get pressureFactor =>
-      normalPressure == null ? 0.5 : normalPressure! / 1023;
+      normalPressure == null ? 0.5 : normalPressure! / pressureMetric.maximum;
 }
 
 class LegacyWordInkStroke {
@@ -45,6 +101,8 @@ class LegacyWordInkStroke {
     required this.rectangleTip,
     required this.drawingFlags,
     required this.rasterOperation,
+    required this.transform,
+    required this.pressureMetric,
   }) : points = List.unmodifiable(points);
   final List<LegacyWordInkPoint> points;
   final String colorRgb;
@@ -52,6 +110,8 @@ class LegacyWordInkStroke {
   final double widthHimetric, heightHimetric;
   final bool rectangleTip;
   final int drawingFlags, rasterOperation;
+  final LegacyWordInkTransform transform;
+  final LegacyWordInkPressureMetric pressureMetric;
   bool get fitToCurve => (drawingFlags & 1) != 0;
   bool get ignorePressure => (drawingFlags & 4) != 0;
   bool get isHighlighter => rasterOperation == 9;
@@ -139,7 +199,7 @@ class _InkReader {
     final value = wide
         ? view.getFloat64(0, Endian.little)
         : view.getFloat32(0, Endian.little);
-    if (!value.isFinite) _invalidInk('Nonfinite ISF transform');
+    if (!value.isFinite) _invalidInk('Nonfinite ISF real value');
     return value;
   }
 
@@ -273,20 +333,25 @@ class _InkPaint {
   _InkPaint({this.width = 25, this.height = 25, this.flags = 0});
   double width, height;
   int flags, color = 0, alpha = 255, tip = 0, raster = 13;
-  LegacyWordInkStroke stroke(List<LegacyWordInkPoint> points) =>
-      LegacyWordInkStroke._(
-        points: points,
-        colorRgb: [color & 255, (color >> 8) & 255, (color >> 16) & 255]
-            .map((value) => value.toRadixString(16).padLeft(2, '0'))
-            .join()
-            .toUpperCase(),
-        alpha: alpha,
-        widthHimetric: width,
-        heightHimetric: height,
-        rectangleTip: tip == 1,
-        drawingFlags: flags,
-        rasterOperation: raster,
-      );
+  LegacyWordInkStroke stroke(
+    List<LegacyWordInkPoint> points,
+    LegacyWordInkTransform transform,
+    LegacyWordInkPressureMetric pressureMetric,
+  ) => LegacyWordInkStroke._(
+    points: points,
+    colorRgb: [color & 255, (color >> 8) & 255, (color >> 16) & 255]
+        .map((value) => value.toRadixString(16).padLeft(2, '0'))
+        .join()
+        .toUpperCase(),
+    alpha: alpha,
+    widthHimetric: width,
+    heightHimetric: height,
+    rectangleTip: tip == 1,
+    drawingFlags: flags,
+    rasterOperation: raster,
+    transform: transform,
+    pressureMetric: pressureMetric,
+  );
 }
 
 class _InkDecoder {
@@ -295,8 +360,11 @@ class _InkDecoder {
   final paints = <_InkPaint>[];
   final descriptors = <bool>[];
   final guids = <String>[];
+  final transforms = <LegacyWordInkTransform>[];
+  final metrics = <LegacyWordInkPressureMetric>[];
   var paintIndex = 0, descriptorIndex = 0, totalPoints = 0;
-  var transformSeen = false;
+  var transformIndex = 0, metricIndex = 0;
+  var extendedTransformSeen = false;
 
   List<LegacyWordInkStroke> decode() {
     if (input.unsigned() != 0) _unsupportedInk('Unsupported ISF version');
@@ -362,21 +430,69 @@ class _InkDecoder {
           if (descriptorIndex >= descriptors.length) {
             _invalidInk('Invalid ISF descriptor index');
           }
-        case 17:
-          if (transformSeen) _unsupportedInk('Repeated ISF transform');
-          if (body.real(wide: false) != 1) {
-            _unsupportedInk('Nonidentity ISF transform');
-          }
-          transformSeen = true;
-        case 31:
-          if (!transformSeen) {
-            _invalidInk('ISF extended transform has no initial transform');
+        case 15:
+          if (transforms.isNotEmpty || strokes.isNotEmpty) {
+            _unsupportedInk('Repeated or late ISF transform table');
           }
           final block = body.block();
-          if (block.unsigned() != 17 || block.real(wide: true) != 1) {
-            _unsupportedInk('Nonidentity ISF extended transform');
+          if (block.done) _invalidInk('Empty ISF transform table');
+          while (!block.done) {
+            if (transforms.length >= 512) {
+              _inkLimit('ISF transform limit exceeded');
+            }
+            transforms.add(transform(block, block.unsigned(), wide: false));
+          }
+        case 16:
+        case 17:
+        case 18:
+        case 20:
+        case 21:
+          if (transforms.isNotEmpty || strokes.isNotEmpty) {
+            _unsupportedInk('Repeated or late ISF transform');
+          }
+          transforms.add(transform(body, tag, wide: false));
+        case 23:
+          transformIndex = body.unsigned();
+          if (transformIndex >= transforms.length) {
+            _invalidInk('Invalid ISF transform index');
+          }
+        case 24:
+          if (metrics.isNotEmpty || strokes.isNotEmpty) {
+            _unsupportedInk('Repeated or late ISF metric table');
+          }
+          final block = body.block();
+          if (block.done) _invalidInk('Empty ISF metric table');
+          while (!block.done) {
+            if (metrics.length >= 512) _inkLimit('ISF metric limit exceeded');
+            metrics.add(metric(block.block()));
+          }
+        case 25:
+          if (metrics.isNotEmpty || strokes.isNotEmpty) {
+            _unsupportedInk('Repeated or late ISF metric block');
+          }
+          metrics.add(metric(body.block()));
+        case 26:
+          metricIndex = body.unsigned();
+          if (metricIndex >= metrics.length) {
+            _invalidInk('Invalid ISF metric index');
+          }
+        case 31:
+          if (transforms.isEmpty) {
+            _invalidInk('ISF extended transform has no initial transform');
+          }
+          if (extendedTransformSeen || strokes.isNotEmpty) {
+            _unsupportedInk('Repeated or late ISF extended transform');
+          }
+          final block = body.block();
+          for (var i = 0; i < transforms.length; i++) {
+            final precise = transform(block, block.unsigned(), wide: true);
+            if (!_sameFloatTransform(transforms[i], precise)) {
+              _unsupportedInk('Mismatched ISF extended transform');
+            }
+            transforms[i] = precise;
           }
           block.complete();
+          extendedTransformSeen = true;
         case 10:
           if (strokes.length >= 4096) _inkLimit('ISF stroke limit exceeded');
           final block = body.block();
@@ -392,23 +508,140 @@ class _InkDecoder {
               ? _inkPackets(block, count)
               : null;
           block.complete();
+          final selectedTransform = transforms.isEmpty
+              ? LegacyWordInkTransform.identity
+              : transforms[transformIndex];
+          final selectedMetric = metrics.isEmpty
+              ? LegacyWordInkPressureMetric.standard
+              : metrics[metricIndex];
           if (pressure != null &&
-              pressure.any((value) => value < 0 || value > 1023)) {
-            _invalidInk('ISF pressure exceeds the default metric');
+              pressure.any(
+                (value) => value < 0 || value > selectedMetric.maximum,
+              )) {
+            _invalidInk('ISF pressure exceeds its source metric');
           }
           final points = [
             for (var i = 0; i < count; i++)
-              LegacyWordInkPoint(xs[i], ys[i], pressure?[i]),
+              LegacyWordInkPoint(
+                xs[i],
+                ys[i],
+                pressure?[i],
+                transform: selectedTransform,
+                pressureMetric: selectedMetric,
+              ),
           ];
+          for (final point in points) {
+            if (!point.xHimetric.isFinite ||
+                !point.yHimetric.isFinite ||
+                point.xHimetric.abs() > 9007199254740991 ||
+                point.yHimetric.abs() > 9007199254740991) {
+              _inkLimit('ISF transformed coordinate limit exceeded');
+            }
+          }
           final attributes = paints.isEmpty
               ? _InkPaint(width: 53, height: 53, flags: 16)
               : paints[paintIndex];
-          strokes.add(attributes.stroke(points));
+          strokes.add(
+            attributes.stroke(points, selectedTransform, selectedMetric),
+          );
         default:
           _unsupportedInk('Unsupported ISF record $tag');
       }
     }
     return strokes;
+  }
+
+  LegacyWordInkTransform transform(
+    _InkReader reader,
+    int tag, {
+    required bool wide,
+  }) {
+    final count = switch (tag) {
+      16 => 6,
+      17 => 1,
+      18 || 20 => 2,
+      21 => 4,
+      _ => _unsupportedInk('Unsupported ISF transform $tag'),
+    };
+    final values = [for (var i = 0; i < count; i++) reader.real(wide: wide)];
+    if (values.any((value) => value.abs() > 1000000)) {
+      _inkLimit('ISF transform coefficient limit exceeded');
+    }
+    if ((tag == 17 || tag == 18) && values.any((value) => value == 0)) {
+      _invalidInk('Zero ISF scale');
+    }
+    final matrix = switch (tag) {
+      16 => values,
+      17 => [values[0], 0.0, 0.0, values[0], 0.0, 0.0],
+      18 => [values[0], 0.0, 0.0, values[1], 0.0, 0.0],
+      20 => [0.0, 0.0, 0.0, 0.0, values[0], values[1]],
+      _ => [values[0], 0.0, 0.0, values[1], values[2], values[3]],
+    };
+    return LegacyWordInkTransform._(
+      tag,
+      wide,
+      matrix[0],
+      matrix[1],
+      matrix[2],
+      matrix[3],
+      matrix[4],
+      matrix[5],
+    );
+  }
+
+  bool _sameFloatTransform(
+    LegacyWordInkTransform initial,
+    LegacyWordInkTransform precise,
+  ) {
+    if (initial.recordTag != precise.recordTag) return false;
+    final rounded = ByteData(4);
+    final a = [
+      initial.m11,
+      initial.m12,
+      initial.m21,
+      initial.m22,
+      initial.dx,
+      initial.dy,
+    ];
+    final b = [
+      precise.m11,
+      precise.m12,
+      precise.m21,
+      precise.m22,
+      precise.dx,
+      precise.dy,
+    ];
+    for (var i = 0; i < a.length; i++) {
+      rounded.setFloat32(0, b[i], Endian.little);
+      if (rounded.getFloat32(0, Endian.little) != a[i]) return false;
+    }
+    return true;
+  }
+
+  LegacyWordInkPressureMetric metric(_InkReader block) {
+    if (block.done) return LegacyWordInkPressureMetric.standard;
+    if (block.unsigned() != 56) {
+      _unsupportedInk('Unsupported ISF packet metric');
+    }
+    final entry = block.block();
+    var minimum = 0, maximum = 1023, unit = 0;
+    var resolution = 1.0;
+    // Every present prefix field takes effect. Omitted trailing fields alone
+    // inherit defaults (ISF specification, Metric Block, printed page 14).
+    if (!entry.done) minimum = entry.signed();
+    if (!entry.done) maximum = entry.signed();
+    if (!entry.done) unit = entry.unsigned();
+    if (!entry.done) resolution = entry.real(wide: false);
+    if (!entry.done || !block.done) {
+      _unsupportedInk('Extended or repeated ISF pressure metric');
+    }
+    if (maximum <= minimum || resolution <= 0) {
+      _invalidInk('Invalid ISF pressure metric');
+    }
+    if (minimum != 0 || unit != 0 || resolution != 1) {
+      _unsupportedInk('Unqualified ISF pressure metric');
+    }
+    return LegacyWordInkPressureMetric._(minimum, maximum, unit, resolution);
   }
 
   bool descriptor(_InkReader block) {

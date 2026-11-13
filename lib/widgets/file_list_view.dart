@@ -26,6 +26,7 @@ import 'file_context_menu.dart';
 import 'pattern_selection_dialog.dart';
 import 'folder_drop_target.dart';
 import 'folder_size_presentation.dart';
+import 'file_column_metrics.dart';
 
 export '../models/panel_drag_data.dart';
 
@@ -724,6 +725,11 @@ class CompactFileTile extends ConsumerWidget {
     final view = FileViewConfiguration(
       columns: ref.watch(fileColumnsProvider(side)),
       widths: ref.watch(columnWidthsProvider(side)),
+      minimumSizeWidth: minimumFileSizeColumnWidth(
+        context,
+        fontSize: textStyle?.fontSize ?? 12,
+        fontFamily: textStyle?.fontFamily,
+      ),
     );
 
     // Selected = fill; cursor = blue current-row bar + left marker.

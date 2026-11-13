@@ -1,0 +1,83 @@
+{
+  "coordinateUnit": "DIP (1/96 inch)",
+  "dipPerHimetric": 0.03779527559055118,
+  "strokeCount": 1,
+  "strokes": [
+    {
+      "index": 0,
+      "boundsDip": [
+        2.7779527559055115,
+        -2.8913385826771654,
+        242.00314960629922,
+        26.003149606299214
+      ],
+      "attributes": {
+        "colorArgb": "#FF000000",
+        "width": 2.0031496062992127,
+        "height": 2.0031496062992127,
+        "widthHimetric": 53,
+        "heightHimetric": 53,
+        "fitToCurve": false,
+        "ignorePressure": true,
+        "isHighlighter": false,
+        "stylusTip": "Ellipse",
+        "stylusTipTransform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "pressureMetric": {
+        "minimum": 0,
+        "maximum": 1023,
+        "unit": "None",
+        "resolution": 1
+      },
+      "points": [
+        {
+          "x": 3.779527559055118,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 100,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 99.77952755905511,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 2640,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 99.77952755905511,
+          "y": 10.129133858267716,
+          "pressureFactor": 0.5,
+          "himetricX": 2640,
+          "himetricY": 268,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 195.7795275590551,
+          "y": 10.129133858267716,
+          "pressureFactor": 0.5,
+          "himetricX": 5180,
+          "himetricY": 268,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 243.7795275590551,
+          "y": 22.11023622047244,
+          "pressureFactor": 0.5,
+          "himetricX": 6450,
+          "himetricY": 585,
+          "pressurePropertyValue": 511
+        }
+      ]
+    }
+  ]
+}
