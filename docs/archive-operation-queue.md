@@ -57,7 +57,7 @@ paused checkpoints and terminates the writer. A private directory owned by the
 parent holds worker codec spools and is cleaned after worker exit, including a
 crash. Cancellation listeners are detached on completion.
 
-The short original-to-backup/install-or-restore publication transaction is not
+The original-to-backup/install-or-restore publication transaction is not
 suspended with the original absent. Before that boundary, a pause invalidates
 stale source/candidate proofs and triggers revalidation. Verification deadlines
 exclude intentional pause time. A returned publication receipt is authoritative:
@@ -128,11 +128,28 @@ fixture settings, workspace locking/cancellation/cleanup compatibility, and
 widget completion/animation/real-I/O handling. The fixes retain the original
 workspace guard assertions and old creation-dialog completion expectations.
 
-Full runtime acceptance is pending the corrected source's hosted rerun. The
-workflow combines archive and transfer regressions with the new queue/recovery
-and widget suites. Its artifacts record exact commands, dependency hashes,
-completed test events and receipts; large cases must finish without being
-skipped. No local Flutter run is claimed.
+The first attempt of the subsequent `7f540b6` run recorded 2,057 passes, six
+failures and 13 skips before cancellation, with one workspace widget test still
+waiting. Its remaining
+failures exposed callback-cancellation classification and a metadata fixture
+with two-byte stream chunks. The widget wait was reproduced as a test-zone I/O
+deadlock. Source `e9ceb43b5a4b808ab68d5af9547fd5ce15933a03` preserves both
+established cancellation types and fixes the test fixtures without removing
+their content, preservation or authority assertions.
+
+Latest qualification source: `6eab6a33ffd374bfc9343a692b3df43c85758a1b`,
+[run 43388827835](https://github.com/CrispStrobe/CrispCloud/actions/runs/43388827835).
+Its application and test files are identical to `e9ceb43`; the workflow now
+groups runs by commit so retrying an older revision cannot cancel a newer
+revision's acceptance. The ZIP worker gate above 2 GiB completed successfully
+and its downloaded artifact digest was checked. The combined regression suite,
+7z and TGZ gates have not yet completed. Full runtime acceptance remains
+pending; neither an interrupted run nor a queued job counts as a pass.
+
+The workflow combines archive and transfer regressions with the new
+queue/recovery and widget suites. Its artifacts record exact commands,
+dependency hashes, completed test events and receipts; large cases must finish
+without being skipped. No local Flutter run is claimed.
 
 ## Commander comparison
 

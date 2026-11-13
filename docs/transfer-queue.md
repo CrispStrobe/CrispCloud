@@ -64,7 +64,7 @@ to the job. Compression runs in a native isolate with bounded streams.
 
 Per-job Pause/Resume/Stop, bulk controls, priority, reorder and scheduling apply.
 Queue pause holds new work; selected-row pause controls cooperatively pause eligible live jobs.
-Stop wakes paused workers. The short original-to-backup/install-or-restore
+Stop wakes paused workers. The original-to-backup/install-or-restore
 transaction is not suspended with the original absent. Verified publication
 remains completed when a late Stop or completion observer fails.
 
