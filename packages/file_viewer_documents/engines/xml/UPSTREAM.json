@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/flyfish-dev/file-viewer",
+    "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+    "package": "packages/renderers/text"
+  },
+  "scope": "Selected source overlays and runtime artifacts only; shared selected core provenance is recorded by the host build manifest.",
+  "original_files": [
+    {
+      "path": "packages/renderers/text/LICENSE",
+      "role": "license-and-notice",
+      "bytes": 9140,
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
+      "git_blob_sha": "59121b29efbabb216432f367c8071d1f6019c43f"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/NOTICE.md",
+      "role": "license-and-notice",
+      "bytes": 2392,
+      "sha256": "8f0fae92f691506d50490166a846fe4abc8d5bc1fbce0d493ba2754ee75a5431",
+      "git_blob_sha": "ac1f0ac629a72b108da2041cc53337f1e373d973"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/libxml2-xsd-Copyright.txt",
+      "role": "license-and-notice",
+      "bytes": 1273,
+      "sha256": "c99aae1afe013e50b8b3701e089222b351258043c3025b64053a233fd25b4be7",
+      "git_blob_sha": "f76a86df63f54f2ce47a86716170955e06ef20e4"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/libxml2-xslt-Copyright.txt",
+      "role": "license-and-notice",
+      "bytes": 1314,
+      "sha256": "5d4873884a890122a4b9b20ad56ac6f7da1d796a5bfcf04a427970ac96217626",
+      "git_blob_sha": "8c0b7c15dd9b66501511f5971ec9cae971997a0d"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/libxslt-Copyright.txt",
+      "role": "license-and-notice",
+      "bytes": 2968,
+      "sha256": "7e48e290b6bfccc2ec1b297023a1d77f2fd87417f71fbb9f50aabef40a851819",
+      "git_blob_sha": "627eeff982f41b08a90a0ae6d30c16a193e44cef"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/xmllint-wasm-COPYING.txt",
+      "role": "license-and-notice",
+      "bytes": 1177,
+      "sha256": "e98df1cfcec684393740037a0d82a2886b6a2c52518cab54072c29ee01755c2d",
+      "git_blob_sha": "646eb650ea9c8bb1af099e71eaad28ae336d6f86"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/xslt-polyfill-LICENSE.txt",
+      "role": "license-and-notice",
+      "bytes": 1498,
+      "sha256": "54c3dd9f65fffc74f4cc1295e6cd23c4378d588d9073b6363e199547043f0747",
+      "git_blob_sha": "6c458b8e712039731193f0ff969137732fb9c4b3"
+    },
+    {
+      "path": "packages/renderers/text/licenses/xml-profiles/zlib-LICENSE.txt",
+      "role": "license-and-notice",
+      "bytes": 1002,
+      "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
+      "git_blob_sha": "b7a69d058e616651eae27b3f90c0b7fd36c099b2"
+    },
+    {
+      "path": "packages/renderers/text/package.json",
+      "role": "source-or-runtime",
+      "bytes": 2858,
+      "sha256": "19de94e7cf9d18ee43cad485bf5215258b3caf5aaa8fb94d664bfc0ade6ab430",
+      "git_blob_sha": "0ccbb4405660871ba4485df8c567cbf3e1393515"
+    },
+    {
+      "path": "packages/renderers/text/src/xmlEngines.ts",
+      "role": "source-or-runtime",
+      "bytes": 8756,
+      "sha256": "7b6fb66eacb568fe37f5787837c37ac9fc10ac372272de17622083fff3a22d02",
+      "git_blob_sha": "76e08e83b1e82bdd8e02e5ee8555a6e3a48625eb"
+    },
+    {
+      "path": "packages/renderers/text/src/xmlSafety.ts",
+      "role": "source-or-runtime",
+      "bytes": 5933,
+      "sha256": "96e731dda87dc17567cdc27307f821c18a36c08614d6b7086a63c1d615b8394e",
+      "git_blob_sha": "996922d62f2c394ca77d4946f05a485f0f6aeb9f"
+    },
+    {
+      "path": "packages/renderers/text/src/xmlWasmMemory.ts",
+      "role": "source-or-runtime",
+      "bytes": 2821,
+      "sha256": "7af5dabb0152a77cd31e8ffb34c27d8d60d17a18d1db4c3155dd9c2f65fb8772",
+      "git_blob_sha": "1fc5d9fa9d877640c400111a08dee07920127000"
+    }
+  ],
+  "overlays": [
+    {
+      "path": "src/entry.ts",
+      "upstream_path": null,
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/xmlEngines.ts",
+      "upstream_path": "packages/renderers/text/src/xmlEngines.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/xmlSafety.ts",
+      "upstream_path": "packages/renderers/text/src/xmlSafety.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    }
+  ],
+  "runtime_artifacts": [
+    {
+      "package": "xmllint-wasm",
+      "version": "5.3.0",
+      "registry_integrity": "sha512-sEgRXdf2t13eYCFCURmCE6h2hwleEOIS9VL/jOh9JJJnez2YXIooi2Ghm05/JZEPXyPawN8sMASPVZlmh8Sd6A==",
+      "path": "xmllint-browser.mjs",
+      "bytes": 28042,
+      "sha256": "5f5a2c17be12d398c640f3b494e7ded8cd8c9b0175d2c65e6f197a28b77fd01e"
+    },
+    {
+      "package": "xmllint-wasm",
+      "version": "5.3.0",
+      "registry_integrity": "sha512-sEgRXdf2t13eYCFCURmCE6h2hwleEOIS9VL/jOh9JJJnez2YXIooi2Ghm05/JZEPXyPawN8sMASPVZlmh8Sd6A==",
+      "path": "xmllint.wasm",
+      "bytes": 778732,
+      "sha256": "4e3cc21a67e8dd40ccb59822e4193fd1923b4cda08b40fe8ff8973de5eed9515"
+    },
+    {
+      "package": "xslt-polyfill",
+      "version": "1.0.33",
+      "registry_integrity": "sha512-GFKg8/M20hbSWLgEBa0ucs36Fhun1gcIymJTw5vz5Suao+00g0KV2/6M4HF5kJ4oB36PfIkHJCVgejPNs5ZMlw==",
+      "path": "dist/xslt-wasm.js",
+      "bytes": 1321096,
+      "sha256": "f1ce407622bfa5db3d6817a3923100c206d3ac9de64ea2677e9d74d831a798e1"
+    }
+  ],
+  "selected_licenses": [
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "MIT",
+    "Zlib"
+  ],
+  "native_source_modified": false,
+  "native_rebuilt": false,
+  "runtime_notes": "Original native versions/source grant notices are retained. Published xmllint zlib version remains unidentified. XSLT memory declaration is bounded at compilation; original asset bytes remain unchanged."
+}

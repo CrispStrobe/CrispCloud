@@ -175,8 +175,9 @@ class _DocumentPreviewState extends State<DocumentPreview> {
       }
       if (current()) await send(message('open'));
     } catch (error) {
-      if (current())
+      if (current()) {
         _fail('The document browser could not receive the file: $error');
+      }
     }
   }
 

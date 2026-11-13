@@ -33,8 +33,9 @@ class DocumentAssetServer {
       "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline' blob:; img-src 'self' blob: data:; font-src 'self' blob: data:; media-src blob: data:; frame-src blob:; connect-src 'self' blob: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'";
 
   Future<Uri> start() {
-    if (_closed)
+    if (_closed) {
       return Future.error(StateError('The document asset server has closed.'));
+    }
     return _starting ??= _start();
   }
 
@@ -134,10 +135,12 @@ class DocumentAssetServer {
   static String? _contentType(String relative) {
     if (relative.endsWith('.wasm')) return 'application/wasm';
     if (relative.endsWith('.json')) return 'application/json; charset=utf-8';
-    if (relative.endsWith('.txt') || relative.endsWith('.md'))
+    if (relative.endsWith('.txt') || relative.endsWith('.md')) {
       return 'text/plain; charset=utf-8';
-    if (relative.endsWith('.js') || relative.endsWith('.mjs'))
+    }
+    if (relative.endsWith('.js') || relative.endsWith('.mjs')) {
       return 'application/javascript; charset=utf-8';
+    }
     if (relative.endsWith('.css')) return 'text/css; charset=utf-8';
     if (relative.endsWith('.html')) return 'text/html; charset=utf-8';
     return null;

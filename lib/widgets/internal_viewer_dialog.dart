@@ -1064,8 +1064,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   void _selectMailboxMessage(int index) {
     final mailbox = _mailbox;
-    if (mailbox == null || index < 0 || index >= mailbox.messages.length)
+    if (mailbox == null || index < 0 || index >= mailbox.messages.length) {
       return;
+    }
     _searchDebounce?.cancel();
     _resetSearchResults();
     _emailSearchSource?.dispose();

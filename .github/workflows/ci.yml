@@ -485,10 +485,33 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify Linux document host build requirements
+        if: matrix.platform == 'linux'
+        run: |
+          pkg-config --print-errors --atleast-version=2.48.4 webkit2gtk-4.1
+          pkg-config --print-errors --exists gtk+-3.0 gmodule-2.0 epoxy
+          python3 - <<'PY'
+          import re
+          import subprocess
+          version = subprocess.check_output(['cmake', '--version'], text=True).splitlines()[0]
+          match = re.match(r'^cmake version (\d+)\.(\d+)', version)
+          if not match or tuple(map(int, match.groups())) < (3, 19):
+              raise SystemExit('The Linux document host requires CMake 3.19 or newer: ' + version)
+          print(version)
+          PY
+
       # --- Web / Linux builds ---
       - name: Build ${{ matrix.platform }}
         if: matrix.platform != 'android'
         run: ${{ matrix.build_cmd }}
+
+      - name: Verify Linux document host was packaged
+        if: matrix.platform == 'linux'
+        run: |
+          if [ ! -x build/linux/x64/release/bundle/lib/file_viewer_documents_webkit_probe ]; then
+            echo "::error::The Linux document host probe is missing or not executable; the WebKitGTK host was not packaged."
+            exit 1
+          fi
 
       - name: Package ${{ matrix.platform }}
         if: matrix.platform != 'android'

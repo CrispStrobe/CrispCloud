@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/flyfish-dev/file-viewer",
+    "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+    "package": "packages/renderers/design"
+  },
+  "scope": "Selected source overlays and runtime artifacts only; shared selected core provenance is recorded by the host build manifest.",
+  "original_files": [
+    {
+      "path": "packages/renderers/design/LICENSE",
+      "role": "license-and-notice",
+      "bytes": 9140,
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
+      "git_blob_sha": "59121b29efbabb216432f367c8071d1f6019c43f"
+    },
+    {
+      "path": "packages/renderers/design/LICENSES/CC0-1.0.txt",
+      "role": "license-and-notice",
+      "bytes": 6552,
+      "sha256": "469d87b5fa48f8aaf69e25f4fcac3a309c97dbb7d561b917638abdb640e004d9",
+      "git_blob_sha": "550e190e5c9ddeff82695fd411ca16edc5e4980e"
+    },
+    {
+      "path": "packages/renderers/design/LICENSES/Stet-Apache-2.0.txt",
+      "role": "license-and-notice",
+      "bytes": 10283,
+      "sha256": "281755c6f4d045a464a29eb720c3e7586175c621352675dce144ca74bd1228cb",
+      "git_blob_sha": "8a21c3d88f279916066582cae14a7c59034a79d8"
+    },
+    {
+      "path": "packages/renderers/design/LICENSES/Stet-CMYK-Profile.txt",
+      "role": "license-and-notice",
+      "bytes": 1207,
+      "sha256": "80d58f24890cc7abacc62651c199b79b7fa9fcc10aa781756d029312298d672f",
+      "git_blob_sha": "fab315b54e0a9748a4ef5b5b5703a1a873c9835e"
+    },
+    {
+      "path": "packages/renderers/design/LICENSES/Stet-MIT.txt",
+      "role": "license-and-notice",
+      "bytes": 1069,
+      "sha256": "4e27c8bbd00f817fb6fb96e8ca8eada8f0983a50a38fe3114ba8f977d31f654b",
+      "git_blob_sha": "12040d12a71c8322faebde42e21549ae4e40c248"
+    },
+    {
+      "path": "packages/renderers/design/LICENSES/Stet-URW-Fonts-OFL-1.1.txt",
+      "role": "license-and-notice",
+      "bytes": 6631,
+      "sha256": "64e0f8458b90c8305d0b89d5f0c3401e861bdda648cdcb5ae1a4d1f132171e66",
+      "git_blob_sha": "a71f9947a1aaf57b34ef955ae342d4c86e414e52"
+    },
+    {
+      "path": "packages/renderers/design/LICENSES/Stet_NATIVE_THIRD_PARTY_LICENSES.json",
+      "role": "license-and-notice",
+      "bytes": 374678,
+      "sha256": "cbca7bd3c1c1d4e7cbae0fe0330a5d1589db7d219b0b858df6f5bc266ebb9dc8",
+      "git_blob_sha": "42cc69346d4339c02bab18b287bed19c6ec33419"
+    },
+    {
+      "path": "packages/renderers/design/package.json",
+      "role": "source-or-runtime",
+      "bytes": 4506,
+      "sha256": "ee57a5cd53cf5eadbd5fdb7f09993f7d650336199be5cf22cba6741ec64d52a9",
+      "git_blob_sha": "b68e7c2f4c4f075a4678f30d1884374d4c8270d9"
+    },
+    {
+      "path": "packages/renderers/design/runtime/postscript/stet_wasm_bg.wasm",
+      "role": "source-or-runtime",
+      "bytes": 14706940,
+      "sha256": "b8d72531ec41ca497d67a79589a1dbb44748a4fefd088aa122007fbb28e06b20",
+      "git_blob_sha": "baba4a4825ecca0400e50cb4df4fdcf98a537a40"
+    },
+    {
+      "path": "packages/renderers/design/source/postscript/Cargo.lock",
+      "role": "source-or-runtime",
+      "bytes": 19886,
+      "sha256": "828105d370044c45bd761c529c7f23a4d0822ff29ef32e82d201e9dbd6595793",
+      "git_blob_sha": "8b48783508c14b2cab21e41240ed529878d8e474"
+    },
+    {
+      "path": "packages/renderers/design/source/postscript/license-overrides/fax-MIT.txt",
+      "role": "source-or-runtime",
+      "bytes": 1075,
+      "sha256": "7101390b4c8edd752f4c0de47f35d61b44d9cf0ee8dd032115e25644e277cfff",
+      "git_blob_sha": "16bcf2c47e0a476e50d87d68fa5d84af8b92ff63"
+    },
+    {
+      "path": "packages/renderers/design/source/postscript/upstream.json",
+      "role": "source-or-runtime",
+      "bytes": 9427,
+      "sha256": "35c1c5511eaf58ed33639f1d20bb3d2cf04abd3d522bb99c1265cc33bd786a9f",
+      "git_blob_sha": "290c896fffb1ed17818c922342262634572b9047"
+    },
+    {
+      "path": "packages/renderers/design/src/postscript.ts",
+      "role": "source-or-runtime",
+      "bytes": 22470,
+      "sha256": "93feae4205fd8e461c1aa4f46d1515896359c28487223522872f7b8c09f3b457",
+      "git_blob_sha": "02f431d50e5bba7146a807653a369b2626ff2375"
+    },
+    {
+      "path": "packages/renderers/design/src/postscript.worker.ts",
+      "role": "source-or-runtime",
+      "bytes": 9251,
+      "sha256": "4836dca9d404f857eca709253c244edf7f97d433785b03e1952dd18a313438a5",
+      "git_blob_sha": "4591108c4bc7c896035ca267f1186801fe7bb59a"
+    },
+    {
+      "path": "packages/renderers/design/src/postscriptLimits.ts",
+      "role": "source-or-runtime",
+      "bytes": 2178,
+      "sha256": "b0bee4a119a7859937170a561b561e2e92447dee638e2bae4fb68ff9e7a3cada",
+      "git_blob_sha": "a58a51b7f82afc4e062cb721666f7e50e6a47478"
+    },
+    {
+      "path": "packages/renderers/design/src/postscriptProtocol.ts",
+      "role": "source-or-runtime",
+      "bytes": 1237,
+      "sha256": "e6630c87c513fa17325d9b178a44d3feb5271c29b210ebf9e0d689cdcf9845d4",
+      "git_blob_sha": "a6686d5510f588bca1323293e428f35f9d7ec3ce"
+    },
+    {
+      "path": "packages/renderers/design/src/postscriptRuntime/stet_wasm.d.ts",
+      "role": "source-or-runtime",
+      "bytes": 8020,
+      "sha256": "e947b3ea26edf8d0a22023d2ec8f01b91e09cb8c00b8017eef7fe008b78110dd",
+      "git_blob_sha": "39b2d3390080f182fcb0d2503661d68e6eab1f39"
+    },
+    {
+      "path": "packages/renderers/design/src/postscriptRuntime/stet_wasm.js",
+      "role": "source-or-runtime",
+      "bytes": 19265,
+      "sha256": "1b2e94299c8e33b8585fbd18a73e0764a707f24050b025287c1ae6501e87f264",
+      "git_blob_sha": "cbf21fe12bab6dabc3d949472c236996001c9fcc"
+    },
+    {
+      "path": "packages/renderers/design/src/postscriptWorkerClient.ts",
+      "role": "source-or-runtime",
+      "bytes": 6967,
+      "sha256": "021329fec6f8c5d2a2520eb9c12f80266c22d9087cb6c47c2c09ada4404185e8",
+      "git_blob_sha": "5052de9030d829b024b50888deb6d790f3a457e3"
+    }
+  ],
+  "overlays": [
+    {
+      "path": "src/entry.ts",
+      "upstream_path": null,
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/postscript.ts",
+      "upstream_path": "packages/renderers/design/src/postscript.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/postscript.worker.ts",
+      "upstream_path": "packages/renderers/design/src/postscript.worker.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/postscriptLimits.ts",
+      "upstream_path": "packages/renderers/design/src/postscriptLimits.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    }
+  ],
+  "runtime_artifacts": [
+    {
+      "path": "packages/renderers/design/runtime/postscript/stet_wasm_bg.wasm",
+      "role": "native-runtime",
+      "bytes": 14706940,
+      "sha256": "b8d72531ec41ca497d67a79589a1dbb44748a4fefd088aa122007fbb28e06b20",
+      "git_blob_sha": "baba4a4825ecca0400e50cb4df4fdcf98a537a40"
+    },
+    {
+      "path": "packages/renderers/design/src/postscriptRuntime/stet_wasm.js",
+      "role": "native-loader",
+      "bytes": 19265,
+      "sha256": "1b2e94299c8e33b8585fbd18a73e0764a707f24050b025287c1ae6501e87f264",
+      "git_blob_sha": "cbf21fe12bab6dabc3d949472c236996001c9fcc"
+    }
+  ],
+  "selected_licenses": [
+    "Apache-2.0",
+    "MIT",
+    "BSD-family",
+    "Zlib",
+    "OFL-1.1 fonts",
+    "CC0-1.0 ICC profile",
+    "original permissive Rust/crate notices"
+  ],
+  "native_source_modified": false,
+  "native_rebuilt": false,
+  "runtime_notes": "Stet 0.8.7/stet-wasm 0.2.0 native source, JavaScript binding, WASM, embedded fonts and ICC profile are unchanged; not independently rebuilt. Native source inventory is conservative, not a post-link component claim."
+}

@@ -18,6 +18,9 @@ It does not load the upstream preset or download a renderer at runtime.
 The complete shipped grants are in `assets/licenses/THIRD_PARTY.txt`, including
 the original native notices and matching-source/build references. The generated
 `RUNTIME_MANIFEST.json` records input, overlay, dependency and asset hashes.
+The exact WordPerfect source archives, shim and original build materials are
+also retained under `corresponding-source/wordperfect` in this source repository.
+They are not added to the application's rendering payload.
 Keep these notices and the MPL matching-source availability information with
 redistributed binaries. See each `engines/*/UPSTREAM.md` for the exact boundaries.
 The full repository audit is in `../../docs/file-viewer-format-license-matrix.md`.

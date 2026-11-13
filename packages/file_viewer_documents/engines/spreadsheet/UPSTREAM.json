@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/flyfish-dev/file-viewer",
+    "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+    "package": "packages/renderers/spreadsheet"
+  },
+  "scope": "Selected renderer overlays and pinned runtime only; no complete File Viewer preset",
+  "original_files": [
+    {
+      "path": "LICENSE",
+      "role": "license-and-notice",
+      "bytes": 9140,
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
+      "git_blob_sha": "59121b29efbabb216432f367c8071d1f6019c43f"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/LICENSE",
+      "role": "license-and-notice",
+      "bytes": 9140,
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
+      "git_blob_sha": "59121b29efbabb216432f367c8071d1f6019c43f"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/THIRD_PARTY_NOTICES.md",
+      "role": "license-and-notice",
+      "bytes": 427,
+      "sha256": "e5d074536092aa85fa521ef718eea2f445d0d1cf755a68645b9d49dbccdc1814",
+      "git_blob_sha": "72b28a95f9695305de75630a732eda9ec1989cc3"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/package.json",
+      "role": "source",
+      "bytes": 3395,
+      "sha256": "e4e3e393ca03018507ca9820cbf27b08da35bcae165583cf14f7aa675501a30d",
+      "git_blob_sha": "76fba875397d3449ed9b46a7904f81f372ce73f6"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/ambient.d.ts",
+      "role": "source",
+      "bytes": 107,
+      "sha256": "d27ce010f0c46aa4fd5fb561d9a28e7c3001b8e1b979a677044ba029d88d98f2",
+      "git_blob_sha": "8a7c461548c951e535a4606688bf848efb80ca0e"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/index.ts",
+      "role": "source",
+      "bytes": 1557,
+      "sha256": "2f69227944da3cd35b5e9c7e612655cd5baa656f073f8fa95396fbb57f614091",
+      "git_blob_sha": "ec932132d16e12daf3cf2ac9f812b7b83a88c949"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/chartRenderer.ts",
+      "role": "source",
+      "bytes": 23641,
+      "sha256": "7ac67273b77234dadbb6a40a9bed4b10d1d78ce57cbacda4e9528aeec7b28cfc",
+      "git_blob_sha": "eb1d8697713cc5949bbf5880a876c1db844a0253"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/chartSampling.ts",
+      "role": "source",
+      "bytes": 2888,
+      "sha256": "dae14c4f39b68fa34398b5552459d9d7fab37c8b4a44e432be8801986a7e00ab",
+      "git_blob_sha": "534b0fc1661156633bd17a67f3431c43d76289d1"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/imageSource.ts",
+      "role": "source",
+      "bytes": 5667,
+      "sha256": "690a9017bacef6328c15b375e23bdb8ef00daf778b08dfe64216c80c14febfc9",
+      "git_blob_sha": "25640db250a4d793565dc3c8cde7cfa2ed906d81"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/rangeNavigation.ts",
+      "role": "source",
+      "bytes": 6642,
+      "sha256": "b1bb37bacd3c2e4d1a49f2fc0f7874e0b52f8c008d3494cb5f4d2adf9fe6d6e4",
+      "git_blob_sha": "ed83fed2070ab65ecc21dc60ba860f2bd4c5ffe4"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/state.ts",
+      "role": "source",
+      "bytes": 4989,
+      "sha256": "9ec7dcb2f6858dfe0192273bb26f977cdd1ea50383bad27f4bab31a44de2c7d6",
+      "git_blob_sha": "8083b5a50e8870eecd535683a579531a74c9c44a"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/view.ts",
+      "role": "source",
+      "bytes": 41890,
+      "sha256": "7f9aba6c5a76fcefecf6e4d3c5fa4bdf1b35d656068bcf2de2ac4d5d5ea0b966",
+      "git_blob_sha": "617aabf3a5823ce62a3e7d500681f3c44349526f"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/viewport.ts",
+      "role": "source",
+      "bytes": 3410,
+      "sha256": "e0b16e31a67770379e9a3a1daf4ac8689d1774afdd1a2a7505b5430db9b7939b",
+      "git_blob_sha": "6130260f15af44e7c9f58ae1f373f1b807cccbc9"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/index.ts",
+      "role": "source",
+      "bytes": 177,
+      "sha256": "062fb47b5088955950c764f91588f8aeef98ba34c56cc6c50310d3cf0d67a9a5",
+      "git_blob_sha": "f57b13a1bdc77b799f0153c8b795e5035ee36e36"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/SheetJsModel.ts",
+      "role": "source",
+      "bytes": 28721,
+      "sha256": "b8df5111168a5a87bfc129380221bb9a63701a354904668834b5955332696e22",
+      "git_blob_sha": "3fe3668a5259802e347362e84050363db538f3fe"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/chartParser.ts",
+      "role": "source",
+      "bytes": 22126,
+      "sha256": "bff6dfdf1b5cdce3c09c9982a91e4bba33541ff5d32c08b3c5656ac5cb2e681b",
+      "git_blob_sha": "2a8ef688a8978e099eabdabe3aa951107b8ff320"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/color.ts",
+      "role": "source",
+      "bytes": 2751,
+      "sha256": "4b86dc8873176b8fc6170b4aee8c8e38fc3b7310399df671df557ddf5916b29e",
+      "git_blob_sha": "fa82c0b8671a0cc472104d37596be5bf07fa154e"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/formulaValues.ts",
+      "role": "source",
+      "bytes": 14786,
+      "sha256": "74abcc49fecb206a98efdf3cd56dce46c8d7306a5d138ff57f13971cb0dbdbc4",
+      "git_blob_sha": "06848d8ae813b0aa2734d32470c449552b779b43"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/index.ts",
+      "role": "source",
+      "bytes": 421,
+      "sha256": "a9d4d442d214a0c1f0b0d59bb80f070771244e18e54a0c4a2e23a8397f256283",
+      "git_blob_sha": "193cb2e7716f85e2056779db3a2599add1b86d3b"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/parser.ts",
+      "role": "source",
+      "bytes": 22615,
+      "sha256": "0910afa5fa065f657b5e6a6780a9efdf8dc839dd6eb4eb72d69a8d147222abdc",
+      "git_blob_sha": "3a67c5028780dca1a4d2a07f99d26701a82a2393"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/richDataParser.ts",
+      "role": "source",
+      "bytes": 14800,
+      "sha256": "1518062edc1c113549eb9e6d011608691b62e53e1d7181661ee2d57cfaea7032",
+      "git_blob_sha": "919c358bfbd026c481695859ed5e1139dea7ae82"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/richText.ts",
+      "role": "source",
+      "bytes": 5556,
+      "sha256": "1b95307d8f602d2078f2e910461512fbb52cef7702cba4735ef8b15fdd73248a",
+      "git_blob_sha": "b0725e22f88906651427f159c5a741d4e3d90dca"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/sheet.worker.ts",
+      "role": "source",
+      "bytes": 499,
+      "sha256": "e18c37d3a4e837199b1ad552260ed19ccfce1cf363456cedab10ba3ec16a10e5",
+      "git_blob_sha": "b50c4922ee3f26f9be3453b806c45311f660021b"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/sheetLayout.ts",
+      "role": "source",
+      "bytes": 3475,
+      "sha256": "cbd82284924cb7f1cc80bd4097f6f73ae0059a1a446303ca7b2054fc37871930",
+      "git_blob_sha": "9f446c38200b83b51671308a3e074eb6dda57675"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/sheetjs/textEncoding.ts",
+      "role": "source",
+      "bytes": 4126,
+      "sha256": "185645c7f8fd09edbbbbe83bb87df0091f7117be43aa147e85764fa3b665e938",
+      "git_blob_sha": "7763bfe17cc13c9a4bb7b4d1db8ee58a602daf7e"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet/worker/type.ts",
+      "role": "source",
+      "bytes": 3178,
+      "sha256": "a8ef2d65f4690ed8f66ac414090fca4396f61eca6b31dfb897adae4cf84c8316",
+      "git_blob_sha": "e9f98f3433b800111621d0af7814d0137c7d9ed7"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/spreadsheet.ts",
+      "role": "source",
+      "bytes": 89341,
+      "sha256": "6bc29053a8c9dd67b1ee7923821967cae6235cac607994c42070033ab9f8a825",
+      "git_blob_sha": "edeb66b9a68eaef30eeabad390c90c47701808cf"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/src/utif.d.ts",
+      "role": "source",
+      "bytes": 327,
+      "sha256": "f725709f2234907d6dab10e86979a65ee2a949c69ab4914822cceb2d8b41385a",
+      "git_blob_sha": "158d65ed7266d94ff9ba12bd4fec4bbb90e887de"
+    },
+    {
+      "path": "packages/renderers/spreadsheet/test/fixtures/github-178-embedded-image.xls",
+      "role": "test-only",
+      "bytes": 7168,
+      "sha256": "bc5d4542e16382a4a79b639b744f767c7cd5c420b5d5a3c42f132cb51c62eb20",
+      "git_blob_sha": "1407dfc917553fe1b13ab2c9559811a11eb61f7f"
+    }
+  ],
+  "modified_or_added_source": [
+    {
+      "path": "src/boundedWorker.ts",
+      "sha256": "138be675841525cb28471742d6ab79c9a84c9a88981d4d5c2a0e2c78032ac0e3"
+    },
+    {
+      "path": "src/entry.ts",
+      "sha256": "221e59fc56e7ea7e4b8d964113db9b130e2184037a075fd7faaf32563a2e29df"
+    },
+    {
+      "path": "src/limits.ts",
+      "sha256": "1f7bdde7502d81d176cb8c6fb324bb4c6b440b12ec57f83a2e6ee37ad14a98d8"
+    },
+    {
+      "path": "src/spreadsheet/worker/sheetjs/parser.ts",
+      "sha256": "6c11be158913f4206cc901f0a87342a28a42ea13e99ddce026233f439bfaa38e"
+    },
+    {
+      "path": "src/spreadsheet.ts",
+      "sha256": "85d6e205ff6b51625681414984fde3fa4382265a3b03f8f70a48db0156785c88"
+    },
+    {
+      "path": "src/zipPreflight.ts",
+      "sha256": "da6ccd5350ed25ae09e48d53ad3695c88e96c051af4e8fd915099bc5405d9b66"
+    }
+  ],
+  "runtime_dependencies": "Exact resolved closure and original grants are retained by the root lockfile, RUNTIME_MANIFEST.json and assets/licenses.",
+  "test_material_distributed_as_runtime": false
+}

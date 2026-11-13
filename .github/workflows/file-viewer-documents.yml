@@ -1,0 +1,100 @@
+name: Selected document engines
+
+on:
+  push:
+    branches: [feature/apache-file-viewer-20261113]
+    paths:
+      - 'packages/file_viewer_documents/**'
+      - '.github/workflows/file-viewer-documents.yml'
+  pull_request:
+    paths:
+      - 'packages/file_viewer_documents/**'
+      - '.github/workflows/file-viewer-documents.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: document-engines-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FILE_VIEWER_UPSTREAM_DIR: ${{ github.workspace }}/packages/file_viewer_documents/tooling/.source
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: packages/file_viewer_documents/tooling/package-lock.json
+      - name: Install pinned build tools
+        working-directory: packages/file_viewer_documents/tooling
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Fetch the reviewed source commit
+        shell: bash
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/flyfish-dev/file-viewer.git "$FILE_VIEWER_UPSTREAM_DIR"
+          git -C "$FILE_VIEWER_UPSTREAM_DIR" checkout --detach d264009ca6efb3daed79a39d1ae63133e0f25558
+      - name: Build only the six selected engines and collect their grants
+        run: node packages/file_viewer_documents/tooling/build.mjs
+      - name: Native and WASM engine contracts
+        shell: bash
+        run: |
+          tests=(packages/file_viewer_documents/engines/*/test/*.test.mjs)
+          node --test "${tests[@]}"
+      - name: Install real Chromium
+        working-directory: packages/file_viewer_documents/tooling
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Browser rendering and lifecycle
+        shell: bash
+        run: |
+          for smoke in packages/file_viewer_documents/engines/*/test/browser-smoke.mjs; do
+            node "$smoke"
+          done
+          node packages/file_viewer_documents/tooling/host-browser-smoke.mjs
+      - name: Preserve runtime and license evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: selected-document-runtime
+          path: |
+            packages/file_viewer_documents/assets
+            packages/file_viewer_documents/RUNTIME_MANIFEST.json
+            packages/file_viewer_documents/corresponding-source
+          retention-days: 30
+  checkpoint:
+    needs: runtime
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/apache-file-viewer-20261113'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only this job can save the user-requested checkpoint. Parser/build jobs
+    # and pull-request runs have read-only repository credentials.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: selected-document-runtime
+          path: packages/file_viewer_documents
+      - name: Save verified runtime to the authorized feature branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/file_viewer_documents/assets packages/file_viewer_documents/RUNTIME_MANIFEST.json packages/file_viewer_documents/corresponding-source
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'build(viewer): checkpoint verified selected document runtime'
+          # Refuse to overwrite concurrent user work. A later source push reruns
+          # this workflow, so a rejected fast-forward requires no force push.
+          git push origin HEAD:refs/heads/feature/apache-file-viewer-20261113
