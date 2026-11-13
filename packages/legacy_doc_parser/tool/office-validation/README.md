@@ -17,15 +17,21 @@ be selected with `--dart` and `--dotnet`. The default path builds the copied
 project with `dotnet publish`. The separate GitHub Actions job runs this gate
 without LibreOffice, Word, or Quds installed.
 
-The corpus contains 55 required DOC-to-DOCX conversions: nine authored table
-origins/nesting cases, two full conditional table text/style cases, eight row
-height/splitting and cell-layout cases, twelve border/default/reset cases, twelve shape
-cases, six EMF/WMF compound-fill cases, section formatting history, paragraph
-numbering change/insertion, LISTNUM result history, and the retained native
-formatting and linked-textbox DOCs. The generator calls the existing fixture
-producers and retains the independently assembled binary inputs. A fixed
-inventory catches missing cases, duplicate output aliases, and unregistered
-Office files.
+The required DOC-to-DOCX inventory is defined by `EXPECTED_CASES` in
+`tool/fidelity/schema.py` and currently contains 279 conversions. It covers
+table geometry and revisions, shapes, metafiles, media, ink, fields, list
+labels and sequences, section formatting, notes, headers, footers and textbox
+boundaries, alongside retained native DOC inputs. The generator calls the
+existing fixture producers and retains independently assembled binary inputs.
+The fixed inventory catches missing cases, duplicate output aliases, and
+unregistered Office files.
+
+The separate `public_metafile_fixture.dart` and `public_compound_fixture.dart`
+generators produce caller-built public-model controls for native image and
+OLE/VBA activation. These outputs are not binary-DOC-derived cases. Their raw
+inputs and model descriptions must remain alongside the DOCX/DOCM outputs
+when validating them with the built validator. Package schema validation does
+not validate or execute the contents of an OLE object or a VBA project.
 
 The corpus is generated twice, and every retained source, output, and metadata
 file must match byte-for-byte. The second generation is also checked against

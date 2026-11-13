@@ -6,7 +6,10 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
+import 'bounded_cfb_reader.dart';
+import 'compound/cfbf_reader.dart' show CfbfException;
 import 'legacy_word_document.dart';
+import 'legacy_word_metafile.dart';
 import 'legacy_word_number_formats.dart';
 import 'legacy_word_numbering.dart';
 import 'legacy_word_textbox_alias.dart';
@@ -20,6 +23,7 @@ part 'word_numbering_writer.dart';
 part 'word_layout_writer.dart';
 part 'word_compatibility_writer.dart';
 part 'word_media_writer.dart';
+part 'word_compound_storage_validation.dart';
 part 'word_ole_placeholder.dart';
 part 'word_image_appearance_writer.dart';
 part 'word_officeart_position_writer.dart';

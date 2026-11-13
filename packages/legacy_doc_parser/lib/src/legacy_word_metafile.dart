@@ -191,6 +191,30 @@ LegacyWordMetafileInfo parseLegacyWordMetafile(
   maxPreviewCharacters: maxPreviewCharacters,
 );
 
+/// Recheck actual immutable image bytes at the native output boundary. Public
+/// callers can supply arbitrary metadata, so its native-embedding flag alone
+/// cannot establish this property. This bounded scan does not build an SVG.
+bool canEmbedLegacyWordMetafile(
+  Uint8List bytes, {
+  required LegacyWordImageFormat format,
+}) => _scanLegacyWordMetafile(bytes, format, null).nativeEmbeddingAllowed;
+
+_MetafileScan _scanLegacyWordMetafile(
+  Uint8List bytes,
+  LegacyWordImageFormat format,
+  LegacyWordVectorBounds? bounds,
+) {
+  if (bytes.length > legacyWordMetafileByteLimit) {
+    throw const FormatException('Metafile exceeds its byte limit.');
+  }
+  final input = _MetaBytes(bytes);
+  return switch (format) {
+    LegacyWordImageFormat.emf => _scanEmf(input),
+    LegacyWordImageFormat.wmf => _scanWmf(input, bounds),
+    _ => throw ArgumentError.value(format, 'format', 'Expected EMF or WMF'),
+  };
+}
+
 LegacyWordMetafileInfo _parseLegacyWordMetafile(
   Uint8List bytes, {
   required LegacyWordImageFormat format,
@@ -200,15 +224,8 @@ LegacyWordMetafileInfo _parseLegacyWordMetafile(
   int? heightEmu,
   int maxPreviewCharacters = 8 * 1024 * 1024,
 }) {
-  if (bytes.length > legacyWordMetafileByteLimit) {
-    throw const FormatException('Metafile exceeds its byte limit.');
-  }
   final input = _MetaBytes(bytes);
-  final scan = switch (format) {
-    LegacyWordImageFormat.emf => _scanEmf(input),
-    LegacyWordImageFormat.wmf => _scanWmf(input, bounds),
-    _ => throw ArgumentError.value(format, 'format', 'Expected EMF or WMF'),
-  };
+  final scan = _scanLegacyWordMetafile(bytes, format, bounds);
   if (maxPreviewCharacters < 0 || maxPreviewCharacters > 8 * 1024 * 1024) {
     throw ArgumentError.value(maxPreviewCharacters, 'maxPreviewCharacters');
   }

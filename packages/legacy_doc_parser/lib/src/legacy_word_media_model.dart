@@ -128,9 +128,10 @@ class LegacyWordImageAsset {
       : null;
   Uint8List get embeddingBytes => nativeBitmapBytes ?? bytes;
 
-  /// Reusable raster bytes or a structurally validated, escape-free EMF/WMF.
-  /// This is native Office reuse; [LegacyWordMetafileInfo.previewSvg] records
-  /// the separate, deliberately narrower portable rendering capability.
+  /// Native reuse eligibility recorded by the parser. Since callers can build
+  /// this model directly, output writers also validate actual EMF/WMF bytes.
+  /// [LegacyWordMetafileInfo.previewSvg] records the separate, deliberately
+  /// narrower portable rendering capability.
   bool get isRenderable =>
       format == LegacyWordImageFormat.png ||
       format == LegacyWordImageFormat.jpeg ||

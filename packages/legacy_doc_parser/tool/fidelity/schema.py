@@ -22,6 +22,17 @@ EXPECTED_CASES = frozenset([
     "font-charsets/symbol", "font-charsets/default", "font-charsets/default-symbol-alias",
     "font-charsets/conflict", "font-charsets/unknown",
     "font-charsets/empty-name",
+    "ink-budget/aggregate",
+    *(f"list-metadata/{name}" for name in (
+        "bullet-ignored-restart", "none-ignored-restart", "none-literal",
+        "none-empty-placeholder", "none-ancestor-placeholder", "literal-percent-text",
+        "percent-before-placeholder", "numbered-valid-restart", "numbered-inactive-restart",
+        "uncommon-format-literal", "uncommon-format-ancestor", "uncommon-format-legal",
+        "literal-label-tab", "tab-before-placeholder", "none-label-tab")),
+    *(f"nested-fields/{name}" for name in (
+        "nested-results", "private-result", "private-instruction-result", "unsupported-result", "formula",
+        "instruction-whitespace", "nested-instruction-whitespace", "cached-controls",
+        "nested-cached-controls")),
     *(f"ink-strokes/{name}-{mode}" for name in (
         "polyline-solid", "single-dot", "paint-ellipse-alpha", "multiple-strokes",
         "pressure-ramp", "signed-quantization") for mode in ("compressed", "uncompressed")),

@@ -18,7 +18,17 @@ every Word document or every renderer.
 
 ## Evidence is versioned
 
-The current integrated runtime is **c5ff75e7**. Its
+The [fourth parser audit](parser-audit-20261113-fourth-pass.md) validates runtime
+**e84f413** with 1,361 Dart tests, 162 Python controls, actual compiled-JavaScript
+acceptance and 320 schema-valid packages (279 DOC-derived DOCX, 24 public-image
+DOCX and 17 public-compound DOCM). All 297 preceding DOCX outputs remain
+byte-identical. The [evidence bundle](evidence/parser-audit-20261113-fourth-pass/README.md)
+retains exact source identities, original failures and the passing receipts.
+This adds list-text, text-only Unicode and public OLE/VBA activation checks;
+literal `%1`–`%9` labels, the two measured LibreOffice field-import differences,
+full CFB conformance and native Word rendering fidelity remain open.
+
+The earlier integrated runtime **c5ff75e7** has
 [portable/schema evidence](evidence/continuation-c5ff75e7/README.md) records
 1,028 Dart tests, 162 Python controls, actual DOC/51-media JavaScript checks,
 56 native WPF ISFs, and 254 schema-valid DOCX outputs. The two complete

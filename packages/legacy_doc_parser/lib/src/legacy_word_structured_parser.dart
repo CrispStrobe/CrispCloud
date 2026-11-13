@@ -197,6 +197,14 @@ class _StructuredWordParser {
 
   List<LegacyWordBlock> _parseRange(int first, int limit, String storyId) {
     if (first == limit) return const [];
+    // The complete logical buffer has valid UTF-16, but two independent story
+    // ranges must not borrow each other's half of a surrogate pair. Physical
+    // piece/FKP boundaries may split a scalar; an emitted story boundary may
+    // not, including the boundary after an unused spare textbox record.
+    if ((first > 0 && _highSurrogate(body[first - 1])) ||
+        _highSurrogate(body[limit - 1])) {
+      throw const FormatException('Invalid UTF-16 at a Word story boundary.');
+    }
     final priorFields = fields.length;
     _collectFields(first, limit, storyId);
     _prepareFieldRevisions(priorFields);

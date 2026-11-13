@@ -117,8 +117,12 @@ identities form separate tables before conditional text is resolved. Physical
 tables. DOCX writes native `bidiVisual`, justification, width, and fixed/automatic
 layout properties. Later rows can explicitly restore left alignment and fixed
 layout through `tblPrEx`; defaults on a later row do not silently inherit the
-first row's nondefault setting. PGP hierarchy interpretation and floating table
-placement remain unsupported and diagnosed.
+first row's nondefault setting. PGP hierarchy interpretation remains unsupported
+and diagnosed. Supported floating-table anchors, placements, offsets, wrapping
+distances and overlap behavior are retained under the
+[floating-table contract](floating-table-notes.md). Absolute origins additionally
+use the bounded row-grid, table-default padding and single-border mapping in the
+[native origin evidence](evidence/floating-table-origin-20261112/README.md).
 
 Table style UPXs are decoded without following Data-stream references. Property
 groups, known forbidden structural operators, and nested conditions are checked
@@ -203,10 +207,11 @@ whose resolved runs remain explicit native text.
 Differently styled adjacent rows become separate tables, each retaining its own
 native style reference and resolved cell/text formatting. Bounded preferred
 cell widths retain their percentage and other source units independently of
-the physical grid. Floating tables, cell-spacing geometry, table-wide preferred
-widths, complete automatic-layout behavior and additional incremental row
-operators still require further work. This is not a claim of complete
-conditional-style equivalence.
+the physical grid. General floating-table layout beyond the supported anchor
+and origin mapping, cell-spacing geometry, table-wide preferred widths,
+complete automatic-layout behavior and additional incremental row operators
+still require further work. This is not a claim of complete conditional-style
+equivalence.
 
 Primary references:
 
@@ -407,8 +412,11 @@ cover the increment in `test/legacy_word_row_borders_test.dart` and
 
 ## Residual scope
 
-Floating-table placement, additional conditional text operators, native relative
-table-style toggle rules, adjacent-row table boundaries that depend on style or
-floating-position changes, and unverified list-instance
-restart combinations need their own property-level interpretation. Retaining nested
-content alone does not establish page-layout equivalence to Microsoft Word.
+General floating-table layout, additional conditional text operators, native
+relative table-style toggle rules and unverified list-instance restart
+combinations remain incomplete. Supported style, direction and position changes
+already split adjacent rows into separate tables. Compound, spaced, shadowed
+or framed borders retain their properties, but their contribution to absolute
+floating origins remains diagnosed as `floatingTableBorderOrigin` evidence.
+Retaining nested content and bounded positioning alone does not establish
+page-layout equivalence to Microsoft Word.

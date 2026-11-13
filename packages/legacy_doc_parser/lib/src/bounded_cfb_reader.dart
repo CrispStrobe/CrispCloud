@@ -2,6 +2,7 @@
 
 import 'dart:typed_data';
 
+import 'compound/cfbf_names.dart';
 import 'compound/cfbf_reader.dart'
     show CfbfDirectoryEntry, CfbfFile, CfbfObjectType;
 
@@ -46,7 +47,6 @@ class BoundedCfbReader {
   final int maxStreamBytes;
   final int maxTotalReadBytes;
   int _readBytes = 0;
-  Uint8List? _miniContainer;
   final Map<int, List<CfbfDirectoryEntry>> _children = {};
   final Map<int, Map<String, CfbfDirectoryEntry>> _names = {};
 
@@ -57,7 +57,7 @@ class BoundedCfbReader {
 
   /// Looks only in this storage, never in an unrelated embedded message.
   CfbfDirectoryEntry? child(CfbfDirectoryEntry parent, String name) {
-    return _names[parent.index]?[name.toUpperCase()];
+    return _names[parent.index]?[cfbfNameKey(name)];
   }
 
   /// Compound storages own disjoint sibling trees. Validate this once before
@@ -91,10 +91,11 @@ class BoundedCfbReader {
         }
         owners[index] = parent.index;
         final entry = entries[index];
+        final key = cfbfNameKey(entry.name);
         if (entry.type == CfbfObjectType.empty ||
             entry.type == CfbfObjectType.root ||
             entry.name.isEmpty ||
-            names.containsKey(entry.name.toUpperCase())) {
+            names.containsKey(key)) {
           throw const FormatException(
             'Invalid or duplicate compound directory entry',
           );
@@ -103,7 +104,7 @@ class BoundedCfbReader {
           throw const FormatException('Compound stream cannot have children');
         }
         children.add(entry);
-        names[entry.name.toUpperCase()] = entry;
+        names[key] = entry;
         if (entry.isStorage) storages.add(entry);
         stack.add(entry.leftSibling);
         stack.add(entry.rightSibling);
@@ -131,6 +132,7 @@ class BoundedCfbReader {
 
   Uint8List readEntry(CfbfDirectoryEntry entry) {
     if (!entry.isStream ||
+        entry.streamSize < 0 ||
         entry.streamSize > maxStreamBytes ||
         _readBytes + entry.streamSize > maxTotalReadBytes) {
       throw const FormatException(
@@ -138,30 +140,9 @@ class BoundedCfbReader {
       );
     }
     _readBytes += entry.streamSize;
-    if (entry.streamSize > 0 && entry.streamSize < 4096) {
-      // The engine re-reads the entire mini-stream container for each small
-      // property. Cache it once so a message with many headers is still linear
-      // in the file size, instead of repeatedly allocating that container.
-      final container = _miniContainer ??= _file.readEntry(root);
-      final result = Uint8List(entry.streamSize);
-      final seen = <int>{};
-      var sector = entry.startSector;
-      var written = 0;
-      while (written < result.length) {
-        final count = (result.length - written).clamp(0, 64);
-        final offset = sector * 64;
-        if (!seen.add(sector) ||
-            sector >= _file.miniFat.length ||
-            offset < 0 ||
-            offset + count > container.length) {
-          throw const FormatException('Invalid compound mini-stream chain');
-        }
-        result.setRange(written, written + count, container, offset);
-        written += count;
-        sector = _file.miniFat[sector];
-      }
-      return result;
-    }
+    // The underlying reader caches the mini-stream container and validated
+    // allocation suffixes; both small-property reads and spare-capacity checks
+    // stay linear in the file size plus the logical bytes requested here.
     return _file.readEntry(entry);
   }
 
@@ -233,7 +214,7 @@ class BoundedCfbReader {
     ];
     List<int> checkChain(int sector, int limit) {
       final seen = <int>{};
-      while (sector != end && sector != free) {
+      while (sector != end) {
         offsetOf(sector);
         if (sector >= fat.length || !seen.add(sector) || seen.length > limit) {
           throw const FormatException(
@@ -246,19 +227,25 @@ class BoundedCfbReader {
     }
 
     final directory = checkChain(u32(48), 65536 ~/ (size ~/ 128));
+    if (major == 4 && directory.length != u32(40)) {
+      throw const FormatException('Inconsistent compound directory count');
+    }
     for (final sector in directory) {
       final offset = offsetOf(sector);
       for (var index = 0; index < size; index += 128) {
         final type = bytes[offset + index + 66];
         if ((type == 2 || type == 5) &&
-            (u32(offset + index + 124) != 0 ||
+            ((major == 4 && u32(offset + index + 124) != 0) ||
                 u32(offset + index + 120) > bytes.length)) {
-          // All preview inputs are smaller than 4 GiB. Check the raw high word
-          // too: JavaScript integer bit operations cannot represent uint64.
+          // Version 3 ignores historically uninitialized high DWORDs (MS-CFB
+          // §2.6.3). Version 4 uses all 64 bits; every preview input is below
+          // 4 GiB, so check its raw high word before JavaScript int operations.
           throw const FormatException('Compound stream exceeds its container');
         }
       }
     }
-    if (u32(64) > 0) checkChain(u32(60), sectors);
+    if (u32(64) > 0 && checkChain(u32(60), sectors).length != u32(64)) {
+      throw const FormatException('Inconsistent compound mini FAT count');
+    }
   }
 }

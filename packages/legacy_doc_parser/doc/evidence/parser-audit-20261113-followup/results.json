@@ -1,0 +1,177 @@
+{
+  "analysis": {
+    "fatal_infos": true,
+    "issues": 0
+  },
+  "base_commit": "de4566aa69f6e6c6b5347b8463f4ecb7995d35f1",
+  "corpus_integrity_inputs": 24,
+  "dart_tests": {
+    "added_across_both_passes": 120,
+    "added_this_pass": 62,
+    "final_passed": 1175,
+    "previous_passed": 1113
+  },
+  "date": "2026-11-13",
+  "format": {
+    "files": 224,
+    "passed": true
+  },
+  "hosted_ci": "Status is separate; these are local clean-checkout results.",
+  "intermediate_candidate_review": {
+    "initial_sector_views": 133120,
+    "initial_zero_length_views": 132600,
+    "original_observations_retained": true,
+    "partial_mini_lengths_preserved": [
+      1,
+      65,
+      127
+    ],
+    "revised_observations_retained": true,
+    "revised_sector_views": 520,
+    "revised_zero_length_views": 0,
+    "source_snapshot_retained": false
+  },
+  "javascript": {
+    "Compound allocation JavaScript": {
+      "malformedCases": 15,
+      "portableIntegers": {
+        "rawFiletimePreserved": true,
+        "readRangeRejections": 3,
+        "validValues": 6,
+        "writeRangeRejections": 2
+      },
+      "readerRejections": 30,
+      "sharedTailSectorReads": 520,
+      "sharedTailStreams": 65,
+      "sharedTailZeroLengthReads": 0,
+      "sourceUnchanged": true,
+      "streamComparisons": 20,
+      "validCases": 7
+    },
+    "Ink JavaScript": {
+      "cases": 24,
+      "points": 96,
+      "strokes": 32
+    },
+    "Ink budget JavaScript": {
+      "decodedPayloads": 2,
+      "decodedPoints": 100000,
+      "limitedPayloads": 2,
+      "payloads": 4,
+      "rawPayloadsPreserved": 4
+    },
+    "Ink header JavaScript": {
+      "cases": 32,
+      "points": 160,
+      "specifiedMetricDifferences": 1,
+      "strokes": 32
+    },
+    "Legacy DOC JavaScript": {
+      "boundedTextExtraction": true,
+      "cfbSimpleNames": true,
+      "cfbVersionedStreamSizes": true,
+      "footers": 3,
+      "footnotes": 1,
+      "headers": 3,
+      "images": 1,
+      "internalRelationships": true,
+      "oleMetadata": true,
+      "signatureValidityClaimed": false,
+      "sourceUnchanged": true,
+      "tables": 1,
+      "unicode": true,
+      "vbaMetadata": true
+    },
+    "Media JavaScript": {
+      "checks": 51,
+      "emfBytes": 540,
+      "recordCounts": {
+        "emf": 21,
+        "wmf": 17
+      },
+      "wmfBytes": 230
+    },
+    "Nested field JavaScript": {
+      "balancedFields": true,
+      "cachedControlsPreserved": true,
+      "cases": 8,
+      "externalFieldsInert": true,
+      "fieldCounts": {
+        "cached-controls": 1,
+        "formula": 1,
+        "instruction-whitespace": 1,
+        "nested-instruction-whitespace": 2,
+        "nested-results": 3,
+        "private-instruction-result": 2,
+        "private-result": 1,
+        "unsupported-result": 2
+      },
+      "instructionWhitespacePreserved": true,
+      "privateDescendantsSuppressed": true,
+      "sourceUnchanged": true
+    },
+    "Story Unicode JavaScript": {
+      "cases": 4,
+      "invalidStoryBoundariesRejected": 3,
+      "sourceUnchanged": true,
+      "supplementaryStoryTextPreserved": true
+    }
+  },
+  "kind": "parser-audit-followup-acceptance",
+  "native": {
+    "new_run": false,
+    "previous_five_docx_inputs_identical": true,
+    "previous_two_libreoffice_divergences_remain": true
+  },
+  "openxml": {
+    "deterministic_files": 556,
+    "errors": 0,
+    "files": 263,
+    "negative_controls": {
+      "errors": 2,
+      "files": 2,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "negative-controls.json",
+      "reportSha256": "36c216984caa4e5dab6469532732ecc999ed560f67d9d16d64e4b8cab4883f7b"
+    },
+    "positive_control": {
+      "errors": 0,
+      "files": 1,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "positive-control.json",
+      "reportSha256": "8433e3204580d9bdff00eb8d43537fc63880ce3ce4583e09b8d23e6327796671"
+    },
+    "self_test_passed": true
+  },
+  "package_dry_run": {
+    "published": false,
+    "warnings": 0
+  },
+  "portable_and_schema_passed": true,
+  "previous_corpus_comparison": {
+    "changed_docx": [],
+    "common_docx": 260,
+    "new_docx": [
+      "nested-fields/cached-controls.docx",
+      "nested-fields/instruction-whitespace.docx",
+      "nested-fields/nested-instruction-whitespace.docx"
+    ],
+    "new_runtime": "8bf4db2585288e293d10d8fcf6a2d17697c621c1",
+    "old_runtime": "92486f82dd746ab14b5ccf1310f629b74f7bfa5a",
+    "removed_docx": [],
+    "unchanged_docx": 260
+  },
+  "python_tests": 162,
+  "regression_observations": {
+    "allocation_failures_before": 22,
+    "allocation_initial_cases": 29,
+    "field_failures_before": 6,
+    "integer_javascript_truncation_reproduced": true,
+    "integer_vm_range_failures_before": 5,
+    "story_failures_before": 3
+  },
+  "runtime_commit": "8bf4db2585288e293d10d8fcf6a2d17697c621c1",
+  "source_unchanged": true
+}

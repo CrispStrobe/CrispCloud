@@ -31,8 +31,11 @@ data is not rasterized or converted to an unrelated format.
 
 WMF `META_ESCAPE` and EMF `EMR_DRAWESCAPE`, `EMR_EXTESCAPE`, or
 `EMR_NAMEDESCAPE` disable native embedding. Their original records remain inert
-evidence, with an explicit unsupported-image notice. PICT, DIB and unrecognized
-BLIPs still follow the earlier opaque-preservation path.
+evidence, with an explicit unsupported-image notice. PICT and unrecognized
+BLIPs still follow the earlier opaque-preservation path. DIB support is limited
+to the independently qualified monochrome textbox-pattern subset described in
+[textbox paint](textbox-paint.md#embedded-picture-texture-and-monochrome-pattern-fills);
+other DIB images remain opaque.
 
 ## Portable vector preview
 
@@ -153,10 +156,13 @@ tangent-editor/pixel limitations are recorded in
 [officeart-context.md](officeart-context.md).
 
 The model also exposes direct RGB fill/line colors and opacity, line width,
-dash/join/cap identifiers, and offset-shadow properties. Palette/system colors,
-gradients, pattern fills, perspective/3-D settings and unmapped appearance
-properties remain explicit `unsupportedProperties`, never relabeled as a
-plain RGB style. Parsed data and native rendering support are separate.
+dash/join/cap identifiers, and offset-shadow properties. Qualified textboxes
+add scaled gradients, embedded picture/texture fills and bounded monochrome
+patterns under the [textbox paint contract](textbox-paint.md). Palette/system
+colors, other gradient/pattern forms, perspective/3-D settings and unmapped
+appearance properties remain explicit `unsupportedProperties`, never
+relabeled as a plain RGB style. Parsed data and native rendering support are
+separate; the qualified textbox fill path does not enable arbitrary shape fills.
 
 Ordinary image frames now have a separately verified DrawingML appearance
 path for FSP flips, absolute floating quarter turns, direct solid outlines
@@ -243,11 +249,13 @@ requires distinct owning ranges, index zero on every instance, a matching
 primary shape and no continuation links. Each output part receives its own
 editable instance and inline field events; the source text is still parsed
 once. `recoveredSharedHeaderTextbox` and placement evidence disclose the
-recovery. The retained sources now import successfully, while their measured
-0.35 pt placement offset remains visible.
+recovery. The original recovery measurements retain their 0.35 pt placement
+offset. The later [textbox frame-border correction](textbox-frame-borders.md)
+closes that offset for the two retained alias cases on initial import and all
+three repeat cycles; the earlier observations remain unchanged.
 
 Actual positioning is checked independently: the first run also exposed a
-page-origin discrepancy in the native bridge. A successful chain recovery
+page-origin discrepancy in the parser conversion. A successful chain recovery
 does not by itself claim correct positions or an exact raster match.
 The report separates resize reflow from absolute authored placement. For
 the reflow metric only, it may subtract one disclosed common translation
@@ -255,16 +263,23 @@ anchored to the first marker in the authored DOCX; it cannot reposition
 frames or variants independently. Absolute placement and the overall probe
 still fail when that translation places markers outside the authored frames.
 
-With LibreOfficeDev `26.8.0.0.alpha0` commit
-`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5`, both direct DOCX and binary DOC
-put two markers in the small first frame and four in the enlarged frame.
-The parser DOCX has the same actual reflow but is shifted 72 pt right/down.
-The native DOC records explicit OfficeArt `posh=0`, `posv=0`,
-`posrelh=1`, `posrelv=1`. Microsoft documents value 1 of those relative
-position properties as margin-relative, while this producer's page-based
-fixture is interpreted differently by its native renderer. The raw records
-remain retained; this single interoperability result does not justify
-globally reinterpreting the MS-DOC/FSPA origin enums.
+The initial LibreOfficeDev `26.8.0.0.alpha0` run at commit
+`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5` put two markers in the small first
+frame and four in the enlarged frame for both direct DOCX and binary DOC.
+The earlier parser preserved reflow but shifted the text 72 pt right/down.
+That failure remains historical evidence. The
+[Word-specific positioning contract](officeart-positioning.md) resolves explicit
+FOPT origins using the independently corroborated zero-based Word mapping:
+`posrelh=1` and `posrelv=1` are page-relative. Generic MS-ODRAW's one-based
+table is not applied to these Word properties. Each axis retains its SPA
+fallback when the explicit property is absent or unsupported.
+
+The corrected positioning receipt measures zero marker drift without a fitted
+translation. Its compact source initially retained a five-pixel raster
+difference; the later [74420eb2 native corpus](evidence/native-corpus-74420eb2/README.md)
+records exact initial compact and extended renders after the qualified paint
+changes. Repeat-import differences and arbitrary anchor/layout combinations
+remain separate from those bounded initial-render results.
 
 Primary references:
 

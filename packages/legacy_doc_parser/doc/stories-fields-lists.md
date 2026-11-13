@@ -45,6 +45,18 @@ external-link instruction is source metadata, not a request to update content
 or access a URL. Nested field instruction slices can contain original field
 control characters. They must not be copied directly into XML or HTML.
 
+Nested result positions are reconstructed from their containing raw instruction,
+not from normalized `storedResult` text. Each supported nested field is emitted
+once within its original instruction/result context. Descendants of a private
+result do not become independent field events. Caller-built models must have
+matching instruction keywords and field types; a `PAGE` label cannot authorize
+an unrelated `DDEAUTO` or `INCLUDETEXT` instruction.
+
+Formula instructions beginning with `=` retain that field type and serialize
+as locked fields with automatic updating disabled. Their stored result remains
+unchanged, even when it disagrees with the formula. Unsupported nested
+instructions remain inert with source evidence and cached display text.
+
 Visible main/story text uses stored field results and omits instructions.
 Private cached results are omitted from the block/run model and HTML while
 remaining explicitly marked in field metadata. Hidden character runs remain

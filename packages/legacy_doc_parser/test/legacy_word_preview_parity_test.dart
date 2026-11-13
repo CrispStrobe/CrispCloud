@@ -308,6 +308,15 @@ void main() {
       _labels(
         renderLegacyWordHtml([_item(0)], numberingDefinitions: [_list('none')]),
       ),
+      ['.'],
+    );
+    expect(
+      _labels(
+        renderLegacyWordHtml(
+          [_item(0)],
+          numberingDefinitions: [_list('none', text: '%1')],
+        ),
+      ),
       isEmpty,
     );
   });

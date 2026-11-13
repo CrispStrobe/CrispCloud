@@ -37,7 +37,7 @@ complete stroke decode.
   metrics, nonzero pressure minima, nonunit resolution, unknown units, rotation
   shorthand and unmatched transform extensions remain inert.
 
-Bounds are 16 MiB per ISF, 100,000 total points, 4,096 strokes, 512 table
+Bounds per ISF are 16 MiB, 100,000 total points, 4,096 strokes, 512 table
 entries/properties and 16,384 stream records. Bit decoding uses bounded exact
 integer arithmetic on the Dart VM and JavaScript. Unknown extensions are not
 silently discarded. Transform coefficients are bounded to magnitude 1,000,000
@@ -45,6 +45,33 @@ and transformed coordinates to JavaScript's exact-integer range. Fractional
 coordinates retain the source transform's floating-point precision. Repeated or
 late transform/metric definitions are unsupported; valid indices select an
 already validated table. A decoder result never invents an ink/comment link.
+
+## Aggregate conversion limits
+
+Conversion shares one allowance of 100,000 attempted points and 4,096 attempted
+strokes across inline and floating ink. Each stroke reserves its declared point
+count before packet arrays are allocated. Work already performed on a payload
+that later proves malformed or unsupported remains charged. A payload exceeding
+the remaining allowance has no partial decoded strokes; its exact ISF bytes
+remain inert evidence with `strokeDecodeStatus: limitExceeded` and an explicit
+aggregate-limit reason.
+
+Repeated references to the same immutable ink model reuse one conversion
+inspection. Conversion inspects source bytes under its own allowance, independent
+of the model's standalone cached `decoding` result, so caller-predecoded models
+cannot bypass the limit. Conversely, an exhausted conversion does not change a
+later standalone inspection. Callers inspecting multiple payloads directly can
+pass one `LegacyWordInkDecodeBudget` to successive `decodeLegacyWordInk` calls;
+its nonnegative point/stroke limits may be lower than, but cannot exceed, the
+per-stream ceilings. Failed work remains charged to that shared budget too.
+
+`inkPayloads`, `decodedInkPayloads` and `decodedInkStrokes` count preserved
+occurrences. Repeated references therefore contribute to those counters even
+when their decode work is shared. They are distinct from the aggregate work
+allowance and do not certify Word placement or rendering. The binary regression
+in `test/legacy_word_ink_budget_test.dart` and the VM/compiled-JavaScript
+acceptance in `tool/ink_web_acceptance.dart` check limited and retained payloads
+independently of the native WPF evidence below.
 
 ## Independent oracle and limits
 

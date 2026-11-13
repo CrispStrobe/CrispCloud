@@ -5,6 +5,7 @@
 import 'dart:typed_data';
 
 import 'byte_source.dart';
+import 'cfbf_names.dart';
 
 /// Compound File Binary signature: `D0 CF 11 E0 A1 B1 1A E1`.
 const List<int> cfbfSignature = <int>[
@@ -102,14 +103,22 @@ class CfbfDirectoryEntry {
 }
 
 /// Parsed Compound File Binary (OLE 2.0 structured storage).
+///
+/// Allocation and directory metadata are immutable snapshots. Successful and
+/// failed chain validation is cached, as is the mini-stream container once it
+/// is read. Do not modify the underlying [source] while this reader is in use.
 class CfbfFile {
   CfbfFile._({
     required this.source,
     required this.header,
-    required this.fat,
-    required this.miniFat,
-    required this.entries,
-  });
+    required List<int> fat,
+    required List<int> miniFat,
+    required List<CfbfDirectoryEntry> entries,
+    required Set<int> metadataSectors,
+  }) : fat = List.unmodifiable(fat),
+       miniFat = List.unmodifiable(miniFat),
+       entries = List.unmodifiable(entries),
+       _metadataSectors = Set.unmodifiable(metadataSectors);
 
   /// source API.
   final ByteSource source;
@@ -117,14 +126,20 @@ class CfbfFile {
   /// header API.
   final CfbfHeader header;
 
-  /// fat API.
+  /// Immutable FAT snapshot. Chain validation is cached against these bytes.
   final List<int> fat;
 
-  /// miniFat API.
+  /// Immutable mini-FAT snapshot.
   final List<int> miniFat;
 
-  /// entries API.
+  /// Immutable directory snapshot, including the mini-stream's root metadata.
   final List<CfbfDirectoryEntry> entries;
+
+  final Map<int, int> _fatChainLengths = {};
+  final Map<int, int> _miniChainLengths = {};
+  final Set<int> _metadataSectors;
+  Set<int>? _sharedStreamEntries;
+  Uint8List? _miniContainer;
 
   /// root API.
   CfbfDirectoryEntry get root => entries.firstWhere(
@@ -134,19 +149,27 @@ class CfbfFile {
   /// open API.
   factory CfbfFile.open(ByteSource source) {
     final CfbfHeader header = CfbfHeader.parse(source);
-    final List<int> fat = _readFat(source, header);
+    final metadataSectors = <int>{};
+    final List<int> fat = _readFat(source, header, metadataSectors);
     final List<CfbfDirectoryEntry> entries = _readDirectory(
       source,
       header,
       fat,
+      metadataSectors,
     );
-    final List<int> miniFat = _readMiniFat(source, header, fat);
+    final List<int> miniFat = _readMiniFat(
+      source,
+      header,
+      fat,
+      metadataSectors,
+    );
     return CfbfFile._(
       source: source,
       header: header,
       fat: fat,
       miniFat: miniFat,
       entries: entries,
+      metadataSectors: metadataSectors,
     );
   }
 
@@ -213,18 +236,93 @@ class CfbfFile {
     return readEntry(entry);
   }
 
-  /// readEntry API.
+  /// Reads a stream or mini-container described by this file's directory.
   Uint8List readEntry(CfbfDirectoryEntry entry) {
+    // Ownership is cached against the parsed directory, so a caller-supplied
+    // entry must not substitute a different allocation under the same index.
+    if (entry.index < 0 ||
+        entry.index >= entries.length ||
+        (!entry.isStream && entry.type != CfbfObjectType.root) ||
+        entries[entry.index].type != entry.type ||
+        entries[entry.index].startSector != entry.startSector ||
+        entries[entry.index].streamSize != entry.streamSize) {
+      throw const CfbfException('Stream entry does not match this directory');
+    }
+    if (entry.streamSize < 0 || entry.streamSize > source.length) {
+      throw const CfbfException('Stream size exceeds its compound container');
+    }
     if (entry.streamSize == 0) {
       return Uint8List(0);
     }
     final bool mini =
         entry.type != CfbfObjectType.root &&
         entry.streamSize < header.miniStreamCutoff;
+    final shared = _sharedStreamEntries ??= _findSharedStreamEntries();
+    if (shared.contains(entry.index) || (mini && shared.contains(root.index))) {
+      throw const CfbfException('Stream allocation has multiple owners');
+    }
     if (mini) {
       return _readMiniStream(entry);
     }
     return _readFatStream(entry.startSector, entry.streamSize);
+  }
+
+  /// Detect ambiguous ownership before returning any stream's bytes. Merely
+  /// claiming sectors as streams are read would expose whichever alias was
+  /// requested first. Each sector is visited at most once in each namespace;
+  /// stopping at an existing owner also bounds adversarial shared long tails.
+  ///
+  /// This is not an eager topology check: unrelated invalid links and cycles
+  /// are still rejected only when their streams are requested. Extra allocated
+  /// capacity belongs to its stream even when it lies past the logical bytes.
+  Set<int> _findSharedStreamEntries() {
+    final conflicts = <int>{};
+    final regularOwners = <int, int>{
+      for (final sector in _metadataSectors) sector: -1,
+    };
+    final miniOwners = <int, int>{};
+    void claim(
+      CfbfDirectoryEntry entry,
+      List<int> table,
+      Map<int, int> owners,
+      int physicalSectors,
+    ) {
+      var sector = entry.startSector;
+      while (sector != cfbfEndOfChain &&
+          sector >= 0 &&
+          sector < physicalSectors &&
+          sector < table.length) {
+        final previous = owners[sector];
+        if (previous != null) {
+          if (previous != entry.index) {
+            conflicts.add(entry.index);
+            if (previous >= 0) conflicts.add(previous);
+          }
+          return;
+        }
+        owners[sector] = entry.index;
+        sector = table[sector];
+      }
+    }
+
+    final physicalSectors = source.length ~/ header.sectorSize - 1;
+    final miniSize = header.miniSectorSize;
+    // The mini-container cannot exceed the source; its exact logical bound
+    // (including compatibility with a partial last mini sector) is checked on
+    // read. This cap also bounds the scan of an oversized mini-FAT.
+    final miniSectors = miniSize > 0
+        ? (source.length + miniSize - 1) ~/ miniSize
+        : 0;
+    for (final entry in entries) {
+      if (entry.streamSize <= 0) continue;
+      if (entry.type == CfbfObjectType.root ||
+          (entry.isStream && entry.streamSize >= header.miniStreamCutoff)) {
+        claim(entry, fat, regularOwners, physicalSectors);
+      } else if (entry.isStream) {
+        claim(entry, miniFat, miniOwners, miniSectors);
+      }
+    }
+    return conflicts;
   }
 
   /// Resolves a storage path such as `ObjectPool/obj1/Package`.
@@ -264,47 +362,56 @@ class CfbfFile {
   }
 
   Uint8List _readFatStream(int startSector, int size) {
+    // Mini-stream reads call this directly for the root container, bypassing
+    // readEntry. Check its physical bound before allocating, too.
+    if (size < 0 || size > source.length) {
+      throw const CfbfException('Stream size exceeds its compound container');
+    }
+    final int sectorSize = header.sectorSize;
+    final sectors = _validatedChainLength(
+      fat,
+      startSector,
+      _fatChainLengths,
+      source.length ~/ sectorSize - 1,
+    );
+    if (sectors * sectorSize < size) {
+      throw const CfbfException('Truncated FAT stream');
+    }
     final Uint8List out = Uint8List(size);
     int remaining = size;
     int written = 0;
     int sector = startSector;
-    final int sectorSize = header.sectorSize;
-    final Set<int> guard = <int>{};
-    while (remaining > 0 && sector != cfbfEndOfChain) {
-      if (!guard.add(sector)) {
-        throw const CfbfException('FAT cycle detected');
-      }
+    while (remaining > 0) {
       final int offset = header.sectorOffset(sector);
       final int take = remaining < sectorSize ? remaining : sectorSize;
       out.setRange(written, written + take, source.view(offset, take));
       written += take;
       remaining -= take;
-      if (sector >= fat.length) {
-        throw CfbfException('FAT index $sector out of range (${fat.length})');
-      }
       sector = fat[sector];
-    }
-    if (remaining != 0) {
-      throw CfbfException('Truncated FAT stream: $remaining bytes missing');
     }
     return out;
   }
 
   Uint8List _readMiniStream(CfbfDirectoryEntry entry) {
-    final Uint8List miniContainer = _readFatStream(
+    final Uint8List miniContainer = _miniContainer ??= _readFatStream(
       root.startSector,
       root.streamSize,
     );
+    final int miniSize = header.miniSectorSize;
+    final sectors = _validatedChainLength(
+      miniFat,
+      entry.startSector,
+      _miniChainLengths,
+      (miniContainer.length + miniSize - 1) ~/ miniSize,
+    );
+    if (sectors * miniSize < entry.streamSize) {
+      throw const CfbfException('Truncated mini stream');
+    }
     final Uint8List out = Uint8List(entry.streamSize);
     int remaining = entry.streamSize;
     int written = 0;
     int sector = entry.startSector;
-    final int miniSize = header.miniSectorSize;
-    final Set<int> guard = <int>{};
-    while (remaining > 0 && sector != cfbfEndOfChain) {
-      if (!guard.add(sector)) {
-        throw const CfbfException('MiniFAT cycle detected');
-      }
+    while (remaining > 0) {
       final int offset = sector * miniSize;
       final int take = remaining < miniSize ? remaining : miniSize;
       if (offset + take > miniContainer.length) {
@@ -317,24 +424,84 @@ class CfbfFile {
       );
       written += take;
       remaining -= take;
-      if (sector >= miniFat.length) {
-        throw CfbfException('MiniFAT index $sector out of range');
-      }
       sector = miniFat[sector];
-    }
-    if (remaining != 0) {
-      throw CfbfException('Truncated MiniFAT stream: $remaining bytes missing');
     }
     return out;
   }
 
-  static List<int> _readFat(ByteSource source, CfbfHeader header) {
-    final List<int> difat = List<int>.from(header.headerDifat);
+  /// Validate each allocation-table suffix once, including spare capacity.
+  /// Logical reads still copy only their requested bytes. Without suffix
+  /// caching, repeated reads of a valid overallocated stream could repeatedly
+  /// traverse the whole file. Ownership validation separately rejects aliases.
+  static int _validatedChainLength(
+    List<int> table,
+    int start,
+    Map<int, int> cached,
+    int physicalSectorCount,
+  ) {
+    final path = <int>[];
+    final seen = <int>{};
+    var sector = start;
+    var length = 0;
+    try {
+      while (sector != cfbfEndOfChain) {
+        final previous = cached[sector];
+        if (previous != null) {
+          if (previous < 0) {
+            throw const CfbfException('Invalid compound allocation chain');
+          }
+          length = previous;
+          break;
+        }
+        if (sector < 0 ||
+            sector >= physicalSectorCount ||
+            sector >= table.length ||
+            !seen.add(sector)) {
+          throw const CfbfException('Invalid or cyclic allocation chain');
+        }
+        path.add(sector);
+        sector = table[sector];
+      }
+      for (var index = path.length - 1; index >= 0; index--) {
+        cached[path[index]] = ++length;
+      }
+      return length;
+    } on CfbfException {
+      // A repeated request for an invalid suffix must not repeat its work.
+      for (final index in path) {
+        cached[index] = -1;
+      }
+      rethrow;
+    }
+  }
+
+  static List<int> _readFat(
+    ByteSource source,
+    CfbfHeader header,
+    Set<int> metadataSectors,
+  ) {
+    final List<int> difat = <int>[];
+    final seenFat = <int>{};
+    final physicalSectors = source.length ~/ header.sectorSize - 1;
+    final entriesPerSector = header.sectorSize ~/ 4;
+    void addFat(int sector) {
+      if (sector == cfbfFreeSect) return;
+      if (sector < 0 || sector >= physicalSectors || !seenFat.add(sector)) {
+        throw const CfbfException('Invalid or repeated FAT sector');
+      }
+      difat.add(sector);
+    }
+
+    for (final sector in header.headerDifat) {
+      addFat(sector);
+    }
     int difatSector = header.firstDifatSector;
     final Set<int> guard = <int>{};
     while (difatSector != cfbfEndOfChain && difatSector != cfbfFreeSect) {
-      if (!guard.add(difatSector)) {
-        throw const CfbfException('DIFAT cycle detected');
+      if (difatSector < 0 ||
+          difatSector >= physicalSectors ||
+          !guard.add(difatSector)) {
+        throw const CfbfException('Invalid or cyclic DIFAT sector');
       }
       final int offset = header.sectorOffset(difatSector);
       final ByteCursor cursor = ByteCursor.view(
@@ -342,20 +509,21 @@ class CfbfFile {
         offset,
         header.sectorSize,
       );
-      final int entriesPerSector = header.sectorSize ~/ 4;
       for (int i = 0; i < entriesPerSector - 1; i++) {
-        difat.add(cursor.u32le());
+        addFat(cursor.u32le());
       }
       difatSector = cursor.u32le();
     }
 
+    if (difat.length != header.fatSectorCount ||
+        guard.length != header.difatSectorCount) {
+      throw const CfbfException('Inconsistent FAT or DIFAT sector count');
+    }
+    _reserveMetadata(difat, metadataSectors);
+    _reserveMetadata(guard, metadataSectors);
+
     final List<int> fat = <int>[];
-    int fatSectorsSeen = 0;
     for (final int fatSector in difat) {
-      if (fatSector == cfbfFreeSect || fatSector == cfbfEndOfChain) {
-        continue;
-      }
-      fatSectorsSeen++;
       final ByteCursor cursor = ByteCursor.view(
         source,
         header.sectorOffset(fatSector),
@@ -366,9 +534,6 @@ class CfbfFile {
         fat.add(cursor.u32le());
       }
     }
-    if (header.fatSectorCount != 0 && fatSectorsSeen != header.fatSectorCount) {
-      // Some writers leave unused DIFAT slots; tolerate extra FREESECT.
-    }
     return fat;
   }
 
@@ -376,8 +541,14 @@ class CfbfFile {
     ByteSource source,
     CfbfHeader header,
     List<int> fat,
+    Set<int> metadataSectors,
   ) {
     final List<int> chain = _followChain(fat, header.firstDirectorySector);
+    if (header.majorVersion == 4 &&
+        chain.length != header.directorySectorCount) {
+      throw const CfbfException('Inconsistent directory sector count');
+    }
+    _reserveMetadata(chain, metadataSectors);
     final BytesBuilder builder = BytesBuilder(copy: false);
     for (final int sector in chain) {
       builder.add(source.view(header.sectorOffset(sector), header.sectorSize));
@@ -389,7 +560,9 @@ class CfbfFile {
       offset + 128 <= raw.length;
       offset += 128, index++
     ) {
-      entries.add(_parseDirectoryEntry(raw, offset, index));
+      entries.add(
+        _parseDirectoryEntry(raw, offset, index, header.majorVersion),
+      );
     }
     return entries;
   }
@@ -398,12 +571,16 @@ class CfbfFile {
     ByteSource source,
     CfbfHeader header,
     List<int> fat,
+    Set<int> metadataSectors,
   ) {
-    if (header.miniFatSectorCount == 0 ||
-        header.firstMiniFatSector == cfbfEndOfChain) {
+    if (header.miniFatSectorCount == 0) {
       return <int>[];
     }
     final List<int> chain = _followChain(fat, header.firstMiniFatSector);
+    if (chain.length != header.miniFatSectorCount) {
+      throw const CfbfException('Inconsistent mini FAT sector count');
+    }
+    _reserveMetadata(chain, metadataSectors);
     final List<int> mini = <int>[];
     for (final int sector in chain) {
       final ByteCursor cursor = ByteCursor.view(
@@ -419,11 +596,19 @@ class CfbfFile {
     return mini;
   }
 
+  static void _reserveMetadata(Iterable<int> chain, Set<int> reserved) {
+    for (final sector in chain) {
+      if (!reserved.add(sector)) {
+        throw const CfbfException('Compound metadata sectors overlap');
+      }
+    }
+  }
+
   static List<int> _followChain(List<int> fat, int start) {
     final List<int> chain = <int>[];
     final Set<int> seen = <int>{};
     int sector = start;
-    while (sector != cfbfEndOfChain && sector != cfbfFreeSect) {
+    while (sector != cfbfEndOfChain) {
       if (!seen.add(sector)) {
         throw const CfbfException('Sector chain cycle detected');
       }
@@ -440,6 +625,7 @@ class CfbfFile {
     Uint8List raw,
     int offset,
     int index,
+    int majorVersion,
   ) {
     final ByteCursor cursor = ByteCursor(
       Uint8List.sublistView(raw, offset, offset + 128),
@@ -456,16 +642,49 @@ class CfbfFile {
     final createdRaw = cursor.copyBytes(8);
     final modifiedRaw = cursor.copyBytes(8);
     final int start = cursor.u32le();
-    final int size = cursor.u64le();
-
-    final int charCount = nameLen ~/ 2;
-    final StringBuffer name = StringBuffer();
-    for (int i = 0; i < charCount && i < 32; i++) {
-      final int unit = nameBytes[i * 2] | (nameBytes[i * 2 + 1] << 8);
-      if (unit == 0) {
-        break;
+    final int sizeLow = cursor.u32le();
+    final int sizeHigh = cursor.u32le();
+    // MS-CFB §2.6.3: historical version-3 writers left the high DWORD
+    // uninitialized. Only version 4 gives those bits stream-size meaning.
+    // These fields are unused for storage/unallocated directory entries.
+    var size = sizeLow;
+    if (majorVersion != 3 && (typeByte == 2 || typeByte == 5)) {
+      if (sizeHigh > 0x1fffff) {
+        throw const CfbfException(
+          'Stream size exceeds the portable integer range',
+        );
       }
-      name.writeCharCode(unit);
+      // JavaScript bitwise shifts discard the high word. Arithmetic retains
+      // exact unsigned metadata through 2^53-1; larger values fail explicitly.
+      size = sizeHigh * 0x100000000 + sizeLow;
+    }
+
+    final StringBuffer name = StringBuffer();
+    if (typeByte == 1 || typeByte == 2 || typeByte == 5) {
+      // MS-CFB §2.6.1 counts the terminating UTF-16 NUL in the byte length.
+      // Silently truncating this field aliases malformed names to unrelated
+      // valid lookup keys. Padding and deleted directory slots remain ignored.
+      if (nameLen < 2 || nameLen > 64 || nameLen.isOdd) {
+        throw CfbfException('Invalid directory name length at entry $index');
+      }
+      final int charCount = nameLen ~/ 2;
+      for (int i = 0; i < charCount; i++) {
+        final int unit = nameBytes[i * 2] | (nameBytes[i * 2 + 1] << 8);
+        if (i == charCount - 1) {
+          if (unit != 0) {
+            throw CfbfException('Unterminated directory name at entry $index');
+          }
+        } else {
+          if (unit == 0 ||
+              unit == 0x2f ||
+              unit == 0x5c ||
+              unit == 0x3a ||
+              unit == 0x21) {
+            throw CfbfException('Invalid directory name at entry $index');
+          }
+          name.writeCharCode(unit);
+        }
+      }
     }
 
     return CfbfDirectoryEntry(
@@ -630,7 +849,7 @@ bool _cfbfNamesEqual(String a, String b) {
   if (a.length != b.length) {
     return false;
   }
-  return a.toUpperCase() == b.toUpperCase();
+  return cfbfNameKey(a) == cfbfNameKey(b);
 }
 
 DateTime? _filetimeToDate(Uint8List bytes) {

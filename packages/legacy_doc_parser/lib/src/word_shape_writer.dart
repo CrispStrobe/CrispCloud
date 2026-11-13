@@ -300,7 +300,7 @@ extension _WordShapes on _StructuredWordWriter {
     if (const {1, 2, 3}.contains(fill.type)) {
       final asset = _mediaAssets[fill.imageId];
       if (asset == null ||
-          !asset.isRenderable ||
+          !_canEmbedImage(asset) ||
           (fill.type == 1 && asset.nativeBitmapBytes == null)) {
         return;
       }

@@ -176,6 +176,10 @@ extension _WordLists on _StructuredWordParser {
     final flags = input.u8(at + 5);
     final suffix = input.u8(at + 15);
     final restart = input.u8(at + 26);
+    // MS-DOC LVLF ignores both the start and restart metadata when the level
+    // has no number sequence, even when fNoRestart is set in the source.
+    final hasNumberSequence = nfc != 23 && nfc != 255;
+    final hasRestartThreshold = hasNumberSequence && (flags & 8) != 0;
     final format = nfc == 255
         ? 'none'
         : nfc < _numberFormats.length
@@ -183,10 +187,10 @@ extension _WordLists on _StructuredWordParser {
         : null;
     if (format == null ||
         const {8, 9, 15, 19}.contains(nfc) ||
-        (nfc != 23 && nfc != 255 && (start < 0 || start > 32767)) ||
+        (hasNumberSequence && (start < 0 || start > 32767)) ||
         (flags & 3) == 3 ||
         suffix > 2 ||
-        ((flags & 8) != 0 && restart > level)) {
+        (hasRestartThreshold && restart > level)) {
       throw const FormatException('Invalid Word list-level format.');
     }
     final papxLength = input.u8(at + 25);
@@ -228,6 +232,17 @@ extension _WordLists on _StructuredWordParser {
         text.write('%${numberLevel + 1}');
       } else {
         final unit = template.codeUnitAt(i);
+        // Binary LVL placeholders are explicit character offsets. Both our
+        // public model and OOXML lvlText reserve %1..%9 and have no literal
+        // escape, so accepting this source text would change the label.
+        if (unit == 37 &&
+            i + 1 < template.length &&
+            template.codeUnitAt(i + 1) >= 49 &&
+            template.codeUnitAt(i + 1) <= 57) {
+          throw const FormatException(
+            'Unsupported Word list label with a literal percent-number sequence.',
+          );
+        }
         if (unit < 32 && unit != 9) {
           throw const FormatException(
             'Invalid control character in Word list label.',
@@ -260,10 +275,10 @@ extension _WordLists on _StructuredWordParser {
           level: level,
           format: format,
           text: text.toString(),
-          startAt: nfc == 23 || nfc == 255 ? 1 : start,
+          startAt: hasNumberSequence ? start : 1,
           suffix: LegacyWordListSuffix.values[suffix],
           legal: (flags & 4) != 0,
-          restartAfterLevel: (flags & 8) != 0 ? restart : null,
+          restartAfterLevel: hasRestartThreshold ? restart : null,
           markerAlignment:
               LegacyWordAlignment.values[(flags & 3) == 1
                   ? 1
