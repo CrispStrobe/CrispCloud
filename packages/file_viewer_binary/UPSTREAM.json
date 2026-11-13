@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "purpose": "Provenance-only source snapshot for the CrispCloud Dart binary header inspector; not an npm or Dart runtime package.",
+  "repository": "https://github.com/flyfish-dev/file-viewer",
+  "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+  "upstream_package": "@file-viewer/renderer-binary",
+  "upstream_version": "3.3.3",
+  "reviewed_at": "2026-11-13",
+  "license": "Apache-2.0",
+  "copyright": "Copyright 2026 Flyfish Viewer",
+  "upstream_notice_file": null,
+  "upstream_notice_scope": "No root NOTICE or binary-package NOTICE found in the complete tree at the pinned commit.",
+  "runtime_dependencies_added": [],
+  "upstream_file_allowlist": [
+    {
+      "upstream_path": "packages/renderers/binary/LICENSE",
+      "local_path": "LICENSE",
+      "git_blob_sha1": "59121b29efbabb216432f367c8071d1f6019c43f",
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
+      "bytes": 9140,
+      "modified": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "upstream_path": "packages/renderers/binary/src/parser.ts",
+      "local_path": "upstream/parser.ts",
+      "git_blob_sha1": "988d602b44888d4e5643a03ec9ecfe3c7623800a",
+      "sha256": "d3580e4d9ef2ce25d67e0fb37eccdaf8a3b5987bf8ae29de19aab090a7a1ae8c",
+      "bytes": 11840,
+      "modified": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "upstream_path": "packages/renderers/binary/src/types.ts",
+      "local_path": "upstream/types.ts",
+      "git_blob_sha1": "f5da7234b6ae1623e7db7c3e00a1daafc99d800f",
+      "sha256": "e01abcc75a4d756a2bf3ccf4d70b169c00be8509b798fd53147b754c8ee3b83c",
+      "bytes": 2199,
+      "modified": false,
+      "license": "Apache-2.0"
+    }
+  ],
+  "excluded": [
+    "all other upstream source files",
+    "npm packages and presets",
+    "workers and WASM",
+    "fonts and images",
+    "demo files and fixtures",
+    "CAD runtimes",
+    "third-party dependency trees"
+  ],
+  "scope": "Only the listed files are imported verbatim from File Viewer. The Dart derivative is maintained in CrispCloud and carries its own change notice. No conclusion about existing CrispCloud dependencies is implied.",
+  "derivative": {
+    "path": "lib/services/binary_structure_service.dart",
+    "language": "Dart",
+    "api": "inspectBinaryStructure(Uint8List prefix, {required int totalBytes})",
+    "maximum_prefix_bytes": 65536,
+    "imports": [
+      "dart:typed_data"
+    ],
+    "changes": [
+      "Dart port and local types",
+      "bounded prefix rather than full-file input",
+      "present-byte field ranges and explicit incomplete/invalid header issues",
+      "ELF metadata and PE offset/optional-header validation",
+      "preserved byte-view offsets",
+      "BigInt for exact uint64 hexadecimal formatting on web",
+      "fat Mach-O recognition and conservative CAFEBABE ambiguity handling"
+    ]
+  }
+}
