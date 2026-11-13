@@ -98,6 +98,44 @@ started solely because its saved scheduled time has arrived.
 
 ## Verification
 
+### Completed hosted acceptance
+
+[Run 43388827835](https://github.com/CrispStrobe/CrispCloud/actions/runs/43388827835),
+attempt 1, completed successfully for application and test revision
+`6eab6a33ffd374bfc9343a692b3df43c85758a1b`. The hosted Linux runner used
+Flutter 3.47.8 and Dart 3.13.7. Subsequent saves contain documentation and
+verification evidence only.
+
+| Acceptance job | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Archive, transfer queue and widget regression suite | 2,067 | 0 | 13 |
+| ZIP worker, 2 GiB plus 17 bytes | 1 | 0 | 0 |
+| 7z worker, 2 GiB plus 17 bytes | 1 | 0 | 0 |
+| TGZ worker, 2 GiB plus 17 bytes | 1 | 0 | 0 |
+
+The normal skips are opt-in large cases; the three worker cases were explicitly
+enabled and completed in their separate jobs. Each worker job verifies
+2,147,483,665 decoded bytes from a highly compressible member; its physical
+archive is smaller than 2 GiB. The earlier physical-container
+and publication acceptance remains recorded in the
+[archive container runtime verification](archive-containers-runtime-verification.md).
+The four new widget suites completed all **38 tests**, including workspace
+handoff after navigation, editable-draft retention after failed admission,
+stale-pane rejection, creation dialog controls and Operations panel controls.
+Integrated static analysis, portable JavaScript codec execution and help-guide
+validation also passed.
+
+The [durable hosted receipt](evidence/archive-queue-hosted-acceptance-6eab6a3.json)
+records exact commands, per-suite completed counts, selected acceptance names,
+worker measurements, artifact identifiers and SHA-256 digests. All four ZIP
+artifacts were downloaded and their digests checked independently. Their
+revision, dependency input hashes, restored inputs, completed test events and
+full large-payload hashes were checked before creating this receipt. Its
+normal suite inventory explicitly includes the queue, recovery, worker,
+operation-control and all four background-archive widget suites.
+
+### Direct worker probes
+
 The direct worker receipt is [archive-writer-worker-verification.json](archive-writer-worker-verification.json).
 Its six focused probe groups passed: streamed formats/raw HFSX, buffered options
 and protection, opaque DMG preservation, pause/backpressure, stalled/paused
@@ -120,36 +158,23 @@ is observational rather than an exact peak-memory guarantee. The earlier
 [archive container runtime acceptance](archive-containers-runtime-verification.md)
 retains separate physical-container and complete publication evidence.
 
-The first hosted run, [43383115342](https://github.com/CrispStrobe/CrispCloud/actions/runs/43383115342),
-tested source `c7523ab53447b19d461b7c759b90191c1b59ede8`. All three explicit
-worker gates above 2 GiB passed without skips. The combined suite recorded
-2,012 passed, 54 failed and 13 opt-in skips. Those failures identified two 7z
-fixture settings, workspace locking/cancellation/cleanup compatibility, and
-widget completion/animation/real-I/O handling. The fixes retain the original
-workspace guard assertions and old creation-dialog completion expectations.
+### Corrections found during acceptance
 
-The first attempt of the subsequent `7f540b6` run recorded 2,057 passes, six
-failures and 13 skips before cancellation, with one workspace widget test still
-waiting. Its remaining
-failures exposed callback-cancellation classification and a metadata fixture
-with two-byte stream chunks. The widget wait was reproduced as a test-zone I/O
-deadlock. Source `e9ceb43b5a4b808ab68d5af9547fd5ce15933a03` preserves both
-established cancellation types and fixes the test fixtures without removing
-their content, preservation or authority assertions.
+The initial failed and interrupted runs identified 7z fixture settings,
+workspace locking and cleanup compatibility, cancellation classification, and
+widget completion/animation/real-I/O handling. Callback cancellation now keeps
+the established `StateError` contract while also identifying
+`FileOperationCancelled` to transfer coordinators. The ISO metadata fixture
+uses realistic bounded stream chunks; dedicated fragmented-stream fixtures
+remain unchanged. The workspace widget harness drives both native I/O and its
+test clock, including retained-draft cleanup. The original content,
+preservation, authority and completion assertions remain in place and passed
+in the completed run above.
 
-Latest qualification source: `6eab6a33ffd374bfc9343a692b3df43c85758a1b`,
-[run 43388827835](https://github.com/CrispStrobe/CrispCloud/actions/runs/43388827835).
-Its application and test files are identical to `e9ceb43`; the workflow now
-groups runs by commit so retrying an older revision cannot cancel a newer
-revision's acceptance. The ZIP worker gate above 2 GiB completed successfully
-and its downloaded artifact digest was checked. The combined regression suite,
-7z and TGZ gates have not yet completed. Full runtime acceptance remains
-pending; neither an interrupted run nor a queued job counts as a pass.
-
-The workflow combines archive and transfer regressions with the new
-queue/recovery and widget suites. Its artifacts record exact commands,
-dependency hashes, completed test events and receipts; large cases must finish
-without being skipped. No local Flutter run is claimed.
+The workflow groups runs by commit so retrying an older revision cannot cancel
+a newer revision's acceptance. Runtime acceptance was performed on hosted
+Linux; local Flutter and native Windows/macOS UI acceptance are not represented
+by these receipts.
 
 ## Commander comparison
 

@@ -13,6 +13,9 @@ Baseline: current `main` plus the preserved archive sync / native TAR continuati
 > See [writable ISO, RAR and DMG](archive-iso-rar-dmg.md) for the newer data-image
 > creation and editing profiles. The earlier local Flutter restriction remains
 > historical evidence, not the current hosted runtime result.
+> The subsequent [native archive queue and background packing](archive-operation-queue.md)
+> continuation passed 2,067 archive/transfer/widget tests and three separate
+> worker cases above 2 GiB.
 
 ## Requested outcome
 
@@ -189,9 +192,12 @@ and platform acceptance.
 - External 7z filter/metadata combinations are accepted only when preservation
   is understood. Large externally produced solid archives need broader runtime
   qualification; unsupported structures are refused or remain bounded/read-only.
-- Split-volume handling, external/WCX packers, a durable packing queue,
+- Split-volume handling, external/WCX packers,
   cross-platform app acceptance, large incompressible physical containers and
   the full 8 GiB limit remain separate acceptance items.
+
+The native packing queue and background worker were delivered subsequently;
+see [archive queue behavior and completed acceptance](archive-operation-queue.md).
 
 ## Comparison sources
 
