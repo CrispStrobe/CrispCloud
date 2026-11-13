@@ -419,6 +419,7 @@ void main(List<String> arguments) {
 
   for (final name in [
     'formatting',
+    'word-compatibility',
     'linked-textboxes',
     'word14-margin-origin',
     'word16-page-origin',

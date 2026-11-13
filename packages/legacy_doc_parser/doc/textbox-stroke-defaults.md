@@ -36,13 +36,17 @@ contains a source-dependent border transform in `GetEscherLineMatch` and
 `MatchSdrItemsIntoFlySet`: simple textbox borders have half their width outside
 the shape rectangle, and importing into a native frame adjusts the rectangle
 accordingly. For a 15-twip line this involves seven twips, or 0.35 points.
-This explains a concrete hypothesis but is not sufficient to apply a global
-position correction. Compound borders, rotation, alignment, and the receiving
-VML consumer's frame convention need separate source/target controls.
+The subsequent [explicit-border frame correction](textbox-frame-borders.md)
+now verifies and applies that conversion for a bounded simple, explicit-width
+subset with independent source/target controls. It does not apply a global
+position correction or extend the conclusion to absent widths, compound
+borders, rotation or alignment.
 
 The current writer does not force an absent textbox stroke width. It continues
 to emit explicit zero, explicit hairlines and other supported explicit widths,
 and disabled strokes remain disabled. The specification-backed validation is
 retained: negative, out-of-range and complex binary line-width operands remain
 unsupported evidence; caller-built invalid widths reject conversion. Source
-coordinates, dimensions, insets, table depth and existing goldens are unchanged.
+coordinates, insets, table depth and existing goldens are unchanged. The
+explicit-border correction derives VML frame dimensions from those retained
+source coordinates only for its verified subset.

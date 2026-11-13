@@ -1,0 +1,409 @@
+{
+  "runtimeCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "recoveredBaselineCommit": "6b18332399268c530c0ee5569711c6cf0425c69c",
+  "caseId": "table-borders",
+  "retainedEvidence": "../native-corpus-0c3e596/sealed/04-table-borders/",
+  "sourceFixture": "../../../test/fixtures/word_native/note-table-ending.doc",
+  "comparison": {
+    "authoredVsParser": {
+      "pageGeometryAndWordsEqual": true,
+      "layoutTextEqual": true,
+      "rgbRasterEqual": true
+    },
+    "binaryVsParser": {
+      "maximumOrderedWordDriftPoints": 74.42699999999999
+    },
+    "binaryDocSha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+    "parserDocxSha256": "10641b6ff67830b6dee75b7fd418e9fa05952d624fe1848bb9ddd89eca7c49bf"
+  },
+  "sourceTable": {
+    "cpRange": [
+      124,
+      147
+    ],
+    "cellMarkCp": 145,
+    "rowMarkCp": 146,
+    "piece": {
+      "startCp": 0,
+      "endCp": 149,
+      "fc": 2048,
+      "compressed": false
+    },
+    "rawUnits": [
+      85,
+      110,
+      98,
+      111,
+      114,
+      100,
+      101,
+      114,
+      101,
+      100,
+      32,
+      110,
+      111,
+      116,
+      101,
+      32,
+      116,
+      97,
+      98,
+      108,
+      101,
+      7,
+      7
+    ],
+    "paragraphRuns": [
+      {
+        "firstFc": 2296,
+        "lastFc": 2340,
+        "page": 6,
+        "propertyOffset": 3256,
+        "style": 0,
+        "operations": [
+          {
+            "wordStreamOffset": 3256,
+            "sprm": "0x2416",
+            "operandHex": "01"
+          },
+          {
+            "wordStreamOffset": 3259,
+            "sprm": "0x6649",
+            "operandHex": "01000000"
+          },
+          {
+            "wordStreamOffset": 3265,
+            "sprm": "0x2441",
+            "operandHex": "00"
+          }
+        ]
+      },
+      {
+        "firstFc": 2340,
+        "lastFc": 2342,
+        "page": 7,
+        "propertyOffset": 3967,
+        "style": 0,
+        "operations": [
+          {
+            "wordStreamOffset": 3967,
+            "sprm": "0x2416",
+            "operandHex": "01"
+          },
+          {
+            "wordStreamOffset": 3970,
+            "sprm": "0x2417",
+            "operandHex": "01"
+          },
+          {
+            "wordStreamOffset": 3973,
+            "sprm": "0x6649",
+            "operandHex": "01000000"
+          },
+          {
+            "wordStreamOffset": 3979,
+            "sprm": "0xd608",
+            "operandHex": "010000d0070000000000000000000000000000000000000000"
+          },
+          {
+            "wordStreamOffset": 4008,
+            "sprm": "0xd609",
+            "operandHex": "0000"
+          },
+          {
+            "wordStreamOffset": 4013,
+            "sprm": "0xd612",
+            "operandHex": "000000ff000000ff0000"
+          },
+          {
+            "wordStreamOffset": 4026,
+            "sprm": "0xd670",
+            "operandHex": "000000ff000000ff0000"
+          },
+          {
+            "wordStreamOffset": 4039,
+            "sprm": "0xd670",
+            "operandHex": "000000ff000000ff0000"
+          },
+          {
+            "wordStreamOffset": 4052,
+            "sprm": "0xd634",
+            "operandHex": "000101030000"
+          },
+          {
+            "wordStreamOffset": 4061,
+            "sprm": "0xd634",
+            "operandHex": "000102036c00"
+          },
+          {
+            "wordStreamOffset": 4070,
+            "sprm": "0xd634",
+            "operandHex": "000104030000"
+          },
+          {
+            "wordStreamOffset": 4079,
+            "sprm": "0xd634",
+            "operandHex": "000108036c00"
+          },
+          {
+            "wordStreamOffset": 4088,
+            "sprm": "0x3466",
+            "operandHex": "00"
+          },
+          {
+            "wordStreamOffset": 4091,
+            "sprm": "0x3403",
+            "operandHex": "00"
+          }
+        ]
+      }
+    ],
+    "decodedRow": {
+      "cellCount": 1,
+      "gridEdgesTwips": [
+        0,
+        2000
+      ],
+      "leftAndRightCellMarginsTwips": 108
+    }
+  },
+  "noteWordPositions": {
+    "original": [
+      {
+        "text": "1Note",
+        "box": [
+          72.1,
+          682.1,
+          99.562,
+          693.1
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          102.026,
+          682.1,
+          124.62,
+          693.1
+        ]
+      },
+      {
+        "text": "follows",
+        "box": [
+          127.084,
+          682.1,
+          158.874,
+          693.1
+        ]
+      },
+      {
+        "text": "Unbordered",
+        "box": [
+          77.5,
+          695.55,
+          131.741,
+          706.55
+        ]
+      },
+      {
+        "text": "note",
+        "box": [
+          134.205,
+          695.55,
+          154.808,
+          706.55
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          77.5,
+          709.0,
+          100.061,
+          720.0
+        ]
+      }
+    ],
+    "binary": [
+      {
+        "text": "1Note",
+        "box": [
+          72.1,
+          695.55,
+          99.562,
+          706.55
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          102.026,
+          695.55,
+          124.62,
+          706.55
+        ]
+      },
+      {
+        "text": "follows",
+        "box": [
+          127.084,
+          695.55,
+          158.874,
+          706.55
+        ]
+      },
+      {
+        "text": "Unbordered",
+        "box": [
+          72.1,
+          709.0,
+          126.341,
+          720.0
+        ]
+      },
+      {
+        "text": "note",
+        "box": [
+          128.805,
+          709.0,
+          149.408,
+          720.0
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          151.883,
+          709.0,
+          174.488,
+          720.0
+        ]
+      }
+    ],
+    "converted": [
+      {
+        "text": "1Note",
+        "box": [
+          72.1,
+          682.1,
+          99.562,
+          693.1
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          102.026,
+          682.1,
+          124.62,
+          693.1
+        ]
+      },
+      {
+        "text": "follows",
+        "box": [
+          127.084,
+          682.1,
+          158.874,
+          693.1
+        ]
+      },
+      {
+        "text": "Unbordered",
+        "box": [
+          77.5,
+          695.55,
+          131.741,
+          706.55
+        ]
+      },
+      {
+        "text": "note",
+        "box": [
+          134.205,
+          695.55,
+          154.808,
+          706.55
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          77.5,
+          709.0,
+          100.061,
+          720.0
+        ]
+      }
+    ],
+    "native": [
+      {
+        "text": "1",
+        "box": [
+          72.1,
+          694.45,
+          75.3384,
+          700.85
+        ]
+      },
+      {
+        "text": "Note",
+        "box": [
+          75.3,
+          695.55,
+          97.212,
+          706.55
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          99.676,
+          695.55,
+          122.27,
+          706.55
+        ]
+      },
+      {
+        "text": "follows",
+        "box": [
+          124.734,
+          695.55,
+          156.524,
+          706.55
+        ]
+      },
+      {
+        "text": "Unbordered",
+        "box": [
+          72.1,
+          709.0,
+          126.341,
+          720.0
+        ]
+      },
+      {
+        "text": "note",
+        "box": [
+          128.805,
+          709.0,
+          149.408,
+          720.0
+        ]
+      },
+      {
+        "text": "table",
+        "box": [
+          151.883,
+          709.0,
+          174.488,
+          720.0
+        ]
+      }
+    ]
+  },
+  "nativeExportNoteTableCount": 0,
+  "parserNoteTableCount": 1,
+  "scope": "Closes attribution of the initial74.427pt case04 discrepancy; no runtime layout compensation or golden changes."
+}

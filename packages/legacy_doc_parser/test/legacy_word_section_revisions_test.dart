@@ -93,6 +93,8 @@ void main() {
             ...wordSprm(0xf203, [1, ...wordU16(5000)]),
             ...wordSprm(0xf204, [0, ...wordU16(360)]),
             ..._byte(0x300a, 1),
+            ..._byte(0x3228, 1),
+            ..._byte(0x322a, 1),
             ..._byte(0x3239, 1),
             ..._word(0xb01f, 15840),
             ..._word(0xb020, 12240),
@@ -101,6 +103,8 @@ void main() {
             ..._word(0x500b, 0),
             ..._byte(0x3005, 1),
             ..._byte(0x300a, 0),
+            ..._byte(0x3228, 0),
+            ..._byte(0x322a, 0),
             ..._mark(),
             ...wordSprm(0x703a, wordU32(0x12345678)),
           ]),
@@ -149,6 +153,10 @@ void main() {
       ]);
       expect(accepted.containsKey('titlePg'), isFalse);
       expect(rejected.containsKey('titlePg'), isTrue);
+      expect(accepted.containsKey('bidi'), isFalse);
+      expect(accepted.containsKey('rtlGutter'), isFalse);
+      expect(rejected['bidi'], [{}]);
+      expect(rejected['rtlGutter'], [{}]);
       expect(converted.preservedCounts['sections'], 1);
       expect(converted.preservedCounts['sectionFormattingRevisions'], 1);
       expect(

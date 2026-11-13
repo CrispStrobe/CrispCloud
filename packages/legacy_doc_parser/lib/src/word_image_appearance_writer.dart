@@ -81,6 +81,7 @@ extension _WordImageAppearance on _StructuredWordWriter {
       // A solid line has no patterned background. A nondefault opaque
       // background flag is separately diagnosed as unsupported 0x01ff.
       if ((line.type ?? 0) != 0 ||
+          (line.compoundStyle ?? 0) != 0 ||
           shape.unsupportedProperties.any(
             (id) => id >= 0x01c0 && id <= 0x01ff && id != 0x01c2,
           )) {

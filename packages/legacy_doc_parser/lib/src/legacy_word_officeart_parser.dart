@@ -122,6 +122,7 @@ class _OfficeArtShapeReader {
             color: _color(0x01c0),
             opacityFixed16: _opacity(0x01c1),
             widthEmu: _nonnegative(0x01cb, maximum: 0x0132f540),
+            compoundStyle: _enum(0x01cd, 4),
             dash: _enum(0x01ce, 10),
             join: _enum(0x01d6, 2),
             cap: _enum(0x01d7, 2),
@@ -190,6 +191,11 @@ class _OfficeArtShapeReader {
     if (fill?.type != null && fill!.type != 0) unsupported.add(0x0180);
     if (line?.type != null && line!.type != 0) unsupported.add(0x01c4);
     if (properties.complex.containsKey(0x01cb)) unsupported.add(0x01cb);
+    if (properties.complex.containsKey(0x01cd) ||
+        (line?.compoundStyle ?? 0) != 0) {
+      unsupported.add(0x01cd);
+    }
+    if (properties.complex.containsKey(0x01ff)) unsupported.add(0x01ff);
     if (shadow?.type != null && shadow!.type != 0) unsupported.add(0x0200);
     // MS-ODRAW 2.3.7.2 marks the background color unused for a solid fill.
     // Line background color is inactive for a solid line unless the separate
@@ -234,6 +240,7 @@ class _OfficeArtShapeReader {
       0x01c2,
       0x01c4,
       0x01cb,
+      0x01cd,
       0x01ce,
       0x01d6,
       0x01d7,

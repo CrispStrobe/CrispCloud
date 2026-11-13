@@ -255,3 +255,13 @@ mode, matching the Android CI build. The manual `Rebuild Android release asset`
 workflow can repair an APK for an existing tag only after verifying successful
 application CI for that exact source commit; it retains release signing and
 artifact evidence and does not recreate the release or replace other assets.
+
+
+Development version `1.2.9+22` consumes the qualified canonical parser's
+section/gutter direction, manual-break justification compatibility and bounded
+explicit textbox-border frame conversion. Shared Office sources match Quds
+`6d6e77d` and parser `cd9ab85` exactly across 1,219 managed files. The source
+parser passes 931 Dart tests; the synchronized app Office gate passes 1,165
+mandatory engine tests and 202 host tests, with complete host instrumentation.
+These counts overlap the larger suites. The additional ISO/RAR/DMG archive
+increment is being qualified separately before its integration and release.

@@ -84,6 +84,7 @@ EXPECTED_CASES = frozenset([
     "reviews/numbering-change", "reviews/numbering-insertion",
     "reviews/listnum-display-change", "section-review",
     "native-inputs/formatting", "native-inputs/linked-textboxes",
+    "native-inputs/word-compatibility",
     "native-inputs/word14-margin-origin", "native-inputs/word16-page-origin",
     "native-inputs/poi-simple-table2",
     "native-inputs/word16-page-origin-lo-blip-count",

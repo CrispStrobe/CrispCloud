@@ -74,6 +74,7 @@ class LegacyWordOfficeArtLine {
     this.color,
     this.opacityFixed16,
     this.widthEmu,
+    this.compoundStyle,
     this.dash,
     this.join,
     this.cap,
@@ -83,6 +84,10 @@ class LegacyWordOfficeArtLine {
   final String? color;
   final int? opacityFixed16;
   final int? widthEmu;
+
+  /// MSOLINESTYLE: 0=single, 1=double, 2=thick/thin, 3=thin/thick, 4=triple.
+  /// Compound styles remain unsupported for active output; absence is single.
+  final int? compoundStyle;
   final int? dash, join, cap;
 }
 

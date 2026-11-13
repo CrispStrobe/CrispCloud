@@ -171,6 +171,17 @@ Map<String, bool> _resolved(LegacyWordDocument document) => {
 Map<String, bool> _baseline(Iterable<String> names) => {
   for (final name in names) name: _inverted.contains(name),
 };
+// ISO 29500-1 17.15.3.3/.5 define these omitted options as disabled.
+// Keep source interpretation assertions separate from equivalent XML spelling.
+Map<String, bool> _serialized(Map<String, bool> source) => {
+  for (final entry in source.entries)
+    if (entry.value ||
+        !{
+          'balanceSingleByteDoubleByteWidth',
+          'doNotExpandShiftReturn',
+        }.contains(entry.key))
+      entry.key: entry.value,
+};
 List<Map<String, dynamic>> _evidence(Map<String, Uint8List> files) =>
     (jsonDecode(utf8.decode(files['word/evidence/manifest.json']!))['records']
             as List)
@@ -199,7 +210,7 @@ void main() {
       isNull,
     );
     final files = _parts(convertLegacyWordDocument(present).bytes);
-    expect(_settings(files), _resolved(present));
+    expect(_settings(files), _serialized(_resolved(present)));
     expect(utf8.decode(files['word/settings.xml']!), contains('w:val="0"'));
   });
 
@@ -213,12 +224,98 @@ void main() {
       expect(_resolved(parsed), expected, reason: 'Copts60 bit ${entry.key}');
       expect(
         _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-        expected,
+        _serialized(expected),
         reason: 'Copts60 native XML bit ${entry.key}',
       );
       expect(parsed.compatibility.issues, [
         LegacyWordCompatibilityIssue.partialLegacyDop,
       ]);
+    }
+  });
+
+  test(
+    'width balancing uses equivalent disabled default without losing source',
+    () {
+      const flag = LegacyWordCompatibilityFlag.balanceSingleByteDoubleByteWidth;
+      for (final disabled in [false, true]) {
+        // fDntBlnSbDbWid is bit 15; its OOXML meaning is inverted.
+        final dop = _dop(544, options: disabled ? 0x8000 : 0);
+        final parsed = parseLegacyWordDocument(
+          _source(dop: dop, newVersion: 0xd9),
+        );
+        expect(parsed.compatibility[flag], !disabled);
+        final converted = convertLegacyWordDocument(parsed);
+        final files = _parts(converted.bytes);
+        final settings = _settings(files);
+        if (disabled) {
+          expect(
+            settings.containsKey('balanceSingleByteDoubleByteWidth'),
+            isFalse,
+          );
+        } else {
+          expect(settings['balanceSingleByteDoubleByteWidth'], isTrue);
+        }
+        // Other explicit false flags retain their existing spelling.
+        expect(settings['wrapTrailSpaces'], isFalse);
+        expect(
+          converted.preservedCounts['compatibilityFlags'],
+          parsed.compatibility.flags.length,
+        );
+        for (final record in _evidence(files)) {
+          final start = record['offsetInDop'] as int;
+          final bytes = files[record['part']]!;
+          expect(bytes, dop.sublist(start, start + bytes.length));
+        }
+      }
+    },
+  );
+
+  test('Word16 retains all corroborated disabled width-balancing copies', () {
+    final source = File(
+      'test/fixtures/word_native/word16-page-origin.doc',
+    ).readAsBytesSync();
+    final parsed = parseLegacyWordDocument(source);
+    expect(
+      parsed.compatibility[LegacyWordCompatibilityFlag
+          .balanceSingleByteDoubleByteWidth],
+      isFalse,
+    );
+    expect(parsed.compatibility.sourceBlocks, hasLength(3));
+    for (final block in parsed.compatibility.sourceBlocks) {
+      expect(block.bytes.take(2), [0x00, 0xf0]);
+    }
+    final settings = _settings(_parts(convertLegacyWordDocument(parsed).bytes));
+    expect(settings.containsKey('balanceSingleByteDoubleByteWidth'), isFalse);
+    expect(parsed.plainText, contains('Zufahrt für'));
+  });
+
+  test('manual-break justification preserves both inverse source choices', () {
+    const flag = LegacyWordCompatibilityFlag.doNotExpandShiftReturn;
+    for (final expand in [false, true]) {
+      // fExpShRtn is bit 13, with the opposite OOXML meaning.
+      final dop = _dop(544, options: expand ? 0x2000 : 0);
+      final parsed = parseLegacyWordDocument(
+        _source(dop: dop, newVersion: 0xd9),
+      );
+      expect(parsed.compatibility[flag], !expand);
+      final converted = convertLegacyWordDocument(parsed);
+      final files = _parts(converted.bytes);
+      final settings = _settings(files);
+      if (expand) {
+        expect(settings.containsKey('doNotExpandShiftReturn'), isFalse);
+      } else {
+        expect(settings['doNotExpandShiftReturn'], isTrue);
+      }
+      expect(settings['wrapTrailSpaces'], isFalse);
+      expect(
+        converted.preservedCounts['compatibilityFlags'],
+        parsed.compatibility.flags.length,
+      );
+      for (final record in _evidence(files)) {
+        final start = record['offsetInDop'] as int;
+        final bytes = files[record['part']]!;
+        expect(bytes, dop.sublist(start, start + bytes.length));
+      }
     }
   });
 
@@ -232,7 +329,7 @@ void main() {
       expect(_resolved(parsed), expected, reason: 'Copts80 bit ${entry.key}');
       expect(
         _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-        expected,
+        _serialized(expected),
       );
       expect(parsed.compatibility.issues, isEmpty);
     }
@@ -257,7 +354,7 @@ void main() {
       );
       expect(
         _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-        expected,
+        _serialized(expected),
       );
       expect(parsed.compatibility.issues, isEmpty);
     }
@@ -341,7 +438,7 @@ void main() {
         contains(LegacyWordWarning.unsupportedFormatting),
       );
       final files = _parts(convertLegacyWordDocument(parsed).bytes);
-      expect(_settings(files), _resolved(parsed));
+      expect(_settings(files), _serialized(_resolved(parsed)));
       final records = _evidence(files);
       expect(records, hasLength(3));
       for (final record in records) {
@@ -388,7 +485,7 @@ void main() {
     );
     expect(
       _settings(_parts(convertLegacyWordDocument(parsed).bytes)),
-      _resolved(parsed),
+      _serialized(_resolved(parsed)),
     );
   });
 
@@ -514,7 +611,7 @@ void main() {
       'noLeading',
     ]);
     expect(names.last, 'noSpaceRaiseLower');
-    expect(_settings(files), _resolved(parsed));
+    expect(_settings(files), _serialized(_resolved(parsed)));
   });
 
   test(

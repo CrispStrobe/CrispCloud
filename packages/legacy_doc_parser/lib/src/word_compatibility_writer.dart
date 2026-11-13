@@ -10,8 +10,19 @@ extension _WordCompatibilityWriter on _StructuredWordWriter {
       for (final flag in LegacyWordCompatibilityFlag.values) {
         final value = compatibility[flag];
         if (value == null) continue;
-        settings.add('<w:${flag.name} w:val="${value ? 1 : 0}"/>');
         _count('compatibilityFlags');
+        // ISO 29500-1 17.15.3.3/.5: these options default to false when absent.
+        // LibreOffice enables them on element presence even for val=0. Use
+        // the equivalent absent form for false; keep the explicit source bool
+        // in the model and the original Copts bytes in evidence.
+        if (!value &&
+            (flag ==
+                    LegacyWordCompatibilityFlag
+                        .balanceSingleByteDoubleByteWidth ||
+                flag == LegacyWordCompatibilityFlag.doNotExpandShiftReturn)) {
+          continue;
+        }
+        settings.add('<w:${flag.name} w:val="${value ? 1 : 0}"/>');
       }
       settings.add('</w:compat>');
     }

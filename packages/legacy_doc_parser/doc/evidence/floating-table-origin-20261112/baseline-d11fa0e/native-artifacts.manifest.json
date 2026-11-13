@@ -1,0 +1,353 @@
+{
+  "version": 1,
+  "sourceCommit": "d11fa0e297f8058c8048c71537f2392457baa624",
+  "sourceWorktreeDirty": false,
+  "report": {
+    "path": "native-report.json.xz",
+    "sha256": "d37c22945d8fbe5c05abf856f58d122da63fc083cd6311aaae27c2085cd690a7",
+    "bytes": 26556,
+    "uncompressedSha256": "7661421ea7fe9c5844ab053aed66252aefc6f0a795437146da3e654be8395df7",
+    "uncompressedBytes": 7208008
+  },
+  "archive": {
+    "path": "native-artifacts.tar.xz",
+    "sha256": "ed4a0d0356926d4bc070868555957b68454ba6ea991fd6a5af212aca15f672e2",
+    "bytes": 220128,
+    "format": "USTAR/XZ",
+    "compressionPreset": 6
+  },
+  "fileCount": 58,
+  "uncompressedFileBytes": 8967669,
+  "excludedGeneratedFiles": [
+    "Office profile directories",
+    "temporary directory",
+    "compiled parser executable (hash retained in report)"
+  ],
+  "files": [
+    {
+      "path": "inputs/word16-page-origin.doc",
+      "bytes": 63488,
+      "sha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d"
+    },
+    {
+      "path": "run/compile.log",
+      "bytes": 82,
+      "sha256": "f411b2ac0a4832fd00e6716d9cc3bcd96e8277dab459f47a8e2c5dd5ea464f13"
+    },
+    {
+      "path": "run/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    {
+      "path": "run/fonts.txt",
+      "bytes": 51943,
+      "sha256": "cda9e96d268b4149761b3233661bd91d6fcd03573ed3d540cd378714a2c821fc"
+    },
+    {
+      "path": "run/word16-page-origin/binary-render.json",
+      "bytes": 1449,
+      "sha256": "8f2d6f8a6a32e9fd75130513e96fbdd59363322bd1ababdefe660d6f11025a13"
+    },
+    {
+      "path": "run/word16-page-origin/converted-render.json",
+      "bytes": 1451,
+      "sha256": "aabd48e69fe241392ba6203019a6daa3115669086434f307c27028ff7c2b33b6"
+    },
+    {
+      "path": "run/word16-page-origin/converted-semantic.json",
+      "bytes": 353644,
+      "sha256": "9571c3c1cbc6c311c35c93221a00ab20a93192e1aca6091021c0ce2962af3d90"
+    },
+    {
+      "path": "run/word16-page-origin/converted.docx",
+      "bytes": 52629,
+      "sha256": "ad14053ae74934775782152216a55c6a891f9165b8e4d4a73502a3dadf5f5e48"
+    },
+    {
+      "path": "run/word16-page-origin/native-docx/conversion.log",
+      "bytes": 267,
+      "sha256": "4859fdcfcdfcc56fdeb3c77e045e4c587d8190e3474fe5ecf51408fdda46df0b"
+    },
+    {
+      "path": "run/word16-page-origin/native-docx/source.docx",
+      "bytes": 18699,
+      "sha256": "b98fc3ac37b276502200d863c4d196eb5cf90d9c68baa33c0b1c6ce254d13a62"
+    },
+    {
+      "path": "run/word16-page-origin/native-render.json",
+      "bytes": 1449,
+      "sha256": "2227de0622aeb9ea1927fd4407176bb0bd9d492ce2757481d6e85300295b5b33"
+    },
+    {
+      "path": "run/word16-page-origin/native-semantic.json",
+      "bytes": 271993,
+      "sha256": "2e08cea18d0ec9d4d2b43fab76242aedcc3aa1e69124c1e73e9df602eec9aa8a"
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/conversion.log",
+      "bytes": 265,
+      "sha256": "8b07d2133c2c03439439f2b99afd5e54b2de108a6ccca2012098ed3e937aade4"
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/page-0001.ppm.gz",
+      "bytes": 8026,
+      "sha256": "4adeb2a4843fcfed7c56747bfe8c0503fffaf66194ce3b47feda110f71646469",
+      "uncompressedSha256": "65be64fd1844899dd2fa294dfa2986606b620b36a34d6601ab7394ef6ff63cb1",
+      "uncompressedBytes": 1505511,
+      "rasterContext": {
+        "render": "run/word16-page-origin/binary-render.json",
+        "manifest": "run/word16-page-origin/render-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/pages.txt",
+      "bytes": 30,
+      "sha256": "dada940ff122717a57c3010327903861d83eb1fbcb106848616dfddc09ac3ad1"
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/pages.xhtml",
+      "bytes": 1146,
+      "sha256": "72d7e16f704844faf56eea1e40f970d4da88414d7be90b482ced9d0c8e12a26e"
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/pdfinfo.txt",
+      "bytes": 464,
+      "sha256": "39948967f238b8461efd9f79978f1cbd63b6b6679f7295f87182c955b7108707"
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "272c859dc62a887ae5f9358572e3453998c140cd77858e6bbe2e67d656b77dd2"
+    },
+    {
+      "path": "run/word16-page-origin/render-binary/source.pdf",
+      "bytes": 30870,
+      "sha256": "4a900f01865a0ce788a45d8c9c47b003c55985c05ad9572693a9392a4f1f1ddf"
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/conversion.log",
+      "bytes": 275,
+      "sha256": "eb9929bae35a2548f139002472b5606da69cffc516ccb9a94691e235fc515664"
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/converted.pdf",
+      "bytes": 29548,
+      "sha256": "401f0e0cd30f7d5a73e967215be06f3ef9d01e5fd7a62ef1f7e33047f958006b"
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/page-0001.ppm.gz",
+      "bytes": 8077,
+      "sha256": "4762006986dce01ae9a689d7d06cc6a0fff7b2f7a93c25cea036363eb2896071",
+      "uncompressedSha256": "5a27a25bca81a243d63f821fba953d3c61ab04b148353ed96f8eee6f5d5509fe",
+      "uncompressedBytes": 1505511,
+      "rasterContext": {
+        "render": "run/word16-page-origin/converted-render.json",
+        "manifest": "run/word16-page-origin/render-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/pages.txt",
+      "bytes": 30,
+      "sha256": "dada940ff122717a57c3010327903861d83eb1fbcb106848616dfddc09ac3ad1"
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/pages.xhtml",
+      "bytes": 1109,
+      "sha256": "fd24ad479802fdea0c19f9e7cd7352e9c6ab1aac6b936d445cacb927d10af6d8"
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/pdfinfo.txt",
+      "bytes": 442,
+      "sha256": "1a005eef005bdc5ae328d9c5e6721ba721cb876f0d1b5a54353f0ff83334965d"
+    },
+    {
+      "path": "run/word16-page-origin/render-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "2227a93c6b64fee3a27a9b3a350394fcc5e89586ba63b5a843cdba53de803ded"
+    },
+    {
+      "path": "run/word16-page-origin/render-native/conversion.log",
+      "bytes": 278,
+      "sha256": "c2922196ceab06f232083eec143534eee771451a1b114ebc1bba90cb65bfabbe"
+    },
+    {
+      "path": "run/word16-page-origin/render-native/page-0001.ppm.gz",
+      "bytes": 8048,
+      "sha256": "47030c17be8e0dfe9ac49a682080d5e0f75e8500b5b7250760608530d3123c12",
+      "uncompressedSha256": "d54264e6ba76a767b9d5ccd2eda0bea27b145e030ca0d0c8ec0c27fcf878d928",
+      "uncompressedBytes": 1505511,
+      "rasterContext": {
+        "render": "run/word16-page-origin/native-render.json",
+        "manifest": "run/word16-page-origin/render-native/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word16-page-origin/render-native/pages.txt",
+      "bytes": 30,
+      "sha256": "dada940ff122717a57c3010327903861d83eb1fbcb106848616dfddc09ac3ad1"
+    },
+    {
+      "path": "run/word16-page-origin/render-native/pages.xhtml",
+      "bytes": 1146,
+      "sha256": "5cae48472127db13f9909c67ef164090a815fd598c0d075d01e5df4d177a3da1"
+    },
+    {
+      "path": "run/word16-page-origin/render-native/pdfinfo.txt",
+      "bytes": 464,
+      "sha256": "a6b295c517541a2d8dd6cfd1abc60fbbfb1a9884a2a1aa8ed9a472ad70d6abd6"
+    },
+    {
+      "path": "run/word16-page-origin/render-native/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "8f4255006edd5e9d22af01d2bea09ebff4703ae1b437344ec51a27b6330c7e74"
+    },
+    {
+      "path": "run/word16-page-origin/render-native/source.pdf",
+      "bytes": 30735,
+      "sha256": "7db99ef8708d8eae6fe1f79ff1b3d2079c2c4fe80fb569e8f4fd1bac8d624b12"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/conversion.log",
+      "bytes": 304,
+      "sha256": "ee0c9fa1bb6ad58e1bb9cbd2d9d2f613d9024a72959484dcb34f8ad871b44f43"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/converted.pdf",
+      "bytes": 29550,
+      "sha256": "53f72b2773cb27f535e24ca6cf127329240c4304ba62e0464f65a3e06757ba5d"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/page-0001.ppm.gz",
+      "bytes": 8073,
+      "sha256": "c4b8dab1624f2c3bc52962ffaab5b0d00458b042b5fa5d3e477ead45e5a2c2c9",
+      "uncompressedSha256": "e0c0f8b59ce9a699ffa49389311a2615aafcdf783ec89c664031ceb009cf09d1",
+      "uncompressedBytes": 1505511,
+      "rasterContext": {
+        "render": "run/word16-page-origin/roundtrip-01-binary-render.json",
+        "manifest": "run/word16-page-origin/render-roundtrip-01-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/pages.txt",
+      "bytes": 30,
+      "sha256": "dada940ff122717a57c3010327903861d83eb1fbcb106848616dfddc09ac3ad1"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/pages.xhtml",
+      "bytes": 1109,
+      "sha256": "a69839910f344f72f32d8b49c513534b66e62909261c4e788f43efce713a0b70"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/pdfinfo.txt",
+      "bytes": 442,
+      "sha256": "d6a707ae6cb61bf180142f92ee9ae4f29bb9c793ca46bac8c4dc2f9ba038e123"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "feec397a7a2b45688ea2f13ff1b971ed2b55712953733f25bf4ffa6e2817c18d"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/conversion.log",
+      "bytes": 295,
+      "sha256": "c8c87818da6980199b65f3a5b3f84f1e4fd08e599cc11aea3d75488d9f6388ce"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/import.pdf",
+      "bytes": 29543,
+      "sha256": "0974a22ee109c4e1aa4f2954dbbad63fdcafd40984b1b05939fb4c2b08af19f6"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/page-0001.ppm.gz",
+      "bytes": 8017,
+      "sha256": "a99342d6cb6c5db7bacf93a8c35076a11851569091dd042ad8315883b3ee94d9",
+      "uncompressedSha256": "7bd14efa060f93be96fd365da1807c50226a3e0eb1c62412a47b5f1a41f754e0",
+      "uncompressedBytes": 1505511,
+      "rasterContext": {
+        "render": "run/word16-page-origin/roundtrip-01-converted-render.json",
+        "manifest": "run/word16-page-origin/render-roundtrip-01-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/pages.txt",
+      "bytes": 30,
+      "sha256": "dada940ff122717a57c3010327903861d83eb1fbcb106848616dfddc09ac3ad1"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/pages.xhtml",
+      "bytes": 1109,
+      "sha256": "125b5956ab2067ce5e1ec927b2895de0c01e29eae914a4fdb3c7eae92d393151"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/pdfinfo.txt",
+      "bytes": 442,
+      "sha256": "4840d9fd1dbca9ef7ed8f9f16d4e2fef30e46ea7d494db8ad225784d72a0b05e"
+    },
+    {
+      "path": "run/word16-page-origin/render-roundtrip-01-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "7f7a6a3b3e74451cc37722e582a047256a20b9fba5f84ceb190b9b48f9a78ee8"
+    },
+    {
+      "path": "run/word16-page-origin/result.json",
+      "bytes": 6560759,
+      "sha256": "10de1394c09f05e435a9fb556ab28e8fb82262358cf2e096552b95a0e6475e5f"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01-binary-render.json",
+      "bytes": 1451,
+      "sha256": "96792a30e83990a2fa3482f549c2fd527612364ed534742caf994084c6f85068"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01-converted-render.json",
+      "bytes": 1449,
+      "sha256": "edf6bd077c6e5d81e3d073020721b0df0d531941d4d8e1d39d45c7c1a09ca02b"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01-converted-semantic.json",
+      "bytes": 554432,
+      "sha256": "64aabb16e17694213f80f758183bec1478146a32cc7773a892aca976ccb2057d"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01-native-semantic.json",
+      "bytes": 614690,
+      "sha256": "3af9760862208bd3113a18b3616b745a9cdfe2b4215b2c8aa592cab0e7c941c2"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01/binary/conversion.log",
+      "bytes": 271,
+      "sha256": "0faca8c09149497b0e80de6342b39195764bbbbbd0bc77eade18ab77925003ec"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01/binary/converted.doc",
+      "bytes": 25088,
+      "sha256": "749eb409e7b684cba5704e7065e15ca9073ea3a9e853224718840df513897875"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01/import.docx",
+      "bytes": 32170,
+      "sha256": "e13e50d5625a968a76b8b820e1b28e659e65d28683b9ffabe8cf2290c0f5c091"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01/native-docx/conversion.log",
+      "bytes": 306,
+      "sha256": "051bd9a9b2eb971a709de064f348fcaae18e81719ac4379fd4352b703a472de6"
+    },
+    {
+      "path": "run/word16-page-origin/roundtrip-01/native-docx/converted.docx",
+      "bytes": 18895,
+      "sha256": "b411b4457c014c9377375bcd8c1aa9f6666b46f45d2bc2db95417422a4685825"
+    },
+    {
+      "path": "run/word16-page-origin/source.doc",
+      "bytes": 63488,
+      "sha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d"
+    }
+  ]
+}

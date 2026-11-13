@@ -635,3 +635,15 @@ It does not change the application runtime, dependency lock, cryptographic
 algorithms or protocols, Apple declarations, or reviewed distribution policy.
 The new workflow is included in the reviewed source inventory; fingerprints
 were refreshed after inspecting these packaging-only changes.
+
+
+### Canonical parser refresh for build 22, 2026-11-13
+
+The source update changes DOC section compatibility and explicit textbox frame
+geometry, plus retained acceptance evidence and the application version. The
+canonical parser and Quds source gates pass; the synchronized Office gate
+passes 1,165 mandatory engine tests and 202 host tests. Signature validity is
+still never claimed, and embedded content and macros are not executed. No
+cryptographic algorithm, protocol, dependency, Apple declaration or reviewed
+distribution setting changes. The source binding was refreshed after reviewing
+these changes; this records source consistency rather than a new binary upload.

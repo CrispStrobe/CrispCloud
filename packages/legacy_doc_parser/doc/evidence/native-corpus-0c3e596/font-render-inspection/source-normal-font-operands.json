@@ -1,0 +1,49 @@
+{
+  "source": "test/fixtures/word_native/formatting.doc",
+  "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+  "table": "1Table",
+  "styleIndex": 0,
+  "styleName": "Normal",
+  "styleKind": 1,
+  "styleRecordTableOffset": 22,
+  "styleRecordBytes": 114,
+  "upx": [
+    {
+      "index": 0,
+      "tableOffset": 50,
+      "bytes": 31
+    },
+    {
+      "index": 1,
+      "tableOffset": 84,
+      "bytes": 51
+    }
+  ],
+  "fontOperands": [
+    {
+      "sprm": "0x4a4f",
+      "tableOffset": 87,
+      "fontIndex": 4,
+      "bytes": "4f4a0400"
+    },
+    {
+      "sprm": "0x4a51",
+      "tableOffset": 91,
+      "fontIndex": 4,
+      "bytes": "514a0400"
+    },
+    {
+      "sprm": "0x4a50",
+      "tableOffset": 111,
+      "fontIndex": 5,
+      "bytes": "504a0500"
+    },
+    {
+      "sprm": "0x4a5e",
+      "tableOffset": 123,
+      "fontIndex": 6,
+      "bytes": "5e4a0600"
+    }
+  ],
+  "reader": "Independent literal FIB/STSH/STD/UPX operand walk; compound storage reader only."
+}

@@ -17,8 +17,20 @@ extension _WordTextboxes on _StructuredWordWriter {
     );
     if (first && !_renderedTextboxes.add(occurrence)) return;
     final shape = drawing.shape, text = shape?.text;
-    final width = (drawing.rightTwips - drawing.leftTwips) / 20;
-    final height = (drawing.bottomTwips - drawing.topTwips) / 20;
+    final outside = _textboxOutsideBorderTwips(drawing);
+    final left = drawing.leftTwips - outside;
+    final top = drawing.topTwips - outside;
+    final width = (drawing.rightTwips - drawing.leftTwips + 2 * outside) / 20;
+    final height = (drawing.bottomTwips - drawing.topTwips + 2 * outside) / 20;
+    if (outside != 0 &&
+        [
+          left,
+          top,
+          width * 20,
+          height * 20,
+        ].any((value) => value.abs() > 0x7fffffff)) {
+      _tooComplex();
+    }
     final prefix = reference.inHeaderFooter ? 'Header' : '';
     // Distinct package identifiers derive from the two original source
     // occurrences. The binary shape ID itself remains unchanged in the model
@@ -35,8 +47,8 @@ extension _WordTextboxes on _StructuredWordWriter {
     _mediaStart(drawing.presentation);
     _xml.add(
       '<w:pict><v:rect id="_legacy${prefix}TextboxShape${drawing.shapeId}$occurrenceSuffix" '
-      'style="position:absolute;margin-left:${drawing.leftTwips / 20}pt;'
-      'margin-top:${drawing.topTwips / 20}pt;width:${width}pt;height:${height}pt;'
+      'style="position:absolute;margin-left:${left / 20}pt;'
+      'margin-top:${top / 20}pt;width:${width}pt;height:${height}pt;'
       '${_officeArtVmlPosition(drawing)}'
       'z-index:${drawing.behindText ? -1 : drawing.shapeId}',
     );
@@ -146,6 +158,7 @@ extension _WordTextboxes on _StructuredWordWriter {
       'shapeId': drawing.shapeId,
       'story': story.id,
       'insetsEmu': insets,
+      'outsideBorderTwips': outside,
       'wrapDistancesEmu': _drawingMetadata(
         drawing,
       )['officeArtWrapDistancesEmu'],
@@ -161,6 +174,46 @@ extension _WordTextboxes on _StructuredWordWriter {
           'host reflow, automatic margins and arbitrary shape effects are not certified.',
     });
     limitations.add(LegacyWordConversionLimitation.partialFormatting);
+  }
+
+  int _textboxOutsideBorderTwips(LegacyWordDrawing drawing) {
+    final shape = drawing.shape, line = shape?.line;
+    final width = line?.widthEmu;
+    // OfficeArt textbox rectangles orient from inside the outer half of a
+    // simple border. VML text frames orient from the outer frame boundary.
+    // Convert the frame only when the source border and transform are known;
+    // retain the original FSPA in the model/evidence. See the native contract
+    // and independent controls in doc/textbox-frame-borders.md.
+    if (shape == null ||
+        shape.type != 202 ||
+        shape.unsupportedProperties.isNotEmpty ||
+        (shape.sourceFlags & 0x37) != 0 ||
+        shape.rotationFixed16 != 0 ||
+        shape.flipHorizontal ||
+        shape.flipVertical ||
+        line?.enabled == false ||
+        (line?.type ?? 0) != 0 ||
+        (line?.compoundStyle ?? 0) != 0 ||
+        (line?.dash ?? 0) != 0 ||
+        shape.shadow?.enabled == true ||
+        shape.text?.autoTextMargin == true ||
+        (shape.position?.horizontalMode ?? 0) != 0 ||
+        (shape.position?.verticalMode ?? 0) != 0 ||
+        width == null ||
+        width < 0 ||
+        width > 0x0132f540 ||
+        width % 635 != 0 ||
+        [
+          shape.text?.insetLeftEmu,
+          shape.text?.insetTopEmu,
+          shape.text?.insetRightEmu,
+          shape.text?.insetBottomEmu,
+        ].any((value) => value != null && value < 0)) {
+      return 0;
+    }
+    // Binary placement is in whole twips. The outer half of an odd-width
+    // border is truncated in that source coordinate space, e.g. 15 -> 7.
+    return (width ~/ 635) ~/ 2;
   }
 
   void _textboxPaint(LegacyWordOfficeArtShape? shape) {

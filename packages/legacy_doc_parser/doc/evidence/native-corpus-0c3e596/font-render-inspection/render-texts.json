@@ -1,0 +1,5 @@
+{
+  "binary": "Fixture header\n\n\n\n\nInstalled Office conversion fixture\nUnicode café —   😀 .😀Bold red text and italic text.\nColumn A                                 Column B\nCell one                                 Cell two\n\n\n\n\nA footnote remains attached here1\n\nA second paragraph after the footnote.\n\n\n\n\n1Footnote content survives conversion.\n\n\nFixture footer\n\f",
+  "converted": "Fixture header\n\n\n\n\nInstalled Office conversion fixture\nUnicode café — 東京     😀. Bold red text and italic text.\nColumn A                                 Column B\nCell one                                 Cell two\n\n\n\n\nA footnote remains attached here1\n\nA second paragraph after the footnote.\n\n\n\n\n1Footnote content survives conversion.\n\n\nFixture footer\n\f",
+  "native": "Fixture header\n\n\n\n\nInstalled Office conversion fixture\nUnicode café —   😀 .😀Bold red text and italic text.\nColumn A                                 Column B\nCell one                                 Cell two\n\n\n\n\nA footnote remains attached here1\n\nA second paragraph after the footnote.\n\n\n\n\n1\nFootnote content survives conversion.\n\n\nFixture footer\n\f"
+}
