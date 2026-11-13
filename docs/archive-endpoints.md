@@ -338,7 +338,7 @@ are normalized to the chosen format's supported precision. Empty directories
 are retained. Merging an existing explicit archive directory preserves its
 original mode and modification time; new directories import supported metadata.
 The legacy ZIP/7z member model does not promise arbitrary comments, ownership,
-ACLs or opaque extras. Format-specific TAR/AR/CPIO/XAR/ISO inspectors separately
+ACLs or opaque extras. Format-specific TAR/AR/CPIO/XAR/ISO/RAR/DMG inspectors separately
 capture supported metadata and refuse structures their writers cannot preserve.
 This member policy is separate from the stricter outer-container access policy
 below. See the complete [format matrix](archive-format-coverage.md) for each

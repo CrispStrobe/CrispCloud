@@ -46,9 +46,15 @@ void main() {
           try {
             if (large && format == ArchiveCreationFormat.dmg) {
               // UDIF represents all-zero blocks without payload even in Store
-              // mode. Nonzero blocks prove the outer DMG also exceeds 2 GiB.
-              final block = Uint8List(256 * 1024)
-                ..fillRange(0, 256 * 1024, 0x51);
+              // mode, and review uses zlib. Repeat a deterministic high-entropy
+              // block larger than zlib's window so both the original and the
+              // edited outer DMG exceed 2 GiB without a whole-file buffer.
+              final block = Uint8List(256 * 1024);
+              var state = 0x43524953;
+              for (var index = 0; index < block.length; index++) {
+                state = (state * 1664525 + 1013904223) & 0xffffffff;
+                block[index] = state >> 24;
+              }
               for (
                 var position = 0;
                 position < size;
@@ -185,6 +191,10 @@ void main() {
           workspace.replace('/added.txt', Uint8List.fromList([9, 8, 7]));
           final review = await workspace.review();
           expect(review.spool?.isSealed, isTrue);
+          final reviewedBytes = review.spool!.length;
+          if (large) {
+            expect(reviewedBytes, greaterThan(2 * 1024 * 1024 * 1024));
+          }
           expect(() => review.bytes, throwsStateError);
           await expectLater(
             workspace.save(reviewed: review, isCancelled: () => true),
@@ -194,6 +204,7 @@ void main() {
           final receipt = await workspace.save(reviewed: review);
           expect(receipt, isNotNull);
           expect(workspace.dirty, isFalse);
+          expect(await container.length(), reviewedBytes);
           await workspace.close();
 
           final reopened = await ArchiveWorkspace.open(

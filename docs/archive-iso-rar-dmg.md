@@ -34,6 +34,12 @@ switching formats. New labels and guidance are translated into the existing
 eight non-English UI locales. The English, German and French offline guides
 describe the same scope and limitations.
 
+RAR5 Store workspaces use the exact metadata reader in both native streaming
+and bounded buffered/nested routes, so a rename does not round a retained
+subsecond modification time. DMG workspace paths use the same frozen HFS
+Unicode normalization as the image writer, including accented-name lookups and
+canonical-equivalent collision checks.
+
 ## Commander comparison
 
 The comparison distinguishes an application's archive interface from the
@@ -119,7 +125,8 @@ filesystem/partition layouts are not reconstructed from a partial file listing.
 
 UDIF zero runs can make even a Store image physically small when its filesystem
 contains mostly zero bytes. The hosted large DMG fixture therefore supplies
-nonzero blocks and requires an actual outer container larger than 2 GiB.
+deterministic high-entropy blocks, larger than zlib's window, and requires both
+the original and the edited, published outer container to exceed 2 GiB.
 
 ## Verification and evidence
 

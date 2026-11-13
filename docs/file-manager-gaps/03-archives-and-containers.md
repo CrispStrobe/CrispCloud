@@ -40,8 +40,17 @@ member/container/expanded budget. The reader, writer and publisher retain
 metadata, path, protection and source-authority checks. Buffered editors,
 protected/nested profiles and directory-to-archive synchronization retain their
 separate smaller bounds. The [parity report](../archive-parity-large-continuation.md)
-records the independently measured codec results and blocked Flutter runtime
-gate; native app acceptance is still open.
+records the original codec checkpoint. The subsequent
+[hosted runtime gate](../archive-containers-runtime-verification.md) passed
+1,769 normal archive tests and all five explicitly enabled common-format
+cases above 2 GiB. Provider and platform release acceptance remain separate.
+
+**ISO/RAR/DMG continuation (2026-11-13):** The same reviewed folder operations
+now route eligible data ISO, RAR5 Store/CBR and fully inspected canonical HFSX
+data-volume DMG through the native streamed workspace. Their 8 GiB container
+budgets include format overhead; each ISO file must be smaller than 4 GiB.
+Unsupported boot/hybrid/filesystem/protection metadata keeps a container
+read-only. See the [exact profiles and verification](../archive-iso-rar-dmg.md).
 
 **Boundary:** Capabilities are format-specific. Mutating one member may require repacking the container; declare cost and read/write/encryption support. Keep original containers recoverable until replacement is verified.
 
@@ -177,7 +186,7 @@ increment does not close the broader G20 scope.
 
 ### Large background archive jobs
 
-**Status:** Partially implemented: native foreground ZIP/7z/TGZ creation and common-format editing now stream, alongside TAR/CBT and data-image creation; durable queued packing, restart and app runtime qualification remain. **Dependencies:** G18; transfer queue.
+**Status:** Partially implemented: native foreground common-format creation/editing and eligible ISO/RAR5 Store/DMG workflows stream; durable queued packing, restart and broader platform qualification remain. **Dependencies:** G18; transfer queue.
 
 **Scope:** Add worker/streaming packing, durable recovery and bounded validation.
 
@@ -213,15 +222,16 @@ linked from the [parity report](../archive-parity-large-continuation.md).
 
 **Remaining:** Durable queue/job records, worker lifecycle, stop/restart and
 process-interruption recovery for packing, large protected/nested profiles,
-and provider/platform acceptance. Automatic approval review blocked the local
-Flutter runner, so authored application integration tests are not runtime
-passes. Foreground streaming does not close the durable background-job scope.
+and provider/platform acceptance. The local Flutter runner remains unavailable;
+the completed hosted common-format gate and the separate ISO/RAR/DMG acceptance
+status are recorded in [runtime verification](../archive-containers-runtime-verification.md).
+Foreground streaming does not close the durable background-job scope.
 
 ## G22
 
 ### Archive format coverage
 
-**Status:** Partially implemented: shared reader/writer routing, additional archive writers and streamed data-image creation delivered; uncommon codecs, existing disk filesystem rewrites and signed package builders remain. **Dependencies:** License and format review per codec.
+**Status:** Partially implemented: shared routing, additional archive writers and eligible ISO/RAR5 Store/DMG data-profile rewrites delivered; uncommon codecs, arbitrary filesystem rewrites and signed package builders remain. **Dependencies:** License and format review per codec.
 
 **Scope:** Add each missing reader/writer/alias independently with a tested capability matrix.
 
@@ -306,6 +316,19 @@ readback cases and 18 actual JavaScript profiles pass, including dictionary
 resets and external TAR metadata preservation. The format's missing checksum
 and decoded length remain explicit. See the
 [writer evidence](../../test/fixtures/archives/UNIX_COMPRESS_WRITER_PROFILES.md).
+
+**ISO/RAR/DMG writer continuation (2026-11-13):** RAR5 Store and CBR bring the
+creation picker to **35** choices. The independent public-format Store codec
+retains exact supported time records and attributes, with CRC/SHA-256 source
+checks across its two packing passes. Native data ISO and fully verified
+single-volume HFSX data DMG profiles gain large reviewed edits and publication;
+fresh native ISO/HFSX/DMG creation now has an 8 GiB image budget. ISO preserves
+understood volume/root/Rock Ridge/Joliet metadata. DMG checks every nonpayload
+filesystem byte and both UDIF CRC layers before allowing a rewrite.
+Compressed/protected/split RAR, arbitrary DMG layouts, resource forks, extended
+attributes, APFS and signing are not added. The
+[continuation record](../archive-iso-rar-dmg.md) distinguishes direct independent
+codec measurements, hosted app gates and remaining Commander parity work.
 
 ## G23
 

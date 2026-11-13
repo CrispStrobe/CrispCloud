@@ -285,8 +285,10 @@ jobs:
               'test/archive_large_tar_creation_test.dart',
               'test/archive_native_container_workflows_test.dart',
               'test/archive_dmg_rewrite_test.dart',
+              'test/archive_dmg_workspace_test.dart',
               'test/archive_iso_streamed_test.dart',
               'test/archive_rar_stored_test.dart',
+              'test/archive_rar_workspace_test.dart',
               'test/widget/archive_container_viewer_test.dart',
               'test/widget/archive_creation_dialog_test.dart',
           ]

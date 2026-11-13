@@ -126,11 +126,15 @@ distinguishes actual measured fixtures from the configured upper bound.
 
 ZIP, TGZ and 7z have each processed a member larger than 2 GiB through the
 standalone writer and independent readers. ZIP64 has also processed a member
-larger than 4 GiB and an archive with 65,536 entries. The fixtures compress to
-small physical files; they do not establish a full 8 GiB application save or
-large physical-container publication. See the [writer evidence](archive-streaming-codec-verification.md),
-[reader evidence](archive-streaming-reader-verification.md) and
-[integration status](archive-parity-large-continuation.md).
+larger than 4 GiB and an archive with 65,536 entries. The original compressed
+fixtures are physically small. A completed hosted application gate now also
+creates and publishes actual ZIP, 7z and TGZ containers above 2 GiB and edits
+and republishes a TGZ containing a member above 2 GiB. None of these fixtures
+qualifies the complete 8 GiB ceiling. See the
+[writer evidence](archive-streaming-codec-verification.md),
+[reader evidence](archive-streaming-reader-verification.md),
+[completed hosted gate](archive-containers-runtime-verification.md) and
+[ISO/RAR/DMG evidence](archive-iso-rar-dmg.md).
 
 Large durable background jobs remain separate work. The current creation entry
 point accepts native local selections. Other archive browsing and editing

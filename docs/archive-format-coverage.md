@@ -226,25 +226,31 @@ content checksums from publisher authentication.
   64 MiB full-data input limit. Password retries borrow a fresh reader, and
   changing modes or closing the viewer immediately invalidates pending reads.
 - Buffered interactive member reads remain capped at 64 MiB per member.
-  Eligible native top-level ZIP/CBZ, 7z/CB7, TAR/CBT and TGZ/TAR.GZ workspaces
+  Eligible native top-level ZIP/CBZ, 7z/CB7, TAR/CBT, TGZ/TAR.GZ and RAR5
+  Store/CBR workspaces
   stream imports, copy-out, repacking, verification and publication within an
   8 GiB member/container/expanded-content budget. Editing a member in an in-memory
   text or hex editor retains its separate bound. Native direct extraction uses
-  the streamed reader for eligible common formats; buffered extraction keeps
+  the streamed reader for eligible formats; buffered extraction keeps
   its 64 MiB member and 256 MiB input/total-output limits. Copying through a pane
   keeps its own operation planning and cancellation rules.
-- Fresh native ISO/HFSX/DMG creation streams output up to 2 GiB, including image
-  metadata. Files larger than 64 MiB are supported in that creation path and
-  verified by streaming; this does not raise the existing workspace edit,
-  preview or ordinary extraction limits. Browser/fallback output spools are
-  capped at 256 MiB, and the creation UI remains native-local.
+- Fresh ISO/HFSX/DMG creation on bounded native local storage streams within
+  an 8 GiB image budget, including image metadata and filesystem free space.
+  Eligible existing data ISO and fully verified canonical single-volume HFSX
+  data DMG profiles also support streamed workspace editing and extraction.
+  ISO and DMG allow 100,000 entries; each ISO file must be smaller than 4 GiB.
+  Existing raw HFS images remain read-only. Other creation backends retain
+  the 2 GiB image bound; browser output spools remain capped at 256 MiB.
+  Buffered previews retain their own limits, and the creation UI remains
+  native-local. See the [ISO/RAR/DMG scope and evidence](archive-iso-rar-dmg.md).
 - Fresh native uncompressed TAR/CBT creation also streams to a 2 GiB packed
   output bound, including headers and alignment. Eligible bounded native-local
   endpoints can create members above 64 MiB and archives above 256 MiB, with
   streaming member hashes, full source rechecks and staged byte readback.
   Existing eligible native TAR editing uses its separate 8 GiB streaming budget.
   See the [measured large TAR evidence](archive-sync-large-tar-verification.md).
-- Native unencrypted ZIP/CBZ, 7z/CB7 Store/LZMA2 and TGZ/TAR.GZ creation streams
+- Native unencrypted ZIP/CBZ, 7z/CB7 Store/LZMA2, RAR5 Store/CBR and
+  TGZ/TAR.GZ creation streams
   within an 8 GiB member/expanded/packed budget. TGZ's decoded TAR including
   headers must also fit. Protected archives, nested writes, browser/fallback
   paths, 7z Deflate creation and other formats retain their buffered limits:
