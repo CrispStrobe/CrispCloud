@@ -112,6 +112,7 @@ const Set<String> textEditableExtensions = <String>{
   'asciidoc',
   'org',
   'srt',
+  'lrc',
   'vtt',
   'sub',
   'ass',

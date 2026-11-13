@@ -78,6 +78,12 @@ jobs:
       - name: Verify offline help topics and translation revisions
         run: python3 tool/check_help_guides.py
 
+      - name: Verify Apache-only File Viewer source boundary
+        run: |
+          python3 tool/verify_file_viewer_binary.py
+          python3 tool/verify_file_viewer_lrc.py
+          python3 -m unittest discover -s tool -p 'test_verify_file_viewer*.py'
+
       # Cache Flutter SDK
       - name: Cache Flutter SDK
         uses: actions/cache@v5
@@ -203,6 +209,15 @@ jobs:
         # CLI analysis runs above; analysis_options.yaml excludes it here.
         # Preserve the errors-only policy while also failing on tool crashes.
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: File Viewer parser VM and JavaScript portability
+        run: |
+          dart run tool/binary_structure_portability_smoke.dart
+          dart run tool/lrc_portability_smoke.dart
+          dart compile js tool/binary_structure_portability_smoke.dart -O2 -o "$RUNNER_TEMP/binary-structure-smoke.js"
+          node "$RUNNER_TEMP/binary-structure-smoke.js"
+          dart compile js tool/lrc_portability_smoke.dart -O2 -o "$RUNNER_TEMP/lrc-smoke.js"
+          node "$RUNNER_TEMP/lrc-smoke.js"
 
       - name: Fast deterministic tests with coverage
         env:

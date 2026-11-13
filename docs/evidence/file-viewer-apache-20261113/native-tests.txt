@@ -1,0 +1,215 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart
+00:00 +0: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: inspects PNG fields without interpreting image data or CRC
+00:00 +1: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: rejects malformed first PNG chunk values without following lengths
+00:00 +2: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: inspects WASM version and discloses an unsupported version
+00:00 +3: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: ELF 32 BE
+00:00 +4: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: Mach-O 32 BE
+00:00 +5: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: fat Mach-O 32 BE
+00:00 +6: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: ELF 64 BE
+00:00 +7: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: Mach-O 64 BE
+00:00 +8: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: fat Mach-O 64 BE
+00:00 +9: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: keeps all 64 bits exact (BE)
+00:00 +10: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: ELF 32 LE
+00:00 +11: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: Mach-O 32 LE
+00:00 +12: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: fat Mach-O 32 LE
+00:00 +13: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: ELF 64 LE
+00:00 +14: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: Mach-O 64 LE
+00:00 +15: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: fat Mach-O 64 LE
+00:00 +16: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: keeps all 64 bits exact (LE)
+00:00 +17: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: does not invent an ELF byte order or class for malformed headers
+00:00 +18: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: inspects PE signature and bounded optional header
+00:00 +19: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: never reads optional-header magic beyond its declared size
+00:00 +20: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: discloses PE pointer outside file without exposing a phantom field
+00:00 +21: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: a PE header outside the prefix is uninspected, not a truncated file
+00:00 +22: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: inspects ZIP local metadata without extracting entries
+00:00 +23: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: inspects Java class only with compatible version and pool evidence
+00:00 +24: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: retains ambiguity if both Java and fat Mach-O headers are plausible
+00:00 +25: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: large input counts and lengths never expand the header tree
+00:00 +26: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: missing fat architecture evidence keeps a short prefix ambiguous
+00:00 +27: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: unfamiliar CPU code cannot make a plausible fat header become Java
+00:00 +28: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: inspects every truncated header prefix without unsafe ranges or reads
+00:00 +29: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: distinguishes a truncated file from a partial prefix
+00:00 +30: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: honors a nonzero typed-data view offset and does not retain byte data
+00:00 +31: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: rejects inconsistent and oversized inputs before header access
+00:00 +32: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: unknown and empty files remain raw without invented fields
+00:00 +33: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_service_test.dart: returned field, child and issue lists are immutable
+00:12 +34: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_source_test.dart: multi-gigabyte input uses one bounded prefix read
+00:12 +35: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_source_test.dart: small source reads only its actual length
+00:12 +36: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_source_test.dart: changed source is rejected before any read
+00:12 +37: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_source_test.dart: change during the read prevents publishing an analysis
+00:12 +38: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_source_test.dart: short read is reported as a read failure
+00:12 +39: /workspace/scratch/2b82b742a9df/CrispCloud/test/binary_structure_source_test.dart: closed source cannot be inspected
+00:12 +40: /workspace/scratch/2b82b742a9df/CrispCloud/test/file_viewer_binary_license_test.dart: distributed inspector exposes original license and adaptation notice
+00:28 +41: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:28 +42: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:28 +43: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:28 +44: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:28 +45: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +46: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +47: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +48: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +49: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +50: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +51: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +52: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +53: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +54: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +55: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +56: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +57: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +58: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +59: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +60: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +61: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +62: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +63: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +64: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +65: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +66: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +67: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +68: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +69: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +70: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +71: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +72: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +73: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +74: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +75: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +76: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +77: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +78: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +79: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +80: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +81: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +82: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +83: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +84: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +85: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +86: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +87: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +88: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +89: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +90: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +91: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +92: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +93: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +94: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +95: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +96: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +97: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +98: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +99: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +100: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +101: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +102: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +103: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +104: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +105: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +106: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +107: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +108: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +109: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +110: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +111: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +112: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +113: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +114: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +115: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +116: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +117: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +118: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +119: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +120: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +121: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +122: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +123: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +124: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +125: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +126: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +127: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +128: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +129: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +130: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +131: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +132: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +133: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +134: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +135: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +136: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +137: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +138: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +139: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +140: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +141: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +142: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +143: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +144: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +145: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +146: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +147: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +148: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +149: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +150: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +151: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +152: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +153: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +154: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +155: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +156: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +157: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +158: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +159: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +160: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +161: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +162: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +163: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: field selection returns to Hex and highlights its exact bytes
+00:29 +164: /workspace/scratch/2b82b742a9df/CrispCloud/test/internal_viewer_test.dart: new extension families zip-based package formats → archive
+00:29 +165: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +166: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +167: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +168: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +169: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +170: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +171: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +172: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +173: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +174: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +175: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +176: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +177: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: closing structure preserves current hex selection
+00:29 +178: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: truncated input discloses missing fields without selectable inventions
+00:30 +179: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: unknown bytes remain accessible in Hex
+00:30 +180: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: small displays and large text retain a reachable Close action
+00:30 +181: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/binary_structure_viewer_test.dart: all supported locales translate controls and every issue
+00:30 +182: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode literal whitespace and 0x text, case toggle and edited-query reset agree
+00:32 +183: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode every match remains reachable past the bounded result page in both directions
+00:33 +184: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:35 +185: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode renders decoded lines for a text file
+00:35 +186: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode search finds and counts text matches
+00:35 +187: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: byte modes ASCII mode keeps control bytes visible as dots
+00:35 +188: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: byte modes Binary mode keeps only printable ASCII
+00:36 +189: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: byte modes Hex mode renders the dump for any file type
+00:36 +190: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: byte modes hex mode is available for binary data
+00:36 +191: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: byte modes hex goto uses decimal numbers and explicit hexadecimal offsets
+00:36 +192: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes CSV renders as a table
+00:36 +193: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes ZIP shows a member list and opens members
+00:37 +194: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes 7z lists members and opens them
+00:37 +195: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes RAR lists real members
+00:37 +196: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes encrypted 7z asks for a password and opens members
+00:38 +197: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes single-file .gz opens decompressed content
+00:38 +198: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes markdown renders as a document
+00:38 +199: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes office documents render formatted text and plain text
+00:38 +200: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes HTML renders and can switch to source
+00:38 +201: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes XML renders as a tree and can switch to source
+00:39 +202: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes PPTX opens the slide viewer by default
+00:39 +203: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes truncated legacy PPT shows its localized extraction reason
+00:39 +204: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes PNG auto-detects image mode
+00:39 +205: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streaming view UTF-8 page boundaries preserve the whole character and paging survives a parent rebuild
+00:41 +206: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streaming view long rows keep UTF-16 surrogate pairs and UTF-8 chunk-edge scalars together
+00:41 +207: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streaming view indexes lines and shows byte offsets
+00:41 +208: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text goto reaches a match beyond 64 MiB without indexing the prefix
+00:41 +209: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streamed UTF-16 text retains encoding and newline alignment
+00:41 +210: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: mode bar offers the core viewer modes
+00:41 +211: All tests passed!
