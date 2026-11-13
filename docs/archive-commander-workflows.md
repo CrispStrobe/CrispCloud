@@ -274,25 +274,49 @@ capabilities. See [format coverage](archive-format-coverage.md) and
 
 ## Verification
 
-Final verification of the merged continuation is pending. Its gate uses Flutter
-3.47.8 / Dart 3.13.7, matching the repository pin, and will run against a frozen
-source revision. Focused pre-merge runs checked batch planning and extraction,
-password retries, external process failures, independently decoded output,
-supported SFX layouts and numbered volume snapshots. Those runs do not replace
-the merged regression gate.
+The integrated continuation at
+[`6fe58ec5fa531c0437aafa9606ff9f0885327306`](https://github.com/CrispStrobe/CrispCloud/commit/6fe58ec5fa531c0437aafa9606ff9f0885327306) completed its immutable local gate on native Linux
+with Flutter 3.47.8 / Dart 3.13.7:
 
-The canonical shared queue already has separate historical qualification at
-`6eab6a33ffd374bfc9343a692b3df43c85758a1b`: 2,067 normal tests passed with 13
-opt-in skips, and three separately enabled workers each verified a logical
-payload above 2 GiB. The [queue guide](archive-operation-queue.md) links the exact
-receipt and distinguishes those highly compressible worker payloads from the
-earlier physical-container acceptance. These counts qualify that revision.
+| Check | Completed result |
+| --- | --- |
+| Archive, menu, viewer and shared transfer regressions | 2,789 passed, zero failures, 13 explicit >2 GiB opt-in skips across 135 test files |
+| Strict scoped analysis | 266 inputs, no issues, fatal-info mode |
+| Offline help | Three guides with 23 matching topics each |
+| Portable JavaScript codecs | Dart-to-JavaScript compilation and Node ISO/RAR/DMG read/write checks passed |
+| Release web build | Version 1.2.9+22, revision `6fe58ec5` embedded and verified |
 
-The combined gate covers archive/menu/viewer and shared transfer-queue
-regressions, scoped analysis, offline-help validation, portable JavaScript codec
-execution and a versioned release web build. The workflow and retained receipt
-record the merged test manifest, exact source SHA, dependency hashes, test
-events and logs. Earlier
-normal and >2 GiB hosted evidence remains recorded against its own source
-revisions in [runtime verification](archive-containers-runtime-verification.md);
-it is not retroactive qualification of every new option.
+The [machine-readable receipt](evidence/archive-commander-acceptance-6fe58ec5.json) preserves the complete test manifest,
+source and dependency hashes, exact commands, completed stage results, skipped
+case names, native engine identities, log hashes and web artifact identity.
+Application source stayed fixed; the wrapper restored both dependency manifests
+byte-for-byte after each phase.
+The local native profile disabled the unrelated optional ebook build hook and
+used verified local SQLite plus pinned libsmb2; it is recorded explicitly in
+the receipt. This is local qualification, not a claim that queued hosted CI
+has passed or that native macOS/Windows device acceptance is complete.
+
+Both real installed engines ran: Linux 7-Zip 23.01 and RAR 7.23. All 27 exposed
+7z profiles passed Store, Normal and Maximum probes; vendor-engine tests were
+not skipped. The normal suite also covers actual data and output beyond the
+old 64 MiB limit, streamed TAR beyond 256 MiB, batch capture and cleanup,
+resource-limit preflight, durable admission and cancellation, verified
+publication, dialog dismissal and observer failures.
+
+The earlier full run at `2942c9bb25b1e75f1c420400b1ebac1656c057e3`
+completed 2,788 passing cases and the same 13 opt-in skips with one outdated
+volume-reader expectation. The guarded decoder now rejects an oversized coder
+output when opening, before decoding payloads; that test previously expected
+rejection only during reading. The final checkpoint corrects the expectation
+and verifies private-spool cleanup. Production code is unchanged by that
+test-only correction, and the final complete run above passed independently.
+
+The shared queue's historical qualification at
+`6eab6a33ffd374bfc9343a692b3df43c85758a1b` remains separate: 2,067 normal tests
+passed and three separately enabled workers verified logical payloads above
+2 GiB. The [queue guide](archive-operation-queue.md) links that exact receipt.
+Earlier physical-container and >2 GiB hosted evidence in
+[runtime verification](archive-containers-runtime-verification.md) likewise
+qualifies its recorded source revisions. The 13 opt-in cases were not rerun
+here, and this receipt does not retroactively qualify every maximum-size or
+platform profile. Remaining Commander parity gaps are listed above.

@@ -274,19 +274,20 @@ void main() {
     () async {
       final backend = _Backend();
       final capture = _Capture();
-      final opened = await openSevenZipVolumeArchive(
-        backend,
-        backend.selected,
-        streaming: false,
-        maxMemberBytes: 120,
-        createSpool: capture.create,
-      );
-      expect(opened.archive.maxStreamingMemberBytes, kArchiveReadLimit);
       await expectLater(
-        _read(opened, 'first.txt'),
-        throwsA(isA<ArchiveViewException>()),
+        openSevenZipVolumeArchive(
+          backend,
+          backend.selected,
+          streaming: false,
+          maxMemberBytes: 120,
+          createSpool: capture.create,
+        ),
+        throwsA(
+          isA<ArchiveViewException>()
+              .having((error) => error.code, 'code', ArchiveMessageCode.archiveLimit)
+              .having((error) => error.message, 'detail', contains('coder output')),
+        ),
       );
-      await opened.archive.close();
       capture.expectDisposed();
     },
   );

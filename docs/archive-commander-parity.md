@@ -32,10 +32,14 @@ runtime evidence and remaining work are recorded in the
 This is substantial archive-workflow progress, not a claim of full feature or
 plugin parity with either Commander application.
 
-The integration extends the canonical shared queue from current `main`.
-Final validation of the combined source is pending the frozen-revision gate.
-The queue's earlier hosted receipt and this branch's focused results retain
-their original source attribution.
+The integration preserves the canonical shared queue from `main` at
+`07928e070135d422fbd136fccd1bf53d0d2d47b6`. The combined source at
+[`6fe58ec5fa531c0437aafa9606ff9f0885327306`](https://github.com/CrispStrobe/CrispCloud/commit/6fe58ec5fa531c0437aafa9606ff9f0885327306) passed **2,789 normal regressions** with
+**zero failures and 13 explicit >2 GiB opt-in skips**, strict analysis,
+portable JavaScript codec readback, offline-help validation and a versioned
+release web build. The [retained local receipt](evidence/archive-commander-acceptance-6fe58ec5.json) records its exact inputs,
+tools, commands, skip names and build identity. Native macOS/Windows and the
+earlier large-case hosted runs retain their separate qualification boundaries.
 
 ## Comparison scope
 
