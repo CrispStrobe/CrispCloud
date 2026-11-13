@@ -233,7 +233,9 @@ void main() {
         if (intent == 'dirty') {
           workspace.replace('/members/new.txt', Uint8List.fromList([20, 21]));
         }
-        final selected = (await workspace.backend.stat('/members/new.txt'))!;
+        final selected = (await tester.runAsync(
+          () => workspace.backend.stat('/members/new.txt'),
+        ))!;
         var finished = false;
         await mount(tester, () async {
           await showFileOperationDialog(
@@ -308,7 +310,7 @@ void main() {
         expect(workspace.isCurrent, isTrue);
         expect(workspace.dirty, intent == 'dirty');
         expect(
-          await workspace.read('/members/new.txt'),
+          await tester.runAsync(() => workspace.read('/members/new.txt')),
           intent == 'dirty' ? [20, 21] : [7, 8, 9],
         );
         expect(

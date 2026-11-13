@@ -1702,15 +1702,24 @@ class ArchiveWorkspace {
     ArchiveOutputSpool? spool,
     bool Function()? isCancelled,
   }) async {
-    final streamed = spool == null
-        ? null
-        : await openStreamedArchiveSource(
-            await spool.openByteSource(),
-            name: file.name,
-            password: password,
-            maxBytes: maxContainerBytes,
-            isCancelled: isCancelled,
-          );
+    if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    StreamedArchiveOpen? streamed;
+    if (spool != null) {
+      try {
+        streamed = await openStreamedArchiveSource(
+          await spool.openByteSource(),
+          name: file.name,
+          password: password,
+          maxBytes: maxContainerBytes,
+          isCancelled: isCancelled,
+        );
+      } on ArchiveViewException {
+        // Preserve the file-operation cancellation contract at this boundary.
+        // Reader validation can yield while opening the private candidate.
+        if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+        rethrow;
+      }
+    }
     final replacement =
         streamed?.archive ??
         await openViewerArchive(bytes!, name: file.name, password: password);

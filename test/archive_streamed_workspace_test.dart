@@ -348,10 +348,23 @@ void main() {
     expect(await file.readAsBytes(), original);
     expect(workspace.dirty, isTrue);
     final review = await workspace.review();
+    for (final cancelAt in [4, 8]) {
+      var openingChecks = 0;
+      await expectLater(
+        workspace.save(
+          reviewed: review,
+          isCancelled: () => ++openingChecks >= cancelAt,
+        ),
+        throwsA(isA<FileOperationCancelled>()),
+      );
+      expect(openingChecks, greaterThanOrEqualTo(cancelAt));
+      expect(await file.readAsBytes(), original);
+      expect(review.isCurrent, isTrue);
+    }
     var cancelled = true;
     await expectLater(
       workspace.save(reviewed: review, isCancelled: () => cancelled),
-      throwsA(isA<ArchiveViewException>()),
+      throwsA(isA<FileOperationCancelled>()),
     );
     expect(await file.readAsBytes(), original);
     cancelled = false;

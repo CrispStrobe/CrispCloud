@@ -172,7 +172,12 @@ void main() {
       fixture.workspace.list('/destination/chosen').map((file) => file.name),
       ['empty', 'a.txt'],
     );
-    expect(await fixture.workspace.read('/destination/other.txt'), [3]);
+    expect(
+      await tester.runAsync(
+        () => fixture.workspace.read('/destination/other.txt'),
+      ),
+      [3],
+    );
     expect(fixture.workspace.dirty, isTrue);
     expect(fixture.backend.files['/input/work.zip'], fixture.original);
     expect(fixture.backend.mutations, isEmpty);
@@ -209,7 +214,9 @@ void main() {
       findsOneWidget,
     );
     expect(fixture.workspace.revision, revision);
-    expect(await fixture.workspace.read('/other.txt'), [9]);
+    expect(await tester.runAsync(() => fixture.workspace.read('/other.txt')), [
+      9,
+    ]);
     expect(fixture.workspace.list('/destination').map((file) => file.name), [
       'keep.txt',
     ]);
@@ -282,7 +289,9 @@ void main() {
       await _tap(tester, 'archive-member-move-stage');
       expect(run.finished, isFalse);
       expect(fixture.workspace.revision, revision);
-      expect(await fixture.workspace.read('/a.txt'), [1]);
+      expect(await tester.runAsync(() => fixture.workspace.read('/a.txt')), [
+        1,
+      ]);
       expect(find.textContaining('Move could not be staged:'), findsOneWidget);
       await _policy(tester, ArchiveMemberMoveConflict.keepBoth);
       await _tap(tester, 'archive-member-move-stage');
@@ -290,8 +299,18 @@ void main() {
         '/a.txt': '/destination/a.txt',
         '/z.txt': '/destination/z (2).txt',
       });
-      expect(await fixture.workspace.read('/destination/z.txt'), [3]);
-      expect(await fixture.workspace.read('/destination/z (2).txt'), [2]);
+      expect(
+        await tester.runAsync(
+          () => fixture.workspace.read('/destination/z.txt'),
+        ),
+        [3],
+      );
+      expect(
+        await tester.runAsync(
+          () => fixture.workspace.read('/destination/z (2).txt'),
+        ),
+        [2],
+      );
       expect(fixture.backend.mutations, isEmpty);
     },
   );
@@ -319,7 +338,12 @@ void main() {
     expect(run.result!.skipped, ['/folder']);
     expect(run.result!.moved, {'/a.txt': '/destination/a.txt'});
     expect(fixture.workspace.list('/folder').single.name, 'empty');
-    expect(await fixture.workspace.read('/destination/folder/keep.txt'), [3]);
+    expect(
+      await tester.runAsync(
+        () => fixture.workspace.read('/destination/folder/keep.txt'),
+      ),
+      [3],
+    );
   });
 
   testWidgets('selected folders cannot be entered as move destinations', (

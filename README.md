@@ -241,3 +241,11 @@ The `1.2.7` integration includes the completed moves within an archive workspace
 The `1.2.8` integration restores selection and visibility of the containing archive when leaving it with `..`. It includes reviewed native archive-to-archive moves, destination-verified recovery, UNIX compress/TAR.Z creation, reviewed one-way directory-to-archive synchronization and qualified streamed native TAR creation. The canonical DOC parser includes floating-table anchors and padding, exact note endings, independent shared header/footer textbox instances, bounded internal hyperlinks, separate script font slots and stored drawing wrap clearances. Its README describes supported behavior and remaining fidelity limits.
 
 File marks survive ordinary cursor clicks. Shift-click marks a visible range; Ctrl/Cmd-click toggles individual marks, and Shift-arrows toggle the rows being left. Find arrows navigate matching entries without discarding the query. Local selections can be handed to other desktop apps through native macOS file URLs, Windows Unicode file-drop data and Linux GTK URI lists; cancellation preserves the sources. Pane-to-pane drags retain the existing captured-source review workflow. Cloud/archive drag-out and native mobile/browser handoff still require separate export support.
+
+The integrated archive regression runs 1,769 tests across 75 files, with five
+conditional large-test skips. Four separate opt-in application cases passed:
+creation/publication of ZIP, 7z and TAR.GZ beyond 2 GiB, plus TAR.GZ edit, review,
+publication and reopen beyond 2 GiB. Desktop drag-out offers the complete local
+selection through native macOS, Windows and Linux formats; cloud/archive members
+still require a local copy. Hosted platform builds and TestFlight remain separate
+release gates.

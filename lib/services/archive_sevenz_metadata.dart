@@ -734,7 +734,10 @@ final class SevenZFileInfo {
       );
     }
     final micros = ticks ~/ 10 - 11644473600000000;
-    if (micros < -62135596800000000 || micros > 253402300799999999) {
+    // The exclusive year-10000 bound is exactly representable in dart2js.
+    // This native parser is still checked by the browser compiler before
+    // tree shaking, even though browser archive paths use bounded readers.
+    if (micros < -62135596800000000 || micros >= 253402300800000000) {
       throw UnsupportedFeatureException(
         '7z timestamp cannot be represented.',
         format: '7z',

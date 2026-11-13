@@ -266,7 +266,11 @@ void main() {
       await _activate(tester, 'Close', () => run.closed);
       expect(run.result, isNull);
       expect(workspace.isCurrent, isTrue);
-      expect(await workspace.read('/chosen/new.txt'), [7, 8, 9]);
+      expect(await tester.runAsync(() => workspace.read('/chosen/new.txt')), [
+        7,
+        8,
+        9,
+      ]);
       await _expectOriginals(tester, fixture);
       expect(fixture.journal.records, isEmpty);
       expect(tester.takeException(), isNull);
