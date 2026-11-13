@@ -11,10 +11,13 @@ The later `feature/archive-commander-parity-20261113` branch and
 [PR #97](https://github.com/CrispStrobe/CrispCloud/pull/97) build on the shared
 operation queue and add batch workflows, installed packers, SFX and numbered-7z
 reading. Their source and verification record is in the
-[Commander workflow guide](archive-commander-workflows.md). Verification of the
-combined source is pending its final frozen-revision gate. The hosted runs below
-continue to qualify their recorded revisions; their earlier pass counts are
-not tests of every new workflow or option.
+[Commander workflow guide](archive-commander-workflows.md). The combined source
+at `6fe58ec5fa531c0437aafa9606ff9f0885327306` passed 2,789 normal local regressions, strict analysis,
+portable JavaScript codec checks, offline-help validation and a versioned
+release web build, with zero failures and 13 explicit >2 GiB opt-in skips.
+Its [retained local receipt](evidence/archive-commander-acceptance-6fe58ec5.json) records exact inputs and results. The hosted
+runs below continue to qualify their recorded revisions; their earlier pass
+counts are not tests of every new workflow, option or platform.
 
 ## Current integrated commit
 
