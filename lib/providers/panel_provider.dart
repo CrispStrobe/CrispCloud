@@ -6135,13 +6135,13 @@ class PanelNotifier extends ChangeNotifier {
         await navigateUpArchive();
       } else if (item.isFolder && item.path != null) {
         await _navigateArchive(item.path!);
-      } else if (ArchiveService.isArchive(item.name)) {
+      } else if (isDefaultArchiveFilename(item.name)) {
         await _enterNestedArchive(item);
       }
       return;
     }
     // If a non-folder file is an archive, enter it
-    if (!item.isFolder && ArchiveService.isArchive(item.name)) {
+    if (!item.isFolder && isDefaultArchiveFilename(item.name)) {
       await enterArchive(item);
       return;
     }

@@ -21,8 +21,9 @@ and the previous archive acceptance documentation through
 Archive jobs share the existing transfer scheduler and journal. They reserve
 selected source paths for reading and the destination directory/output for
 writing, so a conflicting copy, move or another archive job waits. An active
-paused job retains its worker slot and reservations. Queue pause controls new
-admissions; selected-row pause controls also affect eligible active jobs.
+paused job retains its worker slot and reservations. Queue pause prevents queued
+jobs from starting; new jobs can still be added. Selected-row pause controls also
+affect eligible active jobs.
 
 The application owns admitted jobs. Closing a progress dialog or navigating a
 pane does not cancel them. Completion refreshes already-open panes, and a failed

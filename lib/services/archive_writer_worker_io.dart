@@ -8,6 +8,7 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
+import 'archive_created_zip_metadata.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_package_writers.dart';
 import 'archive_streaming_writer.dart';
@@ -777,7 +778,9 @@ Future<void> _writeCreation(
   } else {
     await writer!.close();
   }
-  await channel.emit(memory.getBytes());
+  final packed = memory.getBytes();
+  if (zip != null) finalizeCreatedZipMetadata(packed, entries);
+  await channel.emit(packed);
 }
 
 class _BoundedMemory extends codecs.OutputMemoryStream {

@@ -10,6 +10,7 @@ import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
 import 'archive_checkpoint_source.dart';
+import 'archive_created_zip_metadata.dart';
 import 'archive_writer_worker.dart';
 import 'archive_disk_verification.dart';
 import 'archive_dmg_writer.dart';
@@ -383,6 +384,17 @@ class ArchiveCreationResult {
   final Object? publicationWarning;
 }
 
+/// An explicitly selected packer supplies bytes, never publication authority.
+/// The creator still captures sources, bounds output, independently reopens the
+/// result and verifies every member before its normal exclusive publication.
+/// Callbacks remain in the foreground; they cannot cross the worker protocol.
+typedef ArchiveCreationWriter = Future<void> Function({
+  required List<ArchiveWriteEntry> entries,
+  required Future<void> Function(List<int>) sink,
+  required int maxOutputBytes,
+  bool Function()? isCancelled,
+});
+
 class _CreationEntry {
   _CreationEntry(this.file, this.name, {this.mode});
   final FileItem file;
@@ -478,6 +490,7 @@ class ArchiveCreationService {
     bool Function()? isCancelled,
     FileOperationControl? control,
     bool background = false,
+    ArchiveCreationWriter? writer,
     String? expectedSourceManifestSha256,
     Future<void> Function(Map<String, dynamic> state)? onPublicationCheckpoint,
     void Function(ArchiveCreationProgress)? onProgress,
@@ -490,25 +503,44 @@ class ArchiveCreationService {
         'expectedSourceManifestSha256',
       );
     }
+    if (writer != null &&
+        (background ||
+            options.format.diskImage ||
+            options.password != null ||
+            !const {
+              ArchiveEndpointFormat.zip,
+              ArchiveEndpointFormat.sevenZip,
+              ArchiveEndpointFormat.rar,
+            }.contains(options.format.endpointFormat))) {
+      throw const ArchiveCreationException(
+        ArchiveCreationError.unsupportedOptions,
+      );
+    }
     bool cancelled() =>
         (control?.isCancelled ?? false) || (isCancelled?.call() ?? false);
-    final streamedTar = supportsStreamedTarCreation(
-      format: options.format,
-      source: source,
-      destination: destination,
-    );
-    final streamedCommon = supportsStreamedCreation(
-      format: options.format,
-      source: source,
-      destination: destination,
-      password: options.password,
-      compression: options.compression,
-    );
-    final streamedDisk = supportsStreamedDiskCreation(
-      format: options.format,
-      source: source,
-      destination: destination,
-    );
+    final streamedTar =
+        writer == null &&
+        supportsStreamedTarCreation(
+          format: options.format,
+          source: source,
+          destination: destination,
+        );
+    final streamedCommon =
+        writer == null &&
+        supportsStreamedCreation(
+          format: options.format,
+          source: source,
+          destination: destination,
+          password: options.password,
+          compression: options.compression,
+        );
+    final streamedDisk =
+        writer == null &&
+        supportsStreamedDiskCreation(
+          format: options.format,
+          source: source,
+          destination: destination,
+        );
     final streamed = streamedTar || streamedCommon || streamedDisk;
     final nativeLarge = streamedCommon || streamedDisk;
     final streamedLimit = nativeLarge
@@ -959,7 +991,21 @@ class ArchiveCreationService {
           options.name,
         );
       }
-      if (background) {
+      if (writer != null) {
+        progress(
+          ArchiveCreationPhase.packing,
+          0,
+          totalBytes,
+          options.name,
+          isByteProgress: true,
+        );
+        await writer(
+          entries: List.unmodifiable(captured),
+          sink: emit,
+          maxOutputBytes: spool.maxBytes,
+          isCancelled: cancelled,
+        );
+      } else if (background) {
         if (!supportsArchiveWriterWorker) {
           throw UnsupportedError('Background archive packing is unavailable.');
         }
@@ -1195,6 +1241,7 @@ class ArchiveCreationService {
         }
         await sink.close();
         final packed = memory.getBytes();
+        if (zip != null) finalizeCreatedZipMetadata(packed, captured);
         await emit(packed);
       }
       await spool.finish();
@@ -1282,7 +1329,8 @@ class ArchiveCreationService {
                 maxBytes: streamedLimit,
                 isCancelled: cancelled,
               )).archive
-            : options.format.endpointFormat == ArchiveEndpointFormat.rar
+            : writer == null &&
+                  options.format.endpointFormat == ArchiveEndpointFormat.rar
             ? await openStoredRarArchive(
                 verificationSource,
                 maxBytes: ArchiveService.maxArchiveBytes,
@@ -1301,7 +1349,15 @@ class ArchiveCreationService {
         try {
           final expected = {for (final entry in entries) entry.name: entry};
           if (archive.members.length != entries.length ||
-              streamedTar && archive.formatName != 'tar') {
+              streamedTar && archive.formatName != 'tar' ||
+              writer != null &&
+                  archive.formatName !=
+                      switch (options.format.endpointFormat) {
+                        ArchiveEndpointFormat.zip => 'zip',
+                        ArchiveEndpointFormat.sevenZip => '7z',
+                        ArchiveEndpointFormat.rar => 'rar',
+                        _ => '',
+                      }) {
             throw const ArchiveCreationException(
               ArchiveCreationError.verificationFailed,
             );
@@ -1315,6 +1371,7 @@ class ArchiveCreationService {
             if (entry == null ||
                 member.pathEscapedRoot ||
                 member.isSpecial ||
+                writer != null && member.isEncrypted ||
                 member.isFile == entry.file.isFolder ||
                 member.size != (entry.file.isFolder ? 0 : entry.file.size) ||
                 entry.mode != null &&
@@ -1600,7 +1657,9 @@ class ArchiveCreationService {
       (a.isSymlink != true && b.isSymlink != true) &&
       (a.uuid == null && !requireKnown || a.uuid == b.uuid) &&
       (a.size == null && !requireKnown || a.size == b.size) &&
-      (a.updatedAt == null && !requireKnown || a.updatedAt == b.updatedAt);
+      (a.updatedAt == null
+          ? !requireKnown || b.updatedAt == null
+          : b.updatedAt != null && a.updatedAt!.isAtSameMomentAs(b.updatedAt!));
 }
 
 /// TAR verification may index many headers before opening a member. Keep its

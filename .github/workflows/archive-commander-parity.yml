@@ -1,0 +1,115 @@
+name: Commander archive workflows
+
+on:
+  push:
+    branches: [feature/archive-commander-parity-20261113]
+    paths:
+      - '.github/workflows/archive-commander-parity.yml'
+      - '.github/actions/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'packages/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tool/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archive-commander-parity-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.8
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
+  BOT: true
+  CRISP_RUN_LARGE_ARCHIVE_TESTS: '0'
+  CRISP_STREAMING_ARCHIVE_LARGE: '0'
+  CRISP_RAR_STORED_LARGE: '0'
+  CRISP_ARCHIVE_WORKER_LARGE: '0'
+
+jobs:
+  archives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Capture immutable inputs
+        run: |
+          set -euo pipefail
+          mkdir -p build/archive-commander-ci
+          git rev-parse HEAD > build/archive-commander-ci/REVISION.txt
+          sha256sum pubspec.yaml pubspec.lock > build/archive-commander-ci/input-sha256.txt
+      - uses: ./.github/actions/setup-ebook-rust
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Configure private dependency authentication
+        env:
+          ARCHIVE_DEPENDENCY_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          set -euo pipefail
+          git config --global "url.https://x-access-token:${ARCHIVE_DEPENDENCY_TOKEN}@github.com/.insteadOf" "https://github.com/"
+      - name: Install native build and test libraries
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build libsqlite3-dev liblz4-1
+      - name: Prepare an independently installed 7-Zip test engine
+        run: |
+          set -euo pipefail
+          archive_test_engine="$RUNNER_TEMP/archive-test-7zip"
+          mkdir -p "$archive_test_engine"
+          curl --fail --location --retry 3 https://www.7-zip.org/a/7z2301-linux-x64.tar.xz -o "$archive_test_engine/7zip.tar.xz"
+          printf '%s  %s\n' 23babcab045b78016e443f862363e4ab63c77d75bc715c0b3463f6134cbcf318 "$archive_test_engine/7zip.tar.xz" | sha256sum --check | tee build/archive-commander-ci/7zip-download.txt
+          tar -xJf "$archive_test_engine/7zip.tar.xz" -C "$archive_test_engine"
+          test -x "$archive_test_engine/7zz"
+          printf 'CRISPCLOUD_TEST_7ZZ=%s/7zz\n' "$archive_test_engine" >> "$GITHUB_ENV"
+      - name: Resolve pinned dependencies
+        run: |
+          set -euo pipefail
+          flutter --version 2>&1 | tee build/archive-commander-ci/flutter-version.txt
+          flutter pub get --enforce-lockfile 2>&1 | tee build/archive-commander-ci/dependencies.log
+      - name: Analyze archive integration
+        run: |
+          set -euo pipefail
+          python3 tool/check_help_guides.py 2>&1 | tee build/archive-commander-ci/help.log
+          dart analyze --fatal-infos lib/models/archive*.dart lib/models/operation_progress.dart lib/providers/transfer_provider.dart lib/services/archive_*.dart lib/services/transfer_recovery_service.dart lib/widgets/archive_*.dart lib/widgets/operations_panel.dart lib/widgets/transfer_history_dialog.dart lib/l10n/archive_*.dart lib/l10n/transfer_queue_translations.dart test/archive_*_test.dart test/widget/archive_*_test.dart test/support/verify_archive_portable_data_codecs.dart test/support/verify_archive_writer_worker.dart test/support/archive_queue_fixture.dart 2>&1 | tee build/archive-commander-ci/analysis.log
+      - name: Validate portable archive codecs
+        run: |
+          set -euo pipefail
+          mkdir -p build/archive-portable
+          dart compile js --packages=.dart_tool/package_config.json -O1 -o build/archive-portable/data-codecs.js test/support/verify_archive_portable_data_codecs.dart 2>&1 | tee build/archive-commander-ci/portable-compile.log
+          node -e 'global.self=global; require("./build/archive-portable/data-codecs.js")' 2>&1 | tee build/archive-commander-ci/portable-runtime.log
+      - name: Run archive and menu regression suites
+        timeout-minutes: 35
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          archive_test_files=(test/archive_*_test.dart test/widget/archive_*_test.dart test/browser_menu_*_test.dart test/widget/browser_menu_*_test.dart test/widget/browser_menu_test.dart test/internal_viewer_test.dart test/widget/internal_viewer_widget_test.dart test/widget/file_column_view_test.dart test/transfer_*_test.dart test/widget/operations_panel*_test.dart test/widget/transfer_history*_test.dart test/operation_progress_test.dart)
+          printf '%s\n' "${archive_test_files[@]}" > build/archive-commander-ci/test-files.txt
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub --concurrency=2 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden --reporter expanded --file-reporter json:build/archive-commander-ci/test-events.json "${archive_test_files[@]}" 2>&1 | tee build/archive-commander-ci/test.log
+      - name: Build the versioned web application
+        run: |
+          set -euo pipefail
+          archive_build_version="$(sed -n 's/^version: //p' pubspec.yaml)"
+          archive_build_revision="$(git rev-parse --short HEAD)"
+          test -n "$archive_build_version"
+          flutter build web --release --no-pub --no-wasm-dry-run "--dart-define=APP_VERSION=$archive_build_version" "--dart-define=GIT_HASH=$archive_build_revision" 2>&1 | tee build/archive-commander-ci/web-build.log
+      - name: Verify dependency inputs were restored
+        if: always()
+        run: sha256sum --check build/archive-commander-ci/input-sha256.txt
+      - name: Retain test and build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-commander-evidence-${{ github.sha }}
+          path: build/archive-commander-ci
+          retention-days: 14

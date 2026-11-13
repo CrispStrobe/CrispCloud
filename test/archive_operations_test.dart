@@ -79,7 +79,7 @@ void main() {
     final tar = Uint8List.fromList(TarEncoder().encode(archive));
     for (final variant in <String, Uint8List>{
       'a.tar': tar,
-      'b.tar.gz': Uint8List.fromList(GZipEncoder().encode(tar)),
+      'b.tar.gz': Uint8List.fromList(const GZipEncoder().encode(tar)),
     }.entries) {
       final target = p.join(temp.path, variant.key);
       final paths = await ArchiveService.extractArchiveBytes(

@@ -25,6 +25,20 @@ class ArchiveFormatCapability {
 
 const archiveFormatCapabilities = <ArchiveFormatCapability>[
   ArchiveFormatCapability(
+    id: '7z-volumes',
+    label: 'Split 7-Zip archive',
+    suffixes: ['.7z.001', '.7z.0001', '.7z.00001', '.7z.000001'],
+    mimeType: 'application/x-7z-compressed',
+    notes: 'Open the first volume with all numbered parts in the same folder. The complete volume set is captured and checked for browsing and extraction. Volume sets are read-only.',
+  ),
+  ArchiveFormatCapability(
+    id: 'sfx',
+    label: 'Self-extracting archive',
+    suffixes: ['.exe', '.sfx'],
+    mimeType: 'application/vnd.microsoft.portable-executable',
+    notes: 'Read-only ZIP, 7z or RAR payloads inside supported unsigned Windows executables. Executables are never run. Installer-specific overlays and signed executables are unavailable.',
+  ),
+  ArchiveFormatCapability(
     id: 'zip',
     label: 'ZIP',
     suffixes: ['.zip'],
@@ -379,6 +393,11 @@ ArchiveFormatCapability? archiveFormatForName(String name) {
 }
 
 bool isArchiveFilename(String name) => archiveFormatForName(name) != null;
+
+/// Executables offer explicit SFX inspection without changing their ordinary
+/// open/preview behavior. A suffix alone does not establish an archive payload.
+bool isDefaultArchiveFilename(String name) =>
+    isArchiveFilename(name) && !name.toLowerCase().endsWith('.exe');
 
 /// Recognizes virtual member routes without a second extension allowlist.
 bool isArchiveVirtualPath(String path) {

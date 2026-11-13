@@ -9,6 +9,8 @@ import 'archive_member_index.dart';
 import 'archive_service.dart';
 import 'archive_viewer_file.dart';
 import 'archive_viewer_service.dart';
+import 'archive_volume_backend.dart';
+import 'archive_volume_source.dart';
 import 'file_operation_service.dart';
 import 'viewer_spool.dart';
 
@@ -58,6 +60,29 @@ class ArchiveBrowserSession {
     }
 
     check();
+    if (sevenZipVolumeBaseName(file.name) != null) {
+      final opened = await openSevenZipVolumeArchive(
+        source,
+        file,
+        maxInputBytes: maxInputBytes,
+        spoolToDisk: spoolToDisk,
+        isCancelled: isCancelled,
+      );
+      try {
+        check();
+        return ArchiveBrowserSession._(
+          source,
+          opened.file,
+          opened.archive,
+          ArchiveMemberIndex(opened.archive),
+          null,
+          opened.fingerprint,
+        );
+      } catch (_) {
+        await opened.archive.close();
+        rethrow;
+      }
+    }
     if (file.path == null || file.isFolder || file.isSymlink == true) {
       throw const ArchiveViewException('Choose a regular archive file.');
     }

@@ -52,6 +52,8 @@ import '../services/archive_streamed_reader.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/archive_viewer_source.dart';
 import '../services/archive_viewer_streaming.dart';
+import '../services/archive_volume_backend.dart';
+import '../services/archive_volume_source.dart';
 import '../services/binary_structure_service.dart';
 import '../services/binary_structure_source.dart';
 import '../services/file_bytes_loader.dart';
@@ -430,6 +432,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   final _archiveSources = <ArchiveViewerSource>{};
   List<ViewerArchiveMember>? _archiveMembers;
   String? _archivePassword;
+  String? _archiveVolumeFingerprint;
 
   // ---- Scroll --------------------------------------------------------------
   final ScrollController _vScroll = ScrollController();
@@ -567,9 +570,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           );
         }
         if (!current()) return;
+        final isVolume = sevenZipVolumeBaseName(widget.file.name) != null;
         if (!kIsWeb &&
             _origin!.source.isLocal &&
-            ((fresh.size ?? 0) > kAutoFullLoadBytes ||
+            (isVolume ||
+                (fresh.size ?? 0) > kAutoFullLoadBytes ||
                 _viewName.toLowerCase().endsWith('.pdf') ||
                 _viewerService.detectMode(_viewName) == ViewerMode.media)) {
           final local = ref.read(localFileServiceProvider);
@@ -602,6 +607,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           final spool = await createViewerSpool(
             backend,
             fresh,
+            maxBytes: isVolume
+                ? kArchiveStreamingLimit
+                : 2 * 1024 * 1024 * 1024,
             isCancelled: () => !current(),
             onProgress: (bytes, total) {
               if (current()) {
@@ -637,7 +645,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             ref,
             widget.file,
             widget.side,
-            capBytes: kViewerFullDataCap,
+            capBytes: isVolume && kIsWeb
+                ? kArchiveVolumeMemoryLimit
+                : kViewerFullDataCap,
             origin: _origin,
           );
           if (!current()) return;
@@ -1210,6 +1220,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _archive = null;
     _archiveMembers = null;
     _archivePassword = null;
+    _archiveVolumeFingerprint = null;
     final officePdf = _officePdfController;
     _officePdfController = null;
     final officePdfDoc = _officePdfDoc;
@@ -1306,6 +1317,31 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     var retained = false;
     try {
       ViewerArchive archive;
+      if (widget.bytesOverride == null &&
+          _expansionName == null &&
+          sevenZipVolumeBaseName(widget.file.name) != null) {
+        final backend = _capturedBackend();
+        final selected = widget.file.copyWith(
+          path: widget.file.path ?? backend.paths.join(_origin!.source.currentPath, widget.file.name),
+        );
+        final opened = await openSevenZipVolumeArchive(
+          backend,
+          selected,
+          password: password,
+          onSnapshotCaptured: (fingerprint) {
+            if (!isCurrent()) {
+              throw const ArchiveViewException('Archive opening was cancelled.');
+            }
+            if (_archiveVolumeFingerprint != null && _archiveVolumeFingerprint != fingerprint) {
+              throw const ArchiveViewException('The split archive changed during the password request. Reopen it before continuing.');
+            }
+            _archiveVolumeFingerprint = fingerprint;
+          },
+          isCancelled: () => !isCurrent(),
+        );
+        retained = true;
+        return (archive: opened.archive, source: borrowed);
+      }
       final streamed =
           !kIsWeb &&
           widget.bytesOverride == null &&
@@ -2965,7 +3001,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       ViewerMode.office,
       ViewerMode.email,
       ViewerMode.archive,
-    ].where((mode) => mode == _autoMode);
+    ].where((mode) =>
+        mode == _autoMode ||
+        (mode == ViewerMode.archive &&
+            _viewName.toLowerCase().endsWith('.exe')));
 
     return Container(
       height: math.max(48, MediaQuery.textScalerOf(context).scale(16) + 40),

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/archive_creation_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/services/archive_creation_service.dart';
+import 'package:crisp_cloud/services/archive_creation_batch.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
 import 'package:crisp_cloud/services/storage_transfer_contract.dart';
 import 'package:crisp_cloud/widgets/archive_creation_dialog.dart';
@@ -60,6 +63,7 @@ class _RecordingService extends ArchiveCreationService {
     Future<void> Function(Map<String, dynamic>)? onPublicationCheckpoint,
     bool Function()? isCancelled,
     void Function(ArchiveCreationProgress)? onProgress,
+    ArchiveCreationWriter? writer,
   }) async {
     requests.add(options);
     destinationPath = destinationDirectory;
@@ -101,12 +105,23 @@ void main() {
     double width = 800,
     double textScale = 1,
     String selectedPath = '/input/report.txt',
+    List<String>? selectedPaths,
+    Future<void> Function(List<ArchiveCreationBatchItem>)? onQueueBatch,
+    Future<void> Function()? onViewJobs,
+    VoidCallback? onCreated,
+    Future<ArchiveCreationResult?> Function(
+      ValueChanged<ArchiveCreationResult> onPublished,
+    )?
+    onExternalPacker,
   }) async {
     tester.view.physicalSize = Size(width, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final file = (await backend.stat(selectedPath))!;
+    final files = [
+      for (final path in selectedPaths ?? [selectedPath])
+        (await backend.stat(path))!,
+    ];
     await tester.pumpWidget(
       MaterialApp(
         locale: Locale(language),
@@ -121,9 +136,13 @@ void main() {
           body: ArchiveCreationDialog(
             source: backend,
             destination: backend,
-            files: [file],
+            files: files,
             destinationDirectory: '/output',
             service: service,
+            onCreated: onCreated,
+            onQueueBatch: onQueueBatch,
+            onViewJobs: onViewJobs,
+            onExternalPacker: onExternalPacker,
           ),
         ),
       ),
@@ -967,4 +986,227 @@ void main() {
       );
     });
   }
+
+  testWidgets('batch queue receives reviewed options and clears the password', (
+    tester,
+  ) async {
+    backend.put('/input/report.csv', [4]);
+    final queued = <ArchiveCreationOptions>[];
+    var viewed = false;
+    await show(
+      tester,
+      selectedPaths: ['/input/report.txt', '/input/report.csv'],
+      onQueueBatch: (items) async =>
+          queued.addAll(items.map((item) => item.options)),
+      onViewJobs: () async => viewed = true,
+    );
+    await tester.tap(find.byKey(const ValueKey('archive-create-batch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('archive-create-password')),
+      'queue-secret',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('archive-create-confirmation')),
+      'queue-secret',
+    );
+    final queue = find.byKey(const ValueKey('archive-create-queue'));
+    await tester.ensureVisible(queue);
+    await tester.tap(queue);
+    await tester.pumpAndSettle();
+    expect(queued.map((item) => item.name), [
+      'report.txt.zip',
+      'report.csv.zip',
+    ]);
+    expect(queued.map((item) => item.password), everyElement('queue-secret'));
+    expect(service.requests, isEmpty);
+    expect(find.byKey(const ValueKey('archive-create-queued')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(
+            find.byKey(const ValueKey('archive-create-password')),
+          )
+          .controller!
+          .text,
+      isEmpty,
+    );
+    expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+    await tester.ensureVisible(find.text('View jobs'));
+    await tester.tap(find.text('View jobs'));
+    await tester.pumpAndSettle();
+    expect(viewed, isTrue);
+  });
+
+  testWidgets('failed batch admission remains a retryable form', (
+    tester,
+  ) async {
+    backend.put('/input/report.csv', [4]);
+    await show(
+      tester,
+      selectedPaths: ['/input/report.txt', '/input/report.csv'],
+      onQueueBatch: (_) async => throw StateError('Queue unavailable'),
+    );
+    await tester.tap(find.byKey(const ValueKey('archive-create-batch')));
+    await tester.pumpAndSettle();
+    final queue = find.byKey(const ValueKey('archive-create-queue'));
+    await tester.ensureVisible(queue);
+    await tester.tap(queue);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('archive-create-queued')), findsNothing);
+    expect(find.byKey(const ValueKey('archive-create-error')), findsOneWidget);
+    expect(tester.widget<OutlinedButton>(queue).onPressed, isNotNull);
+    expect(service.requests, isEmpty);
+  });
+
+  testWidgets(
+    'separate archives preview every output and enter the queue together',
+    (tester) async {
+      backend.put('/input/report.csv', [4]);
+      List<ArchiveCreationBatchItem>? batch;
+      await show(
+        tester,
+        selectedPaths: ['/input/report.txt', '/input/report.csv'],
+        onQueueBatch: (items) async => batch = items,
+      );
+      final separate = find.byKey(const ValueKey('archive-create-batch'));
+      await tester.ensureVisible(separate);
+      await tester.tap(separate);
+      await tester.pumpAndSettle();
+      expect(find.text('/output/report.txt.zip'), findsOneWidget);
+      expect(find.text('/output/report.csv.zip'), findsOneWidget);
+      expect(find.byKey(const ValueKey('archive-create-name')), findsNothing);
+      expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+      await tester.ensureVisible(find.text('Queue 2 archives'));
+      await tester.tap(find.text('Queue 2 archives'));
+      await tester.pumpAndSettle();
+      expect(batch!.map((item) => item.options.name), [
+        'report.txt.zip',
+        'report.csv.zip',
+      ]);
+      expect(batch!.map((item) => item.files.single.path), [
+        '/input/report.txt',
+        '/input/report.csv',
+      ]);
+      expect(find.text('Queued 2 archives.'), findsOneWidget);
+      expect(service.requests, isEmpty);
+    },
+  );
+
+  testWidgets('protected creation cannot delegate to an unencrypted packer', (
+    tester,
+  ) async {
+    var calls = 0;
+    await show(
+      tester,
+      onExternalPacker: (_) async {
+        calls++;
+        return const ArchiveCreationResult('/output/external.7z', 1, 42);
+      },
+    );
+    final staleAction = tester
+        .widget<TextButton>(
+          find.widgetWithText(TextButton, 'Use installed packer…'),
+        )
+        .onPressed!;
+    await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+    await tester.pumpAndSettle();
+    expect(find.text('Use installed packer…'), findsNothing);
+    staleAction();
+    await tester.pumpAndSettle();
+    expect(calls, 0);
+    expect(service.requests, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+    await tester.pumpAndSettle();
+    expect(find.text('Use installed packer…'), findsOneWidget);
+  });
+
+  testWidgets('installed packer returns the verified result to creation', (
+    tester,
+  ) async {
+    await show(
+      tester,
+      onExternalPacker: (_) async =>
+          const ArchiveCreationResult('/output/external.7z', 1, 42),
+    );
+    await tester.ensureVisible(find.text('Use installed packer…'));
+    await tester.tap(find.text('Use installed packer…'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Created and verified: /output/external.7z'),
+      findsOneWidget,
+    );
+    expect(service.requests, isEmpty);
+  });
+
+  testWidgets(
+    'external publication survives a null route result exactly once',
+    (tester) async {
+      final closed = Completer<ArchiveCreationResult?>();
+      late ValueChanged<ArchiveCreationResult> published;
+      var notifications = 0;
+      const result = ArchiveCreationResult('/output/external.7z', 1, 42);
+      await show(
+        tester,
+        onCreated: () => notifications++,
+        onExternalPacker: (onPublished) {
+          published = onPublished;
+          return closed.future;
+        },
+      );
+      await tester.ensureVisible(find.text('Use installed packer…'));
+      await tester.tap(find.text('Use installed packer…'));
+      await tester.pump();
+      published(result);
+      await tester.pump();
+      expect(notifications, 1);
+      closed.complete(null);
+      await tester.pumpAndSettle();
+      published(result);
+      await tester.pumpAndSettle();
+      expect(notifications, 1);
+      expect(
+        find.text('Created and verified: /output/external.7z'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+      expect(find.text('Use installed packer…'), findsNothing);
+      expect(service.requests, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('external publication observer failure cannot enable a retry', (
+    tester,
+  ) async {
+    var notifications = 0;
+    const result = ArchiveCreationResult('/output/external.7z', 1, 42);
+    await show(
+      tester,
+      onCreated: () {
+        notifications++;
+        throw StateError('Selection refresh unavailable');
+      },
+      onExternalPacker: (onPublished) async {
+        onPublished(result);
+        return result;
+      },
+    );
+    await tester.ensureVisible(find.text('Use installed packer…'));
+    await tester.tap(find.text('Use installed packer…'));
+    await tester.pumpAndSettle();
+    expect(notifications, 1);
+    expect(
+      find.text('Created and verified: /output/external.7z'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('archive-create-warning')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+    expect(service.requests, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
 }

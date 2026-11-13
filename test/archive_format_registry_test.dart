@@ -48,10 +48,21 @@ void main() {
             expect(ArchiveService.isArchive(name), isTrue, reason: name);
             expect(_panel.isArchive(name), isTrue, reason: name);
             expect(_panel.canEnter(name), isTrue, reason: name);
-            expect(_viewer.detectMode(name), ViewerMode.archive, reason: name);
+            expect(
+              isDefaultArchiveFilename(name),
+              !name.toLowerCase().endsWith('.exe'),
+              reason: name,
+            );
+            final expectedViewerMode =
+                format.id == 'sfx' && name.toLowerCase().endsWith('.exe')
+                ? ViewerMode.binary
+                : ViewerMode.archive;
+            expect(_viewer.detectMode(name), expectedViewerMode, reason: name);
             final content = _viewer.loadContent(Uint8List(1), name);
-            expect(content.mode, ViewerMode.archive, reason: name);
-            expect(content.mimeType, format.mimeType, reason: name);
+            expect(content.mode, expectedViewerMode, reason: name);
+            if (expectedViewerMode == ViewerMode.archive) {
+              expect(content.mimeType, format.mimeType, reason: name);
+            }
             expect(
               isArchiveVirtualPath('$name:/folder/file.txt'),
               isTrue,

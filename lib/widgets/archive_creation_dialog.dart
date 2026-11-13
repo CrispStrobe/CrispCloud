@@ -6,11 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../l10n/archive_creation_strings.dart';
+import '../l10n/archive_job_strings.dart';
+import '../l10n/archive_external_packer_strings.dart';
 import '../models/archive_operation.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_creation_service.dart';
+import '../services/archive_creation_batch.dart';
+import 'archive_external_packer_dialog.dart';
+import 'archive_jobs_dialog.dart';
 import '../services/file_operation_backend.dart';
 import '../services/file_operation_service.dart';
 import '../services/panel_source_service.dart';
@@ -53,6 +58,40 @@ Future<void> showArchiveCreationDialog(
         destination: backend,
         files: selection,
         destinationDirectory: directory,
+        onCreated: rememberSelection,
+        onQueueBatch:
+            !kIsWeb &&
+                const {
+                  TargetPlatform.linux,
+                  TargetPlatform.macOS,
+                  TargetPlatform.windows,
+                }.contains(defaultTargetPlatform)
+            ? (items) async {
+                await transfers.enqueueArchiveCreationBatch(
+                  source: backend,
+                  destination: backend,
+                  items: items,
+                  onCreated: rememberSelection,
+                );
+              }
+            : null,
+        onViewJobs: () => showArchiveJobsDialog(context, ref),
+        onExternalPacker:
+            !kIsWeb &&
+                const {
+                  TargetPlatform.linux,
+                  TargetPlatform.macOS,
+                  TargetPlatform.windows,
+                }.contains(defaultTargetPlatform)
+            ? (onPublished) => showArchiveExternalPackerDialog(
+                context,
+                source: backend,
+                destination: backend,
+                files: selection,
+                destinationDirectory: directory,
+                onPublished: onPublished,
+              )
+            : null,
         enqueue: (options) => transfers.enqueueArchiveCreation(
           source: backend,
           destination: backend,
@@ -83,6 +122,9 @@ class ArchiveCreationDialog extends StatefulWidget {
     this.service = const ArchiveCreationService(),
     this.onCreated,
     this.enqueue,
+    this.onQueueBatch,
+    this.onViewJobs,
+    this.onExternalPacker,
   });
 
   final FileOperationBackend source;
@@ -98,6 +140,14 @@ class ArchiveCreationDialog extends StatefulWidget {
     ArchiveCreationOptions options,
   )?
   enqueue;
+  final Future<void> Function(List<ArchiveCreationBatchItem>)? onQueueBatch;
+  final Future<void> Function()? onViewJobs;
+
+  /// Reports publication independently of the child route's eventual pop value.
+  final Future<ArchiveCreationResult?> Function(
+    ValueChanged<ArchiveCreationResult> onPublished,
+  )?
+  onExternalPacker;
 
   @override
   State<ArchiveCreationDialog> createState() => _ArchiveCreationDialogState();
@@ -117,6 +167,8 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
   Object? _error;
   String? _validation;
   ArchiveCreationResult? _result;
+  bool _batch = false;
+  int _queuedCount = 0;
 
   FileOperationControl? get _control => _job?.control ?? _localControl;
   bool get _cancelled => _control?.isCancelled ?? false;
@@ -206,8 +258,138 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
     setState(() {});
   }
 
+  ArchiveCreationOptions? _options() {
+    setState(() {
+      _validation = null;
+      _error = null;
+    });
+    if (_protect && _password.text.isEmpty) {
+      setState(() => _validation = 'Enter a password.');
+      return null;
+    }
+    if (_protect && _password.text != _confirmation.text) {
+      setState(() => _validation = 'Passwords do not match.');
+      return null;
+    }
+    final options = ArchiveCreationOptions(
+      name: _batch
+          ? archiveCreationBatchName(widget.files.first, _format)
+          : _name.text,
+      format: _format,
+      compression: _compression,
+      password: _protect ? _password.text : null,
+      encryptNames: _protect && _format.supportsHiddenNames && _hideNames,
+    );
+    try {
+      options.validate();
+      return options;
+    } catch (error) {
+      setState(() => _error = error);
+      return null;
+    }
+  }
+
+  Future<void> _queueBatch() async {
+    if (_busy ||
+        !_batch ||
+        _result != null ||
+        _queuedCount != 0 ||
+        widget.onQueueBatch == null) {
+      return;
+    }
+    final options = _options();
+    if (options == null) return;
+    setState(() {
+      _busy = true;
+      _admitting = true;
+    });
+    try {
+      final items = planArchiveCreationBatch(
+        files: widget.files,
+        destinationDirectory: widget.destinationDirectory,
+        options: options,
+      );
+      await widget.onQueueBatch!(items);
+      if (mounted) setState(() => _queuedCount = items.length);
+    } catch (error) {
+      if (mounted) setState(() => _error = error);
+    } finally {
+      if (mounted) {
+        _password.clear();
+        _confirmation.clear();
+        setState(() {
+          _busy = false;
+          _admitting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _external() async {
+    final action = widget.onExternalPacker;
+    if (action == null ||
+        _protect ||
+        _busy ||
+        _batch ||
+        _result != null ||
+        _queuedCount != 0) {
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _admitting = true;
+      _error = null;
+    });
+    ArchiveCreationResult? published;
+    void retainPublication(ArchiveCreationResult result) {
+      if (published != null) return;
+      published = result;
+      var accepted = result;
+      try {
+        widget.onCreated?.call();
+      } catch (error) {
+        accepted = ArchiveCreationResult(
+          result.path,
+          result.entryCount,
+          result.bytes,
+          publicationWarning: result.publicationWarning ?? error,
+        );
+      }
+      published = accepted;
+      if (mounted) setState(() => _result = accepted);
+    }
+
+    try {
+      final result = await action(retainPublication);
+      if (result != null) retainPublication(result);
+    } catch (error) {
+      if (mounted) {
+        final completed = published;
+        setState(() {
+          if (completed == null) {
+            _error = error;
+          } else {
+            _result = ArchiveCreationResult(
+              completed.path,
+              completed.entryCount,
+              completed.bytes,
+              publicationWarning: completed.publicationWarning ?? error,
+            );
+          }
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _admitting = false;
+        });
+      }
+    }
+  }
+
   Future<void> _create({bool background = false}) async {
-    if (_busy || _result != null) return;
+    if (_busy || _batch || _result != null || _queuedCount != 0) return;
     setState(() {
       _validation = null;
       _error = null;
@@ -323,7 +505,7 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
   Widget build(BuildContext context) {
     String tr(String key, [List<Object?> values = const []]) =>
         archiveCreationText(context, key, values);
-    final enabled = !_busy && _result == null;
+    final enabled = !_busy && _result == null && _queuedCount == 0;
     final streamedTar = ArchiveCreationService.supportsStreamedTarCreation(
       format: _format,
       source: widget.source,
@@ -380,15 +562,51 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                TextField(
-                  key: const ValueKey('archive-create-name'),
-                  controller: _name,
-                  enabled: enabled,
-                  decoration: InputDecoration(
-                    labelText: tr('Archive name'),
-                    border: const OutlineInputBorder(),
+                if (widget.onQueueBatch != null &&
+                    widget.files.length > 1 &&
+                    widget.files.length <= 128)
+                  CheckboxListTile(
+                    key: const ValueKey('archive-create-batch'),
+                    contentPadding: EdgeInsets.zero,
+                    value: _batch,
+                    title: Text(
+                      archiveJobText(context, 'One archive per selected item'),
+                    ),
+                    subtitle: Text(
+                      archiveJobText(
+                        context,
+                        'Each archive becomes a separate background job. Source files are retained.',
+                      ),
+                    ),
+                    onChanged: enabled
+                        ? (value) => setState(() {
+                            _batch = value ?? false;
+                            _error = null;
+                            _validation = null;
+                          })
+                        : null,
                   ),
-                ),
+                if (_batch) ...[
+                  Text(archiveJobText(context, 'Planned archives')),
+                  for (final file in widget.files)
+                    SelectableText(
+                      p.join(
+                        widget.destinationDirectory,
+                        archiveCreationBatchName(file, _format),
+                      ),
+                      textDirection: TextDirection.ltr,
+                    ),
+                  const SizedBox(height: 12),
+                ] else
+                  TextField(
+                    key: const ValueKey('archive-create-name'),
+                    controller: _name,
+                    enabled: enabled,
+                    decoration: InputDecoration(
+                      labelText: tr('Archive name'),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<ArchiveCreationFormat>(
                   key: const ValueKey('archive-create-format'),
@@ -615,6 +833,20 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                       overflow: TextOverflow.ellipsis,
                     ),
                 ],
+                if (_queuedCount > 0) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    archiveJobText(context, 'Queued {0} archives.', [
+                      _queuedCount,
+                    ]),
+                    key: const ValueKey('archive-create-queued'),
+                  ),
+                  if (widget.onViewJobs != null)
+                    TextButton(
+                      onPressed: widget.onViewJobs,
+                      child: Text(archiveJobText(context, 'View jobs')),
+                    ),
+                ],
                 if (_validation != null || _error != null) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -667,9 +899,31 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
           ] else if (!_busy)
             TextButton(
               onPressed: () => Navigator.of(context).pop(_result),
-              child: Text(tr(_result == null ? 'Cancel' : 'Close')),
+              child: Text(
+                tr(_result == null && _queuedCount == 0 ? 'Cancel' : 'Close'),
+              ),
             ),
-          if (_result == null && !_busy) ...[
+          if (enabled &&
+              !_batch &&
+              !_protect &&
+              widget.onExternalPacker != null)
+            TextButton(
+              onPressed: _external,
+              child: Text(
+                archiveExternalPackerText(context, 'Use installed packer…'),
+              ),
+            ),
+          if (enabled && _batch && widget.onQueueBatch != null)
+            OutlinedButton(
+              key: const ValueKey('archive-create-queue'),
+              onPressed: _queueBatch,
+              child: Text(
+                archiveJobText(context, 'Queue {0} archives', [
+                  widget.files.length,
+                ]),
+              ),
+            ),
+          if (_result == null && _queuedCount == 0 && !_busy && !_batch) ...[
             if (widget.enqueue != null)
               OutlinedButton.icon(
                 key: const ValueKey('archive-create-background'),

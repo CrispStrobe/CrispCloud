@@ -15,7 +15,7 @@ import '../providers/focus_area_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
 import '../screens/screen_dialogs.dart' show viewSelectedFile;
-import '../services/archive_service.dart';
+import '../services/archive_format_registry.dart';
 import '../services/file_operation_backend.dart';
 import '../services/folder_drop_service.dart';
 import '../services/keyboard_shortcut_service.dart';
@@ -231,8 +231,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     while (current != root && result.length < 127) {
       final parent = paths.dirname(current);
       if (parent == current ||
-          (parent != root && !paths.isWithin(root, parent)))
+          (parent != root && !paths.isWithin(root, parent))) {
         break;
+      }
       result.add(parent);
       current = parent;
     }
@@ -244,8 +245,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     if (!mounted ||
         !identical(_hydration, request) ||
         !request.sessionIsCurrent() ||
-        !request.origin.isCurrent)
+        !request.origin.isCurrent) {
       return false;
+    }
     final panel = ref.read(panelProvider(request.side));
     final current = _currentOrigin(panel);
     return current != null &&
@@ -353,8 +355,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                 entry.name == '.' ||
                 entry.name == '..' ||
                 (!request.showHidden && entry.name.startsWith('.')) ||
-                !seen.add(normalized))
+                !seen.add(normalized)) {
               continue;
+            }
             files.add(entry.copyWith(path: normalized));
           }
           if (_columns.any((column) => column.path == path)) continue;
@@ -421,8 +424,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     if (!mounted ||
         ticket != _interaction ||
         !origin.isCurrent ||
-        !_matchesLocalTrail(origin, localRoot, localIdentity))
+        !_matchesLocalTrail(origin, localRoot, localIdentity)) {
       return false;
+    }
     final selected = ref.read(panelSourceProvider(widget.side)).withPath('');
     return ref.read(panelProvider(widget.side)).activeTabId == tabId &&
         // Explicitly routed legacy listings can update a stale picker label.
@@ -492,8 +496,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
       captured,
       localRoot,
       localIdentity,
-    ))
+    )) {
       return null;
+    }
     final current = _currentOrigin(panel);
     if (current == null ||
         !_sameEndpoint(captured, current) ||
@@ -540,7 +545,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         panel.toggleSelection(file, shiftKey: shift, ctrlKey: toggle);
       } else {
         panel.setCursorOnly(file);
-        if (file.isFolder || (open && ArchiveService.isArchive(file.name))) {
+        if (file.isFolder || (open && isDefaultArchiveFilename(file.name))) {
           await panel.navigateInto(file);
         } else if (open) {
           viewSelectedFile(context, ref);
@@ -693,8 +698,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted ||
           !identical(panel.itemToScrollTo, item) ||
-          !widget.scrollController.hasClients)
+          !widget.scrollController.hasClients) {
         return;
+      }
       final position = widget.scrollController.position;
       final top = index * _rowHeight;
       final bottom = top + _rowHeight;
@@ -801,8 +807,9 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
                 b,
                 panel.secondarySortBy!,
               );
-              if (panel.secondarySortOrder == SortOrder.descending)
+              if (panel.secondarySortOrder == SortOrder.descending) {
                 result = -result;
+              }
             }
             return result == 0 ? a.name.compareTo(b.name) : result;
           }));
