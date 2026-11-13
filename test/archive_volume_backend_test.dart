@@ -111,6 +111,42 @@ class _Backend extends FileOperationBackend {
       mutations.add('rmdir:$path');
 }
 
+class _StalledBackend extends _Backend {
+  _StalledBackend(this.phase) {
+    mutableIdentity = true;
+  }
+  final String phase;
+  final entered = Completer<void>();
+  final release = Completer<void>();
+  Future<void> _stall() async {
+    if (entered.isCompleted) return;
+    entered.complete();
+    await release.future;
+  }
+
+  @override
+  Future<FileItem?> stat(String path) async {
+    if (phase == 'stat' && !entered.isCompleted) await _stall();
+    return super.stat(path);
+  }
+
+  @override
+  Future<List<FileItem>> list(String path) async {
+    if (phase == 'list' && lists == 0 || phase == 'final list' && lists == 1) {
+      await _stall();
+    }
+    return super.list(path);
+  }
+
+  @override
+  Stream<List<int>> readFile(FileItem file) async* {
+    await for (final chunk in super.readFile(file)) {
+      yield chunk;
+      if (phase == 'read' && file.name.endsWith('.002')) await _stall();
+    }
+  }
+}
+
 class _TrackedSpool extends ArchiveOutputSpool {
   _TrackedSpool(this.inner);
   final ArchiveOutputSpool inner;
@@ -242,7 +278,7 @@ void main() {
         backend,
         backend.selected,
         streaming: false,
-        maxMemberBytes: 8,
+        maxMemberBytes: 120,
         createSpool: capture.create,
       );
       expect(opened.archive.maxStreamingMemberBytes, kArchiveReadLimit);
@@ -424,6 +460,165 @@ void main() {
       expect(backend.reads, isEmpty);
       expect(capture.spools, isEmpty);
     });
+  });
+
+  group('pending provider cancellation and cleanup', () {
+    for (final phase in ['list', 'stat', 'read', 'final list']) {
+      for (final stop in ['cancel', 'revoke', 'change account']) {
+        test(
+          '$stop while $phase is pending returns and disposes owned parts',
+          () async {
+            final backend = _StalledBackend(phase);
+            final capture = _Capture();
+            var cancelled = false;
+            final result = Completer<Object?>();
+            unawaited(
+              openSevenZipVolumeArchive(
+                backend,
+                backend.selected,
+                spoolToDisk: false,
+                isCancelled: () => cancelled,
+                createSpool: capture.create,
+              ).then<void>(
+                (opened) async {
+                  await opened.archive.close();
+                  result.complete(null);
+                },
+                onError: (Object error, StackTrace stack) {
+                  result.complete(error);
+                },
+              ),
+            );
+            try {
+              await backend.entered.future.timeout(const Duration(seconds: 2));
+              switch (stop) {
+                case 'cancel':
+                  cancelled = true;
+                case 'revoke':
+                  backend.current = false;
+                case 'change account':
+                  backend.identityValue = Object();
+              }
+              final error = await result.future.timeout(
+                const Duration(seconds: 3),
+              );
+              expect(error, isA<ArchiveViewException>());
+              expect(
+                backend.release.isCompleted,
+                isFalse,
+                reason: 'provider acknowledgement must not hold owned spools',
+              );
+              expect(capture.spools.length, switch (phase) {
+                'read' => 2,
+                'final list' => 4,
+                _ => 0,
+              });
+              capture.expectDisposed();
+              expect(backend.mutations, isEmpty);
+            } finally {
+              if (!backend.release.isCompleted) backend.release.complete();
+              await result.future;
+            }
+          },
+        );
+      }
+    }
+
+    test(
+      'late provider metadata errors are observed after cancellation',
+      () async {
+        final backend = _StalledBackend('stat');
+        var cancelled = false;
+        final result = Completer<Object?>();
+        unawaited(
+          openSevenZipVolumeArchive(
+            backend,
+            backend.selected,
+            spoolToDisk: false,
+            isCancelled: () => cancelled,
+          ).then<void>(
+            (opened) async {
+              await opened.archive.close();
+              result.complete(null);
+            },
+            onError: (Object error, StackTrace stack) {
+              result.complete(error);
+            },
+          ),
+        );
+        await backend.entered.future;
+        cancelled = true;
+        expect(
+          await result.future.timeout(const Duration(seconds: 3)),
+          isA<ArchiveViewException>(),
+        );
+        backend.release.completeError(StateError('late provider error'));
+        await Future<void>.delayed(Duration.zero);
+      },
+    );
+
+    test(
+      'inactive remote reads expire and dispose completed and current parts',
+      () async {
+        final backend = _StalledBackend('read');
+        final capture = _Capture();
+        try {
+          await expectLater(
+            openSevenZipVolumeArchive(
+              backend,
+              backend.selected,
+              spoolToDisk: false,
+              createSpool: capture.create,
+              sourceInactivityTimeout: const Duration(milliseconds: 30),
+            ),
+            throwsA(
+              isA<ArchiveViewException>().having(
+                (error) => error.message,
+                'message',
+                contains('stopped responding'),
+              ),
+            ),
+          );
+          expect(capture.spools.length, 2);
+          capture.expectDisposed();
+        } finally {
+          if (!backend.release.isCompleted) backend.release.complete();
+        }
+      },
+    );
+
+    test(
+      'pending spool creation remains owned until its resource is returned',
+      () async {
+        final backend = _Backend();
+        final capture = _Capture();
+        final entered = Completer<void>(), release = Completer<void>();
+        var cancelled = false, completed = false;
+        final opening = openSevenZipVolumeArchive(
+          backend,
+          backend.selected,
+          spoolToDisk: false,
+          isCancelled: () => cancelled,
+          createSpool: (limit) async {
+            entered.complete();
+            await release.future;
+            return capture.create(limit);
+          },
+        );
+        final result = expectLater(
+          opening.whenComplete(() => completed = true),
+          throwsA(isA<ArchiveViewException>()),
+        );
+        await entered.future;
+        cancelled = true;
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        expect(completed, isFalse);
+        release.complete();
+        await result;
+        expect(capture.spools, hasLength(1));
+        capture.expectDisposed();
+      },
+    );
   });
 
   group('capture validation and cleanup', () {

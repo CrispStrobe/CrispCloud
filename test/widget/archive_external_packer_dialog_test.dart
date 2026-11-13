@@ -34,6 +34,7 @@ class _Engine implements ArchiveExternalPackerEngine {
   @override
   String? platform = 'linux';
   int probes = 0, discoveries = 0;
+  final profiles = <ArchiveExternalSevenZipProfile>[];
   Object? error;
   Completer<void>? probeGate;
   List<ArchiveExternalPackerConfiguration> candidates = [];
@@ -50,9 +51,12 @@ class _Engine implements ArchiveExternalPackerEngine {
   @override
   Future<ArchiveExternalPackerInstallation> probe(
     ArchiveExternalPackerConfiguration configuration, {
+    ArchiveExternalSevenZipProfile sevenZipProfile =
+        const ArchiveExternalSevenZipProfile(),
     bool Function()? isCancelled,
   }) async {
     probes++;
+    profiles.add(sevenZipProfile);
     await probeGate?.future;
     if (isCancelled?.call() ?? false) {
       throw const ArchiveExternalPackerException(
@@ -76,6 +80,7 @@ class _Engine implements ArchiveExternalPackerEngine {
       formats: configuration.kind == ArchiveExternalPackerKind.rar
           ? {ArchiveExternalPackerFormat.rar}
           : formats,
+      sevenZipProfile: sevenZipProfile,
     );
   }
 
@@ -202,6 +207,30 @@ void main() {
 
   bool createEnabled(WidgetTester tester) =>
       tester.widget<FilledButton>(key('create')).onPressed != null;
+
+  Future<void> chooseFormat(
+    WidgetTester tester,
+    ArchiveExternalPackerFormat value,
+  ) async {
+    final field = find.byType(
+      DropdownButtonFormField<ArchiveExternalPackerFormat>,
+    );
+    await tester.ensureVisible(field);
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(value.label).last);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> chooseNumber(
+    WidgetTester tester,
+    String name,
+    String value,
+  ) async {
+    await tap(tester, name);
+    await tester.tap(find.text(value).last);
+    await tester.pumpAndSettle();
+  }
 
   testWidgets(
     'creation requires a capability probe and captures output directory',
@@ -336,6 +365,103 @@ void main() {
     );
     expect(preferences.saves, 0);
   });
+  testWidgets('7z profile changes require a new exact capability check', (
+    tester,
+  ) async {
+    await show(tester);
+    await probe(tester);
+    expect(key('dictionary'), findsNothing);
+    await chooseFormat(tester, ArchiveExternalPackerFormat.sevenZip);
+    expect(createEnabled(tester), isTrue);
+    await chooseNumber(tester, 'dictionary', '1 MiB');
+    expect(createEnabled(tester), isFalse);
+    await chooseNumber(tester, 'threads', '4');
+    await chooseNumber(tester, 'solid', '32 MiB');
+    expect(key('profile-unverified'), findsOneWidget);
+    expect(engine.probes, 1);
+    expect(preferences.saves, 0);
+    await tap(tester, 'probe');
+    expect(
+      engine.profiles.last,
+      const ArchiveExternalSevenZipProfile(
+        dictionaryMiB: 1,
+        threads: 4,
+        solidBlockMiB: 32,
+      ),
+    );
+    expect(createEnabled(tester), isTrue);
+    expect(key('profile-unverified'), findsNothing);
+    await tap(tester, 'create');
+    final options = service.requests.single;
+    expect(options.name, 'report.7z');
+    expect(options.sevenZipProfile, engine.profiles.last);
+  });
+  testWidgets('7z-only options do not alter the checked ZIP profile', (
+    tester,
+  ) async {
+    await show(tester);
+    await probe(tester);
+    await chooseFormat(tester, ArchiveExternalPackerFormat.sevenZip);
+    await chooseNumber(tester, 'solid', '16 MiB');
+    expect(createEnabled(tester), isFalse);
+    await chooseFormat(tester, ArchiveExternalPackerFormat.zip);
+    expect(createEnabled(tester), isTrue);
+    expect(key('dictionary'), findsNothing);
+    expect(key('threads'), findsNothing);
+    expect(key('solid'), findsNothing);
+    await tap(tester, 'probe');
+    expect(engine.profiles.last, const ArchiveExternalSevenZipProfile());
+    expect(createEnabled(tester), isTrue);
+    await tap(tester, 'create');
+    expect(
+      service.requests.single.sevenZipProfile,
+      const ArchiveExternalSevenZipProfile(),
+    );
+    expect(service.requests.single.format, ArchiveExternalPackerFormat.zip);
+  });
+  testWidgets('Store disables only the unused dictionary control', (
+    tester,
+  ) async {
+    engine.formats = {ArchiveExternalPackerFormat.sevenZip};
+    await show(tester);
+    await probe(tester);
+    await tap(tester, 'compression');
+    await tester.tap(find.text('Store (no compression)').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<DropdownButtonFormField<int>>(key('dictionary')).onChanged,
+      isNull,
+    );
+    expect(
+      tester.widget<DropdownButtonFormField<int>>(key('threads')).onChanged,
+      isNotNull,
+    );
+    expect(
+      tester.widget<DropdownButtonFormField<int>>(key('solid')).onChanged,
+      isNotNull,
+    );
+    expect(createEnabled(tester), isTrue);
+  });
+  testWidgets('a failed advanced-profile check leaves creation disabled', (
+    tester,
+  ) async {
+    engine.formats = {ArchiveExternalPackerFormat.sevenZip};
+    await show(tester);
+    await probe(tester);
+    await chooseNumber(tester, 'solid', '32 MiB');
+    engine.error = const ArchiveExternalPackerException(
+      ArchiveExternalPackerFailure.capabilityCheckFailed,
+    );
+    await tap(tester, 'probe');
+    expect(createEnabled(tester), isFalse);
+    expect(key('error'), findsOneWidget);
+    // Controls remain available to recover from a failed selected profile.
+    await chooseNumber(tester, 'solid', '16 MiB');
+    engine.error = null;
+    await tap(tester, 'probe');
+    expect(createEnabled(tester), isTrue);
+    expect(engine.profiles.last.solidBlockMiB, 16);
+  });
   testWidgets('unknown process errors do not expose logs or private paths', (
     tester,
   ) async {
@@ -400,15 +526,31 @@ void main() {
   });
   for (final language in ['de', 'fr', 'es', 'pt', 'zh', 'ja', 'ko', 'ar']) {
     testWidgets(
-      '$language narrow dialog supports probe and creation without overflow',
+      '$language narrow dialog supports advanced profiles without overflow',
       (tester) async {
+        engine.formats = {ArchiveExternalPackerFormat.sevenZip};
         await show(tester, language: language, width: 360, scale: 1.25);
         await probe(tester);
         expect(tester.takeException(), isNull);
         expect(find.text('External archive tool'), findsNothing);
+        expect(find.text('Dictionary size'), findsNothing);
+        expect(createEnabled(tester), isTrue);
+        await chooseNumber(tester, 'dictionary', '4 MiB');
+        await chooseNumber(tester, 'threads', '4');
+        await chooseNumber(tester, 'solid', '16 MiB');
+        expect(createEnabled(tester), isFalse);
+        await tap(tester, 'probe');
         expect(createEnabled(tester), isTrue);
         await tap(tester, 'create');
         expect(service.requests.length, 1);
+        expect(
+          service.requests.single.sevenZipProfile,
+          const ArchiveExternalSevenZipProfile(
+            dictionaryMiB: 4,
+            threads: 4,
+            solidBlockMiB: 16,
+          ),
+        );
         expect(tester.takeException(), isNull);
       },
     );

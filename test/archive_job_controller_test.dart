@@ -512,6 +512,37 @@ void main() {
     },
   );
 
+  test(
+    'close retains ownership until an idle queue journal write drains',
+    () async {
+      final first = controller();
+      await first.initialize();
+      await first.setQueuePaused(true);
+      final record = await enqueue(first, 'one');
+      store.delayNextStatus('paused');
+      final pausing = first.pause(record.id);
+      await store.writeEntered!.future;
+      var closed = false;
+      final closing = first.close().then((_) => closed = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(closed, isFalse);
+      final other = controller();
+      await other.initialize();
+      expect(other.ownedElsewhere, isTrue);
+      expect(workers, isEmpty);
+      store.releaseWrite!.complete();
+      await pausing;
+      await closing;
+      expect(closed, isTrue);
+      final recovered = controller();
+      await recovered.initialize();
+      expect(recovered.isReady, isTrue);
+      expect(recovered.job(record.id)!.status, ArchiveJobStatus.interrupted);
+      await recovered.setQueuePaused(true);
+      expect(recovered.error, isNull);
+    },
+  );
+
   test('close retains active intent for restart and releases ownership only after drain', () async {
     final first = controller();
     final record = await enqueue(first, 'one');

@@ -16,6 +16,8 @@ import 'support/archive_creation_backend.dart';
 ArchiveExternalPackerInstallation _installation({
   ArchiveExternalPackerKind kind = ArchiveExternalPackerKind.sevenZip,
   Set<ArchiveExternalPackerFormat>? formats,
+  ArchiveExternalSevenZipProfile sevenZipProfile =
+      const ArchiveExternalSevenZipProfile(),
 }) => ArchiveExternalPackerInstallation(
   configuration: ArchiveExternalPackerConfiguration(
     platform: 'linux',
@@ -32,6 +34,7 @@ ArchiveExternalPackerInstallation _installation({
     sha256: 'a' * 64,
   ),
   version: '23.01',
+  sevenZipProfile: sevenZipProfile,
   formats:
       formats ??
       (kind == ArchiveExternalPackerKind.rar
@@ -57,8 +60,11 @@ class _Engine implements ArchiveExternalPackerEngine {
   @override
   Future<ArchiveExternalPackerInstallation> probe(
     ArchiveExternalPackerConfiguration configuration, {
+    ArchiveExternalSevenZipProfile sevenZipProfile =
+        const ArchiveExternalSevenZipProfile(),
     bool Function()? isCancelled,
-  }) async => _installation(kind: configuration.kind);
+  }) async =>
+      _installation(kind: configuration.kind, sevenZipProfile: sevenZipProfile);
   @override
   Future<void> write({
     required ArchiveExternalPackerInstallation installation,
@@ -231,6 +237,8 @@ void main() {
     Future<ArchiveCreationResult> create({
       ArchiveExternalPackerFormat format = ArchiveExternalPackerFormat.zip,
       ArchiveExternalPackerInstallation? installation,
+      ArchiveExternalSevenZipProfile sevenZipProfile =
+          const ArchiveExternalSevenZipProfile(),
       bool Function()? cancelled,
     }) async => service.create(
       source: backend,
@@ -242,6 +250,7 @@ void main() {
         name: 'created${format.extension}',
         format: format,
         compression: ArchiveExternalPackerCompression.maximum,
+        sevenZipProfile: sevenZipProfile,
       ),
       isCancelled: cancelled,
     );
@@ -306,6 +315,67 @@ void main() {
         expect(backend.writes, isEmpty);
       },
     );
+    test(
+      'a changed 7z profile cannot reuse previous capability evidence',
+      () async {
+        await expectLater(
+          create(
+            format: ArchiveExternalPackerFormat.sevenZip,
+            sevenZipProfile: const ArchiveExternalSevenZipProfile(
+              dictionaryMiB: 4,
+              threads: 4,
+              solidBlockMiB: 32,
+            ),
+          ),
+          failure(ArchiveExternalPackerFailure.unsupportedOptions),
+        );
+        expect(engine.calls, 0);
+        expect(backend.writes, isEmpty);
+      },
+    );
+    test(
+      'a checked advanced profile reaches the normal verified writer',
+      () async {
+        const profile = ArchiveExternalSevenZipProfile(
+          dictionaryMiB: 1,
+          threads: 1,
+          solidBlockMiB: 16,
+        );
+        final checked = await service.probe(
+          _installation().configuration,
+          sevenZipProfile: profile,
+        );
+        expect(checked.sevenZipProfile, profile);
+        final result = await create(
+          format: ArchiveExternalPackerFormat.sevenZip,
+          installation: checked,
+          sevenZipProfile: profile,
+        );
+        expect(engine.options!.sevenZipProfile, profile);
+        expect(backend.contents.containsKey(result.path), isTrue);
+      },
+    );
+    for (final format in [
+      ArchiveExternalPackerFormat.zip,
+      ArchiveExternalPackerFormat.rar,
+    ]) {
+      test('${format.name} refuses 7z-only options before any write', () async {
+        await expectLater(
+          create(
+            format: format,
+            installation: _installation(
+              kind: format == ArchiveExternalPackerFormat.rar
+                  ? ArchiveExternalPackerKind.rar
+                  : ArchiveExternalPackerKind.sevenZip,
+            ),
+            sevenZipProfile: const ArchiveExternalSevenZipProfile(threads: 4),
+          ),
+          failure(ArchiveExternalPackerFailure.unsupportedOptions),
+        );
+        expect(engine.calls, 0);
+        expect(backend.writes, isEmpty);
+      });
+    }
     test('an absent capability prevents the writer from running', () async {
       await expectLater(
         create(

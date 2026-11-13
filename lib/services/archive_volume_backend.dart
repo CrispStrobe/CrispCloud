@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
@@ -48,6 +50,12 @@ class ArchiveVolumeOpen {
 /// reader with [maxMemberBytes] capped at 64 MiB. The returned
 /// format is always read-only `volumes/7z`, even if its inner format is writable.
 ///
+/// Source metadata and pending stream reads observe cancellation/availability
+/// within a 100 ms polling interval and [sourceInactivityTimeout] without
+/// waiting indefinitely for a provider's cancellation acknowledgement. Empty
+/// chunks do not reset inactivity; capture also has a six-hour overall bound.
+/// Native writes and owned cleanup are drained before returning.
+///
 /// [createSpool] optionally supplies private bounded snapshot storage. It must
 /// provide the same sealing, positional-read and disposal contract as
 /// [ArchiveOutputSpool]; the returned archive owns every supplied spool.
@@ -60,6 +68,8 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
   bool streaming = true,
   int maxMemberBytes = kArchiveReadLimit,
   bool Function()? isCancelled,
+  void Function(String fingerprint)? onSnapshotCaptured,
+  Duration sourceInactivityTimeout = const Duration(minutes: 2),
   Future<ArchiveOutputSpool> Function(int maxBytes)? createSpool,
 }) async {
   if (maxInputBytes <= 0) {
@@ -67,6 +77,12 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
   }
   if (maxMemberBytes <= 0) {
     throw ArgumentError.value(maxMemberBytes, 'maxMemberBytes');
+  }
+  if (sourceInactivityTimeout <= Duration.zero) {
+    throw ArgumentError.value(
+      sourceInactivityTimeout,
+      'sourceInactivityTimeout',
+    );
   }
   final boundedMemberBytes = maxMemberBytes < kArchiveReadLimit
       ? maxMemberBytes
@@ -117,9 +133,10 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
     }
   }
 
+  final guard = _VolumeCaptureGuard(check, sourceInactivityTimeout);
   ViewerArchive? inner;
   try {
-    final manifest = await _listManifest(source, parent, base, check);
+    final manifest = await _listManifest(source, parent, base, guard);
     final first = manifest.first;
     if (manifest.any((part) => part.storageId != first.storageId)) {
       throw const ArchiveViewException(
@@ -146,7 +163,7 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
     final witnesses = <Object?>[];
     for (final file in manifest) {
       check();
-      final current = await source.stat(file.path!);
+      final current = await guard.wait(() => source.stat(file.path!));
       check();
       if (!_sameSnapshot(file, current)) {
         throw _changed();
@@ -162,7 +179,7 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
       for (var index = 0; index < manifest.length; index++) {
         check();
         final file = manifest[index];
-        final current = await source.stat(file.path!);
+        final current = await guard.wait(() => source.stat(file.path!));
         check();
         if (!_sameSnapshot(file, current)) throw _changed();
         await native.verifyNativeArchiveImportSource(
@@ -179,23 +196,43 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
         spools.add(spool);
         check();
         var received = 0;
-        await for (final chunk in source.readFile(file)) {
-          check();
-          if (chunk.length > file.size! - received) throw _changed();
-          if (chunk is! Uint8List &&
-              chunk.any((byte) => byte < 0 || byte > 255)) {
-            throw const ArchiveViewException(
-              'A 7z volume contains an invalid byte stream.',
-            );
+        final input = StreamIterator(source.readFile(file));
+        try {
+          while (await guard.wait(input.moveNext, countsAsProgress: false)) {
+            guard.check();
+            final chunk = input.current;
+            if (chunk.length > file.size! - received) throw _changed();
+            if (chunk is! Uint8List &&
+                chunk.any((byte) => byte < 0 || byte > 255)) {
+              throw const ArchiveViewException(
+                'A 7z volume contains an invalid byte stream.',
+              );
+            }
+            for (var at = 0; at < chunk.length; at += 256 * 1024) {
+              guard.check();
+              final remaining = chunk.length - at;
+              final take = remaining < 256 * 1024 ? remaining : 256 * 1024;
+              final copy = Uint8List.fromList(chunk.sublist(at, at + take));
+              hashing.add(copy);
+              // Keep native writes owned until they return. Only provider
+              // metadata/next-event waits race cancellation and deadlines.
+              await spool.write(copy);
+              received += copy.length;
+              guard.progress();
+            }
           }
-          for (var at = 0; at < chunk.length; at += 256 * 1024) {
-            check();
-            final remaining = chunk.length - at;
-            final take = remaining < 256 * 1024 ? remaining : 256 * 1024;
-            final copy = Uint8List.fromList(chunk.sublist(at, at + take));
-            hashing.add(copy);
-            await spool.write(copy);
-            received += copy.length;
+        } finally {
+          // A stalled provider may never acknowledge cancellation. It no
+          // longer receives spool writes, and late errors remain observed.
+          try {
+            unawaited(
+              input.cancel().then<void>(
+                (_) {},
+                onError: (Object _, StackTrace __) {},
+              ),
+            );
+          } catch (_) {
+            // Preserve the original read/cancellation outcome.
           }
         }
         check();
@@ -209,7 +246,10 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
           witnesses[index],
         );
         check();
-        if (!_sameSnapshot(file, await source.stat(file.path!))) {
+        if (!_sameSnapshot(
+          file,
+          await guard.wait(() => source.stat(file.path!)),
+        )) {
           throw _changed();
         }
         check();
@@ -217,13 +257,16 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
     } finally {
       hashing.close();
     }
-    final after = await _listManifest(source, parent, base, check);
+    final after = await _listManifest(source, parent, base, guard);
     if (after.length != manifest.length) throw _changed();
     for (var index = 0; index < manifest.length; index++) {
       check();
       final file = manifest[index];
       if (!_sameSnapshot(file, after[index]) ||
-          !_sameSnapshot(file, await source.stat(file.path!))) {
+          !_sameSnapshot(
+            file,
+            await guard.wait(() => source.stat(file.path!)),
+          )) {
         throw _changed();
       }
       check();
@@ -234,6 +277,11 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
       );
       check();
     }
+
+    // Report capture before opening protected headers, so a caller can compare
+    // all password attempts even when the reader asks for a password or fails.
+    onSnapshotCaptured?.call(digest.value!.toString());
+    check();
 
     Future<ArchiveVolumeSource> joined() => openSevenZipVolumes(
       parts,
@@ -320,6 +368,8 @@ Future<ArchiveVolumeOpen> openSevenZipVolumeArchive(
       // Preserve the capture/open failure.
     }
     Error.throwWithStackTrace(error, stack);
+  } finally {
+    guard.close();
   }
 }
 
@@ -327,11 +377,9 @@ Future<List<FileItem>> _listManifest(
   FileOperationBackend source,
   String parent,
   String base,
-  void Function() check,
+  _VolumeCaptureGuard guard,
 ) async {
-  check();
-  final listed = await source.list(parent);
-  check();
+  final listed = await guard.wait(() => source.list(parent));
   final manifest = <FileItem>[];
   final paths = <String>{};
   final identifiers = <String>{};
@@ -409,4 +457,66 @@ class _DigestSink implements Sink<Digest> {
   void add(Digest value) => this.value = value;
   @override
   void close() {}
+}
+
+/// Pending provider I/O cannot retain private snapshots after cancellation.
+/// Spool creation/writes, explicit native witness checks and disposal are
+/// deliberately awaited normally so their results remain owned.
+class _VolumeCaptureGuard {
+  _VolumeCaptureGuard(this._checkSource, this.inactivityTimeout);
+  final void Function() _checkSource;
+  final Duration inactivityTimeout;
+  final Stopwatch _clock = Stopwatch()..start();
+  Duration _lastProgress = Duration.zero;
+
+  void check() {
+    _checkSource();
+    if (_clock.elapsed - _lastProgress >= inactivityTimeout) {
+      throw const ArchiveViewException(
+        'The split-archive source stopped responding.',
+      );
+    }
+    if (_clock.elapsed >= const Duration(hours: 6)) {
+      throw const ArchiveViewException(
+        'The split-archive capture exceeded its time limit.',
+      );
+    }
+  }
+
+  void progress() => _lastProgress = _clock.elapsed;
+  void close() => _clock.stop();
+
+  Future<T> wait<T>(
+    Future<T> Function() operation, {
+    bool countsAsProgress = true,
+  }) async {
+    check();
+    final result = Completer<T>();
+    final poll = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (result.isCompleted) return;
+      try {
+        check();
+      } catch (error, stack) {
+        result.completeError(error, stack);
+      }
+    });
+    unawaited(
+      Future<T>.sync(operation).then<void>(
+        (value) {
+          if (!result.isCompleted) result.complete(value);
+        },
+        onError: (Object error, StackTrace stack) {
+          if (!result.isCompleted) result.completeError(error, stack);
+        },
+      ),
+    );
+    try {
+      final value = await result.future;
+      check();
+      if (countsAsProgress) progress();
+      return value;
+    } finally {
+      poll.cancel();
+    }
+  }
 }

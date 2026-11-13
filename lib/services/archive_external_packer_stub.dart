@@ -16,6 +16,8 @@ class _UnavailableEngine implements ArchiveExternalPackerEngine {
   @override
   Future<ArchiveExternalPackerInstallation> probe(
     ArchiveExternalPackerConfiguration configuration, {
+    ArchiveExternalSevenZipProfile sevenZipProfile =
+        const ArchiveExternalSevenZipProfile(),
     bool Function()? isCancelled,
   }) async => _unavailable();
   @override

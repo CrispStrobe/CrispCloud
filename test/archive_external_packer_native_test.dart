@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/archive_external_packer.dart';
 import 'package:crisp_cloud/services/archive_external_packer_io.dart';
@@ -189,6 +190,242 @@ void main() {
             }
           },
         );
+
+        if (kind == ArchiveExternalPackerKind.sevenZip) {
+          test('all 27 bounded profiles pass real Store, Normal and Maximum probes', () async {
+            for (final dictionary
+                in ArchiveExternalSevenZipProfile.dictionarySizesMiB) {
+              for (final threads
+                  in ArchiveExternalSevenZipProfile.threadCounts) {
+                for (final solid
+                    in ArchiveExternalSevenZipProfile.solidBlockSizesMiB) {
+                  final profile = ArchiveExternalSevenZipProfile(
+                    dictionaryMiB: dictionary,
+                    threads: threads,
+                    solidBlockMiB: solid,
+                  );
+                  final checked = await engine.probe(
+                    installation.configuration,
+                    sevenZipProfile: profile,
+                  );
+                  expect(checked.sevenZipProfile, profile);
+                  expect(
+                    checked.formats,
+                    contains(ArchiveExternalPackerFormat.sevenZip),
+                    reason:
+                        'dictionary=$dictionary threads=$threads solid=$solid',
+                  );
+                }
+              }
+            }
+            expect(
+              await Directory(p.join(root.path, 'stages')).list().toList(),
+              isEmpty,
+            );
+          }, timeout: const Timeout(Duration(minutes: 4)));
+
+          test(
+            'advanced options use the same verified publication boundary',
+            () async {
+              const profile = ArchiveExternalSevenZipProfile(
+                dictionaryMiB: 4,
+                threads: 4,
+                solidBlockMiB: 16,
+              );
+              final checked = await engine.probe(
+                installation.configuration,
+                sevenZipProfile: profile,
+              );
+              final backend = ArchiveCreationBackend()
+                ..put(
+                  '/input/first.txt',
+                  utf8.encode('same repeated text ' * 1024),
+                )
+                ..put(
+                  '/input/second.txt',
+                  utf8.encode('same repeated text ' * 2048),
+                );
+              final result = await ArchiveExternalPackerService(engine: engine)
+                  .create(
+                    source: backend,
+                    destination: backend,
+                    files: [
+                      (await backend.stat('/input/first.txt'))!,
+                      (await backend.stat('/input/second.txt'))!,
+                    ],
+                    destinationDirectory: '/output',
+                    installation: checked,
+                    options: const ArchiveExternalPackerOptions(
+                      name: 'bounded.7z',
+                      format: ArchiveExternalPackerFormat.sevenZip,
+                      compression: ArchiveExternalPackerCompression.maximum,
+                      sevenZipProfile: profile,
+                    ),
+                  );
+              expect(result.path, '/output/bounded.7z');
+              expect(result.entryCount, 2);
+              expect(result.bytes, lessThan(4096));
+            },
+          );
+
+          test(
+            'solid blocks preserve the 64 MiB decoded-folder boundary',
+            () async {
+              const mib = 1024 * 1024;
+              final sizes = {
+                'a-small': 4 * mib,
+                'b-middle': 24 * mib,
+                'c-large': 64 * mib,
+              };
+              final chunk = Uint8List(64 * 1024);
+              final entries = [
+                for (final entry in sizes.entries)
+                  ArchiveWriteEntry(
+                    path: entry.key,
+                    isDirectory: false,
+                    size: entry.value,
+                    modified: DateTime.utc(2024, 1, 2, 3, 4, 5),
+                    mode: Platform.isWindows ? null : 0x180,
+                    readChunks: () async* {
+                      for (
+                        var count = 0;
+                        count < entry.value;
+                        count += chunk.length
+                      ) {
+                        yield chunk;
+                      }
+                    },
+                  ),
+              ];
+              for (final solid in [16, 32]) {
+                final profile = ArchiveExternalSevenZipProfile(
+                  dictionaryMiB: 1,
+                  solidBlockMiB: solid,
+                );
+                final checked = await engine.probe(
+                  installation.configuration,
+                  sevenZipProfile: profile,
+                );
+                final bytes = await collectArchiveWrite(
+                  (sink) => engine.write(
+                    installation: checked,
+                    options: ArchiveExternalPackerOptions(
+                      name: 'bounded.7z',
+                      format: ArchiveExternalPackerFormat.sevenZip,
+                      sevenZipProfile: profile,
+                    ),
+                    entries: entries,
+                    sink: sink,
+                    maxOutputBytes: mib,
+                  ),
+                );
+                final archive = await openViewerArchive(
+                  bytes,
+                  name: 'bounded.7z',
+                );
+                try {
+                  expect(archive.members.length, sizes.length);
+                  for (final member in archive.members) {
+                    var count = 0;
+                    await for (final data in archive.openMember(member)) {
+                      expect(data.every((byte) => byte == 0), isTrue);
+                      count += data.length;
+                    }
+                    expect(count, sizes[member.name]);
+                  }
+                } finally {
+                  await archive.close();
+                }
+                // Independent vendor listing confirms actual folder grouping;
+                // this is test-only, not an application command/output parser.
+                final output = File(p.join(root.path, 'solid-$solid.7z'));
+                await output.writeAsBytes(bytes);
+                final listed = await Process.run(executable!, [
+                  'l',
+                  '-slt',
+                  output.path,
+                ]);
+                expect(listed.exitCode, 0);
+                final blocks = <int, int>{};
+                for (final record in (listed.stdout as String).split(
+                  RegExp(r'\r?\n\r?\n'),
+                )) {
+                  final block = RegExp(
+                    r'^Block = (\d+)\r?$',
+                    multiLine: true,
+                  ).firstMatch(record);
+                  final size = RegExp(
+                    r'^Size = (\d+)\r?$',
+                    multiLine: true,
+                  ).firstMatch(record);
+                  if (block != null && size != null) {
+                    final id = int.parse(block.group(1)!);
+                    blocks[id] = (blocks[id] ?? 0) + int.parse(size.group(1)!);
+                  }
+                }
+                expect(
+                  blocks.values.toSet(),
+                  solid == 16
+                      ? {4 * mib, 24 * mib, 64 * mib}
+                      : {28 * mib, 64 * mib},
+                );
+                expect(
+                  blocks.values.every(
+                    (size) => size <= kArchiveExternalPackerMemberLimit,
+                  ),
+                  isTrue,
+                );
+              }
+
+              // A tool ignoring the bounded-solid switch must still fail the
+              // existing reader limit, even though every individual file fits.
+              final ignoresSolid = NativeArchiveExternalPackerEngine(
+                hasAccess: (_) async => true,
+                stagingRoot: () async => p.join(root.path, 'stages'),
+                runner: (request) => runArchiveExternalPackerProcess(
+                  ArchiveExternalPackerInvocation(
+                    executable: request.executable,
+                    arguments: [
+                      for (final argument in request.arguments)
+                        argument.startsWith('-ms=') ? '-ms=on' : argument,
+                    ],
+                    directory: request.directory,
+                    environment: request.environment,
+                    timeout: request.timeout,
+                    outputPath: request.outputPath,
+                    maxOutputBytes: request.maxOutputBytes,
+                    isCancelled: request.isCancelled,
+                  ),
+                ),
+              );
+              final unbounded = await collectArchiveWrite(
+                (sink) => ignoresSolid.write(
+                  installation: installation,
+                  options: const ArchiveExternalPackerOptions(
+                    name: 'unbounded.7z',
+                    format: ArchiveExternalPackerFormat.sevenZip,
+                  ),
+                  entries: entries,
+                  sink: sink,
+                  maxOutputBytes: mib,
+                ),
+              );
+              final archive = await openViewerArchive(
+                unbounded,
+                name: 'unbounded.7z',
+              );
+              try {
+                await expectLater(
+                  archive.readMember(archive.members.first),
+                  throwsA(isA<ArchiveViewException>()),
+                );
+              } finally {
+                await archive.close();
+              }
+            },
+            timeout: const Timeout(Duration(minutes: 3)),
+          );
+        }
       },
       skip: executable == null
           ? 'Set the explicit installed engine path to run native CLI tests.'

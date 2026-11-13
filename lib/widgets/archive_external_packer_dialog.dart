@@ -64,6 +64,8 @@ class _ArchiveExternalPackerDialogState
   ArchiveExternalPackerFormat _format = ArchiveExternalPackerFormat.zip;
   ArchiveExternalPackerCompression _compression =
       ArchiveExternalPackerCompression.normal;
+  ArchiveExternalSevenZipProfile _sevenZipProfile =
+      const ArchiveExternalSevenZipProfile();
   ArchiveExternalPackerInstallation? _installation;
   List<ArchiveExternalPackerConfiguration> _candidates = const [];
   ArchiveCreationProgress? _progress;
@@ -161,6 +163,11 @@ class _ArchiveExternalPackerDialogState
         kind: _kind,
         executable: _executable.text,
       ),
+      sevenZipProfile:
+          _kind == ArchiveExternalPackerKind.sevenZip &&
+              _format == ArchiveExternalPackerFormat.sevenZip
+          ? _sevenZipProfile
+          : const ArchiveExternalSevenZipProfile(),
       isCancelled: () => _cancelled || !mounted,
     );
     if (!mounted) return;
@@ -205,6 +212,9 @@ class _ArchiveExternalPackerDialogState
         name: _name.text,
         format: _format,
         compression: _compression,
+        sevenZipProfile: _format == ArchiveExternalPackerFormat.sevenZip
+            ? _sevenZipProfile
+            : const ArchiveExternalSevenZipProfile(),
       ),
       isCancelled: () => _cancelled || !mounted,
       onProgress: (value) {
@@ -224,9 +234,47 @@ class _ArchiveExternalPackerDialogState
     final supported = _service.platform != null;
     final enabled = supported && !_busy && _result == null;
     final installation = _installation;
+    final profileVerified =
+        _format != ArchiveExternalPackerFormat.sevenZip ||
+        installation?.sevenZipProfile == _sevenZipProfile;
     final formats =
         installation?.formats.toList() ?? const <ArchiveExternalPackerFormat>[];
     final progress = _progress;
+    Widget profileChoice({
+      required String key,
+      required String label,
+      required int value,
+      required List<int> choices,
+      required void Function(int) choose,
+      bool available = true,
+      bool memorySize = true,
+    }) => DropdownButtonFormField<int>(
+      key: ValueKey('archive-external-$key'),
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: tr(label),
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        for (final choice in choices)
+          DropdownMenuItem(
+            value: choice,
+            child: Text(
+              choice == 0 ? tr('Off') : '$choice${memorySize ? ' MiB' : ''}',
+            ),
+          ),
+      ],
+      onChanged: enabled && available
+          ? (value) {
+              if (value == null) return;
+              setState(() {
+                choose(value);
+                _error = null;
+              });
+            }
+          : null,
+    );
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
@@ -456,6 +504,74 @@ class _ArchiveExternalPackerDialogState
                         }
                       : null,
                 ),
+                if (_kind == ArchiveExternalPackerKind.sevenZip &&
+                    _format == ArchiveExternalPackerFormat.sevenZip) ...[
+                  const SizedBox(height: 16),
+                  Text(tr('7z options')),
+                  const SizedBox(height: 8),
+                  Text(
+                    tr('Changing these options requires another tool check.'),
+                  ),
+                  const SizedBox(height: 12),
+                  profileChoice(
+                    key: 'dictionary',
+                    label: 'Dictionary size',
+                    value: _sevenZipProfile.dictionaryMiB,
+                    choices: ArchiveExternalSevenZipProfile.dictionarySizesMiB,
+                    available:
+                        _compression != ArchiveExternalPackerCompression.store,
+                    choose: (value) =>
+                        _sevenZipProfile = ArchiveExternalSevenZipProfile(
+                          dictionaryMiB: value,
+                          threads: _sevenZipProfile.threads,
+                          solidBlockMiB: _sevenZipProfile.solidBlockMiB,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(tr('Dictionary size applies to Normal and Maximum.')),
+                  const SizedBox(height: 12),
+                  profileChoice(
+                    key: 'threads',
+                    label: 'Threads',
+                    value: _sevenZipProfile.threads,
+                    choices: ArchiveExternalSevenZipProfile.threadCounts,
+                    memorySize: false,
+                    choose: (value) =>
+                        _sevenZipProfile = ArchiveExternalSevenZipProfile(
+                          dictionaryMiB: _sevenZipProfile.dictionaryMiB,
+                          threads: value,
+                          solidBlockMiB: _sevenZipProfile.solidBlockMiB,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  profileChoice(
+                    key: 'solid',
+                    label: 'Solid block size',
+                    value: _sevenZipProfile.solidBlockMiB,
+                    choices: ArchiveExternalSevenZipProfile.solidBlockSizesMiB,
+                    choose: (value) =>
+                        _sevenZipProfile = ArchiveExternalSevenZipProfile(
+                          dictionaryMiB: _sevenZipProfile.dictionaryMiB,
+                          threads: _sevenZipProfile.threads,
+                          solidBlockMiB: value,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    tr(
+                      'Solid blocks group files for compression. Extracting a file can require reading its whole block.',
+                    ),
+                  ),
+                  if (installation != null && !profileVerified) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      tr('Check the tool again to verify these 7z options.'),
+                      key: const ValueKey(
+                        'archive-external-profile-unverified',
+                      ),
+                    ),
+                  ],
+                ],
                 if (_busy) ...[
                   const SizedBox(height: 16),
                   const LinearProgressIndicator(),
@@ -496,7 +612,9 @@ class _ArchiveExternalPackerDialogState
           if (_result == null)
             FilledButton(
               key: const ValueKey('archive-external-create'),
-              onPressed: enabled && installation != null ? _create : null,
+              onPressed: enabled && installation != null && profileVerified
+                  ? _create
+                  : null,
               child: Text(common('Create archive')),
             ),
         ],

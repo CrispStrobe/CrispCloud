@@ -91,8 +91,14 @@ class ArchiveExternalPackerService {
       engine.discover();
   Future<ArchiveExternalPackerInstallation> probe(
     ArchiveExternalPackerConfiguration configuration, {
+    ArchiveExternalSevenZipProfile sevenZipProfile =
+        const ArchiveExternalSevenZipProfile(),
     bool Function()? isCancelled,
-  }) => engine.probe(configuration, isCancelled: isCancelled);
+  }) => engine.probe(
+    configuration,
+    sevenZipProfile: sevenZipProfile,
+    isCancelled: isCancelled,
+  );
 
   Future<ArchiveCreationResult> create({
     required FileOperationBackend source,
@@ -109,16 +115,12 @@ class ArchiveExternalPackerService {
         ArchiveExternalPackerFailure.unsupportedPlatform,
       );
     }
-    if (installation.configuration.platform != platform ||
-        !installation.formats.contains(options.format) ||
-        installation.configuration.kind == ArchiveExternalPackerKind.rar &&
-            options.format != ArchiveExternalPackerFormat.rar ||
-        installation.configuration.kind == ArchiveExternalPackerKind.sevenZip &&
-            options.format == ArchiveExternalPackerFormat.rar) {
+    if (installation.configuration.platform != platform) {
       throw const ArchiveExternalPackerException(
         ArchiveExternalPackerFailure.unsupportedFormat,
       );
     }
+    installation.validateOptions(options);
     final format = switch (options.format) {
       ArchiveExternalPackerFormat.zip => ArchiveCreationFormat.zip,
       ArchiveExternalPackerFormat.sevenZip => ArchiveCreationFormat.sevenZip,

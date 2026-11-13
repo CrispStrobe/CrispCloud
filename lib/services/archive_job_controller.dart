@@ -633,6 +633,11 @@ class ArchiveJobController extends ChangeNotifier {
         /* Initialization recorded its error. */
       }
       await _driving;
+      // An idle queue can still have a journal mutation in flight. Keep the
+      // publication lease until its CAS and acknowledgement have drained, so a
+      // replacement owner cannot load a snapshot that this controller changes
+      // after relinquishing authority. New edits already fail _authority().
+      await _mutations.synchronized(() async {});
     } finally {
       _passwords.clear();
       _lease?.close();

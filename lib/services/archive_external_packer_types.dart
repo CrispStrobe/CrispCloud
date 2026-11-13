@@ -26,6 +26,7 @@ enum ArchiveExternalPackerFailure {
   unavailable,
   changed,
   unsupportedFormat,
+  unsupportedOptions,
   unsupportedEntry,
   capabilityCheckFailed,
   processFailed,
@@ -137,6 +138,40 @@ class ArchiveExternalPackerIdentity {
       Object.hash(path, length, modified, changed, mode, sha256);
 }
 
+/// A bounded 7z profile. A solid block can exceed its requested size only when
+/// one member is larger; the independent reader still enforces its 64 MiB
+/// decoded-folder limit before a candidate can be published.
+class ArchiveExternalSevenZipProfile {
+  const ArchiveExternalSevenZipProfile({
+    this.dictionaryMiB = 16,
+    this.threads = 2,
+    this.solidBlockMiB = 0,
+  });
+  static const dictionarySizesMiB = [1, 4, 16];
+  static const threadCounts = [1, 2, 4];
+  static const solidBlockSizesMiB = [0, 16, 32];
+  final int dictionaryMiB, threads, solidBlockMiB;
+
+  void validate() {
+    if (!dictionarySizesMiB.contains(dictionaryMiB) ||
+        !threadCounts.contains(threads) ||
+        !solidBlockSizesMiB.contains(solidBlockMiB)) {
+      throw const ArchiveExternalPackerException(
+        ArchiveExternalPackerFailure.unsupportedOptions,
+      );
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ArchiveExternalSevenZipProfile &&
+      dictionaryMiB == other.dictionaryMiB &&
+      threads == other.threads &&
+      solidBlockMiB == other.solidBlockMiB;
+  @override
+  int get hashCode => Object.hash(dictionaryMiB, threads, solidBlockMiB);
+}
+
 /// Only formats whose executable round-trip probe succeeded are selectable.
 /// The installation is transient: capabilities and identities are never saved.
 class ArchiveExternalPackerInstallation {
@@ -145,11 +180,37 @@ class ArchiveExternalPackerInstallation {
     required this.identity,
     required this.version,
     required Set<ArchiveExternalPackerFormat> formats,
+    this.sevenZipProfile = const ArchiveExternalSevenZipProfile(),
   }) : formats = Set.unmodifiable(formats);
   final ArchiveExternalPackerConfiguration configuration;
   final ArchiveExternalPackerIdentity identity;
   final String version;
   final Set<ArchiveExternalPackerFormat> formats;
+
+  /// All three compression levels were checked with this exact 7z profile.
+  /// ZIP and RAR use their fixed profiles and do not inherit these options.
+  final ArchiveExternalSevenZipProfile sevenZipProfile;
+
+  void validateOptions(ArchiveExternalPackerOptions options) {
+    if (!formats.contains(options.format) ||
+        configuration.kind == ArchiveExternalPackerKind.rar &&
+            options.format != ArchiveExternalPackerFormat.rar ||
+        configuration.kind == ArchiveExternalPackerKind.sevenZip &&
+            options.format == ArchiveExternalPackerFormat.rar) {
+      throw const ArchiveExternalPackerException(
+        ArchiveExternalPackerFailure.unsupportedFormat,
+      );
+    }
+    options.sevenZipProfile.validate();
+    if (options.sevenZipProfile !=
+        (options.format == ArchiveExternalPackerFormat.sevenZip
+            ? sevenZipProfile
+            : const ArchiveExternalSevenZipProfile())) {
+      throw const ArchiveExternalPackerException(
+        ArchiveExternalPackerFailure.unsupportedOptions,
+      );
+    }
+  }
 }
 
 class ArchiveExternalPackerOptions {
@@ -157,10 +218,12 @@ class ArchiveExternalPackerOptions {
     required this.name,
     required this.format,
     this.compression = ArchiveExternalPackerCompression.normal,
+    this.sevenZipProfile = const ArchiveExternalSevenZipProfile(),
   });
   final String name;
   final ArchiveExternalPackerFormat format;
   final ArchiveExternalPackerCompression compression;
+  final ArchiveExternalSevenZipProfile sevenZipProfile;
 }
 
 abstract interface class ArchiveExternalPackerEngine {
@@ -168,6 +231,8 @@ abstract interface class ArchiveExternalPackerEngine {
   Future<List<ArchiveExternalPackerConfiguration>> discover();
   Future<ArchiveExternalPackerInstallation> probe(
     ArchiveExternalPackerConfiguration configuration, {
+    ArchiveExternalSevenZipProfile sevenZipProfile =
+        const ArchiveExternalSevenZipProfile(),
     bool Function()? isCancelled,
   });
   Future<void> write({

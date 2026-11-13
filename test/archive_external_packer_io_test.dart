@@ -17,6 +17,7 @@ import 'package:path/path.dart' as p;
 class _FixtureProcess {
   final invocations = <ArchiveExternalPackerInvocation>[];
   Future<void> Function(ArchiveExternalPackerInvocation)? mutate;
+  bool Function(ArchiveExternalPackerInvocation)? reject;
   int exit = 0;
   bool badTimes = false;
   Set<ArchiveExternalPackerFormat> supported = ArchiveExternalPackerFormat
@@ -38,7 +39,9 @@ class _FixtureProcess {
         : request.outputPath!.endsWith('.7z')
         ? ArchiveExternalPackerFormat.sevenZip
         : ArchiveExternalPackerFormat.zip;
-    if (exit != 0 || !supported.contains(format)) {
+    if (exit != 0 ||
+        !supported.contains(format) ||
+        (reject?.call(request) ?? false)) {
       return ArchiveExternalPackerProcessResult(
         exit == 0 ? 2 : exit,
         'untrusted private log',
@@ -223,6 +226,169 @@ void main() {
       process.supported = {ArchiveExternalPackerFormat.sevenZip};
       final result = await engine.probe(configuration);
       expect(result.formats, {ArchiveExternalPackerFormat.sevenZip});
+      await clean();
+    },
+  );
+  test(
+    'the selected 7z profile is checked at every compression level',
+    () async {
+      const profile = ArchiveExternalSevenZipProfile(
+        dictionaryMiB: 1,
+        threads: 4,
+        solidBlockMiB: 32,
+      );
+      final checked = await engine.probe(
+        configuration,
+        sevenZipProfile: profile,
+      );
+      expect(checked.sevenZipProfile, profile);
+      final calls = process.invocations.where(
+        (i) => i.arguments.contains('-t7z'),
+      );
+      expect(calls.length, 3);
+      for (final call in calls) {
+        expect(call.arguments, containsAll(['-mmt=4', '-ms=32m']));
+        if (call.arguments.contains('-mx=0')) {
+          expect(call.arguments, contains('-m0=Copy'));
+          expect(call.arguments.any((a) => a.startsWith('-md=')), isFalse);
+        } else {
+          expect(call.arguments, containsAll(['-md=1m', '-m0=LZMA2']));
+        }
+      }
+      for (final call in process.invocations.where(
+        (i) => i.arguments.contains('-tzip'),
+      )) {
+        expect(call.arguments, contains('-mmt=2'));
+        expect(
+          call.arguments.any(
+            (a) => a.startsWith('-ms=') || a.startsWith('-md='),
+          ),
+          isFalse,
+        );
+      }
+      await clean();
+    },
+  );
+  test(
+    'an unsupported selected 7z profile cannot succeed through ZIP alone',
+    () async {
+      process.reject = (call) => call.arguments.contains('-ms=32m');
+      await expectLater(
+        engine.probe(
+          configuration,
+          sevenZipProfile: const ArchiveExternalSevenZipProfile(
+            solidBlockMiB: 32,
+          ),
+        ),
+        failure(ArchiveExternalPackerFailure.capabilityCheckFailed),
+      );
+      await clean();
+    },
+  );
+  test('unbounded and unknown profile values never execute the tool', () async {
+    for (final profile in const [
+      ArchiveExternalSevenZipProfile(dictionaryMiB: 0),
+      ArchiveExternalSevenZipProfile(dictionaryMiB: 32),
+      ArchiveExternalSevenZipProfile(threads: 0),
+      ArchiveExternalSevenZipProfile(threads: 8),
+      ArchiveExternalSevenZipProfile(solidBlockMiB: -1),
+      ArchiveExternalSevenZipProfile(solidBlockMiB: 64),
+    ]) {
+      await expectLater(
+        engine.probe(configuration, sevenZipProfile: profile),
+        failure(ArchiveExternalPackerFailure.unsupportedOptions),
+      );
+      await expectLater(
+        engine.write(
+          installation: ArchiveExternalPackerInstallation(
+            configuration: configuration,
+            identity: installation.identity,
+            version: installation.version,
+            formats: installation.formats,
+            sevenZipProfile: profile,
+          ),
+          options: ArchiveExternalPackerOptions(
+            name: 'unbounded.7z',
+            format: ArchiveExternalPackerFormat.sevenZip,
+            sevenZipProfile: profile,
+          ),
+          entries: entries(),
+          sink: (_) async => fail('invalid option reached output'),
+          maxOutputBytes: 1024 * 1024,
+        ),
+        failure(ArchiveExternalPackerFailure.unsupportedOptions),
+      );
+    }
+    expect(process.invocations, isEmpty);
+    await clean();
+  });
+  test(
+    'all bounded 7z choices produce exactly the requested fixed switches',
+    () async {
+      for (final dictionary
+          in ArchiveExternalSevenZipProfile.dictionarySizesMiB) {
+        for (final threads in ArchiveExternalSevenZipProfile.threadCounts) {
+          for (final solid
+              in ArchiveExternalSevenZipProfile.solidBlockSizesMiB) {
+            final profile = ArchiveExternalSevenZipProfile(
+              dictionaryMiB: dictionary,
+              threads: threads,
+              solidBlockMiB: solid,
+            );
+            await engine.write(
+              installation: ArchiveExternalPackerInstallation(
+                configuration: configuration,
+                identity: installation.identity,
+                version: installation.version,
+                formats: installation.formats,
+                sevenZipProfile: profile,
+              ),
+              options: ArchiveExternalPackerOptions(
+                name: 'bounded.7z',
+                format: ArchiveExternalPackerFormat.sevenZip,
+                sevenZipProfile: profile,
+              ),
+              entries: entries(),
+              sink: (_) async {},
+              maxOutputBytes: 1024 * 1024,
+            );
+            final args = process.invocations.last.arguments;
+            expect(
+              args.singleWhere((a) => a.startsWith('-md=')),
+              '-md=${dictionary}m',
+            );
+            expect(
+              args.singleWhere((a) => a.startsWith('-mmt=')),
+              '-mmt=$threads',
+            );
+            expect(
+              args.singleWhere((a) => a.startsWith('-ms=')),
+              '-ms=${solid == 0 ? 'off' : '${solid}m'}',
+            );
+          }
+        }
+      }
+      await clean();
+    },
+  );
+  test(
+    'write rejects changed profile evidence before staging inputs',
+    () async {
+      await expectLater(
+        engine.write(
+          installation: installation,
+          options: const ArchiveExternalPackerOptions(
+            name: 'unchecked.7z',
+            format: ArchiveExternalPackerFormat.sevenZip,
+            sevenZipProfile: ArchiveExternalSevenZipProfile(threads: 4),
+          ),
+          entries: entries(),
+          sink: (_) async => fail('unverified profile reached output'),
+          maxOutputBytes: 1024 * 1024,
+        ),
+        failure(ArchiveExternalPackerFailure.unsupportedOptions),
+      );
+      expect(process.invocations, isEmpty);
       await clean();
     },
   );

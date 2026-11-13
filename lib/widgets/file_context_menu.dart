@@ -1,6 +1,8 @@
 import '../l10n/commander_strings.dart';
 import '../l10n/archive_creation_strings.dart';
 import 'archive_creation_dialog.dart';
+import 'archive_batch_actions.dart';
+import '../l10n/archive_batch_integrity_strings.dart';
 import '../l10n/file_conversion_strings.dart';
 import 'file_conversion_dialog.dart';
 import 'file_delete_dialog.dart';
@@ -1410,6 +1412,20 @@ void showFileContextMenu(
         ),
       );
     }
+  }
+
+  if (files.isNotEmpty && files.every((selected) => !selected.isFolder && selected.isSymlink != true && ArchiveService.isArchive(selected.name))) {
+    items.add(PopupMenuItem(
+      child: ListTile(
+        leading: const Icon(Icons.fact_check_outlined),
+        title: Text(archiveBatchIntegrityText(context, 'Test selected archives')),
+      ),
+      onTap: () => Future<void>.delayed(Duration.zero, () async {
+        if (context.mounted) {
+          await showArchiveBatchIntegrityForSelection(context, ref, side: side, files: files, sourceOrigin: origin);
+        }
+      }),
+    ));
   }
 
   if (!isMultiSelect && !file.isFolder && ArchiveService.isArchive(file.name)) {

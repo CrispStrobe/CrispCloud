@@ -217,9 +217,16 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
   @override
   Future<ArchiveExternalPackerInstallation> probe(
     ArchiveExternalPackerConfiguration configuration, {
+    ArchiveExternalSevenZipProfile sevenZipProfile =
+        const ArchiveExternalSevenZipProfile(),
     bool Function()? isCancelled,
   }) async {
     _check(isCancelled);
+    sevenZipProfile.validate();
+    if (configuration.kind != ArchiveExternalPackerKind.sevenZip &&
+        sevenZipProfile != const ArchiveExternalSevenZipProfile()) {
+      _fail(ArchiveExternalPackerFailure.unsupportedOptions);
+    }
     final identity = await _identity(configuration);
     final stage = await _PackerStage.create(stagingRoot);
     var cleanup = true;
@@ -275,6 +282,7 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
       identity: identity,
       version: version,
       formats: candidates,
+      sevenZipProfile: sevenZipProfile,
     );
     final supported = <ArchiveExternalPackerFormat>{};
     for (final format in candidates) {
@@ -296,7 +304,9 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
         // A valid tool may not preserve this format's complete tested profile.
       }
     }
-    if (supported.isEmpty) {
+    if (supported.isEmpty ||
+        sevenZipProfile != const ArchiveExternalSevenZipProfile() &&
+            !supported.contains(ArchiveExternalPackerFormat.sevenZip)) {
       _fail(ArchiveExternalPackerFailure.capabilityCheckFailed);
     }
     return ArchiveExternalPackerInstallation(
@@ -304,6 +314,7 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
       identity: identity,
       version: version,
       formats: supported,
+      sevenZipProfile: sevenZipProfile,
     );
   }
 
@@ -345,6 +356,14 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
         readChunks: () => Stream.value(bytes),
       ),
       ArchiveWriteEntry(
+        path: 'folder/second.txt',
+        isDirectory: false,
+        size: bytes.length,
+        modified: date,
+        mode: platform == 'windows' ? null : 0x180,
+        readChunks: () => Stream.value(bytes),
+      ),
+      ArchiveWriteEntry(
         path: 'empty',
         isDirectory: true,
         size: 0,
@@ -359,6 +378,9 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
           name: 'probe${format.extension}',
           format: format,
           compression: compression,
+          sevenZipProfile: format == ArchiveExternalPackerFormat.sevenZip
+              ? installation.sevenZipProfile
+              : const ArchiveExternalSevenZipProfile(),
         ),
         entries: entries,
         sink: sink,
@@ -424,13 +446,7 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
     bool Function()? isCancelled,
   }) async {
     _check(isCancelled);
-    if (!installation.formats.contains(options.format) ||
-        installation.configuration.kind == ArchiveExternalPackerKind.rar &&
-            options.format != ArchiveExternalPackerFormat.rar ||
-        installation.configuration.kind == ArchiveExternalPackerKind.sevenZip &&
-            options.format == ArchiveExternalPackerFormat.rar) {
-      _fail(ArchiveExternalPackerFailure.unsupportedFormat);
-    }
+    installation.validateOptions(options);
     if (maxOutputBytes <= 0 ||
         maxOutputBytes > kArchiveExternalPackerTotalLimit) {
       _fail(ArchiveExternalPackerFailure.outputTooLarge);
@@ -603,7 +619,7 @@ List<String> _arguments(
     'a',
     '-t${options.format == ArchiveExternalPackerFormat.zip ? 'zip' : '7z'}',
     '-mx=$level',
-    '-mmt=2',
+    '-mmt=${options.format == ArchiveExternalPackerFormat.sevenZip ? options.sevenZipProfile.threads : 2}',
     '-r-',
     '-spd',
     '-sse',
@@ -618,9 +634,9 @@ List<String> _arguments(
     '-mtc=off',
     '-mtm=on',
     if (options.format == ArchiveExternalPackerFormat.sevenZip) ...[
-      '-ms=off',
+      '-ms=${options.sevenZipProfile.solidBlockMiB == 0 ? 'off' : '${options.sevenZipProfile.solidBlockMiB}m'}',
       '-m0=${level == 0 ? 'Copy' : 'LZMA2'}',
-      if (level != 0) '-md=16m',
+      if (level != 0) '-md=${options.sevenZipProfile.dictionaryMiB}m',
     ] else ...[
       '-mm=${level == 0 ? 'Copy' : 'Deflate'}',
       // The shared ZIP creation contract preserves UTC seconds. Ask the

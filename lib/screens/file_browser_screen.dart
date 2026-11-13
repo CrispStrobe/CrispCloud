@@ -66,6 +66,8 @@ import '../widgets/archive_endpoint_actions.dart';
 import '../l10n/archive_endpoint_strings.dart';
 import '../l10n/archive_job_strings.dart';
 import '../widgets/archive_jobs_dialog.dart';
+import '../widgets/archive_batch_actions.dart';
+import '../l10n/archive_batch_integrity_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
@@ -604,6 +606,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       () => showArchiveJobsDialog(context, ref),
       available: () => !kIsWeb && const {TargetPlatform.linux,
         TargetPlatform.windows, TargetPlatform.macOS}.contains(defaultTargetPlatform),
+    );
+    add(
+      'archiveTest',
+      archiveBatchIntegrityText(context, 'Test selected archives'),
+      () => showArchiveBatchIntegrityForSelection(context, ref),
+      available: () => canTestArchiveSelection(ref),
     );
     add(
       'gatherSelection',

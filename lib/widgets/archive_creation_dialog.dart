@@ -288,7 +288,14 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
 
   Future<void> _external() async {
     final action = widget.onExternalPacker;
-    if (action == null) return;
+    if (action == null ||
+        _protect ||
+        _busy ||
+        _batch ||
+        _result != null ||
+        _queuedName != null) {
+      return;
+    }
     setState(() {
       _busy = true;
       _delegating = true;
@@ -731,7 +738,10 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                 tr(_result == null && _queuedName == null ? 'Cancel' : 'Close'),
               ),
             ),
-          if (enabled && !_batch && widget.onExternalPacker != null)
+          if (enabled &&
+              !_protect &&
+              !_batch &&
+              widget.onExternalPacker != null)
             TextButton(
               onPressed: _external,
               child: Text(

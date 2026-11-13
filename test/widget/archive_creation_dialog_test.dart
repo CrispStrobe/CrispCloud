@@ -1079,6 +1079,34 @@ void main() {
     },
   );
 
+  testWidgets('protected creation cannot delegate to an unencrypted packer', (
+    tester,
+  ) async {
+    var calls = 0;
+    await show(
+      tester,
+      onExternalPacker: () async {
+        calls++;
+        return const ArchiveCreationResult('/output/external.7z', 1, 42);
+      },
+    );
+    final staleAction = tester
+        .widget<TextButton>(
+          find.widgetWithText(TextButton, 'Use installed packer…'),
+        )
+        .onPressed!;
+    await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+    await tester.pumpAndSettle();
+    expect(find.text('Use installed packer…'), findsNothing);
+    staleAction();
+    await tester.pumpAndSettle();
+    expect(calls, 0);
+    expect(service.requests, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+    await tester.pumpAndSettle();
+    expect(find.text('Use installed packer…'), findsOneWidget);
+  });
+
   testWidgets('installed packer returns the verified result to creation', (
     tester,
   ) async {

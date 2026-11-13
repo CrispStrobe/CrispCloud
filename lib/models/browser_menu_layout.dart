@@ -358,6 +358,7 @@ class BrowserMenuLayout {
           'externalEditingSessions',
           'archiveRecovery',
           'archiveJobs',
+          'archiveTest',
           'gatherSelection',
           'gatheringStack',
           'extensions',
