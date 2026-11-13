@@ -128,25 +128,26 @@ Uint8List inlinePictureWordFixture({
   ).build();
 }
 
-Uint8List blipStoreEntry(Uint8List blip, {int? delayOffset}) => officeArtRecord(
-  0xf007,
-  [
-    6,
-    6,
-    ...List.filled(16, 0),
-    ...wordU16(255),
-    ...wordU32(blip.length),
-    ...wordU32(1),
-    ...wordU32(delayOffset ?? 0xffffffff),
-    0,
-    0,
-    0,
-    0,
-    if (delayOffset == null) ...blip,
-  ],
-  version: 2,
-  instance: 6,
-);
+Uint8List blipStoreEntry(Uint8List blip, {int? delayOffset, int type = 6}) =>
+    officeArtRecord(
+      0xf007,
+      [
+        type,
+        type,
+        ...List.filled(16, 0),
+        ...wordU16(255),
+        ...wordU32(blip.length),
+        ...wordU32(1),
+        ...wordU32(delayOffset ?? 0xffffffff),
+        0,
+        0,
+        0,
+        0,
+        if (delayOffset == null) ...blip,
+      ],
+      version: 2,
+      instance: type,
+    );
 
 Uint8List drawingContent({
   required Uint8List shape,

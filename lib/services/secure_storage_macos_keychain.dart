@@ -23,6 +23,46 @@ class MacOsCustomKeychainStorage extends SecureStorage
   String get credentialStoreLocation => path;
   final MethodChannel _channel;
   bool _initialized = false;
+  Future<void>? _unlocking;
+  Object? _unlockFailure;
+  StackTrace? _unlockFailureStack;
+
+  /// A deliberate Retry may ask Security.framework again after cancellation.
+  void allowUnlockRetry() {
+    _unlockFailure = null;
+    _unlockFailureStack = null;
+  }
+
+  Future<void> _unlockSelectedKeychain() async {
+    if (_unlockFailure != null) {
+      Error.throwWithStackTrace(_unlockFailure!, _unlockFailureStack!);
+    }
+    final pending = _unlocking;
+    if (pending != null) return pending;
+    final attempt = _channel.invokeMethod<void>('unlock', {'path': path});
+    _unlocking = attempt;
+    try {
+      await attempt;
+    } catch (error, stack) {
+      _unlockFailure = error;
+      _unlockFailureStack = stack;
+      rethrow;
+    } finally {
+      _unlocking = null;
+    }
+  }
+
+  Future<T> _withUnlock<T>(Future<T> Function() operation) async {
+    try {
+      return await operation();
+    } on PlatformException catch (error) {
+      // This native error is raised before the operation touches any item.
+      // Other errors, including permission failures, never trigger a retry.
+      if (error.code != 'custom_keychain_locked') rethrow;
+      await _unlockSelectedKeychain();
+      return operation();
+    }
+  }
 
   static void _checkPlatform() {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) {
@@ -40,7 +80,10 @@ class MacOsCustomKeychainStorage extends SecureStorage
     if (path.trim().isEmpty) {
       throw ArgumentError.value(path, 'path', 'A keychain path is required.');
     }
-    await _channel.invokeMethod<void>('initialize', {'path': path});
+    allowUnlockRetry();
+    await _withUnlock(
+      () => _channel.invokeMethod<void>('initialize', {'path': path}),
+    );
     _initialized = true;
   }
 
@@ -93,24 +136,28 @@ class MacOsCustomKeychainStorage extends SecureStorage
   }
 
   @override
-  Future<String?> read(String key) =>
-      _channel.invokeMethod<String>('read', _arguments(key));
+  Future<String?> read(String key) {
+    final arguments = _arguments(key);
+    return _withUnlock(() => _channel.invokeMethod<String>('read', arguments));
+  }
 
   @override
-  Future<void> write(String key, String value) => _channel.invokeMethod<void>(
-    'write',
-    {..._arguments(key), 'value': value},
-  );
+  Future<void> write(String key, String value) {
+    final arguments = {..._arguments(key), 'value': value};
+    return _withUnlock(() => _channel.invokeMethod<void>('write', arguments));
+  }
 
   @override
-  Future<void> delete(String key) =>
-      _channel.invokeMethod<void>('delete', _arguments(key));
+  Future<void> delete(String key) {
+    final arguments = _arguments(key);
+    return _withUnlock(() => _channel.invokeMethod<void>('delete', arguments));
+  }
 
   @override
   Future<bool> containsKey(String key) async {
-    final result = await _channel.invokeMethod<bool>(
-      'containsKey',
-      _arguments(key),
+    final arguments = _arguments(key);
+    final result = await _withUnlock(
+      () => _channel.invokeMethod<bool>('containsKey', arguments),
     );
     if (result == null) {
       throw const FormatException('The selected keychain returned no result.');
@@ -119,13 +166,17 @@ class MacOsCustomKeychainStorage extends SecureStorage
   }
 
   @override
-  Future<void> deleteAll() =>
-      _channel.invokeMethod<void>('deleteAll', _arguments());
+  Future<void> deleteAll() {
+    final arguments = _arguments();
+    return _withUnlock(
+      () => _channel.invokeMethod<void>('deleteAll', arguments),
+    );
+  }
 
   Future<Map<String, String>> readAll() async {
-    final result = await _channel.invokeMapMethod<String, String>(
-      'readAll',
-      _arguments(),
+    final arguments = _arguments();
+    final result = await _withUnlock(
+      () => _channel.invokeMapMethod<String, String>('readAll', arguments),
     );
     if (result == null) {
       throw const FormatException('The selected keychain returned no result.');

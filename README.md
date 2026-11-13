@@ -6,7 +6,9 @@ Local, cloud and network storage. Automated unit, widget and native protocol tes
 
 Credential-storage recovery identifies the selected store, its path where available,
 the failed operation and native status, with copyable original stack traces.
-Startup and unlock failures offer Retry, access restoration where supported, and
+Locked custom macOS keychains use the system unlock dialog with the saved file
+grant; their passwords stay in macOS. Startup and unlock failures offer Retry,
+access restoration for a genuinely missing grant, and
 an explicit choice of another store without deleting the original credentials.
 See [credential storage](docs/credential-storage.md).
 
@@ -61,7 +63,9 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Sync engine:** background sync, conflict resolution, selective sync
 - **Backup engine:** scheduled backups with versioning
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
+- **Background archive jobs:** archive creation and edited-archive publication share the Operations queue, with pause/resume/stop, priority, scheduling and conflict reservations. Native compression runs in a worker; closing its dialog leaves the job running. Saved creation recipes support reviewed restart without stored passwords. See [archive queue behavior and verification](docs/archive-operation-queue.md).
 - **Archive workflows:** browse archives like folders; create and review edits to ZIP/7z/TAR, comic and unsigned Java aliases, compressed TAR/files, AR/CPIO/XAR and eligible data ISOs. Original-source verification and recovery protect publication.
+- **Archive operation queue:** native creation and workspace packing can continue in the shared queue after their dialogs close. Pause, resume, cancellation and reviewed restart recovery retain source/destination checks; passwords are never journaled. See [queue behavior and limits](docs/archive-operation-queue.md).
 - **Large native archives:** eligible unencrypted ZIP/ZIP64, 7z and TGZ workflows use bounded streams and private file snapshots with an explicit 8 GiB budget. Standalone codecs have processed members above 2 GiB; the [commander comparison and verification record](docs/archive-parity-large-continuation.md) separates measured codec results and remaining limits. The integration also exercises creation, publication, editing, extraction and F3 in Flutter; final platform acceptance is tracked by release CI.
 - **Extended file formats:** decoded EML/Outlook MSG viewing, including compressed RTF bodies and attachments; formatted RTF previews; legacy PPT/PPS/POT previews with native text fallback; formatted legacy DOC/DOT previews; protected DOCM/DOTM/DOTX rich editing; and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
 - **Legacy Word conversion:** the maintained [legacy_doc_parser](https://github.com/CrispStrobe/legacy-doc-parser) supplies portable formatted previews and separate, reviewed DOCX/DOCM copies. Supported installed Word/LibreOffice conversions and their PDF previews remain available, as does explicit text-only conversion. Originals stay unchanged; macros and embedded objects are never executed by the built-in parser. See [conversion support and limits](docs/legacy-word-conversion.md).
@@ -282,3 +286,8 @@ hybrid, encrypted and other unsupported disk images remain read-only.
 See [container profiles and verification](docs/archive-iso-rar-dmg.md). Apple's
 `hdiutil` independently verified a generated data-image fixture on this Mac;
 large hosted acceptance uses a fixed source checkpoint before release.
+
+Cloud connections can stay open simultaneously in the two panes. See
+[provider setup](docs/PROVIDER_SETUP.md#multiple-simultaneous-cloud-connections)
+for session behavior and [Nextcloud browser requirements](docs/PROVIDER_SETUP.md#browser-access-webpwa)
+for CORS, HTTPS and server configuration limits.

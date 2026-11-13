@@ -8,6 +8,7 @@ import 'package:crisp_cloud/services/credential_storage_bootstrap.dart';
 import 'package:crisp_cloud/services/credential_storage_config.dart';
 import 'package:crisp_cloud/services/credential_storage_diagnostics.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
+import 'package:crisp_cloud/services/secure_storage_macos_keychain.dart';
 import 'package:crisp_cloud/widgets/lock_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,7 @@ class _Store extends InMemorySecureStorage
 class _Policy extends AppLockService {
   _Policy(super.storage);
   bool fail = true;
+  String failureCode = 'custom_keychain_locked';
   bool failVerification = false;
   int reads = 0;
   @override
@@ -39,7 +41,7 @@ class _Policy extends AppLockService {
     reads++;
     if (fail) {
       throw PlatformException(
-        code: 'custom_keychain_locked',
+        code: failureCode,
         message: 'The selected keychain is locked.',
         details: {'status': -25308, 'credential': 'MUST_NOT_RENDER'},
       );
@@ -65,7 +67,7 @@ class _Policy extends AppLockService {
 }
 
 Widget _gate(
-  _Store store,
+  SecureStorage store,
   _Policy policy, {
   Future<void> Function()? restart,
 }) => ProviderScope(
@@ -111,6 +113,28 @@ void main() {
       expect(find.byType(LockScreen), findsOneWidget);
       expect(find.byKey(const ValueKey('startup-choose-store')), findsNothing);
       expect(policy.reads, 2);
+    },
+  );
+
+  testWidgets(
+    'locked stores offer unlock retry; only missing file grants offer a picker',
+    (tester) async {
+      final store = MacOsCustomKeychainStorage(
+        path: '/synthetic/original.keychain-db',
+      );
+      final policy = _Policy(store);
+      await tester.pumpWidget(_gate(store, policy));
+      await tester.pumpAndSettle();
+      expect(find.text('Restore keychain access'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('startup-choose-store')),
+        findsOneWidget,
+      );
+      policy.failureCode = 'custom_keychain_access_required';
+      await tester.ensureVisible(find.text('Retry'));
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Restore keychain access'), findsOneWidget);
     },
   );
 

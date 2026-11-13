@@ -44,7 +44,7 @@ the retained limitations.
 `word14-source-model.json` is a read-only inspection of the original fixture,
 whose SHA-256 is
 `cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a`.
-Its pattern, texture, picture, shade-title, absent-width, and other unresolved
+Its pattern, texture, picture, scaled-gradient, absent-width, and other unresolved
 properties are outside these resolved-paint controls. The original native
 failures and reviewed goldens remain unchanged.
 

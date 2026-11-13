@@ -59,7 +59,7 @@ class FileColumnDefinition {
   };
 
   double get defaultWidth => switch (kind) {
-    FileColumnKind.size => 62,
+    FileColumnKind.size => 96,
     FileColumnKind.modified => 78,
     FileColumnKind.extension => 40,
     FileColumnKind.path => 180,
@@ -177,7 +177,8 @@ class FileViewConfiguration {
   FileViewConfiguration({
     this.display = FileViewDisplay.full,
     List<FileColumnDefinition> columns = FileColumnDefinition.defaults,
-    Map<String, double> widths = const {'size': 62, 'date': 78, 'ext': 40},
+    Map<String, double> widths = const {'size': 96, 'date': 78, 'ext': 40},
+    this.minimumSizeWidth = 80,
     this.sortBy = SortBy.name,
     this.sortOrder = SortOrder.ascending,
     this.secondarySortBy,
@@ -193,6 +194,9 @@ class FileViewConfiguration {
   final FileViewDisplay display;
   final List<FileColumnDefinition> columns;
   final Map<String, double> widths;
+
+  /// Derived from the current font; it is not a saved user width.
+  final double minimumSizeWidth;
   final SortBy sortBy;
   final SortOrder sortOrder;
   final SortBy? secondarySortBy;
@@ -202,8 +206,14 @@ class FileViewConfiguration {
   final bool showHidden;
   final String filter;
 
-  double widthFor(FileColumnDefinition column) =>
-      widths[column.id] ?? column.defaultWidth;
+  double widthFor(FileColumnDefinition column) {
+    final width = widths[column.id] ?? column.defaultWidth;
+    return column.kind == FileColumnKind.size &&
+            width > 0 &&
+            width < minimumSizeWidth
+        ? minimumSizeWidth
+        : width;
+  }
 
   /// The name remains readable at narrow widths. Both headers and rows use
   /// this same calculation; widening the pane reveals the remaining columns.

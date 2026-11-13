@@ -83,6 +83,9 @@ class CredentialStorageDiagnostics {
   final String message;
   final String stackTrace;
 
+  bool get needsFileAccessGrant =>
+      code?.startsWith('custom_keychain_access_required') ?? false;
+
   String get summary => '$operation: $message${code == null ? '' : ' [$code]'}';
 
   String get report =>

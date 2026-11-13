@@ -3,6 +3,7 @@
 import 'dart:typed_data';
 
 import 'legacy_word_officeart_model.dart';
+import 'legacy_word_pattern_dib.dart';
 import 'legacy_word_revision_model.dart';
 export 'legacy_word_officeart_model.dart';
 export 'legacy_word_revision_model.dart';
@@ -120,6 +121,13 @@ class LegacyWordImageAsset {
   final String officeArtArtifactId;
   final LegacyWordMetafileInfo? metafile;
 
+  /// A validated 8x8 monochrome DIB plus its 14-byte BMP file header. Original
+  /// [bytes] and [source] remain unchanged; arbitrary DIBs are not renderable.
+  late final Uint8List? nativeBitmapBytes = format == LegacyWordImageFormat.dib
+      ? wrapOfficeArtPatternDib(bytes)
+      : null;
+  Uint8List get embeddingBytes => nativeBitmapBytes ?? bytes;
+
   /// Reusable raster bytes or a structurally validated, escape-free EMF/WMF.
   /// This is native Office reuse; [LegacyWordMetafileInfo.previewSvg] records
   /// the separate, deliberately narrower portable rendering capability.
@@ -127,6 +135,7 @@ class LegacyWordImageAsset {
       format == LegacyWordImageFormat.png ||
       format == LegacyWordImageFormat.jpeg ||
       format == LegacyWordImageFormat.tiff ||
+      (format == LegacyWordImageFormat.dib && nativeBitmapBytes != null) ||
       ((format == LegacyWordImageFormat.emf ||
               format == LegacyWordImageFormat.wmf) &&
           metafile?.nativeEmbeddingAllowed == true);
@@ -134,6 +143,7 @@ class LegacyWordImageAsset {
     LegacyWordImageFormat.png => 'image/png',
     LegacyWordImageFormat.jpeg => 'image/jpeg',
     LegacyWordImageFormat.tiff => 'image/tiff',
+    LegacyWordImageFormat.dib when nativeBitmapBytes != null => 'image/bmp',
     LegacyWordImageFormat.emf => 'image/x-emf',
     LegacyWordImageFormat.wmf => 'image/x-wmf',
     _ => 'application/octet-stream',
@@ -142,6 +152,7 @@ class LegacyWordImageAsset {
     LegacyWordImageFormat.png => 'png',
     LegacyWordImageFormat.jpeg => 'jpg',
     LegacyWordImageFormat.tiff => 'tif',
+    LegacyWordImageFormat.dib when nativeBitmapBytes != null => 'bmp',
     LegacyWordImageFormat.emf => 'emf',
     LegacyWordImageFormat.wmf => 'wmf',
     _ => 'bin',

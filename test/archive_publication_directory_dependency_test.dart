@@ -496,15 +496,17 @@ void main() {
   test(
     'guarded pending cleanup blocks a new edit at the same archive path',
     () async {
+      final warning = StateError('Cleanup is unavailable.');
       final receipt = await publish(
         onPhase: (phase) {
           if (phase == ArchivePublicationPhase.cleaningBackup) {
-            throw StateError('Cleanup is unavailable.');
+            throw warning;
           }
         },
       );
       expect(receipt.cleanupPending, isTrue);
       expect(receipt.record.published, isNotNull);
+      expect(publisher.observerWarning, same(warning));
       await expectLater(
         ArchiveContainerPublisher(backend, journal).publish(
           original: (await backend.stat(target.path))!,

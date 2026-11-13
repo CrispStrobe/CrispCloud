@@ -708,7 +708,9 @@ Future<CredentialStorageBootstrapResult> _initializeNativeSecureStorage({
             onRetry: () {
               if (!action.isCompleted) action.complete(_StartupAction.retry);
             },
-            onRestoreStorageAccess: recovery?.canRestoreKeychainAccess == true
+            onRestoreStorageAccess:
+                diagnostic.needsFileAccessGrant &&
+                    recovery?.canRestoreKeychainAccess == true
                 ? () {
                     if (!action.isCompleted) {
                       action.complete(_StartupAction.restoreAccess);
@@ -1032,6 +1034,8 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
       });
     }
     try {
+      final storage = ref.read(secureStorageProvider);
+      if (storage is MacOsCustomKeychainStorage) storage.allowUnlockRetry();
       final lockService = ref.read(appLockServiceProvider);
       final enabled = await lockService.validateStartupPolicy();
       if (mounted) {
@@ -1087,6 +1091,10 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
 
   Future<void> _checkAutoLock() async {
     if (_isLocked) return;
+    if (mounted) setState(() => _isChecking = true);
+    // Keep the protected browser hidden while a system unlock dialog is pending.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
     try {
       final lockService = ref.read(appLockServiceProvider);
       final enabled = await lockService.isEnabled();
@@ -1110,6 +1118,8 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
         'Credential policy check failed\n${_failure!.diagnostics!.report}',
       );
       if (mounted) setState(() => _checkFailed = true);
+    } finally {
+      if (mounted) setState(() => _isChecking = false);
     }
   }
 
@@ -1174,7 +1184,9 @@ class _CredentialGateFailure extends ConsumerWidget {
           restart: ref.read(credentialRecoveryRestartProvider),
         ),
       ),
-      onRestoreStorageAccess: storage is MacOsCustomKeychainStorage
+      onRestoreStorageAccess:
+          storage is MacOsCustomKeychainStorage &&
+              failure.diagnostics?.needsFileAccessGrant == true
           ? () async {
               try {
                 if (await MacOsCustomKeychainStorage.restoreKeychainAccess(

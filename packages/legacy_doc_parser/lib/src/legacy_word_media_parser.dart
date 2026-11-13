@@ -261,6 +261,7 @@ class _WordMediaReader {
         extra += size;
       } else {
         result.values[id] = value;
+        if ((opid & 0x4000) != 0) result.blipReferences.add(id);
       }
     }
     if (extra != input.length) {
@@ -269,7 +270,11 @@ class _WordMediaReader {
     return result;
   }
 
-  _DrawingShape _shape(_ArtRecord node, String artifactId) {
+  _DrawingShape _shape(
+    _ArtRecord node,
+    String artifactId, {
+    Set<int>? fillTargets,
+  }) {
     if (node.type != 0xf004 || node.version != 15) {
       throw const FormatException('Expected an OfficeArt shape container.');
     }
@@ -308,7 +313,26 @@ class _WordMediaReader {
         textbox != propertyTextbox) {
       throw const FormatException('Conflicting OfficeArt textbox identifiers.');
     }
-    final reader = _OfficeArtShapeReader(props, type, flags);
+    LegacyWordImageAsset? fillImage;
+    final fillIndex = props.values[0x0186] ?? 0;
+    final fillFlags = props.values[0x01bf] ?? 0;
+    final fillDisabled = (fillFlags & 0x00100010) == 0x00100000;
+    if (fillTargets?.contains(shapeId) == true &&
+        !fillDisabled &&
+        const {1, 2, 3}.contains(props.values[0x0180]) &&
+        props.blipReferences.contains(0x0186) &&
+        fillIndex != 0) {
+      final imageId = _globalImage(fillIndex);
+      if (imageId != null) {
+        fillImage = assets.firstWhere((asset) => asset.id == imageId);
+      }
+    }
+    final reader = _OfficeArtShapeReader(
+      props,
+      type,
+      flags,
+      fillImage: fillImage,
+    );
     // Validate and budget the unwrapped ink before its immutable model copy.
     // The original OfficeArt artifact is separately included in this budget.
     _retain(reader.inkByteLength);
@@ -412,9 +436,10 @@ class _WordMediaReader {
       if (drawing.type != 0xf002 || drawing.version != 15) {
         throw const FormatException('Invalid OfficeArt drawing container.');
       }
+      final fillTargets = _anchoredShapeIds(header: label == 1);
       void visit(_ArtRecord node) {
         if (node.type == 0xf004) {
-          final shape = _shape(node, artifact);
+          final shape = _shape(node, artifact, fillTargets: fillTargets);
           if (_shapes.containsKey((label == 1, shape.id))) {
             throw const FormatException(
               'Duplicate OfficeArt shape identifier.',
@@ -431,6 +456,24 @@ class _WordMediaReader {
       visit(drawing);
       cursor = drawing.end;
     }
+  }
+
+  Set<int> _anchoredShapeIds({required bool header}) {
+    final (offset, length) = source.pair(header ? 41 : 40);
+    if (length == 0) return const {};
+    if (length < 34 || (length - 4) % 30 != 0) {
+      throw const FormatException('Invalid Word drawing-anchor table.');
+    }
+    final count = (length - 4) ~/ 30;
+    if (count > _itemLimit) {
+      throw const FormatException('Word drawing anchors exceed their limit.');
+    }
+    source.table.require(offset, length);
+    final records = offset + (count + 1) * 4;
+    return {
+      for (var index = 0; index < count; index++)
+        source.table.u32(records + index * 26),
+    };
   }
 
   void _readAnchors({required bool header}) {
@@ -778,6 +821,7 @@ class _WordMediaReader {
       }.contains(node.instance),
       LegacyWordImageFormat.png => node.instance == 0x6e1,
       LegacyWordImageFormat.tiff => node.instance == 0x6e5,
+      LegacyWordImageFormat.dib => node.instance == 0x7a9,
       LegacyWordImageFormat.emf => node.instance == 0x3d5,
       LegacyWordImageFormat.wmf => node.instance == 0x217,
       _ => false,
@@ -798,6 +842,7 @@ class _WordMediaReader {
         0x6e4,
         0x6e5,
       }.contains(node.instance),
+      LegacyWordImageFormat.dib => const {0x7a8, 0x7a9}.contains(node.instance),
       LegacyWordImageFormat.emf => const {0x3d4, 0x3d5}.contains(node.instance),
       LegacyWordImageFormat.wmf => const {0x216, 0x217}.contains(node.instance),
       _ => true,
@@ -822,6 +867,18 @@ class _WordMediaReader {
         node.absoluteStart + 8 + decoded.dataOffset,
         decoded.encodedLength,
         'OfficeArtMetafileData',
+      );
+    } else if (format == LegacyWordImageFormat.dib &&
+        node.version == 0 &&
+        validInstance &&
+        node.data.length >= (twoUids ? 33 : 17)) {
+      final skip = (twoUids ? 32 : 16) + 1;
+      bytes = node.data.slice(skip, node.data.length - skip);
+      reference = _reference(
+        node.path,
+        node.absoluteStart + 8 + skip,
+        bytes.length,
+        'BLIPFileData',
       );
     } else if (raster && node.version == 0 && validInstance) {
       final skip = (twoUids ? 32 : 16) + 1;
@@ -861,6 +918,9 @@ class _WordMediaReader {
       officeArtArtifactId: artifact,
       metafile: metafile,
     );
+    // The original DIB and derived BMP wrapper are both retained. Charge the
+    // complete additional buffer, including the new 14-byte file header.
+    _retain(asset.nativeBitmapBytes?.length ?? 0);
     assets.add(asset);
     if (!asset.isRenderable) {
       _notice(LegacyWordMediaIssue.unsupportedImage, reference);

@@ -1,5 +1,10 @@
 # Archive container runtime verification
 
+The subsequent [archive queue and background packing continuation](archive-operation-queue.md)
+passed 2,067 archive/transfer/widget regressions and three separate worker cases
+above 2 GiB at `6eab6a33ffd374bfc9343a692b3df43c85758a1b`. This document retains
+the earlier physical-container and complete creation/publication acceptance.
+
 ## Current integrated commit
 
 The integrated candidate is

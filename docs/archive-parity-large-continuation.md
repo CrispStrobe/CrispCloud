@@ -13,6 +13,9 @@ Baseline: current `main` plus the preserved archive sync / native TAR continuati
 > See [writable ISO, RAR and DMG](archive-iso-rar-dmg.md) for the newer data-image
 > creation and editing profiles. The earlier local Flutter restriction remains
 > historical evidence, not the current hosted runtime result.
+> The subsequent [native archive queue and background packing](archive-operation-queue.md)
+> continuation passed 2,067 archive/transfer/widget tests and three separate
+> worker cases above 2 GiB.
 
 ## Requested outcome
 
@@ -85,12 +88,12 @@ sources for the competitor columns.
 | Large members and containers | Native/external archive engines rather than a small whole-file buffer contract | ZIP64 and large TAR support documented in change history | 8 GiB configured native bound; measured >2 GiB members in all three requested formats, >2 GiB stored ZIP/7z containers and >4 GiB ZIP64 member; see exact evidence below |
 | Archive-to-archive transfer | Archive file operations depend on plugins | Explicit archive-to-archive copy support | Captured copies and ordered native two-archive moves; destination verified before source removal |
 | Passwords and encryption | Depends on selected engine | Supported archive/packer profiles | Existing supported ZIP AES-256 and 7z encryption retained on the smaller buffered path; large encrypted writes remain open |
-| Background packing | File operations/background queues | Documented background packing | Cancellable foreground streaming; durable queued packing/resume is still open |
+| Background packing | File operations/background queues | Documented background packing | Native background worker; shared operation queue with pause/resume/stop, priority and scheduling; saved creation recipes support reviewed restart |
 | Split volumes and packer/plugin ecosystem | External archivers and WCX support | Internal/external packers and WCX ecosystem | No split-volume creation/join or external/WCX adapter in this increment |
 
 Core common-format folder operations now have a native streaming implementation.
 Full commander parity is **not closed**: external packers, split archives,
-durable background jobs, large protected/nested writes and broader platform
+large protected/nested writes and broader platform
 acceptance remain explicit work. Existing container readers are not implicitly
 made writers; signed packages and unsupported filesystem metadata stay read-only.
 
@@ -189,9 +192,12 @@ and platform acceptance.
 - External 7z filter/metadata combinations are accepted only when preservation
   is understood. Large externally produced solid archives need broader runtime
   qualification; unsupported structures are refused or remain bounded/read-only.
-- Split-volume handling, external/WCX packers, a durable packing queue,
+- Split-volume handling, external/WCX packers,
   cross-platform app acceptance, large incompressible physical containers and
   the full 8 GiB limit remain separate acceptance items.
+
+The native packing queue and background worker were delivered subsequently;
+see [archive queue behavior and completed acceptance](archive-operation-queue.md).
 
 ## Comparison sources
 

@@ -3,8 +3,17 @@ import 'package:crisp_storage/crisp_storage.dart'
 
 import 'smb_backend_field.dart';
 import 'cloud_engine_field.dart';
+
 import 'package:crisp_storage/rust_cloud.dart'
-    show CloudEngine, RustCloudProvider, RustCloudUnavailable, RustCloudException, RustCloudErrorCode, configuredCloudEngine, parseCloudEngine;
+    show
+        CloudEngine,
+        RustCloudProvider,
+        RustCloudUnavailable,
+        RustCloudException,
+        RustCloudErrorCode,
+        configuredCloudEngine,
+        parseCloudEngine;
+
 import '../services/filen_client_adapter.dart';
 import '../services/internxt_client_adapter.dart';
 import 'ftp_security_field.dart';
@@ -21,8 +30,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/panel_source_provider.dart';
+import '../services/panel_source_service.dart';
 import '../services/cloud_storage_interface.dart';
 import '../services/connection_profiles.dart';
 import '../services/encryption_service.dart';
@@ -332,9 +342,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               _defaultEngineFor(_selectedProvider);
         } on FormatException {
           setState(
-            () => _error = ConnectionDialogExtraStrings(
-              context,
-            ).text('invalidCloudEngineProfile'),
+            () =>
+                _error = ConnectionDialogExtraStrings(context)
+                    .text('invalidCloudEngineProfile'),
           );
           return;
         }
@@ -1434,8 +1444,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
     try {
       // 1. Switch provider if needed
-      if (auth.currentProvider != _selectedProvider) {
-        await auth.switchProvider(_selectedProvider);
+      if (auth.currentProvider != _selectedProvider || auth.isConnected) {
+        await auth.switchProvider(_selectedProvider, newConnection: true);
       }
       if (!mounted) return;
 
@@ -1699,7 +1709,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         (auth.client as SmbClientAdapter).smbBackend = _smbBackend;
       }
       final engineClient = auth.client;
-      if (engineClient is FilenClientAdapter) engineClient.engine = _cloudEngine;
+      if (engineClient is FilenClientAdapter)
+        engineClient.engine = _cloudEngine;
       if (engineClient is InternxtClientAdapter) {
         engineClient.engine = _cloudEngine;
       }
@@ -1739,7 +1750,24 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       if (!mounted) return;
 
       // 7. Refresh through the wrapper, after encryption has been installed.
-      await ref.read(panelProvider(PanelSide.remote)).refresh();
+      final active = ref.read(activePanelProvider);
+      final other = oppositePanel(active);
+      // Prefer a local pane when the active pane already shows another cloud.
+      final target =
+          ref.read(panelSourceProvider(active)).isRemote &&
+              ref.read(panelSourceProvider(other)).isLocal
+          ? other
+          : active;
+      ref
+          .read(panelSourceProvider(target).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: auth.providerName,
+              client: auth.client,
+              path: auth.client.rootPath,
+            ),
+          );
+      await ref.read(panelProvider(target)).refresh();
 
       if (mounted) {
         Navigator.pop(context);
@@ -1752,9 +1780,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             _needs2fa = true;
           }
           _error = e is RustCloudUnavailable
-              ? ConnectionDialogExtraStrings(
-                  context,
-                ).text('rustEngineUnavailable')
+              ? ConnectionDialogExtraStrings(context)
+                    .text('rustEngineUnavailable')
               : e is EncryptionFormatException
               ? KeyManagementStrings(context).text(e.code.name, e.arguments)
               : e is NextcloudAuthenticationException

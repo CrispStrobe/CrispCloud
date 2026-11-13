@@ -236,8 +236,8 @@ extension _WordShapes on _StructuredWordWriter {
     bool includeShadow = true,
   }) {
     final fill = shape.fill, line = shape.line, shadow = shape.shadow;
-    if (includeFill && fill?.opacityFixed16 != null) {
-      _xml.add('<v:fill opacity="${_shapeOpacity(fill!.opacityFixed16!)}"/>');
+    if (includeFill && fill != null) {
+      _shapeFillElement(fill);
     }
     if (includeStroke) {
       _xml.add('<v:stroke');
@@ -288,5 +288,71 @@ extension _WordShapes on _StructuredWordWriter {
       }
       _xml.add('/>');
     }
+  }
+
+  void _shapeFillElement(LegacyWordOfficeArtFill fill) {
+    if ((fill.type ?? 0) == 0) {
+      if (fill.opacityFixed16 != null) {
+        _xml.add('<v:fill opacity="${_shapeOpacity(fill.opacityFixed16!)}"/>');
+      }
+      return;
+    }
+    if (const {1, 2, 3}.contains(fill.type)) {
+      final asset = _mediaAssets[fill.imageId];
+      if (asset == null ||
+          !asset.isRenderable ||
+          (fill.type == 1 && asset.nativeBitmapBytes == null)) {
+        return;
+      }
+      final type = switch (fill.type) {
+        1 => 'pattern',
+        2 => 'tile',
+        _ => 'frame',
+      };
+      final relation = _imageRelation(asset);
+      _xml.add('<v:fill type="$type" r:id="$relation"');
+      if (fill.type == 1) {
+        _xml.add(
+          ' color="#${_StructuredWordWriter._color(fill.color ?? 'FFFFFF')}"'
+          ' color2="#${_StructuredWordWriter._color(fill.backColor ?? 'FFFFFF')}"',
+        );
+        if (fill.backOpacityFixed16 != null) {
+          _xml.add(' o:opacity2="${_shapeOpacity(fill.backOpacityFixed16!)}"');
+        }
+      }
+      if (fill.opacityFixed16 != null) {
+        _xml.add(' opacity="${_shapeOpacity(fill.opacityFixed16!)}"');
+      }
+      if (fill.rotateWithShape case final rotate?) {
+        _xml.add(' rotate="${rotate ? 't' : 'f'}"');
+      }
+      _xml.add('/>');
+      return;
+    }
+    if (fill.type != 7) return;
+    // msofillShadeScale is the scaled VML gradient. Other gradient types
+    // need distinct fill geometry and are not silently coerced to this type.
+    _xml.add('<v:fill type="gradient"');
+    if (fill.backColor != null) {
+      _xml.add(' color2="#${_StructuredWordWriter._color(fill.backColor!)}"');
+    }
+    if (fill.opacityFixed16 != null) {
+      _xml.add(' opacity="${_shapeOpacity(fill.opacityFixed16!)}"');
+    }
+    if (fill.backOpacityFixed16 != null) {
+      _xml.add(' o:opacity2="${_shapeOpacity(fill.backOpacityFixed16!)}"');
+    }
+    if (fill.angleFixed16 case final angle?) {
+      if (angle.abs() > 360 * 65536) _tooComplex();
+      _xml.add(' angle="${angle / 65536}"');
+    }
+    if (fill.focusPercent case final focus?) {
+      if (focus < -100 || focus > 100) _tooComplex();
+      _xml.add(' focus="$focus%"');
+    }
+    if (fill.rotateWithShape case final rotate?) {
+      _xml.add(' rotate="${rotate ? 't' : 'f'}"');
+    }
+    _xml.add('/>');
   }
 }

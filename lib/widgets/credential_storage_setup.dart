@@ -181,12 +181,9 @@ class _CredentialStorageSetupPanelState
     'Select a keychain file.',
     'Enter a path and password for the new keychain.',
     'The system keychain is unavailable. Choose an encrypted file or session-only storage.',
-    _keychainLocked,
     _keychainAccessNeeded,
   };
 
-  static const _keychainLocked =
-      'The selected keychain is locked. Unlock it in Keychain Access, then continue.';
   static const _keychainAccessNeeded =
       'CrispCloud needs permission to use this keychain file. Choose it in the file dialog to grant access.';
 
@@ -199,24 +196,14 @@ class _CredentialStorageSetupPanelState
       await MacosKeychainService.selectKeychain(path);
       return path;
     } on PlatformException catch (error) {
-      if (error.code == 'custom_keychain_locked') {
-        throw const FormatException(_keychainLocked);
-      }
+      if (error.code != 'custom_keychain_access_required') rethrow;
     }
     final granted = await MacosKeychainService.chooseKeychain(
       initialPath: path,
     );
     if (granted == null) throw const FormatException(_keychainAccessNeeded);
     if (mounted) setState(() => _existingPath.text = granted);
-    try {
-      await MacosKeychainService.selectKeychain(granted);
-    } on PlatformException catch (error) {
-      throw FormatException(
-        error.code == 'custom_keychain_locked'
-            ? _keychainLocked
-            : _keychainAccessNeeded,
-      );
-    }
+    await MacosKeychainService.selectKeychain(granted);
     return granted;
   }
 

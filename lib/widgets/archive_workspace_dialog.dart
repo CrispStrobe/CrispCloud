@@ -13,6 +13,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_browser_session.dart';
 import '../services/archive_workspace.dart';
+import '../services/archive_writer_worker.dart';
 import '../services/archive_endpoint.dart';
 import '../services/archive_publication_journal.dart';
 import '../services/editor_document.dart';
@@ -27,6 +28,21 @@ import 'archive_endpoint_actions.dart';
 import 'archive_member_move_dialog.dart';
 
 enum ArchiveWorkspaceAction { browse, copyOut, moveOut, edit }
+
+/// A reviewed draft may outlive its original route and pane view. The captured
+/// storage capability still rejects account disconnection or replacement.
+class _ArchiveWorkspaceAuthority {
+  _ArchiveWorkspaceAuthority(this.origin, this.location);
+
+  final PanelFileOrigin origin;
+  final ArchiveWorkspaceLocation? location;
+  bool viewOpen = true;
+  bool background = false;
+
+  bool get isCurrent =>
+      origin.isCurrent &&
+      (background || (viewOpen && (location?.isCurrent() ?? true)));
+}
 
 /// Reuses the actual archive account and the member selection of an archive
 /// panel. Member paths are archive-relative; the container path is kept separate.
@@ -146,6 +162,9 @@ class _ArchiveWorkspaceDialog extends ConsumerStatefulWidget {
 class _ArchiveWorkspaceDialogState
     extends ConsumerState<_ArchiveWorkspaceDialog> {
   ArchiveWorkspace? _workspace;
+  late final _ArchiveWorkspaceAuthority _authority;
+  bool _backgroundAdmission = false;
+  bool _workspaceHandedOff = false;
   final _selected = <String>{};
   String _path = '/';
   bool _busy = false;
@@ -158,6 +177,7 @@ class _ArchiveWorkspaceDialogState
   @override
   void initState() {
     super.initState();
+    _authority = _ArchiveWorkspaceAuthority(widget.origin, widget.location);
     unawaited(_openInitial());
   }
 
@@ -194,9 +214,14 @@ class _ArchiveWorkspaceDialogState
 
   @override
   void dispose() {
+    _authority.viewOpen = false;
     _cancelled = true;
     _importControl?.cancel();
-    unawaited(_workspace?.close());
+    // Admission owns cleanup until it either returns a queue handle or fails.
+    // The accepted workspace (and its spools) then belongs to the queue.
+    if (!_workspaceHandedOff && !_backgroundAdmission) {
+      unawaited(_workspace?.close());
+    }
     super.dispose();
   }
 
@@ -223,13 +248,11 @@ class _ArchiveWorkspaceDialogState
       null,
     );
     try {
+      final authority = _authority;
       final source = fileOperationBackend(
         source: widget.origin.source,
         local: ref.read(localFileServiceProvider),
-        isCurrent: () =>
-            mounted &&
-            widget.origin.isCurrent &&
-            (widget.location?.isCurrent() ?? true),
+        isCurrent: () => authority.isCurrent,
       );
       final journal = widget.journal ?? ArchivePublicationJournal();
       await journal.initialize();
@@ -630,6 +653,107 @@ class _ArchiveWorkspaceDialogState
     }
   });
 
+  Future<void> _saveInBackground() async {
+    final workspace = _workspace;
+    if (!supportsArchiveWriterWorker ||
+        _busy ||
+        workspace == null ||
+        !workspace.dirty ||
+        !workspace.isCurrent) {
+      return;
+    }
+    final revision = workspace.revision;
+    final changes = workspace.draftChanges;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.commanderTr('Save archive in background?')),
+        content: SizedBox(
+          width: 560,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dialogContext.commanderTr(
+                    'Publish these draft changes to {0} in the background? The original archive will be replaced only after packing and verification succeed.',
+                    [
+                      workspace.outermost.file.path ??
+                          workspace.outermost.file.name,
+                    ],
+                  ),
+                ),
+                if (workspace.nestedMemberPaths.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  SelectableText(workspace.nestedMemberPaths.join(' → ')),
+                ],
+                const SizedBox(height: 12),
+                for (final change in changes)
+                  Text(
+                    '${archiveEndpointText(dialogContext, change.kind.name)}: '
+                    '${change.from == null ? '' : '${change.from} → '}${change.path}',
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  dialogContext.commanderTr(
+                    'Packing continues while CrispCloud is open. You can pause or stop it in the operation queue.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.commanderTr('Keep editing')),
+          ),
+          FilledButton.icon(
+            key: const ValueKey('archive-workspace-background-confirm'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.queue),
+            label: Text(dialogContext.commanderTr('Save in background')),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    if (!_authority.isCurrent || workspace.revision != revision) {
+      setState(
+        () => _error = context.commanderTr(
+          'The archive draft changed. Review its current changes again.',
+        ),
+      );
+      return;
+    }
+    final transfers = ref.read(transferProvider);
+    setState(() {
+      _busy = true;
+      _backgroundAdmission = true;
+      _error = null;
+    });
+    // The scheduler can begin immediately after its durable admission, before
+    // this await resumes. Release only the view guard now; the original account
+    // capability and workspace fingerprint remain bound to the captured draft.
+    _authority.background = true;
+    try {
+      await transfers.enqueueArchiveWorkspace(workspace);
+      _workspaceHandedOff = true;
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
+      _authority.background = false;
+      if (mounted) {
+        setState(() => _error = '$error');
+      } else {
+        await workspace.close();
+      }
+    } finally {
+      _backgroundAdmission = false;
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _createDirectory() async {
     final name = await _prompt('New folder', '');
     if (name == null || !mounted) return;
@@ -697,7 +821,7 @@ class _ArchiveWorkspaceDialogState
     final editable = enabled && workspace!.canUpdate;
     final size = MediaQuery.sizeOf(context);
     return PopScope(
-      canPop: !_busy && workspace?.dirty != true,
+      canPop: _workspaceHandedOff || (!_busy && workspace?.dirty != true),
       child: Dialog(
         child: SizedBox(
           width: math.min(960, size.width * .95),
@@ -973,16 +1097,27 @@ class _ArchiveWorkspaceDialogState
                   children: [
                     if (_busy)
                       TextButton(
-                        onPressed: () {
-                          setState(() => _cancelled = true);
-                          _importControl?.cancel();
-                        },
+                        onPressed: _backgroundAdmission
+                            ? null
+                            : () {
+                                setState(() => _cancelled = true);
+                                _importControl?.cancel();
+                              },
                         child: Text(context.commanderTr("Stop")),
                       ),
                     TextButton(
                       onPressed: _busy ? null : _close,
                       child: Text(context.commanderTr("Close")),
                     ),
+                    if (supportsArchiveWriterWorker)
+                      OutlinedButton.icon(
+                        key: const ValueKey('archive-workspace-background'),
+                        onPressed: editable && workspace.dirty
+                            ? _saveInBackground
+                            : null,
+                        icon: const Icon(Icons.queue),
+                        label: Text(context.commanderTr('Save in background')),
+                      ),
                     FilledButton.icon(
                       onPressed: editable && workspace.dirty ? _save : null,
                       icon: const Icon(Icons.save),

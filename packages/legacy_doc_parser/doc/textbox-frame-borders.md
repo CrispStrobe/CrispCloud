@@ -67,7 +67,12 @@ applied separately. [Textbox paint controls](textbox-paint.md) verify the
 corresponding layout and repeat behavior. Unresolved shadow properties and
 other shadow types still prevent the transform.
 
-An absent source width is still absent. The failed standalone default-width
+An absent source width is still absent in the model. A fully resolved textbox
+with an explicitly enabled source line can now use the documented 15-twip
+default together with this same seven-twip outer-frame transform. Source and
+emitted widths are recorded separately. Unspecified line-enabled flags and
+unresolved frames remain unforced; see the [paired source-default controls](textbox-stroke-defaults.md#qualified-enabled-line-with-an-absent-width).
+The failed standalone default-width
 experiment and its repeat-import counterexample remain documented in
 [textbox-stroke-defaults.md](textbox-stroke-defaults.md). In particular, this
 change does not materialize the default on Word 14's six textboxes or apply a

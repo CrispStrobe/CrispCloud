@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,8 +98,15 @@ void main() {
             ),
           ),
         );
-        expect(calls.single.method, 'initialize');
-        expect(calls.single.arguments, {'path': path});
+        expect(
+          calls.map((call) => call.method),
+          code == 'custom_keychain_locked'
+              ? ['initialize', 'unlock']
+              : ['initialize'],
+        );
+        for (final call in calls) {
+          expect(call.arguments, {'path': path});
+        }
         expect(() => storage.read('credential'), throwsStateError);
       }
     },
@@ -115,8 +124,111 @@ void main() {
       storage.read('credential'),
       throwsA(isA<PlatformException>()),
     );
-    expect(calls.single.method, 'read');
-    expect(calls.single.arguments, {'path': path, 'key': 'credential'});
+    expect(calls.map((call) => call.method), ['read', 'unlock']);
+    expect(calls.first.arguments, {'path': path, 'key': 'credential'});
+    expect(calls.last.arguments, {'path': path});
+  });
+
+  test('a locked selected keychain unlocks through macOS without another file grant', () async {
+    var locked = true;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      if (call.method == 'unlock') {
+        locked = false;
+        return null;
+      }
+      if (locked) throw PlatformException(code: 'custom_keychain_locked');
+      return call.method == 'read' ? 'original credential' : null;
+    });
+    final storage = MacOsCustomKeychainStorage(path: path);
+    await storage.initialize();
+    expect(await storage.read('credential'), 'original credential');
+    expect(calls.map((call) => call.method), [
+      'initialize',
+      'unlock',
+      'initialize',
+      'read',
+    ]);
+    expect(
+      calls.every((call) => (call.arguments as Map)['path'] == path),
+      isTrue,
+    );
+  });
+
+  test(
+    'sleep-time locking coalesces concurrent credential reads into one unlock',
+    () async {
+      final storage = MacOsCustomKeychainStorage(path: path);
+      await storage.initialize();
+      calls.clear();
+      var locked = true;
+      final unlock = Completer<void>();
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call);
+        if (call.method == 'unlock') {
+          await unlock.future;
+          locked = false;
+          return null;
+        }
+        if (locked) throw PlatformException(code: 'custom_keychain_locked');
+        return 'retained:${(call.arguments as Map)['key']}';
+      });
+      final reads = Future.wait([
+        storage.read('first'),
+        storage.read('second'),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(calls.where((call) => call.method == 'unlock'), hasLength(1));
+      unlock.complete();
+      expect(await reads, ['retained:first', 'retained:second']);
+      expect(
+        calls.every((call) => (call.arguments as Map)['path'] == path),
+        isTrue,
+      );
+    },
+  );
+
+  test('cancellation preserves the store and suppresses more prompts until deliberate Retry', () async {
+    final storage = MacOsCustomKeychainStorage(path: path);
+    await storage.initialize();
+    calls.clear();
+    var locked = true;
+    var cancel = true;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      if (call.method == 'unlock') {
+        if (cancel)
+          throw PlatformException(
+            code: 'custom_keychain_unlock_cancelled',
+            details: {'status': -128},
+          );
+        locked = false;
+        return null;
+      }
+      if (locked) throw PlatformException(code: 'custom_keychain_locked');
+      return 'retained';
+    });
+    final cancelled = throwsA(
+      isA<PlatformException>().having(
+        (e) => e.code,
+        'code',
+        'custom_keychain_unlock_cancelled',
+      ),
+    );
+    await expectLater(storage.read('credential'), cancelled);
+    await expectLater(storage.read('credential'), cancelled);
+    expect(calls.where((call) => call.method == 'unlock'), hasLength(1));
+    cancel = false;
+    storage.allowUnlockRetry();
+    expect(await storage.read('credential'), 'retained');
+    expect(calls.where((call) => call.method == 'unlock'), hasLength(2));
+    expect(
+      calls.any(
+        (call) => call.method == 'chooseKeychain' || call.method == 'deleteAll',
+      ),
+      isFalse,
+    );
   });
 
   test(
@@ -218,7 +330,11 @@ void main() {
         MacosKeychainService.selectKeychain(path),
         throwsA(isA<PlatformException>()),
       );
-      expect(calls.map((call) => call.method), ['listKeychains', 'initialize']);
+      expect(calls.map((call) => call.method), [
+        'listKeychains',
+        'initialize',
+        'unlock',
+      ]);
     },
   );
 

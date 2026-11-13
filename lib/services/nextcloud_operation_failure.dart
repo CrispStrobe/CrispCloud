@@ -15,6 +15,7 @@ enum NextcloudOperationCode {
   restoreVersion,
   notAuthenticated,
   propfind,
+  browserConnectionFailed,
   rangeDownload,
   chunkCreate,
   chunkUpload,
@@ -27,9 +28,11 @@ class NextcloudOperationFailure implements Exception {
   final String message;
   final Map<String, Object> arguments;
 
-  NextcloudOperationFailure(this.code, this.message,
-      [Map<String, Object> arguments = const {}])
-      : arguments = Map.unmodifiable(arguments);
+  NextcloudOperationFailure(
+    this.code,
+    this.message, [
+    Map<String, Object> arguments = const {},
+  ]) : arguments = Map.unmodifiable(arguments);
 
   @override
   String toString() => 'Exception: $message';

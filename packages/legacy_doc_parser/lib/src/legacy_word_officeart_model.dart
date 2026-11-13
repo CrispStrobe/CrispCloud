@@ -63,11 +63,33 @@ class LegacyWordOfficeArtFill {
     this.type,
     this.color,
     this.opacityFixed16,
+    this.backColor,
+    this.backOpacityFixed16,
+    this.angleFixed16,
+    this.focusPercent,
+    this.rotateWithShape,
+    this.imageId,
+    this.imageSourceName,
+    this.imageNameFlags,
+    this.recolorAsPicture,
   });
   final bool? enabled;
   final int? type;
   final String? color;
   final int? opacityFixed16;
+  final String? backColor;
+  final int? backOpacityFixed16;
+
+  /// Counterclockwise from the bottom-to-top gradient vector.
+  final int? angleFixed16;
+  final int? focusPercent;
+  final bool? rotateWithShape;
+  final String? imageId;
+
+  /// A stored comment/name/URL only. It is never fetched or emitted as a link.
+  final String? imageSourceName;
+  final int? imageNameFlags;
+  final bool? recolorAsPicture;
 }
 
 class LegacyWordOfficeArtLine {

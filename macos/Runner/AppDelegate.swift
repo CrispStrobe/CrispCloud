@@ -86,6 +86,9 @@ class AppDelegate: FlutterAppDelegate {
         case "initialize":
           try self.customKeychainStore.initialize(path: path)
           result(nil)
+        case "unlock":
+          try self.customKeychainStore.unlock(path: path)
+          result(nil)
         case "read", "write", "delete", "containsKey":
           guard let key = arguments["key"] as? String else {
             throw CustomKeychainStoreError(

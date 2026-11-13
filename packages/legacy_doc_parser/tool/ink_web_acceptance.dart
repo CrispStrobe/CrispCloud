@@ -5,17 +5,33 @@ import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 
 /// Executes the real decoder in compiled JavaScript against independently
 /// captured WPF bytes and decoded JSON. The host only supplies fixture data.
-Map<String, Object> verifyInkWebAcceptance(List<dynamic> cases) {
+Map<String, Object> verifyInkWebAcceptance(
+  List<dynamic> cases, {
+  bool headerCases = false,
+}) {
   void require(bool value, String reason) {
     if (!value) throw StateError(reason);
   }
 
-  var strokes = 0, points = 0;
-  require(cases.length == 24, 'Missing WPF source cases');
+  var strokes = 0, points = 0, metricDifferences = 0;
+  require(cases.length == (headerCases ? 32 : 24), 'Missing WPF source cases');
+  final seenPaths = <String>{};
   for (final dynamic source in cases) {
-    final decoded = decodeLegacyWordInk(
-      base64Decode(source['base64'] as String),
-    );
+    final path = source['path'] as String;
+    require(seenPaths.add(path), 'Duplicate WPF source case');
+    final bytes = base64Decode(source['base64'] as String);
+    final decoded = decodeLegacyWordInk(bytes);
+    final compactPressure =
+        headerCases &&
+        path ==
+            'test/fixtures/ink_wpf_headers/pressure-explicit-0-2047/roundtrip.isf';
+    if (compactPressure) {
+      // Retain the observed WPF JSON unchanged. Its compact metric reader
+      // drops the final present field; the ISF specification preserves it.
+      final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      require(hex.contains('1905380300fe1f'), 'Missing literal 0..2047 metric');
+      metricDifferences++;
+    }
     require(
       decoded.status == LegacyWordInkDecodeStatus.decoded,
       '${source['path']}: ${decoded.reason}',
@@ -25,6 +41,24 @@ Map<String, Object> verifyInkWebAcceptance(List<dynamic> cases) {
     strokes += decoded.strokes.length;
     for (var i = 0; i < expected.length; i++) {
       final actual = decoded.strokes[i];
+      if (headerCases) {
+        final metric = expected[i]['pressureMetric'] as Map;
+        require(
+          actual.pressureMetric.minimum == metric['minimum'] &&
+              actual.pressureMetric.maximum ==
+                  (compactPressure ? 2047 : metric['maximum']) &&
+              actual.pressureMetric.unit == 0 &&
+              metric['unit'] == 'None' &&
+              actual.pressureMetric.resolution == metric['resolution'],
+          'Ink pressure metric differs',
+        );
+        if (compactPressure) {
+          require(
+            metric['maximum'] == 1023,
+            'Native metric observation changed',
+          );
+        }
+      }
       final attributes = expected[i]['attributes'] as Map;
       final color = attributes['colorArgb'] as String;
       require(
@@ -64,7 +98,11 @@ Map<String, Object> verifyInkWebAcceptance(List<dynamic> cases) {
           'Signed ink coordinate differs',
         );
         require(
-          (point.pressureFactor - (expectedPoint['pressureFactor'] as num))
+          (point.pressureFactor -
+                      (compactPressure
+                          ? (expectedPoint['pressurePropertyValue'] as num) /
+                                2047
+                          : (expectedPoint['pressureFactor'] as num)))
                   .abs() <
               1e-7,
           'Ink pressure differs',
@@ -78,5 +116,16 @@ Map<String, Object> verifyInkWebAcceptance(List<dynamic> cases) {
       }
     }
   }
-  return {'cases': cases.length, 'strokes': strokes, 'points': points};
+  if (headerCases) {
+    require(
+      metricDifferences == 1,
+      'Missing compact metric discrepancy control',
+    );
+  }
+  return {
+    'cases': cases.length,
+    'strokes': strokes,
+    'points': points,
+    if (headerCases) 'specifiedMetricDifferences': metricDifferences,
+  };
 }

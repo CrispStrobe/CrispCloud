@@ -25,6 +25,7 @@ import 'table_review_fixture.dart' as table_reviews;
 import 'table_text_fixture.dart' as table_text;
 import 'table_width_fixture.dart' as table_width;
 import 'textbox_boundary_fixture.dart' as textbox_boundary;
+import 'textbox_fill_schema_fixture.dart' as textbox_fills;
 import 'textbox_table_fixture.dart' as textbox_tables;
 
 void main(List<String> arguments) {
@@ -61,6 +62,15 @@ void main(List<String> arguments) {
         'tool/fidelity/ink_schema_fixture.dart',
       );
     }
+  }
+
+  for (final name in ink_strokes.inkHeaderSchemaCases.keys) {
+    record(
+      'ink-strokes/$name',
+      'ink-strokes/$name.doc',
+      'ink-strokes/$name.docx',
+      'tool/fidelity/ink_schema_fixture.dart',
+    );
   }
 
   origins.main(['${root.path}/table-origin']);
@@ -380,6 +390,15 @@ void main(List<String> arguments) {
         'tool/fidelity/textbox_boundary_fixture.dart',
       );
     }
+  }
+  textbox_fills.main(['${root.path}/textbox-fills']);
+  for (final name in textbox_fills.names) {
+    record(
+      'textbox-fills/$name',
+      'textbox-fills/$name.doc',
+      'textbox-fills/$name.docx',
+      'tool/fidelity/textbox_fill_schema_fixture.dart',
+    );
   }
   header_aliases.main(['${root.path}/header-alias']);
   for (final kind in [

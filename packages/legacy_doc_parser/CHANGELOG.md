@@ -1,5 +1,23 @@
 ## 0.1.0-dev.1
 
+- Decode complete bounded nonempty ISF strokes using independent Windows WPF
+  inputs: packet compression, pen attributes, qualified transforms and pressure
+  metric prefixes. Preserve raw packets and source bytes, and keep native Word
+  ink emission inactive until placement is independently established.
+- Preserve editable textbox opacity, dashes, simple shadows, scaled gradients,
+  embedded picture/texture fills and validated monochrome DIB patterns. Keep
+  unknown effects and native tiling/secondary-alpha differences explicit.
+- Couple the documented absent textbox line-width default to its qualified
+  outer-frame conversion, preserving the missing source operand and keeping
+  disabled, explicit zero and unresolved contexts distinct.
+- Resolve the source built-in Line Number character style and its inheritance
+  independently of note labels and source compatibility settings.
+- Apply PICMID scale percentages with exact fractional-twip truncation after
+  bounds checking; preserve source image bytes and avoid fabricated crop.
+- Render a clearly labeled generated placeholder for an embedded OLE object
+  without a source preview, retaining per-object identities, payloads and
+  relationships in main, header and footer stories.
+
 - Preserve corroborated occurrences of one shared header shape by source anchor
   CP, including native DOC re-exports. Keep each occurrence's geometry and
   wrapping flags and reject ambiguous payloads, links and revision histories.

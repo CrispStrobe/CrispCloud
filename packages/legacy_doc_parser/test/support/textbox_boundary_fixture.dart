@@ -16,6 +16,9 @@ Uint8List textboxBoundaryFixture(
   String? anchorText,
   List<WordFixtureFkpRun> characterRuns = const [],
   List<WordFixtureFkpRun> paragraphRuns = const [],
+  Map<int, int> shapeProperties = const {},
+  Map<int, Uint8List> shapeComplex = const {},
+  List<(int, Uint8List)> globalBlips = const [],
 }) {
   if (chainLength < 1 || (chainLength > 1 && ranges.length != 1)) {
     throw ArgumentError('A linked control has one shared FTXBXS range.');
@@ -59,7 +62,9 @@ Uint8List textboxBoundaryFixture(
         0x0390: 1,
         0x0391: 0,
         0x0392: 1,
+        ...shapeProperties,
       },
+      complex: shapeComplex,
     ),
     ...officeArtRecord(0xf00d, wordU32(((item.$2 + 1) << 16) | item.$3)),
   ], version: 15);
@@ -99,7 +104,18 @@ Uint8List textboxBoundaryFixture(
         ],
       ),
       50: [
-        ...officeArtRecord(0xf000, [], version: 15),
+        ...officeArtRecord(0xf000, [
+          if (globalBlips.isNotEmpty)
+            ...officeArtRecord(
+              0xf001,
+              [
+                for (final (type, blip) in globalBlips)
+                  ...blipStoreEntry(blip, type: type),
+              ],
+              version: 15,
+              instance: globalBlips.length,
+            ),
+        ], version: 15),
         header ? 1 : 0,
         ...officeArtRecord(
           0xf002,

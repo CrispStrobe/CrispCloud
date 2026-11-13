@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../services/azure_blob_adapter.dart';
 import '../services/azure_config_service.dart';
@@ -45,6 +46,7 @@ import '../services/smb_config_service.dart';
 import '../services/smb_client_adapter.dart';
 import '../services/log_service.dart';
 import 'error_provider.dart';
+import 'multi_cloud_provider.dart';
 import '../services/auth_sync_notice.dart';
 
 class AuthNotifier extends ChangeNotifier {
@@ -53,7 +55,6 @@ class AuthNotifier extends ChangeNotifier {
 
   CloudProvider _currentProvider;
   late CloudStorageClient _cloudClient;
-  dynamic _config;
   final String _configPath;
   final SecureStorage _secureStorage;
 
@@ -63,15 +64,15 @@ class AuthNotifier extends ChangeNotifier {
   final _switchLock = AsyncLock();
   final _autoLoginLock = AsyncLock();
 
-  AuthNotifier(this._ref, {
+  AuthNotifier(
+    this._ref, {
     required CloudProvider initialProvider,
     required dynamic config,
     required String configPath,
     required SecureStorage secureStorage,
-  })  : _currentProvider = initialProvider,
-        _config = config,
-        _configPath = configPath,
-        _secureStorage = secureStorage {
+  }) : _currentProvider = initialProvider,
+       _configPath = configPath,
+       _secureStorage = secureStorage {
     _cloudClient = CloudStorageFactory.create(initialProvider, config: config);
     _attemptAutoLogin();
   }
@@ -85,55 +86,101 @@ class AuthNotifier extends ChangeNotifier {
   bool get isEncryptionEnabled => _cloudClient is EncryptedStorageWrapper;
 
   // --- Provider switching ---
-  Future<void> switchProvider(CloudProvider provider) async {
-    if (_currentProvider == provider) return;
+  Future<void> switchProvider(
+    CloudProvider provider, {
+    bool newConnection = false,
+  }) async {
+    if (_currentProvider == provider && !newConnection) return;
     await _switchLock.synchronized(() async {
-      if (_currentProvider == provider) return;
+      if (_currentProvider == provider && !newConnection) return;
+      // Finish any startup restoration before retiring that primary client.
+      await _autoLoginLock.synchronized(() async {});
       _log.info('Switching cloud provider to $provider');
 
-      if (_isConnected) await logout();
+      // Construct first: a failed replacement must leave the live session intact.
+      final config = _createConfigForProvider(provider);
+      final client = CloudStorageFactory.create(provider, config: config);
+      if (_isConnected) {
+        _ref
+            .read(multiCloudProvider)
+            .addConnection(
+              id: 'retained-${const Uuid().v4()}',
+              label: '$providerName · ${_cloudClient.userId ?? "connected"}',
+              provider: _currentProvider,
+              client: _cloudClient,
+            );
+      }
 
       // Persist preference
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cloud_provider', provider.name);
 
-      // Create config service for new provider
-      final config = _createConfigForProvider(provider);
-      final client = CloudStorageFactory.create(provider, config: config);
-      // Recovery can install a key before login. Retire that disconnected
-      // session too, only after the replacement client was constructed.
-      disableEncryption();
-      _config = config;
+      // The retained wrapper owns its own key copy. Clear only the new primary
+      // session's key-management state, without unwrapping the old connection.
+      _encryptionKey = null;
+      _encryptionSalt = null;
+      _isConnected = false;
+      _userEmail = null;
       _currentProvider = provider;
       _cloudClient = client;
 
-      await _attemptAutoLogin();
       notifyListeners();
+      if (!newConnection) await _attemptAutoLogin();
     });
   }
 
   dynamic _createConfigForProvider(CloudProvider provider) {
     switch (provider) {
       case CloudProvider.dropbox:
-        return DropboxConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return DropboxConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.filen:
-        return FilenConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return FilenConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.ftp:
-        return FTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return FTPConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.gdrive:
-        return GDriveConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return GDriveConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.onedrive:
-        return OneDriveConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return OneDriveConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.s3:
-        return S3ConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return S3ConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.sftp:
-        return SFTPConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return SFTPConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.nextcloud:
-        return NextcloudConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return NextcloudConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.pcloud:
-        return PCloudConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return PCloudConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.webdav:
-        return WebDavConfigService(configPath: _configPath, secureStorage: _secureStorage);
+        return WebDavConfigService(
+          configPath: _configPath,
+          secureStorage: _secureStorage,
+        );
       case CloudProvider.smb:
         return SmbConfigService(_secureStorage);
       case CloudProvider.internxt:
@@ -164,7 +211,10 @@ class AuthNotifier extends ChangeNotifier {
 
   /// Key material never enters the generic password/2FA flow or logs.
   Future<void> loginSftpWithPrivateKey(
-      String identity, String privateKey, String? passphrase) async {
+    String identity,
+    String privateKey,
+    String? passphrase,
+  ) async {
     final client = _cloudClient;
     if (client is! SFTPClientAdapter) {
       throw StateError('SFTP provider is not selected');
@@ -204,12 +254,12 @@ class AuthNotifier extends ChangeNotifier {
   Uint8List? _encryptionSalt;
 
   /// The current encryption key (null if encryption is disabled).
-  Uint8List? get encryptionKey => _encryptionKey == null
-      ? null : Uint8List.fromList(_encryptionKey!);
+  Uint8List? get encryptionKey =>
+      _encryptionKey == null ? null : Uint8List.fromList(_encryptionKey!);
 
   /// The salt used to derive the encryption key.
-  Uint8List? get encryptionSalt => _encryptionSalt == null
-      ? null : Uint8List.fromList(_encryptionSalt!);
+  Uint8List? get encryptionSalt =>
+      _encryptionSalt == null ? null : Uint8List.fromList(_encryptionSalt!);
 
   void enableEncryption(String passphrase) {
     if (_cloudClient is EncryptedStorageWrapper) return;
@@ -241,8 +291,10 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   void disableEncryption() {
-    final hadEncryption = isEncryptionEnabled ||
-        _encryptionKey != null || _encryptionSalt != null;
+    final hadEncryption =
+        isEncryptionEnabled ||
+        _encryptionKey != null ||
+        _encryptionSalt != null;
     if (_cloudClient is EncryptedStorageWrapper) {
       _cloudClient = (_cloudClient as EncryptedStorageWrapper).inner;
     }
@@ -254,39 +306,52 @@ class AuthNotifier extends ChangeNotifier {
   // --- Ensure authenticated (used by transfer provider) ---
   Future<void> ensureAuthenticated() async {
     if (_cloudClient is DropboxClientAdapter) {
-      final creds = await (_cloudClient as DropboxClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as DropboxClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is InternxtClientAdapter) {
-      final creds = await (_cloudClient as InternxtClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as InternxtClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is FilenClientAdapter) {
-      final creds = await (_cloudClient as FilenClientAdapter).filenConfig.readCredentials();
+      final creds = await (_cloudClient as FilenClientAdapter).filenConfig
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is FTPClientAdapter) {
-      final creds = await (_cloudClient as FTPClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as FTPClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is GDriveClientAdapter) {
-      final creds = await (_cloudClient as GDriveClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as GDriveClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is OneDriveClientAdapter) {
-      final creds = await (_cloudClient as OneDriveClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as OneDriveClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is S3ClientAdapter) {
-      final creds = await (_cloudClient as S3ClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as S3ClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is SFTPClientAdapter) {
-      final creds = await (_cloudClient as SFTPClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as SFTPClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is SmbClientAdapter) {
-      if (await (_cloudClient as SmbClientAdapter).config.readCredentials() == null) throw StateError('Not authenticated');
+      if (await (_cloudClient as SmbClientAdapter).config.readCredentials() ==
+          null)
+        throw StateError('Not authenticated');
     } else if (_cloudClient is WebDavClientAdapter) {
-      final creds = await (_cloudClient as WebDavClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as WebDavClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is NextcloudClientAdapter) {
-      final creds = await (_cloudClient as NextcloudClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as NextcloudClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     } else if (_cloudClient is PCloudClientAdapter) {
-      final creds = await (_cloudClient as PCloudClientAdapter).config.readCredentials();
+      final creds = await (_cloudClient as PCloudClientAdapter).config
+          .readCredentials();
       if (creds == null) throw Exception('Not authenticated');
     }
   }
@@ -309,7 +374,8 @@ class AuthNotifier extends ChangeNotifier {
           final rawCreds = await adapter.config.readCredentials();
           final creds = rawCreds?.cast<String, String>();
           // Rust-format sessions restore only through the Rust engine.
-          if (creds == null || !await adapter.restoreSavedSession(creds)) return;
+          if (creds == null || !await adapter.restoreSavedSession(creds))
+            return;
           _userEmail = creds['email'];
           _isConnected = true;
           notifyListeners();
@@ -325,7 +391,9 @@ class AuthNotifier extends ChangeNotifier {
         } else if (_cloudClient is FTPClientAdapter) {
           final adapter = _cloudClient as FTPClientAdapter;
           final creds = await adapter.config.readCredentials();
-          if (creds != null && creds['host'] != null && creds['username'] != null) {
+          if (creds != null &&
+              creds['host'] != null &&
+              creds['username'] != null) {
             _userEmail = '${creds['username']}@${creds['host']}';
             _isConnected = true;
             notifyListeners();
@@ -333,7 +401,9 @@ class AuthNotifier extends ChangeNotifier {
         } else if (_cloudClient is SFTPClientAdapter) {
           final adapter = _cloudClient as SFTPClientAdapter;
           final creds = await adapter.config.readCredentials();
-          if (creds != null && creds['host'] != null && creds['username'] != null) {
+          if (creds != null &&
+              creds['host'] != null &&
+              creds['username'] != null) {
             _userEmail = '${creds['username']}@${creds['host']}';
             _isConnected = true;
             notifyListeners();
@@ -372,7 +442,9 @@ class AuthNotifier extends ChangeNotifier {
         } else if (_cloudClient is WebDavClientAdapter) {
           final adapter = _cloudClient as WebDavClientAdapter;
           final creds = await adapter.config.readCredentials();
-          if (creds != null && creds['host'] != null && creds['username'] != null) {
+          if (creds != null &&
+              creds['host'] != null &&
+              creds['username'] != null) {
             _userEmail = '${creds['username']}@${creds['host']}';
             _isConnected = true;
             notifyListeners();
@@ -396,8 +468,12 @@ class AuthNotifier extends ChangeNotifier {
         }
       } catch (e) {
         _log.warn('Auto-login exception', e);
-        _ref.read(errorProvider).addError('Session expired. Please log in again.',
-            cause: const AuthSyncNotice(AuthSyncNoticeCode.sessionExpired));
+        _ref
+            .read(errorProvider)
+            .addError(
+              'Session expired. Please log in again.',
+              cause: const AuthSyncNotice(AuthSyncNoticeCode.sessionExpired),
+            );
         _isConnected = false;
         notifyListeners();
       }
@@ -455,7 +531,8 @@ class AuthNotifier extends ChangeNotifier {
     } else if (_cloudClient is B2ClientAdapter) {
       await (_cloudClient as B2ClientAdapter).config.clearCredentials();
     } else if (_cloudClient is HetznerStorageBoxAdapter) {
-      await (_cloudClient as HetznerStorageBoxAdapter).config.clearCredentials();
+      await (_cloudClient as HetznerStorageBoxAdapter).config
+          .clearCredentials();
     }
   }
 }

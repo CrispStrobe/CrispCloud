@@ -1,0 +1,1269 @@
+{
+  "schema": 1,
+  "verified": true,
+  "recordedUtc": "2026-11-13T08:21:44.514319+00:00",
+  "repository": "CrispStrobe/CrispCloud",
+  "sourceSha": "6eab6a33ffd374bfc9343a692b3df43c85758a1b",
+  "runId": 43388827835,
+  "runAttempt": 1,
+  "runUrl": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43388827835",
+  "inputSha256": {
+    "pubspec.yaml": "80d2bad69a8ac0b5b9139267f252662a7120691c74e68532704bf89d6b97cbab",
+    "pubspec.lock": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5"
+  },
+  "cases": [
+    {
+      "case": "normal",
+      "verified": true,
+      "artifactId": 14021227032,
+      "artifactSha256": "836237ce5884e2805b3bcdbab55ed473b40f095ba0fd81f5f0b01ad779af9196",
+      "counts": {
+        "passed": 2067,
+        "failed": 0,
+        "skipped": 13
+      },
+      "inputHashesMatchCommit": true,
+      "dependencyInputRestoration": "success",
+      "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub --reporter expanded --file-reporter json:build/archive-ci/test-events.json --concurrency=4 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --exclude-tags=benchmark\\,live\\,deploy\\,mock_server\\,integration\\,connection_dialog\\,golden test/archive_browser_session_test.dart test/archive_browsing_test.dart test/archive_cab_reader_test.dart test/archive_codec_dispatch_test.dart test/archive_compression_integrity_test.dart test/archive_compression_shape_test.dart test/archive_compression_writer_test.dart test/archive_container_dispatch_test.dart test/archive_container_publisher_test.dart test/archive_cpio_binary_test.dart test/archive_cpio_creation_test.dart test/archive_cpio_odc_test.dart test/archive_cpio_writer_profiles_test.dart test/archive_creation_extended_test.dart test/archive_creation_service_test.dart test/archive_directory_snapshot_test.dart test/archive_directory_sync_service_test.dart test/archive_disk_creation_service_test.dart test/archive_disk_verification_test.dart test/archive_disk_writer_test.dart test/archive_dmg_reader_test.dart test/archive_dmg_rewrite_test.dart test/archive_dmg_transfer_names_test.dart test/archive_dmg_workspace_test.dart test/archive_endpoint_dialog_test.dart test/archive_endpoint_policy_malformed_test.dart test/archive_endpoint_test.dart test/archive_format_registry_test.dart test/archive_hfs_reader_test.dart test/archive_integrity_service_test.dart test/archive_iso_reader_test.dart test/archive_iso_streamed_test.dart test/archive_iso_writer_test.dart test/archive_job_queue_test.dart test/archive_job_recovery_test.dart test/archive_large_tar_creation_test.dart test/archive_lz4_codec_test.dart test/archive_lzip_codec_test.dart test/archive_lzma_codec_test.dart test/archive_native_container_workflows_test.dart test/archive_operation_control_test.dart test/archive_operations_test.dart test/archive_output_spool_test.dart test/archive_package_integration_test.dart test/archive_package_readers_test.dart test/archive_package_writers_test.dart test/archive_pbzx_large_test.dart test/archive_pbzx_source_test.dart test/archive_privileged_import_test.dart test/archive_publication_dependency_test.dart test/archive_publication_directory_dependency_test.dart test/archive_rar_stored_test.dart test/archive_rar_workspace_test.dart test/archive_rpm_reader_test.dart test/archive_sevenz_metadata_test.dart test/archive_streamed_creation_test.dart test/archive_streamed_endpoint_test.dart test/archive_streamed_extraction_test.dart test/archive_streamed_publication_test.dart test/archive_streamed_workspace_test.dart test/archive_streaming_writer_test.dart test/archive_tar_writer_test.dart test/archive_to_archive_move_test.dart test/archive_to_archive_transfer_test.dart test/archive_unix_compress_codec_test.dart test/archive_unix_compress_workflow_test.dart test/archive_unix_compress_writer_test.dart test/archive_viewer_integration_test.dart test/archive_viewer_localization_test.dart test/archive_viewer_service_test.dart test/archive_viewer_source_test.dart test/archive_workspace_move_test.dart test/archive_workspace_test.dart test/archive_writable_formats_test.dart test/archive_write_model_test.dart test/archive_writer_worker_test.dart test/archive_writer_workflow_guards_test.dart test/archive_zip_metadata_test.dart test/widget/archive_background_creation_dialog_test.dart test/widget/archive_background_workspace_dialog_test.dart test/widget/archive_container_viewer_test.dart test/widget/archive_copy_dialog_test.dart test/widget/archive_creation_dialog_test.dart test/widget/archive_directory_sync_dialog_test.dart test/widget/archive_endpoint_actions_test.dart test/widget/archive_integrity_dialog_test.dart test/widget/archive_job_recovery_dialog_test.dart test/widget/archive_member_move_dialog_test.dart test/widget/archive_move_dialog_test.dart test/widget/archive_operation_queue_controls_test.dart test/transfer_error_localization_test.dart test/transfer_job_management_test.dart test/transfer_job_schedule_test.dart test/transfer_job_scheduler_test.dart test/transfer_journal_storage_io_test.dart test/transfer_queue_controls_test.dart test/transfer_queue_reorder_test.dart test/transfer_queue_test.dart test/transfer_recovery_test.dart test/transfer_spool_test.dart test/transfer_stage_cleanup_test.dart test/transfer_stream_control_test.dart test/widget/operations_panel_test.dart test/widget/transfer_history_dialog_test.dart test/operation_progress_test.dart",
+      "runtimeVersion": "Flutter 3.47.8 \u2022 channel stable \u2022 https://github.com/flutter/flutter.git\nFramework \u2022 revision 737ba8f885 (3 weeks ago) \u2022 2026-10-22 21:37:31 -0700\nEngine \u2022 hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (21 days ago) \u2022 2026-10-23 02:13:38.000Z\nTools \u2022 Dart 3.13.7 \u2022 DevTools 2.60.0",
+      "completedSuiteCounts": {
+        "test/archive_browser_session_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_browsing_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_cab_reader_test.dart": {
+          "passed": 63,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_codec_dispatch_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_compression_integrity_test.dart": {
+          "passed": 16,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_compression_shape_test.dart": {
+          "passed": 45,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_compression_writer_test.dart": {
+          "passed": 27,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_container_dispatch_test.dart": {
+          "passed": 35,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_container_publisher_test.dart": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_cpio_binary_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_cpio_creation_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_cpio_odc_test.dart": {
+          "passed": 16,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_cpio_writer_profiles_test.dart": {
+          "passed": 42,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_creation_extended_test.dart": {
+          "passed": 31,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_creation_service_test.dart": {
+          "passed": 40,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_directory_snapshot_test.dart": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_directory_sync_service_test.dart": {
+          "passed": 25,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_disk_creation_service_test.dart": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_disk_verification_test.dart": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_disk_writer_test.dart": {
+          "passed": 20,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_dmg_reader_test.dart": {
+          "passed": 40,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_dmg_rewrite_test.dart": {
+          "passed": 29,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_dmg_transfer_names_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_dmg_workspace_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_endpoint_dialog_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_endpoint_policy_malformed_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_endpoint_test.dart": {
+          "passed": 38,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_format_registry_test.dart": {
+          "passed": 65,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_hfs_reader_test.dart": {
+          "passed": 40,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_integrity_service_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_iso_reader_test.dart": {
+          "passed": 47,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_iso_streamed_test.dart": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_iso_writer_test.dart": {
+          "passed": 31,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_job_queue_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_job_recovery_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_large_tar_creation_test.dart": {
+          "passed": 24,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_lz4_codec_test.dart": {
+          "passed": 20,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_lzip_codec_test.dart": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_lzma_codec_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_native_container_workflows_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 3
+        },
+        "test/archive_operation_control_test.dart": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_operations_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_output_spool_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_package_integration_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_package_readers_test.dart": {
+          "passed": 37,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_package_writers_test.dart": {
+          "passed": 60,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_pbzx_large_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_pbzx_source_test.dart": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_privileged_import_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_publication_dependency_test.dart": {
+          "passed": 39,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_publication_directory_dependency_test.dart": {
+          "passed": 38,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_rar_stored_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 1
+        },
+        "test/archive_rar_workspace_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_rpm_reader_test.dart": {
+          "passed": 67,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_sevenz_metadata_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_streamed_creation_test.dart": {
+          "passed": 47,
+          "failed": 0,
+          "skipped": 4
+        },
+        "test/archive_streamed_endpoint_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_streamed_extraction_test.dart": {
+          "passed": 16,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_streamed_publication_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_streamed_workspace_test.dart": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 1
+        },
+        "test/archive_streaming_writer_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 1
+        },
+        "test/archive_tar_writer_test.dart": {
+          "passed": 43,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_to_archive_move_test.dart": {
+          "passed": 29,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_to_archive_transfer_test.dart": {
+          "passed": 29,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_unix_compress_codec_test.dart": {
+          "passed": 32,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_unix_compress_workflow_test.dart": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_unix_compress_writer_test.dart": {
+          "passed": 21,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_viewer_integration_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_viewer_localization_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_viewer_service_test.dart": {
+          "passed": 26,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_viewer_source_test.dart": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_workspace_move_test.dart": {
+          "passed": 57,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_workspace_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_writable_formats_test.dart": {
+          "passed": 39,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_write_model_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_writer_worker_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 3
+        },
+        "test/archive_writer_workflow_guards_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/archive_zip_metadata_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/operation_progress_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_error_localization_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_job_management_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_job_schedule_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_job_scheduler_test.dart": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_journal_storage_io_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_queue_controls_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_queue_reorder_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_queue_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_recovery_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_spool_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_stage_cleanup_test.dart": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/transfer_stream_control_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_background_creation_dialog_test.dart": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_background_workspace_dialog_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_container_viewer_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_copy_dialog_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_creation_dialog_test.dart": {
+          "passed": 47,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_directory_sync_dialog_test.dart": {
+          "passed": 25,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_endpoint_actions_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_integrity_dialog_test.dart": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_job_recovery_dialog_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_member_move_dialog_test.dart": {
+          "passed": 21,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_move_dialog_test.dart": {
+          "passed": 18,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/archive_operation_queue_controls_test.dart": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/operations_panel_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/widget/transfer_history_dialog_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "selectedAcceptanceTests": [
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "durable queue admission and stopped pending job never open its writer",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "pause holds a running archive and Stop wakes it without publication",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "password is never journaled and must be supplied again after restart",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "review of an absent output is read-only and binds the original accounts",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "lost completion acknowledgement reconciles only the full recorded output hash",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "an occupied output without a receipt is never overwritten",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "resuming an observed job publishes after its dialog listener detaches",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "a pause invalidates an existing-output proof when its read prefix changes",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "changed sources or revoked original account block restart",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "generic transfer execution, recovery and backup restore refuse archive recipes",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "damaged archive marker remains classified as archive and cannot become a copy",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_recovery_test.dart",
+          "name": "recipe destination and receipt paths cannot be redirected independently",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "ZIP creates and reopens through the background queue",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "7z creates and reopens through the background queue",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "TAR.GZ creates and reopens through the background queue",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "Stop after exclusive install retains completed result and durable receipt",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "post-publication journal failure remains a successful archive with a warning",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "a failed admission does not start archive I/O",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "archive jobs honor priority, future schedules and shared destination claims",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "queue and normal copy compete for the same destination reservation",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "workspace draft survives queued Stop and can be reviewed and retried in session",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "a replayed archive recipe never auto-starts or falls through to copy recovery",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_job_queue_test.dart",
+          "name": "reviewed restart rejects changed source bytes even with restored size and time",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "creation pauses at an input boundary and resumes the exact payload",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "stopping a paused creation releases its checkpoint without publishing",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "stopping interrupts a source stalled before its first data chunk",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "creation pauses before commit with an acknowledged source manifest",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "a precommit pause rechecks source bytes",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "a precommit pause rechecks staged bytes",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "late stop and failed completion observer preserve committed creation",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "failed precommit observer prevents publication",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "restart manifest rejects different bytes with identical size and time",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "background creation uses controlled source and publishes verified content",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "workspace callback cancellation retains legacy and typed classification",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "workspace exposes its diff before paused background review and save",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "publisher finishes a requested pause after backup",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "publisher stops and restores after backup",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "publication source guard may pause while original remains available",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "post-publication observer failure retains a successful receipt",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_operation_control_test.dart",
+          "name": "intentional pause is excluded from publisher verification deadlines",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "native writer worker roundtrips streamed formats and raw HFSX",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "native writer worker preserves buffered compression and protection options",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "native writer worker retains opaque DMG preservation evidence",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "native writer worker pauses pulls and honors sink backpressure",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "native writer worker cancels stalled input and paused checkpoints",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "native writer worker rejects faults and cleans up crashed codec spools",
+          "result": "passed"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "ZIP worker streams and verifies a member beyond 2 GiB",
+          "result": "skipped"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "7z worker streams and verifies a member beyond 2 GiB",
+          "result": "skipped"
+        },
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "TGZ worker streams and verifies a member beyond 2 GiB",
+          "result": "skipped"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "background closes only after durable admission and detaches",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "failed admission leaves the reviewed dialog open",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "foreground queue observer pauses resumes and stops the same job",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "sending a paused job to background does not resume or stop it",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "external route removal during admission preserves accepted work",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "successful publication keeps success when cleanup warns",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "standalone foreground owner cancels on disposal",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "a standalone completion observer cannot undo successful creation",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "en background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "de background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "fr background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "es background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "pt background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "zh background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "ja background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "ko background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_creation_dialog_test.dart",
+          "name": "ar background controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_workspace_dialog_test.dart",
+          "name": "background workspace admission detaches its original authority from pane navigation",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_workspace_dialog_test.dart",
+          "name": "failed workspace admission preserves the editable draft",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_background_workspace_dialog_test.dart",
+          "name": "navigation before explicit confirmation rejects the stale pane draft",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_job_recovery_dialog_test.dart",
+          "name": "archive history routes to dedicated recovery without copy actions",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_job_recovery_dialog_test.dart",
+          "name": "opening a protected recipe asks for password without starting it",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_job_recovery_dialog_test.dart",
+          "name": "a restored workspace offers publication recovery without a lost draft restart",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_job_recovery_dialog_test.dart",
+          "name": "an active archive cannot be inspected or restarted through recovery",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_job_recovery_dialog_test.dart",
+          "name": "malformed archive recipes stay out of generic recovery",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "archive pause resume and stop are visible without an overflow menu",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "stop all affects eligible jobs even when the view is filtered",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "stop all is disabled when only completed history remains",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "a published archive warning stays completed and cannot restart",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "en archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "de archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "fr archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "es archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "pt archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "zh archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "ja archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "ko archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/widget/archive_operation_queue_controls_test.dart",
+          "name": "ar archive controls fit narrow large text",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "recovery admission and finalization each retain one exclusive owner",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "queue pause persists separately and preserves individual pauses",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "clearing completed history retains a job until finalization settles",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "backup restoration rejects active workers and holds queued dispatch through verification",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "schedule changes hold dispatch until durable and respect concurrent queue pause",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "moving a shared source waits for its reader while disjoint jobs run",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "destination directory reservations cover dynamic siblings without blocking other directories",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "queue summary excludes history and separates waiting, review, pause and schedule",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "scheduled saved jobs require review after restart and keep their timestamp",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "claim paths respect account, case, separators and segment boundaries",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_job_management_test.dart",
+          "name": "claims retain source-directory cleanup and collapse a large subtree",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_queue_controls_test.dart",
+          "name": "journal-owned jobs release completed task closures after finalization and policy changes",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_queue_controls_test.dart",
+          "name": "concurrency changes start pending work and never cancel active work",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_queue_controls_test.dart",
+          "name": "pending pause does not occupy a slot and resume schedules it",
+          "result": "passed"
+        },
+        {
+          "suite": "test/transfer_queue_controls_test.dart",
+          "name": "changing priority and manual order preserves tasks and callbacks",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationProgress creates with correct initial state",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationProgress progress updates correctly",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationProgress handles zero totalBytes",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationProgress cancel sets isCancelled",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationProgress complete() sets isComplete",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationProgress fail() stores error message",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "OperationType has all expected values",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "pause, resume and a restarted stream reset throughput and ETA",
+          "result": "passed"
+        },
+        {
+          "suite": "test/operation_progress_test.dart",
+          "name": "processed counts distinguish skipped rows from successful copies",
+          "result": "passed"
+        }
+      ],
+      "requiredQueueAndWidgetSuitesPresent": [
+        "test/archive_job_queue_test.dart",
+        "test/archive_job_recovery_test.dart",
+        "test/archive_operation_control_test.dart",
+        "test/archive_writer_worker_test.dart",
+        "test/operation_progress_test.dart",
+        "test/transfer_job_management_test.dart",
+        "test/transfer_queue_controls_test.dart",
+        "test/widget/archive_background_creation_dialog_test.dart",
+        "test/widget/archive_background_workspace_dialog_test.dart",
+        "test/widget/archive_job_recovery_dialog_test.dart",
+        "test/widget/archive_operation_queue_controls_test.dart"
+      ]
+    },
+    {
+      "case": "worker-7z-2g",
+      "verified": true,
+      "artifactId": 14021330215,
+      "artifactSha256": "81511cab266e7bd29c2827eb248a5466a3b195f8d18b506159f48cab0f923221",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "inputHashesMatchCommit": true,
+      "dependencyInputRestoration": "success",
+      "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub --reporter expanded --file-reporter json:build/archive-ci/test-events.json --concurrency=1 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --plain-name 7z\\ worker\\ streams\\ and\\ verifies\\ a\\ member\\ beyond\\ 2\\ GiB test/archive_writer_worker_test.dart",
+      "runtimeVersion": "Flutter 3.47.8 \u2022 channel stable \u2022 https://github.com/flutter/flutter.git\nFramework \u2022 revision 737ba8f885 (3 weeks ago) \u2022 2026-10-22 21:37:31 -0700\nEngine \u2022 hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (21 days ago) \u2022 2026-10-23 02:13:38.000Z\nTools \u2022 Dart 3.13.7 \u2022 DevTools 2.60.0",
+      "completedSuiteCounts": {
+        "test/archive_writer_worker_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "selectedAcceptanceTests": [
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "7z worker streams and verifies a member beyond 2 GiB",
+          "result": "passed"
+        }
+      ],
+      "expectedLargeTest": "7z worker streams and verifies a member beyond 2 GiB",
+      "workerMeasurement": {
+        "check": "large worker 7z",
+        "result": "PASS",
+        "memberBytes": 2147483665,
+        "packedBytes": 925826,
+        "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af",
+        "packingMilliseconds": 29708,
+        "totalMilliseconds": 57532,
+        "baselineRss": 145477632,
+        "sampledPeakRss": 239579136,
+        "sampledGrowthRss": 94101504,
+        "heartbeatTicks": 1714,
+        "maxInputChunk": 65536,
+        "maxOutputChunk": 262144
+      }
+    },
+    {
+      "case": "worker-tgz-2g",
+      "verified": true,
+      "artifactId": 14019999680,
+      "artifactSha256": "63f8c069549995abef6f0b813ce2a93751a2ddddfe6416131052bee665bdbaf7",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "inputHashesMatchCommit": true,
+      "dependencyInputRestoration": "success",
+      "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub --reporter expanded --file-reporter json:build/archive-ci/test-events.json --concurrency=1 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --plain-name TGZ\\ worker\\ streams\\ and\\ verifies\\ a\\ member\\ beyond\\ 2\\ GiB test/archive_writer_worker_test.dart",
+      "runtimeVersion": "Flutter 3.47.8 \u2022 channel stable \u2022 https://github.com/flutter/flutter.git\nFramework \u2022 revision 737ba8f885 (3 weeks ago) \u2022 2026-10-22 21:37:31 -0700\nEngine \u2022 hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (21 days ago) \u2022 2026-10-23 02:13:38.000Z\nTools \u2022 Dart 3.13.7 \u2022 DevTools 2.60.0",
+      "completedSuiteCounts": {
+        "test/archive_writer_worker_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "selectedAcceptanceTests": [
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "TGZ worker streams and verifies a member beyond 2 GiB",
+          "result": "passed"
+        }
+      ],
+      "expectedLargeTest": "TGZ worker streams and verifies a member beyond 2 GiB",
+      "workerMeasurement": {
+        "check": "large worker tgz",
+        "result": "PASS",
+        "memberBytes": 2147483665,
+        "packedBytes": 2087363,
+        "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af",
+        "packingMilliseconds": 20993,
+        "totalMilliseconds": 78124,
+        "baselineRss": 145731584,
+        "sampledPeakRss": 220786688,
+        "sampledGrowthRss": 75055104,
+        "heartbeatTicks": 3905,
+        "maxInputChunk": 65536,
+        "maxOutputChunk": 4169
+      }
+    },
+    {
+      "case": "worker-zip-2g",
+      "verified": true,
+      "artifactId": 14020526233,
+      "artifactSha256": "f72faf762268f290cd4effa54f0bd0fb124e821130c9147721915b837684873b",
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "inputHashesMatchCommit": true,
+      "dependencyInputRestoration": "success",
+      "command": "python3 tool/with_ci_system_sqlite.py flutter test --no-pub --reporter expanded --file-reporter json:build/archive-ci/test-events.json --concurrency=1 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --plain-name ZIP\\ worker\\ streams\\ and\\ verifies\\ a\\ member\\ beyond\\ 2\\ GiB test/archive_writer_worker_test.dart",
+      "runtimeVersion": "Flutter 3.47.8 \u2022 channel stable \u2022 https://github.com/flutter/flutter.git\nFramework \u2022 revision 737ba8f885 (3 weeks ago) \u2022 2026-10-22 21:37:31 -0700\nEngine \u2022 hash dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2 (revision cf636b1dfb) (21 days ago) \u2022 2026-10-23 02:13:38.000Z\nTools \u2022 Dart 3.13.7 \u2022 DevTools 2.60.0",
+      "completedSuiteCounts": {
+        "test/archive_writer_worker_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "selectedAcceptanceTests": [
+        {
+          "suite": "test/archive_writer_worker_test.dart",
+          "name": "ZIP worker streams and verifies a member beyond 2 GiB",
+          "result": "passed"
+        }
+      ],
+      "expectedLargeTest": "ZIP worker streams and verifies a member beyond 2 GiB",
+      "workerMeasurement": {
+        "check": "large worker zip",
+        "result": "PASS",
+        "memberBytes": 2147483665,
+        "packedBytes": 2087416,
+        "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af",
+        "packingMilliseconds": 6711,
+        "totalMilliseconds": 30028,
+        "baselineRss": 145825792,
+        "sampledPeakRss": 292958208,
+        "sampledGrowthRss": 147132416,
+        "heartbeatTicks": 368,
+        "maxInputChunk": 65536,
+        "maxOutputChunk": 4111
+      }
+    }
+  ],
+  "scope": [
+    "Hosted Linux Flutter runtime validation, with separately downloaded and SHA-256-verified evidence artifacts.",
+    "Three worker cases each fully verify a logical member of 2 GiB plus 17 bytes; their compressible physical archives are smaller.",
+    "Prior physical-container acceptance remains documented separately; this receipt does not claim new native Windows/macOS UI acceptance.",
+    "Normal opt-in large cases may be skipped; the three separately selected large worker cases must each run without skips."
+  ]
+}

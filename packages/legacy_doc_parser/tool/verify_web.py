@@ -43,6 +43,14 @@ def main():
                           "base64": base64.b64encode(source.read_bytes()).decode("ascii"),
                           "expected": json.loads(snapshot.read_bytes())})
     encoded_ink = base64.b64encode(json.dumps(ink_cases).encode()).decode("ascii")
+    ink_header_cases = []
+    for source in sorted((repository / "test/fixtures/ink_wpf_headers").glob("*/*.isf")):
+        snapshot = source.with_name("second-reloaded.json" if source.name == "roundtrip.isf"
+                                    else "reloaded.json")
+        ink_header_cases.append({"path": source.relative_to(repository).as_posix(),
+                                 "base64": base64.b64encode(source.read_bytes()).decode("ascii"),
+                                 "expected": json.loads(snapshot.read_bytes())})
+    encoded_ink_headers = base64.b64encode(json.dumps(ink_header_cases).encode()).decode("ascii")
     environment = dict(os.environ, CI="true")
 
     with tempfile.TemporaryDirectory(prefix="legacy-doc-web-", dir=packages.parent) as directory:
@@ -60,6 +68,8 @@ def main():
             "  print('Media JavaScript acceptance passed: ${jsonEncode(verifyMediaWebAcceptance())}');\n"
             f"  final ink = verifyInkWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_ink}'))) as List);\n"
             "  print('Ink JavaScript acceptance passed: ${jsonEncode(ink)}');\n"
+            f"  final inkHeaders = verifyInkWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_ink_headers}'))) as List, headerCases: true);\n"
+            "  print('Ink header JavaScript acceptance passed: ${jsonEncode(inkHeaders)}');\n"
             "}\n",
             encoding="utf-8",
         )

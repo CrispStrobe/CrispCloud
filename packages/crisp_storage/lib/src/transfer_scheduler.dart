@@ -141,6 +141,10 @@ class ScheduledTransfer<T extends TransferOperation> {
   /// Number of retries after the initial attempt. Zero disables replay.
   final int? maxRetries;
 
+  /// Durable job owners can retain their own history without keeping closures
+  /// containing credentials, source handles or large draft buffers alive.
+  final bool retainCompletedTask;
+
   ScheduledTransfer({
     required this.id,
     required this.operation,
@@ -152,6 +156,7 @@ class ScheduledTransfer<T extends TransferOperation> {
     List<TransferResourceClaim> resourceClaims = const [],
     this.notBefore,
     this.maxRetries,
+    this.retainCompletedTask = true,
   }) : providerNames = Set.unmodifiable({
          ...providerNames,
          if (providerName != null) providerName,
@@ -177,6 +182,7 @@ class ScheduledTransfer<T extends TransferOperation> {
        providerNames = task.providerNames,
        resourceClaims = task.resourceClaims,
        maxRetries = task.maxRetries,
+       retainCompletedTask = task.retainCompletedTask,
        _resourceIndex = task._resourceIndex;
 }
 
@@ -678,7 +684,7 @@ class TransferScheduler<T extends TransferOperation> {
         _settlingPending.remove(task.id);
       }
       _finishing.remove(task);
-      _completed.add(task);
+      if (task.retainCompletedTask) _completed.add(task);
       _processQueue();
     }
   }

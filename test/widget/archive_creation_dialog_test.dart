@@ -54,6 +54,10 @@ class _RecordingService extends ArchiveCreationService {
     required List<FileItem> files,
     required String destinationDirectory,
     required ArchiveCreationOptions options,
+    FileOperationControl? control,
+    bool background = false,
+    String? expectedSourceManifestSha256,
+    Future<void> Function(Map<String, dynamic>)? onPublicationCheckpoint,
     bool Function()? isCancelled,
     void Function(ArchiveCreationProgress)? onProgress,
   }) async {

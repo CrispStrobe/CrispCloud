@@ -136,16 +136,18 @@ timeouts and temporary cleanup remain in the converter. There is no fake
 Cancel control while a converter without a cancellation API is running.
 
 The primary DOC/DOT route remains
-[`legacy-doc-parser` at e442772](https://github.com/CrispStrobe/legacy-doc-parser/commit/e4427725cc720eaefad97c2cb921a6fe1e36749d).
-The [previous comparison](file-viewer-doc-dot-comparison.md) and parser fixes
-remain applicable. XML retains Tree, Source, XSD validation and XSLT tools.
+[`legacy-doc-parser` at 402b66d](https://github.com/CrispStrobe/legacy-doc-parser/commit/402b66de584fda5860c0dbeb7c370858e4568804).
+This combines the compatibility checkpoint `e442772` with the qualified ink and
+textbox checkpoint `d9f6406`. The [previous comparison](file-viewer-doc-dot-comparison.md)
+remains the historical assessment of the earlier implementation. XML retains Tree, Source, XSD validation and XSLT tools.
 Legacy PPT retains its native Text fallback. These are complementary uses of
 the existing code, without another embedded general-purpose document engine.
 
 ## Package reduction
 
-Measured against `db5b6126fdfb7f31598c80e5adc96ea548139505`, after the shared
-browser-font code is included:
+Measured on the release web build of `ab3af2f813a97e57be351366ebe9573798177e4c`
+against `db5b6126fdfb7f31598c80e5adc96ea548139505`, with the shared browser-font
+code included:
 
 | Scope | Before | After | Raw saving | Gzip-9 saving |
 | --- | ---: | ---: | ---: | ---: |
@@ -153,10 +155,15 @@ browser-font code is included:
 | Standalone fonts | 14,213,736 B | 12,568,664 B | 1,645,072 B | 555,431 B |
 | Combined asset reduction | 39,128,103 B | 33,690,303 B | **5,437,800 B (5.186 MiB)** | **1,085,587 B (1.035 MiB)** |
 
-The final release measurement includes the normal production icon subset,
+The `ab3af2f` release measurement includes the normal production icon subset,
 which grew by 112 bytes for the current icon set. Removing the extra full
 Material Icons asset alone saves 1,645,184 bytes. All 21 shared catalog font
-files appear once in the built assets, with no duplicate font hashes.
+files appear once in that built release, with no duplicate font hashes.
+
+The subsequent integration of frozen main `07928e` preserves the font files
+and renderer assets exactly. Its incoming archive UI can change the production
+icon subset, so the table is not a new measurement of the merged release. No
+post-merge APK, IPA, installer or web-release size is claimed.
 
 Production JavaScript is minified. Complete original notices remain as 63
 distinct source texts representing all 86 origins; distribution contains one
@@ -201,8 +208,8 @@ and Unicode diagnostics. Focused static analysis reports no issues.
 
 The selected browser engines pass 75 Node/native/WASM/font contracts. All 36
 provenance controls pass, including nine runtime-retention mutation checks.
-Tracked source verification covers 1,504 Office records and 158 selected
-runtime/source/notice records. App checks use the normal dependency graph and
+At `ab3af2f`, tracked source verification covered 1,504 Office records and 158
+selected runtime/source/notice records. App checks use the normal dependency graph and
 normal native hooks.
 
 The release web build passed at implementation commit
@@ -215,6 +222,30 @@ the app assets, and the normal production icon font is 77,552 bytes. The
 [app validation receipt](evidence/document-font-implementation-20261113/app-validation.json)
 and [build receipt](evidence/document-font-implementation-20261113/release-web-build-receipt.json)
 retain commands, source hashes, SDK versions and linked test logs.
+
+### Integration with frozen main `07928e`
+
+The font implementation and its evidence checkpoint `3167ff6` are combined with
+exact app main `07928e070135d422fbd136fccd1bf53d0d2d47b6`. The standalone parser
+is updated through its guarded sync to `402b66d`, the documentation-only child
+of validated merge `5a4caac` (parents `e442772` and `d9f6406`). Quds remains pinned
+to `e82c997`; the renderer, font assets and Quds package trees are byte-identical
+to `ab3af2f`. The newer main's archive, cloud-session, Nextcloud and macOS changes
+are retained. Later moving main commits are outside this frozen integration.
+
+The merged app passes 31 focused font/PDF/preview checks and focused analysis
+with no issues. All 36 sync/retention controls pass. Tracked provenance verifies
+1,698 Office records and the same 158 runtime/source/notice records. The combined
+canonical parser separately passes 1,055 full tests, 145 focused regressions,
+analysis, formatting and JavaScript portable acceptance. Historical comparison
+receipts retain their original source identities.
+
+The [integration receipt](evidence/document-font-implementation-20261113/integration-07928e.json)
+records exact parents, canonical trees, log hashes, preservation checks and the
+release-measurement boundary. [Parser PR #7](https://github.com/CrispStrobe/legacy-doc-parser/pull/7)
+was closed unmerged as redundant after canonical main acquired identical
+parser, test and non-document source trees. The saved `402b66d` source branch
+and its evidence remain preserved.
 
 Local Chromium cannot start in this execution sandbox because its process
 singleton socket is denied. The updated CI smoke tests use real font bytes and

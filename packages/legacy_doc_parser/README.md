@@ -25,11 +25,14 @@ The codebase currently supports:
   and corroborated textbox chains and independent header/footer instances.
   Explicit simple textbox borders retain their source anchors while bounded
   DOCX frame conversion accounts for their outer border extent; see the
-  [frame contract](doc/textbox-frame-borders.md).
-- Bounded nonempty ISF ink inspection exposes supported strokes, pressure and
-  drawing attributes, checked against 24 independent Windows WPF inputs. Raw
-  payloads are preserved; native Word placement and editable ink are still
-  pending. See [supported ink decoding and limits](doc/ink-decoding.md).
+  [frame contract](doc/textbox-frame-borders.md). Qualified textbox paint includes
+  source-valued opacity, dashes, simple shadows, scaled gradients and embedded
+  picture/texture/monochrome-pattern fills.
+- Bounded nonempty ISF stroke inspection with original packet coordinates,
+  source transforms, pressure ranges and pen attributes, independently checked
+  against actual Windows WPF. Raw ink remains retained; Word-native ink
+  placement, rendering and editing are not inferred from decoded packets. See
+  [supported ink inspection and limits](doc/ink-decoding.md).
 - Structured DOCX conversion, safe HTML and plain-text extraction, and explicit
   DOCM output that can retain one structurally complete VBA project. Embedded
   objects, macros and signature evidence are retained only within the documented
@@ -60,7 +63,7 @@ format coverage, revision and drawing semantics, and a stable published API.
 The [fidelity status](doc/fidelity-status.md) gives the supported contracts and
 open gaps; the [oracle guide](doc/fidelity-oracles.md) explains how schema,
 semantic and native-rendering checks differ.
-The [current continuation handoff](doc/continuation-20261113.md) records the
+The [current continuation handoff](doc/continuation-20261113-followup.md) records the
 saved parser/app integration, complete validation and next bounded work.
 
 Use Dart 3.8 or later. `archive` is the runtime package dependency. A development

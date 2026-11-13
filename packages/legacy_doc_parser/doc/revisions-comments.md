@@ -225,7 +225,12 @@ headers, and verify that unrelated comment/shape flags remain independent.
 Those envelope tests do not establish native pen rendering. Separate actual
 Windows WPF fixtures now supply six authored nonempty cases, both compression
 modes and two save cycles (24 ISFs), with decoded JSON and independent raster
-outputs. They qualify the bounded decoder without establishing Word shape
+outputs. A second Windows run supplies 16 controlled transform/pressure headers
+and their round trips (32 more ISFs), preserving original packet bodies. The
+decoder retains selected transforms and zero-based unitless pressure ranges;
+the compact pressure-metric native discrepancy is explicitly qualified in
+[the decoder contract](ink-decoding.md). These controls qualify the bounded
+decoder without establishing Word shape
 placement or native ink editing. The inspected Quds fixtures still provide no
 original ink-bearing Word document.
 

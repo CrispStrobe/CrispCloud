@@ -29,27 +29,74 @@ void main(List<String> args) {
         }
       }
     }
+
     walk(parsed.blocks);
-    final bodyCounts = {'paragraphs':paragraphs,'tables':tables,'rows':rows,'cells':cells};
-    for (final story in parsed.stories) { walk(story.blocks); }
-    stdout.writeln(jsonEncode({
-      'ok':true,'elapsedMs':watch.elapsedMicroseconds/1000,
-      'bodyCounts':bodyCounts,'allCounts':{'paragraphs':paragraphs,'tables':tables,'rows':rows,'cells':cells},
-      'warnings':parsed.warnings.map((e)=>e.name).toList(),
-      'sections':parsed.sections.length,'numberingDefinitions':parsed.numbering.length,
-      'tableStyles':parsed.tableStyles.length,'bookmarks':parsed.bookmarks.length,'fields':parsed.fields.length,
-      'noteReferences':parsed.noteReferences.length,'commentReferences':parsed.commentReferences.length,
-      'textboxReferences':parsed.textboxReferences.length,
-      'unpositionedTextboxes':parsed.textboxReferences.where((r)=>r.placementUnresolved).length,
-      'media':{'assets':parsed.media.assets.length,'pictures':parsed.media.pictures.length,
-        'drawings':parsed.media.drawings.length,'objects':parsed.media.embeddedObjects.length,
-        'vbaProjects':parsed.media.vbaProjects.length,
-        'notices':parsed.media.notices.map((e)=>e.issue.name).toList()},
-      'revisions':{'insertedRuns':insertedRuns,'deletedRuns':deletedRuns,'historicalRuns':historicalRuns},
-      'plainText':parsed.plainText,'html':parsed.safeHtml,
-      'stories':parsed.stories.map((s)=>{'id':s.id,'kind':s.kind.name,'plainText':s.plainText,'html':s.safeHtml}).toList(),
-    }));
-  } catch(error) {
-    stdout.writeln(jsonEncode({'ok':false,'elapsedMs':watch.elapsedMicroseconds/1000,'error':error.toString()}));
+    final bodyCounts = {
+      'paragraphs': paragraphs,
+      'tables': tables,
+      'rows': rows,
+      'cells': cells,
+    };
+    for (final story in parsed.stories) {
+      walk(story.blocks);
+    }
+    stdout.writeln(
+      jsonEncode({
+        'ok': true,
+        'elapsedMs': watch.elapsedMicroseconds / 1000,
+        'bodyCounts': bodyCounts,
+        'allCounts': {
+          'paragraphs': paragraphs,
+          'tables': tables,
+          'rows': rows,
+          'cells': cells,
+        },
+        'warnings': parsed.warnings.map((e) => e.name).toList(),
+        'sections': parsed.sections.length,
+        'numberingDefinitions': parsed.numbering.length,
+        'tableStyles': parsed.tableStyles.length,
+        'bookmarks': parsed.bookmarks.length,
+        'fields': parsed.fields.length,
+        'noteReferences': parsed.noteReferences.length,
+        'commentReferences': parsed.commentReferences.length,
+        'textboxReferences': parsed.textboxReferences.length,
+        'unpositionedTextboxes': parsed.textboxReferences
+            .where((r) => r.placementUnresolved)
+            .length,
+        'media': {
+          'assets': parsed.media.assets.length,
+          'pictures': parsed.media.pictures.length,
+          'drawings': parsed.media.drawings.length,
+          'objects': parsed.media.embeddedObjects.length,
+          'vbaProjects': parsed.media.vbaProjects.length,
+          'notices': parsed.media.notices.map((e) => e.issue.name).toList(),
+        },
+        'revisions': {
+          'insertedRuns': insertedRuns,
+          'deletedRuns': deletedRuns,
+          'historicalRuns': historicalRuns,
+        },
+        'plainText': parsed.plainText,
+        'html': parsed.safeHtml,
+        'stories': parsed.stories
+            .map(
+              (s) => {
+                'id': s.id,
+                'kind': s.kind.name,
+                'plainText': s.plainText,
+                'html': s.safeHtml,
+              },
+            )
+            .toList(),
+      }),
+    );
+  } catch (error) {
+    stdout.writeln(
+      jsonEncode({
+        'ok': false,
+        'elapsedMs': watch.elapsedMicroseconds / 1000,
+        'error': error.toString(),
+      }),
+    );
   }
 }

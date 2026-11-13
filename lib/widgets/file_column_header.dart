@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,8 +9,10 @@ import '../models/file_view_configuration.dart';
 import '../models/panel_side.dart';
 import '../providers/panel_provider.dart';
 import '../providers/toolbar_provider.dart';
+import '../providers/providers.dart' show fontSizeProvider, fontFamilyProvider;
+import 'file_column_metrics.dart';
 
-class FileColumnHeader extends ConsumerWidget {
+class FileColumnHeader extends ConsumerStatefulWidget {
   const FileColumnHeader({
     super.key,
     required this.side,
@@ -20,12 +24,31 @@ class FileColumnHeader extends ConsumerWidget {
   final VoidCallback? onConfigure;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FileColumnHeader> createState() => _FileColumnHeaderState();
+}
+
+class _FileColumnHeaderState extends ConsumerState<FileColumnHeader> {
+  PanelSide get side => widget.side;
+  PanelNotifier get panel => widget.panel;
+  VoidCallback? get onConfigure => widget.onConfigure;
+  double _resizeStart = 0;
+  double _resizeDistance = 0;
+  double _resizeMaximum = 600;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final widths = ref.watch(columnWidthsProvider(side));
     final view = FileViewConfiguration(
       columns: ref.watch(fileColumnsProvider(side)),
       widths: widths,
+      minimumSizeWidth: minimumFileSizeColumnWidth(
+        context,
+        fontSize: ref.watch(fontSizeProvider),
+        fontFamily: ref.watch(fontFamilyProvider) == 'system'
+            ? null
+            : ref.watch(fontFamilyProvider),
+      ),
     );
     final style = TextStyle(
       fontSize: 11,
@@ -92,10 +115,34 @@ class FileColumnHeader extends ConsumerWidget {
       );
     }
 
-    Widget resize(FileColumnDefinition column) => GestureDetector(
-      onHorizontalDragUpdate: (details) => ref
-          .read(columnWidthsProvider(side).notifier)
-          .setWidth(column.id, view.widthFor(column) + details.delta.dx),
+    Widget resize(
+      FileColumnDefinition column,
+      double maximumWidth,
+    ) => GestureDetector(
+      key: ValueKey('resize-column-${column.id}'),
+      onHorizontalDragStart: (_) {
+        _resizeStart = view.widthFor(column);
+        _resizeDistance = 0;
+        _resizeMaximum = maximumWidth;
+      },
+      onHorizontalDragUpdate: (details) {
+        _resizeDistance += details.delta.dx;
+        // This is the column's LEFT edge; moving it left enlarges the column.
+        ref
+            .read(columnWidthsProvider(side).notifier)
+            .setWidth(
+              column.id,
+              (_resizeStart - _resizeDistance).clamp(
+                column.kind == FileColumnKind.size ? view.minimumSizeWidth : 24,
+                math.max(
+                  column.kind == FileColumnKind.size
+                      ? view.minimumSizeWidth
+                      : 24,
+                  _resizeMaximum,
+                ),
+              ),
+            );
+      },
       onDoubleTap: () => ref
           .read(columnWidthsProvider(side).notifier)
           .setWidth(column.id, column.defaultWidth),
@@ -128,7 +175,10 @@ class FileColumnHeader extends ConsumerWidget {
         final namePrimary =
             panel.sortColumnId == null && panel.sortBy == SortBy.name;
         return Container(
-          height: 22,
+          height: math.max(
+            22,
+            MediaQuery.textScalerOf(context).scale(11) * 1.4 + 4,
+          ),
           color: theme.colorScheme.surfaceContainerLow,
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
@@ -173,7 +223,20 @@ class FileColumnHeader extends ConsumerWidget {
                   ),
                 ),
               ),
-              for (final column in visible) ...[resize(column), label(column)],
+              for (final column in visible) ...[
+                resize(
+                  column,
+                  constraints.maxWidth -
+                      146 -
+                      visible
+                          .where((other) => other.id != column.id)
+                          .fold<double>(
+                            0,
+                            (sum, other) => sum + view.widthFor(other) + 6,
+                          ),
+                ),
+                label(column),
+              ],
               const SizedBox(width: 4),
             ],
           ),
