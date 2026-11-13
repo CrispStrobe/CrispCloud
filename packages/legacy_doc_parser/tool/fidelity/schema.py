@@ -18,6 +18,19 @@ ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / "tool/office-validation"
 OFFICE_SUFFIXES = {".docx", ".docm", ".dotx", ".dotm", ".xlsx", ".pptx"}
 EXPECTED_CASES = frozenset([
+    "symbols/plain", "symbols/deleted",
+    "font-charsets/symbol", "font-charsets/default", "font-charsets/default-symbol-alias",
+    "font-charsets/conflict", "font-charsets/unknown",
+    "font-charsets/empty-name",
+    "ink-budget/aggregate",
+    *(f"list-metadata/{name}" for name in (
+        "bullet-ignored-restart", "none-ignored-restart", "none-literal",
+        "none-empty-placeholder", "none-ancestor-placeholder", "literal-percent-text",
+        "percent-before-placeholder", "numbered-valid-restart", "numbered-inactive-restart")),
+    *(f"nested-fields/{name}" for name in (
+        "nested-results", "private-result", "private-instruction-result", "unsupported-result", "formula",
+        "instruction-whitespace", "nested-instruction-whitespace", "cached-controls",
+        "nested-cached-controls")),
     *(f"ink-strokes/{name}-{mode}" for name in (
         "polyline-solid", "single-dot", "paint-ellipse-alpha", "multiple-strokes",
         "pressure-ramp", "signed-quantization") for mode in ("compressed", "uncompressed")),
@@ -106,6 +119,8 @@ EXPECTED_CASES = frozenset([
     "native-inputs/header-textbox-page-variants",
     "native-inputs/bookmarks-native-hyperlink",
     "native-inputs/line-number-style",
+    "native-inputs/external-hyperlinks-native", "native-inputs/reference-hyperlink-native",
+    "native-inputs/symbol-source-control",
     *(f"native-inputs/{kind}-ending-{ending}" for kind in ("header", "footer")
       for ending in ("paragraph", "table")),
     *(f"textbox-boundary/textbox-{story}-{kind}" for story in ("main", "header")

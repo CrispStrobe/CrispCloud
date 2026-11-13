@@ -1,0 +1,407 @@
+{
+  "jobs": {
+    "jobs": [
+      {
+        "conclusion": "success",
+        "id": 131758984962,
+        "logs_url": null,
+        "name": "openxml-schema",
+        "run_id": 43387392944,
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart-lang/setup-dart@v1",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-dotnet@v4",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart pub get",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run python3 tool/fidelity/schema.py --out build/schema-ci",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-dotnet@v4",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 14,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "conclusion": "success",
+        "id": 131758985202,
+        "logs_url": null,
+        "name": "test",
+        "run_id": 43387392944,
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart-lang/setup-dart@v1",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run python3 -m pip install -r tool/fidelity/requirements-test.txt",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart pub get",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart format --output=none --set-exit-if-changed .",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart analyze --fatal-infos",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart test",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run python3 tool/fidelity/oracle.py",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run python3 -m unittest discover -s tool/fidelity -p 'test_*.py'",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run python3 tool/verify_web.py",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run dart pub publish --dry-run",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "number": 25,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 26,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 27,
+            "status": "completed"
+          }
+        ]
+      }
+    ]
+  },
+  "observedAtUtc": "2026-11-13 07:50:36 UTC",
+  "run": {
+    "actor": {
+      "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+      "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+      "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+      "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+      "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+      "gravatar_id": "",
+      "html_url": "https://github.com/CrispStrobe",
+      "id": 154636388,
+      "login": "CrispStrobe",
+      "node_id": "U_kgDOCTeQZA",
+      "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+      "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+      "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+      "site_admin": false,
+      "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+      "type": "User",
+      "url": "https://api.github.com/users/CrispStrobe",
+      "user_view_type": "public"
+    },
+    "artifacts_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43387392944/artifacts",
+    "cancel_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43387392944/cancel",
+    "check_suite_id": 117485601561,
+    "check_suite_node_id": "CS_kwDOVr6ISM8AAAAbWrADGQ",
+    "check_suite_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/check-suites/117485601561",
+    "conclusion": "success",
+    "created_at": "2026-11-13T07:40:11Z",
+    "display_title": "Integrate qualified textbox fills, frame defaults and nonempty ink se\u2026",
+    "event": "push",
+    "head_branch": "feature/office-fidelity-gaps-20261113",
+    "head_commit": {
+      "author": {
+        "email": "154636388+CrispStrobe@users.noreply.github.com",
+        "name": "CrispStrobe"
+      },
+      "committer": {
+        "email": "154636388+CrispStrobe@users.noreply.github.com",
+        "name": "CrispStrobe"
+      },
+      "id": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+      "message": "Integrate qualified textbox fills, frame defaults and nonempty ink semantics\n\nPreserve all accepted runtime and evidence parents. Combine bounded gradient and bitmap fills, the independently qualified absent-width frame conversion, source ink transforms and pressure metrics, and exact native verifier controls. Reconcile current documentation while retaining historical failures and source/native discrepancies. This checkpoint is the source for final combined acceptance and the next guarded CrispCloud roll.",
+      "timestamp": "2026-11-13T07:40:08Z",
+      "tree_id": "25bd05c12fa2272a32ec2aaba2cc0117be5bed96"
+    },
+    "head_repository": {
+      "archive_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/{archive_format}{/ref}",
+      "assignees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/assignees{/user}",
+      "blobs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/blobs{/sha}",
+      "branches_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/branches{/branch}",
+      "collaborators_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/collaborators{/collaborator}",
+      "comments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/comments{/number}",
+      "commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/commits{/sha}",
+      "compare_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/compare/{base}...{head}",
+      "contents_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contents/{+path}",
+      "contributors_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contributors",
+      "deployments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/deployments",
+      "description": "Dart parsing of Word 97\u20132003 .doc/.dot files, with a typed document model, safe formatted previews and conversion to a separate Word Open XML copy",
+      "downloads_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/downloads",
+      "events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/events",
+      "fork": false,
+      "forks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/forks",
+      "full_name": "CrispStrobe/legacy-doc-parser",
+      "git_commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/commits{/sha}",
+      "git_refs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/refs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/tags{/sha}",
+      "hooks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/hooks",
+      "html_url": "https://github.com/CrispStrobe/legacy-doc-parser",
+      "id": 1455327304,
+      "issue_comment_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/comments{/number}",
+      "issue_events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/events{/number}",
+      "issues_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues{/number}",
+      "keys_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/keys{/key_id}",
+      "labels_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/labels{/name}",
+      "languages_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/languages",
+      "merges_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/merges",
+      "milestones_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/milestones{/number}",
+      "name": "legacy-doc-parser",
+      "node_id": "R_kgDOVr6ISA",
+      "notifications_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/notifications{?since,all,participating}",
+      "owner": {
+        "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+        "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+        "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+        "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+        "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+        "gravatar_id": "",
+        "html_url": "https://github.com/CrispStrobe",
+        "id": 154636388,
+        "login": "CrispStrobe",
+        "node_id": "U_kgDOCTeQZA",
+        "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+        "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+        "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+        "site_admin": false,
+        "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+        "type": "User",
+        "url": "https://api.github.com/users/CrispStrobe",
+        "user_view_type": "public"
+      },
+      "private": false,
+      "pulls_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/pulls{/number}",
+      "releases_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/releases{/id}",
+      "stargazers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/stargazers",
+      "statuses_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/statuses/{sha}",
+      "subscribers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscribers",
+      "subscription_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscription",
+      "tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/tags",
+      "teams_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/teams",
+      "trees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/trees{/sha}",
+      "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser"
+    },
+    "head_sha": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+    "html_url": "https://github.com/CrispStrobe/legacy-doc-parser/actions/runs/43387392944",
+    "id": 43387392944,
+    "jobs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43387392944/jobs",
+    "logs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43387392944/logs",
+    "name": "Dart package",
+    "node_id": "WFR_kwLOVr6ISM8AAAAKGhcTsA",
+    "path": ".github/workflows/ci.yml",
+    "previous_attempt_url": null,
+    "pull_requests": [],
+    "referenced_workflows": [],
+    "repository": {
+      "archive_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/{archive_format}{/ref}",
+      "assignees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/assignees{/user}",
+      "blobs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/blobs{/sha}",
+      "branches_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/branches{/branch}",
+      "collaborators_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/collaborators{/collaborator}",
+      "comments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/comments{/number}",
+      "commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/commits{/sha}",
+      "compare_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/compare/{base}...{head}",
+      "contents_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contents/{+path}",
+      "contributors_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contributors",
+      "deployments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/deployments",
+      "description": "Dart parsing of Word 97\u20132003 .doc/.dot files, with a typed document model, safe formatted previews and conversion to a separate Word Open XML copy",
+      "downloads_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/downloads",
+      "events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/events",
+      "fork": false,
+      "forks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/forks",
+      "full_name": "CrispStrobe/legacy-doc-parser",
+      "git_commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/commits{/sha}",
+      "git_refs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/refs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/tags{/sha}",
+      "hooks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/hooks",
+      "html_url": "https://github.com/CrispStrobe/legacy-doc-parser",
+      "id": 1455327304,
+      "issue_comment_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/comments{/number}",
+      "issue_events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/events{/number}",
+      "issues_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues{/number}",
+      "keys_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/keys{/key_id}",
+      "labels_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/labels{/name}",
+      "languages_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/languages",
+      "merges_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/merges",
+      "milestones_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/milestones{/number}",
+      "name": "legacy-doc-parser",
+      "node_id": "R_kgDOVr6ISA",
+      "notifications_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/notifications{?since,all,participating}",
+      "owner": {
+        "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+        "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+        "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+        "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+        "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+        "gravatar_id": "",
+        "html_url": "https://github.com/CrispStrobe",
+        "id": 154636388,
+        "login": "CrispStrobe",
+        "node_id": "U_kgDOCTeQZA",
+        "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+        "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+        "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+        "site_admin": false,
+        "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+        "type": "User",
+        "url": "https://api.github.com/users/CrispStrobe",
+        "user_view_type": "public"
+      },
+      "private": false,
+      "pulls_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/pulls{/number}",
+      "releases_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/releases{/id}",
+      "stargazers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/stargazers",
+      "statuses_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/statuses/{sha}",
+      "subscribers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscribers",
+      "subscription_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscription",
+      "tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/tags",
+      "teams_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/teams",
+      "trees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/trees{/sha}",
+      "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser"
+    },
+    "rerun_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43387392944/rerun",
+    "run_attempt": 1,
+    "run_number": 167,
+    "run_started_at": "2026-11-13T07:40:11Z",
+    "status": "completed",
+    "triggering_actor": {
+      "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+      "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+      "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+      "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+      "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+      "gravatar_id": "",
+      "html_url": "https://github.com/CrispStrobe",
+      "id": 154636388,
+      "login": "CrispStrobe",
+      "node_id": "U_kgDOCTeQZA",
+      "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+      "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+      "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+      "site_admin": false,
+      "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+      "type": "User",
+      "url": "https://api.github.com/users/CrispStrobe",
+      "user_view_type": "public"
+    },
+    "updated_at": "2026-11-13T07:46:52Z",
+    "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43387392944",
+    "workflow_id": 416069301,
+    "workflow_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/workflows/416069301"
+  }
+}

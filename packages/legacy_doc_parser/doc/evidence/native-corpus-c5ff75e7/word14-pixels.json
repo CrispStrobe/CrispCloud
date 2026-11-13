@@ -1,0 +1,1731 @@
+{
+  "comparisons": {
+    "after-initial-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-converted/page-0001.ppm.gz",
+        "rasterSha256": "5874a6539d1b078bf394072e88a2f767c0d16d588ec083cc7569d0abf5e537d2",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/converted-render.json",
+        "receiptSha256": "2be21b6724754bb902d9213a7415c458c91b86520a98ca6c1bfd3369eaaaf630",
+        "uncompressedSha256": "c716eb549025ae755ab57ce596499aaea5feb4822a1a003c2188c4fea2fbeec4",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 6725615,
+        "changedPixelBounds": [
+          71,
+          81,
+          535,
+          298
+        ],
+        "changedPixels": 30704,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 8.956022957281347,
+        "meanAbsoluteChannelDeltaChangedPixels": 73.0156222859128,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-binary/page-0001.ppm.gz",
+        "rasterSha256": "6b3bcc717e5fe7971b0a800b98f04b274af8dd766c6b57688ba20e357f4280cd",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/binary-render.json",
+        "receiptSha256": "67706c877bec1102138dfd874433e81ec93bb32b76b3bb22779d744cc04d0feb",
+        "uncompressedSha256": "a52939fe5dcda90a2df08e7f7cd3a647a32f3952ad44808a2fdcf240af4e1e71",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 1646517,
+          "changedPixelBounds": [
+            71,
+            148,
+            259,
+            183
+          ],
+          "changedPixels": 6499,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 30.23906336088154,
+          "meanAbsoluteChannelDeltaChangedPixels": 84.4497615017695,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1716061,
+          "changedPixelBounds": [
+            71,
+            205,
+            259,
+            240
+          ],
+          "changedPixels": 6524,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 31.516271808999083,
+          "meanAbsoluteChannelDeltaChangedPixels": 87.67938892295115,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1167703,
+          "changedPixelBounds": [
+            348,
+            139,
+            535,
+            174
+          ],
+          "changedPixels": 3320,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 7.701510354834454,
+          "meanAbsoluteChannelDeltaChangedPixels": 117.23925702811245,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 629425,
+          "changedPixelBounds": [
+            344,
+            206,
+            532,
+            298
+          ],
+          "changedPixels": 7440,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 3.4293614470960008,
+          "meanAbsoluteChannelDeltaChangedPixels": 28.200044802867385,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 72293,
+          "changedPixelBounds": [
+            72,
+            81,
+            317,
+            120
+          ],
+          "changedPixels": 409,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 0.5409128320239431,
+          "meanAbsoluteChannelDeltaChangedPixels": 58.918500407497966,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1493616,
+          "changedPixelBounds": [
+            71,
+            257,
+            259,
+            293
+          ],
+          "changedPixels": 6512,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 8.621160173160174,
+          "meanAbsoluteChannelDeltaChangedPixels": 76.45454545454545,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "after-roundtrip-01-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-01-converted/page-0001.ppm.gz",
+        "rasterSha256": "0030d7cba6ff4ee6e09d024be4a4e9d496be437ee1a1be73ac7efc8567498ad4",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-01-converted-render.json",
+        "receiptSha256": "58ddb3b402680d426b2a57dbe178cb8b81add32a40d5b7fa23ad492bca2818b4",
+        "uncompressedSha256": "bd75bd0df152de3d3d8793faa2a62b3d9cff7938d53899e4ac6c1e6e19d45dfd",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 911580,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          292
+        ],
+        "changedPixels": 6110,
+        "maxChannelDelta": 207,
+        "meanAbsoluteChannelDeltaAllPixels": 1.213886225631192,
+        "meanAbsoluteChannelDeltaChangedPixels": 49.731587561374795,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-01-binary/page-0001.ppm.gz",
+        "rasterSha256": "d41ee7f02958d7269a97bc7e5eedfb8a4c21defa010d5acef8418be8a6101af4",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-01-binary-render.json",
+        "receiptSha256": "d930e3c1cca7279e051c4b8d81133bc4af5269d50778cee123749cb68ce8c3f7",
+        "uncompressedSha256": "80f220671ee48c1f3246a842dedf2be4ff6bb927809bb0befa84a580360c9142",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 828,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            172
+          ],
+          "changedPixels": 18,
+          "maxChannelDelta": 56,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0054610209734863475,
+          "meanAbsoluteChannelDeltaChangedPixels": 15.333333333333334,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 910752,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6092,
+          "maxChannelDelta": 207,
+          "meanAbsoluteChannelDeltaAllPixels": 5.256865800865801,
+          "meanAbsoluteChannelDeltaChangedPixels": 49.83322390019698,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "after-roundtrip-02-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-02-converted/page-0001.ppm.gz",
+        "rasterSha256": "40b99091fc8a2cd012eb4c533b5cb922c10b0182fb48429632a4ba31c085315f",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-02-converted-render.json",
+        "receiptSha256": "e68e46b466df5bcb5bfd3a767a4528ff74848b4c63b2d6d7ecb39d99a740dab8",
+        "uncompressedSha256": "992e3053b812deab4be7b94903b387d5b39b0909fdc6c3700ed321b063e820c5",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 911068,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          292
+        ],
+        "changedPixels": 6102,
+        "maxChannelDelta": 207,
+        "meanAbsoluteChannelDeltaAllPixels": 1.2132044316608075,
+        "meanAbsoluteChannelDeltaChangedPixels": 49.76881896645909,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-02-binary/page-0001.ppm.gz",
+        "rasterSha256": "6ed0301e223ae8f12d7a0e1a758ce2e1543016bad1fd3d69909a8ec69be450d8",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-02-binary-render.json",
+        "receiptSha256": "f1271284a7752cdc0bdf49637eec8b40ed0a146525472fb9af0a8a1c848918f1",
+        "uncompressedSha256": "6b91eec78102e1351265291c98a91594e4b32342d85c7973f6a620671afae4fc",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 316,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            172
+          ],
+          "changedPixels": 10,
+          "maxChannelDelta": 55,
+          "meanAbsoluteChannelDeltaAllPixels": 0.002084157762828123,
+          "meanAbsoluteChannelDeltaChangedPixels": 10.533333333333333,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 910752,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6092,
+          "maxChannelDelta": 207,
+          "meanAbsoluteChannelDeltaAllPixels": 5.256865800865801,
+          "meanAbsoluteChannelDeltaChangedPixels": 49.83322390019698,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "after-roundtrip-03-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-03-converted/page-0001.ppm.gz",
+        "rasterSha256": "680e75d0accbc195046e959e773f23560556dd4c5412def94ed3a5b02cdd8217",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-03-converted-render.json",
+        "receiptSha256": "e13a997a9ade1006d803a0b5c33235c05f11a5fd6d63cae6ce64478c2653edd0",
+        "uncompressedSha256": "d8496eec120babab80704392406024eb6630c6e5187fdfa6b9e648e57aec0fb1",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 1840706,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          291
+        ],
+        "changedPixels": 9739,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 2.45113721103654,
+        "meanAbsoluteChannelDeltaChangedPixels": 63.00119793271041,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-03-binary/page-0001.ppm.gz",
+        "rasterSha256": "75738142ecb66751f7d502c30d26370b33f0bbacb91267dde4c663719251fef3",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-03-binary-render.json",
+        "receiptSha256": "60e08eb1e7c66de6bc0414eab18bceda9a5cfa0eac37becbb3de6c92f310fe3d",
+        "uncompressedSha256": "6c8ca281f82450e0ae1769e844b7a004ac15559abb6cbe4fec8ba118382eb91d",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 955385,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 3831,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 6.301180583036539,
+          "meanAbsoluteChannelDeltaChangedPixels": 83.12755590359349,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 885321,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            291
+          ],
+          "changedPixels": 5908,
+          "maxChannelDelta": 207,
+          "meanAbsoluteChannelDeltaAllPixels": 5.110077922077922,
+          "meanAbsoluteChannelDeltaChangedPixels": 49.95040622884225,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-initial-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-converted/page-0001.ppm.gz",
+        "rasterSha256": "c41a952ed63a63fdbdc1d65713f0e21e6f6665b160ef4ed3c0e14c514e6edbd8",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/converted-render.json",
+        "receiptSha256": "8e292fa251cd69c9538a0ca279605cd53abf857e0ebb444c426c2fb37c42161d",
+        "uncompressedSha256": "cc688a2805c755bba86864a393adb044984bbc7319c3f93ffb4ecc48878a5dcd",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 10774592,
+        "changedPixelBounds": [
+          71,
+          81,
+          535,
+          298
+        ],
+        "changedPixels": 35146,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 14.347757537019282,
+        "meanAbsoluteChannelDeltaChangedPixels": 102.18888825660578,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-binary/page-0001.ppm.gz",
+        "rasterSha256": "6b3bcc717e5fe7971b0a800b98f04b274af8dd766c6b57688ba20e357f4280cd",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/binary-render.json",
+        "receiptSha256": "34f00f366e5363cc9df2fef913040d0d89cf6328317289b3a1b6d720c6081a3b",
+        "uncompressedSha256": "a52939fe5dcda90a2df08e7f7cd3a647a32f3952ad44808a2fdcf240af4e1e71",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 1529313,
+          "changedPixelBounds": [
+            71,
+            148,
+            259,
+            183
+          ],
+          "changedPixels": 6500,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 28.0865564738292,
+          "meanAbsoluteChannelDeltaChangedPixels": 78.42630769230769,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1804478,
+          "changedPixelBounds": [
+            71,
+            205,
+            259,
+            240
+          ],
+          "changedPixels": 6524,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 33.14009182736456,
+          "meanAbsoluteChannelDeltaChangedPixels": 92.19691395871654,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 2407579,
+          "changedPixelBounds": [
+            348,
+            139,
+            535,
+            174
+          ],
+          "changedPixels": 5444,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.87903310908851,
+          "meanAbsoluteChannelDeltaChangedPixels": 147.41482978202302,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 3335066,
+          "changedPixelBounds": [
+            344,
+            206,
+            532,
+            298
+          ],
+          "changedPixels": 11778,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 18.170785659801677,
+          "meanAbsoluteChannelDeltaChangedPixels": 94.38687949283975,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 72293,
+          "changedPixelBounds": [
+            72,
+            81,
+            317,
+            120
+          ],
+          "changedPixels": 409,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 0.5409128320239431,
+          "meanAbsoluteChannelDeltaChangedPixels": 58.918500407497966,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1625863,
+          "changedPixelBounds": [
+            71,
+            257,
+            259,
+            293
+          ],
+          "changedPixels": 4491,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 9.38449062049062,
+          "meanAbsoluteChannelDeltaChangedPixels": 120.67564759147926,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-roundtrip-01-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-01-converted/page-0001.ppm.gz",
+        "rasterSha256": "c11ff899e82f4fffad8254c9712194de48586b6f4bb4a8f1816ff1dd4c87e032",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-01-converted-render.json",
+        "receiptSha256": "1d5fa0d1b37ff08fdc8a3d8d95c7168f0ac2f520f702ea7b513034d7380039ff",
+        "uncompressedSha256": "0dc078156fbbbbdb565811b5d4b7328cfe3e736fc22e54789dae35ff0b38ec11",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 0,
+        "changedPixelBounds": null,
+        "changedPixels": 0,
+        "maxChannelDelta": 0,
+        "meanAbsoluteChannelDeltaAllPixels": 0.0,
+        "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-01-binary/page-0001.ppm.gz",
+        "rasterSha256": "c11ff899e82f4fffad8254c9712194de48586b6f4bb4a8f1816ff1dd4c87e032",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-01-binary-render.json",
+        "receiptSha256": "543fdeeb0afc9375e2f0b26bf995843363dbd838937f93d28d51ddc6f6f7d2ba",
+        "uncompressedSha256": "0dc078156fbbbbdb565811b5d4b7328cfe3e736fc22e54789dae35ff0b38ec11",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-roundtrip-02-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-02-converted/page-0001.ppm.gz",
+        "rasterSha256": "2f2ca8836b33ca750c8a4cea8ad09dc6cb049274168c646e96bece749d1efe54",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-02-converted-render.json",
+        "receiptSha256": "365e137f86ab58920cd6a10a5ef861f55cc1926ac8fbf31f453c0982864f5e8f",
+        "uncompressedSha256": "1e685c3181e45289f5c651e3a25d6c09d2a662f8f8e2591892f241fc07f39b00",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 0,
+        "changedPixelBounds": null,
+        "changedPixels": 0,
+        "maxChannelDelta": 0,
+        "meanAbsoluteChannelDeltaAllPixels": 0.0,
+        "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-02-binary/page-0001.ppm.gz",
+        "rasterSha256": "2f2ca8836b33ca750c8a4cea8ad09dc6cb049274168c646e96bece749d1efe54",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-02-binary-render.json",
+        "receiptSha256": "99c49423ca5a33f3e3c121e4b43fc41b2479899785952cafe864724bace79b85",
+        "uncompressedSha256": "1e685c3181e45289f5c651e3a25d6c09d2a662f8f8e2591892f241fc07f39b00",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-roundtrip-03-binary-vs-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-03-converted/page-0001.ppm.gz",
+        "rasterSha256": "1e87246e2a0920f44f364b48ffc7911ba8fe3cab2915bd62da45d7018d6d9609",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-03-converted-render.json",
+        "receiptSha256": "d58ad8ff7ad189d809a7103d76b815d5c72c9fc19084de1b2b44824f01910e65",
+        "uncompressedSha256": "20619bdf1ab6cdb74cb401d7aa7afe9621af2b3a041d39167ba858656f7dd8b1",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 0,
+        "changedPixelBounds": null,
+        "changedPixels": 0,
+        "maxChannelDelta": 0,
+        "meanAbsoluteChannelDeltaAllPixels": 0.0,
+        "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-03-binary/page-0001.ppm.gz",
+        "rasterSha256": "1e87246e2a0920f44f364b48ffc7911ba8fe3cab2915bd62da45d7018d6d9609",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-03-binary-render.json",
+        "receiptSha256": "d5626381d705fd0f36ad454cec9a5149dfc0a0839e7c477e9e4cebe6c7b36a86",
+        "uncompressedSha256": "20619bdf1ab6cdb74cb401d7aa7afe9621af2b3a041d39167ba858656f7dd8b1",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-binary": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-binary/page-0001.ppm.gz",
+        "rasterSha256": "6b3bcc717e5fe7971b0a800b98f04b274af8dd766c6b57688ba20e357f4280cd",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/binary-render.json",
+        "receiptSha256": "67706c877bec1102138dfd874433e81ec93bb32b76b3bb22779d744cc04d0feb",
+        "uncompressedSha256": "a52939fe5dcda90a2df08e7f7cd3a647a32f3952ad44808a2fdcf240af4e1e71",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 0,
+        "changedPixelBounds": null,
+        "changedPixels": 0,
+        "maxChannelDelta": 0,
+        "meanAbsoluteChannelDeltaAllPixels": 0.0,
+        "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-binary/page-0001.ppm.gz",
+        "rasterSha256": "6b3bcc717e5fe7971b0a800b98f04b274af8dd766c6b57688ba20e357f4280cd",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/binary-render.json",
+        "receiptSha256": "34f00f366e5363cc9df2fef913040d0d89cf6328317289b3a1b6d720c6081a3b",
+        "uncompressedSha256": "a52939fe5dcda90a2df08e7f7cd3a647a32f3952ad44808a2fdcf240af4e1e71",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-converted/page-0001.ppm.gz",
+        "rasterSha256": "5874a6539d1b078bf394072e88a2f767c0d16d588ec083cc7569d0abf5e537d2",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/converted-render.json",
+        "receiptSha256": "2be21b6724754bb902d9213a7415c458c91b86520a98ca6c1bfd3369eaaaf630",
+        "uncompressedSha256": "c716eb549025ae755ab57ce596499aaea5feb4822a1a003c2188c4fea2fbeec4",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8538455,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          297
+        ],
+        "changedPixels": 32997,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.370052998828166,
+        "meanAbsoluteChannelDeltaChangedPixels": 86.25486155307048,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-converted/page-0001.ppm.gz",
+        "rasterSha256": "c41a952ed63a63fdbdc1d65713f0e21e6f6665b160ef4ed3c0e14c514e6edbd8",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/converted-render.json",
+        "receiptSha256": "8e292fa251cd69c9538a0ca279605cd53abf857e0ebb444c426c2fb37c42161d",
+        "uncompressedSha256": "cc688a2805c755bba86864a393adb044984bbc7319c3f93ffb4ecc48878a5dcd",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 823760,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 135,
+          "meanAbsoluteChannelDeltaAllPixels": 15.128741965105602,
+          "meanAbsoluteChannelDeltaChangedPixels": 46.38288288288288,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1252087,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 251,
+          "meanAbsoluteChannelDeltaAllPixels": 22.995169880624427,
+          "meanAbsoluteChannelDeltaChangedPixels": 70.50039414414414,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1722006,
+          "changedPixelBounds": [
+            349,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 4210,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 11.357380292837357,
+          "meanAbsoluteChannelDeltaChangedPixels": 136.34251781472685,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2785309,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            297
+          ],
+          "changedPixels": 10842,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.175487632123788,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.63330873762528,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1955293,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6105,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 11.285962481962482,
+          "meanAbsoluteChannelDeltaChangedPixels": 106.75910455910456,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-roundtrip-01-binary": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-01-binary/page-0001.ppm.gz",
+        "rasterSha256": "d41ee7f02958d7269a97bc7e5eedfb8a4c21defa010d5acef8418be8a6101af4",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-01-binary-render.json",
+        "receiptSha256": "d930e3c1cca7279e051c4b8d81133bc4af5269d50778cee123749cb68ce8c3f7",
+        "uncompressedSha256": "80f220671ee48c1f3246a842dedf2be4ff6bb927809bb0befa84a580360c9142",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8557431,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          297
+        ],
+        "changedPixels": 34216,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.395321987855544,
+        "meanAbsoluteChannelDeltaChangedPixels": 83.36675824175825,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-01-binary/page-0001.ppm.gz",
+        "rasterSha256": "c11ff899e82f4fffad8254c9712194de48586b6f4bb4a8f1816ff1dd4c87e032",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-01-binary-render.json",
+        "receiptSha256": "543fdeeb0afc9375e2f0b26bf995843363dbd838937f93d28d51ddc6f6f7d2ba",
+        "uncompressedSha256": "0dc078156fbbbbdb565811b5d4b7328cfe3e736fc22e54789dae35ff0b38ec11",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 785948,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 68,
+          "meanAbsoluteChannelDeltaAllPixels": 14.434306703397613,
+          "meanAbsoluteChannelDeltaChangedPixels": 44.25382882882883,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1189775,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 127,
+          "meanAbsoluteChannelDeltaAllPixels": 21.850780532598716,
+          "meanAbsoluteChannelDeltaChangedPixels": 66.99183558558559,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1853388,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 5429,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 12.22390185991294,
+          "meanAbsoluteChannelDeltaChangedPixels": 113.79554245717443,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2785309,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            297
+          ],
+          "changedPixels": 10842,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.175487632123788,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.63330873762528,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1943011,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6105,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 11.215070707070707,
+          "meanAbsoluteChannelDeltaChangedPixels": 106.08850668850668,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-roundtrip-01-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-01-converted/page-0001.ppm.gz",
+        "rasterSha256": "0030d7cba6ff4ee6e09d024be4a4e9d496be437ee1a1be73ac7efc8567498ad4",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-01-converted-render.json",
+        "receiptSha256": "58ddb3b402680d426b2a57dbe178cb8b81add32a40d5b7fa23ad492bca2818b4",
+        "uncompressedSha256": "bd75bd0df152de3d3d8793faa2a62b3d9cff7938d53899e4ac6c1e6e19d45dfd",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8565011,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          297
+        ],
+        "changedPixels": 34216,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.405415734526473,
+        "meanAbsoluteChannelDeltaChangedPixels": 83.44060283687944,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-01-converted/page-0001.ppm.gz",
+        "rasterSha256": "c11ff899e82f4fffad8254c9712194de48586b6f4bb4a8f1816ff1dd4c87e032",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-01-converted-render.json",
+        "receiptSha256": "1d5fa0d1b37ff08fdc8a3d8d95c7168f0ac2f520f702ea7b513034d7380039ff",
+        "uncompressedSha256": "0dc078156fbbbbdb565811b5d4b7328cfe3e736fc22e54789dae35ff0b38ec11",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 785948,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 68,
+          "meanAbsoluteChannelDeltaAllPixels": 14.434306703397613,
+          "meanAbsoluteChannelDeltaChangedPixels": 44.25382882882883,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1189775,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 127,
+          "meanAbsoluteChannelDeltaAllPixels": 21.850780532598716,
+          "meanAbsoluteChannelDeltaChangedPixels": 66.99183558558559,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1853436,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 5429,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 12.22421844083894,
+          "meanAbsoluteChannelDeltaChangedPixels": 113.79848959292687,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2785309,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            297
+          ],
+          "changedPixels": 10842,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.175487632123788,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.63330873762528,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1950543,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6105,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 11.258545454545455,
+          "meanAbsoluteChannelDeltaChangedPixels": 106.4997542997543,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-roundtrip-02-binary": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-02-binary/page-0001.ppm.gz",
+        "rasterSha256": "6ed0301e223ae8f12d7a0e1a758ce2e1543016bad1fd3d69909a8ec69be450d8",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-02-binary-render.json",
+        "receiptSha256": "f1271284a7752cdc0bdf49637eec8b40ed0a146525472fb9af0a8a1c848918f1",
+        "uncompressedSha256": "6b91eec78102e1351265291c98a91594e4b32342d85c7973f6a620671afae4fc",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8517949,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          296
+        ],
+        "changedPixels": 34038,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.342746617662725,
+        "meanAbsoluteChannelDeltaChangedPixels": 83.41607419158979,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-02-binary/page-0001.ppm.gz",
+        "rasterSha256": "2f2ca8836b33ca750c8a4cea8ad09dc6cb049274168c646e96bece749d1efe54",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-02-binary-render.json",
+        "receiptSha256": "99c49423ca5a33f3e3c121e4b43fc41b2479899785952cafe864724bace79b85",
+        "uncompressedSha256": "1e685c3181e45289f5c651e3a25d6c09d2a662f8f8e2591892f241fc07f39b00",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 785948,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 68,
+          "meanAbsoluteChannelDeltaAllPixels": 14.434306703397613,
+          "meanAbsoluteChannelDeltaChangedPixels": 44.25382882882883,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1189775,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 127,
+          "meanAbsoluteChannelDeltaAllPixels": 21.850780532598716,
+          "meanAbsoluteChannelDeltaChangedPixels": 66.99183558558559,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1845380,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 5397,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 12.17108560875874,
+          "meanAbsoluteChannelDeltaChangedPixels": 113.97566549317521,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2753835,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            296
+          ],
+          "changedPixels": 10696,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.004004576659039,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.82133507853403,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1943011,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6105,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 11.215070707070707,
+          "meanAbsoluteChannelDeltaChangedPixels": 106.08850668850668,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-roundtrip-02-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-02-converted/page-0001.ppm.gz",
+        "rasterSha256": "40b99091fc8a2cd012eb4c533b5cb922c10b0182fb48429632a4ba31c085315f",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-02-converted-render.json",
+        "receiptSha256": "e68e46b466df5bcb5bfd3a767a4528ff74848b4c63b2d6d7ecb39d99a740dab8",
+        "uncompressedSha256": "992e3053b812deab4be7b94903b387d5b39b0909fdc6c3700ed321b063e820c5",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8525573,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          296
+        ],
+        "changedPixels": 34038,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.352898956002983,
+        "meanAbsoluteChannelDeltaChangedPixels": 83.4907358442525,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-02-converted/page-0001.ppm.gz",
+        "rasterSha256": "2f2ca8836b33ca750c8a4cea8ad09dc6cb049274168c646e96bece749d1efe54",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-02-converted-render.json",
+        "receiptSha256": "365e137f86ab58920cd6a10a5ef861f55cc1926ac8fbf31f453c0982864f5e8f",
+        "uncompressedSha256": "1e685c3181e45289f5c651e3a25d6c09d2a662f8f8e2591892f241fc07f39b00",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 785948,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 68,
+          "meanAbsoluteChannelDeltaAllPixels": 14.434306703397613,
+          "meanAbsoluteChannelDeltaChangedPixels": 44.25382882882883,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1189775,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 127,
+          "meanAbsoluteChannelDeltaAllPixels": 21.850780532598716,
+          "meanAbsoluteChannelDeltaChangedPixels": 66.99183558558559,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1845472,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 5397,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 12.171692388866903,
+          "meanAbsoluteChannelDeltaChangedPixels": 113.98134766228151,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2753835,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            296
+          ],
+          "changedPixels": 10696,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.004004576659039,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.82133507853403,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1950543,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            292
+          ],
+          "changedPixels": 6105,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 11.258545454545455,
+          "meanAbsoluteChannelDeltaChangedPixels": 106.4997542997543,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-roundtrip-03-binary": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-03-binary/page-0001.ppm.gz",
+        "rasterSha256": "75738142ecb66751f7d502c30d26370b33f0bbacb91267dde4c663719251fef3",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-03-binary-render.json",
+        "receiptSha256": "60e08eb1e7c66de6bc0414eab18bceda9a5cfa0eac37becbb3de6c92f310fe3d",
+        "uncompressedSha256": "6c8ca281f82450e0ae1769e844b7a004ac15559abb6cbe4fec8ba118382eb91d",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8457990,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          296
+        ],
+        "changedPixels": 33853,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.262903483541068,
+        "meanAbsoluteChannelDeltaChangedPixels": 83.28154077925147,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-03-binary/page-0001.ppm.gz",
+        "rasterSha256": "1e87246e2a0920f44f364b48ffc7911ba8fe3cab2915bd62da45d7018d6d9609",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-03-binary-render.json",
+        "receiptSha256": "d5626381d705fd0f36ad454cec9a5149dfc0a0839e7c477e9e4cebe6c7b36a86",
+        "uncompressedSha256": "20619bdf1ab6cdb74cb401d7aa7afe9621af2b3a041d39167ba858656f7dd8b1",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 785948,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 68,
+          "meanAbsoluteChannelDeltaAllPixels": 14.434306703397613,
+          "meanAbsoluteChannelDeltaChangedPixels": 44.25382882882883,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1189775,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 127,
+          "meanAbsoluteChannelDeltaAllPixels": 21.850780532598716,
+          "meanAbsoluteChannelDeltaChangedPixels": 66.99183558558559,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1843034,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 5397,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 12.155612716000528,
+          "meanAbsoluteChannelDeltaChangedPixels": 113.83077018096473,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2753835,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            296
+          ],
+          "changedPixels": 10696,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.004004576659039,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.82133507853403,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1885398,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            291
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 10.882528138528139,
+          "meanAbsoluteChannelDeltaChangedPixels": 106.1597972972973,
+          "totalPixels": 57750
+        }
+      }
+    },
+    "before-vs-after-roundtrip-03-converted": {
+      "actual": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/render-roundtrip-03-converted/page-0001.ppm.gz",
+        "rasterSha256": "680e75d0accbc195046e959e773f23560556dd4c5412def94ed3a5b02cdd8217",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7/word14-margin-origin/roundtrip-03-converted-render.json",
+        "receiptSha256": "e13a997a9ade1006d803a0b5c33235c05f11a5fd6d63cae6ce64478c2653edd0",
+        "uncompressedSha256": "d8496eec120babab80704392406024eb6630c6e5187fdfa6b9e648e57aec0fb1",
+        "width": 596
+      },
+      "page": {
+        "absoluteChannelDeltaSum": 8473844,
+        "changedPixelBounds": [
+          73,
+          139,
+          534,
+          296
+        ],
+        "changedPixels": 33852,
+        "maxChannelDelta": 255,
+        "meanAbsoluteChannelDeltaAllPixels": 11.284015127303718,
+        "meanAbsoluteChannelDeltaChangedPixels": 83.4401118594667,
+        "totalPixels": 250320
+      },
+      "reference": {
+        "height": 420,
+        "rasterPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/render-roundtrip-03-converted/page-0001.ppm.gz",
+        "rasterSha256": "1e87246e2a0920f44f364b48ffc7911ba8fe3cab2915bd62da45d7018d6d9609",
+        "receiptPath": "/workspace/scratch/c1ca2a1344e9/parser-native-74420eb/word14-margin-origin/roundtrip-03-converted-render.json",
+        "receiptSha256": "d58ad8ff7ad189d809a7103d76b815d5c72c9fc19084de1b2b44824f01910e65",
+        "uncompressedSha256": "20619bdf1ab6cdb74cb401d7aa7afe9621af2b3a041d39167ba858656f7dd8b1",
+        "width": 596
+      },
+      "regions": {
+        "gradient_one_1029": {
+          "absoluteChannelDeltaSum": 785948,
+          "changedPixelBounds": [
+            73,
+            150,
+            258,
+            182
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 68,
+          "meanAbsoluteChannelDeltaAllPixels": 14.434306703397613,
+          "meanAbsoluteChannelDeltaChangedPixels": 44.25382882882883,
+          "totalPixels": 18150
+        },
+        "gradient_two_1027": {
+          "absoluteChannelDeltaSum": 1189775,
+          "changedPixelBounds": [
+            73,
+            207,
+            258,
+            239
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 127,
+          "meanAbsoluteChannelDeltaAllPixels": 21.850780532598716,
+          "meanAbsoluteChannelDeltaChangedPixels": 66.99183558558559,
+          "totalPixels": 18150
+        },
+        "pattern_1030": {
+          "absoluteChannelDeltaSum": 1843271,
+          "changedPixelBounds": [
+            347,
+            139,
+            534,
+            173
+          ],
+          "changedPixels": 5396,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 12.157175834322649,
+          "meanAbsoluteChannelDeltaChangedPixels": 113.86650605386706,
+          "totalPixels": 50540
+        },
+        "picture_1028": {
+          "absoluteChannelDeltaSum": 2753835,
+          "changedPixelBounds": [
+            351,
+            208,
+            527,
+            296
+          ],
+          "changedPixels": 10696,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 15.004004576659039,
+          "meanAbsoluteChannelDeltaChangedPixels": 85.82133507853403,
+          "totalPixels": 61180
+        },
+        "solid_1031": {
+          "absoluteChannelDeltaSum": 0,
+          "changedPixelBounds": null,
+          "changedPixels": 0,
+          "maxChannelDelta": 0,
+          "meanAbsoluteChannelDeltaAllPixels": 0.0,
+          "meanAbsoluteChannelDeltaChangedPixels": 0.0,
+          "totalPixels": 44550
+        },
+        "texture_1026": {
+          "absoluteChannelDeltaSum": 1901015,
+          "changedPixelBounds": [
+            73,
+            259,
+            258,
+            291
+          ],
+          "changedPixels": 5920,
+          "maxChannelDelta": 255,
+          "meanAbsoluteChannelDeltaAllPixels": 10.972669552669553,
+          "meanAbsoluteChannelDeltaChangedPixels": 107.03913288288288,
+          "totalPixels": 57750
+        }
+      }
+    }
+  },
+  "dpi": 72,
+  "helperSha256": "02ea78e6fed2c70d1b5d8632d06733f2eb5ea91df1e2eb76d81575490d497627",
+  "method": "Compare retained lossless PPM pixels after verifying their render receipts.\n\nRegions partition page whitespace around each named object. They are analysis\nregions, not inferred source shape bounds. Bounding boxes are half-open pixels.\nNo native application or parser runs and no retained artifact is modified.\n",
+  "regions": {
+    "gradient_one_1029": [
+      0,
+      135,
+      330,
+      190
+    ],
+    "gradient_two_1027": [
+      0,
+      190,
+      330,
+      245
+    ],
+    "pattern_1030": [
+      330,
+      0,
+      596,
+      190
+    ],
+    "picture_1028": [
+      330,
+      190,
+      596,
+      420
+    ],
+    "solid_1031": [
+      0,
+      0,
+      330,
+      135
+    ],
+    "texture_1026": [
+      0,
+      245,
+      330,
+      420
+    ]
+  },
+  "schemaVersion": 1
+}

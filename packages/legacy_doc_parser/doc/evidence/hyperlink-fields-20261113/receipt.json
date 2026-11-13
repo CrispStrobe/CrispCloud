@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "result": {
+    "verified": true,
+    "externalFocusedTests": 69,
+    "finalFocusedTests": 89,
+    "nativeSources": 2,
+    "preservedUrlFields": 4,
+    "restoredReferenceFields": 1,
+    "sdkPackages": 2,
+    "sdkErrors": 0,
+    "javascriptNativeCases": 2,
+    "javascriptFields": 7,
+    "javascriptOwnerSwapRejected": true
+  },
+  "files": {
+    "README.md": "9c25339ddc1f47c1239f17a398f3ef29756ad17b4363afb79fee07660a765485",
+    "verify.py": "8f8adbd3c6f1c165398c966de4dde46c28de76935f3df78c1d3d878af0e2f2f1",
+    "source_oracle.py": "4bb46c6a3911c307c15fdff5331a2e6b2986fbbd8daf99c69a3019c21c8378d5",
+    "test_verifier.py": "ee55f98f8dbcd454e7a150a3159558df249cdc54003b527d9ceeb63a546f1d60",
+    "manifest.json": "debecead91ed56f24f440a7e1ac8e30df26c559ff10b0f88ac9977a68158eeec",
+    "records.tar.xz": "ef452b56d52ab69f06fa9b89449b104d4854bb22ac4e081cbbb0ccacf72ebbc5"
+  },
+  "measuredRuntimeCommits": [
+    "3c8d22d2a2e2277d53547378bf66e62e951f0ccf",
+    "d7e7883325d454a2bf01a44810c6f8336177d7a8"
+  ],
+  "scope": "Two native DOC sources; semantic fields, cached results, SDK and JavaScript; no pixel equality claim",
+  "javascriptHelperCommit": "8eaa15bbe7dc1564692e60427294ae546d177b68"
+}

@@ -1,0 +1,203 @@
+{
+  "analysis": {
+    "fatal_infos": true,
+    "issues": 0
+  },
+  "base_commit": "c1b3ec5b685bfebb9199684ceb35b4c9f231ef7a",
+  "dart_tests": {
+    "added": 58,
+    "baseline_passed": 1055,
+    "final_passed": 1113
+  },
+  "date": "2026-11-13",
+  "dependencies_sha256": "b8da06e622794c47491eee61f6b751f6e9a12c0c747af7bbc7e39d7ff39a39d3",
+  "final_runtime_sources_unchanged": true,
+  "format": {
+    "active_files": 216,
+    "active_roots": [
+      "lib",
+      "test",
+      "tool",
+      "example"
+    ],
+    "ci_fix_commit": "1b4d23afd8afe9b652daf0cc51196303c3df539f",
+    "historical_probe_sha256": "171ab5d8ab411e5c81a68b7eefd8a1cd2175590cab72b3b0aaae071b34e869c1",
+    "initial_full_tree_passed": false,
+    "passed": true
+  },
+  "hosted_ci": "Check GitHub for current status; these results are local clean-checkout measurements.",
+  "javascript": {
+    "Ink JavaScript": {
+      "cases": 24,
+      "points": 96,
+      "strokes": 32
+    },
+    "Ink budget JavaScript": {
+      "decodedPayloads": 2,
+      "decodedPoints": 100000,
+      "limitedPayloads": 2,
+      "payloads": 4,
+      "rawPayloadsPreserved": 4
+    },
+    "Ink header JavaScript": {
+      "cases": 32,
+      "points": 160,
+      "specifiedMetricDifferences": 1,
+      "strokes": 32
+    },
+    "Legacy DOC JavaScript": {
+      "boundedTextExtraction": true,
+      "cfbSimpleNames": true,
+      "cfbVersionedStreamSizes": true,
+      "footers": 3,
+      "footnotes": 1,
+      "headers": 3,
+      "images": 1,
+      "internalRelationships": true,
+      "oleMetadata": true,
+      "signatureValidityClaimed": false,
+      "sourceUnchanged": true,
+      "tables": 1,
+      "unicode": true,
+      "vbaMetadata": true
+    },
+    "Media JavaScript": {
+      "checks": 51,
+      "emfBytes": 540,
+      "recordCounts": {
+        "emf": 21,
+        "wmf": 17
+      },
+      "wmfBytes": 230
+    },
+    "Nested field JavaScript": {
+      "balancedFields": true,
+      "cases": 5,
+      "externalFieldsInert": true,
+      "fieldCounts": {
+        "formula": 1,
+        "nested-results": 3,
+        "private-instruction-result": 2,
+        "private-result": 1,
+        "unsupported-result": 2
+      },
+      "privateDescendantsSuppressed": true,
+      "sourceUnchanged": true
+    }
+  },
+  "kind": "parser-audit-acceptance",
+  "native_fields": {
+    "attribution_controls": 10,
+    "attribution_schema_errors": 0,
+    "cases": [
+      {
+        "actual_normalized_text": "A999Z",
+        "actual_text": "A999Z\n\n\f",
+        "expected_normalized_text": "A999Z",
+        "input": "native-fields-input/formula.docx",
+        "input_sha256": "29e51aa79b5cf97246c2ad57010890a2199050b1439fa3f7983175694d107ecc",
+        "matches_expected": true,
+        "name": "formula",
+        "pdf_created": true,
+        "pdf_sha256": "ad99bd23e89aa24b10c6b98428101412ba62491325e6c8a80a63a504c7328a39",
+        "text": "native-fields-pdf/formula.txt",
+        "text_extraction_exit_code": 0
+      },
+      {
+        "actual_normalized_text": "A1VisibleZ",
+        "actual_text": "A1VisibleZ\n\n\f",
+        "expected_normalized_text": "AVisibleZ",
+        "input": "native-fields-input/nested-results.docx",
+        "input_sha256": "c289d1d9a1b8228e2de8a048fb66716dc6e0b7ed8ca2cd9062b85ded9b40753d",
+        "matches_expected": false,
+        "name": "nested-results",
+        "pdf_created": true,
+        "pdf_sha256": "d24a1532c6ffce60d564082be2d0c49f0df402b4994d1348b7fd91b497998602",
+        "text": "native-fields-pdf/nested-results.txt",
+        "text_extraction_exit_code": 0
+      },
+      {
+        "actual_normalized_text": "AError:ReferencesourcenotfoundZ",
+        "actual_text": "AError: Reference source not foundZ\n\n\f",
+        "expected_normalized_text": "AZ",
+        "input": "native-fields-input/private-result.docx",
+        "input_sha256": "0ef0225d2dc1326751919cc009899f3b57650eb78d80c256195e05d8a591fd48",
+        "matches_expected": false,
+        "name": "private-result",
+        "pdf_created": true,
+        "pdf_sha256": "83529059e19a0635dc490240677ca52d167cd6985616220c6ae0ceb79693a6e9",
+        "text": "native-fields-pdf/private-result.txt",
+        "text_extraction_exit_code": 0
+      },
+      {
+        "actual_normalized_text": "AVisibleZ",
+        "actual_text": "AVisibleZ\n\n\f",
+        "expected_normalized_text": "AVisibleZ",
+        "input": "native-fields-input/private-instruction-result.docx",
+        "input_sha256": "c4c688aa6cfa68e728ae993b8e28979380f37af939fab63df483ffe19a5b3340",
+        "matches_expected": true,
+        "name": "private-instruction-result",
+        "pdf_created": true,
+        "pdf_sha256": "3a593ea51d3c5aa229ea7fc6439d89e2f2b38affc56721f8619a11e1eea1c367",
+        "text": "native-fields-pdf/private-instruction-result.txt",
+        "text_extraction_exit_code": 0
+      },
+      {
+        "actual_normalized_text": "AVisibleZ",
+        "actual_text": "AVisibleZ\n\n\f",
+        "expected_normalized_text": "AVisibleZ",
+        "input": "native-fields-input/unsupported-result.docx",
+        "input_sha256": "a5ea922bcc8441b62ea70af0b75176158fa13ff579da70bfea321f424a801e27",
+        "matches_expected": true,
+        "name": "unsupported-result",
+        "pdf_created": true,
+        "pdf_sha256": "6a6bcb926769fbeb3017da25ddf4eb6651e633bb26776944f05fb958d950649c",
+        "text": "native-fields-pdf/unsupported-result.txt",
+        "text_extraction_exit_code": 0
+      }
+    ],
+    "field_tree_equivalence": {
+      "independent_nested_matches_parser_field_tree": true,
+      "ordinary_empty_ref_matches_private_parser_field_tree": true
+    },
+    "imports": 5,
+    "matching_visible_text": 3,
+    "scope": "Five converted DOCX files; visible field text only. No pagination, rendering equivalence, original DOC import, or native Microsoft Word fidelity claim."
+  },
+  "native_visible_text_all_match": false,
+  "openxml": {
+    "deterministic_files": 550,
+    "errors": 0,
+    "negative_controls": {
+      "errors": 2,
+      "files": 2,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "negative-controls.json",
+      "reportSha256": "b419bb8fbcb6c88b345f7c0a15fdcfbebfdf610078270da2e0031978e0a0acf5"
+    },
+    "outputs": 260,
+    "positive_control": {
+      "errors": 0,
+      "files": 1,
+      "hashesVerified": true,
+      "inputsUnchanged": true,
+      "report": "positive-control.json",
+      "reportSha256": "d29cd961fe059e64680e106d7ff34fe20b6ef4d76646f7e3bc956d39b571b989"
+    },
+    "self_test": true
+  },
+  "portable_and_schema_passed": true,
+  "publish_dry_run": {
+    "published": false,
+    "warnings": 0
+  },
+  "python_controls": {
+    "passed": 162
+  },
+  "runtime_commit": "92486f82dd746ab14b5ccf1310f629b74f7bfa5a",
+  "runtime_source_aggregate_sha256": "86c3c6b251e38a9a3f7a4661ae919ffe3c81c64b65f7ccc6c8be36eeaa30cb63",
+  "schema_version": 1,
+  "source_clean": true,
+  "source_corpus_verified": 24
+}

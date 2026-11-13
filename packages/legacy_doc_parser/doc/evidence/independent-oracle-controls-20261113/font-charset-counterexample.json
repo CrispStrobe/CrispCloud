@@ -1,0 +1,48 @@
+{
+  "scope": "Same actual counterfactual packages, unchanged document XML and literal text; only charset02/01 differs. This new schema-6 comparison does not relabel the original schema-5 native reports.",
+  "baselineSourceCommit": "d5fa58409ce4be3859b05a40132edbef3c4d54cf",
+  "baselineOracleSha256": "fea936f53c2efcf2564f58574908eef7fe858a29d3d3f6f18f7fc4c528268e8d",
+  "currentOracleSha256": "cd089a5b807d90023e582f1e23e9c30581f39736452321886e66e489e0a85395",
+  "inputs": [
+    {
+      "path": "font-metadata-counterfactuals-v2/wingdings-charset-02.docx",
+      "sha256": "2627e0dbcf40005a274e911b9da555d7bafc0fd8914ad018e2c6d38a24ea5648"
+    },
+    {
+      "path": "font-metadata-counterfactuals-v2/wingdings-charset-01.docx",
+      "sha256": "9adf40cf87f51071196f1665a9ac3151731a3631bc1d6809f76f259eb1cf1236"
+    }
+  ],
+  "baselineOracleSchema": 5,
+  "baselineDifferences": [],
+  "currentOracleSchema": 6,
+  "currentDifferences": [
+    {
+      "property": "fontCharsets",
+      "reference": [
+        [
+          {
+            "name": "Wingdings",
+            "charsets": [
+              {
+                "val": "02"
+              }
+            ]
+          }
+        ]
+      ],
+      "actual": [
+        [
+          {
+            "name": "Wingdings",
+            "charsets": [
+              {
+                "val": "01"
+              }
+            ]
+          }
+        ]
+      ]
+    }
+  ]
+}

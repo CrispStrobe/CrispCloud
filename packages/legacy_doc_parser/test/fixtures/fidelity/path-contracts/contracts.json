@@ -1,0 +1,50 @@
+{
+  "schema": "legacy-doc-parser/path-controls",
+  "version": 1,
+  "authoring": "Literal XML/explicit ID renaming and authored contracts, never derived from converter output.",
+  "cases": [
+    {
+      "path": "markdown-metadata.docx",
+      "contract": {
+        "visibleParagraphs": [
+          "KEPT-TITLE",
+          "KEPT-AUTHOR",
+          "BODY"
+        ],
+        "styles": [
+          "Title",
+          "Author",
+          "Normal"
+        ],
+        "reason": "Separate styled title/author metadata from body-only Markdown equality."
+      },
+      "bytes": 1712,
+      "sha256": "22fac3ae1702857d0a5dc2a23100c734996f33ac3206930d5a5c10c3946d9e04"
+    },
+    {
+      "path": "note-identifiers.docx",
+      "source": {
+        "path": "test/fixtures/fidelity/semantic-contracts/note-joins.docx",
+        "sha256": "add41f4c94e0329302c63b4f6839640a93b14651895995a784551452c2288914"
+      },
+      "contract": {
+        "mainParagraph": "MAIN-A[] MAIN-B[]",
+        "referenceTexts": [
+          "NOTE-A:α",
+          "NOTE-B:β"
+        ],
+        "renamedIds": {
+          "19": 1,
+          "7": 2
+        },
+        "notePartOrder": [
+          "NOTE-B:β",
+          "NOTE-A:α"
+        ],
+        "reason": "Labeled alternative producer input; retain the original unordered-ID control separately."
+      },
+      "bytes": 2141,
+      "sha256": "ef88a5bcc026202e2c053fe8f4906ad6af0ad8e68002c9fbbd71d3f6da164efd"
+    }
+  ]
+}

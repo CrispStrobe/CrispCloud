@@ -1,7 +1,87 @@
 // SPDX-License-Identifier: MPL-2.0
 import 'dart:convert';
 
+import 'package:archive/archive.dart';
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
+
+import '../test/support/ink_budget_fixture.dart';
+
+/// Exercises the document-wide decode allowance in VM and compiled JavaScript.
+/// Source payload sizes and expected outcomes are independently declared.
+Map<String, Object> verifyInkBudgetWebAcceptance() {
+  void require(bool value, String reason) {
+    if (!value) throw StateError(reason);
+  }
+
+  final payloads = [
+    for (final count in [60000, 60000, 40000, 1]) inkBudgetIsf([count]),
+  ];
+  final source = inkBudgetWordFixture(payloads);
+  final before = base64Encode(source);
+  final result = convertLegacyWord(source);
+  final parts = {
+    for (final entry in ZipDecoder().decodeBytes(result.bytes))
+      if (entry.isFile) entry.name: entry.content,
+  };
+  final manifest = jsonDecode(
+    utf8.decode(parts['word/evidence/manifest.json']!),
+  );
+  final records = (manifest['records'] as List)
+      .where((dynamic record) => record['kind'] == 'officeArtInk')
+      .toList();
+  const statuses = ['decoded', 'limitExceeded', 'decoded', 'limitExceeded'];
+  const points = [60000, null, 40000, null];
+  require(records.length == 4, 'Ink budget evidence is incomplete');
+  for (var index = 0; index < records.length; index++) {
+    final record = records[index] as Map;
+    final complete = statuses[index] == 'decoded';
+    require(
+      record['strokeDecodeStatus'] == statuses[index] &&
+          record['strokeSemanticsDecoded'] == complete &&
+          record['pointCount'] == points[index] &&
+          record['strokeCount'] == (complete ? 1 : null),
+      'Ink aggregate status/count mismatch at occurrence $index',
+    );
+    require(
+      record['nativeInkEmitted'] == false,
+      'Ink budget inspection activated native ink',
+    );
+    if (!complete) {
+      require(
+        (record['strokeDecodeReason'] as String).contains('aggregate point'),
+        'Ink budget failure lacks its aggregate diagnostic',
+      );
+    }
+    final retained = parts[record['part']];
+    require(
+      retained != null &&
+          base64Encode(retained) == base64Encode(payloads[index]),
+      'Ink budget evidence changed or lost payload $index',
+    );
+  }
+  require(
+    result.preservedCounts['inkPayloads'] == 4 &&
+        result.preservedCounts['decodedInkPayloads'] == 2 &&
+        result.preservedCounts['decodedInkStrokes'] == 2,
+    'Ink budget preservation counters differ',
+  );
+  for (final entry in parts.entries) {
+    if (entry.key.endsWith('.xml')) {
+      require(
+        !utf8.decode(entry.value).contains('<o:ink'),
+        'Ink budget output contains active ink',
+      );
+    }
+  }
+  require(base64Encode(source) == before, 'Ink budget source bytes changed');
+  return {
+    'payloads': 4,
+    'decodedPayloads': 2,
+    'limitedPayloads': 2,
+    'decodedPoints': 100000,
+    'rawPayloadsPreserved': 4,
+  };
+}
 
 /// Executes the real decoder in compiled JavaScript against independently
 /// captured WPF bytes and decoded JSON. The host only supplies fixture data.

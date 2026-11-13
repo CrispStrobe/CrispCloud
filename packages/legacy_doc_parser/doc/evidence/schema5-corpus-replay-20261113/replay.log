@@ -1,0 +1,25 @@
+{"cases": 24, "packages": 62, "snapshotSuccesses": 62, "readerErrors": 0}
+formatting {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}}
+word {'native': {'endnoteReference': 1, 'footnoteReference': 1, 'hyperlink': 3}, 'parser': {'endnoteReference': 1, 'footnoteReference': 1}, 'original': {'endnoteReference': 1, 'footnoteReference': 1, 'hyperlink': 3}}
+word-compatibility {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}, 'original': {'footnoteReference': 1}}
+table-borders {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}, 'original': {'footnoteReference': 1}}
+story-media {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}, 'original': {'footnoteReference': 1}}
+comment-threads {'native': {}, 'parser': {}, 'original': {}}
+note-markers {'native': {'endnoteReference': 3, 'footnoteReference': 6}, 'parser': {'endnoteReference': 3, 'footnoteReference': 6}, 'original': {'endnoteReference': 3, 'footnoteReference': 6}}
+bookmarks {'native': {'bookmarkEnd': 14, 'bookmarkStart': 14, 'endnoteReference': 1, 'footnoteReference': 1, 'hyperlink': 1}, 'parser': {'bookmarkEnd': 16, 'bookmarkStart': 16, 'endnoteReference': 1, 'field': 1, 'footnoteReference': 1}, 'original': {'bookmarkEnd': 16, 'bookmarkStart': 16, 'endnoteReference': 1, 'footnoteReference': 1, 'hyperlink': 1}}
+content-controls {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}, 'original': {'footnoteReference': 1}}
+content-controls-legacy {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}, 'original': {'footnoteReference': 1}}
+word-altchunk {'native': {'footnoteReference': 1}, 'parser': {'footnoteReference': 1}, 'original': {'footnoteReference': 1}}
+linked-textboxes {'native': {}, 'parser': {}, 'original': {}}
+officeart-shapes {'native': {}, 'parser': {}, 'original': {}}
+linked-textboxes-native {'native': {}, 'parser': {}}
+emf-vectors {'native': {}, 'parser': {}, 'original': {}}
+wmf-vectors {'native': {}, 'parser': {}, 'original': {}}
+linked-textboxes-compact {'native': {}, 'parser': {}}
+list-continue {'native': {}, 'parser': {}}
+list-restart {'native': {}, 'parser': {}}
+word14-margin-origin {'native': {}, 'parser': {}}
+word16-page-origin {'native': {}, 'parser': {}}
+poi-simple-table2 {'native': {}, 'parser': {}}
+header-textbox-alias {'native': {}, 'parser': {}}
+header-textbox-first-enabled {'native': {}, 'parser': {}}

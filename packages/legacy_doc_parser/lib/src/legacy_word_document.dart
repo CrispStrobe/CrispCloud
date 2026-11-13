@@ -29,7 +29,7 @@ String extractLegacyWordText(Uint8List bytes) {
   if (word == null || word.length < 32) {
     throw const FormatException('The WordDocument stream is missing.');
   }
-  final fib = _WordBytes(word);
+  var fib = _WordBytes(word);
   if (fib.u16(0) != 0xa5ec) {
     throw const FormatException('This is not a Word binary document.');
   }
@@ -52,6 +52,14 @@ String extractLegacyWordText(Uint8List bytes) {
   final cslw = fib.u16(cslwOffset);
   if (cslw != 22) throw const FormatException('Invalid Word FIB long count.');
   final longStart = cslwOffset + 2;
+  final declaredExtent = fib.u32(longStart);
+  if (declaredExtent != 0) {
+    // Match the structured reader: a positive cbMac bounds every FIB and text
+    // read, even when the physical CFB stream contains additional bytes. Zero
+    // remains the historical minimal-export compatibility case.
+    fib.require(0, declaredExtent);
+    fib = _WordBytes(Uint8List.sublistView(word, 0, declaredExtent));
+  }
   final characterCount = fib.u32(longStart + 3 * 4);
   if (characterCount > maxCharacters) {
     throw const FormatException('Word text exceeds the preview size limit.');
@@ -112,6 +120,9 @@ String extractLegacyWordText(Uint8List bytes) {
     if (start >= characterCount) continue;
     final count = (next < characterCount ? next : characterCount) - start;
     final fc = textTable.u32(pcdStart + index * 8 + 2);
+    if ((fc & 0x80000000) != 0) {
+      throw const FormatException('Invalid Word text piece offset.');
+    }
     final compressed = (fc & 0x40000000) != 0;
     final rawOffset = fc & 0x3fffffff;
     if (compressed && rawOffset.isOdd) {
@@ -192,6 +203,7 @@ String _readableBody(String value) {
         case 0x0b:
         case 0x0c:
         case 0x0d:
+        case 0x0e:
           output.write('\n');
         case 0x1e:
           output.writeCharCode(0x2011);

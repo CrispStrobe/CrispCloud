@@ -5,6 +5,7 @@
 import 'dart:typed_data';
 
 import 'byte_source.dart';
+import 'cfbf_names.dart';
 import 'cfbf_reader.dart';
 
 /// Builds a version-3 (512-byte sector) Compound File Binary.
@@ -613,19 +614,5 @@ int _cfbfNameCompare(String a, String b) {
   final lengthDifference = a.length - b.length;
   if (lengthDifference != 0) return lengthDifference;
 
-  /// au API.
-  final String au = a.toUpperCase();
-
-  /// bu API.
-  final String bu = b.toUpperCase();
-
-  /// minLen API.
-  final int minLen = au.length < bu.length ? au.length : bu.length;
-  for (int i = 0; i < minLen; i++) {
-    final int d = au.codeUnitAt(i) - bu.codeUnitAt(i);
-    if (d != 0) {
-      return d;
-    }
-  }
-  return au.length - bu.length;
+  return cfbfNameKey(a).compareTo(cfbfNameKey(b));
 }

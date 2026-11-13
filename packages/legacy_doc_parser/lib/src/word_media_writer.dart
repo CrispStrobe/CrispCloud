@@ -3,9 +3,49 @@ part of 'conversion.dart';
 
 const _evidenceRelationship = 'urn:legacy-doc-parser:relationships:evidence';
 
+/// Decode each immutable ink model at most once within one conversion. Read
+/// bytes under this shared budget instead of forcing the model's standalone
+/// lazy decode: predecoded public models must not bypass aggregate limits.
+class _ConversionInkInspection {
+  final _budget = LegacyWordInkDecodeBudget();
+  final _results =
+      Map<LegacyWordOfficeArtInk, LegacyWordInkDecodeResult>.identity();
+
+  LegacyWordInkDecodeResult? inspect(LegacyWordOfficeArtInk ink) {
+    final bytes = ink.data;
+    if (bytes == null) return null;
+    return _results.putIfAbsent(
+      ink,
+      () => decodeLegacyWordInk(bytes, budget: _budget),
+    );
+  }
+}
+
 extension _WordMedia on _StructuredWordWriter {
+  bool _canEmbedImage(LegacyWordImageAsset asset) {
+    if (!asset.isRenderable) return false;
+    if (asset.format != LegacyWordImageFormat.emf &&
+        asset.format != LegacyWordImageFormat.wmf) {
+      return true;
+    }
+    final allowed = _validatedMetafiles.putIfAbsent(asset, () {
+      // Repeated references share one scan. Bound total scan work separately
+      // from the later package byte limit, including rejected public models.
+      _metafileBytesInspected += asset.bytes.length;
+      if (_metafileBytesInspected > kLegacyWordPackageLimit) _tooComplex();
+      try {
+        return canEmbedLegacyWordMetafile(asset.bytes, format: asset.format);
+      } on FormatException {
+        return false;
+      }
+    });
+    if (!allowed) limitations.add(LegacyWordConversionLimitation.images);
+    return allowed;
+  }
+
   void _prepareMedia() {
     final media = document.media;
+    final inkInspection = _ConversionInkInspection();
     if (media.assets.length > 4096 ||
         media.pictures.length > 20000 ||
         media.drawings.length > 20000 ||
@@ -22,7 +62,7 @@ extension _WordMedia on _StructuredWordWriter {
     }
     for (final picture in media.pictures) {
       final owner = _storyAt(picture.cp);
-      _preserveInk(picture.shape, {
+      _preserveInk(picture.shape, inkInspection, {
         'pictureId': picture.id,
         'cp': picture.cp,
         'story': owner,
@@ -32,7 +72,7 @@ extension _WordMedia on _StructuredWordWriter {
       if (owner == null ||
           !_displayPosition(picture.cp) ||
           asset == null ||
-          !asset.isRenderable ||
+          !_canEmbedImage(asset) ||
           picture.shapeDeleted) {
         limitations.add(LegacyWordConversionLimitation.images);
         _evidenceRecords.add({
@@ -108,7 +148,7 @@ extension _WordMedia on _StructuredWordWriter {
         }
       }
       final owner = _storyAt(drawing.anchorCp);
-      _preserveInk(drawing.shape, {
+      _preserveInk(drawing.shape, inkInspection, {
         'shapeId': drawing.shapeId,
         'cp': drawing.anchorCp,
         'story': owner,
@@ -142,7 +182,7 @@ extension _WordMedia on _StructuredWordWriter {
       if (owner == null ||
           !_displayPosition(drawing.anchorCp) ||
           asset == null ||
-          !asset.isRenderable ||
+          !_canEmbedImage(asset) ||
           drawing.shapeDeleted ||
           !_validDrawing(drawing)) {
         limitations.add(LegacyWordConversionLimitation.embeddedObjects);
@@ -274,6 +314,7 @@ extension _WordMedia on _StructuredWordWriter {
 
   void _preserveInk(
     LegacyWordOfficeArtShape? shape,
+    _ConversionInkInspection inspection,
     Map<String, Object?> occurrence,
   ) {
     final ink = shape?.ink;
@@ -283,7 +324,7 @@ extension _WordMedia on _StructuredWordWriter {
       limitations.add(LegacyWordConversionLimitation.notesComments);
     }
     final bytes = ink.data;
-    final decoded = ink.decoding;
+    final decoded = inspection.inspect(ink);
     final decodedComplete =
         decoded?.status == LegacyWordInkDecodeStatus.decoded;
     final metadata = <String, Object?>{
@@ -323,6 +364,9 @@ extension _WordMedia on _StructuredWordWriter {
   }
 
   String _imageRelation(LegacyWordImageAsset asset) {
+    if (!_canEmbedImage(asset)) {
+      throw const FormatException('Unvalidated Word image embedding.');
+    }
     var path = _mediaParts[asset.id];
     if (path == null) {
       path = 'word/media/image${_mediaParts.length + 1}.${asset.extension}';

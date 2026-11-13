@@ -89,3 +89,8 @@ size operands (`0x033F`, `0x03A9`, `0x03BF`, `0x07C0`, `0x07C1`, `0x07C4`,
 `0x07C5`). The alternative `metroBlob` is documented as ignorable, but the
 current conservative shape guard still retains it; this change does not
 silently weaken that guard or claim the full Word14 geometry is resolved.
+
+The [sealed paired controls and original authoring counterexample](evidence/textbox-default-width-20261113/README.md)
+retain both runs, all 15 repeat cycles, exact build inputs and read-only source
+inspection. They preserve the distinction between the corrected enabled-line
+cases, unchanged disabled behavior and unresolved complete-document layout.

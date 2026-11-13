@@ -6,17 +6,22 @@ import 'dart:io';
 import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 
 import 'header_textbox_alias_fixture.dart' as header_aliases;
+import 'font_charset_schema_fixture.dart' as font_charsets;
 import 'image_appearance_probe.dart' as image_appearance;
+import 'ink_budget_fixture.dart' as ink_budget;
 import 'ink_schema_fixture.dart' as ink_strokes;
 import 'list_sequence_fixture.dart' as list_sequences;
+import 'list_metadata_fixture.dart' as list_metadata;
 import 'metafile_probe.dart' as metafiles;
 import 'media_review_fixture.dart' as media_reviews;
+import 'nested_field_fixture.dart' as nested_fields;
 import 'note_boundary_fixture.dart' as note_boundaries;
 import 'note_format_fixture.dart' as note_formats;
 import 'packed_shape_probe.dart' as packed_shapes;
 import 'review_schema_fixture.dart' as reviews;
 import 'section_review_fixture.dart' as sections;
 import 'shape_probe.dart' as shapes;
+import 'symbol_schema_fixture.dart' as symbols;
 import 'table_borders_fixture.dart' as table_borders;
 import 'table_layout_fixture.dart' as table_layout;
 import 'table_origin_fixture.dart' as origins;
@@ -52,6 +57,34 @@ void main(List<String> arguments) {
     });
   }
 
+  ink_budget.main(['${root.path}/ink-budget']);
+  record(
+    'ink-budget/aggregate',
+    'ink-budget/aggregate.doc',
+    'ink-budget/aggregate.docx',
+    'tool/fidelity/ink_budget_fixture.dart',
+  );
+
+  nested_fields.main(['${root.path}/nested-fields']);
+  for (final name in nested_fields.nestedFieldCases) {
+    record(
+      'nested-fields/$name',
+      'nested-fields/$name.doc',
+      'nested-fields/$name.docx',
+      'tool/fidelity/nested_field_fixture.dart',
+    );
+  }
+
+  list_metadata.main(['${root.path}/list-metadata']);
+  for (final name in list_metadata.listMetadataCases) {
+    record(
+      'list-metadata/$name',
+      'list-metadata/$name.doc',
+      'list-metadata/$name.docx',
+      'tool/fidelity/list_metadata_fixture.dart',
+    );
+  }
+
   ink_strokes.main(['${root.path}/ink-strokes']);
   for (final name in ink_strokes.inkSchemaCases) {
     for (final mode in ['compressed', 'uncompressed']) {
@@ -70,6 +103,26 @@ void main(List<String> arguments) {
       'ink-strokes/$name.doc',
       'ink-strokes/$name.docx',
       'tool/fidelity/ink_schema_fixture.dart',
+    );
+  }
+
+  symbols.main(['${root.path}/symbols']);
+  for (final name in symbols.symbolSchemaCases) {
+    record(
+      'symbols/$name',
+      'symbols/$name.doc',
+      'symbols/$name.docx',
+      'tool/fidelity/symbol_schema_fixture.dart',
+    );
+  }
+
+  font_charsets.main(['${root.path}/font-charsets']);
+  for (final name in font_charsets.fontCharsetSchemaCases.keys) {
+    record(
+      'font-charsets/$name',
+      'font-charsets/$name.doc',
+      'font-charsets/$name.docx',
+      'tool/fidelity/font_charset_schema_fixture.dart',
     );
   }
 
@@ -471,6 +524,9 @@ void main(List<String> arguments) {
     'header-textbox-page-variants',
     'bookmarks-native-hyperlink',
     'line-number-style',
+    'external-hyperlinks-native',
+    'reference-hyperlink-native',
+    'symbol-source-control',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }

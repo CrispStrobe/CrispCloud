@@ -1,0 +1,43 @@
+{
+  "cases": 24,
+  "packages": 62,
+  "roles": {
+    "original": {
+      "packages": 14,
+      "eventCounts": {
+        "bookmarkEnd": 16,
+        "bookmarkStart": 16,
+        "endnoteReference": 5,
+        "footnoteReference": 14,
+        "hyperlink": 4
+      }
+    },
+    "native": {
+      "packages": 24,
+      "eventCounts": {
+        "bookmarkEnd": 14,
+        "bookmarkStart": 14,
+        "endnoteReference": 5,
+        "footnoteReference": 15,
+        "hyperlink": 4
+      }
+    },
+    "parser": {
+      "packages": 24,
+      "eventCounts": {
+        "bookmarkEnd": 16,
+        "bookmarkStart": 16,
+        "endnoteReference": 5,
+        "field": 1,
+        "footnoteReference": 15
+      }
+    }
+  },
+  "sameBinaryInlineDifferences": [
+    "bookmarks",
+    "note-markers",
+    "word"
+  ],
+  "sameBinaryBodyNoteAnchorDifferences": [],
+  "scope": "Initial retained packages only; empty feature equality is not positive coverage."
+}

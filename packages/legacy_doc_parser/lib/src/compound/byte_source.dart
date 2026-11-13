@@ -163,11 +163,16 @@ class ByteCursor {
     return value >= 0x80000000 ? value - 0x100000000 : value;
   }
 
-  /// u64le API.
+  /// Reads an unsigned 64-bit field when its value is exactly portable to
+  /// JavaScript (0 through 2^53-1). Wider metadata must retain its raw bytes or
+  /// use BigInt; it must never be silently truncated by a bitwise shift.
   int u64le() {
     final int lo = u32le();
     final int hi = u32le();
-    return (hi << 32) | lo;
+    if (hi > 0x1fffff) {
+      throw RangeError('Unsigned 64-bit value exceeds portable integer range');
+    }
+    return hi * 0x100000000 + lo;
   }
 
   /// bytes API.
@@ -225,10 +230,14 @@ class ByteSink {
     _length += 4;
   }
 
-  /// u64le API.
+  /// Writes an exact unsigned value in the portable range 0 through 2^53-1.
+  /// Rejects unsupported values before appending any bytes.
   void u64le(int value) {
-    u32le(value & 0xFFFFFFFF);
-    u32le((value >> 32) & 0xFFFFFFFF);
+    if (value < 0 || value > 9007199254740991) {
+      throw RangeError.range(value, 0, 9007199254740991, 'value');
+    }
+    u32le(value % 0x100000000);
+    u32le(value ~/ 0x100000000);
   }
 
   /// u16be API.

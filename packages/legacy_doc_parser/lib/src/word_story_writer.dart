@@ -274,6 +274,7 @@ extension _WordStories on _StructuredWordWriter {
             deletionRevision: run.deletionRevision,
             formattingRevision: run.formattingRevision,
             formattingSaveId: run.formattingSaveId,
+            symbol: run.symbol,
           ),
         );
       }
@@ -431,7 +432,17 @@ extension _WordStories on _StructuredWordWriter {
       });
     }
     for (final field in document.fields) {
+      final start = field.storyId == 'main'
+          ? 0
+          : _stories[field.storyId]?.startCp;
+      final end = field.storyId == 'main'
+          ? _mainEnd
+          : _stories[field.storyId]?.endCp;
       if (_fields.containsKey(field.id) ||
+          start == null ||
+          end == null ||
+          field.startCp < start ||
+          field.endCp > end ||
           field.startCp >= field.endCp ||
           (field.separatorCp != null &&
               (field.separatorCp! <= field.startCp ||
@@ -449,32 +460,46 @@ extension _WordStories on _StructuredWordWriter {
     for (final children in _fieldChildren.values) {
       children.sort((a, b) => a.startCp.compareTo(b.startCp));
     }
-    for (final field in document.fields) {
-      final parent = field.parentId == null ? null : _fields[field.parentId];
-      if (field.parentId != null &&
-          (parent == null ||
-              parent.storyId != field.storyId ||
-              parent.startCp >= field.startCp ||
-              parent.endCp <= field.endCp)) {
+    // CP ownership determines the immediate parent, even for inactive fields.
+    // Checking only that a declared parent contains a child admits crossing
+    // roots, overlapping siblings and skipped private ancestors. Input list
+    // order is immaterial: the parser normally lists children before parents.
+    final orderedFields = document.fields.toList()
+      ..sort((a, b) {
+        final story = a.storyId.compareTo(b.storyId);
+        return story != 0 ? story : a.startCp.compareTo(b.startCp);
+      });
+    final ancestors = <LegacyWordField>[];
+    String? currentStory;
+    for (final field in orderedFields) {
+      if (field.storyId != currentStory) {
+        ancestors.clear();
+        currentStory = field.storyId;
+      }
+      while (ancestors.isNotEmpty && ancestors.last.endCp <= field.startCp) {
+        ancestors.removeLast();
+      }
+      final parent = ancestors.isEmpty ? null : ancestors.last;
+      if (field.parentId != parent?.id ||
+          parent != null &&
+              (parent.startCp >= field.startCp ||
+                  parent.endCp <= field.endCp ||
+                  (parent.separatorCp != null &&
+                      field.startCp <= parent.separatorCp! &&
+                      field.endCp > parent.separatorCp!))) {
         throw const FormatException('Invalid Word field nesting.');
       }
-      final inInstruction =
-          parent != null &&
-          field.startCp < (parent.separatorCp ?? parent.endCp - 1);
-      if (inInstruction) continue;
+      ancestors.add(field);
+    }
+    for (final field in document.fields) {
+      // Every descendant of an instruction field is emitted while recursively
+      // writing that instruction, including fields in its cached result.
+      // Private ancestors suppress their entire result subtree. Scheduling
+      // these descendants globally leaks hidden instructions or duplicates
+      // field markers outside their original containing field.
+      if (_fieldHandledByAncestor(field)) continue;
       if (!_safeFieldTree(field)) {
-        limitations.add(LegacyWordConversionLimitation.fieldsLists);
-        _evidenceRecords.add({
-          'kind': 'field',
-          'type': field.type,
-          'instruction': field.instruction,
-          'storedResult': field.storedResult,
-          'story': field.storyId,
-          'startCp': field.startCp,
-          'endCp': field.endCp,
-          'privateResult': field.privateResult,
-          'reason': 'inert; no external or unsupported field evaluation',
-        });
+        _inertFieldEvidence(field);
         continue;
       }
       _event(field.storyId, field.startCp, 10, () => _fieldBegin(field));
@@ -496,43 +521,105 @@ extension _WordStories on _StructuredWordWriter {
     _prepareTextboxes();
   }
 
-  bool _safeField(LegacyWordField field) =>
-      const {
-        'TOC',
-        'REF',
-        'PAGEREF',
-        'NOTEREF',
-        'STYLEREF',
-        'PAGE',
-        'NUMPAGES',
-        'SECTION',
-        'SECTIONPAGES',
-        'SEQ',
-        'LISTNUM',
-        'TC',
-        'XE',
-        'INDEX',
-        'HYPERLINK',
-        'DATE',
-        'TIME',
-        'CREATEDATE',
-        'SAVEDATE',
-        'PRINTDATE',
-        'AUTHOR',
-        'TITLE',
-        'SUBJECT',
-        'KEYWORDS',
-        'DOCPROPERTY',
-        'DOCVARIABLE',
-        'QUOTE',
-        'IF',
-        '=',
-      }.contains(field.type.toUpperCase()) &&
-      _fieldInstruction(field).runes.every(
+  bool _fieldHandledByAncestor(LegacyWordField field) {
+    var current = field, depth = 0;
+    while (current.parentId != null) {
+      if (++depth > 64) _tooComplex();
+      final parent = _fields[current.parentId]!;
+      if (parent.privateResult ||
+          current.startCp < (parent.separatorCp ?? parent.endCp - 1)) {
+        return true;
+      }
+      current = parent;
+    }
+    return false;
+  }
+
+  void _inertFieldEvidence(LegacyWordField field) {
+    limitations.add(LegacyWordConversionLimitation.fieldsLists);
+    _evidenceRecords.add({
+      'kind': 'field',
+      'type': field.type,
+      'instruction': field.instruction,
+      'storedResult': field.storedResult,
+      'story': field.storyId,
+      'startCp': field.startCp,
+      'endCp': field.endCp,
+      'privateResult': field.privateResult,
+      'reason': 'inert; no external or unsupported field evaluation',
+    });
+  }
+
+  static final _fieldKeyword = RegExp(r'^\s*([A-Za-z][A-Za-z0-9_]*|=)');
+
+  bool _safeField(LegacyWordField field) {
+    final instruction = _fieldInstruction(field);
+    final type = field.type.toUpperCase();
+    // Public document models may be caller-built. A supplied label must not
+    // authorize an unrelated active instruction, including an external field.
+    if (_fieldKeyword.firstMatch(instruction)?.group(1)?.toUpperCase() !=
+        type) {
+      return false;
+    }
+    if (!const {
+      'TOC',
+      'REF',
+      'PAGEREF',
+      'NOTEREF',
+      'STYLEREF',
+      'PAGE',
+      'NUMPAGES',
+      'SECTION',
+      'SECTIONPAGES',
+      'SEQ',
+      'LISTNUM',
+      'TC',
+      'XE',
+      'INDEX',
+      'HYPERLINK',
+      'DATE',
+      'TIME',
+      'CREATEDATE',
+      'SAVEDATE',
+      'PRINTDATE',
+      'AUTHOR',
+      'TITLE',
+      'SUBJECT',
+      'KEYWORDS',
+      'DOCPROPERTY',
+      'DOCVARIABLE',
+      'QUOTE',
+      'IF',
+      '=',
+    }.contains(type)) {
+      return false;
+    }
+    // A typed child occupies a whole source range in this raw instruction,
+    // including its cached result. Word text controls in that result are not
+    // instruction text. Validate only the slices emitted as instrText here;
+    // _safeFieldTree checks each child's instruction independently.
+    final start = field.startCp + 1;
+    final end = field.separatorCp ?? field.endCp - 1;
+    var position = start;
+    bool safeTextUntil(int cp) {
+      final value = instruction.substring(position - start, cp - start);
+      return value.runes.every(
         (rune) =>
             (rune >= 0x20 && rune != 0xfffe && rune != 0xffff) ||
-            const {9, 10, 13, 19, 20, 21}.contains(rune),
+            const {9, 10, 13}.contains(rune),
       );
+    }
+
+    for (final child in _fieldChildren[field.id] ?? const <LegacyWordField>[]) {
+      if (child.startCp >= end) break;
+      if (child.startCp < position || child.endCp > end) {
+        throw const FormatException('Overlapping Word field instructions.');
+      }
+      if (!safeTextUntil(child.startCp)) return false;
+      position = child.endCp;
+    }
+    return safeTextUntil(end);
+  }
 
   bool _safeFieldTree(LegacyWordField field, [int depth = 0]) {
     if (depth > 64) _tooComplex();
@@ -547,17 +634,24 @@ extension _WordStories on _StructuredWordWriter {
     if (depth > 64) _tooComplex();
     final instruction = _fieldInstruction(field);
     if (instruction != field.instruction) {
-      _count('binaryHyperlinkFields');
+      final reference = _referenceHyperlinkInstruction(field);
+      _count(
+        reference == null ? 'binaryHyperlinkFields' : 'binaryReferenceFields',
+      );
       _evidenceRecords.add({
-        'kind': 'binaryHyperlinkField',
+        'kind': reference == null
+            ? 'binaryHyperlinkField'
+            : 'binaryReferenceField',
         'story': field.storyId,
         'startCp': field.startCp,
         'instruction': field.instruction,
         'emittedInstruction': instruction,
+        if (reference != null) 'recoveredNativeTerminator': reference.$2,
         'reason':
-            'A referenced HFD internal location agrees with the literal field '
+            'A referenced HFD target agrees with the literal field '
             'target; its binary metadata marker is not instruction text. '
-            'The original data is retained and no link is traversed.',
+            'The original data is retained and no link is traversed.'
+            '${reference?.$2 == true ? ' The reference-only extra zero UTF-16 terminator matches the native producer form.' : ''}',
       });
     }
     _xml.add(
@@ -581,14 +675,10 @@ extension _WordStories on _StructuredWordWriter {
       final value = instruction.substring(start, end);
       if (value.isNotEmpty) {
         _xml.add('<w:r><w:instrText xml:space="preserve">');
-        // Tabs are legal field instruction separators; no raw field controls
-        // enter XML. Nested control markers are handled by their typed child.
-        _xml.text(
-          value
-              .replaceAll('\t', ' ')
-              .replaceAll('\r', ' ')
-              .replaceAll('\n', ' '),
-        );
+        // Whitespace can also occur inside quoted literals; replacing it with
+        // spaces changes the retained instruction. XML character references
+        // preserve it exactly. Nested field markers use their typed child.
+        _xml.text(value, preserveWhitespace: true);
         _xml.add('</w:instrText></w:r>');
       }
       position = cp;
@@ -604,9 +694,11 @@ extension _WordStories on _StructuredWordWriter {
       _fieldBegin(child, depth + 1);
       if (child.separatorCp != null) {
         _xml.add('<w:r><w:fldChar w:fldCharType="separate"/></w:r>');
-        final result = _cachedFieldResult(child);
-        _writeRun(
-          LegacyWordRun(startCp: 0, endCp: result.length, text: result),
+        _writeCachedFieldResult(
+          child,
+          field.instruction,
+          instructionStart,
+          depth + 1,
         );
       }
       _xml.add('<w:r><w:fldChar w:fldCharType="end"/></w:r>');
@@ -616,31 +708,91 @@ extension _WordStories on _StructuredWordWriter {
     _count('fields');
   }
 
-  String _cachedFieldResult(LegacyWordField field, [int depth = 0]) {
+  void _writeCachedFieldResult(
+    LegacyWordField field,
+    String instruction,
+    int instructionStart,
+    int depth, {
+    bool emitFields = true,
+  }) {
     if (depth > 64) _tooComplex();
-    if (field.privateResult || field.separatorCp == null) return '';
+    if (field.privateResult || field.separatorCp == null) return;
     final start = field.separatorCp! + 1;
     final end = field.endCp - 1;
-    if (field.storedResult.length != end - start) {
+    // storedResult is normalized display text: nested instructions and private
+    // results have already been removed, so its offsets are not source CPs.
+    // A nested field's complete raw result is instead retained in the enclosing
+    // instruction. Slice that exact source, then emit each typed child in place.
+    if (start < instructionStart ||
+        end < start ||
+        end > instructionStart + instruction.length) {
       throw const FormatException(
         'Word field result positions do not match text.',
       );
     }
-    final output = StringBuffer();
     var position = start;
+    void textUntil(int cp) {
+      final output = StringBuffer();
+      for (
+        var offset = position - instructionStart;
+        offset < cp - instructionStart;
+        offset++
+      ) {
+        final unit = instruction.codeUnitAt(offset);
+        if (unit == 19 || unit == 20 || unit == 21) {
+          throw const FormatException('Unmatched nested Word result field.');
+        }
+        if (unit == 13 || unit == 11) {
+          output.write('\n');
+        } else if (unit == 7) {
+          output.write('\t');
+        } else if (unit == 30) {
+          output.writeCharCode(0x2011);
+        } else if (unit == 31) {
+          output.writeCharCode(0x00ad);
+        } else if (unit >= 32 ||
+            unit == 9 ||
+            unit == 10 ||
+            unit == 12 ||
+            unit == 14) {
+          output.writeCharCode(unit);
+        }
+      }
+      final text = output.toString();
+      if (text.isNotEmpty) {
+        _writeRun(LegacyWordRun(startCp: 0, endCp: text.length, text: text));
+      }
+      position = cp;
+    }
+
     for (final child in _fieldChildren[field.id] ?? const <LegacyWordField>[]) {
       if (child.startCp < start) continue;
       if (child.startCp < position || child.endCp > end) {
         throw const FormatException('Overlapping Word field results.');
       }
-      output.write(
-        field.storedResult.substring(position - start, child.startCp - start),
+      textUntil(child.startCp);
+      final active = emitFields && _safeFieldTree(child);
+      if (active) {
+        _fieldBegin(child, depth + 1);
+        if (child.separatorCp != null) {
+          _xml.add('<w:r><w:fldChar w:fldCharType="separate"/></w:r>');
+        }
+      } else if (emitFields) {
+        _inertFieldEvidence(child);
+      }
+      _writeCachedFieldResult(
+        child,
+        instruction,
+        instructionStart,
+        depth + 1,
+        emitFields: active,
       );
-      output.write(_cachedFieldResult(child, depth + 1));
+      if (active) {
+        _xml.add('<w:r><w:fldChar w:fldCharType="end"/></w:r>');
+      }
       position = child.endCp;
     }
-    output.write(field.storedResult.substring(position - start));
-    return output.toString();
+    textUntil(end);
   }
 
   void _writeAuxiliaryStories() {

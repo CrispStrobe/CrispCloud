@@ -1,5 +1,39 @@
 ## 0.1.0-dev.1
 
+- Validate allocated compound directory names and exclusive ownership of stream
+  and metadata sectors, with cached linear scans and requested-part validation.
+  Reject negative caller-built stream sizes before aggregate read accounting.
+- Preserve controls in nested cached field results while validating literal
+  instructions separately; require exact story ownership and immediate parent
+  ranges for all caller-built field models, including inactive fields.
+- Reinspect actual EMF/WMF bytes before native image relationships, including
+  textbox fills. Cache bounded validation and retain rejected raw images as
+  inert evidence even when public metadata claims they are embeddable.
+- Ignore restart fields on bullet/no-number levels and retain no-number literal
+  labels and ancestor references in HTML. Explicitly reject literal binary
+  `%1`–`%9` labels that the current native numbering model cannot represent.
+- Reject UTF-16 scalars split across independent Word stories while retaining
+  valid supplementary characters split across physical text pieces.
+- Preserve field instruction TAB/CR/LF/CRLF exactly, including quoted literals,
+  and retain nonbreaking/soft hyphens and column breaks in cached field metadata.
+- Validate referenced compound allocation chains and declared table counts,
+  including invalid tails beyond logical data. Cache immutable allocation
+  snapshots and validated suffixes to bound repeated traversal; preserve legal
+  spare capacity and partial final mini-container compatibility.
+- Keep unsigned 64-bit byte helpers exact on VM and JavaScript through 2^53-1,
+  reject unsupported integer values, and preserve full-width raw FILETIME paths.
+- Apply declared WordDocument bounds and reserved-offset validation to the
+  text-only API, and preserve column breaks as text separators.
+- Keep nested field results at their original character positions, suppress
+  private descendants, and verify caller-supplied field types against their
+  actual instructions. Preserve formula fields with locked cached results.
+- Preserve CFB stream identities with portable simple UTF-16 name comparison,
+  and accept legacy version-3 uninitialized size high words while retaining
+  version-4 and physical-container bounds.
+- Bound aggregate ink inspection during conversion to 100,000 points and
+  4,096 strokes, charging attempted work before allocation. Retain every raw
+  payload and explicit limit diagnostics when inspection capacity is exhausted.
+
 - Decode complete bounded nonempty ISF strokes using independent Windows WPF
   inputs: packet compression, pen attributes, qualified transforms and pressure
   metric prefixes. Preserve raw packets and source bytes, and keep native Word

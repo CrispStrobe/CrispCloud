@@ -8,6 +8,37 @@ import 'dart:typed_data';
 /// Unsupported streams never expose a misleading partial stroke collection.
 enum LegacyWordInkDecodeStatus { decoded, unsupported, invalid, limitExceeded }
 
+/// Shared work allowance for inspecting multiple ISF payloads.
+///
+/// A stroke reserves its declared point count before packet decoding allocates
+/// coordinates. Failed or unsupported decodes keep their reservations, so
+/// repeated unsuccessful payloads cannot bypass the aggregate work limit.
+/// Individual streams retain the same hard limits when no budget is supplied.
+class LegacyWordInkDecodeBudget {
+  LegacyWordInkDecodeBudget({this.maxPoints = 100000, this.maxStrokes = 4096}) {
+    RangeError.checkValueInInterval(maxPoints, 0, 100000, 'maxPoints');
+    RangeError.checkValueInInterval(maxStrokes, 0, 4096, 'maxStrokes');
+  }
+
+  final int maxPoints, maxStrokes;
+  var _pointsUsed = 0, _strokesUsed = 0;
+  int get pointsUsed => _pointsUsed;
+  int get strokesUsed => _strokesUsed;
+  int get remainingPoints => maxPoints - _pointsUsed;
+  int get remainingStrokes => maxStrokes - _strokesUsed;
+
+  void _reserve(int points) {
+    if (remainingStrokes == 0) {
+      _inkLimit('ISF aggregate stroke decode limit exceeded');
+    }
+    if (points > remainingPoints) {
+      _inkLimit('ISF aggregate point decode limit exceeded');
+    }
+    _pointsUsed += points;
+    _strokesUsed++;
+  }
+}
+
 class LegacyWordInkDecodeResult {
   LegacyWordInkDecodeResult._(
     this.status,
@@ -119,7 +150,12 @@ class LegacyWordInkStroke {
 
 /// Decodes the complete supported ISF stream. Original bytes are never changed.
 /// This does not activate a native ink object or generate a guessed preview.
-LegacyWordInkDecodeResult decodeLegacyWordInk(Uint8List bytes) {
+/// An optional [budget] also bounds work across multiple payloads, including
+/// allocations made before a later malformed or unsupported record is found.
+LegacyWordInkDecodeResult decodeLegacyWordInk(
+  Uint8List bytes, {
+  LegacyWordInkDecodeBudget? budget,
+}) {
   try {
     if (bytes.length > 16 * 1024 * 1024) {
       throw const _InkFailure(
@@ -130,7 +166,7 @@ LegacyWordInkDecodeResult decodeLegacyWordInk(Uint8List bytes) {
     return LegacyWordInkDecodeResult._(
       LegacyWordInkDecodeStatus.decoded,
       null,
-      _InkDecoder(bytes).decode(),
+      _InkDecoder(bytes, budget).decode(),
     );
   } on _InkFailure catch (error) {
     return LegacyWordInkDecodeResult._(error.status, error.message, const []);
@@ -355,8 +391,9 @@ class _InkPaint {
 }
 
 class _InkDecoder {
-  _InkDecoder(Uint8List bytes) : input = _InkReader(bytes);
+  _InkDecoder(Uint8List bytes, this.budget) : input = _InkReader(bytes);
   final _InkReader input;
+  final LegacyWordInkDecodeBudget? budget;
   final paints = <_InkPaint>[];
   final descriptors = <bool>[];
   final guids = <String>[];
@@ -501,6 +538,7 @@ class _InkDecoder {
           if (count > 100000 - totalPoints) {
             _inkLimit('ISF point limit exceeded');
           }
+          budget?._reserve(count);
           totalPoints += count;
           final xs = _inkPackets(block, count), ys = _inkPackets(block, count);
           final pressure =
