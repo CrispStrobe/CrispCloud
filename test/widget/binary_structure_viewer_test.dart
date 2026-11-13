@@ -122,6 +122,47 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('small displays and large text retain a reachable Close action', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(2.5)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showDialog<BinaryStructureField>(
+                context: context,
+                builder: (_) => BinaryStructureDialog(
+                  analysis: inspectBinaryStructure(_wasm(), totalBytes: 8),
+                  filename: 'module.wasm',
+                ),
+              ),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final close = find.widgetWithText(TextButton, 'Close');
+    expect(tester.getRect(close).bottom, lessThanOrEqualTo(480));
+    await tester.tap(close);
+    await tester.pumpAndSettle();
+    expect(find.byType(BinaryStructureDialog), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('all supported locales translate controls and every issue', (
     tester,
   ) async {

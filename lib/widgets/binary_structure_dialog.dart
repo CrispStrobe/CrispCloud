@@ -20,6 +20,7 @@ class BinaryStructureDialog extends StatelessWidget {
     final strings = BinaryStructureStrings(context);
     final theme = Theme.of(context);
     return AlertDialog(
+      scrollable: true,
       title: Text(strings.text('title')),
       content: SizedBox(
         width: 640,
