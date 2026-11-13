@@ -10,7 +10,8 @@ import 'archive_types.dart';
 ///
 /// Based on ECMA-119 sections 7–9 and Annex C. This does not mount the image,
 /// execute boot records, follow symbolic links, or implement UDF. Relocated,
-/// interleaved and multi-extent files are refused rather than misrepresented.
+/// interleaved and multi-volume files are refused rather than misrepresented.
+/// Consecutive ordinary multi-extent records form one bounded logical file.
 /// The returned archive owns [source], including when opening fails.
 Future<ViewerArchive> openIsoArchive(
   koni.ByteSource source, {
@@ -18,12 +19,16 @@ Future<ViewerArchive> openIsoArchive(
   int maxEntries = 100000,
   int maxDirectoryBytes = 32 * 1024 * 1024,
   int maxDepth = 64,
+  int maxFileSections = 1024,
+  int maxSectionRecords = 100000,
 }) async {
   try {
     if (maxMemberBytes <= 0 ||
         maxEntries <= 0 ||
         maxDirectoryBytes <= 0 ||
-        maxDepth <= 0) {
+        maxDepth <= 0 ||
+        maxFileSections <= 0 ||
+        maxSectionRecords <= 0) {
       throw ArgumentError('ISO reader limits must be positive.');
     }
     return await _IsoReader(
@@ -32,6 +37,8 @@ Future<ViewerArchive> openIsoArchive(
       maxEntries,
       maxDirectoryBytes,
       maxDepth,
+      maxFileSections,
+      maxSectionRecords,
     ).open();
   } catch (error) {
     await source.close();
@@ -47,23 +54,29 @@ class _IsoReader {
     this.maxEntries,
     this.maxDirectoryBytes,
     this.maxDepth,
+    this.maxFileSections,
+    this.maxSectionRecords,
   );
 
   static const sectorSize = 2048;
+  static const maxLogicalFileBytes = 8 * 1024 * 1024 * 1024;
   final koni.ByteSource source;
   final int maxMemberBytes;
   final int maxEntries;
   final int maxDirectoryBytes;
   final int maxDepth;
+  final int maxFileSections;
+  final int maxSectionRecords;
   int _volumeBytes = 0;
   int _directoryBytes = 0;
   int _continuationBytes = 0;
   int _nameBytes = 0;
   int _descriptorEnd = 0;
+  int _sectionRecords = 0;
   int? _suspSkip;
   bool _joliet = false;
   final _members = <ViewerArchiveMember>[];
-  final _extents = <_IsoRecord>[];
+  final _extents = <List<_IsoRecord>>[];
   final _names = <String>{};
   final _directories = <int>{};
 
@@ -165,7 +178,21 @@ class _IsoReader {
             'ISO entry exceeds the $limit-byte read limit.',
           );
         }
-        return _read(_extents[member.index].offset, member.size);
+        final sections = _extents[member.index];
+        if (sections.length == 1) {
+          return _read(sections.first.offset, member.size);
+        }
+        final result = Uint8List(member.size);
+        var at = 0;
+        for (final section in sections) {
+          result.setRange(
+            at,
+            at + section.size,
+            await _read(section.offset, section.size),
+          );
+          at += section.size;
+        }
+        return result;
       },
       streamReader: (member, chunkSize) async* {
         if (member.size > maxMemberBytes) {
@@ -173,13 +200,14 @@ class _IsoReader {
             'ISO entry exceeds the $maxMemberBytes-byte read limit.',
           );
         }
-        final extent = _extents[member.index];
-        for (var offset = 0; offset < member.size; offset += chunkSize) {
-          final remaining = member.size - offset;
-          yield await _read(
-            extent.offset + offset,
-            remaining < chunkSize ? remaining : chunkSize,
-          );
+        for (final section in _extents[member.index]) {
+          for (var offset = 0; offset < section.size; offset += chunkSize) {
+            final remaining = section.size - offset;
+            yield await _read(
+              section.offset + offset,
+              remaining < chunkSize ? remaining : chunkSize,
+            );
+          }
         }
       },
       close: source.close,
@@ -226,8 +254,8 @@ class _IsoReader {
         (nameLength.isEven && raw[nameEnd] != 0)) {
       _bad('Invalid directory identifier length or padding.');
     }
-    if (raw[25] & 0x80 != 0) {
-      _unsupported('Multi-extent files are not supported.');
+    if (raw[25] & 0x82 == 0x82) {
+      _bad('A directory cannot contain multiple file sections.');
     }
     if (raw[26] != 0 || raw[27] != 0) {
       _unsupported('Interleaved files are not supported.');
@@ -265,6 +293,8 @@ class _IsoReader {
       self: self,
       parent: parent,
       identifier: identifier,
+      flags: raw[25],
+      extendedAttributeBlocks: raw[1],
       modified: _date(Uint8List.sublistView(raw, 18, 25)),
       systemUse: Uint8List.sublistView(raw, systemAt),
     );
@@ -361,6 +391,9 @@ class _IsoReader {
     final bytes = await _read(directory.offset, directory.size);
     final children = <(_IsoRecord, String)>[];
     var records = 0;
+    List<_IsoRecord>? pending;
+    _RockRidge? pendingRock;
+    var pendingSize = 0;
     for (var at = 0; at < bytes.length;) {
       if (bytes[at] == 0) {
         final end = ((at ~/ sectorSize) + 1) * sectorSize;
@@ -370,7 +403,7 @@ class _IsoReader {
         at = end;
         continue;
       }
-      final record = _record(bytes, at);
+      var record = _record(bytes, at);
       at += bytes[at];
       records++;
       if (records == 1 &&
@@ -387,9 +420,59 @@ class _IsoReader {
         if (_suspSkip != null) await _rockRidge(record);
         continue;
       }
-      final rock = _suspSkip == null ? null : await _rockRidge(record);
-      final name = rock?.name ?? _identifier(record);
+      _sectionRecords++;
+      if (_sectionRecords > maxSectionRecords) {
+        _bad('The file-section metadata limit was exceeded.');
+      }
+      var rock = _suspSkip == null ? null : await _rockRidge(record);
+      var name = rock?.name ?? _identifier(record);
       _checkName(name);
+      List<_IsoRecord> sections = [record];
+      var size = record.size;
+      if (pending != null || record.continues) {
+        final type = (rock?.mode ?? 0) & 0xf000;
+        if (record.directory ||
+            rock?.special == true ||
+            (type != 0 && type != 0x8000) ||
+            record.extendedAttributeBlocks != 0 ||
+            record.flags & 0x18 != 0) {
+          _unsupported(
+            'Multi-extent files require ordinary unprotected file sections.',
+          );
+        }
+        if (pending == null) {
+          pending = [];
+          pendingRock = rock;
+          pendingSize = 0;
+        } else {
+          final first = pending.first;
+          if (!_equalBytes(first.identifier, record.identifier) ||
+              first.flags & 0x7f != record.flags & 0x7f ||
+              first.modified != record.modified ||
+              pendingRock?.name != rock?.name ||
+              pendingRock?.mode != rock?.mode) {
+            _bad('Multi-extent file identifiers or attributes disagree.');
+          }
+        }
+        if (pending.length >= maxFileSections ||
+            (record.continues && pending.length + 1 >= maxFileSections)) {
+          _bad('The per-file section limit was exceeded.');
+        }
+        if (record.size > maxLogicalFileBytes - pendingSize) {
+          _bad('The logical multi-extent file exceeds the 8 GiB limit.');
+        }
+        pending.add(record);
+        pendingSize += record.size;
+        if (record.continues) continue;
+        sections = List<_IsoRecord>.unmodifiable(pending);
+        size = pendingSize;
+        record = pending.first;
+        rock = pendingRock;
+        name = rock?.name ?? _identifier(record);
+        pending = null;
+        pendingRock = null;
+        pendingSize = 0;
+      }
       final fullName = path.isEmpty ? name : '$path/$name';
       _nameBytes += fullName.length;
       if (fullName.length > 4096 || _nameBytes > 8 * 1024 * 1024) {
@@ -410,7 +493,7 @@ class _IsoReader {
       _members.add(
         ViewerArchiveMember(
           name: fullName,
-          size: record.directory ? 0 : record.size,
+          size: record.directory ? 0 : size,
           isFile: !record.directory && !special,
           isEncrypted: false,
           isSpecial: special,
@@ -420,13 +503,22 @@ class _IsoReader {
           index: _members.length,
         ),
       );
-      _extents.add(record);
+      _extents.add(sections);
       if (record.directory && !special) children.add((record, fullName));
     }
+    if (pending != null) _bad('An unfinished multi-extent file chain.');
     if (records < 2) _bad('A directory lacks its self and parent records.');
     for (final child in children) {
       await _directory(child.$1, child.$2, depth + 1);
     }
+  }
+
+  bool _equalBytes(Uint8List a, Uint8List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Future<_RockRidge> _rockRidge(_IsoRecord record) async {
@@ -517,6 +609,8 @@ class _IsoRecord {
     required this.self,
     required this.parent,
     required this.identifier,
+    required this.flags,
+    required this.extendedAttributeBlocks,
     required this.modified,
     required this.systemUse,
   });
@@ -526,6 +620,9 @@ class _IsoRecord {
   final bool self;
   final bool parent;
   final Uint8List identifier;
+  final int flags;
+  final int extendedAttributeBlocks;
+  bool get continues => flags & 0x80 != 0;
   final DateTime? modified;
   final Uint8List systemUse;
 }
