@@ -1,8 +1,12 @@
 import 'package:koni_archive/io.dart' as koni;
 
 import 'archive_viewer_service.dart';
+import 'archive_volume_backend.dart';
+import 'archive_volume_source.dart';
 import 'archive_streamed_reader.dart';
 import 'archive_viewer_streaming.dart';
+import 'file_operation_backend.dart';
+import 'local_file_service.dart';
 
 Future<ViewerArchive> openViewerArchiveFile(
   String path, {
@@ -29,6 +33,30 @@ Future<ViewerArchive> openViewerArchiveFile(
   }
 
   check();
+  if (sevenZipVolumeBaseName(name) != null) {
+    final local = LocalFileService();
+    final backend = LocalOperationBackend(
+      local,
+      isCurrent: () => !(isCancelled?.call() ?? false),
+    );
+    final selected = await backend.stat(path);
+    check();
+    if (selected == null ||
+        selected.name != name.split(RegExp(r'[/\\]')).last) {
+      throw const ArchiveViewException(
+        'The first split-archive volume is unavailable.',
+      );
+    }
+    final opened = await openSevenZipVolumeArchive(
+      backend,
+      selected,
+      password: password,
+      streaming: streaming,
+      maxMemberBytes: maxMemberBytes,
+      isCancelled: isCancelled,
+    );
+    return accept(opened.archive);
+  }
   if (streaming && isStreamedArchiveViewerName(name)) {
     final source = await koni.FileByteSource.open(path);
     var transferred = false;

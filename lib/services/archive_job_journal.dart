@@ -43,8 +43,9 @@ class ArchiveJobJournal {
         final record = ArchiveJobRecord.fromJson(
           Map<String, dynamic>.from(saved as Map),
         );
-        if (!ids.add(record.id))
+        if (!ids.add(record.id)) {
           throw const FormatException('Duplicate archive job.');
+        }
         records.add(record);
       }
       paused = value['paused'] as bool;

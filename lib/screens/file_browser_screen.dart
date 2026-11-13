@@ -64,6 +64,10 @@ import '../widgets/integrity_dialogs.dart';
 import '../widgets/integrity_recovery_dialog.dart';
 import '../widgets/archive_endpoint_actions.dart';
 import '../l10n/archive_endpoint_strings.dart';
+import '../l10n/archive_job_strings.dart';
+import '../widgets/archive_jobs_dialog.dart';
+import '../widgets/archive_batch_actions.dart';
+import '../l10n/archive_batch_integrity_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
@@ -595,6 +599,19 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       archiveEndpointText(context, 'recoveryTitle'),
       () => showArchiveRecoveryForActiveSource(context, ref),
       available: () => !kIsWeb,
+    );
+    add(
+      'archiveJobs',
+      archiveJobText(context, 'Archive jobs'),
+      () => showArchiveJobsDialog(context, ref),
+      available: () => !kIsWeb && const {TargetPlatform.linux,
+        TargetPlatform.windows, TargetPlatform.macOS}.contains(defaultTargetPlatform),
+    );
+    add(
+      'archiveTest',
+      archiveBatchIntegrityText(context, 'Test selected archives'),
+      () => showArchiveBatchIntegrityForSelection(context, ref),
+      available: () => canTestArchiveSelection(ref),
     );
     add(
       'gatherSelection',
@@ -2287,6 +2304,8 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         showIntegrityRecoveryDialog(context, ref);
       case 'archive_recovery':
         if (!kIsWeb) showArchiveRecoveryForActiveSource(context, ref);
+      case 'archive_jobs':
+        if (!kIsWeb) showArchiveJobsDialog(context, ref);
       case 'checksums':
         showChecksumToolsDialog(
           context,
@@ -2531,6 +2550,13 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
             archiveEndpointText(context, 'recoveryTitle'),
           ),
         ),
+        if (!kIsWeb && const {TargetPlatform.linux, TargetPlatform.windows,
+            TargetPlatform.macOS}.contains(defaultTargetPlatform))
+          PopupMenuItem(
+            value: 'archive_jobs',
+            child: _overflowItem(Icons.inventory_2_outlined,
+              archiveJobText(context, 'Archive jobs')),
+          ),
         PopupMenuItem(
           value: 'combine_parts',
           child: _overflowItem(

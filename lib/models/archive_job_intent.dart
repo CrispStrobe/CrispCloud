@@ -220,9 +220,7 @@ class ArchiveJobRecord {
     updated: now ?? DateTime.now().toUtc(),
     attempt: attempt ?? this.attempt,
     prepared: clearPrepared ? null : prepared ?? this.prepared,
-    error: error == null
-        ? null
-        : error.substring(0, error.length.clamp(0, 4096)),
+    error: error?.substring(0, error.length.clamp(0, 4096)),
   );
 
   Map<String, Object?> toJson() => {

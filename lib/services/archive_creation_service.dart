@@ -11,6 +11,7 @@ import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
 import 'archive_checkpoint_source.dart';
 import 'archive_writer_worker.dart';
+import 'archive_created_zip_metadata.dart';
 import 'archive_disk_verification.dart';
 import 'archive_dmg_writer.dart';
 import 'archive_hfs_writer.dart';
@@ -1246,6 +1247,7 @@ class ArchiveCreationService {
         }
         await sink.close();
         final packed = memory.getBytes();
+        if (zip != null) finalizeCreatedZipMetadata(packed, captured);
         await emit(packed);
       }
       await spool.finish();
@@ -1353,7 +1355,15 @@ class ArchiveCreationService {
         try {
           final expected = {for (final entry in entries) entry.name: entry};
           if (archive.members.length != entries.length ||
-              streamedTar && archive.formatName != 'tar') {
+              streamedTar && archive.formatName != 'tar' ||
+              writer != null &&
+                  archive.formatName !=
+                      switch (options.format.endpointFormat) {
+                        ArchiveEndpointFormat.zip => 'zip',
+                        ArchiveEndpointFormat.sevenZip => '7z',
+                        ArchiveEndpointFormat.rar => 'rar',
+                        _ => '',
+                      }) {
             throw const ArchiveCreationException(
               ArchiveCreationError.verificationFailed,
             );
@@ -1367,6 +1377,7 @@ class ArchiveCreationService {
             if (entry == null ||
                 member.pathEscapedRoot ||
                 member.isSpecial ||
+                writer != null && member.isEncrypted ||
                 member.isFile == entry.file.isFolder ||
                 member.size != (entry.file.isFolder ? 0 : entry.file.size) ||
                 entry.mode != null &&
@@ -1663,7 +1674,9 @@ class ArchiveCreationService {
       (a.isSymlink != true && b.isSymlink != true) &&
       (a.uuid == null && !requireKnown || a.uuid == b.uuid) &&
       (a.size == null && !requireKnown || a.size == b.size) &&
-      (a.updatedAt == null && !requireKnown || a.updatedAt == b.updatedAt);
+      (a.updatedAt == null
+          ? !requireKnown || b.updatedAt == null
+          : b.updatedAt != null && a.updatedAt!.isAtSameMomentAs(b.updatedAt!));
 }
 
 /// TAR verification may index many headers before opening a member. Keep its

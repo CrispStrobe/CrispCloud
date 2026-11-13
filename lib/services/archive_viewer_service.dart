@@ -33,6 +33,8 @@ import 'archive_unix_compress_codec.dart';
 import 'archive_package_readers.dart';
 import 'archive_pbzx_source.dart';
 import 'archive_rpm_reader.dart';
+import 'archive_rar_metadata_reader.dart';
+import 'archive_sfx_source.dart';
 import 'archive_slice_source.dart';
 import 'archive_types.dart';
 
@@ -113,6 +115,35 @@ Future<ViewerArchive> _openSource(
       0,
       source.length < 512 ? source.length : 512,
     );
+    // Intercept PE files before any generic ZIP fallback. A ZIP self-extractor
+    // retains executable offsets; treating it as an ordinary ZIP could later
+    // authorize a rewrite that silently discards its executable prefix.
+    if (_hasMagic(header, 0, const [0x4d, 0x5a])) {
+      final payload = await openPeSfxSource(source);
+      final inner = await _openWithKoni(
+        payload,
+        password: password,
+        maxMemberBytes: maxMemberBytes,
+      );
+      if (inner.formatName != payload.archiveKind) {
+        await inner.close();
+        throw const ArchiveViewException(
+          'The executable archive payload does not match its inspected format.',
+        );
+      }
+      return ViewerArchive.reader(
+        formatName: 'sfx/${inner.formatName}',
+        members: inner.members,
+        notices: [...ArchiveSfxSource.notices, ...inner.notices],
+        read: (member, limit) => inner.readMember(member, maxBytes: limit),
+        streamReader: (member, chunkSize) => inner.openMember(
+          member,
+          maxBytes: maxMemberBytes,
+          chunkSize: chunkSize,
+        ),
+        close: inner.close,
+      );
+    }
     // UDIF block payloads can themselves begin with BZh or another codec
     // signature. Its validated trailer must win over stream sniffing.
     if (source.length >= 512 &&
@@ -644,6 +675,19 @@ Future<ViewerArchive> _openWithKoni(
   }
 
   final entries = reader.entries;
+  List<DateTime?>? rarTimes;
+  if (reader.format.name == 'rar') {
+    try {
+      rarTimes = await readRar5ModifiedTimes(source, entries);
+    } catch (_) {
+      try {
+        await reader.close();
+      } finally {
+        await source.close();
+      }
+      rethrow;
+    }
+  }
   final members = <ViewerArchiveMember>[];
   for (var i = 0; i < entries.length; i++) {
     final entry = entries[i];
@@ -654,7 +698,7 @@ Future<ViewerArchive> _openWithKoni(
         isFile: entry.isFile,
         isEncrypted: entry.isEncrypted,
         isSpecial: !entry.isFile && !entry.isDirectory,
-        modified: entry.modified,
+        modified: rarTimes?[i] ?? entry.modified,
         posixMode: entry.posixMode,
         pathEscapedRoot: entry.pathEscapedRoot,
         index: i,

@@ -24,6 +24,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../support/archive_iso_fixtures.dart';
 import '../support/archive_package_fixtures.dart';
 import '../support/archive_rpm_fixtures.dart';
+import '../support/archive_sfx_fixtures.dart';
+import '../support/archive_volume_fixtures.dart';
 import '../support/archive_tar_writer_fixtures.dart';
 import '../support/dmg_fixture.dart';
 import '../support/hfs_fixture.dart';
@@ -31,7 +33,7 @@ import '../support/workflow_fake_client.dart';
 import '../support/workspace_fixture.dart' show WorkspaceTestAuth;
 
 class _ArchiveLocal extends Fake implements LocalFileService {
-  _ArchiveLocal(String path, {this.acquireGate})
+  _ArchiveLocal(String path, {this.acquireGate, this.allowSmallReads = false})
     : currentPath = path,
       rootPath = path;
 
@@ -39,6 +41,7 @@ class _ArchiveLocal extends Fake implements LocalFileService {
   String currentPath;
   final String rootPath;
   final Completer<void>? acquireGate;
+  final bool allowSmallReads;
   int acquisitions = 0, releases = 0, fullReads = 0;
 
   @override
@@ -72,6 +75,9 @@ class _ArchiveLocal extends Fake implements LocalFileService {
   @override
   Future<Uint8List> readFile(String path, {FileItem? fileItem}) async {
     fullReads++;
+    if (allowSmallReads && await File(path).length() <= 4096) {
+      return File(path).readAsBytes();
+    }
     throw StateError('Native files must use the existing bounded source.');
   }
 }
@@ -89,6 +95,7 @@ class _NativeIso {
     Completer<void>? acquireGate,
     String name = 'large.iso',
     Future<void> Function(File file)? writeArchive,
+    bool allowSmallReads = false,
   }) async {
     return (await tester.runAsync(() async {
       final directory = await Directory.systemTemp.createTemp('f3-archive-');
@@ -113,7 +120,11 @@ class _NativeIso {
           await handle.close();
         }
       }
-      final local = _ArchiveLocal(directory.path, acquireGate: acquireGate);
+      final local = _ArchiveLocal(
+        directory.path,
+        acquireGate: acquireGate,
+        allowSmallReads: allowSmallReads,
+      );
       final cloud = WorkflowFakeClient()..current = false;
       final container = ProviderContainer(
         overrides: [
@@ -416,6 +427,80 @@ void main() {
       }
       expect(native.local.releases, 1);
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'an SFX payload is browsed explicitly without replacing the executable binary view',
+    (tester) async {
+      await _memoryViewer(
+        tester,
+        sfxPeArchive(sfxReferenceZip()),
+        'bundle.exe',
+      );
+      expect(find.text('readme.txt'), findsNothing);
+      _chip(tester, 'Archive').onSelected!(true);
+      await tester.pumpAndSettle();
+      expect(find.text('readme.txt'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('archive-format-notices')),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('readme.txt'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('SFX payload', findRichText: true),
+        findsWidgets,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'native F3 joins numbered 7z parts and previews a spanning member',
+    (tester) async {
+      final native = await _NativeIso.create(
+        tester,
+        name: 'fixture.7z.001',
+        allowSmallReads: true,
+        writeArchive: (file) async {
+          final parts = volumeSplitBytes(
+            volumeReferenceSevenZip(),
+            sizes: volumeReferenceSizes,
+          );
+          for (var i = 0; i < parts.length; i++) {
+            await File(
+              '${file.parent.path}/fixture.7z.${(i + 1).toString().padLeft(3, '0')}',
+            ).writeAsBytes(parts[i]);
+          }
+        },
+      );
+      try {
+        await native.mount(tester);
+        await _waitFor(
+          tester,
+          () => find.text('first.txt').evaluate().isNotEmpty,
+        );
+        expect(find.text('nested/second.txt'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('archive-format-notices')),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('first.txt'));
+        await _waitFor(
+          tester,
+          () => find
+              .textContaining(
+                'Original split archive fixture.',
+                findRichText: true,
+              )
+              .evaluate()
+              .isNotEmpty,
+        );
+        expect(tester.takeException(), isNull);
+      } finally {
+        await native.dispose(tester);
+      }
     },
   );
 
