@@ -67,7 +67,10 @@ from 15 seconds to at least 100 ms. Higher host values never raise hard caps.
   decoding bounded output. Only HTML creates a preview iframe.
 - HTML output is sanitized and sandboxed without script permissions. It has
   a `default-src 'none'` CSP; links, forms, refresh/base elements and external
-  navigation attributes are removed. Source output is inserted as text.
+  navigation attributes are removed. File inputs and other form controls are
+  also removed because a sandbox alone does not prevent user-activated native
+  file pickers. Only the trusted XML tools retain schema/stylesheet selectors.
+  The exact original transformation output remains available as text.
 - Cancellation destroys disposable workers. New resources invalidate older
   results; local file reads cannot replace a later selection. Destroy aborts
   work, clears data, removes listeners and revokes preview object URLs.
@@ -94,7 +97,10 @@ FILE_VIEWER_UPSTREAM_DIR=/path/to/file-viewer node packages/file_viewer_document
 Install the pinned tooling dependencies and Playwright Chromium first (or set
 `CHROMIUM_EXECUTABLE` to an available compatible Chromium). Browser cases cover
 valid/invalid XSD, real HTML/XML/text transformation, external-resource
-rejection, output bounds, cancellation, cleanup and inert HTML. Local Chromium
+rejection, user-click schema/stylesheet file chooser events, output bounds,
+cancellation, cleanup and inert HTML without form controls. Browser chooser
+events exercise the selected File API inputs; platform-native chooser dialogs
+are qualified separately by their host tests. Local Chromium
 was unavailable because process socket creation was denied; browser success is
 not claimed until the real CI script completes. No fake compiler or replacement
 WASM is used by either set of engine tests.

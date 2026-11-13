@@ -25,6 +25,7 @@
 #include "reader_runtime_probe.h"
 #include "reader_surface_size.h"
 #include "reader_webkit_settings.h"
+#include "xml_file_selection.h"
 #endif
 
 namespace {
@@ -141,7 +142,7 @@ void Error(FlMethodCall* call, const std::string& message) {
   X(webkit_user_content_manager_unregister_script_message_handler) \
   X(webkit_user_content_manager_add_script) X(webkit_user_content_manager_remove_all_scripts) \
   X(webkit_user_script_new) X(webkit_user_script_unref) \
-  X(webkit_javascript_result_get_js_value) X(jsc_value_to_string) \
+  X(webkit_javascript_result_get_js_value) X(jsc_value_to_string) X(jsc_value_is_string) \
   X(webkit_settings_set_enable_javascript) \
   X(webkit_settings_set_javascript_can_open_windows_automatically) \
   X(webkit_settings_set_allow_file_access_from_file_urls) \
@@ -159,6 +160,7 @@ void Error(FlMethodCall* call, const std::string& message) {
   X(webkit_response_policy_decision_get_request) \
   X(webkit_policy_decision_use) X(webkit_policy_decision_ignore) \
   X(webkit_permission_request_deny) X(webkit_file_chooser_request_cancel) \
+  X(webkit_file_chooser_request_get_select_multiple) X(webkit_file_chooser_request_select_files) \
   X(webkit_authentication_request_cancel) X(webkit_script_dialog_close) \
   X(webkit_download_cancel) X(webkit_network_error_quark) X(webkit_policy_error_quark) \
   X(webkit_hit_test_result_context_is_link)
@@ -358,10 +360,13 @@ class TexturePool {
 class ReaderView : public std::enable_shared_from_this<ReaderView> {
  public:
   ReaderView(int64_t id, FlMethodChannel* channel, FlTextureRegistrar* registrar,
-             TexturePool& textures, std::shared_ptr<file_viewer_documents::RuntimeProbe> readiness)
+             TexturePool& textures, std::shared_ptr<file_viewer_documents::RuntimeProbe> readiness,
+             GtkWidget* flutter_view)
       : id_(id), channel_(channel), registrar_(registrar), textures_(textures),
-        api_(WebKitApi::Get()), readiness_(std::move(readiness)) {}
-  ~ReaderView() { Close(); }
+        api_(WebKitApi::Get()), readiness_(std::move(readiness)) {
+    g_weak_ref_init(&flutter_view_, flutter_view);
+  }
+  ~ReaderView() { Close(); g_weak_ref_clear(&flutter_view_); }
 
   bool Initialize(std::string* error) {
     Trace("creating ephemeral context");
@@ -423,6 +428,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     if (closed_) return;
     Trace("closing native view");
     closed_ = true;
+    FinishFileSelection();
     if (timer_ != 0) { g_source_remove(timer_); timer_ = 0; }
     if (cancellable_ != nullptr) g_cancellable_cancel(cancellable_);
     if (content_ != nullptr) {
@@ -672,6 +678,155 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     FlMethodCall* call;
   };
 
+  struct FileSelectionCheck {
+    std::weak_ptr<ReaderView> view;
+    uint64_t generation;
+    bool completing;
+  };
+
+  bool IsFileSelectionDocument() const {
+    return !closed_ && loaded_ && webview_ != nullptr && !url_.empty() &&
+           g_strcmp0(api_.webkit_web_view_get_uri(webview_), url_.c_str()) == 0;
+  }
+
+  void CloseFileSelectionDialog() {
+    if (file_dialog_ != nullptr) {
+      g_signal_handlers_disconnect_by_data(file_dialog_, this);
+      gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(file_dialog_));
+      g_clear_object(&file_dialog_);
+    }
+    if (file_dialog_parent_ != nullptr) {
+      g_signal_handlers_disconnect_by_data(file_dialog_parent_, this);
+      g_clear_object(&file_dialog_parent_);
+    }
+  }
+
+  void FinishFileSelection(const char* selected_path = nullptr) {
+    // Detach state before invoking WebKit; completion/cancellation may reenter.
+    const std::string selected = selected_path != nullptr ? selected_path : "";
+    auto* request = std::exchange(file_request_, nullptr);
+    ++file_request_generation_;
+    if (file_check_timeout_ != 0) { g_source_remove(file_check_timeout_); file_check_timeout_ = 0; }
+    CloseFileSelectionDialog();
+    file_kind_ = file_viewer_documents::XmlResourceKind::kNone;
+    file_selected_path_.clear();
+    if (request != nullptr) {
+      if (selected.empty()) api_.webkit_file_chooser_request_cancel(request);
+      else {
+        const char* paths[] = {selected.c_str(), nullptr};
+        api_.webkit_file_chooser_request_select_files(request, paths);
+      }
+      g_object_unref(request);
+    }
+  }
+
+  void CheckFileSelectionInput(bool completing) {
+    auto* timeout = new FileSelectionCheck{shared_from_this(), file_request_generation_, completing};
+    file_check_timeout_ = g_timeout_add_full(G_PRIORITY_DEFAULT, 5000,
+        [](gpointer data) -> gboolean {
+          const auto* pending = static_cast<FileSelectionCheck*>(data);
+          auto view = pending->view.lock();
+          if (view != nullptr && view->file_request_generation_ == pending->generation) {
+            view->file_check_timeout_ = 0;
+            view->FinishFileSelection();
+          }
+          return G_SOURCE_REMOVE;
+        }, timeout, [](gpointer data) { delete static_cast<FileSelectionCheck*>(data); });
+    auto* check = new FileSelectionCheck{shared_from_this(), file_request_generation_, completing};
+    api_.webkit_web_view_evaluate_javascript(webview_,
+        file_viewer_documents::kFocusedXmlResourceInput, -1, nullptr, url_.c_str(),
+        cancellable_, FileSelectionInputChecked, check);
+  }
+
+  static void FileSelectionInputChecked(GObject* object, GAsyncResult* result, gpointer data) {
+    std::unique_ptr<FileSelectionCheck> check(static_cast<FileSelectionCheck*>(data));
+    auto& api = WebKitApi::Get();
+    g_autoptr(GError) error = nullptr;
+    auto* value = api.webkit_web_view_evaluate_javascript_finish(
+        reinterpret_cast<WebKitWebView*>(object), result, &error);
+    g_autofree char* kind_name = value != nullptr && api.jsc_value_is_string(value)
+        ? api.jsc_value_to_string(value) : nullptr;
+    if (value != nullptr) g_object_unref(value);
+    auto self = check->view.lock();
+    if (self == nullptr || self->file_request_ == nullptr ||
+        self->file_request_generation_ != check->generation) return;
+    if (self->file_check_timeout_ != 0) {
+      g_source_remove(self->file_check_timeout_); self->file_check_timeout_ = 0;
+    }
+    const auto kind = file_viewer_documents::XmlResourceKindFromResult(kind_name != nullptr ? kind_name : "");
+    if (error != nullptr || !self->IsFileSelectionDocument() ||
+        kind == file_viewer_documents::XmlResourceKind::kNone) {
+      self->FinishFileSelection(); return;
+    }
+    if (check->completing) {
+      if (kind == self->file_kind_ && file_viewer_documents::IsApprovedXmlResourceFile(
+              kind, self->file_selected_path_)) {
+        self->FinishFileSelection(self->file_selected_path_.c_str());
+      } else self->FinishFileSelection();
+      return;
+    }
+    self->file_kind_ = kind;
+    self->ShowFileSelectionDialog();
+  }
+
+  void ShowFileSelectionDialog() {
+    g_autoptr(GObject) flutter_view = static_cast<GObject*>(g_weak_ref_get(&flutter_view_));
+    GtkWidget* parent = flutter_view != nullptr
+        ? gtk_widget_get_toplevel(GTK_WIDGET(flutter_view)) : nullptr;
+    if (!IsFileSelectionDocument() || !GTK_IS_WINDOW(parent) ||
+        GTK_IS_OFFSCREEN_WINDOW(parent) || !gtk_widget_get_visible(parent) ||
+        !gtk_widget_get_mapped(parent) || gtk_widget_in_destruction(parent)) {
+      FinishFileSelection(); return;
+    }
+    const bool schema = file_kind_ == file_viewer_documents::XmlResourceKind::kSchema;
+    file_dialog_ = gtk_file_chooser_native_new(schema ? "Choose XML Schema" : "Choose XSLT stylesheet",
+        GTK_WINDOW(parent), GTK_FILE_CHOOSER_ACTION_OPEN, "_Open", "_Cancel");
+    gtk_native_dialog_set_modal(GTK_NATIVE_DIALOG(file_dialog_), TRUE);
+    auto* chooser = GTK_FILE_CHOOSER(file_dialog_);
+    gtk_file_chooser_set_local_only(chooser, TRUE);
+    gtk_file_chooser_set_select_multiple(chooser, FALSE);
+    gtk_file_chooser_set_create_folders(chooser, FALSE);
+    auto* filter = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter, schema ? "XML Schema (*.xsd)" : "XSLT stylesheet (*.xsl, *.xslt)");
+    const auto add_patterns = [filter](const std::string& extension) {
+      // GTK's portable pattern syntax has '*' and '?', but no bracket classes.
+      for (size_t mask = 0; mask < (size_t{1} << extension.size()); ++mask) {
+        std::string pattern = "*." + extension;
+        for (size_t i = 0; i < extension.size(); ++i) {
+          if ((mask & (size_t{1} << i)) != 0) pattern[i + 2] -= 'a' - 'A';
+        }
+        gtk_file_filter_add_pattern(filter, pattern.c_str());
+      }
+    };
+    if (schema) add_patterns("xsd");
+    else { add_patterns("xsl"); add_patterns("xslt"); }
+    gtk_file_chooser_add_filter(chooser, filter);
+    gtk_file_chooser_set_filter(chooser, filter);
+    file_dialog_parent_ = GTK_WINDOW(g_object_ref(parent));
+    g_signal_connect(file_dialog_parent_, "destroy", G_CALLBACK(FileSelectionParentDestroyed), this);
+    g_signal_connect(file_dialog_, "response", G_CALLBACK(FileSelectionResponse), this);
+    gtk_native_dialog_show(GTK_NATIVE_DIALOG(file_dialog_));
+  }
+
+  static void FileSelectionParentDestroyed(GtkWidget*, gpointer data) {
+    static_cast<ReaderView*>(data)->FinishFileSelection();
+  }
+
+  static void FileSelectionResponse(GtkNativeDialog* dialog, gint response, gpointer data) {
+    auto self = static_cast<ReaderView*>(data)->shared_from_this();
+    if (dialog != GTK_NATIVE_DIALOG(self->file_dialog_)) return;
+    g_autofree char* filename = response == GTK_RESPONSE_ACCEPT
+        ? gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog)) : nullptr;
+    if (!self->IsFileSelectionDocument() || filename == nullptr ||
+        !g_utf8_validate(filename, -1, nullptr) ||
+        !file_viewer_documents::IsApprovedXmlResourceFile(self->file_kind_, filename)) {
+      self->FinishFileSelection(); return;
+    }
+    self->file_selected_path_ = filename;
+    self->CloseFileSelectionDialog();
+    self->CheckFileSelectionInput(true);
+  }
+
   bool IsDocument(const char* uri) const {
     if (uri == nullptr || document_url_.empty()) return false;
     const std::string value(uri);
@@ -839,7 +994,7 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   static void LoadChanged(WebKitWebView*, WebKitLoadEvent event, gpointer data) {
     auto* self = static_cast<ReaderView*>(data);
     if (self->closed_) return;
-    if (event == WEBKIT_LOAD_STARTED) self->loaded_ = false;
+    if (event == WEBKIT_LOAD_STARTED) { self->loaded_ = false; self->FinishFileSelection(); }
     if (event == WEBKIT_LOAD_FINISHED && self->IsDocument(self->api_.webkit_web_view_get_uri(self->webview_))) {
       Trace("trusted reader document loaded");
       self->loaded_ = true;
@@ -851,11 +1006,13 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
     auto* self = static_cast<ReaderView*>(data);
     if (g_error_matches(error, self->api_.webkit_network_error_quark(), WEBKIT_NETWORK_ERROR_CANCELLED) ||
         g_error_matches(error, self->api_.webkit_policy_error_quark(), WEBKIT_POLICY_ERROR_FRAME_LOAD_INTERRUPTED_BY_POLICY_CHANGE)) return TRUE;
+    self->FinishFileSelection();
     self->Emit("error", std::string("The Linux browser could not load its reader: ") + error->message);
     return TRUE;
   }
   static void Terminated(WebKitWebView*, WebKitWebProcessTerminationReason, gpointer data) {
     auto* self = static_cast<ReaderView*>(data);
+    self->FinishFileSelection();
     self->Emit("error", "The Linux browser process stopped. Close and reopen the document preview.");
   }
   static gboolean Permission(WebKitWebView*, WebKitPermissionRequest* request, gpointer data) {
@@ -863,7 +1020,15 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   }
   static GtkWidget* CreateWindow(WebKitWebView*, WebKitNavigationAction*, gpointer) { return nullptr; }
   static gboolean FileChooser(WebKitWebView*, WebKitFileChooserRequest* request, gpointer data) {
-    static_cast<ReaderView*>(data)->api_.webkit_file_chooser_request_cancel(request); return TRUE;
+    auto* self = static_cast<ReaderView*>(data);
+    if (!self->IsFileSelectionDocument() || !self->focused_ || self->file_request_ != nullptr ||
+        self->api_.webkit_file_chooser_request_get_select_multiple(request)) {
+      self->api_.webkit_file_chooser_request_cancel(request); return TRUE;
+    }
+    self->file_request_ = static_cast<WebKitFileChooserRequest*>(g_object_ref(request));
+    ++self->file_request_generation_;
+    self->CheckFileSelectionInput(false);
+    return TRUE;
   }
   static gboolean Authenticate(WebKitWebView*, WebKitAuthenticationRequest* request, gpointer data) {
     static_cast<ReaderView*>(data)->api_.webkit_authentication_request_cancel(request); return TRUE;
@@ -890,6 +1055,14 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
   WebKitWebView* webview_ = nullptr;
   WebKitUserContentManager* content_ = nullptr;
   GtkWidget* window_ = nullptr;
+  GWeakRef flutter_view_;
+  WebKitFileChooserRequest* file_request_ = nullptr;
+  GtkFileChooserNative* file_dialog_ = nullptr;
+  GtkWindow* file_dialog_parent_ = nullptr;
+  file_viewer_documents::XmlResourceKind file_kind_ = file_viewer_documents::XmlResourceKind::kNone;
+  std::string file_selected_path_;
+  uint64_t file_request_generation_ = 0;
+  guint file_check_timeout_ = 0;
   CrispDocumentTexture* texture_ = nullptr;
   GCancellable* cancellable_ = nullptr;
   guint timer_ = 0;
@@ -911,12 +1084,12 @@ class ReaderView : public std::enable_shared_from_this<ReaderView> {
 
 class Plugin {
  public:
-  Plugin(FlMethodChannel* channel, FlTextureRegistrar* registrar)
+  Plugin(FlMethodChannel* channel, FlTextureRegistrar* registrar, FlView* flutter_view)
       : channel_(channel), registrar_(FL_TEXTURE_REGISTRAR(g_object_ref(registrar)))
 #ifdef FILE_VIEWER_DOCUMENTS_HAS_WEBKITGTK
         , textures_(registrar_), readiness_(std::make_shared<file_viewer_documents::RuntimeProbe>(ProbeExecutable()))
 #endif
-        {}
+        { g_weak_ref_init(&flutter_view_, flutter_view); }
   ~Plugin() {
 #ifdef FILE_VIEWER_DOCUMENTS_HAS_WEBKITGTK
     *alive_ = false;
@@ -925,6 +1098,7 @@ class Plugin {
     views_.clear();
 #endif
     g_object_unref(registrar_);
+    g_weak_ref_clear(&flutter_view_);
   }
 
   void Handle(FlMethodCall* call) {
@@ -1017,7 +1191,9 @@ class Plugin {
   void CreateReadyView(FlMethodCall* call) {
     if (views_.size() >= 4) { Error(call, "The Linux document browser has reached its four-view limit."); return; }
     const int64_t id = next_id_++;
-    auto view = std::make_shared<ReaderView>(id, channel_, registrar_, textures_, readiness_);
+    g_autoptr(GObject) flutter_view = static_cast<GObject*>(g_weak_ref_get(&flutter_view_));
+    auto view = std::make_shared<ReaderView>(id, channel_, registrar_, textures_, readiness_,
+        flutter_view != nullptr ? GTK_WIDGET(flutter_view) : nullptr);
     std::string error;
     if (!view->Initialize(&error)) {
       readiness_->Invalidate();
@@ -1033,6 +1209,7 @@ class Plugin {
 #endif
   [[maybe_unused]] FlMethodChannel* channel_;
   FlTextureRegistrar* registrar_;
+  GWeakRef flutter_view_;
 #ifdef FILE_VIEWER_DOCUMENTS_HAS_WEBKITGTK
   TexturePool textures_;
   std::shared_ptr<file_viewer_documents::RuntimeProbe> readiness_;
@@ -1048,7 +1225,8 @@ void file_viewer_documents_plugin_register_with_registrar(FlPluginRegistrar* reg
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   g_autoptr(FlMethodChannel) channel = fl_method_channel_new(
       fl_plugin_registrar_get_messenger(registrar), kChannel, FL_METHOD_CODEC(codec));
-  auto* plugin = new Plugin(channel, fl_plugin_registrar_get_texture_registrar(registrar));
+  auto* plugin = new Plugin(channel, fl_plugin_registrar_get_texture_registrar(registrar),
+                            fl_plugin_registrar_get_view(registrar));
   fl_method_channel_set_method_call_handler(channel,
       [](FlMethodChannel*, FlMethodCall* call, gpointer data) { static_cast<Plugin*>(data)->Handle(call); },
       plugin, [](gpointer data) { delete static_cast<Plugin*>(data); });

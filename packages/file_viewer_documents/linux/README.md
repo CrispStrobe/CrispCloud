@@ -63,6 +63,17 @@ blob frames; it does not permit external browsing. The message bridge is bounded
 to 1 MiB and the Dart layer checks channel/session/type before forwarding a
 status to the app. Closing the widget releases the browser and local server.
 
+The XML tools can request one explicitly selected local `.xsd`, `.xsl` or
+`.xslt` resource through a native file chooser parented to the visible Flutter
+window. A request is accepted only for the focused trusted main-frame XML
+control with its exact extension allowlist; document-frame requests, multiple
+selection and directory selection remain denied. The selected file must be a
+regular file (not a symlink) of at most 2 MiB. The host checks the same session
+and XML control again before returning that single filename to WebKit, and
+cancels pending requests on navigation, disposal or parent-window destruction.
+The XML loader independently checks the resource size before reading it. No
+general filesystem bridge, file-URL navigation or network access is enabled.
+
 Ordinary keyboard characters, navigation and editing shortcuts are dispatched
 through GTK so document search fields can work. Ctrl+Tab returns focus to
 Flutter. Full input-method composition, live WebKit rendering and platform

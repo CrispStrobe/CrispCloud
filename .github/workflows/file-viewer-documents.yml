@@ -101,7 +101,6 @@ jobs:
 
   linux-consumer:
     name: Compile standalone Linux document host
-    needs: runtime
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -115,11 +114,6 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Download the verified document runtime
-        uses: actions/download-artifact@v4
-        with:
-          name: selected-document-runtime
-          path: packages/file_viewer_documents
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.8'

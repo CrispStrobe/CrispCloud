@@ -84,7 +84,7 @@ async function open() {
       instance = await (await import("./entry-K66XL2UG.js")).default(input, target, context);
       break;
     case "xml":
-      instance = await (await import("./entry-GW5ZCGSR.js")).default(input, target, context);
+      instance = await (await import("./entry-BECWRWJ3.js")).default(input, target, context);
       break;
     default:
       throw new Error("Unsupported document engine.");

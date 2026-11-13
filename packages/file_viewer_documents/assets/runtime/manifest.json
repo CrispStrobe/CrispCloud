@@ -115,9 +115,9 @@
       "sha256": "b2f6be12578d3ddb4d99ab1f4e1a1dbb36e82b20b4c740e2e8fc9a5b41c82cf9"
     },
     {
-      "path": "entry-GW5ZCGSR.js",
-      "bytes": 24956,
-      "sha256": "03d5d69bc9503f236a5cc5d0f6c19cf07f6852dc7eba63b42b412b70ef0fa9d1"
+      "path": "entry-BECWRWJ3.js",
+      "bytes": 25031,
+      "sha256": "22918aa5db98fea8dbf28a2fbd4918276d3f76635c40efd859cce58ebca7bf8c"
     },
     {
       "path": "entry-IMEYDMPT.js",
@@ -147,7 +147,7 @@
     {
       "path": "host.js",
       "bytes": 5840,
-      "sha256": "ecec89edbb5c0837ef7b652bf012302a7fcd249c1b20564b2e86352f8fa9bc52"
+      "sha256": "d3cbac2c1ef2da7984bd618ce767e20192de6cab2921f15b50838153d4314f34"
     },
     {
       "path": "image-DBKOAVSS.js",
@@ -389,7 +389,7 @@
     },
     {
       "file": "crispcloud-spreadsheet-UPSTREAM.md",
-      "sha256": "15f499bdfbd190e86967862a5f5ea28077344a554ffcacb5208c570aba590b96",
+      "sha256": "cd66c8db4562ddd9ade943edfc51d5336ca525c6ce43247e0eebfcc7ca2ccd93",
       "source": "engines/spreadsheet/UPSTREAM.md"
     },
     {
@@ -439,7 +439,7 @@
     },
     {
       "file": "crispcloud-xml-UPSTREAM.md",
-      "sha256": "d584c33f47b62ebe6d5e67d6c4acec3d908075160b9b01cfce57e6bc522560d9",
+      "sha256": "48b6da60d486112387ca421eb071df44648fbd145fc3621728b4ec071dcdd5f7",
       "source": "engines/xml/UPSTREAM.md"
     },
     {
@@ -2052,7 +2052,7 @@
     },
     {
       "path": "engines/xml/src/entry.ts",
-      "sha256": "9048df680238234ed488355edd9587e2882c739847b91cb24c62d06d04b28366"
+      "sha256": "21a287718c85b6e6e36b4fde9e992f36f59d62b8bdd0cde3f63284c070bf5de2"
     },
     {
       "path": "engines/xml/src/xmlEngines.ts",

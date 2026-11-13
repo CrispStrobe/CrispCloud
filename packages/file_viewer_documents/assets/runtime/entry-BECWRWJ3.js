@@ -520,7 +520,7 @@ ${result.message || "Schema validation failed."}`);
           frame.setAttribute("sandbox", "");
           frame.setAttribute("referrerpolicy", "no-referrer");
           const sanitized = purify_default.sanitize(result.html, {
-            FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "base", "link", "meta"],
+            FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input", "button", "textarea", "select", "option", "optgroup", "datalist", "base", "link", "meta"],
             FORBID_ATTR: ["srcset", "href", "xlink:href", "action", "formaction", "target", "download"]
           });
           const page = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; object-src 'none'; base-uri 'none'; form-action 'none'"></head><body>${sanitized}</body></html>`;

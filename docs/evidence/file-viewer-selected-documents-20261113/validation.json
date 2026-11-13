@@ -77,6 +77,11 @@
       "path": "runtime-checkpoint.json",
       "bytes": 36560,
       "sha256": "876643368776b56234511a666e222c4bf955a1f8bd8074fd6b18e26fe57fb898"
+    },
+    {
+      "path": "native-file-policy.log",
+      "bytes": 46,
+      "sha256": "ad646c39ed404fd16e1d049a29cb1be239377ea0ed95a37e0e3e5210ccf6a908"
     }
   ],
   "runtimeCheckpoint": {
@@ -91,6 +96,20 @@
     "scope": "XLS/XLT/XLSB legacy chart extraction is unavailable; XML/MBOX/PPS boundaries clarified",
     "unchangedRuntimeAssetRecords": 42,
     "dependencyInventoryUnchanged": true,
-    "productionCodeChanged": false
+    "productionCodeChanged": false,
+    "sourceCommit": "5f7b46d47d34d74e9057eb89bc78bc9097867ea7"
+  },
+  "xmlChooserCorrection": {
+    "nativePolicyChecks": 27,
+    "targetedXmlNodeTests": 11,
+    "updatedXmlBrowserCases": 10,
+    "updatedBrowserExecution": "pending CI",
+    "nativeCompilerExecution": "pending CI",
+    "interactiveGtkDialogQualification": "not claimed",
+    "priorNativeAttempt": {
+      "run": 43385379835,
+      "job": 131756389063,
+      "conclusion": "cancelled while queued; zero executed steps"
+    }
   }
 }
