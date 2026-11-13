@@ -286,3 +286,8 @@ hybrid, encrypted and other unsupported disk images remain read-only.
 See [container profiles and verification](docs/archive-iso-rar-dmg.md). Apple's
 `hdiutil` independently verified a generated data-image fixture on this Mac;
 large hosted acceptance uses a fixed source checkpoint before release.
+
+Cloud connections can stay open simultaneously in the two panes. See
+[provider setup](docs/PROVIDER_SETUP.md#multiple-simultaneous-cloud-connections)
+for session behavior and [Nextcloud browser requirements](docs/PROVIDER_SETUP.md#browser-access-webpwa)
+for CORS, HTTPS and server configuration limits.
