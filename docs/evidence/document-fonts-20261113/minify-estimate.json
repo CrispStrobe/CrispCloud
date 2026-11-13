@@ -1,0 +1,287 @@
+{
+  "schema": 1,
+  "versions": {
+    "node": "v24.22.1",
+    "zlib": "1.3.2.1-motley-285e94b",
+    "brotli": "1.2.0",
+    "esbuild": "0.28.2"
+  },
+  "method": "Transform each existing esbuild-produced JS file in memory, preserve legal comments inline; exclude unchanged copied vendor runtimes. No rebundle, tests or production edits; savings are an estimate. Node compression may differ from Python zlib; compare before/after within this file.",
+  "files": 32,
+  "totals": {
+    "bytes": 3705821,
+    "minified_bytes": 2066621,
+    "gzip9_bytes": 866220,
+    "minified_gzip9_bytes": 674556
+  },
+  "rows": [
+    {
+      "file": "UTIF-EAV2MPGD.js",
+      "bytes": 90541,
+      "minified_bytes": 38730,
+      "gzip9_bytes": 19578,
+      "minified_gzip9_bytes": 15241
+    },
+    {
+      "file": "chm.worker.js",
+      "bytes": 6532,
+      "minified_bytes": 3547,
+      "gzip9_bytes": 2133,
+      "minified_gzip9_bytes": 1602
+    },
+    {
+      "file": "chunk-3E27RFED.js",
+      "bytes": 139916,
+      "minified_bytes": 79506,
+      "gzip9_bytes": 26598,
+      "minified_gzip9_bytes": 21283
+    },
+    {
+      "file": "chunk-B3J7LI27.js",
+      "bytes": 14704,
+      "minified_bytes": 7483,
+      "gzip9_bytes": 3636,
+      "minified_gzip9_bytes": 2719
+    },
+    {
+      "file": "chunk-G2WIWTPZ.js",
+      "bytes": 69089,
+      "minified_bytes": 31138,
+      "gzip9_bytes": 16137,
+      "minified_gzip9_bytes": 11930
+    },
+    {
+      "file": "chunk-OJSGNLVQ.js",
+      "bytes": 809,
+      "minified_bytes": 462,
+      "gzip9_bytes": 356,
+      "minified_gzip9_bytes": 297
+    },
+    {
+      "file": "chunk-PBD2UG6C.js",
+      "bytes": 129259,
+      "minified_bytes": 46427,
+      "gzip9_bytes": 22361,
+      "minified_gzip9_bytes": 14977
+    },
+    {
+      "file": "chunk-PIRHQTI4.js",
+      "bytes": 1788,
+      "minified_bytes": 843,
+      "gzip9_bytes": 824,
+      "minified_gzip9_bytes": 485
+    },
+    {
+      "file": "chunk-QU72KJ6R.js",
+      "bytes": 36299,
+      "minified_bytes": 17504,
+      "gzip9_bytes": 8908,
+      "minified_gzip9_bytes": 6828
+    },
+    {
+      "file": "chunk-UIIGQOVD.js",
+      "bytes": 8715,
+      "minified_bytes": 4627,
+      "gzip9_bytes": 2578,
+      "minified_gzip9_bytes": 1953
+    },
+    {
+      "file": "chunk-V2DBS5C2.js",
+      "bytes": 9211,
+      "minified_bytes": 4576,
+      "gzip9_bytes": 2581,
+      "minified_gzip9_bytes": 1872
+    },
+    {
+      "file": "chunk-VJWTYBFP.js",
+      "bytes": 1907,
+      "minified_bytes": 901,
+      "gzip9_bytes": 600,
+      "minified_gzip9_bytes": 431
+    },
+    {
+      "file": "chunk-X3L4DUK6.js",
+      "bytes": 154445,
+      "minified_bytes": 145099,
+      "gzip9_bytes": 35521,
+      "minified_gzip9_bytes": 33828
+    },
+    {
+      "file": "chunk-X6YCA5GR.js",
+      "bytes": 36515,
+      "minified_bytes": 20150,
+      "gzip9_bytes": 9531,
+      "minified_gzip9_bytes": 7359
+    },
+    {
+      "file": "chunk-XPXVZBDO.js",
+      "bytes": 307,
+      "minified_bytes": 162,
+      "gzip9_bytes": 187,
+      "minified_gzip9_bytes": 143
+    },
+    {
+      "file": "dist-NVM75KNJ.js",
+      "bytes": 439516,
+      "minified_bytes": 255437,
+      "gzip9_bytes": 112913,
+      "minified_gzip9_bytes": 90769
+    },
+    {
+      "file": "entry-7RJCH66I.js",
+      "bytes": 42006,
+      "minified_bytes": 26672,
+      "gzip9_bytes": 11546,
+      "minified_gzip9_bytes": 9497
+    },
+    {
+      "file": "entry-BECWRWJ3.js",
+      "bytes": 25031,
+      "minified_bytes": 15139,
+      "gzip9_bytes": 7414,
+      "minified_gzip9_bytes": 6000
+    },
+    {
+      "file": "entry-IMEYDMPT.js",
+      "bytes": 27921,
+      "minified_bytes": 15399,
+      "gzip9_bytes": 7500,
+      "minified_gzip9_bytes": 5846
+    },
+    {
+      "file": "entry-K66XL2UG.js",
+      "bytes": 29396,
+      "minified_bytes": 18892,
+      "gzip9_bytes": 8188,
+      "minified_gzip9_bytes": 6744
+    },
+    {
+      "file": "entry-NDHWTUCQ.js",
+      "bytes": 8762,
+      "minified_bytes": 5807,
+      "gzip9_bytes": 2940,
+      "minified_gzip9_bytes": 2422
+    },
+    {
+      "file": "entry-U22M3L7A.js",
+      "bytes": 152602,
+      "minified_bytes": 71167,
+      "gzip9_bytes": 36261,
+      "minified_gzip9_bytes": 25316
+    },
+    {
+      "file": "export-WDYOWQ5R.js",
+      "bytes": 30585,
+      "minified_bytes": 20449,
+      "gzip9_bytes": 6463,
+      "minified_gzip9_bytes": 5427
+    },
+    {
+      "file": "host.js",
+      "bytes": 5840,
+      "minified_bytes": 4315,
+      "gzip9_bytes": 2018,
+      "minified_gzip9_bytes": 1778
+    },
+    {
+      "file": "image-DBKOAVSS.js",
+      "bytes": 12476,
+      "minified_bytes": 7379,
+      "gzip9_bytes": 3662,
+      "minified_gzip9_bytes": 2998
+    },
+    {
+      "file": "index.es-KPAU56EJ.js",
+      "bytes": 345128,
+      "minified_bytes": 255192,
+      "gzip9_bytes": 81537,
+      "minified_gzip9_bytes": 68838
+    },
+    {
+      "file": "postscript.worker.js",
+      "bytes": 22165,
+      "minified_bytes": 11813,
+      "gzip9_bytes": 6168,
+      "minified_gzip9_bytes": 4697
+    },
+    {
+      "file": "pptjs.worker.js",
+      "bytes": 499763,
+      "minified_bytes": 276553,
+      "gzip9_bytes": 120376,
+      "minified_gzip9_bytes": 96725
+    },
+    {
+      "file": "print-mask-WBMFUFPO.js",
+      "bytes": 19138,
+      "minified_bytes": 10542,
+      "gzip9_bytes": 4699,
+      "minified_gzip9_bytes": 3647
+    },
+    {
+      "file": "printMaskLoader-CV2G6CWF.js",
+      "bytes": 159,
+      "minified_bytes": 154,
+      "gzip9_bytes": 119,
+      "minified_gzip9_bytes": 122
+    },
+    {
+      "file": "sheet.worker.js",
+      "bytes": 1331926,
+      "minified_bytes": 662965,
+      "gzip9_bytes": 299128,
+      "minified_gzip9_bytes": 219850
+    },
+    {
+      "file": "wordperfect.worker.js",
+      "bytes": 13370,
+      "minified_bytes": 7591,
+      "gzip9_bytes": 3759,
+      "minified_gzip9_bytes": 2932
+    }
+  ],
+  "selected_compression": [
+    {
+      "file": "stet_wasm_bg.wasm",
+      "bytes": 14706940,
+      "gzip9_bytes": 11348042,
+      "brotli9_bytes": 10511763
+    },
+    {
+      "file": "libwpd.wasm",
+      "bytes": 531158,
+      "gzip9_bytes": 208239,
+      "brotli9_bytes": 175582
+    },
+    {
+      "file": "chm_wasm_bg.wasm",
+      "bytes": 338731,
+      "gzip9_bytes": 205947,
+      "brotli9_bytes": 188379
+    },
+    {
+      "file": "sheet.worker.js",
+      "bytes": 1331926,
+      "gzip9_bytes": 299128,
+      "brotli9_bytes": 269802
+    },
+    {
+      "file": "pptjs.worker.js",
+      "bytes": 499763,
+      "gzip9_bytes": 120376,
+      "brotli9_bytes": 107906
+    },
+    {
+      "file": "xmllint.wasm",
+      "bytes": 778732,
+      "gzip9_bytes": 274760,
+      "brotli9_bytes": 242709
+    },
+    {
+      "file": "xslt-wasm.js",
+      "bytes": 1321096,
+      "gzip9_bytes": 504482,
+      "brotli9_bytes": 425166
+    }
+  ]
+}
