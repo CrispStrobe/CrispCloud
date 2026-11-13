@@ -52,8 +52,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../l10n/app_localizations.dart';
 
 import 'package:flutter_highlight/flutter_highlight.dart';
-import 'package:flutter_highlight/themes/monokai-sublime.dart';
-import 'package:flutter_highlight/themes/github.dart';
+
+import '../services/syntax_highlight_theme.dart';
 
 import '../services/log_service.dart';
 import '../l10n/preview_media_strings.dart';
@@ -970,13 +970,13 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       final isDark = theme.brightness == Brightness.dark;
       if (lang != null) {
         return Container(
-          color: theme.colorScheme.surfaceContainerLowest,
+          color: syntaxCanvasColor(dark: isDark),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(8),
             child: HighlightView(
               _textContent!,
               language: lang,
-              theme: isDark ? monokaiSublimeTheme : githubTheme,
+              theme: syntaxHighlightTheme(dark: isDark),
               textStyle: const TextStyle(
                 fontFamily: 'AppMono',
                 fontFamilyFallback: documentFontFallbacks,

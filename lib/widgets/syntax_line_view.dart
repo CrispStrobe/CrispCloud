@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:re_highlight/styles/atom-one-dark.dart';
-import 'package:re_highlight/styles/github.dart';
+
+import '../services/syntax_highlight_theme.dart';
 
 import '../services/syntax_line_highlighting.dart';
 import 'internal_viewer_views.dart';
@@ -58,9 +58,9 @@ class _SyntaxLineViewState extends State<SyntaxLineView> {
   }
 
   InlineSpan _span(int index, String text, TextStyle matchStyle) {
-    final theme = Theme.of(context).brightness == Brightness.dark
-        ? atomOneDarkTheme
-        : githubTheme;
+    final theme = syntaxHighlightTheme(
+      dark: Theme.of(context).brightness == Brightness.dark,
+    );
     final tokens = index < _lines.length
         ? _lines[index]
         : <SyntaxRun>[(text: text, scopes: const [])];

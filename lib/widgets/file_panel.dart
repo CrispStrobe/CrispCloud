@@ -764,6 +764,9 @@ class _FilePanelState extends ConsumerState<FilePanel> {
                 child:
                     !retainColumns &&
                         listingState != null &&
+                        !(listingState == PanelListingState.empty &&
+                            (files?.any((file) => file.name == '..') ??
+                                false)) &&
                         (listingState.blocksListing ||
                             (!visualLayout &&
                                 listingState != PanelListingState.loading) ||

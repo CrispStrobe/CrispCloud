@@ -214,6 +214,33 @@ void main() {
     await unmount(tester);
   });
 
+  for (final mode in [
+    ViewMode.list,
+    ViewMode.column,
+    ViewMode.grid,
+    ViewMode.tiles,
+    ViewMode.gallery,
+  ]) {
+    testWidgets('${mode.name} keeps an empty folder parent row navigable', (
+      tester,
+    ) async {
+      cloud.reportCount = 0;
+      await mount(tester, mode: mode);
+      await panel.navigateToPath('/docs', origin: panel.captureCurrentOrigin());
+      await tester.pumpAndSettle();
+      expect(panel.filteredFiles!.map((file) => file.name), ['..']);
+      final parent = find.text('..').hitTestable().last;
+      expect(parent, findsOneWidget);
+      await tester.tap(parent);
+      await tester.pump(const Duration(milliseconds: 50));
+      if (panel.currentPath != '/') await tester.tap(parent);
+      await tester.pumpAndSettle();
+      expect(panel.currentPath, '/');
+      expect(tester.takeException(), isNull);
+      await unmount(tester);
+    });
+  }
+
   for (final mode in [ViewMode.list, ViewMode.column]) {
     testWidgets(
       '${mode.name} explains a parent-only filtered listing and clears the filter',
