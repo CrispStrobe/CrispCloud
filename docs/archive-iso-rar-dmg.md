@@ -173,8 +173,15 @@ and nine explicit large cases. The new tests cover native creation, edits,
 review, cancellation without mutation, verified publication, reopen, bounded
 chunks, full payload hashes, source retention and cleanup for ISO/RAR/DMG. A
 receipt is green only when its exact selected large test completes with zero
-skips. At this checkpoint those integrated tests are authored; their completed
-hosted result must be recorded separately. No local Flutter runtime was used.
+skips. At commit `f1a03e807b1261361a17f66a37fa94858481e1e7`, the normal hosted
+suite completed with **1,856 passed, zero failed and ten opt-in cases skipped**;
+help validation, archive analysis and the portable codec checks also passed.
+The nine large integrated jobs still need completed receipts: attempt 1 was
+canceled while the ISO/DMG cases were active, and attempt 2 reruns the unfinished
+jobs on the same source revision. The additional standalone RAR codec opt-in
+has the separate direct evidence above. Exact jobs and current completion
+status are in [runtime verification](archive-containers-runtime-verification.md).
+No local Flutter runtime was used.
 
 The configured 8 GiB ceiling and all supported operating systems are not fully
 qualified by a 2 GiB Linux fixture. No macOS mounting, application-bundle

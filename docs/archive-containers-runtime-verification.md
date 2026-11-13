@@ -1,5 +1,16 @@
 # Archive container runtime verification
 
+## Current integrated commit
+
+The integrated candidate is
+[`f1a03e807b1261361a17f66a37fa94858481e1e7`](https://github.com/CrispStrobe/CrispCloud/commit/f1a03e807b1261361a17f66a37fa94858481e1e7)
+on `feature/archive-iso-rar-dmg-20261113`. Its
+[Archive containers run 43369528217](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217)
+has a completed normal regression result: **1,856 passed, zero failed, ten
+explicitly skipped large cases**. The nine dedicated large-case jobs are being
+assessed separately; the completed common-format baseline below remains
+independent evidence at its own earlier commit.
+
 ## Retained source and completed hosted gate
 
 The archive checkpoint `5b303280f1149051ef3ecd8c36a6ba3ec651936b` is retained in
@@ -180,6 +191,63 @@ artifact archives were not independently downloaded during this audit.
 
 ## Integrated ISO, RAR and DMG acceptance gate
 
+### Completed normal regression result
+
+The final candidate's
+[normal job 131701898537](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131701898537)
+completed successfully at `2026-11-13T05:13:58Z`, with these exact log lines:
+
+```text
+2026-11-13T05:13:52.0983548Z 06:08 +1856 ~10: All tests passed!
+2026-11-13T05:13:52.3656185Z PASS — 1856 passed, 0 failed, 10 skipped.
+```
+
+The
+[normal evidence artifact 14012002987](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14012002987)
+was independently downloaded and its `receipt.json`, JSON test events, analysis,
+help and portable-runtime logs were inspected. Its receipt identifies the exact
+candidate SHA and attempt 1, with `verified: true`, `completed: true`, successful
+test outcome and dependency restoration, no missing required suites and no
+malformed event lines. GitHub records the artifact's SHA-256 as
+`be9adff2dc8bede22e04a64f9540ebd3591d94805ab37fc08a56b2e1a288ad07`
+and retention through `2026-11-27T05:13:52Z`.
+
+Selected new suites in that completed JSON event report are:
+
+| Suite | Passed | Skipped |
+| --- | ---: | ---: |
+| `archive_dmg_rewrite_test.dart` | 29 | 0 |
+| `archive_dmg_transfer_names_test.dart` | 6 | 0 |
+| `archive_dmg_workspace_test.dart` | 5 | 0 |
+| `archive_iso_streamed_test.dart` | 13 | 0 |
+| `archive_native_container_workflows_test.dart` | 3 | 3 |
+| `archive_rar_stored_test.dart` | 3 | 1 |
+| `archive_rar_workspace_test.dart` | 9 | 0 |
+
+The same job verified three offline help guides with 23 matching topics each.
+Its Dart analysis succeeded with two pre-existing informational lints only:
+`curly_braces_in_flow_control_structures` in
+`archive_container_publisher_test.dart:533` and `prefer_const_constructors` in
+`archive_operations_test.dart:82`. The compiled JavaScript probe passed complete
+payload verification for ISO (61,440 packed bytes), RAR (8,264 packed bytes) and
+DMG (4,548 packed bytes). These are small portable-codec checks; they do not
+establish browser UI or large browser publication coverage.
+
+Attempt 1 was cancelled at `2026-11-13T05:14:38Z`, after the normal job had
+finished. The branch still identified the same candidate; the available
+metadata did not explain the cancellation. The ISO and DMG large jobs had no
+reported assertion failures before cancellation, but neither completed a test.
+Their receipts correctly reported `FAIL / incomplete`, with zero completed,
+failed or skipped tests. Interrupted dependency restoration also failed in
+those cancelled jobs. These are incomplete runs, not large-file acceptance.
+The other seven large jobs had not executed.
+
+Only unsuccessful jobs were requested again on the unchanged candidate;
+attempt 2 was queued at `2026-11-13T05:17:04Z`. The normal result above remains
+the completed attempt-1 result, rather than a newly executed normal suite.
+
+### Exact normal skips and large-case coverage
+
 The
 [archive-containers workflow](../.github/workflows/archive-containers.yml)
 now defines **ten independently reported cases** on relevant pushes to
@@ -200,12 +268,54 @@ names and their source-declared opt-ins:
 | RAR5 Store editing and publication | `RAR5 Store creates, edits and publishes beyond 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
 | DMG editing and publication | `DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
 
+Those nine test names are nine of the ten exact skips in the final normal
+artifact. Its JSON records `skip: true` and `skipReason: null` for all ten;
+the opt-in explanations in the table come from the tested source declarations,
+not a reason string emitted by the runner. Creation and native workflow cases
+also require native exclusive-rename support, which is available in these
+Ubuntu jobs. Ordinary runs deliberately omit their large-case opt-ins.
+
+The remaining normal skip is
+`RAR5 Store writes and fully reads a container larger than 2 GiB` in
+`test/archive_rar_stored_test.dart`, enabled by `CRISP_RAR_STORED_LARGE=1`.
+It has no dedicated matrix job. The same `verifyRarStoredLarge` function was
+executed directly on Dart, with an independent libarchive/Python check, as
+documented in
+[archive-rar-store-verification.md](archive-rar-store-verification.md) and
+[its structured receipt](evidence/archive-rar-store-verification.json).
+That check wrote a dense 2,147,483,788-byte RAR5 Store archive, fully verified its
+2,147,483,665-byte member and its trailing member, and observed payload chunks
+no larger than 262,144 bytes. This is separate direct codec evidence; it is not
+an additional hosted Flutter pass. The two dedicated hosted RAR cases exercise
+application creation and editing/publication respectively.
+
+### Scope of the integrated large fixtures
+
 The new ISO/RAR/DMG workflow cases use `2 GiB + 4,097` bytes, require a published
-outer container above 2 GiB, apply folder changes and member additions/removals,
-verify that cancellation leaves the original unchanged, then publish, reopen
-and compare the complete streamed member SHA-256. DMG uses bounded nonzero
-input blocks because UDIF represents all-zero blocks without payload even when
-zlib compression is disabled.
+outer container above 2 GiB, and also require the sealed edited review and the
+installed container to remain above 2 GiB. They apply folder changes and member
+additions/removals, verify that cancellation leaves the original outer SHA-256
+unchanged, then publish, reopen and compare the complete streamed member
+SHA-256. They assert reopened member chunks no larger than 256 KiB, retain the
+source file and check that staging files are gone.
+
+DMG uses deterministic high-entropy 256 KiB blocks because UDIF represents
+all-zero blocks without payload, and the review writer can compress repeated
+low-entropy bytes. The final fixture's block is larger than zlib's history
+window; the resulting raw-run choice keeps the edited outer image above
+2 GiB. The explicit size assertions cover the initial image, review and
+installed result, so a highly compressed output cannot substitute for that
+outer-container proof.
+
+These application fixtures use the native local backend on Ubuntu. The small
+normal cases also extract the edited member through the shared extraction
+entry point; the large variants verify every reopened member byte through the
+workspace stream instead of repeating extraction to another large file. The
+implemented 8 GiB bounds are guards, not a measurement of every size through
+8 GiB or a claim of unlimited size. This gate does not benchmark remote
+providers or establish large-file behavior on every desktop platform.
+
+### Workflow and evidence contract
 
 Every case uses Flutter 3.47.8 on Ubuntu, the repository's native-assets Rust
 setup, the existing private dependency authentication convention, and the
@@ -230,8 +340,9 @@ analysis over the archive integration and test globs, and compiles
 with `dart compile js -O1`. Node executes the compiled probe and verifies the
 complete small ISO, RAR and DMG payloads. This is a portable codec smoke test;
 native publication and large browser writes are outside its scope. The normal
-receipt now explicitly requires the native-container workflow, DMG rewrite,
-streamed ISO and stored-RAR suites as well as the existing streamed suites.
+receipt now requires 16 named suites, including the native-container workflow,
+DMG rewrite, streamed ISO, stored RAR, exact RAR workspace, DMG workspace and
+DMG transfer-name suites, as well as the existing streamed suites.
 
 Each job retains a 14-day artifact named
 `archive-<case>-<commit>-<attempt>`, including:
@@ -251,8 +362,28 @@ suites also fail the normal case. Logs are retained through failure paths,
 known authentication tokens are redacted before upload, and Git configuration
 or environment dumps are not uploaded.
 
-**Verified status:** the common ZIP/7z/TGZ baseline passed both its normal
-hosted regression suite and all five explicit hosted cases above 2 GiB at
-`80fbf6f2978accc3521b06ee6449d4c52c814b90`. The expanded ten-case gate must be
-assessed at its own integrated commit before claiming hosted ISO/RAR/DMG
-acceptance; the completed baseline does not prove those subsequent changes.
+### Interim failures and the final normal pass
+
+The cancelled interim runs exposed real failures before cancellation. Their
+partial counts are retained for provenance and do not represent completed
+normal-suite results:
+
+| Interim source and run | Observed normal result before cancellation | Correction included in final candidate |
+| --- | --- | --- |
+| `17b36e2478a13ea620f8ed677549b7b8ac38eb76`, [run 43367522239](https://github.com/CrispStrobe/CrispCloud/actions/runs/43367522239), job `131695452205` | Partial receipt: 1,803 passed, 10 failed, 10 skipped. Nine locales failed `distinguishes native archive and data image limits at narrow large text` with `StateError: Bad state: No element` in the format-selection helper at `archive_creation_dialog_test.dart:153`. | The widget helper now waits for the updated scroll layout, targets the actual popup list and its scrollable, starts from its real minimum extent, and verifies the chosen format. These were test interaction failures, not layout-overflow reports. |
+| Same interim run and job | `a native 80 MiB ISO lists and reopens without releasing its viewer source` failed its first listing wait at `archive_container_viewer_test.dart:382`; the viewer remained at `Preparing view…`. | Native read-only ISO viewing skips the write-preservation scan and returns an explicit read-only inspection. Workspace opens and candidate verification retain the complete preservation scan. This avoids reading an entire opaque padded tail before listing, without authorizing edits. |
+| `8c8eb16c9eedc18f9e8d66193b64a718df3e4e37`, [run 43368576022](https://github.com/CrispStrobe/CrispCloud/actions/runs/43368576022), job `131698839603` | Partial receipt: 1,599 passed, one failed, eight skipped. `buffered unsupported RAR fallback remains read-only, encrypted=true` expected `hello, rar!`, but the fixture correctly decoded `hello, rar!\n`, at `archive_rar_workspace_test.dart:206`. | Final commit `f1a03e807b1261361a17f66a37fa94858481e1e7` corrects only this expected fixture literal. Its production code is identical to parent `07248aaa277fdecf3462190f87fb341d8fddf7e8`. |
+
+The completed final normal job includes all of these regression cases and has
+zero failed tests. The same source also includes the reviewed buffered-RAR
+timestamp-preservation fix and HFSX Unicode normalization in workspace,
+directory-sync and import-preview matching, with their required regression
+suites. Cancelled jobs' later dependency-restoration failures are incomplete
+cleanup evidence; they are not additional archive assertion failures.
+
+**Verified status:** the common ZIP/7z/TGZ baseline passed its normal hosted
+suite and all five explicit hosted cases above 2 GiB at
+`80fbf6f2978accc3521b06ee6449d4c52c814b90`. The integrated candidate at
+`f1a03e807b1261361a17f66a37fa94858481e1e7` passed its complete normal archive
+suite. The nine dedicated large cases on that candidate remain pending
+completed receipts; the earlier baseline does not prove subsequent changes.
