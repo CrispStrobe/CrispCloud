@@ -1,0 +1,253 @@
+{
+  "format_version": 1,
+  "sealed_at_utc": "2026-11-13T22:10:14.382335+00:00",
+  "result": "pass",
+  "scope": "Fresh parser and changed Office runtime qualification at the exact merged source; no full application release or platform qualification claimed.",
+  "source": {
+    "app_revision": "a065ee6e7c2aa18574a72ac6232d4d01845bdee9",
+    "app_parents": [
+      "09cb60be02c65f8a20dea92a8f05ac7e94a69353",
+      "e13fb727e4cfe785219c1ef31206d2fbefa8d6c9"
+    ],
+    "app_tracked_status": "",
+    "manifest": {
+      "path": "tool/office_fidelity_manifest.json",
+      "sha256": "410ef9a5abe63816c52595669b314eb02872163a13e77a4398193df9335d98af",
+      "file_count": 1925
+    },
+    "parser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "previous_revision": "840f8af1f645cd6ed85277ba6e619dc120d99277",
+      "revision": "0f9f085f2c0d38d540ea31622edc4a1609ec4ae7",
+      "previous_is_ancestor": true,
+      "new_commits": 13,
+      "managed_file_count": 1497,
+      "changed_runtime_files": [
+        "lib/src/conversion.dart",
+        "lib/src/legacy_word_document.dart",
+        "lib/src/legacy_word_structured_render.dart",
+        "lib/src/word_compound_storage_validation.dart",
+        "lib/src/word_media_writer.dart",
+        "lib/src/word_numbering_writer.dart"
+      ],
+      "verification": "Exact tracked bytes and Git executable modes"
+    },
+    "quds": {
+      "repository": "CrispStrobe/quds_office_suite",
+      "previous_revision": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+      "revision": "05a581de9526dba2e7fffff68d56dab9180bbd2d",
+      "previous_is_ancestor": true,
+      "new_commits": 7,
+      "managed_file_count": 428,
+      "changed_runtime_files": [
+        "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+        "packages/quds_office_editor/lib/src/embed/office_context_menu.dart"
+      ],
+      "verification": "Exact tracked bytes; 34 inherited executable-mode differences documented separately; no new mode difference"
+    },
+    "canonical_worktree_status": {
+      "parser": "",
+      "quds": ""
+    }
+  },
+  "newly_executed_results": {
+    "parser_dart_tests": 1422,
+    "parser_python_controls": 184,
+    "actual_javascript_acceptance_groups": 18,
+    "quds_and_app_host_tests": 16,
+    "engine_conversion_tests": 7,
+    "strict_analysis": [
+      "complete parser package",
+      "two changed editor runtime files and new fallback test",
+      "engine conversion regression"
+    ],
+    "immutable_source_files_before_and_after": 1925,
+    "counts_are_separate_and_not_added_to_historical_runs": true
+  },
+  "runtime_resolution": {
+    "app_archive_version": "4.6.0",
+    "parser_report": "parser-resolution.json",
+    "engine_report": "engine-resolution.json",
+    "exact_configs": [
+      "app-package-config.json",
+      "parser-package-config.json",
+      "engine-package-config.json"
+    ],
+    "only_generated_package_configs_adjusted": true,
+    "tracked_manifests_and_locks_unchanged": true
+  },
+  "corrected_setup_attempts": [
+    {
+      "logs": [
+        "office-focused-first-attempt.log",
+        "office-analysis-first-attempt.log"
+      ],
+      "cause": "Pure Dart engine test was initially included in Flutter app runner/config, which lacks package:test. Host16 passed; engine load and analyzer cascade failed. Corrected by separating package runners.",
+      "not_a_product_failure": true
+    },
+    {
+      "log": "engine-dependencies.log",
+      "cause": "Offline cache lacked lints ^6.0.0. Normal pub get succeeded with unchanged constraints; subsequent runtime config matched the app.",
+      "not_a_product_failure": true
+    },
+    {
+      "log": "immutable-quds-source.json",
+      "cause": "Additional strict mode audit found 34 pre-existing app100755/canonical100644 Dart modes. Detailed follow-up verifies zero byte mismatches and all mode differences inherited.",
+      "details": "immutable-quds-source-details.json"
+    }
+  ],
+  "limitations": [
+    "No new native Word/LibreOffice or Open XML SDK schema gate.",
+    "No golden regeneration or comparison; existing note goldens keep upstream run43416958976/e82c997b attribution.",
+    "Node JavaScript acceptance does not qualify browser rendering or WebAssembly.",
+    "Host profile disables optional native ebook hook and restores manifest/lock; no native ebook qualification.",
+    "Existing upstream and prior local gate counts retain their original source attribution.",
+    "Canonical historical EOF whitespace retained rather than modifying vendored source."
+  ],
+  "reproduction": "README.md and commands.json; qualification-only probe and generated config snapshots included; canonical fixture binaries are not duplicated.",
+  "raw_archive": {
+    "file": "validation-logs.tar.xz",
+    "bytes": 29648,
+    "sha256": "d132f67e615818a587dbbccd4a23c3f3038b1b9d546b456afab476805ca2f9d8",
+    "file_count": 34,
+    "uncompressed_bytes": 349864
+  },
+  "archive_files": {
+    "README.md": {
+      "bytes": 6957,
+      "sha256": "31bbb4085877c13c46f2a1b116a31db974e777fd8ea241be23176ee26f43cbde"
+    },
+    "align_runtime_resolution.py": {
+      "bytes": 2304,
+      "sha256": "e5dc2521dd98a22e88b40088da22329ec3785c7aed96ba0df6cf292479ec3553"
+    },
+    "app-dependencies.log": {
+      "bytes": 2195,
+      "sha256": "78dfcb9ec4958dbbe161f380460db41e6dc2e6e6a1e49abf7582ec1575a4810f"
+    },
+    "app-package-config.json": {
+      "bytes": 59255,
+      "sha256": "aa74192388b7f703956b3b77d95f137198ef45740be45a91930878b64a971fd3"
+    },
+    "commands.json": {
+      "bytes": 4922,
+      "sha256": "5f0d70ed9aceb33cb04bc4111443470d4d35121e6653b6ae3f8966a065c00569"
+    },
+    "engine-analysis.log": {
+      "bytes": 63,
+      "sha256": "a0f1b5079def9afb94ce3df38dc3fe94993818564681f704d39561fb6ac9d812"
+    },
+    "engine-dependencies-online.log": {
+      "bytes": 1147,
+      "sha256": "b5ff7bbebb423aefcceb7a64a6746c594499c6acc36cab2b619bddec4c1d110d"
+    },
+    "engine-dependencies.log": {
+      "bytes": 282,
+      "sha256": "6f414eacabe06d711288e796d5b2a95f45f89a0d16f4e68f774b4a012f22b047"
+    },
+    "engine-package-config.json": {
+      "bytes": 11862,
+      "sha256": "61ac8ce601232961aa7182ca1cbb534500cf767250a77748a717a5f148815b0c"
+    },
+    "engine-resolution.json": {
+      "bytes": 3085,
+      "sha256": "16843749bb2bdba473fb258ec752f38ce4895dd868f1534c0805ce42581a6cf7"
+    },
+    "engine-tests.log": {
+      "bytes": 841,
+      "sha256": "4af737217e4572d1acec95b353d559169e26ff348ece26bb977a5f4e26f40041"
+    },
+    "environment.json": {
+      "bytes": 1593,
+      "sha256": "b1a2c50f691c2ae605639ebf43482aa5db4a0108c78489d0c99100d7adbe9137"
+    },
+    "exact-source-after.log": {
+      "bytes": 203,
+      "sha256": "52364eac2acb3094915c39ebc9b8add5b8df4fcb18f2b1589e9d7e256e11214f"
+    },
+    "exact-source-before.log": {
+      "bytes": 203,
+      "sha256": "52364eac2acb3094915c39ebc9b8add5b8df4fcb18f2b1589e9d7e256e11214f"
+    },
+    "exact-source.log": {
+      "bytes": 203,
+      "sha256": "52364eac2acb3094915c39ebc9b8add5b8df4fcb18f2b1589e9d7e256e11214f"
+    },
+    "immutable-quds-source-details.json": {
+      "bytes": 6331,
+      "sha256": "bcca589afe7e36830ea9107325e820ef39dbbfeeab27206a3884d59b6ded1421"
+    },
+    "immutable-quds-source.json": {
+      "bytes": 2717,
+      "sha256": "7c23be46bd5554368eb485e5b3afb5251971026d1026b039dcf973e60b550fef"
+    },
+    "javascript-acceptance.json": {
+      "bytes": 5246,
+      "sha256": "a0f30d9e47fe5af9e3e0199f0850ee54d03df370f2265bac840cee1e458268c4"
+    },
+    "office-analysis-first-attempt.log": {
+      "bytes": 13645,
+      "sha256": "c80886ec71935fb69421a7e40ec9ca0296b6df72fc87215fba9166e1f26287c2"
+    },
+    "office-analysis.log": {
+      "bytes": 107,
+      "sha256": "2c4ab12fdd2a80806d73b1598874b7e700e570ce77635594afa97cf4023ba61f"
+    },
+    "office-focused-first-attempt.log": {
+      "bytes": 22723,
+      "sha256": "bf3745d780c04ddab40a978772da177ac3a0904fe89e01400de729425c79caea"
+    },
+    "office-focused-tests.log": {
+      "bytes": 4603,
+      "sha256": "040e3cbced790c7b218218e4225500e662a408436375306aa15c0e6da730b1ed"
+    },
+    "office_changed_runtime_probe_test.dart": {
+      "bytes": 3105,
+      "sha256": "d93d5db5f60f9b276f0c55d8ac71806485342fe1e03b50f847c65b084e557442"
+    },
+    "parser-analysis.log": {
+      "bytes": 48,
+      "sha256": "ffe60d0ac6f52a01f55eded9f747c094bcadf0e059519e4b740b42c4e0e363bc"
+    },
+    "parser-dependencies.log": {
+      "bytes": 68,
+      "sha256": "d4cb7a3c68b4133b4f6e58c67ff5bfd13725d8021e930388cdc98da8a575919d"
+    },
+    "parser-javascript.log": {
+      "bytes": 3908,
+      "sha256": "ce299304eb45f7195c6f69e98322523d685cd5ff092d2f308da8d4ed84a78dc5"
+    },
+    "parser-package-config.json": {
+      "bytes": 11850,
+      "sha256": "c89cddb319917edf98c009c249fa070988d23e0f8dc53388cb1541abb6a860ca"
+    },
+    "parser-python-controls.log": {
+      "bytes": 543,
+      "sha256": "ca20b8f9e877fce2cbdb2f2c514b3652302226c4a875ae8d5fdd14cc7d83dd55"
+    },
+    "parser-resolution.json": {
+      "bytes": 1661,
+      "sha256": "acb7af28650cf9618bc515801f128c9cb566d49584f57105d389ebbab2bdc849"
+    },
+    "parser-tests.log": {
+      "bytes": 170811,
+      "sha256": "62dd7d49c781ddee01201560654c6e547c804bd580712e9bcb529919416a0390"
+    },
+    "source-boundaries.json": {
+      "bytes": 1722,
+      "sha256": "2503f3a9a6af17eb9045f71a88dfd5e7310908c876d2ee3967a108f9d04aea4b"
+    },
+    "validation_env.sh": {
+      "bytes": 731,
+      "sha256": "2063a9ecd65db36ba0f7833fa77f80c4593aec18adc36a1c8c17aefa39df8495"
+    },
+    "with_archive_native_profile.py": {
+      "bytes": 4725,
+      "sha256": "fc70cfb292e80f26d432f7344ac46560532cca2f53f06ec05c5fac1800283171"
+    },
+    "with_archive_native_profile.sh": {
+      "bytes": 205,
+      "sha256": "4cfcd1b27e18482941d5a76b34d85692610b78087722733dbf046ee49ee42705"
+    }
+  }
+}

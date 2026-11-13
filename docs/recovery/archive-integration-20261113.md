@@ -1,8 +1,9 @@
 # Archive continuation and complete branch reconciliation
 
 Baseline: `223fb771d2f8980f7425e7e2ecbe5d7953670592` on 13 November 2026.
-Combined implementation: `5d0814fdf8dfa2257e3000d1d3e3792864a4901e`.
+Initial combined implementation: `5d0814fdf8dfa2257e3000d1d3e3792864a4901e`.
 Later concurrent-main input: `e13fb727e4cfe785219c1ef31206d2fbefa8d6c9`.
+Final qualified runtime: `a065ee6e7c2aa18574a72ac6232d4d01845bdee9`.
 Remote continuation: `integration/archive-containers-20261113`,
 [CrispCloud PR #100](https://github.com/CrispStrobe/CrispCloud/pull/100).
 
@@ -88,6 +89,20 @@ Historical branch receipts retain their exact source attribution. The combined
 candidate has its own gate and receipt under
 `docs/evidence/archive-integration-20261113/`; earlier passing totals are not
 added together as a synthetic unique count.
+
+The [final merged receipt](../evidence/archive-integration-20261113/README.md)
+records **173 passing app tests**, passing source/dependency guards and a
+successful original-manifest JavaScript release build at `a065ee6e`. The newer
+canonical parser separately passed **1,422 tests**, its Python controls and
+actual compiled-JavaScript acceptance. Focused Quds host and engine controls
+passed. Expanded app analysis had no errors/warnings and seven documented
+inherited style infos; strict canonical analysis was clean.
+
+The initial 165-file combined run retained 3,107 passes, one missed-checkbox-tap
+test failure and 13 explicit large-file skips. The interaction was reproduced
+and corrected without production recovery changes; it passes in the final
+merged gate. Its original failure receipt remains available alongside passing
+follow-ups. The final build embeds version `1.2.9+22` and commit `a065ee6e`.
 
 The local profile uses repository-pinned Flutter 3.47.8 / Dart 3.13.7, verified
 Clang/SQLite/libsmb2 and real installed packers. It temporarily disables the
