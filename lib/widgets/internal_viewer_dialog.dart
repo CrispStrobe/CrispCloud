@@ -2415,6 +2415,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     if (_mode == ViewerMode.office &&
         _documentPreviewBytes != null &&
         !_documentTextFallback) {
+      // Explain this action immediately, even after a successful text copy.
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
       _showSnack(DocumentViewerStrings(context).text('selectToCopy'));
       return;
     }

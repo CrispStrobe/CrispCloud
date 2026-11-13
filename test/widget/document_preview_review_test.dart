@@ -207,10 +207,7 @@ void main() {
       copied = null;
       await _copyAll(tester);
       expect(copied, isNull);
-      // The preceding successful-copy snackbar is still queued in this real
-      // host; let it finish so the next explanation is actually displayed.
-      await tester.pump(const Duration(seconds: 3));
-      await tester.pumpAndSettle();
+      // The current action must replace the previous successful-copy notice.
       expect(
         find.textContaining('Select text inside the document'),
         findsOneWidget,
