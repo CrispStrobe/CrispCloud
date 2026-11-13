@@ -1,0 +1,7 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/runtime/font-viewer-audit/font_widget_probe_test.dart
+00:00 +0: records font family decoded by the production HTML renderer
+{"case":"plain Arial","matches":[{"text":"FONT_PROBE_PLAIN","family":"Arial","fallbacks":[],"weight":700,"size":22.666666666666668}]}
+{"case":"hex escaped Arial as emitted by legacy-doc-parser","matches":[{"text":"FONT_PROBE_ESCAPED","family":"\\41 \\72 \\69 \\61 \\6c ","fallbacks":[],"weight":700,"size":22.666666666666668}]}
+00:00 +1: All tests passed!
