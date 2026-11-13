@@ -170,6 +170,10 @@ class LegacyWordPicture {
   final String id;
   final int cp;
   final LegacyWordSourceReference source;
+
+  /// Original picture-data artifact. The historic name is retained for API
+  /// compatibility; a legacy linked-file PICF has a binaryData artifact and no
+  /// OfficeArt shape. Its [source] identifies the exact stored structure.
   final String officeArtArtifactId;
   final String? imageId;
   final int? widthTwips;

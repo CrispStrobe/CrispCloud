@@ -559,15 +559,19 @@ class _WordMediaReader {
       }
       final raw = data.slice(offset, length);
       final input = _Bytes(raw);
+      final mappingMode = input.u16(6);
+      final linkedFile = mappingMode == 0x5e;
       final reference = _reference(
         'Data',
         offset,
         length,
-        'PICFAndOfficeArtData',
+        linkedFile ? 'PICFLinkedFileName' : 'PICFAndOfficeArtData',
         cp: cp,
       );
       final artifact = _artifact(
-        LegacyWordArtifactKind.officeArt,
+        linkedFile
+            ? LegacyWordArtifactKind.binaryData
+            : LegacyWordArtifactKind.officeArt,
         raw,
         reference,
       );
@@ -595,49 +599,84 @@ class _WordMediaReader {
       final displayHeight = scaledHeight ~/ 1000;
       var cursor = 68;
       String? externalName;
-      final mappingMode = input.u16(6);
-      if (mappingMode != 0x64 && mappingMode != 0x66) {
-        throw const FormatException('Unsupported Word picture mapping mode.');
-      }
-      if (mappingMode == 0x66) {
+      if (linkedFile) {
+        // Older producers write mm=94 with a length-prefixed external name,
+        // without an OfficeArt container or stored image. Recover only this
+        // exact bounded layout; never interpret its name as a resource to open.
         final count = input.u8(cursor++);
-        externalName = String.fromCharCodes(input.slice(cursor, count));
-        cursor += count;
-        _notice(LegacyWordMediaIssue.externalPictureNotFetched, reference);
-      }
-      final shapeRecord = _record(input, cursor, input.length, 'Data', offset);
-      final shape = _shape(shapeRecord, artifact);
-      cursor = shapeRecord.end;
-      final blocks = <_ArtRecord>[];
-      while (cursor < input.length) {
-        final block = _record(input, cursor, input.length, 'Data', offset);
-        if (block.type != 0xf007 &&
-            (block.type < 0xf018 || block.type > 0xf117)) {
-          throw const FormatException('Unexpected inline Word picture record.');
+        if (count == 0 || cursor + count != input.length) {
+          throw const FormatException('Invalid linked Word picture name.');
         }
-        blocks.add(block);
-        cursor = block.end;
-      }
-      // Multiple inline BLIPs can supply picture/fill/line properties. Until
-      // every such property is mapped, preserve the exact record rather than
-      // silently picking the first file as the displayed picture.
-      final image = blocks.length == 1 && shape.properties.containsKey(0x0104)
-          ? _fileBlock(blocks.single, artifact)
-          : null;
-      if (image == null) {
+        final name = input.slice(cursor, count);
+        if (name.any((unit) => unit < 0x20)) {
+          throw const FormatException('Invalid linked Word picture name.');
+        }
+        externalName = String.fromCharCodes(name);
+        _notice(LegacyWordMediaIssue.externalPictureNotFetched, reference);
         _notice(LegacyWordMediaIssue.unsupportedImage, reference);
+        picture = _PictureData(
+          reference,
+          artifact,
+          null,
+          displayWidth,
+          displayHeight,
+          const {},
+          externalName,
+          false,
+          null,
+        );
+      } else {
+        if (mappingMode != 0x64 && mappingMode != 0x66) {
+          throw const FormatException('Unsupported Word picture mapping mode.');
+        }
+        if (mappingMode == 0x66) {
+          final count = input.u8(cursor++);
+          externalName = String.fromCharCodes(input.slice(cursor, count));
+          cursor += count;
+          _notice(LegacyWordMediaIssue.externalPictureNotFetched, reference);
+        }
+        final shapeRecord = _record(
+          input,
+          cursor,
+          input.length,
+          'Data',
+          offset,
+        );
+        final shape = _shape(shapeRecord, artifact);
+        cursor = shapeRecord.end;
+        final blocks = <_ArtRecord>[];
+        while (cursor < input.length) {
+          final block = _record(input, cursor, input.length, 'Data', offset);
+          if (block.type != 0xf007 &&
+              (block.type < 0xf018 || block.type > 0xf117)) {
+            throw const FormatException(
+              'Unexpected inline Word picture record.',
+            );
+          }
+          blocks.add(block);
+          cursor = block.end;
+        }
+        // Multiple inline BLIPs can supply picture/fill/line properties. Until
+        // every such property is mapped, preserve the exact record rather than
+        // silently picking the first file as the displayed picture.
+        final image = blocks.length == 1 && shape.properties.containsKey(0x0104)
+            ? _fileBlock(blocks.single, artifact)
+            : null;
+        if (image == null) {
+          _notice(LegacyWordMediaIssue.unsupportedImage, reference);
+        }
+        picture = _PictureData(
+          reference,
+          artifact,
+          image,
+          displayWidth,
+          displayHeight,
+          shape.properties,
+          externalName,
+          shape.deleted,
+          shape.model,
+        );
       }
-      picture = _PictureData(
-        reference,
-        artifact,
-        image,
-        displayWidth,
-        displayHeight,
-        shape.properties,
-        externalName,
-        shape.deleted,
-        shape.model,
-      );
       _pictures[offset] = picture;
     }
     pictures.add(
@@ -1273,5 +1312,5 @@ class _PictureData {
   final Map<int, int> properties;
   final String? externalName;
   final bool deleted;
-  final LegacyWordOfficeArtShape shape;
+  final LegacyWordOfficeArtShape? shape;
 }
