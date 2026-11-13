@@ -61,7 +61,7 @@ void main() {
   });
 
   test('rejects illegal XML text before creating a DOCX', () {
-    for (final invalid in [0xd800, 0xfffe, 0xffff]) {
+    for (final invalid in [0xfffe, 0xffff]) {
       expect(
         () => convertLegacyWordToDocx(
           legacyWordFixture('Before${String.fromCharCode(invalid)}after\r'),
@@ -75,6 +75,22 @@ void main() {
         ),
       );
     }
+  });
+
+  test('malformed UTF-16 is rejected by the parser before conversion', () {
+    final source = legacyWordFixture('Before\ud800after\r');
+    final original = Uint8List.fromList(source);
+    expect(
+      () => convertLegacyWordToDocx(source),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('Invalid UTF-16'),
+        ),
+      ),
+    );
+    expect(source, orderedEquals(original));
   });
 
   test('rejects excessive structural expansion before splitting text', () {

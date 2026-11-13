@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/painting.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 
+import '../embed/office_host_fonts.dart';
 import 'caret_engine.dart';
 
 /// Rebuilds a logical string for Flutter/HarfBuzz painting.
@@ -42,11 +43,18 @@ abstract final class PaintRunText {
     String? runFamily,
     String? themeFamily,
   }) {
-    return OfficeTypeface.paintFamily(
+    final requested = OfficeTypeface.paintFamily(
       text: text,
       runFamily: runFamily,
       themeFamily: themeFamily,
     );
+    // Unloaded names otherwise select different system fonts on each OS (or
+    // Ahem in tests). Keep the document's requested face in its model, but
+    // paint an explicit bundled fallback until the host registers real bytes.
+    if (OfficeHostFonts.registeredFamily(requested) != null) {
+      return requested;
+    }
+    return looksRtl(text) ? 'Noto Naskh Arabic' : 'Liberation Sans';
   }
 
   /// fallbacksFor API.
