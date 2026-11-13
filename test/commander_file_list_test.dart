@@ -138,6 +138,7 @@ class _Local extends Fake
   Completer<String>? initialPath;
   final paths = <String>[];
   Future<void> Function()? onRefresh;
+  Future<void> Function(String)? onListDirectory;
   @override
   String? get grantedBasePath => directory ?? '/';
   @override
@@ -150,6 +151,7 @@ class _Local extends Fake
   @override
   Future<List<FileSystemEntity>?> listDirectory(String path) async {
     paths.add(path);
+    await onListDirectory?.call(path);
     return directory == null
         ? []
         : Directory(path).list(followLinks: false).toList();
@@ -260,6 +262,37 @@ void main() {
     expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
   });
 
+  test('a right-pane refresh keeps an explicitly selected local source during its first listing', () async {
+    final panel = container.read(panelProvider(PanelSide.remote));
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    local.onListDirectory = (_) async {
+      if (!entered.isCompleted) entered.complete();
+      await release.future;
+    };
+    addTearDown(() {
+      if (!release.isCompleted) release.complete();
+    });
+    container
+        .read(panelSourceProvider(PanelSide.remote).notifier)
+        .setSource(const LocalPanelSource('/chosen-local'));
+    await entered.future;
+
+    final refreshed = panel.refresh();
+    expect(
+      cloud.paths,
+      isEmpty,
+      reason: 'The default primary account must not replace a local choice',
+    );
+    release.complete();
+    await refreshed;
+
+    expect(panel.currentPath, '/chosen-local');
+    expect(panel.captureCurrentOrigin().source, isA<LocalPanelSource>());
+    expect(cloud.paths, isEmpty);
+    expect(local.paths, everyElement('/chosen-local'));
+  });
+
   test(
     'a delayed local refresh cannot replace newer cloud navigation',
     () async {
@@ -295,6 +328,39 @@ void main() {
       );
     },
   );
+
+  for (final chooseLocal in [false, true]) {
+    test(
+      'a new tab captures the ${chooseLocal ? 'explicit local' : 'pending cloud'} source before its first listing completes',
+      () async {
+        final panel = container.read(panelProvider(PanelSide.remote));
+        final release = Completer<void>();
+        cloud.delay = release;
+        local.onListDirectory = (_) => release.future;
+        addTearDown(() {
+          if (!release.isCompleted) release.complete();
+        });
+        final initial = panel.refresh();
+        expect(cloud.paths, ['/']);
+        if (chooseLocal) {
+          container
+              .read(panelSourceProvider(PanelSide.remote).notifier)
+              .setSource(const LocalPanelSource('/chosen-local'));
+        }
+
+        panel.addTab(path: '/two');
+
+        expect(panel.activeTab!.storage, isNotNull);
+        expect(panel.activeTab!.storage!.isLocal, chooseLocal);
+        release.complete();
+        await initial;
+        await panel.refresh();
+        expect(panel.currentPath, '/two');
+        expect(panel.captureCurrentOrigin().source.isLocal, chooseLocal);
+        if (chooseLocal) expect(cloud.paths, isNot(contains('/two')));
+      },
+    );
+  }
 
   for (final failInitial in [false, true]) {
     test(

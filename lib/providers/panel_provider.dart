@@ -148,6 +148,7 @@ class PanelNotifier extends ChangeNotifier {
   bool _settingSwapSource = false;
   PanelFileOrigin? _currentDirectoryOrigin;
   PanelSource? _requestedListingSource;
+  bool _sourceWasSelected = false;
   ({int generation, String tabId, PanelFileOrigin origin})?
   _directoryPresentationRequest;
   AppError? _directoryListingFailure;
@@ -456,6 +457,7 @@ class PanelNotifier extends ChangeNotifier {
     }
     // Listen for panel source changes (e.g. user switches provider in dropdown).
     _ref.listen<PanelSource>(panelSourceProvider(side), (prev, next) {
+      _sourceWasSelected = true;
       if (prev == next || _settingSwapSource) return;
       _rememberNavigationCursor();
       final navigation = ++_navigationRevision;
@@ -5755,7 +5757,9 @@ class PanelNotifier extends ChangeNotifier {
             (knownSource?.isRemote ??
                 (selectedSource.isRemote ||
                     (side == PanelSide.remote &&
-                        _currentDirectoryOrigin == null)));
+                        _currentDirectoryOrigin == null &&
+                        !_sourceWasSelected &&
+                        selectedSource == const LocalPanelSource('/'))));
         if (remote) {
           await _loadRemoteFiles();
         } else {
@@ -7454,11 +7458,13 @@ class PanelNotifier extends ChangeNotifier {
       duplicateTab(activeTab!.id);
       return;
     }
-    _createTabLocation(
-      directory,
-      _currentDirectoryOrigin?.storageReference ?? activeTab?.storage,
-    );
-    if (side == PanelSide.local) {
+    // A first listing can still be pending. Capture its guarded source before
+    // creating the tab invalidates that request; pane position and the last
+    // completed listing do not identify the user's current source choice.
+    final source = directorySource;
+    final storage = directoryStorage ?? activeTab?.storage;
+    _createTabLocation(directory, storage);
+    if (storage?.isLocal ?? source?.isLocal ?? side == PanelSide.local) {
       _localPath = directory;
     } else {
       _remotePath = directory;
