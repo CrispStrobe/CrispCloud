@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "purpose": "Provenance-only source snapshot for the CrispCloud Dart static LRC lyrics parser; not an npm or Dart runtime package.",
+  "repository": "https://github.com/flyfish-dev/file-viewer",
+  "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+  "upstream_package": "@file-viewer/renderer-text",
+  "upstream_version": "3.3.3",
+  "reviewed_at": "2026-11-13",
+  "license": "Apache-2.0",
+  "copyright": "Copyright 2026 Flyfish Viewer",
+  "upstream_notice_file": null,
+  "upstream_notice_scope": "No NOTICE found in the repository root or any ancestor of packages/renderers/text/src/lrcParser.ts at the pinned commit. The selected file contains no separate exception or third-party notice.",
+  "runtime_dependencies_added": [],
+  "upstream_file_allowlist": [
+    {
+      "upstream_path": "packages/renderers/text/LICENSE",
+      "local_path": "LICENSE",
+      "git_blob_sha1": "59121b29efbabb216432f367c8071d1f6019c43f",
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
+      "bytes": 9140,
+      "modified": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "upstream_path": "packages/renderers/text/src/lrcParser.ts",
+      "local_path": "upstream/lrcParser.ts",
+      "git_blob_sha1": "c701adce35bc0c2d8be239aa077543aaf6fbad60",
+      "sha256": "b0f42a4f200dd32a37f11cc3bae1ea49b47feffb8fac7bf274ddaf0ec935b59b",
+      "bytes": 4281,
+      "modified": false,
+      "license": "Apache-2.0"
+    }
+  ],
+  "excluded": [
+    "all other upstream source files",
+    "npm packages and presets",
+    "text-renderer wrapper and code renderer",
+    "workers and WASM",
+    "fonts and images",
+    "demo files and fixtures",
+    "CAD runtimes",
+    "third-party dependency trees"
+  ],
+  "scope": "Only the listed files are imported verbatim from File Viewer. The Dart derivative imports no libraries. No conclusion about existing CrispCloud dependencies is implied.",
+  "derivative": {
+    "path": "lib/services/lrc_parser.dart",
+    "language": "Dart",
+    "api": "LrcDocument parseLrc(String source)",
+    "imports": [],
+    "limits": {
+      "lrcMaxSourceCodeUnits": 2000000,
+      "lrcMaxCues": 10000,
+      "lrcMaxExpandedWords": 50000,
+      "lrcMaxMetadata": 1000,
+      "lrcMaxTimelineMilliseconds": 20000000000000
+    },
+    "maximum_timeline_milliseconds": 20000000000000,
+    "changes": [
+      "Dart port with immutable local models and no imports",
+      "lazy source-line scanning instead of splitting the entire input",
+      "metadata count bound and pre-allocation cue/word expansion checks",
+      "explicit truncated result and limit reason while retaining exact original source",
+      "strict timestamp input-length/end checks and bounded exact timing arithmetic",
+      "last valid bounded offset applied once to line and shifted repeated-word clocks",
+      "source-order cues plus stable chronological timedCues with equal-time source-order ties"
+    ]
+  }
+}
