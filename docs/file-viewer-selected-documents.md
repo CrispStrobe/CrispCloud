@@ -19,11 +19,11 @@ for other candidates and excluded routes.
 | --- | --- | --- |
 | **WordPerfect** — WPD, WP, WP5, WP6 | Real libwpd/librevenge WASM parses the legacy binary. Ordered paragraphs/tables, styles, supported links, headers/footers and notes become structured browser content. Genuine WP 4.2, 5.0, 5.1 and 6.x fixtures were exercised. A visible notice describes unavailable page layout, images/fonts, equations and drawings. | Apache-2.0 wrapper; **MPL-2.0 alternatives** for libwpd 0.10.3/librevenge 0.0.6; MIT shim, Boost and permissive native/toolchain grants. [Source/notice record](../packages/file_viewer_documents/engines/wordperfect/UPSTREAM.md). |
 | **CHM** | Rust ITSF/LZX WASM decompresses a single help archive. Contents, keyword index, search, internal topics and resources remain available. Sanitized topic HTML is shown in a script-disabled blob iframe. Merged-archive references are disclosed, not fetched automatically. | Apache-2.0 renderer/native engine, MIT ancestry and permissive Rust dependencies. This path does not import CHMLib or libmspack. [Source/notice record](../packages/file_viewer_documents/engines/chm/UPSTREAM.md). |
-| **XLS, XLT, XLSB** | Actual binary workbook parsing, worksheet tabs and a virtual grid with supported stored styles, formula/cached-value display, images and charts. Real BIFF8 and generated XLSB were independently exercised; the similarly named upstream demo files were not used as evidence of distinct formats. | Apache-2.0 styled-exceljs 0.21.6 and wrapper; MIT e-virt-table 1.4.17/Floating UI, MIT-selected JSZip, MIT xmldom, MIT/Zlib pako and other permissive helpers. [Source/notice record](../packages/file_viewer_documents/engines/spreadsheet/UPSTREAM.md). |
-| **PPT, POT, PPS** | Real binary PowerPoint parsing in a worker, followed by virtualized positioned slide canvases. F3 retains the existing native **Text fallback**. This is static preview, without PowerPoint animation or macro execution. | Apache-2.0 public PPT runtime 1.0.2 and wrapper. No PPT WASM/font bundle is imported. [Source/notice record](../packages/file_viewer_documents/engines/ppt/UPSTREAM.md). |
+| **XLS, XLT, XLSB** | Actual binary workbook parsing, worksheet tabs and a virtual grid with supported stored styles, formula/cached-value display and supported embedded images. Legacy/binary chart rendering is not supplied by these routes. Real BIFF8 and generated XLSB were independently exercised; the similarly named upstream demo files were not used as evidence of distinct formats. | Apache-2.0 styled-exceljs 0.21.6 and wrapper; MIT e-virt-table 1.4.17/Floating UI, MIT-selected JSZip, MIT xmldom, MIT/Zlib pako and other permissive helpers. [Source/notice record](../packages/file_viewer_documents/engines/spreadsheet/UPSTREAM.md). |
+| **PPT, POT, PPS** | Real binary PowerPoint parsing in a worker, followed by virtualized positioned slide canvases. PPS is a CrispCloud alias for the same engine. F3 retains the existing native **Text fallback**. This is static preview, without PowerPoint animation or macro execution. | Apache-2.0 public PPT runtime 1.0.2 and wrapper. No PPT WASM/font bundle is imported. [Source/notice record](../packages/file_viewer_documents/engines/ppt/UPSTREAM.md). |
 | **PS, EPS** | The Stet interpreter rasterizes real pages. Page navigation, fonts and color profile run locally. This is experimental PostScript support, with explicit bounds and parser failures; it is not a guarantee of Adobe/Ghostscript parity. | Apache-2.0 wrapper and elected Stet Apache option (Apache-2.0 OR MIT available); permissive native crates; **OFL-1.1** URW fonts and **CC0-1.0** ICC profile. [Source/notice record](../packages/file_viewer_documents/engines/postscript/UPSTREAM.md). |
 | **MBOX** | Native indexing and message selection use the existing email parser/view. Bodies and attachments are decoded for the selected message. Previous/Next/chooser remain available during search; search and Copy All apply to that message. Original Source/Hex bytes and malformed-message recovery are preserved. | CrispCloud-authored integration using its existing Dart email stack. No File Viewer MBOX parser or new MIME dependency was imported. [Parser](../lib/services/mbox_message_service.dart). |
-| **XML with XSD/XSLT** — XML, XSD, XSL, XSLT | Existing Tree/Source views gain **XSD / XSLT**. Users choose or paste local resources. Genuine XSD validation and XSLT 1.0 transformation run in workers. XML/text results remain source; HTML additionally gets a sanitized inert preview. Input is never overwritten. | Apache-2.0 integration; MIT xmllint-wasm 5.3.0/libxml2/libxslt; BSD-3-Clause xslt-polyfill 1.0.33; retained Zlib/native notices; Apache-selected DOMPurify 3.4.17. The published xmllint build does not identify the exact linked zlib version. [Source/notice record](../packages/file_viewer_documents/engines/xml/UPSTREAM.md). |
+| **XML with XSD/XSLT** — XML, XSD, XSL, XSLT | Existing Tree/Source views gain **XSD / XSLT**. Users choose or paste self-contained resources. XML Schema 1.0 validation and XSLT 1.0 transformation run in workers. XML/text results remain source; HTML additionally gets a sanitized inert preview. Input is never overwritten. | Apache-2.0 integration; MIT xmllint-wasm 5.3.0/libxml2/libxslt; BSD-3-Clause xslt-polyfill 1.0.33; retained Zlib/native notices; Apache-selected DOMPurify 3.4.17. The published xmllint build does not identify the exact linked zlib version. [Source/notice record](../packages/file_viewer_documents/engines/xml/UPSTREAM.md). |
 
 The exact JavaScript dependency inventory includes 24 installed production
 packages, including dependencies prebundled inside selected npm distributions.
@@ -49,6 +49,27 @@ recovery is not an Excel calculation engine. CHM topic scripts, executable embed
 remote document resources and external XML dependencies are disabled. Linux
 systems without the required browser runtime receive an unavailable-host message;
 PPT additionally retains its native text view.
+
+XML tools accept a self-contained XSD or stylesheet. Schema imports/includes,
+XInclude, DTDs/entities, XSLT imports/includes, `document()` and extension
+instructions are disabled even for local resources. This is not XSD 1.1 or
+XSLT 2.0/3.0 support. The boundary and actual worker options are recorded in the
+[XML source notice](../packages/file_viewer_documents/engines/xml/UPSTREAM.md).
+
+MBOX indexing accepts LF/CRLF mailboxes with traditional ctime `From ` envelope
+lines. Without `Content-Length`, the preview uses mboxrd's convention of removing
+one leading `>` from quoted body `From ` lines. A valid `Content-Length` instead
+defines an exact body-byte boundary; quoted lines remain unchanged because
+mboxcl and mboxcl2 cannot reliably be distinguished. Invalid or duplicate lengths
+reject indexing. An unescaped body line that is itself a complete envelope is
+intrinsically ambiguous in delimiter-based mailboxes. A malformed selected MIME
+message leaves other indexed messages reachable; this does not guarantee recovery
+from an invalid mailbox boundary. Source/Hex retain the exact stored bytes.
+
+The genuine presentation fixtures cover PPT and POT. PPS routing uses the same
+binary engine and is tested as an extension alias; no independent PPS document
+corpus or slideshow behavior is claimed. The selected wrapper does not expose
+the engine's password input, and visual preview does not execute slide shows.
 
 The browser receives only the selected byte snapshot and display metadata, not
 provider clients, credentials, native paths or source URLs. The host validates
@@ -79,7 +100,8 @@ models, F3 output and a runnable 19-fixture differential probe.
   review projections. Those are candidates for targeted follow-up, not changes
   included in this priority-format implementation.
 
-The native engine remains **MPL-2.0**. File Viewer's binary DOC engine is **MIT**,
+The native package-authored engine remains **MPL-2.0**, with its retained MIT/0BSD
+source notices. File Viewer's binary DOC engine is **MIT**,
 with an Apache Word wrapper and Apache-selectable sanitizer. It is not wholly
 Apache merely because the enclosing repository is Apache.
 

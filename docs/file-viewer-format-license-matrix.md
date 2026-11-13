@@ -60,7 +60,7 @@ calling an ebook format new.
 |---|---|---|
 | `.wpd/.wp/.wp5/.wp6` | libwpd/librevenge worker/WASM; ordered structured text, tables, running sections and notes | Persistent layout warning; no original pagination, embedded images/fonts, drawings or equations. No implicit approximate-text fallback. |
 | `.chm` | ITSF/LZX worker/WASM; contents/index/search and archive-local topic resources | Sanitized script-disabled topic frames; no merged-collection constituent discovery. |
-| `.xls/.xlt/.xlsb` | Bounded spreadsheet worker and virtual worksheet grid | Saved formula values dominate; no full Excel recalculation or macro execution. Other spreadsheet candidates below are not automatically enabled. |
+| `.xls/.xlt/.xlsb` | Bounded spreadsheet worker and virtual worksheet grid | Saved formula values dominate; no full Excel recalculation, macro execution or legacy/binary chart extraction. Other spreadsheet candidates below are not automatically enabled. |
 | `.ppt/.pot/.pps` | Local pure-JavaScript worker and virtual slide canvases | Supported geometry/pictures; Office-identical layout and animation are not promised. Existing native **Text fallback** is an explicit choice. |
 | `.ps/.eps` | Stet worker/WASM rasterized pages and local font/color assets | Experimental PostScript, without complete Level 3 conformance. |
 | `.xml/.xsd/.xsl/.xslt` | Existing tree/source view plus explicit **XSD / XSLT** tools | Schemas/stylesheets must be supplied; external resource resolution is disabled. Output does not overwrite source. |

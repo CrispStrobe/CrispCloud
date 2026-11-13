@@ -30,6 +30,18 @@ Generated files carry their own content hashes in the package runtime manifest.
 The same artifact includes exact WordPerfect MPL source archives and original
 shim/build materials for the source distribution.
 
+The branch checkpoint job `131747631208` also succeeded and committed these
+files in [`05f02c9`](https://github.com/CrispStrobe/CrispCloud/commit/05f02c9ad71ac14b5a041021c2f7eef01b050a2a).
+All 149 generated files added by that commit matched the tested local build
+byte-for-byte, including runtime assets, original grants and the matching MPL
+source archives. [runtime-checkpoint.json](runtime-checkpoint.json) retains the
+comparison and individual hashes; the result is durable in Git rather than
+depending only on the expiring Actions artifact.
+
+The subsequent spreadsheet chart-scope correction changes documentation and
+notice provenance only. All 42 runtime asset records and the dependency
+inventory remain identical to the passing browser build.
+
 ## Genuine application checks
 
 All local Flutter commands use the actual CrispCloud graph, Flutter 3.47.8 /
