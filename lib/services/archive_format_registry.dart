@@ -394,6 +394,11 @@ ArchiveFormatCapability? archiveFormatForName(String name) {
 
 bool isArchiveFilename(String name) => archiveFormatForName(name) != null;
 
+/// Executables offer explicit SFX inspection without changing their ordinary
+/// open/preview behavior. A suffix alone does not establish an archive payload.
+bool isDefaultArchiveFilename(String name) =>
+    isArchiveFilename(name) && !name.toLowerCase().endsWith('.exe');
+
 /// Recognizes virtual member routes without a second extension allowlist.
 bool isArchiveVirtualPath(String path) {
   var cursor = 0;

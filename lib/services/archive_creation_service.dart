@@ -10,8 +10,8 @@ import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
 import 'archive_checkpoint_source.dart';
-import 'archive_writer_worker.dart';
 import 'archive_created_zip_metadata.dart';
+import 'archive_writer_worker.dart';
 import 'archive_disk_verification.dart';
 import 'archive_dmg_writer.dart';
 import 'archive_hfs_writer.dart';
@@ -384,21 +384,10 @@ class ArchiveCreationResult {
   final Object? publicationWarning;
 }
 
-/// A verified candidate whose destination is still unpublished. A durable job
-/// must acknowledge this exact receipt before the exclusive commit may proceed.
-class ArchiveCreationPrepared extends ArchiveCreationResult {
-  const ArchiveCreationPrepared(
-    super.path,
-    super.entryCount,
-    super.bytes,
-    this.sha256,
-  );
-  final String sha256;
-}
-
 /// An explicitly selected packer supplies bytes, never publication authority.
 /// The creator still captures sources, bounds output, independently reopens the
 /// result and verifies every member before its normal exclusive publication.
+/// Callbacks remain in the foreground; they cannot cross the worker protocol.
 typedef ArchiveCreationWriter = Future<void> Function({
   required List<ArchiveWriteEntry> entries,
   required Future<void> Function(List<int>) sink,
@@ -501,11 +490,10 @@ class ArchiveCreationService {
     bool Function()? isCancelled,
     FileOperationControl? control,
     bool background = false,
+    ArchiveCreationWriter? writer,
     String? expectedSourceManifestSha256,
     Future<void> Function(Map<String, dynamic> state)? onPublicationCheckpoint,
     void Function(ArchiveCreationProgress)? onProgress,
-    ArchiveCreationWriter? writer,
-    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
   }) async {
     options.validate();
     if (expectedSourceManifestSha256 != null &&
@@ -515,8 +503,6 @@ class ArchiveCreationService {
         'expectedSourceManifestSha256',
       );
     }
-    bool cancelled() =>
-        (control?.isCancelled ?? false) || (isCancelled?.call() ?? false);
     if (writer != null &&
         (background ||
             options.format.diskImage ||
@@ -530,6 +516,8 @@ class ArchiveCreationService {
         ArchiveCreationError.unsupportedOptions,
       );
     }
+    bool cancelled() =>
+        (control?.isCancelled ?? false) || (isCancelled?.call() ?? false);
     final streamedTar =
         writer == null &&
         supportsStreamedTarCreation(
@@ -1004,7 +992,13 @@ class ArchiveCreationService {
         );
       }
       if (writer != null) {
-        progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+        progress(
+          ArchiveCreationPhase.packing,
+          0,
+          totalBytes,
+          options.name,
+          isByteProgress: true,
+        );
         await writer(
           entries: List.unmodifiable(captured),
           sink: emit,
@@ -1611,17 +1605,6 @@ class ArchiveCreationService {
             throw const ArchiveCreationException(
               ArchiveCreationError.verificationFailed,
             );
-          }
-          if (onPrepared != null) {
-            await onPrepared(
-              ArchiveCreationPrepared(
-                output,
-                entries.length,
-                spool.length,
-                packedHash,
-              ),
-            );
-            check();
           }
           await validateSources();
           await checkDestination();

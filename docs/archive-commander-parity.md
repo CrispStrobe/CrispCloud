@@ -11,6 +11,32 @@ CrispCloud format profiles remain in [format coverage](archive-format-coverage.m
 [creation](archive-creation.md), [endpoints](archive-endpoints.md) and the
 [G18–G24 gap register](file-manager-gaps/03-archives-and-containers.md).
 
+## Implemented continuation
+
+The baseline and acceptance rows below remain a historical comparison. The
+current branch adds the following bounded capabilities; their controls, limits,
+runtime evidence and remaining work are recorded in the
+[Commander workflow guide](archive-commander-workflows.md).
+
+| Rows | Delivered continuation | Remaining boundary |
+| --- | --- | --- |
+| A06 | Shared Operations queue for native creation and workspace saves; cooperative workers, pause/resume/stop, priority/scheduling, password-free recipes and reviewed restart recovery | Canonical queue behavior is in [archive operation queue](archive-operation-queue.md); no arbitrary compressed-byte resume; existing protected/nested and platform limits remain |
+| A07 | Pane/context/palette batch integrity with immutable snapshots, per-file results and copyable member reports | Reader-specific decode and integrity limits remain explicit |
+| A08 | Captured extraction plan with masks, separate/shared/smart folders, flattening and complete collision preview | Native local destinations; partial results retain completed files; no overwrite or source deletion |
+| A09 | Complete separate-per-selection output plan; live dispatch waits for every job's durable save | History writes are per job; interrupted admission may retain review-only partial records. Sources stay intact and outputs have independent results |
+| A10 | Read-only complete numbered 7z sets through panes, F3 and extraction | No split creation/update, RAR volumes or ZIP split sets |
+| A11 | Bounded unsigned PE ZIP/7z/RAR payload browsing; executable F3 default retained | No signed/installer-specific overlay rewriting or SFX generation |
+| A13 | Checked installed-7z profiles: dictionary 1/4/16 MiB, threads 1/2/4, solid off/16/32 MiB | No arbitrary CLI options; buffered external limits remain |
+| A15 | Independently verified installed 7-Zip ZIP/7z and RAR RAR5 creation with owned processes/staging | Broader external actions and WCX hosting remain separate work |
+
+This is substantial archive-workflow progress, not a claim of full feature or
+plugin parity with either Commander application.
+
+The integration extends the canonical shared queue from current `main`.
+Final validation of the combined source is pending the frozen-revision gate.
+The queue's earlier hosted receipt and this branch's focused results retain
+their original source attribution.
+
 ## Comparison scope
 
 The official release pages currently identify **Total Commander 11.58.1** and
@@ -138,7 +164,10 @@ unavailable controls. Reading must not accidentally grant write access; a
 successful external command must not bypass candidate verification. An ABI host
 and a command-line adapter are separate deliverables with separate tests.
 
-## First implementation order
+## Original implementation order
+
+This sequence records the planning baseline. The delivered rows above describe
+the current integration; unfinished portions retain their own acceptance gates.
 
 1. **A06 / G21:** durable native creation jobs and a queue whose owner survives
    the creation dialog. Preserve captured inputs/options, revalidation and

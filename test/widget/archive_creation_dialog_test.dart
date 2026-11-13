@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/l10n/archive_creation_strings.dart';
 import 'package:crisp_cloud/models/file_item.dart';
@@ -62,7 +64,6 @@ class _RecordingService extends ArchiveCreationService {
     bool Function()? isCancelled,
     void Function(ArchiveCreationProgress)? onProgress,
     ArchiveCreationWriter? writer,
-    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
   }) async {
     requests.add(options);
     destinationPath = destinationDirectory;
@@ -105,10 +106,13 @@ void main() {
     double textScale = 1,
     String selectedPath = '/input/report.txt',
     List<String>? selectedPaths,
-    Future<void> Function(ArchiveCreationOptions)? onQueue,
     Future<void> Function(List<ArchiveCreationBatchItem>)? onQueueBatch,
     Future<void> Function()? onViewJobs,
-    Future<ArchiveCreationResult?> Function()? onExternalPacker,
+    VoidCallback? onCreated,
+    Future<ArchiveCreationResult?> Function(
+      ValueChanged<ArchiveCreationResult> onPublished,
+    )?
+    onExternalPacker,
   }) async {
     tester.view.physicalSize = Size(width, 900);
     tester.view.devicePixelRatio = 1;
@@ -135,7 +139,7 @@ void main() {
             files: files,
             destinationDirectory: '/output',
             service: service,
-            onQueue: onQueue,
+            onCreated: onCreated,
             onQueueBatch: onQueueBatch,
             onViewJobs: onViewJobs,
             onExternalPacker: onExternalPacker,
@@ -983,61 +987,69 @@ void main() {
     });
   }
 
-  testWidgets(
-    'background queue receives reviewed options and clears the password',
-    (tester) async {
-      final queued = <ArchiveCreationOptions>[];
-      var viewed = false;
-      await show(
-        tester,
-        onQueue: (options) async => queued.add(options),
-        onViewJobs: () async => viewed = true,
-      );
-      await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byKey(const ValueKey('archive-create-password')),
-        'queue-secret',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('archive-create-confirmation')),
-        'queue-secret',
-      );
-      final queue = find.byKey(const ValueKey('archive-create-queue'));
-      await tester.ensureVisible(queue);
-      await tester.tap(queue);
-      await tester.pumpAndSettle();
-      expect(queued.single.name, 'report.zip');
-      expect(queued.single.password, 'queue-secret');
-      expect(service.requests, isEmpty);
-      expect(
-        find.byKey(const ValueKey('archive-create-queued')),
-        findsOneWidget,
-      );
-      expect(
-        tester
-            .widget<TextField>(
-              find.byKey(const ValueKey('archive-create-password')),
-            )
-            .controller!
-            .text,
-        isEmpty,
-      );
-      expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
-      await tester.ensureVisible(find.text('View jobs'));
-      await tester.tap(find.text('View jobs'));
-      await tester.pumpAndSettle();
-      expect(viewed, isTrue);
-    },
-  );
-
-  testWidgets('failed queue admission remains a retryable form', (
+  testWidgets('batch queue receives reviewed options and clears the password', (
     tester,
   ) async {
+    backend.put('/input/report.csv', [4]);
+    final queued = <ArchiveCreationOptions>[];
+    var viewed = false;
     await show(
       tester,
-      onQueue: (_) async => throw StateError('Queue unavailable'),
+      selectedPaths: ['/input/report.txt', '/input/report.csv'],
+      onQueueBatch: (items) async =>
+          queued.addAll(items.map((item) => item.options)),
+      onViewJobs: () async => viewed = true,
     );
+    await tester.tap(find.byKey(const ValueKey('archive-create-batch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('archive-create-protect')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('archive-create-password')),
+      'queue-secret',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('archive-create-confirmation')),
+      'queue-secret',
+    );
+    final queue = find.byKey(const ValueKey('archive-create-queue'));
+    await tester.ensureVisible(queue);
+    await tester.tap(queue);
+    await tester.pumpAndSettle();
+    expect(queued.map((item) => item.name), [
+      'report.txt.zip',
+      'report.csv.zip',
+    ]);
+    expect(queued.map((item) => item.password), everyElement('queue-secret'));
+    expect(service.requests, isEmpty);
+    expect(find.byKey(const ValueKey('archive-create-queued')), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(
+            find.byKey(const ValueKey('archive-create-password')),
+          )
+          .controller!
+          .text,
+      isEmpty,
+    );
+    expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+    await tester.ensureVisible(find.text('View jobs'));
+    await tester.tap(find.text('View jobs'));
+    await tester.pumpAndSettle();
+    expect(viewed, isTrue);
+  });
+
+  testWidgets('failed batch admission remains a retryable form', (
+    tester,
+  ) async {
+    backend.put('/input/report.csv', [4]);
+    await show(
+      tester,
+      selectedPaths: ['/input/report.txt', '/input/report.csv'],
+      onQueueBatch: (_) async => throw StateError('Queue unavailable'),
+    );
+    await tester.tap(find.byKey(const ValueKey('archive-create-batch')));
+    await tester.pumpAndSettle();
     final queue = find.byKey(const ValueKey('archive-create-queue'));
     await tester.ensureVisible(queue);
     await tester.tap(queue);
@@ -1056,7 +1068,6 @@ void main() {
       await show(
         tester,
         selectedPaths: ['/input/report.txt', '/input/report.csv'],
-        onQueue: (_) async => fail('Combined archive was not selected'),
         onQueueBatch: (items) async => batch = items,
       );
       final separate = find.byKey(const ValueKey('archive-create-batch'));
@@ -1089,7 +1100,7 @@ void main() {
     var calls = 0;
     await show(
       tester,
-      onExternalPacker: () async {
+      onExternalPacker: (_) async {
         calls++;
         return const ArchiveCreationResult('/output/external.7z', 1, 42);
       },
@@ -1116,7 +1127,7 @@ void main() {
   ) async {
     await show(
       tester,
-      onExternalPacker: () async =>
+      onExternalPacker: (_) async =>
           const ArchiveCreationResult('/output/external.7z', 1, 42),
     );
     await tester.ensureVisible(find.text('Use installed packer…'));
@@ -1127,5 +1138,75 @@ void main() {
       findsOneWidget,
     );
     expect(service.requests, isEmpty);
+  });
+
+  testWidgets(
+    'external publication survives a null route result exactly once',
+    (tester) async {
+      final closed = Completer<ArchiveCreationResult?>();
+      late ValueChanged<ArchiveCreationResult> published;
+      var notifications = 0;
+      const result = ArchiveCreationResult('/output/external.7z', 1, 42);
+      await show(
+        tester,
+        onCreated: () => notifications++,
+        onExternalPacker: (onPublished) {
+          published = onPublished;
+          return closed.future;
+        },
+      );
+      await tester.ensureVisible(find.text('Use installed packer…'));
+      await tester.tap(find.text('Use installed packer…'));
+      await tester.pump();
+      published(result);
+      await tester.pump();
+      expect(notifications, 1);
+      closed.complete(null);
+      await tester.pumpAndSettle();
+      published(result);
+      await tester.pumpAndSettle();
+      expect(notifications, 1);
+      expect(
+        find.text('Created and verified: /output/external.7z'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+      expect(find.text('Use installed packer…'), findsNothing);
+      expect(service.requests, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('external publication observer failure cannot enable a retry', (
+    tester,
+  ) async {
+    var notifications = 0;
+    const result = ArchiveCreationResult('/output/external.7z', 1, 42);
+    await show(
+      tester,
+      onCreated: () {
+        notifications++;
+        throw StateError('Selection refresh unavailable');
+      },
+      onExternalPacker: (onPublished) async {
+        onPublished(result);
+        return result;
+      },
+    );
+    await tester.ensureVisible(find.text('Use installed packer…'));
+    await tester.tap(find.text('Use installed packer…'));
+    await tester.pumpAndSettle();
+    expect(notifications, 1);
+    expect(
+      find.text('Created and verified: /output/external.7z'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('archive-create-warning')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+    expect(service.requests, isEmpty);
+    expect(tester.takeException(), isNull);
   });
 }

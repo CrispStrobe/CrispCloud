@@ -17,6 +17,8 @@ metadata, protection or filesystem structures cannot be preserved.
 | --- | --- | --- | --- | --- |
 | ZIP / CBZ | Yes | Yes | Eligible ZIP policy | Native unencrypted creation/editing streams within an 8 GiB budget; ZIP64 is supported. Original supported AES-256 protection uses the smaller buffered path. Comic member order is preserved. |
 | 7z / CB7 | Yes | Yes | Eligible 7z policy | Native unencrypted Store/LZMA2 creation and eligible editing stream within an 8 GiB budget. Protected archives retain their password/header visibility on the smaller buffered path. |
+| Numbered 7z volumes | Complete `.7z.001` sets, with 3–6 digit numbering | No | No | Complete captured sibling manifest; at most 1,024 parts, 8 GiB native / 256 MiB browser aggregate input. Native eligible members stream; unsupported/encrypted methods retain bounded decoding. Read-only across pane, F3 and extraction. |
+| Windows PE SFX | Checked ZIP, 7z or RAR immediate overlays | No | No | Unsigned supported PE profiles; 32 MiB maximum stub and 16 MiB inspected metadata. Rejects ambiguous, signed and installer-specific layouts. Never executes the stub or drops it through an ordinary archive rewrite. |
 | TAR / CBT | Yes | Yes | Inspected regular-file profiles | Preserves understood ownership, names, permissions, timestamps and PAX metadata; unknown extensions, links and special records are refused. |
 | Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, all seven | Eligible TAR plus one supported wrapper | Native TGZ/TAR.GZ creation/editing streams within an 8 GiB budget, including the decoded TAR headers. Other wrappers and buffered paths retain a 64 MiB decoded TAR limit. Includes short and long suffix aliases. |
 | Compressed files | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; single-payload editing requires the immediate decoded payload and cannot flatten inner wrappers. |
@@ -33,7 +35,7 @@ metadata, protection or filesystem structures cannot be preserved.
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge | Data ISO | Inspected data-only profiles | Native creation/editing uses an 8 GiB image budget; each single-extent member must be smaller than 4 GiB. Retains inspected volume/root/Rock Ridge/Joliet metadata. Boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
 | DMG | Unencrypted supported UDIF partitions/filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | 8 GiB packed/decoded budget; raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
-| RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | RAR5 Store / CBR | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. Compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
+| RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
 | PKG / XIP | XAR members and supported nested PBZX/CPIO payloads | No | No | Preview an extensionless `Payload` or `Content` member in F3 to browse its supported inner file tree. Package metadata and signing need dedicated tools. |
@@ -46,6 +48,11 @@ The existing source-account, review, verification and recovery requirements in
 [archive endpoints](archive-endpoints.md) govern every enabled rewrite.
 
 ## Creating and editing
+
+The [Commander workflow guide](archive-commander-workflows.md) covers shared
+background jobs, separate-per-selection creation, batch testing and extraction,
+installed packers, bounded 7z tuning, numbered volumes and SFX browsing. These workflows
+retain the format-specific limits in this table.
 
 Use **Create archive…** for the 35-choice format picker. It exposes only implemented
 compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress take one
@@ -159,9 +166,11 @@ values and distinguishes checked, failed, skipped and unprocessed entries.
 Expand a row for its digest or failure details; **Copy report** copies the full
 report. Unsafe/special entries and members exceeding limits remain visible.
 
-The default check has a 64 MiB member limit and 256 MiB declared work budget;
-failed attempts still consume their declared budget. Namespace validation is
-bounded separately. Cancellation is cooperative between reads/chunks; an active
+Buffered checks retain a 64 MiB member limit and 256 MiB declared work budget.
+Eligible native streamed readers use their existing member and total-work
+limits, up to 8 GiB; protected, nested and unsupported streaming profiles retain
+their smaller bounds. Failed attempts still consume their declared budget.
+Namespace validation is bounded separately. Cancellation is cooperative between reads/chunks; an active
 buffered decode may finish first. The report never changes archive contents and
 does not repair data, authenticate a publisher or invent stored checksums.
 LZMA-alone and UNIX compress lack payload checksums, and optional checksums may
@@ -222,8 +231,11 @@ content checksums from publisher authentication.
   256 MiB in memory. These are input limits, not promised resident-memory use.
 - Native F3 borrows its existing random-access source for archive metadata
   and member reads. Large local disk images do not require a full-file buffer;
-  remote files use the existing 2 GiB spool limit. Browser F3 retains its
-  64 MiB full-data input limit. Password retries borrow a fresh reader, and
+  ordinary remote files use the existing 2 GiB spool limit. Ordinary browser F3
+  retains its 64 MiB full-data input limit. First parts of numbered 7z sets use
+  the separate 8 GiB native / 256 MiB browser input allowance; their complete
+  captured set must also fit that aggregate limit. Native remote F3 can retain
+  both its first-part spool and the set snapshots. Password retries borrow a fresh reader, and
   changing modes or closing the viewer immediately invalidates pending reads.
 - Buffered interactive member reads remain capped at 64 MiB per member.
   Eligible native top-level ZIP/CBZ, 7z/CB7, TAR/CBT, TGZ/TAR.GZ and RAR5
@@ -255,7 +267,9 @@ content checksums from publisher authentication.
   headers must also fit. Protected archives, nested writes, browser/fallback
   paths, 7z Deflate creation and other formats retain their buffered limits:
   64 MiB/member and 256 MiB total/packed, with 64 MiB for compressed streams
-  and decoded TAR wrappers. Durable background packing remains separate work.
+  and decoded TAR wrappers. Native creation and workspace saves can use the
+  [shared background queue](archive-operation-queue.md) within these same bounds;
+  queuing does not expand a codec's supported profile.
   See the [parity and verification status](archive-parity-large-continuation.md).
 - Compression wrappers are bounded by 64 MiB input/output by default and
   four nested wrappers. Readers check available integrity/framing information;
@@ -347,8 +361,10 @@ content checksums from publisher authentication.
 
 ## Dependencies and provenance
 
-No native runtime or subprocess packer is added to the app. The Dart readers,
-writers and format adapters reuse the existing locked packages;
+The app bundles no external packer. Built-in Dart readers, writers and format
+adapters reuse the existing locked packages. Optional external creation uses
+an explicitly configured installed 7-Zip/RAR executable only after its exact
+profile passes the checks described in the [workflow guide](archive-commander-workflows.md).
 `koni_codecs` 0.9.0 is an explicit direct dependency for LZMA/LZMA2 encoding:
 `koni_archive` 0.9.0 and its 0.9.0 codec/core packages (MIT), `archive` 4.6.0
 (MIT), `xml` 6.6.1 (MIT) and `crypto` 3.0.7 (BSD-3-Clause). Check `pubspec.lock`

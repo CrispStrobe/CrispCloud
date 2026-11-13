@@ -34,6 +34,8 @@ import 'archive_package_readers.dart';
 import 'archive_pbzx_source.dart';
 import 'archive_rpm_reader.dart';
 import 'archive_rar_metadata_reader.dart';
+import 'archive_sevenz_byte_reader.dart';
+import 'archive_sevenz_metadata.dart' show SevenZId, readSevenZipNumber;
 import 'archive_sfx_source.dart';
 import 'archive_slice_source.dart';
 import 'archive_types.dart';
@@ -571,6 +573,558 @@ String _innerContainerName(String name) {
   return stripped == name ? '$name.uncompressed' : stripped;
 }
 
+// The pinned 7z fallback allocates ciphertext and intermediate coder buffers,
+// not just the final folder output. Its own maxContainerDecodeSize check does
+// not cover those allocations. Inspect both public and decoded headers before
+// passing immutable metadata to that reader. Native streamed 7z has a separate
+// decoder and never enters this bounded fallback.
+const _sevenZipFallbackInputLimit = 256 * 1024 * 1024;
+const _sevenZipFallbackHeaderLimit = 16 * 1024 * 1024;
+const _sevenZipFallbackCountLimit = 200000;
+
+Never _sevenZipResourceLimit(String detail, int limit) =>
+    throw ArchiveViewException(
+      '7z bounded fallback refuses $detail above ${_mb(limit)}.',
+      code: ArchiveMessageCode.archiveLimit,
+      arguments: {'limit': _mb(limit), 'detail': detail},
+    );
+
+Never _sevenZipInvalid(String detail) =>
+    throw koni.InvalidHeaderException(detail, format: '7z');
+
+class _SevenZipFolderBudget {
+  _SevenZipFolderBudget(this.outputs, this.finalOutput, this.packedInputs);
+  final int outputs, finalOutput, packedInputs;
+  int size = 0, substreams = 1;
+  bool hasCrc = false;
+}
+
+/// A resource scan, not a replacement content/CRC decoder. The same scanner
+/// checks the encoded-header stream table and the eventual main stream table.
+class _SevenZipResourceScanner {
+  _SevenZipResourceScanner(this.reader, this.sourceLength, this.limit);
+  final ByteReader reader;
+  final int sourceLength, limit;
+  int _coders = 0, _graphStreams = 0;
+  int number() => readSevenZipNumber(reader);
+
+  int count(String label, [int maximum = _sevenZipFallbackCountLimit]) {
+    final value = number();
+    if (value > maximum) {
+      throw ArchiveViewException(
+        '7z bounded metadata supports at most $maximum $label.',
+      );
+    }
+    if (value > reader.remaining) {
+      _sevenZipInvalid('7z $label does not fit its metadata.');
+    }
+    return value;
+  }
+
+  void digests(int count, {void Function(int, bool)? onDefined}) {
+    final all = reader.readUint8();
+    final bits = all == 0 ? reader.readBytes((count + 7) ~/ 8) : null;
+    var defined = 0;
+    for (var i = 0; i < count; i++) {
+      final present = bits == null || bits[i ~/ 8] & (0x80 >> (i % 8)) != 0;
+      if (present) defined++;
+      onDefined?.call(i, present);
+    }
+    reader.skip(defined * 4);
+  }
+
+  _SevenZipFolderBudget folder() {
+    final coderCount = count('coder count', 64);
+    if (coderCount == 0) _sevenZipInvalid('A 7z folder has no coders.');
+    if ((_coders += coderCount) > _sevenZipFallbackCountLimit) {
+      throw const ArchiveViewException(
+        '7z bounded metadata supports at most 200000 coders.',
+      );
+    }
+    var inputs = 0, outputs = 0;
+    for (var i = 0; i < coderCount; i++) {
+      final flags = reader.readUint8();
+      if (flags & 0x80 != 0) {
+        throw koni.UnsupportedFeatureException(
+          'Alternative 7z coders are unsupported.',
+          format: '7z',
+        );
+      }
+      final id = reader.readBytes(flags & 15);
+      final complex = flags & 0x10 != 0;
+      final ins = complex ? number() : 1;
+      final outs = complex ? number() : 1;
+      if (ins < 1 || outs < 1) {
+        _sevenZipInvalid('A 7z coder has no input or output.');
+      }
+      if (ins > 64 - inputs || outs > 64 - outputs) {
+        throw const ArchiveViewException(
+          '7z bounded metadata supports at most 64 input and output streams per folder.',
+        );
+      }
+      inputs += ins;
+      outputs += outs;
+      final properties = flags & 0x20 != 0
+          ? reader.readBytes(count('coder properties', 1024 * 1024))
+          : Uint8List(0);
+      if (id.length == 3 && _hasMagic(id, 0, const [3, 1, 1])) {
+        if (properties.length != 5) {
+          _sevenZipInvalid('Invalid 7z LZMA properties.');
+        }
+        if (ByteData.sublistView(properties).getUint32(1, Endian.little) >
+            kArchiveReadLimit) {
+          _sevenZipResourceLimit('an LZMA dictionary', kArchiveReadLimit);
+        }
+      }
+      if (id.length == 1 && id.single == 0x21) {
+        if (properties.length != 1) {
+          _sevenZipInvalid('Invalid 7z LZMA2 properties.');
+        }
+        // Property 28 is 64 MiB; 29 is 96 MiB. The largest property (40)
+        // advertises a 4 GiB dictionary even for a tiny final output.
+        if (properties.single > 28) {
+          _sevenZipResourceLimit('an LZMA2 dictionary', kArchiveReadLimit);
+        }
+      }
+      if (_hasMagic(id, 0, const [0x06, 0xf1, 0x07, 0x01]) && id.length == 4) {
+        if (properties.isEmpty) _sevenZipInvalid('Missing 7z AES properties.');
+        if (properties.first & 0x3f > 20) {
+          throw const ArchiveViewException(
+            '7z AES key derivation above 2^20 rounds is not supported by the bounded reader.',
+          );
+        }
+      }
+    }
+    _graphStreams += inputs + outputs;
+    if (_graphStreams > 2 * _sevenZipFallbackCountLimit) {
+      throw const ArchiveViewException(
+        '7z bounded metadata supports at most 400000 coder input and output streams.',
+      );
+    }
+    final boundIn = <int>{}, boundOut = <int>{};
+    for (var i = 0; i < outputs - 1; i++) {
+      final input = number(), output = number();
+      if (input >= inputs ||
+          output >= outputs ||
+          !boundIn.add(input) ||
+          !boundOut.add(output)) {
+        _sevenZipInvalid('Invalid or duplicate 7z coder binding.');
+      }
+    }
+    final packed = inputs - boundIn.length;
+    if (packed < 1 || packed > 64) {
+      _sevenZipInvalid('Invalid 7z packed-stream graph.');
+    }
+    if (packed != 1) {
+      final indices = <int>{};
+      for (var i = 0; i < packed; i++) {
+        final index = number();
+        if (index >= inputs || boundIn.contains(index) || !indices.add(index)) {
+          _sevenZipInvalid('Invalid 7z packed-stream index.');
+        }
+      }
+    }
+    final finalOutput = List.generate(
+      outputs,
+      (i) => i,
+    ).singleWhere((i) => !boundOut.contains(i));
+    return _SevenZipFolderBudget(outputs, finalOutput, packed);
+  }
+
+  List<_SevenZipFolderBudget> streams() {
+    final packedSizes = <int>[];
+    final folders = <_SevenZipFolderBudget>[];
+    var id = number(), declaredPacks = 0, packPosition = 0;
+    if (id == SevenZId.packInfo) {
+      packPosition = number();
+      declaredPacks = count('packed-stream count');
+      var inner = number();
+      var sizesSeen = false, crcSeen = false;
+      while (inner != SevenZId.end) {
+        if (inner == SevenZId.size && !sizesSeen) {
+          sizesSeen = true;
+          for (var i = 0; i < declaredPacks; i++) {
+            final size = number();
+            if (size > kArchiveReadLimit) {
+              _sevenZipResourceLimit('a packed stream', kArchiveReadLimit);
+            }
+            packedSizes.add(size);
+          }
+        } else if (inner == SevenZId.crc && !crcSeen) {
+          crcSeen = true;
+          digests(declaredPacks);
+        } else {
+          _sevenZipInvalid('Unexpected or repeated 7z packed-stream property.');
+        }
+        inner = number();
+      }
+      if (packedSizes.length != declaredPacks ||
+          packPosition > sourceLength - 32) {
+        _sevenZipInvalid('Invalid 7z packed-stream sizes or position.');
+      }
+      var position = 32 + packPosition;
+      for (final size in packedSizes) {
+        if (size > sourceLength - position) {
+          _sevenZipInvalid('A 7z packed stream extends beyond its source.');
+        }
+        position += size;
+      }
+      id = number();
+    }
+    if (id == SevenZId.unpackInfo) {
+      if (number() != SevenZId.folder) {
+        _sevenZipInvalid('7z folder metadata is missing.');
+      }
+      final folderCount = count('folder count');
+      if (reader.readUint8() != 0) {
+        throw koni.UnsupportedFeatureException(
+          'External 7z folder metadata is unsupported.',
+          format: '7z',
+        );
+      }
+      var usedPacks = 0;
+      for (var i = 0; i < folderCount; i++) {
+        final next = folder();
+        usedPacks += next.packedInputs;
+        folders.add(next);
+      }
+      if (usedPacks != declaredPacks || number() != SevenZId.codersUnpackSize) {
+        _sevenZipInvalid(
+          '7z packed streams or coder sizes do not match their folders.',
+        );
+      }
+      for (final folder in folders) {
+        for (var i = 0; i < folder.outputs; i++) {
+          final size = number();
+          if (size > limit) _sevenZipResourceLimit('a coder output', limit);
+          if (i == folder.finalOutput) folder.size = size;
+        }
+      }
+      var inner = number();
+      if (inner == SevenZId.crc) {
+        digests(
+          folders.length,
+          onDefined: (i, value) => folders[i].hasCrc = value,
+        );
+        inner = number();
+      }
+      if (inner != SevenZId.end) {
+        _sevenZipInvalid('Unexpected 7z unpack property.');
+      }
+      id = number();
+    } else if (declaredPacks != 0) {
+      _sevenZipInvalid('7z packed streams have no folder metadata.');
+    }
+    if (id == SevenZId.subStreamsInfo) {
+      var inner = number();
+      if (inner == SevenZId.numUnpackStream) {
+        var total = 0;
+        for (final folder in folders) {
+          folder.substreams = number();
+          total += folder.substreams;
+          if (total > _sevenZipFallbackCountLimit) {
+            throw const ArchiveViewException(
+              '7z bounded metadata supports at most 200000 substreams.',
+            );
+          }
+        }
+        inner = number();
+      }
+      if (inner == SevenZId.size) {
+        for (final folder in folders) {
+          var total = 0;
+          for (var i = 0; i < folder.substreams - 1; i++) {
+            final size = number();
+            if (size > folder.size - total) {
+              _sevenZipInvalid('7z substreams exceed their folder.');
+            }
+            total += size;
+          }
+        }
+        inner = number();
+      } else if (folders.any((folder) => folder.substreams > 1)) {
+        _sevenZipInvalid('7z substream sizes are missing.');
+      }
+      if (inner == SevenZId.crc) {
+        final unknown = folders.fold<int>(
+          0,
+          (sum, folder) =>
+              sum +
+              (folder.substreams == 1 && folder.hasCrc ? 0 : folder.substreams),
+        );
+        digests(unknown);
+        inner = number();
+      }
+      if (inner != SevenZId.end) {
+        _sevenZipInvalid('Unexpected 7z substream property.');
+      }
+      id = number();
+    }
+    if (id != SevenZId.end ||
+        folders.any((f) => f.substreams == 0 && f.size != 0)) {
+      _sevenZipInvalid('Invalid 7z stream-table terminator or empty folder.');
+    }
+    return folders;
+  }
+
+  void files() {
+    if (number() > _sevenZipFallbackCountLimit) {
+      throw const ArchiveViewException(
+        '7z bounded metadata supports at most 200000 files.',
+      );
+    }
+    final properties = <int>{};
+    var count = 0;
+    for (var id = number(); id != SevenZId.end; id = number()) {
+      // Padding and unknown extension properties may repeat. Only the fields
+      // that allocate per-file vectors need to be unique for this reader.
+      if (const {
+            SevenZId.emptyStream,
+            SevenZId.emptyFile,
+            SevenZId.name,
+            SevenZId.mTime,
+            SevenZId.winAttributes,
+          }.contains(id) &&
+          !properties.add(id)) {
+        _sevenZipInvalid('Repeated 7z file-metadata property.');
+      }
+      if (++count > _sevenZipFallbackCountLimit) {
+        throw const ArchiveViewException(
+          '7z file properties exceed their bounded metadata count.',
+        );
+      }
+      reader.skip(number());
+    }
+  }
+
+  void plainHeader() {
+    if (number() != SevenZId.header) {
+      _sevenZipInvalid('Missing 7z file header.');
+    }
+    var id = number();
+    if (id == SevenZId.archiveProperties) {
+      for (
+        var property = number();
+        property != SevenZId.end;
+        property = number()
+      ) {
+        reader.skip(number());
+      }
+      id = number();
+    }
+    if (id == SevenZId.additionalStreamsInfo) {
+      throw koni.UnsupportedFeatureException(
+        'Additional 7z streams are unsupported.',
+        format: '7z',
+      );
+    }
+    if (id == SevenZId.mainStreamsInfo) {
+      streams();
+      id = number();
+    }
+    if (id == SevenZId.filesInfo) {
+      files();
+      id = number();
+    }
+    if (id != SevenZId.end || reader.remaining != 0) {
+      _sevenZipInvalid('Unexpected trailing 7z metadata.');
+    }
+  }
+}
+
+/// Presents only the metadata already checked above. Packed bytes keep their
+/// original offsets. Closing this borrowed view never closes the owned input.
+class _SevenZipCheckedSource implements koni.ByteSource {
+  _SevenZipCheckedSource(
+    this.parent,
+    Uint8List header, {
+    required this.sourceLength,
+  }) : header = Uint8List.fromList(header),
+       start = Uint8List(32) {
+    start.setRange(0, 8, const [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c, 0, 4]);
+    final data = ByteData.sublistView(start);
+    data.setUint32(12, sourceLength - 32, Endian.little);
+    data.setUint32(20, header.length, Endian.little);
+    data.setUint32(28, ar.getCrc32(header), Endian.little);
+    data.setUint32(
+      8,
+      ar.getCrc32(Uint8List.sublistView(start, 12)),
+      Endian.little,
+    );
+  }
+  final koni.ByteSource parent;
+  final int sourceLength;
+  final Uint8List header, start;
+  bool _closed = false;
+  @override
+  int get length => sourceLength + header.length;
+  @override
+  String? get name => parent.name;
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    if (_closed ||
+        offset < 0 ||
+        length < 0 ||
+        offset > this.length ||
+        length > this.length - offset) {
+      _sevenZipInvalid('Read leaves the checked 7z source.');
+    }
+    if (length > kArchiveReadLimit) {
+      _sevenZipResourceLimit('a source read', kArchiveReadLimit);
+    }
+    final result = Uint8List(length);
+    var done = 0;
+    while (done < length) {
+      final at = offset + done;
+      final boundary = at < 32
+          ? 32
+          : at < sourceLength
+          ? sourceLength
+          : this.length;
+      final take = length - done < boundary - at
+          ? length - done
+          : boundary - at;
+      final bytes = at < 32
+          ? Uint8List.sublistView(start, at, at + take)
+          : at < sourceLength
+          ? await parent.read(at, take)
+          : Uint8List.sublistView(
+              header,
+              at - sourceLength,
+              at - sourceLength + take,
+            );
+      if (bytes.length != take) {
+        _sevenZipInvalid('Truncated checked 7z source.');
+      }
+      result.setRange(done, done + take, bytes);
+      done += take;
+    }
+    return result;
+  }
+
+  @override
+  Future<void> close() async => _closed = true;
+}
+
+Future<koni.ByteSource> _preflightSevenZipFallback(
+  koni.ByteSource source, {
+  required String? password,
+  required int limit,
+}) async {
+  final sourceLength = source.length;
+  if (sourceLength < 6 ||
+      !_hasMagic(await source.read(0, 6), 0, const [
+        0x37,
+        0x7a,
+        0xbc,
+        0xaf,
+        0x27,
+        0x1c,
+      ])) {
+    _sevenZipInvalid('The detected 7z signature changed before inspection.');
+  }
+  if (sourceLength > _sevenZipFallbackInputLimit) {
+    _sevenZipResourceLimit('whole input', _sevenZipFallbackInputLimit);
+  }
+  if (sourceLength < 32) _sevenZipInvalid('Truncated 7z signature header.');
+  final prefix = await source.read(0, 32);
+  if (prefix.length != 32 || prefix[6] != 0) {
+    _sevenZipInvalid('Unsupported 7z signature header.');
+  }
+  final start = ByteReader(prefix)..skip(8);
+  final startCrc = start.readUint32le();
+  if (ar.getCrc32(Uint8List.sublistView(prefix, 12)) != startCrc) {
+    _sevenZipInvalid('7z start-header checksum does not match.');
+  }
+  final offset = start.readUint64le(),
+      size = start.readUint64le(),
+      crc = start.readUint32le();
+  if (size > _sevenZipFallbackHeaderLimit) {
+    _sevenZipResourceLimit('metadata', _sevenZipFallbackHeaderLimit);
+  }
+  if (offset > sourceLength - 32 || size > sourceLength - 32 - offset) {
+    _sevenZipInvalid('7z metadata extends beyond its source.');
+  }
+  if (size == 0) {
+    if (sourceLength != 32 || offset != 0) {
+      _sevenZipInvalid('Empty 7z has unexpected data.');
+    }
+    return _SevenZipCheckedSource(
+      source,
+      Uint8List.fromList([SevenZId.header, SevenZId.end]),
+      sourceLength: sourceLength,
+    );
+  }
+  var header = Uint8List.fromList(await source.read(32 + offset, size));
+  if (header.length != size || ar.getCrc32(header) != crc) {
+    _sevenZipInvalid('7z metadata checksum does not match.');
+  }
+  final cursor = ByteReader(header);
+  if (readSevenZipNumber(cursor) == SevenZId.encodedHeader) {
+    final streamOffset = cursor.position;
+    final encoded = _SevenZipResourceScanner(
+      cursor,
+      sourceLength,
+      limit,
+    ).streams();
+    if (encoded.length != 1 ||
+        encoded.single.substreams != 1 ||
+        cursor.remaining != 0) {
+      _sevenZipInvalid('7z encoded metadata must be one complete stream.');
+    }
+    if (encoded.single.size > _sevenZipFallbackHeaderLimit) {
+      _sevenZipResourceLimit('decoded metadata', _sevenZipFallbackHeaderLimit);
+    }
+    // Reuse the public decoder only after validating every allocation in this
+    // table. Exposing its single stream avoids private package APIs and lets
+    // us inspect the decoded header before the real reader parses any files.
+    final syntheticHeader = BytesBuilder(copy: false)
+      ..add(const [SevenZId.header, SevenZId.mainStreamsInfo])
+      ..add(Uint8List.sublistView(header, streamOffset))
+      ..addByte(SevenZId.end);
+    final synthetic = _SevenZipCheckedSource(
+      source,
+      syntheticHeader.takeBytes(),
+      sourceLength: sourceLength,
+    );
+    koni.ArchiveReader? decoder;
+    try {
+      decoder = await koni.builtInFormats.openReader(
+        synthetic,
+        options: koni.ArchiveReadOptions(
+          password: password,
+          maxEntrySize: limit,
+          maxEntryCount: 1,
+          maxContainerDecodeSize: limit,
+        ),
+      );
+      if (decoder.entries.length != 1) {
+        _sevenZipInvalid('Invalid encoded 7z header stream.');
+      }
+      final output = BytesBuilder(copy: false);
+      await for (final chunk in decoder.openRead(decoder.entries.single)) {
+        if (chunk.length > encoded.single.size - output.length) {
+          _sevenZipInvalid('Decoded 7z metadata exceeds its declared size.');
+        }
+        output.add(Uint8List.fromList(chunk));
+      }
+      if (output.length != encoded.single.size) {
+        _sevenZipInvalid('Decoded 7z metadata is truncated.');
+      }
+      header = output.takeBytes();
+    } finally {
+      await decoder?.close();
+      await synthetic.close();
+    }
+  }
+  _SevenZipResourceScanner(
+    ByteReader(header),
+    sourceLength,
+    limit,
+  ).plainHeader();
+  return _SevenZipCheckedSource(source, header, sourceLength: sourceLength);
+}
+
 Future<bool> _requiresHeaderPassword(koni.ByteSource source, int limit) async {
   if (source.length < 6) return false;
   final borrowed = ArchiveSliceSource(
@@ -590,12 +1144,19 @@ Future<bool> _requiresHeaderPassword(koni.ByteSource source, int limit) async {
     ])) {
       return false;
     }
-    final public = await koni.builtInFormats.openReader(
+    final checked = await _preflightSevenZipFallback(
       borrowed,
+      password: null,
+      limit: limit < kArchiveReadLimit ? limit : kArchiveReadLimit,
+    );
+    final public = await koni.builtInFormats.openReader(
+      checked,
       options: koni.ArchiveReadOptions(
-        maxEntrySize: limit,
+        maxEntrySize: limit < kArchiveReadLimit ? limit : kArchiveReadLimit,
         maxEntryCount: 200000,
-        maxContainerDecodeSize: limit,
+        maxContainerDecodeSize: limit < kArchiveReadLimit
+            ? limit
+            : kArchiveReadLimit,
       ),
     );
     await public.close();
@@ -617,18 +1178,43 @@ Future<ViewerArchive> _openWithKoni(
 }) async {
   koni.ArchiveReader reader;
   try {
+    // Fix the selected decoder before opening it. A second auto-detection on
+    // mutable input must not switch an uninspected format into the 7z fallback.
+    final format = await koni.builtInFormats.detect(source);
+    if (format == null) {
+      throw koni.UnsupportedFormatException(
+        'The archive format could not be determined.',
+      );
+    }
+    final checked = format.name == '7z'
+        ? await _preflightSevenZipFallback(
+            source,
+            password: password,
+            limit: maxMemberBytes < kArchiveReadLimit
+                ? maxMemberBytes
+                : kArchiveReadLimit,
+          )
+        : source;
+    final decodeLimit =
+        checked is _SevenZipCheckedSource && maxMemberBytes > kArchiveReadLimit
+        ? kArchiveReadLimit
+        : maxMemberBytes;
     // Use the reader directly (not the Archive facade): a reader may throw
     // synchronously from openRead() for encrypted/unsupported entries, and
     // the facade's stream wrapper turns that into an unclosed stream (hang).
     reader = await koni.builtInFormats.openReader(
-      source,
+      checked,
+      format: format,
       options: koni.ArchiveReadOptions(
         password: password,
-        maxEntrySize: maxMemberBytes,
+        maxEntrySize: decodeLimit,
         maxEntryCount: 200000,
-        maxContainerDecodeSize: maxMemberBytes,
+        maxContainerDecodeSize: decodeLimit,
       ),
     );
+  } on ArchiveViewException {
+    await source.close();
+    rethrow;
   } on koni.EncryptedArchiveException catch (e) {
     await source.close();
     throw ArchivePasswordRequiredException(

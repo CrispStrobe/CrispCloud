@@ -29,6 +29,7 @@ import '../models/transfer_queue_summary.dart';
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
 import '../services/archive_creation_service.dart';
+import '../services/archive_creation_batch.dart';
 import '../services/archive_job_recovery_service.dart';
 import '../services/archive_workspace.dart';
 import '../services/file_operation_service.dart';
@@ -38,6 +39,7 @@ import '../services/transfer_journal.dart';
 import '../services/background_transfer_journal.dart';
 import '../services/transfer_recovery_service.dart';
 import '../services/transfer_resource_claims.dart';
+import '../services/storage_transfer_contract.dart';
 import '../models/integrity_recovery.dart';
 import '../services/web_streaming_service.dart';
 import '../services/log_service.dart';
@@ -70,6 +72,7 @@ class TransferNotifier extends ChangeNotifier {
   final Map<String, OperationProgress> _activeOperations = {};
   bool _queueUserPaused = false;
   int _dispatchHolds = 0;
+  int _cancelAllEpoch = 0;
 
   late final TransferJournal _journal;
   late final Future<void> ready;
@@ -710,6 +713,9 @@ class TransferNotifier extends ChangeNotifier {
   bool _canHideOperation(String id) => !isJobLive(id);
 
   void cancelAllOperations() {
+    // Batch admission may still be writing its first durable record, before a
+    // live control exists. Such admission must observe Stop all as well.
+    _cancelAllEpoch++;
     for (final operation in _operations.where(
       (op) => op.isWaitingForDecision,
     )) {
@@ -854,6 +860,167 @@ class TransferNotifier extends ChangeNotifier {
   ArchiveWorkspace? archiveWorkspaceForJob(String id) => _archiveWorkspaces[id];
 
   Future<void> dismissArchiveJob(String id) => dismissSavedJob(id);
+
+  /// Admit reviewed outputs to the existing archive/transfer scheduler.
+  ///
+  /// Every recipe and destination is checked before any job is admitted, and
+  /// dispatch stays held until every per-job journal write is acknowledged.
+  /// Failed admission cancels and settles the pending handles already owned by
+  /// this batch before releasing the hold. This is all-or-none live dispatch,
+  /// not an atomic multi-record journal transaction: an interrupted/failed
+  /// admission can retain history that requires review, never automatic replay.
+  Future<List<ArchiveOperationHandle<ArchiveCreationResult>>>
+  enqueueArchiveCreationBatch({
+    required FileOperationBackend source,
+    required FileOperationBackend destination,
+    required List<ArchiveCreationBatchItem> items,
+    ArchiveCreationService service = const ArchiveCreationService(),
+    VoidCallback? onCreated,
+    int priority = 0,
+    DateTime? notBefore,
+  }) async {
+    if (items.isEmpty || items.length > 128) {
+      throw StateError('Choose between 1 and 128 archive jobs.');
+    }
+    if (items.fold<int>(0, (count, item) => count + item.files.length) > 5000) {
+      throw const ArchiveCreationException(ArchiveCreationError.tooLarge);
+    }
+    final sourceIdentity = source.identity;
+    final destinationIdentity = destination.identity;
+    final sourceStorage = source.storageReference;
+    final destinationStorage = destination.storageReference;
+    final sourceId = source.persistentStorageId;
+    final destinationId = destination.persistentStorageId;
+    final cancelAllEpoch = _cancelAllEpoch;
+    void check() {
+      if (_cancelAllEpoch != cancelAllEpoch) {
+        throw const FileOperationCancelled();
+      }
+      if (_disposed ||
+          !source.isCurrent ||
+          !destination.isCurrent ||
+          source.identity != sourceIdentity ||
+          destination.identity != destinationIdentity ||
+          source.storageReference != sourceStorage ||
+          destination.storageReference != destinationStorage ||
+          source.persistentStorageId != sourceId ||
+          destination.persistentStorageId != destinationId) {
+        throw const ArchiveCreationException(
+          ArchiveCreationError.sourceUnavailable,
+        );
+      }
+      if (recoveryError != null) throw StateError(recoveryError!);
+    }
+
+    check();
+    if (!destination.supportsStagedVerification) {
+      throw const ArchiveCreationException(
+        ArchiveCreationError.invalidDestination,
+      );
+    }
+    final outputs = <String>{};
+    final captured =
+        <({FileOperationPlan plan, ArchiveCreationOptions options})>[];
+    for (final item in items) {
+      item.options.validate();
+      if (!destination.paths.isAbsolute(item.destinationDirectory) ||
+          item.destinationDirectory.contains('\u0000')) {
+        throw const ArchiveCreationException(
+          ArchiveCreationError.invalidDestination,
+        );
+      }
+      if (item.files.any(
+            (file) =>
+                file.isSymlink == true ||
+                file.isFolder && !item.options.format.supportsDirectories ||
+                file.storageId != null && file.storageId != sourceId,
+          ) ||
+          item.options.format.singlePayload &&
+              (item.files.length != 1 || item.files.single.isFolder)) {
+        throw const ArchiveCreationException(
+          ArchiveCreationError.unsupportedEntry,
+        );
+      }
+      // The shared recipe builder copies each selected row's version witnesses
+      // instead of retaining a pane's mutable list or provider metadata map.
+      final plan = archiveCreationJobPlan(
+        source: source,
+        destination: destination,
+        files: item.files,
+        destinationDirectory: item.destinationDirectory,
+        options: item.options,
+      );
+      var output = destination.destinationPathKey(
+        plan.entries.first.destination,
+      );
+      if (destination.capabilities.caseSensitivity !=
+          StorageCaseSensitivity.sensitive) {
+        output = output.toLowerCase();
+      }
+      if (!outputs.add(output)) {
+        throw StateError('Two archive jobs have the same destination.');
+      }
+      captured.add((plan: plan, options: item.options));
+    }
+    await ready;
+    check();
+    return _withDispatchHeld(() async {
+      check();
+      for (final item in captured) {
+        final directory = await destination.stat(item.plan.targetDirectory);
+        check();
+        if (directory == null ||
+            !directory.isFolder ||
+            directory.isSymlink == true) {
+          throw const ArchiveCreationException(
+            ArchiveCreationError.invalidDestination,
+          );
+        }
+        final output = item.plan.entries.first.destination;
+        if (await destination.stat(output) != null) {
+          throw ArchiveCreationException(
+            ArchiveCreationError.destinationExists,
+            output,
+          );
+        }
+        check();
+      }
+      final admitted = <ArchiveOperationHandle<ArchiveCreationResult>>[];
+      void checkAdmission() {
+        check();
+        if (admitted.any((handle) => handle.control.isCancelled)) {
+          throw const FileOperationCancelled();
+        }
+      }
+
+      try {
+        for (final item in captured) {
+          checkAdmission();
+          admitted.add(
+            await enqueueArchiveCreation(
+              source: source,
+              destination: destination,
+              files: item.plan.entries.map((entry) => entry.source).toList(),
+              destinationDirectory: item.plan.targetDirectory,
+              options: item.options,
+              service: service,
+              onCreated: onCreated,
+              priority: priority,
+              notBefore: notBefore,
+            ),
+          );
+          checkAdmission();
+        }
+        return List.unmodifiable(admitted);
+      } catch (error, stack) {
+        for (final handle in admitted) {
+          cancelOperation(handle.id);
+        }
+        await Future.wait(admitted.map((handle) => handle.completion));
+        Error.throwWithStackTrace(error, stack);
+      }
+    });
+  }
 
   Future<ArchiveOperationHandle<ArchiveCreationResult>> enqueueArchiveCreation({
     required FileOperationBackend source,

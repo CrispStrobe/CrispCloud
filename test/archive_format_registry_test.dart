@@ -48,6 +48,11 @@ void main() {
             expect(ArchiveService.isArchive(name), isTrue, reason: name);
             expect(_panel.isArchive(name), isTrue, reason: name);
             expect(_panel.canEnter(name), isTrue, reason: name);
+            expect(
+              isDefaultArchiveFilename(name),
+              !name.toLowerCase().endsWith('.exe'),
+              reason: name,
+            );
             final expectedViewerMode =
                 format.id == 'sfx' && name.toLowerCase().endsWith('.exe')
                 ? ViewerMode.binary

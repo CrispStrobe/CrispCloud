@@ -31,10 +31,30 @@ RAR5 Store is an independent implementation of the public container format.
 It writes files without proprietary RAR compression and does not bundle an
 external packer. It checks CRC-32 and SHA-256 across two captured source passes
 before accepting each output payload. Compressed/encrypted RAR archives remain
-on the existing read-only path.
+on the existing read-only path. The separate **Use installed packer…** workflow
+can create verified compressed RAR5 outputs with a checked, user-installed RAR
+tool. It does not change the policy for editing existing compressed RAR files.
 
 Password fields require matching confirmation and are cleared after an attempted
 operation. Passwords are not persisted in settings, operation logs or history.
+The installed-packer action is unavailable while password protection is selected;
+its initial profiles create unencrypted outputs only.
+
+On native desktop, **Start** keeps the progress dialog attached to a job in the
+shared Operations queue. **Queue in background** saves the job and returns to
+the file manager; **Run in background** detaches an already running dialog.
+**Archive jobs** in Tools opens the same Operations panel and history used by
+normal transfers. Pause/resume, stop, priority, ordering and scheduling follow
+the [shared archive queue contract](archive-operation-queue.md). Protected
+creation recipes require their password again after an application restart.
+
+**One archive per selected item** previews a separate output for each selection.
+All output names are checked first, and live dispatch waits until every job is
+durably saved. History records are saved individually: a failed append or
+interruption may leave a partial batch for review without starting its jobs.
+Source files are retained and each admitted output has its own result. The
+[Commander workflow guide](archive-commander-workflows.md) also describes checked
+installed packers and their separate compression options.
 
 Single-file compression choices take exactly one regular file; its decompressed
 name comes from the output filename. AR takes flat regular files. KMZ requires
@@ -77,7 +97,8 @@ Switching panes cannot redirect a captured source or destination.
 Progress covers scanning, packing, verification and saving. Cancel prevents
 publication at the next cancellation check; a codec may need to finish its
 current block first. A commit that already completed is reported as successful.
-Keep the dialog open until it reports completion or cancellation.
+For foreground creation, keep the dialog open until it reports completion or
+cancellation. Queued work continues independently of the dialog.
 
 Eligible native local **ZIP/CBZ, 7z/CB7, RAR5 Store/CBR and TAR.GZ/TGZ creation streams up to
 8 GiB** per source file, total source content and packed output. For TGZ the
@@ -136,9 +157,15 @@ qualifies the complete 8 GiB ceiling. See the
 [completed hosted gate](archive-containers-runtime-verification.md) and
 [ISO/RAR/DMG evidence](archive-iso-rar-dmg.md).
 
-Large durable background jobs remain separate work. The current creation entry
-point accepts native local selections. Other archive browsing and editing
-workflows are described in [file operations](commander-file-operations.md).
+Native background creation and workspace saves use the shared operation queue
+and cooperative writer bridge within the existing format bounds. The
+[queue qualification](archive-operation-queue.md) separately records three
+logical worker payloads above 2 GiB; those results remain attributed to their
+tested source revision. The merged Commander continuation awaits its final
+regression gate. Larger protected/nested profiles and broader device acceptance
+remain separate work. The creation entry point accepts native local selections;
+other archive browsing and editing workflows are described in
+[file operations](commander-file-operations.md).
 
 ## Validation
 

@@ -17,7 +17,7 @@ void main() {
       queue = TransferQueue(maxConcurrent: 0);
     });
 
-    TransferTask _makeTask(String id, {int priority = 0}) {
+    TransferTask makeTask(String id, {int priority = 0}) {
       return TransferTask(
         id: id,
         operation: OperationProgress(
@@ -33,18 +33,18 @@ void main() {
     }
 
     test('enqueue respects priority ordering', () {
-      queue.enqueue(_makeTask('low', priority: 1));
-      queue.enqueue(_makeTask('high', priority: 10));
-      queue.enqueue(_makeTask('mid', priority: 5));
+      queue.enqueue(makeTask('low', priority: 1));
+      queue.enqueue(makeTask('high', priority: 10));
+      queue.enqueue(makeTask('mid', priority: 5));
 
       final ids = queue.pendingTasks.map((t) => t.id).toList();
       expect(ids, ['high', 'mid', 'low']);
     });
 
     test('reorderPending moves task', () {
-      queue.enqueue(_makeTask('a'));
-      queue.enqueue(_makeTask('b'));
-      queue.enqueue(_makeTask('c'));
+      queue.enqueue(makeTask('a'));
+      queue.enqueue(makeTask('b'));
+      queue.enqueue(makeTask('c'));
 
       queue.reorderPending(2, 0); // move 'c' to front
       final ids = queue.pendingTasks.map((t) => t.id).toList();
@@ -52,40 +52,40 @@ void main() {
     });
 
     test('movePendingToTop moves task to front', () {
-      queue.enqueue(_makeTask('a'));
-      queue.enqueue(_makeTask('b'));
-      queue.enqueue(_makeTask('c'));
+      queue.enqueue(makeTask('a'));
+      queue.enqueue(makeTask('b'));
+      queue.enqueue(makeTask('c'));
 
       queue.movePendingToTop('c');
       expect(queue.pendingTasks.first.id, 'c');
     });
 
     test('movePendingToBottom moves task to end', () {
-      queue.enqueue(_makeTask('a'));
-      queue.enqueue(_makeTask('b'));
-      queue.enqueue(_makeTask('c'));
+      queue.enqueue(makeTask('a'));
+      queue.enqueue(makeTask('b'));
+      queue.enqueue(makeTask('c'));
 
       queue.movePendingToBottom('a');
       expect(queue.pendingTasks.last.id, 'a');
     });
 
     test('movePendingToTop with non-existent id is no-op', () {
-      queue.enqueue(_makeTask('a'));
+      queue.enqueue(makeTask('a'));
       queue.movePendingToTop('nonexistent');
       expect(queue.pendingTasks.length, 1);
     });
 
     test('reorderPending with invalid indices is no-op', () {
-      queue.enqueue(_makeTask('a'));
+      queue.enqueue(makeTask('a'));
       queue.reorderPending(-1, 0);
       queue.reorderPending(5, 0);
       expect(queue.pendingTasks.length, 1);
     });
 
     test('pendingTasks returns unmodifiable view', () {
-      queue.enqueue(_makeTask('a'));
+      queue.enqueue(makeTask('a'));
       final tasks = queue.pendingTasks;
-      expect(() => tasks.add(_makeTask('b')), throwsA(isA<UnsupportedError>()));
+      expect(() => tasks.add(makeTask('b')), throwsA(isA<UnsupportedError>()));
     });
   });
 

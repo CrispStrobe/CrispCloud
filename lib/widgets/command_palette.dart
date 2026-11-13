@@ -68,6 +68,7 @@ import 'drive_bar.dart';
 import 'archive_batch_actions.dart';
 import 'archive_jobs_dialog.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
+import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/archive_job_strings.dart';
 import 'package:flutter/foundation.dart';
 
@@ -448,6 +449,15 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
         enabled: canTestArchiveSelection(ref),
         action: () => showArchiveBatchIntegrityForSelection(widget.parentContext, ref),
       ),
+      if (!kIsWeb)
+        _Command(
+          id: 'archive-extract-selected',
+          name: archiveBatchExtractionText(context, 'Extract selected archives'),
+          icon: Icons.drive_folder_upload_outlined,
+          keywords: 'archive extract unpack zip rar 7z mask flatten batch',
+          enabled: canExtractArchiveSelection(ref),
+          action: () => showArchiveBatchExtractionForSelection(widget.parentContext, ref),
+        ),
       if (!kIsWeb && const {TargetPlatform.linux, TargetPlatform.macOS, TargetPlatform.windows}.contains(defaultTargetPlatform))
         _Command(
           id: 'archive-jobs',

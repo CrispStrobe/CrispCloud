@@ -17,19 +17,47 @@ Future<ArchiveCreationResult?> showArchiveExternalPackerDialog(
   ArchiveExternalPackerService? service,
   ArchiveExternalPackerPreferences? preferences,
   VoidCallback? onCreated,
-}) => showDialog<ArchiveCreationResult>(
-  context: context,
-  barrierDismissible: false,
-  builder: (_) => ArchiveExternalPackerDialog(
-    source: source,
-    destination: destination,
-    files: List.unmodifiable(files),
-    destinationDirectory: destinationDirectory,
-    service: service,
-    preferences: preferences,
-    onCreated: onCreated,
-  ),
-);
+  ValueChanged<ArchiveCreationResult>? onPublished,
+}) async {
+  ArchiveCreationResult? capturedReceipt;
+  final dialogResult = await showDialog<ArchiveCreationResult>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => ArchiveExternalPackerDialog(
+      source: source,
+      destination: destination,
+      files: List.unmodifiable(files),
+      destinationDirectory: destinationDirectory,
+      service: service,
+      preferences: preferences,
+      onCreated: onCreated,
+      onPublished: (result) {
+        capturedReceipt = result;
+        try {
+          onPublished?.call(result);
+        } catch (error) {
+          capturedReceipt = _withPublicationWarning(result, error);
+          rethrow;
+        }
+      },
+    ),
+  );
+  // The publication receipt includes observer warnings that a route's earlier
+  // return value may not contain. A pop cannot replace that verified outcome.
+  return capturedReceipt ?? dialogResult;
+}
+
+ArchiveCreationResult _withPublicationWarning(
+  ArchiveCreationResult result,
+  Object error,
+) => result.publicationWarning != null
+    ? result
+    : ArchiveCreationResult(
+        result.path,
+        result.entryCount,
+        result.bytes,
+        publicationWarning: error,
+      );
 
 class ArchiveExternalPackerDialog extends StatefulWidget {
   const ArchiveExternalPackerDialog({
@@ -41,6 +69,7 @@ class ArchiveExternalPackerDialog extends StatefulWidget {
     this.service,
     this.preferences,
     this.onCreated,
+    this.onPublished,
   });
   final FileOperationBackend source, destination;
   final List<FileItem> files;
@@ -48,6 +77,7 @@ class ArchiveExternalPackerDialog extends StatefulWidget {
   final ArchiveExternalPackerService? service;
   final ArchiveExternalPackerPreferences? preferences;
   final VoidCallback? onCreated;
+  final ValueChanged<ArchiveCreationResult>? onPublished;
 
   @override
   State<ArchiveExternalPackerDialog> createState() =>
@@ -199,31 +229,49 @@ class _ArchiveExternalPackerDialogState
     _format = value;
   }
 
-  Future<void> _create() => _run('Creating verified archive…', () async {
-    final installation = _installation;
-    if (installation == null) return;
-    final result = await _service.create(
-      source: widget.source,
-      destination: widget.destination,
-      files: widget.files,
-      destinationDirectory: widget.destinationDirectory,
-      installation: installation,
-      options: ArchiveExternalPackerOptions(
-        name: _name.text,
-        format: _format,
-        compression: _compression,
-        sevenZipProfile: _format == ArchiveExternalPackerFormat.sevenZip
-            ? _sevenZipProfile
-            : const ArchiveExternalSevenZipProfile(),
-      ),
-      isCancelled: () => _cancelled || !mounted,
-      onProgress: (value) {
-        if (mounted) setState(() => _progress = value);
-      },
-    );
-    widget.onCreated?.call();
-    if (mounted) setState(() => _result = result);
-  });
+  Future<void> _create() async {
+    if (!mounted || _busy || _result != null) return;
+    await _run('Creating verified archive…', () async {
+      final installation = _installation;
+      if (installation == null) return;
+      var result = await _service.create(
+        source: widget.source,
+        destination: widget.destination,
+        files: widget.files,
+        destinationDirectory: widget.destinationDirectory,
+        installation: installation,
+        options: ArchiveExternalPackerOptions(
+          name: _name.text,
+          format: _format,
+          compression: _compression,
+          sevenZipProfile: _format == ArchiveExternalPackerFormat.sevenZip
+              ? _sevenZipProfile
+              : const ArchiveExternalSevenZipProfile(),
+        ),
+        isCancelled: () => _cancelled || !mounted,
+        onProgress: (value) {
+          if (mounted) setState(() => _progress = value);
+        },
+      );
+      // Publication is final before observers run. A route removal or observer
+      // failure must not make this completed output eligible for another try.
+      _result = result;
+      if (mounted) setState(() {});
+      try {
+        widget.onCreated?.call();
+      } catch (error) {
+        result = _withPublicationWarning(result, error);
+      }
+      _result = result;
+      try {
+        widget.onPublished?.call(result);
+      } catch (error) {
+        result = _withPublicationWarning(result, error);
+      }
+      _result = result;
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -596,6 +644,14 @@ class _ArchiveExternalPackerDialogState
                     common('Archive created: {0}', [_result!.path]),
                     key: const ValueKey('archive-external-success'),
                   ),
+                  if (_result!.publicationWarning != null)
+                    Text(
+                      common(
+                        'The archive was created. Recovery information: {0}',
+                        [_result!.publicationWarning],
+                      ),
+                      key: const ValueKey('archive-external-warning'),
+                    ),
                 ],
               ],
             ),

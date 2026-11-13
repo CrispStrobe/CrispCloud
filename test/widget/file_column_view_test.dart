@@ -11,6 +11,7 @@ import 'package:crisp_cloud/services/cloud_storage_interface.dart';
 import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/file_column_view.dart';
+import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/file_operation_dialog.dart';
 import 'package:crisp_cloud/widgets/folder_drop_target.dart';
 import 'package:crisp_cloud/services/file_operation_service.dart';
@@ -253,6 +254,25 @@ void main() {
     container.read(activePanelProvider.notifier).state = PanelSide.remote;
     container.read(focusAreaProvider.notifier).state = FocusArea.remote;
   }
+
+  testWidgets('opening an executable keeps its ordinary viewer action', (
+    tester,
+  ) async {
+    cloud.fileNames['/'] = ['program.exe'];
+    cloud.put('/program.exe', [0x4d, 0x5a, ...List<int>.filled(10, 0)]);
+    await panel.refresh();
+    await mount(tester);
+    final executable = row('/', '/program.exe');
+    await tester.tap(executable);
+    await tester.pump(const Duration(milliseconds: 70));
+    await tester.tap(executable);
+    await tester.pumpAndSettle();
+    expect(find.byType(InternalViewerDialog), findsOneWidget);
+    expect(panel.isInArchive, isFalse);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
 
   testWidgets(
     'a direct deep location hydrates parents without blocking its live column',

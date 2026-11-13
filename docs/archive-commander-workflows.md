@@ -11,41 +11,65 @@ Review: [PR #97](https://github.com/CrispStrobe/CrispCloud/pull/97).
 ## Background creation and separate archives
 
 On native desktop, select local files or folders and choose **Create archive…**.
-The usual foreground creation remains available. **Add to queue** saves the
-captured local selection, format, options and exact destination before a worker
-starts. **Archive jobs** in Tools or the command palette opens the same queue.
-Closing either dialog leaves the application-owned queue running.
+**Create archive** admits a job to the shared Operations queue and keeps its
+progress visible. **Queue in background** saves the captured selection, format, options
+and exact destination, then returns to the file manager. A running creation
+dialog also offers **Run in background**. **Archive jobs** in Tools or the command
+palette opens the shared Operations panel and its history. Closing a progress
+view or navigating a pane leaves the application-owned job running.
+
+In an edited archive workspace, **Save in background** reviews the draft changes
+before queuing packing, verification and publication. Creation and workspace
+saves use the same scheduler and `TransferJournal` as normal transfers. The
+[archive operation queue guide](archive-operation-queue.md) is the authoritative
+description of scheduling, cooperative controls and recovery.
 
 For two or more selected items, **One archive per selected item** previews a
 separate output for each item. The complete source name is retained in the
 output name: `report.txt.zip` and `report.csv.zip` stay distinct. The selected
-format must support each individual input. All requested jobs are admitted in
-one durable update after checking every output name; a collision does not admit
-a partial batch. Each admitted archive then has its own progress and result.
+format must support each individual input. All output names are checked before
+admission. Live dispatch is held until every job's individual durable save has
+succeeded. This is not an atomic update of multiple history records: a failed
+append or process interruption can leave part of the batch recorded for review
+without dispatching it. Each admitted archive has its own progress and result.
 Source files are retained.
 
-Jobs run serially in a native isolate. The queue provides pending-job ordering,
-pause/resume, cancellation, queue pause and terminal results. It retains the
-necessary local access scopes until the worker has actually stopped. One native
-lease protects queue ownership across application windows; closing a controller
-also drains an in-flight journal save before relinquishing that lease.
+The shared queue provides priority, pending-job ordering, scheduled starts,
+concurrency controls, pause/resume, stop and terminal results. Jobs reserve
+source and destination paths alongside normal transfers; conflicting work
+waits. A paused active job retains its worker slot and reservations. **Pause
+queue** prevents queued jobs from starting; new jobs can still be added.
+Selected-row controls also pause eligible active jobs.
 
-After an application restart, unfinished jobs are **Interrupted**. Review their
-captured source paths and output, then choose **Restart from source**. This
-rebuilds and verifies an archive from the selected sources; it does not resume
-from an arbitrary compressed byte offset. Protected jobs require their password
-again. Passwords are held only in memory, never in the ordinary job journal.
+A native writer isolate performs codec work while the parent owns source
+streams, access scopes and unpublished output. Requests and acknowledgements
+keep one bounded input/output exchange outstanding. Cooperative checkpoints
+pause scanning, encoding and verification without discarding live state. Stop
+wakes paused work and drains or cancels the owned worker resources. A short
+install/restore transaction completes before pausing, so an original is not
+left absent merely because the user pressed Pause.
 
-Before publishing an output, the worker saves an acknowledged receipt containing
-the exact output path, length, entry count and SHA-256. An output whose completion
-acknowledgement was lost can be checked with **Verify saved output**. Only an
-exact size/hash match is accepted. A mismatch remains visible and is not
-overwritten or automatically adopted. A cancellation arriving after successful
-publication cannot turn that publication into a reported rollback.
+After an application restart, **History and recovery** reviews saved creation
+recipes against their original storage, source witnesses and destination. A
+recorded source-manifest digest also protects against changed content with a
+restored size and modification time. Restart builds and verifies a fresh
+candidate; it does not resume from an arbitrary compressed byte offset.
+Protected jobs require their password again. Passwords stay in memory and never
+enter the ordinary transfer journal. Failed or stopped workspace drafts can be
+reviewed and retried in the same app session; arbitrary in-memory drafts are not
+reconstructed after process exit.
 
-The queue retains at most 128 records in a bounded 4 MiB journal. Each creation
-request retains the existing format and source limits; background execution
-does not increase encrypted, nested or codec budgets. See
+Publication checkpoints retain output length, entry count, SHA-256 and relevant
+source/staging evidence. Recovery accepts an already existing output only after
+its complete length and content hash match the saved proof. A mismatch remains
+visible and is not overwritten or automatically adopted. A verified publication
+remains completed after a late Stop or observer failure, with any later warning
+reported separately.
+
+Jobs run while CrispCloud is open; this is not an operating-system service that
+survives application termination. Each request retains the existing format and
+source limits; background execution does not increase encrypted, nested or codec
+budgets. See
 [creation](archive-creation.md) for the 35 built-in choices and their limits.
 Installed external packers use the separate foreground workflow below.
 
@@ -72,16 +96,63 @@ Changing an archive while a password prompt is open requires a fresh operation.
 Native eligible readers can stream within their existing 8 GiB limits. The
 selected archives are processed one at a time. Buffered readers and browser
 snapshots keep their smaller limits; a streamable input does not make every
-compression method streamable. A batch accepts at most 128 selected inputs and
+compression method streamable. A testing batch accepts at most 5,000 selected inputs and
 retains at most 200,000 report members and 16 MiB of member-path text. This is
 integrity/readability checking, not archive repair or publisher authentication.
 
+## Preview and extract a batch
+
+On native platforms, select archives and choose **Extract selected archives**
+from Tools, the context menu or the command palette. The initial destination is
+captured from the other pane's verified local directory, the local source parent,
+or the local fallback directory. Review or change that path before **Preview**.
+Navigation cannot redirect a prepared operation.
+
+Choose a member mask, matching by filename or full member path, case sensitivity,
+and a folder layout. Masks support `*`, `?`, `;` alternatives and `|` exclusions,
+for example `*.jpg;*.png|thumb*`. The default is all entries, filename matching,
+case-insensitive, with original member paths preserved.
+
+| Layout | Destination behavior |
+| --- | --- |
+| One folder per archive | Removes the recognized compound suffix to name the archive's destination folder |
+| Shared folder | Places selected paths under the one reviewed destination; directory merges are allowed |
+| Smart folders | Retains one selected top-level file/folder directly; otherwise creates a folder named for the archive |
+
+**Flatten files** discards member directories and omits empty folders. In smart
+mode it always adds the archive folder. Duplicate flattened filenames, multiple
+archives claiming the same separate folder, file/directory conflicts, unsafe
+paths and collisions with existing files are refused. There is no implicit
+replace or keep-both policy in this first batch workflow.
+
+Preview captures private immutable archive snapshots and builds the complete
+combined output namespace. It then validates every destination without creating
+output files. The list includes the exact path of every selected member. All
+sources are captured before extraction begins; cancelled/declined passwords,
+no matching members and other skips remain visible.
+
+**Extract** rechecks the complete destination plan, then uses verified exclusive
+publication for each file. A late collision, access change or damaged member
+stops the batch. Already completed files remain in place and are listed in the
+copyable report; later work stays explicitly unprocessed. Cancellation does not
+claim that those completed files were rolled back. Source archives and volume
+parts are protected from output writes and are never deleted.
+
+A batch accepts at most 128 archives, 200,000 output paths and 16 MiB of path
+text. Retained input snapshots and selected expanded output each have an 8 GiB
+aggregate native budget; every underlying reader retains its smaller method,
+member, metadata and protection limits. Prepared snapshots are closed on
+completion, cancellation, failure or dialog closure. A prepared preview is not
+persisted across application restart. Browser destinations and destructive
+extract-and-delete remain outside this workflow.
+
 ## Installed packers and advanced 7z options
 
-From **Create archive…**, open **Installed packer…** on native desktop. Configure
-the absolute path of a locally installed 7-Zip or RAR executable and run its
-check. CrispCloud records the exact executable identity and verifies generated
-probe archives with its independent reader. An executable filename or a
+From **Create archive…**, open **Use installed packer…** on native desktop builds
+that permit local processes. Installed packers are unavailable in the Mac App
+Store build. Configure the absolute path of a locally installed 7-Zip or RAR
+executable and run its check. CrispCloud records the exact executable identity
+and verifies generated probe archives with its independent reader. An executable filename or a
 successful version command alone does not enable creation.
 
 | Installed engine | Enabled new outputs | Compression | Protection |
@@ -157,11 +228,21 @@ both that copy and the captured set.
 These are read-only format-aware 7z volume sets. RAR volumes, ZIP `.z01` sets,
 arbitrary `.001` files, split creation and split updating remain separate work.
 
+All bounded 7z fallbacks, including SFX and encrypted volume payloads, preflight
+their public and decoded headers before invoking the compatibility decoder.
+They cap source input at 256 MiB, each packed range and coder output at 64 MiB,
+LZMA/LZMA2 dictionaries at 64 MiB, inspected header metadata at 16 MiB and AES
+key-derivation power at 20. Oversized intermediate streams are refused even if
+the final member claims a small size. This conservative fallback is separate
+from the eligible native 8 GiB streaming decoder.
+
 ## Inspect self-extracting archives
 
 Supported unsigned Windows PE executables can expose an immediately appended
 ZIP, 7z or RAR payload. Use archive browsing from the pane, or choose **Archive**
-in F3. Ordinary `.exe` files retain their usual binary default. `.sfx` offers
+in F3. Ordinary `.exe` files retain their usual open action and binary viewer
+default; generic folder navigation does not assume every executable contains
+an archive. `.sfx` offers
 archive inspection directly. Inspecting the archive never runs the executable.
 
 The reader checks the PE header, section boundaries and archive extent. It
@@ -193,16 +274,25 @@ capabilities. See [format coverage](archive-format-coverage.md) and
 
 ## Verification
 
-Focused local runs cover queue persistence and publication acknowledgement,
-native worker lifetime, complete batch admission, password retries, external
-process failures, independently decoded output, supported SFX layouts and
-numbered volume snapshots. They use Flutter 3.47.8 / Dart 3.13.7, matching the
-repository pin. The final regression record is added here after the integrated
-source is frozen.
+Final verification of the merged continuation is pending. Its gate uses Flutter
+3.47.8 / Dart 3.13.7, matching the repository pin, and will run against a frozen
+source revision. Focused pre-merge runs checked batch planning and extraction,
+password retries, external process failures, independently decoded output,
+supported SFX layouts and numbered volume snapshots. Those runs do not replace
+the merged regression gate.
 
-The branch's **Commander archive workflows** CI runs archive/menu regression,
-scoped analysis, offline-help validation and a versioned release web build. It
-retains the exact source SHA, dependency hashes, test events and logs. Earlier
+The canonical shared queue already has separate historical qualification at
+`6eab6a33ffd374bfc9343a692b3df43c85758a1b`: 2,067 normal tests passed with 13
+opt-in skips, and three separately enabled workers each verified a logical
+payload above 2 GiB. The [queue guide](archive-operation-queue.md) links the exact
+receipt and distinguishes those highly compressible worker payloads from the
+earlier physical-container acceptance. These counts qualify that revision.
+
+The combined gate covers archive/menu/viewer and shared transfer-queue
+regressions, scoped analysis, offline-help validation, portable JavaScript codec
+execution and a versioned release web build. The workflow and retained receipt
+record the merged test manifest, exact source SHA, dependency hashes, test
+events and logs. Earlier
 normal and >2 GiB hosted evidence remains recorded against its own source
 revisions in [runtime verification](archive-containers-runtime-verification.md);
 it is not retroactive qualification of every new option.

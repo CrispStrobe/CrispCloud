@@ -3,6 +3,7 @@ import '../l10n/archive_creation_strings.dart';
 import 'archive_creation_dialog.dart';
 import 'archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
+import '../l10n/archive_batch_extraction_strings.dart';
 import '../l10n/file_conversion_strings.dart';
 import 'file_conversion_dialog.dart';
 import 'file_delete_dialog.dart';
@@ -1426,6 +1427,19 @@ void showFileContextMenu(
         }
       }),
     ));
+    if (!kIsWeb) {
+      items.add(PopupMenuItem(
+        child: ListTile(
+          leading: const Icon(Icons.drive_folder_upload_outlined),
+          title: Text(archiveBatchExtractionText(context, 'Extract selected archives')),
+        ),
+        onTap: () => Future<void>.delayed(Duration.zero, () async {
+          if (context.mounted) {
+            await showArchiveBatchExtractionForSelection(context, ref, side: side, files: files, sourceOrigin: origin);
+          }
+        }),
+      ));
+    }
   }
 
   if (!isMultiSelect && !file.isFolder && ArchiveService.isArchive(file.name)) {

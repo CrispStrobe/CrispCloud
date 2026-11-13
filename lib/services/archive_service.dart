@@ -168,6 +168,53 @@ class ArchiveService {
     }
   }
 
+  /// Extracts an already owned immutable snapshot without taking ownership.
+  /// Batch workflows may pass an identity-preserving view whose member names
+  /// are the exact reviewed destinations. Publication remains exclusive and
+  /// verifies every decoded member and its staged bytes before renaming.
+  ///
+  /// [validateOnly] performs the complete namespace and existing-path checks
+  /// without creating anything. [onFilePublished] runs only after a verified
+  /// file is committed, so a caller can retain an accurate partial report when
+  /// a later file fails. Source paths remain protected even if now absent.
+  static Future<List<String>> extractOpenedSnapshot(
+    ViewerArchive archive,
+    String targetDir, {
+    LocalFileService? local,
+    int maxTotalBytes = kArchiveStreamingLimit,
+    bool validateOnly = false,
+    Set<String> protectedSourcePaths = const {},
+    bool Function()? isCancelled,
+    void Function(int completed, int total)? onProgress,
+    void Function(String destination)? onFilePublished,
+    Future<void> Function()? checkSource,
+  }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Extract to disk is unavailable on Web.');
+    }
+    if (maxTotalBytes <= 0 || maxTotalBytes > kArchiveStreamingLimit) {
+      throw ArgumentError.value(maxTotalBytes, 'maxTotalBytes');
+    }
+    final root = p.normalize(p.absolute(targetDir));
+    final service = local ?? LocalFileService();
+    return service.withFileOperationAccess(
+      root,
+      () => _extractOpened(
+        archive,
+        root,
+        local: service,
+        maxTotalBytes: maxTotalBytes,
+        overwrite: false,
+        validateOnly: validateOnly,
+        protectedSourcePaths: protectedSourcePaths,
+        isCancelled: isCancelled,
+        onProgress: onProgress,
+        onFilePublished: onFilePublished,
+        checkSource: checkSource,
+      ),
+    );
+  }
+
   /// All selected destinations are checked before any directory is created.
   /// Each file is decoded into a private sibling, checked again from disk, and
   /// only then published. A cancelled operation returns completed files; its
@@ -183,6 +230,9 @@ class ArchiveService {
     void Function(int completed, int total)? onProgress,
     String? sourcePath,
     Future<void> Function()? checkSource,
+    bool validateOnly = false,
+    Set<String> protectedSourcePaths = const {},
+    void Function(String destination)? onFilePublished,
   }) async {
     void checkCancelled() {
       if (isCancelled?.call() ?? false) {
@@ -200,6 +250,7 @@ class ArchiveService {
       final selection = selectedPaths?.map(safeMemberPath).toSet();
       final selected = <({ViewerArchiveMember member, String destination})>[];
       final names = <String, bool>{};
+      final protected = protectedSourcePaths.map(backend.pathKey).toSet();
       var totalBytes = 0;
       for (final entry in archive.members) {
         checkCancelled();
@@ -220,7 +271,8 @@ class ArchiveService {
         final relative = safeMemberPath(entry.name);
         final destination = p.joinAll([root, ...relative.split('/')]);
         final key = backend.pathKey(destination);
-        if (sourcePath != null && key == backend.pathKey(sourcePath)) {
+        if (protected.contains(key) ||
+            sourcePath != null && key == backend.pathKey(sourcePath)) {
           throw const ArchiveViewException(
             'Extraction cannot replace its source archive.',
           );
@@ -265,6 +317,13 @@ class ArchiveService {
         );
       }
       await checkSource?.call();
+      checkCancelled();
+      if (validateOnly) {
+        return [
+          for (final target in selected)
+            if (target.member.isFile) target.destination,
+        ];
+      }
       var completed = 0;
       for (final target in selected) {
         checkCancelled();
@@ -294,6 +353,7 @@ class ArchiveService {
             checkSource: checkSource,
           );
           extracted.add(destination);
+          onFilePublished?.call(destination);
         }
         onProgress?.call(++completed, selected.length);
       }

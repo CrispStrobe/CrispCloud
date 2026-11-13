@@ -24,6 +24,16 @@ String archiveJobText(
 }
 
 const _messages = <String, List<String>>{
+  'Archive jobs share the operation queue and recovery history.': [
+    'Archivaufträge verwenden dieselbe Auftragswarteschlange und denselben Wiederherstellungsverlauf.',
+    'Les tâches d’archivage partagent la file d’opérations et l’historique de récupération.',
+    'Las tareas de archivo comparten la cola de operaciones y el historial de recuperación.',
+    'As tarefas de arquivo partilham a fila de operações e o histórico de recuperação.',
+    '归档任务与其他操作共用队列和恢复历史。',
+    'アーカイブジョブは操作キューと復旧履歴を共有します。',
+    '압축 작업은 작업 대기열과 복구 기록을 공유합니다.',
+    'تشارك مهام الأرشفة قائمة انتظار العمليات وسجل الاسترداد.',
+  ],
   'One archive per selected item': [
     'Ein Archiv pro ausgewähltem Element',
     'Une archive par élément sélectionné',
