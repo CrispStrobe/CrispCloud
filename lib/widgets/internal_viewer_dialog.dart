@@ -43,6 +43,7 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/commander_strings.dart';
 import '../l10n/binary_structure_strings.dart';
+import '../l10n/lrc_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -61,6 +62,8 @@ import '../services/viewer_spool.dart';
 import '../services/viewer_tail_service.dart';
 import '../services/viewer_search_service.dart';
 import '../services/internal_viewer_service.dart';
+import '../services/lrc_parser.dart';
+import '../services/lrc_source.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/office_document_service.dart';
@@ -77,6 +80,7 @@ import 'syntax_line_view.dart';
 import '../services/syntax_line_highlighting.dart';
 import 'hex_viewer.dart';
 import 'binary_structure_dialog.dart';
+import 'lrc_preview.dart';
 import 'internal_viewer_views.dart';
 import 'office_html_widget_factory.dart';
 import 'pptx_slide_viewer.dart';
@@ -331,6 +335,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? _encoding;
   String? _encodingOverride;
   String? _richText;
+  LrcDocument? _lrcDocument;
+  LrcSourceError? _lrcError;
   OfficeDocument? _officeDoc;
   EmailMessageDocument? _emailMessage;
   ViewBytesSource? _emailSearchSource;
@@ -434,6 +440,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   bool get _canChangeEncoding =>
       (_mode == ViewerMode.text ||
+      _mode == ViewerMode.lyrics ||
       _mode == ViewerMode.markdown ||
       _mode == ViewerMode.csv ||
       _mode == ViewerMode.office);
@@ -749,6 +756,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _cachedSafeMatchBinary = null;
       _cachedSafeMatchOffset = null;
       _officeDoc = null;
+      _lrcDocument = null;
+      _lrcError = null;
       _emailMessage = null;
       _officeView = _OfficeView.formatted;
       _officePdfLoading = false;
@@ -788,6 +797,36 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         case ViewerMode.html:
         case ViewerMode.xml:
           if (!_isStreamed) _ensureText();
+          return;
+        case ViewerMode.lyrics:
+          final source = _source;
+          if (source == null) return;
+          final loadToken = _loadToken;
+          bool current() =>
+              mounted &&
+              token == _prepareToken &&
+              loadToken == _loadToken &&
+              identical(_source, source);
+          setState(() => _preparing = true);
+          try {
+            final result = await readLrcSource(
+              source,
+              encodingOverride: _encodingOverride,
+              isCurrent: current,
+            );
+            if (!current()) return;
+            setState(() {
+              _lrcDocument = result.document;
+              _encoding = result.encoding;
+              _preparing = false;
+            });
+          } on LrcSourceException catch (error) {
+            if (!current()) return;
+            setState(() {
+              _lrcError = error.code;
+              _preparing = false;
+            });
+          }
           return;
         case ViewerMode.markdown:
         case ViewerMode.csv:
@@ -2180,6 +2219,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     String? text;
     if (_mode == ViewerMode.email) {
       text = _emailMessage?.searchText;
+    } else if (_mode == ViewerMode.lyrics) {
+      text = _lrcDocument?.source;
     } else if (_mode == ViewerMode.ascii || _mode == ViewerMode.binary) {
       final data = _fullData;
       if (data != null) {
@@ -2713,6 +2754,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       ViewerMode.xml,
       ViewerMode.pdf,
       ViewerMode.media,
+      ViewerMode.lyrics,
       ViewerMode.font,
       ViewerMode.csv,
       ViewerMode.office,
@@ -3083,6 +3125,24 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return _buildPdfBody(theme);
       case ViewerMode.media:
         return _buildMediaBody();
+      case ViewerMode.lyrics:
+        final lyrics = _lrcDocument;
+        if (lyrics == null) {
+          return LrcPreviewUnavailable(
+            message: LrcStrings(context).text(switch (_lrcError) {
+              LrcSourceError.readLimit => 'limit',
+              LrcSourceError.sourceChanged => 'sourceChanged',
+              _ => 'readFailed',
+            }),
+            onShowSource: () => _selectMode(ViewerMode.text),
+          );
+        }
+        return LrcPreview(
+          key: const ValueKey('lrc-preview'),
+          document: lyrics,
+          fontScale: _zoom,
+          onShowSource: () => _selectMode(ViewerMode.text),
+        );
       case ViewerMode.font:
         final data = _fullData;
         if (data == null) {
@@ -4042,6 +4102,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         return 'PDF';
       case ViewerMode.media:
         return InternalViewerStrings(context).text('media');
+      case ViewerMode.lyrics:
+        return LrcStrings(context).text('lyrics');
       case ViewerMode.font:
         return InternalViewerStrings(context).text('font');
       case ViewerMode.csv:

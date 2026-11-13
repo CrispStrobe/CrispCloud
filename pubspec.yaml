@@ -276,6 +276,7 @@ flutter:
     - assets/licenses/pdf_fonts/
     - assets/licenses/terminal/
     - packages/file_viewer_binary/LICENSE
+    - packages/file_viewer_lrc/LICENSE
     - docs/USER_GUIDE.md
     - docs/help/USER_GUIDE.de.md
     - docs/help/USER_GUIDE.fr.md

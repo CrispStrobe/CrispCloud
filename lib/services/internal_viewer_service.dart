@@ -49,6 +49,9 @@ enum ViewerMode {
   /// Audio or video file (rendered with a media player).
   media,
 
+  /// LRC lyrics with line and optional word timestamps.
+  lyrics,
+
   /// Font file (.ttf/.otf/.woff) — sample text at various sizes.
   font,
 
@@ -307,6 +310,7 @@ class InternalViewerService {
       '.vtt',
       '.sub',
     ],
+    ViewerMode.lyrics: ['.lrc'],
     ViewerMode.html: ['.html', '.htm', '.xhtml'],
     ViewerMode.xml: [
       '.xml',
@@ -455,7 +459,13 @@ class InternalViewerService {
 
     if (header != null && header.isNotEmpty) {
       final magic = _detectMagic(header);
-      if (magic != null) return magic;
+      if (magic != null) {
+        // A text BOM selects the decoder; it does not erase the LRC format.
+        if (magic == ViewerMode.text && _extensionOf(lower) == '.lrc') {
+          return ViewerMode.lyrics;
+        }
+        return magic;
+      }
     }
 
     final mode = archiveFormat != null
@@ -609,6 +619,7 @@ class InternalViewerService {
       case ViewerMode.markdown:
       case ViewerMode.html:
       case ViewerMode.xml:
+      case ViewerMode.lyrics:
         final result = _decodeText(data);
         encoding = result.encoding;
         lineCount = result.lineCount;
@@ -976,7 +987,7 @@ class InternalViewerService {
 
   /// Return the list of byte-offsets in [content] where [query] is found.
   ///
-  /// For text/markdown modes: search is performed on the decoded string
+  /// For text/markdown/lyrics modes: search is performed on the decoded string
   /// (case-insensitive); returned offsets are *character* indices in the
   /// decoded text.
   ///
@@ -986,7 +997,8 @@ class InternalViewerService {
     if (query.isEmpty) return const [];
 
     if (content.mode == ViewerMode.text ||
-        content.mode == ViewerMode.markdown) {
+        content.mode == ViewerMode.markdown ||
+        content.mode == ViewerMode.lyrics) {
       return _searchText(content.data, query);
     }
 

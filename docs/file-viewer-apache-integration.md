@@ -11,7 +11,9 @@ Port a small, dependency-free Apache-2.0 binary-header parser into CrispCloud's
 existing Dart viewer. Keep the exact selected upstream source, original license,
 and a checksum allowlist in [packages/file_viewer_binary](../packages/file_viewer_binary/).
 The first implementation adds structured information to the existing hex
-preview, with bounded reads and navigation to the corresponding bytes.
+preview, with bounded reads and navigation to the corresponding bytes. A second
+isolated extraction now supplies a native static LRC lyrics preview; its exact
+source and license are kept in [packages/file_viewer_lrc](../packages/file_viewer_lrc/).
 
 The restriction applies to **code and assets introduced from File Viewer**, not a
 new assertion that every pre-existing CrispCloud dependency is Apache licensed.
@@ -54,7 +56,7 @@ editing and staged save behavior.
 | 2 — focused follow-up | Bounded structural prechecks and format diagnostics | Could improve messages for truncated or mismatched containers. Adapt small Apache routines only after checking their imports and defining which existing viewer owns the decision. Do not import the entire upstream format registry as a claim of supported formats. |
 | 2 — focused follow-up | SVG resource restrictions | Standalone Apache helper `packages/core/src/security/svgResources.ts` is a useful reference for stripping executable attributes and external resource URLs. Evaluate against current SVG handling; it is not by itself a complete sanitizer. |
 | 3 — only for a measured gap | Text encoding detection/selection | `packages/core/src/source/textEncoding.ts` has no runtime imports, but CrispCloud already has incremental UTF and legacy decoding. Its offset mapping and streaming behavior should be retained. Upstream's GB18030 fallback is a product decision, not a default to copy blindly. |
-| 3 — optional media enhancement | LRC timed-lyrics model | The standalone Apache `packages/renderers/text/src/lrcParser.ts` parses metadata, line/word timing, offsets and repeated timestamps with input/expansion bounds. It could support an LRC preview or media-linked lyrics after a focused port review; importing the whole text renderer would add unrelated dependencies. |
+| Implemented follow-up | LRC timed-lyrics model | The standalone Apache `packages/renderers/text/src/lrcParser.ts` now powers a native static lyrics preview with metadata, line/word timing, offsets and repeated timestamps. The Dart port adds no dependencies and bounds input/expansion. Media synchronization and the complete text renderer are outside this slice. See [LRC implementation and verification](file-viewer-lrc-integration.md). |
 | 3 — selective source study | Viewer lifecycle, lazy dispatch, resource cleanup, range reads and search | Reusable Apache patterns exist in `packages/core`, but much overlaps with existing viewer/source services. Port specific missing behavior, not the browser component architecture. |
 | 4 — separate discovery | GDSII layout parser, then other EDA helpers | `packages/renderers/eda-layout/src/index.ts` is a concrete standalone candidate with no imports and an Apache package license. It parses GDSII geometry; real binary OASIS support is limited to inspection/indexing, not complete geometry rendering. GDSII product value, Dart adaptation, and complete per-file provenance still require a focused review. OrCAD helpers are a separate candidate. |
 | Defer | Entire Office, email, archive, ebook, PDF, media or image renderer | CrispCloud already exposes these routes. Full imports introduce overlapping UI and mixed-license dependency/asset graphs; selectively port a proven missing Apache routine instead. |
@@ -121,8 +123,26 @@ Apache license is supplied as an explicit app asset to `LicenseRegistry`.
 The parser, source adapter, localized dialog and Hex selection are implemented
 on the integration branch. The [validation record](file-viewer-apache-validation.md)
 records 211 passing focused application tests, the separate JavaScript check,
-the provenance checks, and the remaining CI status. The broader candidates above
-remain separate follow-up work.
+the provenance checks, and the initial CI status. The [LRC follow-up](file-viewer-lrc-integration.md)
+records the next implementation and the repair of the inherited hex-fork
+provenance mismatch. The other candidates remain separate follow-up work.
+
+## LRC subset
+
+The second extraction consists only of the text package's Apache LICENSE and
+[`src/lrcParser.ts`](https://github.com/flyfish-dev/file-viewer/blob/d264009ca6efb3daed79a39d1ae63133e0f25558/packages/renderers/text/src/lrcParser.ts).
+The parser has no imports, separate per-file exception, or applicable ancestor
+NOTICE at the pinned commit. The rest of the text renderer and its dependency
+tree remain excluded. The [exact manifest](../packages/file_viewer_lrc/UPSTREAM.json)
+and a separate independently pinned guard preserve this boundary.
+
+The Dart adaptation in [lrc_parser.dart](../lib/services/lrc_parser.dart) has no
+imports. The host reads at most a complete 4 MiB lyrics file from its existing
+source, retains its decoder and encoding selection, and shows the original
+source view when parser limits are exceeded. The static UI adds no player,
+sidecar lookup, web view, font, sample lyrics or external resource loading. Its
+controls follow the existing nine-language localization approach, and its
+Apache license is included in the application's license registry.
 
 ## License boundaries
 

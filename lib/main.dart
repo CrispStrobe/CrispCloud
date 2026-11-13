@@ -53,6 +53,7 @@ import 'services/proxy_service.dart';
 import 'services/pdf_font_licenses.dart';
 import 'services/terminal_licenses.dart';
 import 'services/file_viewer_binary_license.dart';
+import 'services/file_viewer_lrc_license.dart';
 import 'services/ebook_licenses.dart';
 import 'services/secure_storage_service.dart';
 import 'services/secure_storage_web.dart';
@@ -229,6 +230,7 @@ Future<void> main() async {
       registerPdfFontLicenses();
       registerTerminalLicenses();
       registerFileViewerBinaryLicense();
+      registerFileViewerLrcLicense();
       registerEbookLicenses();
       registerMediaVideoLicenses();
       LicenseRegistry.addLicense(

@@ -1,5 +1,9 @@
 # File Viewer Apache subset: implementation validation
 
+The [LRC continuation record](file-viewer-lrc-validation.md) adds the second
+Apache subset and records the subsequent repair of the inherited hex-fork
+fingerprint mismatch. The results below describe the initial binary checkpoint.
+
 Date: 2026-11-13. Branch: `feature/apache-file-viewer-20261113`.
 Review: [PR #95](https://github.com/CrispStrobe/CrispCloud/pull/95).
 

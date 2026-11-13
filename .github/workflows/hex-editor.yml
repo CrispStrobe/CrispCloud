@@ -8,21 +8,50 @@ on:
     paths:
       - 'packages/madedit2_hex/**'
       - 'packages/re_editor/**'
+      - 'packages/file_viewer_binary/**'
+      - 'packages/file_viewer_lrc/**'
       - 'tool/verify_hex_vendor.py'
+      - 'tool/file_viewer_provenance.py'
+      - 'tool/verify_file_viewer_*.py'
+      - 'tool/test_verify_file_viewer_*.py'
+      - 'tool/binary_structure_portability_smoke.dart'
+      - 'tool/lrc_portability_smoke.dart'
+      - 'docs/file-viewer-*.md'
+      - 'lib/main.dart'
       - 'lib/services/editor_document*'
       - 'lib/services/captured_file_target.dart'
       - 'lib/services/pdf_file_store.dart'
       - 'lib/services/hex_*'
+      - 'lib/services/binary_structure_*'
+      - 'lib/services/lrc_*'
+      - 'lib/services/file_viewer_*_license.dart'
+      - 'lib/services/file_bytes_loader.dart'
+      - 'lib/services/internal_viewer_service.dart'
       - 'lib/services/file_operation*'
       - 'lib/services/transfer_spool*'
       - 'lib/providers/panel_provider.dart'
       - 'lib/providers/panel_source_provider.dart'
+      - 'lib/utils/file_editability.dart'
       - 'lib/widgets/*editor*'
+      - 'lib/widgets/binary_structure_dialog.dart'
+      - 'lib/widgets/lrc_preview.dart'
+      - 'lib/widgets/internal_viewer*'
+      - 'lib/widgets/hex_viewer.dart'
       - 'lib/l10n/code_document_ui_strings.dart'
+      - 'lib/l10n/binary_structure_strings.dart'
+      - 'lib/l10n/lrc_strings.dart'
+      - 'lib/l10n/internal_viewer_strings.dart'
       - 'test/*editor*'
       - 'test/hex_*'
+      - 'test/binary_structure_*'
+      - 'test/lrc_*'
+      - 'test/file_viewer_*_license_test.dart'
+      - 'test/internal_viewer_test.dart'
       - 'test/code_document_ui_localization_test.dart'
       - 'test/widget/*editor*'
+      - 'test/widget/binary_structure_viewer_test.dart'
+      - 'test/widget/lrc_viewer_test.dart'
+      - 'test/widget/internal_viewer_widget_test.dart'
       - 'pubspec.*'
       - '.github/workflows/hex-editor.yml'
   workflow_dispatch:
@@ -51,6 +80,11 @@ jobs:
 
       - name: Verify maintained fork source fingerprints
         run: python3 tool/verify_hex_vendor.py
+      - name: Verify selected Apache File Viewer source boundaries
+        run: |
+          python3 tool/verify_file_viewer_binary.py
+          python3 tool/verify_file_viewer_lrc.py
+          python3 -m unittest discover -s tool -p 'test_verify_file_viewer*.py'
       - name: Preserve the exact source checkpoint
         run: |
           mkdir -p build/hex-review
@@ -76,6 +110,29 @@ jobs:
           flutter test --reporter expanded
       - name: Resolve application dependencies
         run: flutter pub get
+      - name: File Viewer parser VM and JavaScript portability
+        run: |
+          dart run tool/binary_structure_portability_smoke.dart
+          dart run tool/lrc_portability_smoke.dart
+          dart compile js tool/binary_structure_portability_smoke.dart -O2 -o "$RUNNER_TEMP/binary-structure-smoke.js"
+          node "$RUNNER_TEMP/binary-structure-smoke.js"
+          dart compile js tool/lrc_portability_smoke.dart -O2 -o "$RUNNER_TEMP/lrc-smoke.js"
+          node "$RUNNER_TEMP/lrc-smoke.js"
+      - name: Native binary and LRC viewer regression tests
+        run: >-
+          flutter test --no-pub --reporter expanded --concurrency=2
+          test/binary_structure_service_test.dart
+          test/binary_structure_source_test.dart
+          test/file_viewer_binary_license_test.dart
+          test/widget/binary_structure_viewer_test.dart
+          test/lrc_parser_test.dart
+          test/lrc_source_test.dart
+          test/file_viewer_lrc_license_test.dart
+          test/lrc_viewer_routing_test.dart
+          test/widget/lrc_viewer_test.dart
+          test/internal_viewer_test.dart
+          test/hex_viewer_test.dart
+          test/widget/internal_viewer_widget_test.dart
       - name: Text document and native hex save regression tests
         run: >-
           flutter test --reporter expanded --concurrency=2
@@ -125,6 +182,21 @@ jobs:
         run: flutter test --reporter expanded
       - name: Resolve application dependencies
         run: flutter pub get
+      - name: Native binary and LRC viewer regression tests
+        run: >-
+          flutter test --no-pub --reporter expanded --concurrency=2
+          test/binary_structure_service_test.dart
+          test/binary_structure_source_test.dart
+          test/file_viewer_binary_license_test.dart
+          test/widget/binary_structure_viewer_test.dart
+          test/lrc_parser_test.dart
+          test/lrc_source_test.dart
+          test/file_viewer_lrc_license_test.dart
+          test/lrc_viewer_routing_test.dart
+          test/widget/lrc_viewer_test.dart
+          test/internal_viewer_test.dart
+          test/hex_viewer_test.dart
+          test/widget/internal_viewer_widget_test.dart
       - name: Test native snapshot storage, encoding and line endings
         run: >-
           flutter test --reporter expanded --concurrency=2
