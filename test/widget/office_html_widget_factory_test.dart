@@ -9,6 +9,50 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import '../support/office_svg_paint.dart';
 
 void main() {
+  testWidgets(
+    'Office CSS escapes resolve to named fonts without changing other styles',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: HtmlWidget(
+              r'''<p><span style="font-family:'\41 \72 \69 \61 \6c ';font-size:17pt;font-weight:bold;font-style:italic;color:#123456">ARIAL_PROBE</span></p>'''
+              r'''<p><span style="font-family:'\43 \61 \6c \69 \62 \72 \69 '">CALIBRI_PROBE</span></p>'''
+              r'''<p><span style="font-family:'X\27 \3b color\3a red';color:#123456">LITERAL_PROBE</span></p>''',
+              factoryBuilder: OfficeHtmlWidgetFactory.new,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final styles = <String, TextStyle>{};
+      void walk(InlineSpan span, TextStyle inherited) {
+        if (span is! TextSpan) return;
+        final effective = inherited.merge(span.style);
+        if (span.text?.endsWith('_PROBE') == true)
+          styles[span.text!] = effective;
+        for (final child in span.children ?? <InlineSpan>[]) {
+          walk(child, effective);
+        }
+      }
+
+      for (final rich in tester.widgetList<RichText>(find.byType(RichText))) {
+        walk(rich.text, const TextStyle());
+      }
+      final arial = styles['ARIAL_PROBE']!;
+      expect(arial.fontFamily, 'Liberation Sans');
+      expect(arial.fontWeight, FontWeight.bold);
+      expect(arial.fontStyle, FontStyle.italic);
+      expect(arial.fontSize, closeTo(22.6667, .01));
+      expect(arial.color, const Color(0xff123456));
+      expect(arial.fontFamilyFallback, contains('Noto Naskh Arabic'));
+      expect(styles['CALIBRI_PROBE']!.fontFamily, 'Carlito');
+      expect(styles['LITERAL_PROBE']!.fontFamily, "X';color:red");
+      expect(styles['LITERAL_PROBE']!.color, const Color(0xff123456));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('Office SVG data images paint with dimensions and semantics', (
     tester,
   ) async {
