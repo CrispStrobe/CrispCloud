@@ -4,6 +4,8 @@ import '../services/file_operation_service.dart';
 import 'file_item.dart';
 import 'transfer_job.dart';
 
+export 'archive_job_intent.dart';
+
 bool isArchiveTransferJob(TransferJobRecord job) =>
     job.id.startsWith('archive_create_') ||
     job.id.startsWith('archive_workspace_') ||
