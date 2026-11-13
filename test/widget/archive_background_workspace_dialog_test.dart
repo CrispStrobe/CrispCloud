@@ -104,12 +104,24 @@ void main() {
   }
 
   Future<void> until(WidgetTester tester, bool Function() condition) async {
-    for (var i = 0; i < 100; i++) {
-      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    // Workspace opening performs real native file I/O. Fake clock advances
+    // alone do not allow a cold reader to finish on a shared hosted runner.
+    for (var i = 0; i < 1000 && !condition(); i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
       await tester.pump(const Duration(milliseconds: 20));
-      if (condition()) return;
     }
-    fail('The archive view did not reach the expected state.');
+    expect(
+      condition(),
+      isTrue,
+      reason: [
+        ...tester.widgetList<Text>(find.byType(Text)).map((text) => text.data),
+        ...tester
+            .widgetList<SelectableText>(find.byType(SelectableText))
+            .map((text) => text.data),
+      ].join('\n'),
+    );
   }
 
   Future<void> show(WidgetTester tester) async {

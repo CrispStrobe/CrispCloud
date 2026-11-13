@@ -377,6 +377,10 @@ void main() {
       final future = workspace
           .review(control: control, background: true)
           .whenComplete(() => finished = true);
+      expect(
+        () => workspace.moveMembers(['/renamed.txt'], '/'),
+        throwsStateError,
+      );
       await Future<void>.delayed(_settle);
       expect(finished, isFalse);
       expect(backend.mutations, isEmpty);
@@ -384,7 +388,8 @@ void main() {
       final review = await future;
       expect(review.changes.single.path, changes.single.path);
       final warning = StateError('The saved workspace observer failed.');
-      final receipt = await workspace.save(
+      control.pause();
+      final saving = workspace.save(
         reviewed: review,
         control: control,
         background: true,
@@ -392,6 +397,14 @@ void main() {
           if (phase == ArchivePublicationPhase.published) throw warning;
         },
       );
+      expect(
+        () => workspace.moveMembers(['/renamed.txt'], '/'),
+        throwsStateError,
+      );
+      await Future<void>.delayed(_settle);
+      expect(backend.mutations, isEmpty);
+      control.resume();
+      final receipt = await saving;
       expect(workspace.lastPublicationWarning, same(warning));
       expect(receipt, isNotNull);
       expect(workspace.dirty, isFalse);

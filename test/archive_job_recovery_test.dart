@@ -94,6 +94,7 @@ void main() {
         options: const ArchiveCreationOptions(
           name: 'private.7z',
           format: ArchiveCreationFormat.sevenZip,
+          compression: ArchiveCreationCompression.lzma2,
           password: 'do-not-persist-this-password',
           encryptNames: true,
         ),

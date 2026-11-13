@@ -120,13 +120,19 @@ is observational rather than an exact peak-memory guarantee. The earlier
 [archive container runtime acceptance](archive-containers-runtime-verification.md)
 retains separate physical-container and complete publication evidence.
 
-Hosted acceptance is in progress for source
-`c7523ab53447b19d461b7c759b90191c1b59ede8` in
-[run 43383115342](https://github.com/CrispStrobe/CrispCloud/actions/runs/43383115342).
-The workflow combines archive and transfer regressions, the new queue/recovery
-and widget suites, and three explicit worker gates above 2 GiB. Its artifacts
-record exact commands, dependency hashes, completed test events and receipts;
-large cases must finish without being skipped. No local Flutter run is claimed.
+The first hosted run, [43383115342](https://github.com/CrispStrobe/CrispCloud/actions/runs/43383115342),
+tested source `c7523ab53447b19d461b7c759b90191c1b59ede8`. All three explicit
+worker gates above 2 GiB passed without skips. The combined suite recorded
+2,012 passed, 54 failed and 13 opt-in skips. Those failures identified two 7z
+fixture settings, workspace locking/cancellation/cleanup compatibility, and
+widget completion/animation/real-I/O handling. The fixes retain the original
+workspace guard assertions and old creation-dialog completion expectations.
+
+Full runtime acceptance is pending the corrected source's hosted rerun. The
+workflow combines archive and transfer regressions with the new queue/recovery
+and widget suites. Its artifacts record exact commands, dependency hashes,
+completed test events and receipts; large cases must finish without being
+skipped. No local Flutter run is claimed.
 
 ## Commander comparison
 

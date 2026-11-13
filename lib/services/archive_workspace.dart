@@ -1755,8 +1755,9 @@ class ArchiveWorkspace {
   }) async {
     void check() {
       _check(writing: true);
-      if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
-        throw const FileOperationCancelled();
+      if (control?.isCancelled ?? false) throw const FileOperationCancelled();
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Archive update cancelled.');
       }
     }
 
@@ -1766,24 +1767,26 @@ class ArchiveWorkspace {
       check();
     }
 
-    await checkpoint();
-    _check(writing: true);
+    check();
     if (_saving) {
       throw StateError('The archive is already preparing a publication.');
     }
-    if (_pendingPublication != null && _pendingReview != null) {
-      return _pendingReview!;
-    }
-    if (_latestReview?.isCurrent == true) return _latestReview!;
-    final generations = <ArchiveWorkspace, int>{};
-    ArchiveWorkspace? level = this;
-    while (level != null) {
-      generations[level] = level._revision;
-      level = level._parentWorkspace;
-    }
+    // Reserve the draft before the first await, including a paused checkpoint.
+    // Synchronous edits and nested moves must not overtake an admitted review.
     _saving = true;
     ArchiveOutputSpool? spool;
     try {
+      await checkpoint();
+      if (_pendingPublication != null && _pendingReview != null) {
+        return _pendingReview!;
+      }
+      if (_latestReview?.isCurrent == true) return _latestReview!;
+      final generations = <ArchiveWorkspace, int>{};
+      ArchiveWorkspace? level = this;
+      while (level != null) {
+        generations[level] = level._revision;
+        level = level._parentWorkspace;
+      }
       Uint8List? bytes;
       if (_streaming) {
         spool = await ArchiveOutputSpool.create(maxBytes: maxContainerBytes);
@@ -2042,9 +2045,10 @@ class ArchiveWorkspace {
     Object? directorySyncAuthority,
   }) async {
     _check(writing: true);
-    await control?.checkpoint();
-    _check(writing: true);
-    if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    if (control?.isCancelled ?? false) throw const FileOperationCancelled();
+    if (isCancelled?.call() ?? false) {
+      throw StateError('Archive update cancelled.');
+    }
     if (_sourceRemovalAuthority != null &&
         (!identical(sourceRemovalAuthority, _sourceRemovalAuthority) ||
             dependency == null && _pendingPublication?.dependency == null)) {
@@ -2066,6 +2070,8 @@ class ArchiveWorkspace {
     }
     if (_saving) throw StateError('An archive publication is already running.');
     if (!_dirty) {
+      await control?.checkpoint();
+      _check(writing: true);
       final receipt = await _parentWorkspace?.save(
         isCancelled: isCancelled,
         control: control,
@@ -2095,6 +2101,13 @@ class ArchiveWorkspace {
     ViewerArchive? replacement;
     ArchivePublicationReceipt? authoritativeReceipt;
     try {
+      // A supplied review needs the same synchronous reservation as a newly
+      // packed review; pausing Save must not reopen its draft to mutation.
+      await control?.checkpoint();
+      _check(writing: true);
+      if (isCancelled?.call() ?? false) {
+        throw StateError('Archive update cancelled.');
+      }
       final checked = await _verifyPacked(
         selected._bytes,
         spool: selected.spool,

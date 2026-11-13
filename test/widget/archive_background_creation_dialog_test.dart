@@ -339,6 +339,9 @@ void main() {
       );
       expect(find.byKey(const ValueKey('archive-create-error')), findsNothing);
       expect(find.byKey(const ValueKey('archive-create-submit')), findsNothing);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(find.byKey(const ValueKey('archive-create-stop')), findsNothing);
+      expect(find.widgetWithText(TextButton, 'Close'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

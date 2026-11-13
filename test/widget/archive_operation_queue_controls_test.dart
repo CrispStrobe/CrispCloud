@@ -120,7 +120,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    // Running archive jobs intentionally keep unknown-size progress animated.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   }
 
   Future<void> tap(WidgetTester tester, String key) async {
@@ -138,9 +140,11 @@ void main() {
       );
     }
     await tester.ensureVisible(finder);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(finder);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   }
 
   testWidgets(

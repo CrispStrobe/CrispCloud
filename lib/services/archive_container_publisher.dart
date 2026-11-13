@@ -117,6 +117,13 @@ class ArchiveContainerPublisher {
     } catch (error) {
       if (!_publicationCommitted) rethrow;
       _observerWarning ??= error;
+      if (phase == ArchivePublicationPhase.cleaningBackup ||
+          phase == ArchivePublicationPhase.cleaningCandidate) {
+        // The installation stays successful, but a failed cleanup notification
+        // must retain its recovery object. The surrounding cleanup handler
+        // returns the durable receipt with cleanupPending instead of deleting.
+        rethrow;
+      }
     }
   }
 

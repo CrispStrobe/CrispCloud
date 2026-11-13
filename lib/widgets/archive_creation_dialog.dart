@@ -229,6 +229,11 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
     );
     try {
       options.validate();
+    } catch (error) {
+      setState(() => _error = error);
+      return;
+    }
+    try {
       _job?.removeListener(_jobChanged);
       _job = null;
       setState(() {
@@ -288,7 +293,10 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
         });
       }
     } finally {
-      await _localControlChanges?.cancel();
+      // Removing this in-memory listener is synchronous. A completed archive
+      // must leave its busy state without waiting for an observer-cleanup
+      // future (which may have been created in a different event-loop zone).
+      unawaited(_localControlChanges?.cancel());
       _localControlChanges = null;
       _localControl = null;
       if (mounted) {

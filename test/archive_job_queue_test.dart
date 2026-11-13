@@ -156,6 +156,7 @@ void main() {
           options: ArchiveCreationOptions(
             name: 'result${format.extension}',
             format: format,
+            compression: format.defaultCompression,
           ),
         );
         await handle.completion;
