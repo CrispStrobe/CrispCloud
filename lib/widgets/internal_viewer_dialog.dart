@@ -36,6 +36,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:file_viewer_documents/file_viewer_documents.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:universal_html/html.dart' as html;
@@ -68,8 +69,13 @@ import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/office_document_service.dart';
 import '../services/email_message_service.dart';
+import '../services/mbox_message_service.dart';
+import '../services/document_preview_source.dart';
 import '../l10n/email_viewer_strings.dart';
+import '../l10n/mbox_viewer_strings.dart';
+import '../l10n/document_viewer_strings.dart';
 import 'email_message_view.dart';
+import 'mbox_message_view.dart';
 import '../services/office_pdf_service.dart';
 import '../services/pdf_text_service.dart';
 import '../services/system_preview_service.dart';
@@ -339,6 +345,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   LrcSourceError? _lrcError;
   OfficeDocument? _officeDoc;
   EmailMessageDocument? _emailMessage;
+  MboxDocument? _mailbox;
+  int _mailboxIndex = 0;
+  MboxMessageError? _mailboxMessageError;
+  Uint8List? _documentPreviewBytes;
+  bool _documentTextFallback = false;
+  String? _nativePptError;
+  String? _xmlToolsError;
+  bool _xmlToolsLoading = false;
   ViewBytesSource? _emailSearchSource;
   Future<bool>? _emailSearchPreparation;
   bool _emailSearchLimited = false;
@@ -355,6 +369,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   bool _pdfShowText = false;
   bool _htmlRendered = true;
   bool _xmlTree = true;
+  bool _xmlTools = false;
   bool _pdfTextLoading = false;
   String? _pdfText;
   String? _pdfTextError;
@@ -437,6 +452,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       (isEditableInBuiltInEditor(_viewName) || !isTextEditableName(_viewName));
 
   int get _dataSize => _source?.size ?? widget.file.size ?? 0;
+
+  bool get _isMailbox =>
+      (_expansionName ?? _viewName).toLowerCase().endsWith('.mbox');
+
+  DocumentPreviewKind? get _browserDocumentKind =>
+      documentPreviewKind(_expansionName ?? _viewName);
 
   bool get _canChangeEncoding =>
       (_mode == ViewerMode.text ||
@@ -714,6 +735,19 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   static bool _isSingleCompressed(String name) => isSingleCompressedFile(name);
 
   String _describeError(Object error) {
+    if (error is MboxPreviewException) {
+      return MboxViewerStrings(context).previewError(error.code);
+    }
+    if (error is DocumentSourceException) {
+      if (_isMailbox) {
+        return MboxViewerStrings(context).text(
+          error.code == DocumentSourceError.readLimit
+              ? 'inputLimit'
+              : error.code.name,
+        );
+      }
+      return DocumentViewerStrings(context).text(error.code.name);
+    }
     if (error is FileBytesTooLargeException) {
       return '${error.message}\n\n'
           'This mode needs a complete byte array. Hex, ASCII, Binary and text '
@@ -759,12 +793,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _lrcDocument = null;
       _lrcError = null;
       _emailMessage = null;
+      _mailbox = null;
+      _mailboxIndex = 0;
+      _mailboxMessageError = null;
+      _documentPreviewBytes = null;
+      _documentTextFallback = false;
+      _nativePptError = null;
+      _xmlToolsError = null;
+      _xmlToolsLoading = false;
       _officeView = _OfficeView.formatted;
       _officePdfLoading = false;
       _officePdfError = null;
       _pdfShowText = false;
       _htmlRendered = true;
       _xmlTree = true;
+      _xmlTools = false;
       _pdfTextLoading = false;
       _pdfText = null;
       _pdfTextError = null;
@@ -853,6 +896,17 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.email:
           setState(() => _preparing = true);
+          if (_isMailbox) {
+            final data = await _readDocumentBytes(kMboxPreviewMaxBytes, token);
+            if (!mounted || token != _prepareToken || data == null) return;
+            final mailbox = parseMboxDocument(data);
+            setState(() {
+              _mailbox = mailbox;
+              _preparing = false;
+            });
+            if (mailbox.messages.isNotEmpty) _selectMailboxMessage(0);
+            return;
+          }
           if (_dataSize > kEmailPreviewMaxBytes) {
             throw const FormatException(
               'Email exceeds the 32 MiB preview limit',
@@ -871,9 +925,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           return;
         case ViewerMode.office:
           setState(() => _preparing = true);
+          final kind = _browserDocumentKind;
+          if (kind != null && kind != DocumentPreviewKind.xml) {
+            final data = await _readDocumentBytes(
+              documentPreviewByteLimit(kind),
+              token,
+            );
+            if (!mounted || token != _prepareToken || data == null) return;
+            setState(() {
+              _documentPreviewBytes = data;
+              _preparing = false;
+            });
+            return;
+          }
           final data = await _ensureFullData();
           if (!mounted || token != _prepareToken) return;
-          final document = await parseOfficeDocument(data, _viewName);
+          final document = await parseOfficeDocument(
+            data,
+            _expansionName ?? _viewName,
+          );
           if (!mounted || token != _prepareToken) return;
           _officeDoc = document;
           _richText = document.plainText;
@@ -977,6 +1047,127 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     }
   }
 
+  Future<Uint8List?> _readDocumentBytes(int maxBytes, int token) async {
+    final source = _source;
+    if (source == null) return null;
+    final loadToken = _loadToken;
+    return readDocumentPreviewSource(
+      source,
+      maxBytes: maxBytes,
+      isCurrent: () =>
+          mounted &&
+          token == _prepareToken &&
+          loadToken == _loadToken &&
+          identical(source, _source),
+    );
+  }
+
+  void _selectMailboxMessage(int index) {
+    final mailbox = _mailbox;
+    if (mailbox == null || index < 0 || index >= mailbox.messages.length)
+      return;
+    _searchDebounce?.cancel();
+    _resetSearchResults();
+    _emailSearchSource?.dispose();
+    _emailSearchSource = null;
+    _emailSearchPreparation = null;
+    _emailSearchLimited = false;
+    _emailSearchLimitShown = false;
+    _emailLines = null;
+    _emailLineStarts = null;
+    EmailMessageDocument? message;
+    MboxMessageError? error;
+    try {
+      message = mailbox.parseMessage(index);
+    } on MboxMessageException catch (failure) {
+      error = failure.code;
+    }
+    setState(() {
+      _mailboxIndex = index;
+      _emailMessage = message;
+      _mailboxMessageError = error;
+    });
+    if (_searchOpen && _searchController.text.isNotEmpty) {
+      unawaited(_runSearch(_searchController.text));
+    }
+  }
+
+  void _openEmailAttachment(EmailAttachment attachment) {
+    final bytes = attachment.bytes;
+    if (bytes == null) return;
+    unawaited(
+      showInternalViewer(
+        context,
+        file: widget.file,
+        side: widget.side,
+        bytesOverride: bytes,
+        displayName: attachment.name,
+      ),
+    );
+  }
+
+  Future<void> _loadXmlTools() async {
+    if (_documentPreviewBytes != null || _xmlToolsLoading) return;
+    final token = _prepareToken;
+    setState(() {
+      _xmlToolsLoading = true;
+      _xmlToolsError = null;
+    });
+    try {
+      final bytes = await _readDocumentBytes(
+        documentPreviewByteLimit(DocumentPreviewKind.xml),
+        token,
+      );
+      if (!mounted || token != _prepareToken) return;
+      setState(() => _documentPreviewBytes = bytes);
+    } catch (error) {
+      if (!mounted || token != _prepareToken) return;
+      setState(() => _xmlToolsError = _describeError(error));
+    } finally {
+      if (mounted && token == _prepareToken) {
+        setState(() => _xmlToolsLoading = false);
+      }
+    }
+  }
+
+  Future<void> _loadNativePpt() async {
+    final bytes = _documentPreviewBytes;
+    if (bytes == null || _officeDoc != null) return;
+    final token = _prepareToken;
+    try {
+      final document = await parseOfficeDocument(
+        bytes,
+        _expansionName ?? _viewName,
+      );
+      if (!mounted || token != _prepareToken) return;
+      setState(() {
+        _officeDoc = document;
+        _officeView = _OfficeView.text;
+        _nativePptError = null;
+      });
+    } catch (error) {
+      if (!mounted || token != _prepareToken) return;
+      setState(() => _nativePptError = _describeError(error));
+    }
+  }
+
+  Widget _documentPreview(
+    Uint8List bytes,
+    DocumentPreviewKind kind,
+    ThemeData theme,
+  ) {
+    return DocumentPreview(
+      key: ValueKey((_loadToken, _prepareToken, kind)),
+      bytes: bytes,
+      filename: _expansionName ?? _viewName,
+      kind: kind,
+      locale: Localizations.localeOf(context).toLanguageTag(),
+      dark: theme.brightness == Brightness.dark,
+      fontScale: _zoom,
+      onShowSource: () => _selectMode(ViewerMode.text),
+    );
+  }
+
   void _disposeModeResources({ViewerSpool? spool}) {
     // Revoke borrowed readers immediately, before disposing the viewer source.
     // This also cancels readers still opening or waiting for a password.
@@ -986,6 +1177,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _archiveSources.clear();
     _archiveSource = null;
     _emailMessage = null;
+    _mailbox = null;
+    _mailboxMessageError = null;
+    _documentPreviewBytes = null;
     _emailSearchSource?.dispose();
     _emailSearchSource = null;
     _emailSearchPreparation = null;
@@ -2216,6 +2410,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Future<void> _copyAll() async {
+    if (_mode == ViewerMode.office &&
+        _documentPreviewBytes != null &&
+        !_documentTextFallback) {
+      _showSnack(DocumentViewerStrings(context).text('selectToCopy'));
+      return;
+    }
     String? text;
     if (_mode == ViewerMode.email) {
       text = _emailMessage?.searchText;
@@ -2910,23 +3110,67 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Widget _xmlViewToggle() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: SegmentedButton<bool>(
+      child: SegmentedButton<String>(
         style: _compactButtonStyle,
         segments: [
-          ButtonSegment(value: true, label: Text(context.commanderTr("Tree"))),
           ButtonSegment(
-            value: false,
+            value: 'tree',
+            label: Text(context.commanderTr("Tree")),
+          ),
+          ButtonSegment(
+            value: 'source',
             label: Text(context.commanderTr("Source")),
           ),
+          ButtonSegment(
+            value: 'tools',
+            label: Text(DocumentViewerStrings(context).text('xmlTools')),
+          ),
         ],
-        selected: {_xmlTree},
-        onSelectionChanged: (selection) =>
-            setState(() => _xmlTree = selection.first),
+        selected: {
+          _xmlTools
+              ? 'tools'
+              : _xmlTree
+              ? 'tree'
+              : 'source',
+        },
+        onSelectionChanged: (selection) {
+          final value = selection.first;
+          setState(() {
+            _xmlTools = value == 'tools';
+            _xmlTree = value == 'tree';
+          });
+          if (_xmlTools) unawaited(_loadXmlTools());
+        },
       ),
     );
   }
 
   Widget _officeViewToggle() {
+    if (_documentPreviewBytes != null) {
+      if (_browserDocumentKind != DocumentPreviewKind.ppt) {
+        return const SizedBox.shrink();
+      }
+      final strings = DocumentViewerStrings(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: SegmentedButton<bool>(
+          style: _compactButtonStyle,
+          segments: [
+            ButtonSegment(value: false, label: Text(strings.text('preview'))),
+            if (_browserDocumentKind == DocumentPreviewKind.ppt)
+              ButtonSegment(
+                value: true,
+                label: Text(strings.text('nativeText')),
+              ),
+          ],
+          selected: {_documentTextFallback},
+          onSelectionChanged: (selection) {
+            setState(() => _documentTextFallback = selection.first);
+            if (_documentTextFallback) unawaited(_loadNativePpt());
+          },
+        ),
+      );
+    }
     final document = _officeDoc;
     if (document == null) return const SizedBox.shrink();
     final lowerName = _viewName.toLowerCase();
@@ -3157,6 +3401,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       case ViewerMode.office:
         return _buildOfficeBody(theme);
       case ViewerMode.email:
+        final mailbox = _mailbox;
+        if (mailbox != null) {
+          return MboxMessageView(
+            document: mailbox,
+            selectedIndex: _mailboxIndex,
+            message: _emailMessage,
+            messageError: _mailboxMessageError,
+            onSelectMessage: _selectMailboxMessage,
+            onShowSource: () => _selectMode(ViewerMode.text),
+            fontScale: _zoom,
+            onOpenAttachment: _openEmailAttachment,
+            body: _searchOpen && _emailLines != null
+                ? _buildEmailSearchBody()
+                : null,
+          );
+        }
         final message = _emailMessage;
         if (message == null) {
           return _messagePane(
@@ -3165,33 +3425,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           );
         }
         if (_searchOpen && _emailLines != null) {
-          final span = _textMatchSpan();
-          return SelectionArea(
-            child: MonoLineListView(
-              lines: _emailLines ?? const [],
-              fontScale: _zoom,
-              controller: _vScroll,
-              activeMatchLine: span?.line,
-              activeMatchLocal: span == null ? null : (span.start, span.end),
-            ),
-          );
+          return _buildEmailSearchBody();
         }
         return EmailMessageView(
           message: message,
           fontScale: _zoom,
-          onOpenAttachment: (attachment) {
-            final bytes = attachment.bytes;
-            if (bytes == null) return;
-            unawaited(
-              showInternalViewer(
-                context,
-                file: widget.file,
-                side: widget.side,
-                bytesOverride: bytes,
-                displayName: attachment.name,
-              ),
-            );
-          },
+          onOpenAttachment: _openEmailAttachment,
         );
       case ViewerMode.archive:
         return _buildArchiveList(theme);
@@ -3340,7 +3579,26 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     );
   }
 
+  Widget _buildEmailSearchBody() {
+    final span = _textMatchSpan();
+    return SelectionArea(
+      child: MonoLineListView(
+        lines: _emailLines ?? const [],
+        fontScale: _zoom,
+        controller: _vScroll,
+        activeMatchLine: span?.line,
+        activeMatchLocal: span == null ? null : (span.start, span.end),
+      ),
+    );
+  }
+
   Widget _buildXmlBody(ThemeData theme) {
+    if (_xmlTools) {
+      if (_xmlToolsError case final error?) return _messagePane(error, theme);
+      final data = _documentPreviewBytes;
+      if (data == null) return const Center(child: CircularProgressIndicator());
+      return _documentPreview(data, DocumentPreviewKind.xml, theme);
+    }
     final source = _source!;
     if (source.isStreamed || !_xmlTree) {
       if (source.isStreamed) {
@@ -3451,6 +3709,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildOfficeBody(ThemeData theme) {
+    final data = _documentPreviewBytes;
+    final kind = _browserDocumentKind;
+    if (data != null && kind != null && !_documentTextFallback) {
+      return _documentPreview(data, kind, theme);
+    }
+    if (_documentTextFallback && _nativePptError != null) {
+      return _messagePane(_nativePptError!, theme);
+    }
     final document = _officeDoc;
     if (document == null) {
       return Center(

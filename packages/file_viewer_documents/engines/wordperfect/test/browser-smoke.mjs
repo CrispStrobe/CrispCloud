@@ -89,11 +89,17 @@ try {
   await page.evaluate(() => window.openTestDocument('chm'));
   await page.waitForFunction(() => document.querySelector('.chm-viewer')?.dataset.chmReady === 'true');
   assert.equal(await page.locator('.chm-topic-frame').getAttribute('sandbox'), 'allow-same-origin');
+  const firstTopicUrl = await page.locator('.chm-topic-frame').getAttribute('src');
+  assert.match(firstTopicUrl, /^blob:http:\/\/127\.0\.0\.1:/);
+  assert.equal(await page.locator('.chm-topic-frame').getAttribute('srcdoc'), null);
   const topic = page.frameLocator('.chm-topic-frame');
   await topic.locator('h1').waitFor();
   assert.equal(await topic.locator('h1').innerText(), 'Welcome');
   await topic.locator('a').click();
   await page.waitForFunction(() => document.querySelector('.chm-topic-frame')?.contentDocument?.querySelector('h1')?.textContent === 'Setup', undefined, { timeout: 5000 });
+  const secondTopicUrl = await page.locator('.chm-topic-frame').getAttribute('src');
+  assert.notEqual(firstTopicUrl, secondTopicUrl);
+  assert.equal(await page.evaluate(async url => { try { await fetch(url); return true; } catch { return false; } }, firstTopicUrl), false);
   const sanitized = await page.evaluate(() => window.sanitizeTestHtml('<script>alert(1)</script><img src="https://remote.invalid/a.png" onerror="alert(1)"><object data="file:///secret"></object><p>Readable help</p>'));
   assert.ok(!sanitized.html.includes('<script'));
   assert.ok(!sanitized.html.includes('onerror='));
@@ -103,6 +109,7 @@ try {
   assert.match(sanitized.html, /script-src[^;]*none/);
   await page.evaluate(() => window.closeTestDocument());
   assert.equal(await page.locator('.chm-viewer').count(), 0);
+  assert.equal(await page.evaluate(async url => { try { await fetch(url); return true; } catch { return false; } }, secondTopicUrl), false);
   assert.deepEqual(errors, []);
   console.log('Browser smoke passed: real WPD WASM and ordered DOM/warnings; real CHM WASM, sandbox, internal topic navigation, HTML sanitization and disposal.');
 } finally {

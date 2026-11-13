@@ -209,6 +209,7 @@ export default async function renderChm(
   let entries: ChmEntry[] = [];
   let entryLookup = new Map<string, string>();
   let currentHtml = '';
+  let topicUrl: string | undefined;
   let topicGeneration = 0;
   let searchGeneration = 0;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
@@ -429,7 +430,14 @@ export default async function renderChm(
       const canonicalPath = normalizeChmPath(actualPath) || actualPath;
       topicTitle.textContent = hydrated.title || manifest?.topics.find(item => normalizeChmPath(item.path)?.toLocaleLowerCase() === canonicalPath.toLocaleLowerCase())?.title || actualPath;
       topicPath.textContent = canonicalPath;
-      frame.srcdoc = hydrated.html;
+      const previousTopicUrl = topicUrl;
+      topicUrl = URL.createObjectURL(new Blob([hydrated.html], { type: 'text/html;charset=utf-8' }));
+      objectUrls.add(topicUrl);
+      frame.src = topicUrl;
+      if (previousTopicUrl) {
+        URL.revokeObjectURL(previousTopicUrl);
+        objectUrls.delete(previousTopicUrl);
+      }
       frame.onload = () => {
         if (destroyed || generation !== topicGeneration) return;
         const frameDocument = frame.contentDocument;
@@ -575,6 +583,7 @@ export default async function renderChm(
     client = undefined;
     for (const url of objectUrls) URL.revokeObjectURL(url);
     objectUrls.clear();
+    topicUrl = undefined;
     resourceUrls.clear();
     context?.registerExportAdapter?.(null);
     root.remove();

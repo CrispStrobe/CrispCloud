@@ -19,6 +19,7 @@ class MboxMessageView extends StatelessWidget {
     this.messageError,
     this.fontScale = 1,
     this.onOpenAttachment,
+    this.body,
   });
 
   final MboxDocument document;
@@ -29,6 +30,10 @@ class MboxMessageView extends StatelessWidget {
   final VoidCallback onShowSource;
   final double fontScale;
   final ValueChanged<EmailAttachment>? onOpenAttachment;
+
+  /// An alternate selected-message body, such as its search results.
+  /// Mailbox navigation and scope remain visible while this is displayed.
+  final Widget? body;
 
   @override
   Widget build(BuildContext context) {
@@ -134,23 +139,26 @@ class MboxMessageView extends StatelessWidget {
             ),
             const Divider(height: 1),
             Expanded(
-              child: currentMessage != null && selected != null
-                  ? EmailMessageView(
-                      key: ValueKey('mbox-message-${selected.index}'),
-                      message: currentMessage,
-                      fontScale: fontScale,
-                      onOpenAttachment: onOpenAttachment,
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Text(
-                        entries.isEmpty
-                            ? strings.text('empty')
-                            : strings.messageError(
-                                messageError ?? MboxMessageError.invalidMessage,
-                              ),
-                      ),
-                    ),
+              child:
+                  body ??
+                  (currentMessage != null && selected != null
+                      ? EmailMessageView(
+                          key: ValueKey('mbox-message-${selected.index}'),
+                          message: currentMessage,
+                          fontScale: fontScale,
+                          onOpenAttachment: onOpenAttachment,
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(
+                            entries.isEmpty
+                                ? strings.text('empty')
+                                : strings.messageError(
+                                    messageError ??
+                                        MboxMessageError.invalidMessage,
+                                  ),
+                          ),
+                        )),
             ),
           ],
         );

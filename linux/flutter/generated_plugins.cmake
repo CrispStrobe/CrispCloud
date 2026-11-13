@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   dynamic_color
   file_selector_linux
+  file_viewer_documents
   flutter_secure_storage_linux
   sqlite3_flutter_libs
   system_tray

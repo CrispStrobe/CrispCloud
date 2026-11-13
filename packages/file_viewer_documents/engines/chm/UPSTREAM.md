@@ -50,6 +50,10 @@ rendered instance on file replacement or close.
 - Resolve topic link targets using DOM capabilities rather than a parent-realm
   `instanceof Element` check, so links inside the topic iframe can navigate to
   another internal topic.
+- Display sanitized topic HTML through one same-origin blob URL instead of
+  `srcdoc`, matching the native host's restricted child-frame navigation policy.
+  Revoke the previous topic URL on navigation and the final URL on disposal.
+  The topic still has no script permission and retains its restrictive CSP.
 
 Input/output limits are not claims that arbitrary native parsing is infallible.
 The unchanged Rust/WASM runtime retains its own allocation, metadata, depth,
