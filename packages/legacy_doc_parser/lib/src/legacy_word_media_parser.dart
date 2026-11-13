@@ -575,16 +575,24 @@ class _WordMediaReader {
       if (width <= 0 || height <= 0) {
         throw const FormatException('Invalid Word picture dimensions.');
       }
-      final displayWidth = (width * input.u16(32) + 500) ~/ 1000;
-      final displayHeight = (height * input.u16(34) + 500) ~/ 1000;
-      if (displayWidth < 15 ||
-          displayWidth > 31680 ||
-          displayHeight < 15 ||
-          displayHeight > 31680) {
+      final scaledWidth = width * input.u16(32);
+      final scaledHeight = height * input.u16(34);
+      // PICMID gives a scale in tenths of a percent. Check the exact ratio
+      // before quantizing, so rounding cannot admit an out-of-range size.
+      if (scaledWidth < 15000 ||
+          scaledWidth > 31680000 ||
+          scaledHeight < 15000 ||
+          scaledHeight > 31680000) {
         throw const FormatException(
           'Word picture dimensions exceed their limits.',
         );
       }
+      // Word binary picture layout is represented in integer twips. The
+      // independently measured native PICMID controls truncate positive
+      // fractional twips, including exact halves; nearest rounding grows
+      // common scaled EMF frames by one twip. See doc/picture-scaling.md.
+      final displayWidth = scaledWidth ~/ 1000;
+      final displayHeight = scaledHeight ~/ 1000;
       var cursor = 68;
       String? externalName;
       final mappingMode = input.u16(6);

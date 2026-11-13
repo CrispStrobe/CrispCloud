@@ -245,16 +245,40 @@ void main() {
             );
             expect(shape.getAttribute('ole', namespace: _o), 't');
             expect(shape.getAttribute('oleicon', namespace: _o), 't');
-            expect(shape.getAttribute('path'), isNotEmpty);
+            final shapeType = target
+                .findAllElements('shapetype', namespace: _v)
+                .single;
+            expect(
+              shape.getAttribute('type'),
+              '#${shapeType.getAttribute('id')}',
+            );
+            expect(shapeType.getAttribute('spt', namespace: _o), '75');
+            expect(shapeType.getAttribute('path'), isNotEmpty);
             expect(shape.getAttribute('alt'), contains('preview unavailable'));
-            expect(_elements(shape, 't').map((e) => e.innerText), [
-              'Embedded object',
-              'Preview unavailable',
-            ]);
-            expect(target.findAllElements('imagedata', namespace: _v), isEmpty);
+            expect(_elements(shape, 't'), isEmpty);
+            final image = shape
+                .findAllElements('imagedata', namespace: _v)
+                .single;
+            expect(
+              image.getAttribute('title', namespace: _o),
+              contains('original preview unavailable'),
+            );
             final relationships = XmlDocument.parse(
               utf8.decode(parts['word/_rels/document.xml.rels']!),
             );
+            final imageRelation = relationships
+                .findAllElements('Relationship')
+                .singleWhere(
+                  (node) =>
+                      node.getAttribute('Id') ==
+                      image.getAttribute('id', namespace: _r),
+                );
+            expect(imageRelation.getAttribute('Type'), '$_r/image');
+            final placeholder =
+                parts['word/${imageRelation.getAttribute('Target')}']!;
+            expect(placeholder.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
+            final png = ByteData.sublistView(placeholder);
+            expect((png.getUint32(16), png.getUint32(20)), (288, 144));
             final relation = relationships
                 .findAllElements('Relationship')
                 .singleWhere(

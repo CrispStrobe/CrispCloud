@@ -76,7 +76,9 @@ extension _WordTextboxes on _StructuredWordWriter {
     if (shape?.layoutInCell case final layout?) {
       _xml.add(' o:allowincell="${layout ? 't' : 'f'}"');
     }
-    _xml.add('><v:textbox');
+    _xml.add('>');
+    if (shape != null) _textboxPaintElements(shape);
+    _xml.add('<v:textbox');
     final insets = [
       text?.insetLeftEmu,
       text?.insetTopEmu,
@@ -194,8 +196,7 @@ extension _WordTextboxes on _StructuredWordWriter {
         line?.enabled == false ||
         (line?.type ?? 0) != 0 ||
         (line?.compoundStyle ?? 0) != 0 ||
-        (line?.dash ?? 0) != 0 ||
-        shape.shadow?.enabled == true ||
+        (shape.shadow?.type ?? 0) != 0 ||
         shape.text?.autoTextMargin == true ||
         (shape.position?.horizontalMode ?? 0) != 0 ||
         (shape.position?.verticalMode ?? 0) != 0 ||
@@ -211,8 +212,9 @@ extension _WordTextboxes on _StructuredWordWriter {
         ].any((value) => value != null && value < 0)) {
       return 0;
     }
-    // Binary placement is in whole twips. The outer half of an odd-width
-    // border is truncated in that source coordinate space, e.g. 15 -> 7.
+    // Dashing and a simple offset shadow do not change the border's outside
+    // thickness. Binary placement is in whole twips. The outer half of an
+    // odd-width border is truncated in that source space, e.g. 15 -> 7.
     return (width ~/ 635) ~/ 2;
   }
 
@@ -232,5 +234,30 @@ extension _WordTextboxes on _StructuredWordWriter {
       if (width < 0 || width > 0x0132f540) _tooComplex();
       _xml.add(' strokeweight="${width / 12700}pt"');
     }
+  }
+
+  void _textboxPaintElements(LegacyWordOfficeArtShape shape) {
+    bool resolved(int first, int last) =>
+        !shape.unsupportedProperties.any((id) => id >= first && id <= last);
+    // Textboxes retain their editable text even when one appearance component
+    // is unresolved. Serialize each independently resolved paint component;
+    // an unknown fill must not discard a known line, and an unknown shadow
+    // must not be replaced with a single offset shadow.
+    _shapePaintElements(
+      shape,
+      includeFill:
+          shape.fill != null &&
+          (shape.fill?.type ?? 0) == 0 &&
+          resolved(0x0180, 0x01bf),
+      includeStroke:
+          shape.line != null &&
+          (shape.line?.type ?? 0) == 0 &&
+          (shape.line?.compoundStyle ?? 0) == 0 &&
+          resolved(0x01c0, 0x01ff),
+      includeShadow:
+          shape.shadow != null &&
+          (shape.shadow?.type ?? 0) == 0 &&
+          resolved(0x0200, 0x023f),
+    );
   }
 }

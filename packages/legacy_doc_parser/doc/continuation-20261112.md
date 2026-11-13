@@ -1,5 +1,10 @@
 # Office fidelity continuation — 12 November 2026
 
+This is a historical handoff. The [13 November continuation](continuation-20261113.md)
+records the current branches, integration pins, completed validation and
+remaining priorities. The identities and measurements below are retained as
+recorded at this earlier checkpoint.
+
 The current implementation and evidence are saved on
 `feature/office-fidelity-continuation-20261112` in both
 [`CrispStrobe/legacy-doc-parser`](https://github.com/CrispStrobe/legacy-doc-parser/tree/feature/office-fidelity-continuation-20261112)

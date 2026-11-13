@@ -504,22 +504,27 @@ extension _WordMedia on _StructuredWordWriter {
       '$_relationshipNamespace/oleObject',
       path.substring(5),
     );
+    final imageRelation = _olePlaceholderImageRelation();
     final id = ++_drawingId;
     _mediaStart(object.presentation);
-    // The source preview is unavailable. Keep a clearly labelled icon rather
-    // than claiming a Content snapshot, and give ShapeID a real v:shape target.
-    // MS-OI29500 2.1.1834 also limits ObjectID to an underscore plus int32.
+    // This generated icon identifies an unavailable preview; it is never a
+    // recovered rendering of the source storage. A picture-frame shape with
+    // imagedata survives native readers that discard OLE textbox content.
+    // Each occurrence has a local shape type and a real ShapeID target.
+    // MS-OI29500 2.1.1834 limits ObjectID to an underscore plus int32.
     _xml.add(
       '<w:object w:dxaOrig="1440" w:dyaOrig="720">'
-      '<v:shape id="_legacyObject$id" style="width:72pt;height:36pt" '
+      '<v:shapetype id="_legacyObjectType$id" o:spt="75" '
+      'o:preferrelative="t" filled="f" stroked="f" '
       'coordsize="21600,21600" path="m0,0l21600,0,21600,21600,0,21600xe" '
+      '/>'
+      '<v:shape id="_legacyObject$id" type="#_legacyObjectType$id" '
+      'style="width:72pt;height:36pt" '
       'o:ole="t" o:oleicon="t" '
-      'alt="Embedded object; original preview unavailable" '
-      'fillcolor="#EEEEEE" strokecolor="#808080">'
-      '<v:textbox><w:txbxContent><w:p><w:r><w:rPr><w:sz w:val="16"/>'
-      '</w:rPr><w:t>Embedded object</w:t><w:br/>'
-      '<w:t>Preview unavailable</w:t>'
-      '</w:r></w:p></w:txbxContent></v:textbox></v:shape>'
+      'alt="Embedded object; original preview unavailable">'
+      '<v:imagedata r:id="$imageRelation" '
+      'o:title="Embedded object; original preview unavailable"/>'
+      '</v:shape>'
       '<o:OLEObject Type="Embed" DrawAspect="Icon" ShapeID="_legacyObject$id" '
       'ObjectID="_$id" r:id="$relation"',
     );
@@ -530,6 +535,17 @@ extension _WordMedia on _StructuredWordWriter {
     }
     _xml.add('/></w:object>');
     _mediaEnd(object.presentation);
+    _count('embeddedObjectPlaceholders');
+    if (_evidenceRecords.length >= 20000) _tooComplex();
+    _evidenceRecords.add({
+      'kind': 'embeddedObjectPlaceholder',
+      'id': object.id,
+      'cp': object.cp,
+      'story': _storyId,
+      'imagePart': _olePlaceholderPart,
+      'sourcePreviewRecovered': false,
+      'reason': 'converter-generated icon; original object preview unavailable',
+    });
   }
 
   void _prepareTextboxes() {

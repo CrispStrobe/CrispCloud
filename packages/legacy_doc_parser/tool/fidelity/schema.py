@@ -100,6 +100,7 @@ EXPECTED_CASES = frozenset([
     "native-inputs/shared-header-textbox-table",
     "native-inputs/header-textbox-page-variants",
     "native-inputs/bookmarks-native-hyperlink",
+    "native-inputs/line-number-style",
     *(f"native-inputs/{kind}-ending-{ending}" for kind in ("header", "footer")
       for ending in ("paragraph", "table")),
     *(f"textbox-boundary/textbox-{story}-{kind}" for story in ("main", "header")

@@ -18,27 +18,53 @@ every Word document or every renderer.
 
 ## Evidence is versioned
 
-The current [combined continuation at 0c3e596](evidence/continuation-0c3e596/README.md)
-passes 918 Dart tests, 162 Python controls, actual-DOC JavaScript acceptance and
-51 media checks. The independent SDK accepts all 228 required DOCX outputs and
-21 additional table controls with zero errors and exact file/hash coverage.
-Both complete schema generations, all logs and unchanged-input receipts are
-retained. CrispCloud pins this exact runtime; its clean remote source
-`5348fade` passes 107 data tests, production DOC/RTF/PPT/MSG JavaScript smoke,
-13 actual native assertions and the guarded source controls. The
-[current handoff](continuation-20261112.md) records exact integration identities
-and the remaining execution limits.
+The current [combined continuation at 48bf3a](evidence/continuation-48bf3a/README.md)
+passes 934 Dart tests, 162 Python controls, actual-DOC JavaScript acceptance and
+51 media checks. The independent Open XML SDK accepts all 229 required DOCX
+outputs with zero errors. Both complete 486-file schema generations match byte
+for byte; all logs, controls and unchanged-input receipts are retained.
+CrispCloud pins this exact runtime; its clean remote source `0233ed8e` passes
+107 data tests, production DOC/RTF/PPT/MSG JavaScript smoke and 13 actual native
+assertions. Its guarded mirror now verifies the exact Git-index inventory as
+well as the working bytes, including all six previously omitted diagnostic
+logs. The [current handoff](continuation-20261113.md) records integration
+identities, source-retention controls and execution limits.
 
-The [final 24-case native corpus](evidence/native-corpus-0c3e596/README.md)
-completes all 72 repeat imports without execution/import errors. Six initial
-renders are exact; 52 cycles are exact versus the preceding import and 42
-versus the first. Both source-render goldens reproduce. Table/note repeat drift
-is removed, and Word16's floating origin stays fixed, with a 1.446-point
-middle-word difference remaining. Explicit Word14 wrapping clearances restore
-reading order; its initial 0.75-point difference and native bridge's 0.05-point
-movement per cycle remain measured. Header frame differences and all strict
-structural differences remain visible. The complete reports, 2,646 artifact
-files and 240 decoded raster pages are independently verified.
+The [final 24-case native corpus](evidence/native-corpus-48bf3a/README.md)
+completes all 72 repeat imports without execution/import errors. Eight initial
+renders are exact; 58 cycles are exact versus the preceding import and 48 versus
+the first. Both header fixtures are exact initially and through all three
+cycles. Word16's initial word boxes now agree exactly; its native bridge rewrites
+the source compatibility bit, so the 1.446-point repeat difference remains.
+Both source-render goldens reproduce. Every archive and all 240 lossless raster
+pages are independently verified, and the prior corpus uses the same source
+bytes, renderer, fonts and tool identities. All strict structural comparisons
+still report differences.
+
+The [note-source audit](evidence/note-source-attribution-20261113/README.md)
+attributes the native question-mark substitution and obsolete note-numbering
+field independently of the parser. The existing
+[footnote-table attribution](evidence/table-note-oracle-20261113/README.md)
+preserves the real source table and its exact authored rendering. These
+differences do not justify changing source text or flattening tables.
+Table/note renders remain exactly stable versus their first parser import
+through three cycles.
+
+Word14's 0.75-point initial difference and the native bridge's 0.05-point movement
+per cycle remain measured. The new
+[absent-width probes](evidence/textbox-default-probe-20261113/README.md)
+reduce one initial measurement but establish neither exact raster equality nor
+a repeat-safe source mapping; no default-width transform was accepted. Active
+disabled-line fallback dashes now remain explicit unsupported OfficeArt
+evidence. Dormant fallback flags on an enabled line do not narrow supported
+ordinary shape behavior.
+
+The historical [0c3e596 portable/schema](evidence/continuation-0c3e596/README.md)
+and [native corpus](evidence/native-corpus-0c3e596/README.md) retain their original
+918-test, 228-output and 6/24 initial-render measurements, plus the separate
+21-output table gate. Their original app pin and execution limits remain in
+the [12 November handoff](continuation-20261112.md); those are not the current
+integration boundary.
 
 The [floating-table evidence](evidence/floating-table-origin-20261112/README.md)
 separates table defaults from cell overrides, retains later-row resets and
@@ -119,7 +145,7 @@ retain exact relative table geometry and the remaining 0.35 pt absolute
 placement differences. A proposed textbox table-depth reset passed schema
 validation but caused a 12 pt native-source regression; it was
 [retracted with its counterexample retained](evidence/textbox-table-context-20261112/README.md).
-The [continuation handoff](continuation-20261112.md) records the exact app/parser
+The [current continuation handoff](continuation-20261113.md) records the exact app/parser
 pins, integration results and remaining priorities.
 
 The [solid-shape context control](officeart-context.md) now retains all three

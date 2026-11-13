@@ -51,14 +51,21 @@ source metadata.
 
 ## Deliberately bounded output
 
-The conversion applies only to type-202 textboxes with a resolved simple solid
+The conversion applies only to type-202 textboxes with a resolved simple
 border, explicit integral-twip width, absolute position, no rotation, reflection,
-group/child/OLE flags, enabled shadow, automatic text margins or negative insets.
+group/child/OLE flags, automatic text margins or negative insets.
 Unknown properties and compound borders prevent this conversion. Disabled and
 zero-width borders retain their original rectangle. Fractional-twip widths
 remain unchanged until their source/target rounding contract is independently
 covered. Bounds checks reject an expanded rectangle outside signed 32-bit
 coordinates.
+
+Resolved dash patterns and simple offset shadows use the same outside border
+thickness. The binary importer's `MatchSdrBoxIntoFlyBoxItem` computes the
+outside thickness before mapping the dash style, and shadow properties are
+applied separately. [Textbox paint controls](textbox-paint.md) verify the
+corresponding layout and repeat behavior. Unresolved shadow properties and
+other shadow types still prevent the transform.
 
 An absent source width is still absent. The failed standalone default-width
 experiment and its repeat-import counterexample remain documented in

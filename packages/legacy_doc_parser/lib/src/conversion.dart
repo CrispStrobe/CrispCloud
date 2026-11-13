@@ -19,6 +19,7 @@ part 'word_numbering_writer.dart';
 part 'word_layout_writer.dart';
 part 'word_compatibility_writer.dart';
 part 'word_media_writer.dart';
+part 'word_ole_placeholder.dart';
 part 'word_image_appearance_writer.dart';
 part 'word_officeart_position_writer.dart';
 part 'word_shape_writer.dart';

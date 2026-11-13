@@ -1,0 +1,20 @@
+{
+  "source": "LibreOffice DOC bridge of the independently authored Line Number character-style control",
+  "sourceDocx": "test/fixtures/fidelity/line-number-style.docx",
+  "sourceDocxSha256": "f9bcc87e440b6a97704381b7e4857ed8c6052aacee0b359dd27f017f1de9aeea",
+  "nativeDocSha256": "c904414c506dffed61181846198dd1e097f19e2e1cf85b7e27c46513d3cae7fe",
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "purpose": "Explicit built-in sti40 Line Number style retains inherited/resolved character formatting for generated line labels.",
+  "baselineRuntime": "4518f43c4eae84c5495a95068c0343f077d67ea0",
+  "sourceStyle": {
+    "index": 16,
+    "builtinId": 40,
+    "kind": 2,
+    "parentIndex": 15,
+    "name": "line number",
+    "font": "Courier New",
+    "fontSizeHalfPoints": 28,
+    "colorHex": "CC2233",
+    "bold": true
+  }
+}
