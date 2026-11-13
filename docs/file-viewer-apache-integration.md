@@ -118,9 +118,11 @@ selection. Controls and explanations use the existing nine-language
 localization approach; technical format/field identifiers remain English. The
 Apache license is supplied as an explicit app asset to `LicenseRegistry`.
 
-This assessment and source snapshot establish the first checkpoint. Verification
-results are recorded in subsequent commits and the implementation report; this
-document does not imply that unrecorded tests or builds passed.
+The parser, source adapter, localized dialog and Hex selection are implemented
+on the integration branch. The [validation record](file-viewer-apache-validation.md)
+records 211 passing focused application tests, the separate JavaScript check,
+the provenance checks, and the remaining CI status. The broader candidates above
+remain separate follow-up work.
 
 ## License boundaries
 

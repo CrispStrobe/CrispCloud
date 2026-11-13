@@ -1973,7 +1973,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     setState(() => _inspectingStructure = true);
     try {
       final analysis = await inspectBinaryStructureSource(source);
-      if (!current()) return;
+      if (!mounted || !current()) return;
       final field = await showDialog<BinaryStructureField>(
         context: context,
         builder: (_) => BinaryStructureDialog(
@@ -1997,7 +1997,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       });
     } catch (error, stack) {
       _log.warn('Binary header inspection failed', error, stack);
-      if (current()) {
+      if (mounted && current()) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(BinaryStructureStrings(context).text('readError')),
@@ -3055,9 +3055,11 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           fontScale: _zoom,
           controller: _vScroll,
           selectedByte: _selectedByte,
-          highlightRangeStart: _structureHighlightStart ??
+          highlightRangeStart:
+              _structureHighlightStart ??
               (_isByteSearch ? _matchHighlightStart : null),
-          highlightRangeEnd: _structureHighlightEnd ??
+          highlightRangeEnd:
+              _structureHighlightEnd ??
               (_isByteSearch ? _matchHighlightEnd : null),
           onByteTapped: (offset) => setState(() {
             _selectedByte = offset;

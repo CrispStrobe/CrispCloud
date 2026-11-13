@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-13",
+  "upstream_commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+  "crispcloud_baseline": "794bde82693e07a6e04ed1490bfa228f154e6e5c",
+  "implementation_checkpoint": "de2204812ad485f4d275e8c05a96ffdbd6bb706d",
+  "native_application_tests": {
+    "passed": 211,
+    "new_tests_included": 47,
+    "failed": 0,
+    "skipped": 0,
+    "target": "Linux",
+    "source_scope": "Working tree with mounted guards and const fix. Final source differs only by formatter changes to the two host highlight expressions."
+  },
+  "provenance_tests": {
+    "passed": 21
+  },
+  "focused_analyzer": "No issues found",
+  "javascript_check": "Genuine dart compile js -O2 and Node; parser portability only",
+  "full_ci_complete": false,
+  "known_existing_ci_blocker": "madedit2_hex fork fingerprints differ at baseline; see validation document",
+  "evidence": {
+    "analyzer.txt": {
+      "sha256": "cb695b500d86510cf62c9bde80437a559efacff08139be989d87052bb09f4ce0",
+      "bytes": 357
+    },
+    "native-tests.txt": {
+      "sha256": "6fa607fc8c17df440f26747e0bd05b1a40585e70fc8b1d9b78caa1ea3a272c5b",
+      "bytes": 33415
+    }
+  },
+  "final_source_sha256": {
+    "lib/services/binary_structure_service.dart": "d78af3f2decd07e42370e4e5054d10ff79d9b620518d8dd8b4fb8f316e7c17ad",
+    "lib/services/binary_structure_source.dart": "ea1a5bdc8b1cfaea3851a067cb13f3712635d82ffd143bc2d1b29d218c915616",
+    "lib/services/file_viewer_binary_license.dart": "86fc73bca8b0af72723ccb4c41b0c2ba7634c59ffa6a097683894f49a30f290a",
+    "lib/l10n/binary_structure_strings.dart": "db1b63f2013b7b1b0d4abfba78280876f4c1536b695275df40e2ad9cbca3e096",
+    "lib/widgets/binary_structure_dialog.dart": "4a3c44eb8c378ca71f231a094e5108fe60437b080c4408386e2c355ee3e68d23",
+    "lib/widgets/internal_viewer_dialog.dart": "7f972fc249d3e139266c0d500903b1090b81c64886e200fa4dd364570cbc8143",
+    "lib/main.dart": "c771367088b653798a2b74a332a0f210e7ec3158d93a6f2ad4854dcc375a2cb2",
+    "pubspec.yaml": "29c15dd4f01aa632a378387e1960156a66c6770fc032fed06ee7bf099f908a62",
+    "pubspec.lock": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5",
+    "test/binary_structure_service_test.dart": "d10c9baeff3f25665d262b3c53bd8e39555b94d25d3ad5ae5e83e2a3925cc202",
+    "test/binary_structure_source_test.dart": "4b64ecfc8e6bdd8d9473b741dd62a736100c9f8d7c11490038a90645b9119d89",
+    "test/file_viewer_binary_license_test.dart": "f65cc3bb4f6596d798556675d23497131b8ee1e0eb01f9426563fb933d715e57",
+    "test/widget/binary_structure_viewer_test.dart": "741b0a8d0b7d3b9e9beed78c6d080d28a15790510175faa6e1fa70d4d709727c",
+    "tool/binary_structure_portability_smoke.dart": "068c000982726dcffbae8f07b0cfd7e474cfeb11a56764270e8389fad92fc818",
+    "tool/verify_file_viewer_binary.py": "d99475fa1c98b2105008dc1e7946f00451de3bdab5e5e6359b9c1333b77546bc",
+    "tool/test_verify_file_viewer_binary.py": "698010de103a0b63004591850cb5635be85ab9e54913555a110c1d0d8fb1a2fa"
+  }
+}

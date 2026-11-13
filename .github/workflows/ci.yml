@@ -209,6 +209,11 @@ jobs:
         # Preserve the errors-only policy while also failing on tool crashes.
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
+      - name: Binary header parser JavaScript portability
+        run: |
+          dart compile js tool/binary_structure_portability_smoke.dart -O2 -o "$RUNNER_TEMP/binary-structure-smoke.js"
+          node "$RUNNER_TEMP/binary-structure-smoke.js"
+
       - name: Fast deterministic tests with coverage
         env:
           CRISPER_SFTP_PYTHON: ${{ runner.temp }}/storage-fixture/bin/python
