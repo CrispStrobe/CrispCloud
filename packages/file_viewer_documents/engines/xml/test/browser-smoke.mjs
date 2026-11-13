@@ -134,7 +134,9 @@ test('cancel stops a genuine worker and leaves the XML tools reusable', {timeout
 });
 
 test('the processing deadline also bounds an unfinished local runtime load', {timeout: 10000}, async () => {
-  await browser.open(source, 'order.xml', {xml: {timeoutMs: 100}});
+  // Allow real worker startup on loaded CI/Mac hosts before testing the held fetch.
+  // The fetch itself remains unresolved and must be cancelled by this deadline.
+  await browser.open(source, 'order.xml', {xml: {timeoutMs: 2000}});
   const held = [];
   const routePattern = '**/runtime/xslt-wasm.js';
   await browser.page.route(routePattern, route => {held.push(route);});

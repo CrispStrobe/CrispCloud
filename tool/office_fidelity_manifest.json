@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "main",
-  "source_commit": "76f36ffb97c1dfda3ce03f494fe50ecfdbdedfbf",
+  "source_commit": "4b93b90f7b45b8383e96318cfc5ac57487a51735",
   "files": {
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "c50ad4d1020a9ccf53d1b0ef43f7dc456aa8cc993bd748bc953c0c0f6c59815a",
     "packages/legacy_doc_parser/.gitignore": "0b6a50aa88aca942e68d83482b7ac1b89082dd551a7b823e19d85c99a87c6787",
@@ -1376,7 +1376,7 @@
   "standalone_sources": {
     "packages/legacy_doc_parser": {
       "repository": "CrispStrobe/legacy-doc-parser",
-      "commit": "74420eb2e0ec14401a0db5bcbb30ab6d202a2340"
+      "commit": "3e4d9cb11535b96624edb7ee231cefa8e4d42d73"
     }
   }
 }

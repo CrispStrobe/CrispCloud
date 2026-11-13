@@ -74,10 +74,10 @@ Widget _gate(
     appLockServiceProvider.overrideWithValue(policy),
     credentialRecoveryRestartProvider.overrideWithValue(restart ?? () async {}),
   ],
-  child: MaterialApp(
+  child: const MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: const AppLockGate(),
+    home: AppLockGate(),
   ),
 );
 
