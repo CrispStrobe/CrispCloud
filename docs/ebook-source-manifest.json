@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "https://github.com/CrispStrobe/crisperbooks.git",
-  "revision": "ac9925c46c982a545a18bc8d5616b5d874da51c9",
-  "git_tree": "16943854e11d8be4dbae0c5d7c65bf7ecfc0c96f",
+  "revision": "a18b93c1b066df323ef167359a70801db1359c83",
+  "git_tree": "5692e7027d5c970886071ed8a801be15ac960b83",
   "packages": {
     "crisperbooks": ".",
     "crisp_ebook": "packages/crisp_ebook",
@@ -66,9 +66,9 @@
     },
     "README.md": {
       "mode": "100644",
-      "git_blob": "1eca9ed76b75c8653a3a5850c2cc2fb49242fbbe",
-      "bytes": 5485,
-      "sha256": "b2be657ed620f66691b884d0cf7c0a7c8b04e2ea1609a8cd68971467dcd2321d"
+      "git_blob": "c1a41043d9e34c2dece7d501104fd4bfe5532486",
+      "bytes": 5962,
+      "sha256": "bd25bdb512853e5d26e5edb0b8c951fdae8d87bcfe300848f82281c27932e99f"
     },
     "analysis_options.yaml": {
       "mode": "100644",
@@ -132,9 +132,9 @@
     },
     "docs/reader-selection-recovery-20261113.md": {
       "mode": "100644",
-      "git_blob": "0de7584a73c9a8aa8fae7426e0507eff2846b4d9",
-      "bytes": 2947,
-      "sha256": "24a2397099aa195dde30137cddaeed5b7ad71801edbca49e826aaaad0ad30fa7"
+      "git_blob": "c9296380ea4c0ede95914b69fc61e6f8f813558d",
+      "bytes": 4434,
+      "sha256": "2d2bc585b42252ba4ba3917d3b06a582be587d843cca9361c5f8dcb95b30d3ca"
     },
     "docs/recovery/browser-conversion-2026-11-12.md": {
       "mode": "100644",

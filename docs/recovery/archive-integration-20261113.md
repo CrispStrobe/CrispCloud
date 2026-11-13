@@ -17,7 +17,7 @@ PR #86, referenced in the original continuation handoff, was already merged.
 | Commander archive workflows, PR #97 | True merge of `cfae329b`, preserving the canonical Operations queue, batch creation/testing/extraction, checked installed packers, SFX reading and numbered 7z sets. |
 | Document fonts and previews, PR #95 | True merge of `02160e56`, preserving shared fonts, installed preview, selected engine runtimes and attributed notices. |
 | Office oracle/gaps and related checkpoints | Preserve branch ancestry and independent evidence. Synchronize the exact canonical parser `840f8af1`, a descendant of both competing parser pins; retain the Quds/font source from #95. |
-| Ebook canary/native-input and PR #84 | Preserve branch ancestry after carrying missing bounded-selection and fixed-layout semantics into canonical Crisperbooks. Pin all four ebook packages to `ac9925c`. The prior extracted package structure remains the owner. |
+| Ebook canary/native-input and PR #84 | Preserve branch ancestry after carrying missing bounded-selection and fixed-layout semantics into canonical Crisperbooks. Pin all four ebook packages to `a18b93c1`, which reconciles the recovery with concurrent canonical-main documentation. The prior extracted package structure remains the owner. |
 | Historical PR #14 | Compare each follow-up with current behavior, fix the remaining pending-source Refresh/new-tab cases, then preserve the old PR head as a merge parent. |
 | ISO/RAR/DMG, operation queue, app-layout checkpoint | Already included by baseline main. Their original commits and receipts remain reachable. |
 
@@ -27,6 +27,11 @@ directories or replace later pane/source code with historical versions. The
 [semantic mapping](legacy-branch-semantics-20261113.md) describes each recovery.
 Canonical ebook changes are saved in
 [Crisperbooks PR #1](https://github.com/CrispStrobe/crisperbooks/pull/1).
+Its final reconciliation has genuine parents `ac9925c4` and canonical main
+`c4f64e11`. Only two documentation files differ from `ac9925c4`; runtime,
+test, build and license bytes are unchanged. It preserves the separately
+recorded Mac Chrome acceptance with its original revision attribution. That
+acceptance predates the final disposal cleanup and was not rerun here.
 
 The machine-readable [branch ancestry](../evidence/archive-integration-20261113/branch-ancestry.json)
 and [PR head cohort](../evidence/archive-integration-20261113/pr-heads.json) retain
@@ -44,6 +49,10 @@ timestamped API snapshot from the first audit.
   logical member and stream sections in directory-record order. Consistency,
   section-count and total-size limits apply. The inspected writer remains on
   its single-extent profile.
+- Encrypted numbered 7z members retain their reader after a successful
+  password retry. A real F3 regression reproduced cancellation caused by the
+  old handle's lifetime guard. The accepted replacement now owns that guard;
+  mode/source changes and stale password responses still invalidate reads.
 
 ## Source inventories and retained attribution
 
