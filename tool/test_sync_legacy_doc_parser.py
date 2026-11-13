@@ -184,6 +184,27 @@ class StandaloneParserSyncTest(unittest.TestCase):
                                          require_tracked=True)[1],
                          [f'Office source differs from Git index: {name}'])
 
+    def test_git_index_check_rejects_unstaged_upstream_deletions(self):
+        office.apply(self.host, legacy.plan(self.source, self.host, self.before))
+        self.git(self.host, 'init', '-q')
+        self.git(self.host, 'add', '-A')
+        after = self.update()
+        office.apply(self.host, legacy.plan(self.source, self.host, after))
+        manifest = json.loads((self.host / 'tool/office_fidelity_manifest.json').read_text())
+        # Staging every surviving file misses the deletion: the old source
+        # would reappear after the resulting commit is checked out elsewhere.
+        self.git(self.host, 'add', '--', 'pubspec.yaml',
+                 'tool/office_fidelity_manifest.json', f'{legacy.PREFIX}/UPSTREAM.json',
+                 *manifest['files'])
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source)[1], [])
+        deleted = f'{legacy.PREFIX}/doc/old.md'
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1],
+                         [f'Unexpected parser source in Git index: {deleted}'])
+        self.git(self.host, 'add', '-u', '--', deleted)
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1], [])
+
     def test_modified_or_extra_mirror_source_refuses_every_write(self):
         after = self.update()
         original = (self.host / 'pubspec.yaml').read_bytes()

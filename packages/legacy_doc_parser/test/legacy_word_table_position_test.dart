@@ -445,6 +445,17 @@ void main() {
       ).readAsBytesSync();
       final document = parseLegacyWordDocument(bytes);
       final note = document.stories.singleWhere((s) => s.id == 'footnote-6');
+      // The pinned CLX has U+0002 at CP 167, not a question mark. Its
+      // PlcffndRef entry at anchor CP 48 is automatic index 6. Native DOC
+      // playback turns that table marker into a literal '?' inside a frame;
+      // retaining it would introduce text absent from the binary source.
+      expect(document.noteReferences, hasLength(9));
+      final reference = document.noteReferences.singleWhere(
+        (reference) => reference.storyId == 'footnote-6',
+      );
+      expect(reference.anchorCp, 48);
+      expect(reference.autoNumbered, isTrue);
+      expect(reference.customMark, isNull);
       expect(note.blocks.map((b) => (b.startCp, b.endCp)), [
         (167, 188),
         (188, 189),
@@ -459,6 +470,18 @@ void main() {
       );
       expect(position.verticalPlacement, LegacyWordTableVerticalPlacement.top);
       final xml = _xml(bytes, 'footnotes');
+      final tableNote = xml.rootElement.childElements.last;
+      expect(
+        tableNote.findAllElements('footnoteRef', namespace: _w),
+        hasLength(1),
+      );
+      expect(
+        tableNote
+            .findAllElements('t', namespace: _w)
+            .map((e) => e.innerText)
+            .join(),
+        'Table before  tailAfter note table',
+      );
       expect(
         xml.rootElement.childElements.last.childElements.map(
           (e) => e.name.local,

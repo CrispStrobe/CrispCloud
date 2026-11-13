@@ -11,7 +11,7 @@ import sync_legacy_doc_parser as legacy
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def verify_git_index(root, paths):
+def verify_git_index(root, paths, exact_prefixes=()):
     """Check that the next commit contains the inspected source, including logs."""
     object_format = office.git(root, 'rev-parse', '--show-object-format').decode().strip()
     if object_format not in ('sha1', 'sha256'):
@@ -25,6 +25,10 @@ def verify_git_index(root, paths):
         name = raw_name.decode('utf-8')
         entries.setdefault(name, []).append((mode, oid, stage))
     failures = []
+    for name in sorted(entries):
+        if (any(name.startswith(prefix + '/') for prefix in exact_prefixes)
+                and name not in paths):
+            failures.append(f'Unexpected parser source in Git index: {name}')
     for name in sorted(paths):
         office.safe_path(name)
         staged = entries.get(name)
@@ -84,7 +88,8 @@ def verify(root, source=None, legacy_source=None, *, require_tracked=False):
     if require_tracked:
         declarations = {'tool/office_fidelity_manifest.json', 'pubspec.yaml'}
         declarations.update(f'{prefix}/UPSTREAM.json' for prefix in independent)
-        failures.extend(verify_git_index(root, set(manifest['files']) | declarations))
+        failures.extend(verify_git_index(root, set(manifest['files']) | declarations,
+                                         exact_prefixes=independent))
     return manifest, failures
 
 

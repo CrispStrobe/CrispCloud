@@ -504,6 +504,10 @@
     "packages/legacy_doc_parser/doc/evidence/continuation-ba5f5b0/schema-report.json.gz": "f18d06e6d6c4ec74da5d886069a81003813ca7915f75a027215f1b38d769f2ce",
     "packages/legacy_doc_parser/doc/evidence/continuation-ba5f5b0/schema-validation.json.gz": "89333f18c010a9aa210a0caed44f3e133607136947e7a9e758caa3d9ddf55722",
     "packages/legacy_doc_parser/doc/evidence/continuation-ba5f5b0/summary.json": "dbc127d4c83be78d765cb6787c6d3b8d29498ac4af64f882cce0c6f298868af9",
+    "packages/legacy_doc_parser/doc/evidence/continuation-baseline-20261113/README.md": "0445cdc49c0fc9b55636a14aadabbf100aa38919d55f8cc8f6dc8b20a2c4007b",
+    "packages/legacy_doc_parser/doc/evidence/continuation-baseline-20261113/manifest.json": "62cc540b772d0551fdd880f7d633b2c0110126f7aedd06d3c0dd33acfb598d0d",
+    "packages/legacy_doc_parser/doc/evidence/continuation-baseline-20261113/portable.tar.xz": "5c75cfe8e1232430ee3f5aceeb67e9fdad9c8b31c82e4efa298a879a7b64c2d0",
+    "packages/legacy_doc_parser/doc/evidence/continuation-baseline-20261113/verify.py": "c8895d6f5f7a200bf0808a35f0a7a9b986e2ee8dc877260ad29d27446bc521ba",
     "packages/legacy_doc_parser/doc/evidence/e90f38f/README.md": "abb04ae1754d8f8c9ee822ba2c0e769942668d5a1d157a8794f03766c48f3151",
     "packages/legacy_doc_parser/doc/evidence/e90f38f/native-files.manifest.json": "6f3df4af7a87d14bc8a8ddfc23060eebbec02aea20b88da2e72257334396050f",
     "packages/legacy_doc_parser/doc/evidence/e90f38f/native-files.tar.xz": "111ff51342e7af09316cf624cfce42a5dd06ea6ef0e1acc71d958b6440e3f1c1",
@@ -760,6 +764,9 @@
     "packages/legacy_doc_parser/doc/evidence/note-boundary-d622754/summary.json": "c60bc14d33e94602cdd976ffc4c619f76031b0f7b8be2dfe267bf204fe67a847",
     "packages/legacy_doc_parser/doc/evidence/note-boundary-d622754/verify.py": "b9c5cff10e96a66a3c95808e09ce9e6abf1fc9420e521bc3ccd9a9220d18daad",
     "packages/legacy_doc_parser/doc/evidence/note-formats-schema.json": "4b6da624fd44f4a5e01e7598ff5f288f4cf335eec8e38f36532c0dcf3651c76a",
+    "packages/legacy_doc_parser/doc/evidence/note-source-attribution-20261113/README.md": "8417116d85a65faa74c8e87c2d286635adb85c9f623d09d8742fd07013d054b1",
+    "packages/legacy_doc_parser/doc/evidence/note-source-attribution-20261113/audit.py": "0187904193daee39a7371818ea150345a2b29ce514e352e15205b636bdd97d99",
+    "packages/legacy_doc_parser/doc/evidence/note-source-attribution-20261113/receipt.json": "6e343de55458cd3397b603bee3afae980c38933d639642ddec7c74606d30c0dd",
     "packages/legacy_doc_parser/doc/evidence/note-tables-b1902a0/README.md": "6d8595cca4476ebd38b0a2c9fd916637a14fa7851e8826015a739521309eb7d6",
     "packages/legacy_doc_parser/doc/evidence/note-tables-b1902a0/execution-logs.tar.xz": "95f3c8eba1e867377774ebf95679457a098d64a780064f19c21d745403412de9",
     "packages/legacy_doc_parser/doc/evidence/note-tables-b1902a0/index.json": "158d5b524c79c67c1809ccba88113ed58893d78ba2c95da6353877f0dbdf717a",
@@ -865,7 +872,7 @@
     "packages/legacy_doc_parser/doc/media-fidelity.md": "cf174e19d27c5d33b96ed5a5747c7e744a08e56d077893a6e0c7a9ac496761f0",
     "packages/legacy_doc_parser/doc/media-preservation.md": "a43495c745305c434e266f36e2e1a95cdb9f52c2b30b2f5814f4b246ab16da16",
     "packages/legacy_doc_parser/doc/note-table-boundaries.md": "d9d1f1ceb966280f6e246059be16dd3363071e46f88713d59a2798bb7c1b93d4",
-    "packages/legacy_doc_parser/doc/officeart-context.md": "772e9870bd3b8d3946982479a7dfe521795c231966247bcbb22382203d85527b",
+    "packages/legacy_doc_parser/doc/officeart-context.md": "41c4b522b63c0a226cc6ccde041e33fe456f2af78cfb81277f767968a624ece1",
     "packages/legacy_doc_parser/doc/officeart-positioning.md": "eecd3efe68efc3da685497de6621c3e3aa7f5bb1f36488e029abb72e4e558e30",
     "packages/legacy_doc_parser/doc/officeart-wrap-distances.md": "9df5f358665d425d676a8a8524fd3c4ebb0c5e2f81d3fa5ddad7c9db39dee031",
     "packages/legacy_doc_parser/doc/packed-vertices.md": "6adc2a2449b1b8962bf0b8c7784e36e379f6b881feffb58498eed562c7c4a2dd",
@@ -907,7 +914,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_number_formats.dart": "3a98b56587fe4f1f72b2bcd6ca3020569d5a8f0f3b7f68fe19867b2fd19d42c8",
     "packages/legacy_doc_parser/lib/src/legacy_word_numbering.dart": "ed851e376cfabb7d2db0588718273b2bf891408fd8eb8a0c70e4d0dc8a94fa77",
     "packages/legacy_doc_parser/lib/src/legacy_word_officeart_model.dart": "bd200c4eecb160a4d5ece5a88be5215066dc4b61982cee2b3daeb15344438859",
-    "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart": "1e5d8b08f1088af992252230671c271c157ccb0d48a6d8760e02fc5fe8b6fd44",
+    "packages/legacy_doc_parser/lib/src/legacy_word_officeart_parser.dart": "140c1865db57400a979e9fe25b54fc9650655b207b74d4be945fb571e5b40eff",
     "packages/legacy_doc_parser/lib/src/legacy_word_revision_model.dart": "cf39ce7f1c21de1825f340718da077e3a0f74fff4f85871fa4774792778f0fcd",
     "packages/legacy_doc_parser/lib/src/legacy_word_revisions.dart": "52c090b4d1e2b45280c0ee09f5fcf32bed1c9a2d28e096d3beeecbca7f328ec0",
     "packages/legacy_doc_parser/lib/src/legacy_word_sprms.dart": "7ea4d770bf593a233ef2ca0f2478eeaf7257921bf4d058165eb8e2558e659ee7",
@@ -1080,7 +1087,7 @@
     "packages/legacy_doc_parser/test/legacy_word_row_borders_test.dart": "1b89c63209e391127e27cf0168754325874363b0fc31a695faf657c93268466e",
     "packages/legacy_doc_parser/test/legacy_word_script_fonts_test.dart": "e165329f17e0399491dc6ea98d5e16e8addb72eb29e2cc31dfce1bc8b11b7b81",
     "packages/legacy_doc_parser/test/legacy_word_section_revisions_test.dart": "fd2c0667770e320038330d4aa989aa4268719c1db64ff5079c676621bde7d7df",
-    "packages/legacy_doc_parser/test/legacy_word_shape_context_test.dart": "6b2eae9b4013f8ddcfb075e916f70d71fbed92750894b71b5276cd4984fb6efb",
+    "packages/legacy_doc_parser/test/legacy_word_shape_context_test.dart": "9dbed7320f5a2d8dc179772f807a7cea3704021e1697e544ddfa41ea0d9b9cad",
     "packages/legacy_doc_parser/test/legacy_word_shape_conversion_test.dart": "85608133a8cf2aeb2e0c7fa17653d3d3b92b3f564eaf6e65df3339ff0fee5ed3",
     "packages/legacy_doc_parser/test/legacy_word_shared_header_textbox_test.dart": "622498125ee3ba2f080fcb67222585ef86bfab786f686e07f7b7bca81b8485e3",
     "packages/legacy_doc_parser/test/legacy_word_sprm_regression_test.dart": "0cff36a42b9e18f55a9bfc8e7236083b2c91d620811928c8db0286be21ece5cb",
@@ -1093,7 +1100,7 @@
     "packages/legacy_doc_parser/test/legacy_word_table_layout_test.dart": "a01b866a6faf61e6f235536f97e9641d3867de22d7e436dc74f74cee8be94e44",
     "packages/legacy_doc_parser/test/legacy_word_table_operations_test.dart": "e6156b9f9194ba40660ac7a37d5cacacd80731e63f65be211cb93e0f59f3a65e",
     "packages/legacy_doc_parser/test/legacy_word_table_origin_test.dart": "bc71a41966fd6aa30651761df6f70670d3b0e658f1ae1e7db202a1ad4ce99ed0",
-    "packages/legacy_doc_parser/test/legacy_word_table_position_test.dart": "57f99fff3e1c9c8ab53018c5e1f7e5590ea117ee1b9a42fe48bec1474546f696",
+    "packages/legacy_doc_parser/test/legacy_word_table_position_test.dart": "76fc55900d11241a1b68c7a6db4b3df0b291e2ed9969833e13338a7d39274b98",
     "packages/legacy_doc_parser/test/legacy_word_table_preview_test.dart": "1843c6a719e5346f4425f6aa230e2d7832d00ab94129bc31d9ad549398313ac1",
     "packages/legacy_doc_parser/test/legacy_word_table_properties_test.dart": "a1eaed0275165a4c4c828c0f2faeff9164ffa657de5d30a009c47a4075f50a63",
     "packages/legacy_doc_parser/test/legacy_word_table_review_conditions_test.dart": "89a2767b4343e036e6064a452e9735f47fec772e219e750a1849baf93ee0abde",
@@ -1226,7 +1233,7 @@
   "standalone_sources": {
     "packages/legacy_doc_parser": {
       "repository": "CrispStrobe/legacy-doc-parser",
-      "commit": "cd9ab85aa43fb2955105d5fa34d802f1017307cf"
+      "commit": "48bf3a84e822b960e369f0134d597e025c775a41"
     }
   }
 }

@@ -1,0 +1,609 @@
+{
+  "schema": "legacy-doc-parser/note-source-attribution",
+  "version": 1,
+  "sealedRuntime": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "newNativeExecution": false,
+  "cases": {
+    "note-markers": {
+      "source": "test/fixtures/word_native/note-floating-table.doc",
+      "sourceSha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+      "archive": "doc/evidence/native-corpus-0c3e596/sealed/07-note-markers/native-artifacts.tar.xz",
+      "archiveSha256": "4f14d52d703cff7f85c46bbc266d225251057959fa62144d23d0dbc81faec6cb",
+      "members": {
+        "run/note-markers/bridge/note-markers.doc": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72",
+        "run/note-markers/native-docx/note-markers.docx": "c4aae807b6d4c68598db83f401e744a69dfd082091217aa013c16e843351059a",
+        "run/note-markers/converted.docx": "f781765a48187439d56f5bd5de1bd83e158d460f52b6ff751ad5afea9438e112",
+        "run/note-markers/binary-render.json": "92a877e36d2107045d928430979f7bc4ec63e5508517be78d842ced429319a0c",
+        "run/note-markers/converted-render.json": "b4f7475b97a9a282c24ce586c6298f403e72929d5bb4d0fd1e5cc5067c9593d7"
+      },
+      "rawSource": {
+        "tableStream": "1Table",
+        "nFib": 257,
+        "cswNew": 0,
+        "piece": {
+          "startCp": 0,
+          "endCp": 275,
+          "wordOffset": 2048,
+          "encoding": "UTF-16LE"
+        },
+        "storyLengths": [
+          53,
+          154,
+          0,
+          0,
+          67,
+          0,
+          0
+        ],
+        "questionMarkCount": 0,
+        "references": [
+          {
+            "anchorCp": 43,
+            "recordOffset": 806,
+            "autoIndex": 1
+          },
+          {
+            "anchorCp": 44,
+            "recordOffset": 808,
+            "autoIndex": 2
+          },
+          {
+            "anchorCp": 45,
+            "recordOffset": 810,
+            "autoIndex": 3
+          },
+          {
+            "anchorCp": 46,
+            "recordOffset": 812,
+            "autoIndex": 4
+          },
+          {
+            "anchorCp": 47,
+            "recordOffset": 814,
+            "autoIndex": 5
+          },
+          {
+            "anchorCp": 48,
+            "recordOffset": 816,
+            "autoIndex": 6
+          }
+        ],
+        "noteRangePlcOffset": 818,
+        "noteRangeCps": [
+          0,
+          24,
+          43,
+          58,
+          93,
+          114,
+          153,
+          154
+        ],
+        "notes": [
+          {
+            "startCp": 53,
+            "endCp": 77,
+            "text": "\u0002 Conventional footnote\r"
+          },
+          {
+            "startCp": 77,
+            "endCp": 96,
+            "text": "\u0002Unmarked footnote\r"
+          },
+          {
+            "startCp": 96,
+            "endCp": 111,
+            "text": "\u0002Before  after\r"
+          },
+          {
+            "startCp": 111,
+            "endCp": 146,
+            "text": "\u0002Opening paragraph\rLater paragraph\r"
+          },
+          {
+            "startCp": 146,
+            "endCp": 167,
+            "text": "\u0002 first  second tail\r"
+          },
+          {
+            "startCp": 167,
+            "endCp": 206,
+            "text": "\u0002Table before  tail\u0007\u0007\rAfter note table\r"
+          }
+        ],
+        "dop": {
+          "offset": 1675,
+          "length": 610,
+          "footnoteWordOffset": 1677,
+          "footnoteWord": 4,
+          "footnoteRestart": 0,
+          "footnoteStart": 1
+        },
+        "sections": [
+          {
+            "startCp": 0,
+            "endCp": 275,
+            "sepxOffset": 4608,
+            "operations": [
+              {
+                "opcode": "303c",
+                "wordOffset": 4610,
+                "operand": "00"
+              },
+              {
+                "opcode": "5040",
+                "wordOffset": 4613,
+                "operand": "0000"
+              },
+              {
+                "opcode": "5042",
+                "wordOffset": 4617,
+                "operand": "0200"
+              },
+              {
+                "opcode": "b01f",
+                "wordOffset": 4621,
+                "operand": "d02f"
+              },
+              {
+                "opcode": "b020",
+                "wordOffset": 4625,
+                "operand": "e03d"
+              },
+              {
+                "opcode": "b021",
+                "wordOffset": 4629,
+                "operand": "a005"
+              },
+              {
+                "opcode": "b022",
+                "wordOffset": 4633,
+                "operand": "a005"
+              },
+              {
+                "opcode": "9023",
+                "wordOffset": 4637,
+                "operand": "a005"
+              },
+              {
+                "opcode": "9024",
+                "wordOffset": 4641,
+                "operand": "a005"
+              },
+              {
+                "opcode": "5032",
+                "wordOffset": 4645,
+                "operand": "0000"
+              },
+              {
+                "opcode": "9031",
+                "wordOffset": 4649,
+                "operand": "6400"
+              },
+              {
+                "opcode": "7030",
+                "wordOffset": 4653,
+                "operand": "ffefffff"
+              },
+              {
+                "opcode": "5033",
+                "wordOffset": 4659,
+                "operand": "0000"
+              },
+              {
+                "opcode": "3228",
+                "wordOffset": 4663,
+                "operand": "00"
+              },
+              {
+                "opcode": "300e",
+                "wordOffset": 4666,
+                "operand": "00"
+              }
+            ]
+          }
+        ]
+      },
+      "observations": {
+        "binaryLayoutText": "Authored automatic note markers\nReferences 123456iiiiii\n\ni Conventional endnote\niiUnmarked endnote\niiiEnd before middle tail\n\n\n\n\n1 Conventional footnote\n2Unmarked footnote\n3Before after\n4Opening paragraph\nLater paragraph\n5 first second tail\n6                                 ?Table before tail\nAfter note table\n\f",
+        "parserLayoutText": "Authored automatic note markers\nReferences 123456iiiiii\n\ni Conventional endnote\niiUnmarked endnote\niiiEnd before middle tail\n\n\n\n\n1 Conventional footnote\n2Unmarked footnote\n3Before after\n4Opening paragraph\nLater paragraph\n5 first second tail\n6                                 Table before tail\nAfter note table\n\f",
+        "sourceMarkerCp": 167,
+        "sourceMarkerWordOffset": 2382,
+        "sourceMarkerCodeUnit": 2,
+        "nativeQuestionMarkAlternativeRepresentations": 2,
+        "nativeRenderedQuestionMarks": 1,
+        "parserAutomaticMarkersInSixthNote": 1,
+        "wordSequencesAgreeAfterRemovingOnlyNativeQuestionMark": true
+      }
+    },
+    "word-compatibility": {
+      "source": "test/fixtures/word_native/word-compatibility.doc",
+      "sourceSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+      "archive": "doc/evidence/native-corpus-0c3e596/sealed/03-word-compatibility/native-artifacts.tar.xz",
+      "archiveSha256": "8c9d08a04ad0b0d76b886b68679b38e7717adc2afa768f36aa887e51383f118b",
+      "members": {
+        "run/word-compatibility/bridge/word-compatibility.doc": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+        "run/word-compatibility/native-docx/word-compatibility.docx": "5fd60dbab642f116c9f49fcef38cd8c09ce82ea1d7f29b2de3b56061942b9895",
+        "run/word-compatibility/converted.docx": "e9ec15b4bb05b3c88f419010d4eb1d451214964ba9b88f430c0da5d4011aa85c",
+        "run/word-compatibility/binary-render.json": "6c0f34931fb03c55e8e09232029a7e305009efe1fc8f052c0497237f4f6778bb",
+        "run/word-compatibility/converted-render.json": "c8ab2938bfe726f3cd301ec346d8e2640f479607b90e29ff04ba516bc175d5df"
+      },
+      "rawSource": {
+        "tableStream": "1Table",
+        "nFib": 257,
+        "cswNew": 0,
+        "piece": {
+          "startCp": 0,
+          "endCp": 384,
+          "wordOffset": 2048,
+          "encoding": "UTF-16LE"
+        },
+        "storyLengths": [
+          217,
+          31,
+          135,
+          0,
+          0,
+          0,
+          0
+        ],
+        "questionMarkCount": 0,
+        "references": [
+          {
+            "anchorCp": 215,
+            "recordOffset": 780,
+            "autoIndex": 1
+          }
+        ],
+        "noteRangePlcOffset": 782,
+        "noteRangeCps": [
+          0,
+          30,
+          31
+        ],
+        "notes": [
+          {
+            "startCp": 217,
+            "endCp": 247,
+            "text": "\u0002UNSELECTED footnote fallback\r"
+          }
+        ],
+        "dop": {
+          "offset": 1673,
+          "length": 610,
+          "footnoteWordOffset": 1675,
+          "footnoteWord": 17,
+          "footnoteRestart": 1,
+          "footnoteStart": 4
+        },
+        "sections": [
+          {
+            "startCp": 0,
+            "endCp": 196,
+            "sepxOffset": 4608,
+            "operations": [
+              {
+                "opcode": "303c",
+                "wordOffset": 4610,
+                "operand": "01"
+              },
+              {
+                "opcode": "5040",
+                "wordOffset": 4613,
+                "operand": "0200"
+              },
+              {
+                "opcode": "5042",
+                "wordOffset": 4617,
+                "operand": "0200"
+              },
+              {
+                "opcode": "5015",
+                "wordOffset": 4621,
+                "operand": "0200"
+              },
+              {
+                "opcode": "9016",
+                "wordOffset": 4625,
+                "operand": "f000"
+              },
+              {
+                "opcode": "3013",
+                "wordOffset": 4629,
+                "operand": "01"
+              },
+              {
+                "opcode": "501b",
+                "wordOffset": 4632,
+                "operand": "0300"
+              },
+              {
+                "opcode": "301d",
+                "wordOffset": 4636,
+                "operand": "02"
+              },
+              {
+                "opcode": "b01f",
+                "wordOffset": 4639,
+                "operand": "e03d"
+              },
+              {
+                "opcode": "b020",
+                "wordOffset": 4643,
+                "operand": "d02f"
+              },
+              {
+                "opcode": "b021",
+                "wordOffset": 4647,
+                "operand": "a005"
+              },
+              {
+                "opcode": "b022",
+                "wordOffset": 4651,
+                "operand": "a005"
+              },
+              {
+                "opcode": "b017",
+                "wordOffset": 4655,
+                "operand": "d002"
+              },
+              {
+                "opcode": "9023",
+                "wordOffset": 4659,
+                "operand": "a005"
+              },
+              {
+                "opcode": "9024",
+                "wordOffset": 4663,
+                "operand": "a005"
+              },
+              {
+                "opcode": "500b",
+                "wordOffset": 4667,
+                "operand": "0100"
+              },
+              {
+                "opcode": "900c",
+                "wordOffset": 4671,
+                "operand": "5802"
+              },
+              {
+                "opcode": "3019",
+                "wordOffset": 4675,
+                "operand": "01"
+              },
+              {
+                "opcode": "3005",
+                "wordOffset": 4678,
+                "operand": "00"
+              },
+              {
+                "opcode": "f203",
+                "wordOffset": 4681,
+                "operand": "000816"
+              },
+              {
+                "opcode": "f204",
+                "wordOffset": 4686,
+                "operand": "005802"
+              },
+              {
+                "opcode": "f203",
+                "wordOffset": 4691,
+                "operand": "013f1a"
+              },
+              {
+                "opcode": "5033",
+                "wordOffset": 4696,
+                "operand": "0000"
+              },
+              {
+                "opcode": "3228",
+                "wordOffset": 4700,
+                "operand": "01"
+              },
+              {
+                "opcode": "322a",
+                "wordOffset": 4703,
+                "operand": "01"
+              },
+              {
+                "opcode": "3228",
+                "wordOffset": 4706,
+                "operand": "01"
+              },
+              {
+                "opcode": "300e",
+                "wordOffset": 4709,
+                "operand": "00"
+              },
+              {
+                "opcode": "300a",
+                "wordOffset": 4712,
+                "operand": "01"
+              },
+              {
+                "opcode": "301a",
+                "wordOffset": 4715,
+                "operand": "01"
+              }
+            ]
+          },
+          {
+            "startCp": 196,
+            "endCp": 384,
+            "sepxOffset": 4718,
+            "operations": [
+              {
+                "opcode": "303c",
+                "wordOffset": 4720,
+                "operand": "01"
+              },
+              {
+                "opcode": "5040",
+                "wordOffset": 4723,
+                "operand": "0200"
+              },
+              {
+                "opcode": "5042",
+                "wordOffset": 4727,
+                "operand": "0200"
+              },
+              {
+                "opcode": "5015",
+                "wordOffset": 4731,
+                "operand": "0200"
+              },
+              {
+                "opcode": "9016",
+                "wordOffset": 4735,
+                "operand": "f000"
+              },
+              {
+                "opcode": "3013",
+                "wordOffset": 4739,
+                "operand": "02"
+              },
+              {
+                "opcode": "b01f",
+                "wordOffset": 4742,
+                "operand": "d02f"
+              },
+              {
+                "opcode": "b020",
+                "wordOffset": 4746,
+                "operand": "e03d"
+              },
+              {
+                "opcode": "b021",
+                "wordOffset": 4750,
+                "operand": "b004"
+              },
+              {
+                "opcode": "b022",
+                "wordOffset": 4754,
+                "operand": "b004"
+              },
+              {
+                "opcode": "b025",
+                "wordOffset": 4758,
+                "operand": "7800"
+              },
+              {
+                "opcode": "b017",
+                "wordOffset": 4762,
+                "operand": "5802"
+              },
+              {
+                "opcode": "9023",
+                "wordOffset": 4766,
+                "operand": "b004"
+              },
+              {
+                "opcode": "9024",
+                "wordOffset": 4770,
+                "operand": "b004"
+              },
+              {
+                "opcode": "702b",
+                "wordOffset": 4774,
+                "operand": "00000000"
+              },
+              {
+                "opcode": "d234",
+                "wordOffset": 4780,
+                "operand": "0000000000000000"
+              },
+              {
+                "opcode": "702c",
+                "wordOffset": 4791,
+                "operand": "00000000"
+              },
+              {
+                "opcode": "d235",
+                "wordOffset": 4797,
+                "operand": "0000000000000000"
+              },
+              {
+                "opcode": "702d",
+                "wordOffset": 4808,
+                "operand": "00000000"
+              },
+              {
+                "opcode": "d236",
+                "wordOffset": 4814,
+                "operand": "0000000000000000"
+              },
+              {
+                "opcode": "702e",
+                "wordOffset": 4825,
+                "operand": "00000000"
+              },
+              {
+                "opcode": "d237",
+                "wordOffset": 4831,
+                "operand": "0000000000000000"
+              },
+              {
+                "opcode": "5032",
+                "wordOffset": 4842,
+                "operand": "0100"
+              },
+              {
+                "opcode": "9031",
+                "wordOffset": 4846,
+                "operand": "9001"
+              },
+              {
+                "opcode": "7030",
+                "wordOffset": 4850,
+                "operand": "ffefffff"
+              },
+              {
+                "opcode": "5033",
+                "wordOffset": 4856,
+                "operand": "0000"
+              },
+              {
+                "opcode": "3228",
+                "wordOffset": 4860,
+                "operand": "00"
+              },
+              {
+                "opcode": "300e",
+                "wordOffset": 4863,
+                "operand": "00"
+              },
+              {
+                "opcode": "3011",
+                "wordOffset": 4866,
+                "operand": "01"
+              },
+              {
+                "opcode": "501c",
+                "wordOffset": 4869,
+                "operand": "1f00"
+              },
+              {
+                "opcode": "3009",
+                "wordOffset": 4873,
+                "operand": "04"
+              }
+            ]
+          }
+        ]
+      },
+      "observations": {
+        "binaryLayoutText": "    First page header retained\n\n\n    UNSELECTED body fallback\n2       Selected fallback body\n      Selected nested fallback\n4   UNSELECTED outer fallback\n    Before selected inline after\n6         Selected run fallback\n\n\n\n            First section ending\n\f2   Selected header fallback\n\n\n8   Second section textiv\n\n\n\n\n    ivUNSELECTED footnote fallback\n\f",
+        "parserLayoutText": "                                                 First page header retained\n\n\n 4                UNSELECTED body fallback\n                      Selected fallback body\n 6                  Selected nested fallback\n                  UNSELECTED outer fallback\n 8                Before selected inline after\n                        Selected run fallback\n     Selected\n         table\n       fallback\n10                        First section ending\n\f2   Selected header fallback\n\n\n    Second section texti\n\n\n\n\n    iUNSELECTED footnote fallback\n\f",
+        "reservedDopStart": 4,
+        "effectiveSourceStart": 1,
+        "parserSectionStarts": [
+          "1",
+          "1"
+        ],
+        "sourceSectionOffsetsAbsent": true
+      }
+    }
+  }
+}

@@ -59,8 +59,9 @@ git add -- packages/legacy_doc_parser pubspec.yaml tool/office_fidelity_manifest
 python3 tool/verify_office_fidelity.py --legacy-source /path/to/legacy-doc-parser --require-tracked
 ```
 
-The index check rejects omitted files, unstaged byte or executable-mode changes,
-and source-pin declarations that would differ in the commit. It caught six
+The index check rejects omitted files, unstaged upstream deletions, extra parser
+files, byte or executable-mode changes, and source-pin declarations that would
+differ in the commit. It caught six
 upstream diagnostic logs omitted by the app's general `*.log` ignore rule. The
 app now explicitly includes immutable parser evidence logs. Generated logs
 outside that evidence directory remain ignored. Office CI requires this check
