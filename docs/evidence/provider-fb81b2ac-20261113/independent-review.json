@@ -1,0 +1,263 @@
+{
+  "scope": "Independent read-only review of hosted provider evidence and historical Office queue diagnosis; no production or native pipeline rerun.",
+  "measuredAppCommit": "fb81b2ace557964459189afd7c0c7d76b2c9557d",
+  "measuredAppTree": "a14d066f1179ea00e20eaa3431aec0dd4fe05a5f",
+  "parserCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+  "decision": "Cleared; no concrete evidence errors found.",
+  "evidenceDirectory": "docs/evidence/provider-fb81b2ac-20261113",
+  "evidence": {
+    "receiptSha256": "9d389030a842e0f41a03f354d66e1bb7421e32964f1f102692c62839f0a5eb70",
+    "files": {
+      "README.md": {
+        "bytes": 6678,
+        "sha256": "dc9ed9b45c914b43d6de16f39c632493964d355f88766f12a7782f03a56d6a8e"
+      },
+      "verify.py": {
+        "bytes": 15222,
+        "sha256": "d0a1234c132c81092b228ffec5653e89da28098907ecb7707325148631e5af60"
+      },
+      "test_verifier.py": {
+        "bytes": 3131,
+        "sha256": "857af87e5b3a59888e56487d744ca248b796c15907d205d5d3434b56f3f9e929"
+      },
+      "manifest.json": {
+        "bytes": 4903,
+        "sha256": "9521a5ab69a51174c1c6af886f0fdf16b1289818b48c67c9a80929c821d26285"
+      },
+      "records.tar.xz": {
+        "bytes": 544124,
+        "sha256": "db410b0c9c3b5cc4336ffcee74817bcecab39189d1b8e702c625313429b59d28"
+      }
+    },
+    "providerParts": [
+      {
+        "path": "provider-outputs.part01",
+        "bytes": 3145728,
+        "sha256": "73a349afc394070820df3f09c356ac7e77b81b560d70951f3f1edd2dc6109fd0"
+      },
+      {
+        "path": "provider-outputs.part02",
+        "bytes": 3145728,
+        "sha256": "f59b0ae00ad4027d2f978e09d1a5941633af5ac3308d8418a96a92c2e57c668c"
+      },
+      {
+        "path": "provider-outputs.part03",
+        "bytes": 3145728,
+        "sha256": "af083ef15a189c86572216ff64e5193bda3fd1d7a90d8f201141e8701dc84050"
+      },
+      {
+        "path": "provider-outputs.part04",
+        "bytes": 3145728,
+        "sha256": "e35a4bbf6a58bc638ce0921756e0632ad9743b6905aef6926bcc9958ffa59508"
+      },
+      {
+        "path": "provider-outputs.part05",
+        "bytes": 3145728,
+        "sha256": "93e42772472b6b183d3ade552234debccbb5e72f51833c72382a02738a1ecc42"
+      },
+      {
+        "path": "provider-outputs.part06",
+        "bytes": 2983320,
+        "sha256": "89d43d9961f83db4a69babbdf160a28c03ee3153ed4b7f3f4ba342fd40c52f72"
+      }
+    ]
+  },
+  "verification": {
+    "repositoryVerification": {
+      "exitCode": 0,
+      "metadataRecords": 32,
+      "providerOutputs": 25,
+      "trackedGitInventory": 7579
+    },
+    "normalSemanticControls": {
+      "exitCode": 0,
+      "validEvidenceAccepted": true,
+      "semanticCorruptionsRejected": 13
+    },
+    "optimizedSemanticControls": {
+      "exitCode": 0,
+      "validEvidenceAccepted": true,
+      "semanticCorruptionsRejected": 13
+    }
+  },
+  "independentOriginalZipCheck": {
+    "path": "/workspace/scratch/c1ca2a1344e9/app-final-ci-downloads/provider-fb81b2ac.zip",
+    "bytes": 54108309,
+    "sha256": "13800eb19f18cd237f43ac82efe889fcd641b0cd17e07108d7b01107f35bd495",
+    "originalMembersVerified": 27,
+    "retainedMembersByteIdentical": 25,
+    "omitted": [
+      "results/dart-probe",
+      "results/rust-probe"
+    ]
+  },
+  "actualResults": {
+    "engines": [
+      "rust",
+      "dart",
+      "dart-pointycastle",
+      "dart-native"
+    ],
+    "rawCasesPerEngine": 131,
+    "rawMockCasesPerEngine": 34,
+    "exportCounts": {
+      "rust": 31,
+      "dart": 30,
+      "dart-pointycastle": 30,
+      "dart-native": 30
+    },
+    "crossDecryptions": 363,
+    "passed": true,
+    "failures": [],
+    "knownGaps": 10,
+    "observedInterEngineDifferences": 9,
+    "sharedAcceptedMissingCollectionGap": 1,
+    "promotion_ready": false
+  },
+  "liveGitHubReadOnlyChecks": {
+    "jobs": {
+      "jobs": [
+        {
+          "id": 131769379332,
+          "name": "conformance",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43390627091,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Run dart-lang/setup-dart@v1",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Run Swatinem/rust-cache@v2",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Run python -m pip install cryptography==50.0.0",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Check golden vectors, HTTP mocks and cross-decryption",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 17
+            },
+            {
+              "name": "Post Run Swatinem/rust-cache@v2",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 18
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 19
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 20
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 21
+            }
+          ]
+        }
+      ]
+    },
+    "artifacts": {
+      "artifacts": [
+        {
+          "id": 14020796791,
+          "name": "provider-conformance",
+          "size_in_bytes": 54108309,
+          "url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14020796791",
+          "archive_download_url": "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/artifacts/14020796791/zip",
+          "expired": false,
+          "created_at": "2026-11-13T08:14:03Z",
+          "expires_at": "2026-11-27T08:13:59Z",
+          "updated_at": "2026-11-13T08:14:03Z",
+          "digest": "sha256:13800eb19f18cd237f43ac82efe889fcd641b0cd17e07108d7b01107f35bd495",
+          "workflow_run": {
+            "id": 43390627091,
+            "repository_id": 1107206579,
+            "head_repository_id": 1107206579,
+            "head_branch": "feature/office-fidelity-gaps-20261113",
+            "head_sha": "fb81b2ace557964459189afd7c0c7d76b2c9557d"
+          }
+        }
+      ]
+    }
+  },
+  "officeQueue": {
+    "runId": 43390627156,
+    "jobId": 131769379446,
+    "observedAtUtc": "2026-11-13 08:20:09 UTC",
+    "status": "queued",
+    "conclusion": null,
+    "runnerId": 0,
+    "runnerName": "",
+    "executedSteps": 0,
+    "sameBranchRunning": 0,
+    "sameBranchPending": 0,
+    "sameBranchQueued": 1,
+    "firstJobHasNeeds": false,
+    "currentStatusClaimed": false,
+    "hostedOfficeSuccessClaimed": false,
+    "scope": "The retained source workflow and API records support the dated diagnosis; other-branch activity does not establish a runner-capacity blocker."
+  }
+}

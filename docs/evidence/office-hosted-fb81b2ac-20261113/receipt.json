@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "phase": "host-and-external-complete",
+  "measuredAppCommit": "fb81b2ace557964459189afd7c0c7d76b2c9557d",
+  "measuredAppTree": "a14d066f1179ea00e20eaa3431aec0dd4fe05a5f",
+  "measuredRuntimeCommit": "86d5a218853d8441afe8bc28f19cfe0adf4cd71e",
+  "measuredRuntimeTree": "765bf752b0095233192d38e678941e7ca92a76b8",
+  "parserCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+  "officeRunId": 43390627156,
+  "metadataRecordCount": 50,
+  "metadataUncompressedBytes": 3769429,
+  "files": {
+    "README.md": {
+      "bytes": 10947,
+      "sha256": "0336f9f86f96a7c00dc51abce5651353919c91da9b3d4d438a780d552be20e47"
+    },
+    "verify.py": {
+      "bytes": 40222,
+      "sha256": "cbfa5b51adc8fc31454836ac4aa9073df30c26d9338baa95e4ca27abd30dc7c4"
+    },
+    "test_verifier.py": {
+      "bytes": 5993,
+      "sha256": "0fbaa2b9ee670bf620321a41d85d08d4139e3d2ccfe994cb77b151ed0ebee523"
+    },
+    "manifest.json": {
+      "bytes": 7943,
+      "sha256": "de6568778bbb8495c817029983a6d009e63fa40db112ad12a0bfb4a4b4a378da"
+    },
+    "records.tar.xz": {
+      "bytes": 724272,
+      "sha256": "bb6e7b1bc35029d4e78842ccf757f1f6e1e70d4bd65967213572bfbe259d7177"
+    }
+  },
+  "hostParts": [
+    {
+      "path": "host-artifact.part01",
+      "bytes": 3145728,
+      "sha256": "8ef7e0faeda7d572a38ff6126a84ccadba08273e9b0153b94d0367dc2d2c8450"
+    },
+    {
+      "path": "host-artifact.part02",
+      "bytes": 641738,
+      "sha256": "4e32fa916e99944ff8bf7e732f23cc350307f0216164e2bdc9670bbd4c8d3395"
+    }
+  ],
+  "externalParts": [
+    {
+      "path": "external-artifact.part01",
+      "bytes": 3026036,
+      "sha256": "c04ab98780403ab553489528875e29ab0b7f66b81e70ba4d6cb63281a03da69c"
+    }
+  ]
+}

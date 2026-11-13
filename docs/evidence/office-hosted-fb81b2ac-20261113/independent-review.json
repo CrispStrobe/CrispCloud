@@ -1,0 +1,171 @@
+{
+  "appCommit": "fb81b2ace557964459189afd7c0c7d76b2c9557d",
+  "appTree": "a14d066f1179ea00e20eaa3431aec0dd4fe05a5f",
+  "artifactIds": {
+    "office-host-fidelity-evidence": 14022440972,
+    "office-host-schema-evidence": 14022222719
+  },
+  "boundaries": [
+    "Hosted renderer is LibreOffice24.2.7.2, distinct from local parser LibreOfficeDev26.8.",
+    "33 three-save app/engine series compare save1 to saves2/3 using page count, extracted text, decoded RGB and applicable picture evidence; no PDF-byte or word-box equality claim.",
+    "23 render-only files and0 independent sibling baselines; repeat stability alone does not prove every first export.",
+    "18 authored picture package/raster checks are separate independent controls.",
+    "No complete post-hook hosted Git snapshot exists; restoration is stated as wrapper behavior, not a captured final tree.",
+    "Parser Word14 parity reduction39/72\u219236/72, original unsupported alternate DrawingML and native Word ink limitations remain explicit.",
+    "Provider promotion_ready=false and10 known gaps remain separate from Office success."
+  ],
+  "decision": "Cleared; no remaining concrete finding after the two verifier-only corrections.",
+  "externalIndependentChecks": {
+    "appCommit": "fb81b2ace557964459189afd7c0c7d76b2c9557d",
+    "attemptCounts": {
+      "1": 122
+    },
+    "baselineComparisons": 0,
+    "externalFiles": 527,
+    "externalZipSha256": "c04ab98780403ab553489528875e29ab0b7f66b81e70ba4d6cb63281a03da69c",
+    "hostOutputs": 122,
+    "hostZipSha256": "36e2cd7585656cc2e33c038bd499c2d19e0c39427b453ad7d1dcb282a65d7805",
+    "nativeRenderer": "LibreOffice 24.2.7.2 420(Build:2)",
+    "nativeSchemaOnlyFiles": 0,
+    "pairwiseRepeatComparisonsRecomputed": 66,
+    "pictureOracleFiles": 18,
+    "renderOnlyFiles": 23,
+    "renderedFiles": 122,
+    "renderedPages": 158,
+    "renderedPdfs": 122,
+    "runId": 43390627156,
+    "schemaOutputs": 468,
+    "scope": "Read-only independent ZIP/package/schema/page/PDF/text/RGB/repeat inspection; no native execution or production workflows rerun.",
+    "threeSaveGroups": 33,
+    "verified": true
+  },
+  "finalGuardRecheck": {
+    "counterexamples": [
+      {
+        "name": "SDK Exception alongside empty Errors",
+        "reason": "Successful SDK row shape",
+        "rejected": true
+      },
+      {
+        "name": "external required step names absent with correct job identity",
+        "reason": "Exact final required steps",
+        "rejected": true
+      }
+    ],
+    "helperSha256": "cbfa5b51adc8fc31454836ac4aa9073df30c26d9338baa95e4ca27abd30dc7c4",
+    "metadataRecords": 50,
+    "originalCompleteBundleAccepted": true,
+    "originalZipSha256": {
+      "external": "c04ab98780403ab553489528875e29ab0b7f66b81e70ba4d6cb63281a03da69c",
+      "host": "36e2cd7585656cc2e33c038bd499c2d19e0c39427b453ad7d1dcb282a65d7805"
+    },
+    "repositoryVerified": true,
+    "scope": "Read-only evidence checks; no production/native workflow reruns or repository edits.",
+    "source": "fb81b2ace557964459189afd7c0c7d76b2c9557d"
+  },
+  "hostChecks": {
+    "committedPubspecSha256": "c3a86f613b810ee66f7b12dbcaa0161e2d616846512ef0073bc3effc80a665aa",
+    "coverageInputs": 3971,
+    "coveredInstrumentedLines": 2624,
+    "formats": {
+      "docm": 1,
+      "docx": 99,
+      "dotm": 1,
+      "dotx": 1,
+      "pptx": 16,
+      "xlsx": 4
+    },
+    "generatedInputs": 5,
+    "hookedPubspecSha256": "66e6c8810da5200bc377ea187673cdafbf5386abe150be499d9654ff5b64a2de",
+    "instrumentedLines": 4138,
+    "onlyTrackedDifference": "Exact documented 89-byte pubspec system-SQLite hook",
+    "requiredPackages": 122,
+    "scopedFiles": 12,
+    "trackedCoverageInputs": 3966
+  },
+  "jobIds": {
+    "external-schema": 131783096763,
+    "host-roundtrip": 131769379446
+  },
+  "normalAndOptimizedControls": {
+    "controls": [
+      "wrong committed source",
+      "failed host step",
+      "wrong host artifact source",
+      "missing required host output",
+      "different host output bytes",
+      "wrong owning OPC part",
+      "substituted Flutter command",
+      "unrelated host test file",
+      "wrong collection cwd",
+      "false pristine test pubspec",
+      "changed root lock",
+      "extra generated input",
+      "wrong Flutter version",
+      "invented coverage total",
+      "modified raw LCOV",
+      "wrong final run head",
+      "failed external job",
+      "substituted required external step",
+      "missing SDK package",
+      "wrong SDK package hash",
+      "SDK errors hidden by zero total",
+      "SDK exception hidden by empty errors",
+      "substituted staged host package",
+      "invented schema-only exclusion",
+      "invented baseline comparison",
+      "missing native record",
+      "wrong native source hash",
+      "changed native conversion argv",
+      "invented native retry",
+      "wrong native page fingerprint",
+      "wrong native extracted text",
+      "altered three-save membership",
+      "invented picture measurement"
+    ],
+    "semanticCorruptionsRejected": 33,
+    "validEvidenceAccepted": true
+  },
+  "originalArtifacts": {
+    "external": {
+      "bytes": 3026036,
+      "members": 527,
+      "sha256": "c04ab98780403ab553489528875e29ab0b7f66b81e70ba4d6cb63281a03da69c"
+    },
+    "host": {
+      "bytes": 3787466,
+      "members": 519,
+      "sha256": "36e2cd7585656cc2e33c038bd499c2d19e0c39427b453ad7d1dcb282a65d7805"
+    }
+  },
+  "parserCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+  "reviewedFiles": {
+    "README.md": {
+      "bytes": 10947,
+      "sha256": "0336f9f86f96a7c00dc51abce5651353919c91da9b3d4d438a780d552be20e47"
+    },
+    "manifest.json": {
+      "bytes": 7943,
+      "sha256": "de6568778bbb8495c817029983a6d009e63fa40db112ad12a0bfb4a4b4a378da"
+    },
+    "receipt.json": {
+      "bytes": 1709,
+      "sha256": "ba6adbb846456c899ec425e6df232ca84b25b0b48aead2ae58a37c7aeacbb276"
+    },
+    "records.tar.xz": {
+      "bytes": 724272,
+      "sha256": "bb6e7b1bc35029d4e78842ccf757f1f6e1e70d4bd65967213572bfbe259d7177"
+    },
+    "test_verifier.py": {
+      "bytes": 5993,
+      "sha256": "0fbaa2b9ee670bf620321a41d85d08d4139e3d2ccfe994cb77b151ed0ebee523"
+    },
+    "verify.py": {
+      "bytes": 40222,
+      "sha256": "cbfa5b51adc8fc31454836ac4aa9073df30c26d9338baa95e4ca27abd30dc7c4"
+    }
+  },
+  "runId": 43390627156,
+  "runtimeCommit": "86d5a218853d8441afe8bc28f19cfe0adf4cd71e",
+  "scope": "Independent read-only final hosted Office evidence review. No production workflows, Flutter tests, parser conversions or native rendering rerun; no repository edits."
+}
