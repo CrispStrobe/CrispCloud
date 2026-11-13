@@ -56,6 +56,8 @@ class _RecordingService extends ArchiveCreationService {
     required ArchiveCreationOptions options,
     bool Function()? isCancelled,
     void Function(ArchiveCreationProgress)? onProgress,
+    ArchiveCreationWriter? writer,
+    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
   }) async {
     requests.add(options);
     destinationPath = destinationDirectory;

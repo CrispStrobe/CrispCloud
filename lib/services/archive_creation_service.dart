@@ -373,8 +373,12 @@ class ArchiveCreationResult {
 /// A verified candidate whose destination is still unpublished. A durable job
 /// must acknowledge this exact receipt before the exclusive commit may proceed.
 class ArchiveCreationPrepared extends ArchiveCreationResult {
-  const ArchiveCreationPrepared(super.path, super.entryCount, super.bytes,
-      this.sha256);
+  const ArchiveCreationPrepared(
+    super.path,
+    super.entryCount,
+    super.bytes,
+    this.sha256,
+  );
   final String sha256;
 }
 
@@ -487,28 +491,40 @@ class ArchiveCreationService {
   }) async {
     options.validate();
     if (writer != null &&
-        (options.format.diskImage || options.password != null ||
-            !const {ArchiveEndpointFormat.zip, ArchiveEndpointFormat.sevenZip,
-              ArchiveEndpointFormat.rar}.contains(options.format.endpointFormat))) {
-      throw const ArchiveCreationException(ArchiveCreationError.unsupportedOptions);
+        (options.format.diskImage ||
+            options.password != null ||
+            !const {
+              ArchiveEndpointFormat.zip,
+              ArchiveEndpointFormat.sevenZip,
+              ArchiveEndpointFormat.rar,
+            }.contains(options.format.endpointFormat))) {
+      throw const ArchiveCreationException(
+        ArchiveCreationError.unsupportedOptions,
+      );
     }
-    final streamedTar = writer == null && supportsStreamedTarCreation(
-      format: options.format,
-      source: source,
-      destination: destination,
-    );
-    final streamedCommon = writer == null && supportsStreamedCreation(
-      format: options.format,
-      source: source,
-      destination: destination,
-      password: options.password,
-      compression: options.compression,
-    );
-    final streamedDisk = writer == null && supportsStreamedDiskCreation(
-      format: options.format,
-      source: source,
-      destination: destination,
-    );
+    final streamedTar =
+        writer == null &&
+        supportsStreamedTarCreation(
+          format: options.format,
+          source: source,
+          destination: destination,
+        );
+    final streamedCommon =
+        writer == null &&
+        supportsStreamedCreation(
+          format: options.format,
+          source: source,
+          destination: destination,
+          password: options.password,
+          compression: options.compression,
+        );
+    final streamedDisk =
+        writer == null &&
+        supportsStreamedDiskCreation(
+          format: options.format,
+          source: source,
+          destination: destination,
+        );
     final streamed = streamedTar || streamedCommon || streamedDisk;
     final nativeLarge = streamedCommon || streamedDisk;
     final streamedLimit = nativeLarge
@@ -921,8 +937,12 @@ class ArchiveCreationService {
       }
       if (writer != null) {
         progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
-        await writer(entries: List.unmodifiable(captured), sink: emit,
-            maxOutputBytes: spool.maxBytes, isCancelled: isCancelled);
+        await writer(
+          entries: List.unmodifiable(captured),
+          sink: emit,
+          maxOutputBytes: spool.maxBytes,
+          isCancelled: isCancelled,
+        );
       } else if (streamedCommon) {
         await writeStreamingArchiveEntries(
           options.format.endpointFormat,
@@ -1171,7 +1191,8 @@ class ArchiveCreationService {
                 maxBytes: streamedLimit,
                 isCancelled: isCancelled,
               )).archive
-            : writer == null && options.format.endpointFormat == ArchiveEndpointFormat.rar
+            : writer == null &&
+                  options.format.endpointFormat == ArchiveEndpointFormat.rar
             ? await openStoredRarArchive(
                 verificationSource,
                 maxBytes: ArchiveService.maxArchiveBytes,
@@ -1190,7 +1211,15 @@ class ArchiveCreationService {
         try {
           final expected = {for (final entry in entries) entry.name: entry};
           if (archive.members.length != entries.length ||
-              streamedTar && archive.formatName != 'tar') {
+              streamedTar && archive.formatName != 'tar' ||
+              writer != null &&
+                  archive.formatName !=
+                      switch (options.format.endpointFormat) {
+                        ArchiveEndpointFormat.zip => 'zip',
+                        ArchiveEndpointFormat.sevenZip => '7z',
+                        ArchiveEndpointFormat.rar => 'rar',
+                        _ => '',
+                      }) {
             throw const ArchiveCreationException(
               ArchiveCreationError.verificationFailed,
             );
@@ -1204,6 +1233,7 @@ class ArchiveCreationService {
             if (entry == null ||
                 member.pathEscapedRoot ||
                 member.isSpecial ||
+                writer != null && member.isEncrypted ||
                 member.isFile == entry.file.isFolder ||
                 member.size != (entry.file.isFolder ? 0 : entry.file.size) ||
                 entry.mode != null &&
@@ -1334,8 +1364,14 @@ class ArchiveCreationService {
             );
           }
           if (onPrepared != null) {
-            await onPrepared(ArchiveCreationPrepared(
-                output, entries.length, spool.length, packedHash));
+            await onPrepared(
+              ArchiveCreationPrepared(
+                output,
+                entries.length,
+                spool.length,
+                packedHash,
+              ),
+            );
             check();
           }
           await validateSources();
@@ -1372,7 +1408,9 @@ class ArchiveCreationService {
       (a.isSymlink != true && b.isSymlink != true) &&
       (a.uuid == null && !requireKnown || a.uuid == b.uuid) &&
       (a.size == null && !requireKnown || a.size == b.size) &&
-      (a.updatedAt == null && !requireKnown || a.updatedAt == b.updatedAt);
+      (a.updatedAt == null
+          ? !requireKnown || b.updatedAt == null
+          : b.updatedAt != null && a.updatedAt!.isAtSameMomentAs(b.updatedAt!));
 }
 
 /// TAR verification may index many headers before opening a member. Keep its

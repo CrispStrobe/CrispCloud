@@ -25,6 +25,13 @@ class ArchiveFormatCapability {
 
 const archiveFormatCapabilities = <ArchiveFormatCapability>[
   ArchiveFormatCapability(
+    id: 'sfx',
+    label: 'Self-extracting archive',
+    suffixes: ['.exe', '.sfx'],
+    mimeType: 'application/vnd.microsoft.portable-executable',
+    notes: 'Read-only ZIP, 7z or RAR payloads inside supported unsigned Windows executables. Executables are never run. Installer-specific overlays and signed executables are unavailable.',
+  ),
+  ArchiveFormatCapability(
     id: 'zip',
     label: 'ZIP',
     suffixes: ['.zip'],
