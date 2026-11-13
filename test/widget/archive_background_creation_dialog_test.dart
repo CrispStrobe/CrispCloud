@@ -29,6 +29,8 @@ class _ForegroundService extends ArchiveCreationService {
     Future<void> Function(Map<String, dynamic>)? onPublicationCheckpoint,
     bool Function()? isCancelled,
     void Function(ArchiveCreationProgress)? onProgress,
+    ArchiveCreationWriter? writer,
+    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
   }) {
     receivedControl = control;
     return completed.future;

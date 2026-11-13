@@ -61,6 +61,8 @@ class GatedArchiveCreation extends ArchiveCreationService {
     String? expectedSourceManifestSha256,
     Future<void> Function(Map<String, dynamic>)? onPublicationCheckpoint,
     void Function(ArchiveCreationProgress)? onProgress,
+    ArchiveCreationWriter? writer,
+    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
   }) async {
     calls++;
     if (!entered.isCompleted) entered.complete();
@@ -81,6 +83,8 @@ class GatedArchiveCreation extends ArchiveCreationService {
       expectedSourceManifestSha256: expectedSourceManifestSha256,
       onPublicationCheckpoint: onPublicationCheckpoint,
       onProgress: onProgress,
+      writer: writer,
+      onPrepared: onPrepared,
     );
   }
 }
