@@ -7,11 +7,19 @@ The integrated candidate is
 on `feature/archive-iso-rar-dmg-20261113`. Its
 [Archive containers run 43369528217](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217)
 has a completed normal regression result: **1,856 passed, zero failed, ten
-explicitly skipped large cases**. Its dedicated **DMG creation, editing and
-publication case above 2 GiB has also passed**, with one passed test, zero
-failures and zero skips. Eight other dedicated large-case receipts remain
-pending. The completed common-format baseline below remains independent
-evidence at its own earlier commit.
+explicitly skipped large cases**. All four new-profile large gates have also
+passed: **ISO, DMG and RAR5 Store creation/editing/publication, plus RAR5 Store
+creation**, each with one passed test, zero failures and zero skips. Five
+common-format large receipts remain pending on this candidate. The completed
+common-format baseline below remains independent evidence at its own earlier
+commit.
+
+The repository retains a
+[compact machine-readable hosted receipt](evidence/archive-hosted-acceptance-f1a03e.json)
+with the exact production revision, attempts, completed test counts and
+selected names, verification/restoration results, job and artifact identifiers,
+download-verified artifact hashes, timestamps and explicit pending cases. This
+preserves the acceptance summary beyond the uploaded artifacts' retention.
 
 ## Retained source and completed hosted gate
 
@@ -250,13 +258,17 @@ the completed attempt-1 result, rather than a newly executed normal suite.
 
 ### Completed integrated large results
 
-The DMG case completed successfully in attempt 2 on the same candidate. At the
-`2026-11-13T05:44:12Z` snapshot, the other eight dedicated large cases remained
-running or queued; they are not included in the completed result below.
+All four new-profile large cases completed successfully in attempt 2 on the
+same candidate. At the `2026-11-13T05:49:57Z` snapshot, the other five dedicated
+large cases remained running or queued; they are not included in the completed
+results below.
 
 | Acceptance case | Hosted job | Passed | Failed | Skipped | Receipt timestamp (UTC, 2026-11-13) | Artifact |
 | --- | --- | ---: | ---: | ---: | --- | --- |
 | DMG creation, editing and publication above 2 GiB | [131706499666](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499666) | 1 | 0 | 0 | `05:42:48.5728523Z` | [14013223215](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013223215) |
+| RAR5 Store creation, editing and publication above 2 GiB | [131706499653](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499653) | 1 | 0 | 0 | `05:46:09.1470867Z` | [14013084191](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013084191) |
+| ISO creation, editing and publication above 2 GiB | [131706499639](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499639) | 1 | 0 | 0 | `05:48:50.4612951Z` | [14013228194](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013228194) |
+| RAR5 Store creation above 2 GiB | [131706499674](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499674) | 1 | 0 | 0 | `05:48:56.1120506Z` | [14013622486](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013622486) |
 
 The DMG job logged `19:19 +1: All tests passed!` at
 `2026-11-13T05:42:48.3316452Z` and completed at `05:42:54Z`. Its downloaded
@@ -274,6 +286,27 @@ This completed application test establishes the full DMG fixture described
 below, including initial, reviewed and installed outer images above 2 GiB,
 cancellation without replacing the original, complete reopened member hashing,
 source retention and staging cleanup.
+
+The RAR workflow job logged `18:12 +1: All tests passed!` at
+`2026-11-13T05:46:08.6384316Z` and completed at `05:46:14Z`. Its downloaded
+receipt confirms the exact selected test,
+`RAR5 Store creates, edits and publishes beyond 2 GiB`, passed without a skip,
+with successful dependency restoration and a completed verified receipt. Its
+ZIP SHA-256 matches GitHub's digest
+`fcdfd5dabf291cd87a8f7da205e603b0c42523e8c16d67b937704a5997b842e5`;
+artifact retention runs through `2026-11-27T05:46:09Z`. This establishes the RAR
+application workflow above 2 GiB in addition to the separate direct codec
+proof described below.
+
+The ISO job logged `22:11 +1: All tests passed!` at
+`2026-11-13T05:48:50.2686186Z` and completed at `05:48:54Z`. The RAR creation
+job logged `03:38 +1: All tests passed!` at `05:48:55.9796007Z` and completed
+at `05:49:00Z`. Their downloaded receipts each identify the exact selected
+test, with one passed test, zero failures, zero skips, completed verification
+and successful dependency restoration. Both downloaded ZIP digests match
+GitHub metadata. The durable JSON receipt records those hashes and each
+artifact's retention timestamp, together with the normal, DMG and RAR workflow
+receipts.
 
 ### Exact normal skips and large-case coverage
 
@@ -426,6 +459,7 @@ cleanup evidence; they are not additional archive assertion failures.
 suite and all five explicit hosted cases above 2 GiB at
 `80fbf6f2978accc3521b06ee6449d4c52c814b90`. The integrated candidate at
 `f1a03e807b1261361a17f66a37fa94858481e1e7` passed its complete normal archive
-suite and its explicit DMG creation/editing/publication case above 2 GiB.
-Eight dedicated large cases on that candidate remain pending completed
-receipts; the earlier baseline does not prove subsequent changes.
+suite and all four new-profile large gates: ISO, DMG and RAR5 Store
+creation/editing/publication, plus RAR5 Store creation. Five common-format
+large cases on that candidate remain pending completed receipts; the earlier
+baseline does not prove subsequent changes.

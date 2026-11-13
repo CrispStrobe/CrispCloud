@@ -151,8 +151,10 @@ common-format workspaces with their individual 8 GiB budgets. Imports use sealed
 private spools; transfer checks and source-removal hashes consume bounded
 streams. A streamed pair's combined candidate budget is the sum of its two
 workspace limits, while each archive retains its own limit. Two buffered
-workspaces retain the earlier 256 MiB combined budget. The new integration
-tests are authored and statically checked; the Flutter runtime gate remains.
+workspaces retain the earlier 256 MiB combined budget. The integration suites
+have since passed in the hosted normal archive gate. Exact tested revisions and
+the separately enabled large-case results are recorded in
+[runtime verification](../archive-containers-runtime-verification.md).
 
 **Delivered same-workspace continuation (2026-11-12):** **Move within archive…**
 preflights a selected group, supports recursive/implicit/empty directories and

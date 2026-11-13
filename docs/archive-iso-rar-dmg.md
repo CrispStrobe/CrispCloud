@@ -180,12 +180,14 @@ receipt is green only when its exact selected large test completes with zero
 skips. At commit `f1a03e807b1261361a17f66a37fa94858481e1e7`, the normal hosted
 suite completed with **1,856 passed, zero failed and ten opt-in cases skipped**;
 help validation, archive analysis and the portable codec checks also passed.
-The **DMG large integrated job also passed**, including creation, folder edits,
-review, cancellation without mutation, publication, reopening and full payload
-hashing, with one passed test and no failures or skips. Both its initial and
-edited, published outer containers exceeded 2 GiB. Eight other large jobs still
-need completed receipts: attempt 1 was canceled while the ISO/DMG cases were
-active, and attempt 2 reruns the unfinished jobs on the same source revision.
+The **ISO, RAR5 Store and DMG large integrated jobs also passed**, including
+creation, folder edits, review, cancellation without mutation, publication,
+reopening and full payload hashing, with one passed test and no failures or skips
+in each job. Both the initial and edited, published outer containers exceeded
+2 GiB in each format. The separate RAR5 Store creation case passed as well.
+Five common-format large jobs still need completed receipts on this candidate:
+attempt 1 was canceled while the ISO/DMG cases were active, and attempt 2 reruns
+the unfinished jobs on the same source revision.
 The additional standalone RAR codec opt-in has the separate direct evidence
 above. Exact jobs and current completion status are in
 [runtime verification](archive-containers-runtime-verification.md).

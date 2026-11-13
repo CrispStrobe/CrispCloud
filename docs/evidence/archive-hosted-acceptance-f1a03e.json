@@ -1,0 +1,378 @@
+{
+  "schema": 1,
+  "repository": "CrispStrobe/CrispCloud",
+  "production_revision": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+  "branch": "feature/archive-iso-rar-dmg-20261113",
+  "run": {
+    "id": 43369528217,
+    "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217",
+    "latest_attempt_observed": 2,
+    "github_reported_status": "queued",
+    "observed_at_utc": "2026-11-13T05:49:57Z"
+  },
+  "acceptance": {
+    "status": "partial",
+    "required_matrix_cases": 10,
+    "completed_matrix_cases": 5,
+    "pending_matrix_cases": 5,
+    "normal_result_retained_from_attempt": 1
+  },
+  "completed_cases": [
+    {
+      "case": "normal",
+      "run_attempt": 1,
+      "job": {
+        "id": 131701898537,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131701898537",
+        "name": "Archive regression suite",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:04:19Z",
+        "completed_at": "2026-11-13T05:13:58Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:13:52.3656185Z",
+      "receipt": {
+        "schema": 1,
+        "case": "normal",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1856,
+          "failed": 0,
+          "skipped": 10
+        },
+        "expected_large_test": null,
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "skipped_tests": [
+          {
+            "name": "ISO data image creates, edits and publishes beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "RAR5 Store creates, edits and publishes beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "RAR5 Store writes and fully reads a container larger than 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "ZIP publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "native TGZ can review, publish and reopen a member larger than 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "ZIP, TGZ and 7z stream a source larger than 2GiB with bounded memory",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "7z publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "TAR.GZ publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          },
+          {
+            "name": "RAR5 Store publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": true
+          }
+        ],
+        "skipped_test_event_reason": null
+      },
+      "artifact": {
+        "id": 14012002987,
+        "name": "archive-normal-f1a03e807b1261361a17f66a37fa94858481e1e7-1",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14012002987",
+        "sha256_github": "be9adff2dc8bede22e04a64f9540ebd3591d94805ab37fc08a56b2e1a288ad07",
+        "created_at": "2026-11-13T05:13:53Z",
+        "expires_at": "2026-11-27T05:13:52Z",
+        "sha256_downloaded": "be9adff2dc8bede22e04a64f9540ebd3591d94805ab37fc08a56b2e1a288ad07",
+        "download_digest_matches_github": true
+      }
+    },
+    {
+      "case": "iso-workflow-2g",
+      "run_attempt": 2,
+      "job": {
+        "id": 131706499639,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499639",
+        "name": "ISO creation, editing and publication above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:23:32Z",
+        "completed_at": "2026-11-13T05:48:54Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:48:50.4612951Z",
+      "receipt": {
+        "schema": 1,
+        "case": "iso-workflow-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "ISO data image creates, edits and publishes beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "ISO data image creates, edits and publishes beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14013228194,
+        "name": "archive-iso-workflow-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013228194",
+        "sha256_github": "b3888be245179ae8c2bdc498249c95ccacc15c57a2833ab29750ac0d62afb520",
+        "created_at": "2026-11-13T05:48:51Z",
+        "expires_at": "2026-11-27T05:48:50Z",
+        "sha256_downloaded": "b3888be245179ae8c2bdc498249c95ccacc15c57a2833ab29750ac0d62afb520",
+        "download_digest_matches_github": true
+      }
+    },
+    {
+      "case": "dmg-workflow-2g",
+      "run_attempt": 2,
+      "job": {
+        "id": 131706499666,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499666",
+        "name": "DMG creation, editing and publication above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:20:49Z",
+        "completed_at": "2026-11-13T05:42:54Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:42:48.5728523Z",
+      "receipt": {
+        "schema": 1,
+        "case": "dmg-workflow-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14013223215,
+        "name": "archive-dmg-workflow-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013223215",
+        "sha256_github": "57ac98544f99bae0468af7796fcaf0543fc09982883734e81a851e5dca084498",
+        "created_at": "2026-11-13T05:42:49Z",
+        "expires_at": "2026-11-27T05:42:48Z",
+        "sha256_downloaded": "57ac98544f99bae0468af7796fcaf0543fc09982883734e81a851e5dca084498",
+        "download_digest_matches_github": true
+      }
+    },
+    {
+      "case": "rar-workflow-2g",
+      "run_attempt": 2,
+      "job": {
+        "id": 131706499653,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499653",
+        "name": "RAR5 Store creation, editing and publication above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:25:14Z",
+        "completed_at": "2026-11-13T05:46:14Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:46:09.1470867Z",
+      "receipt": {
+        "schema": 1,
+        "case": "rar-workflow-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "RAR5 Store creates, edits and publishes beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "RAR5 Store creates, edits and publishes beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14013084191,
+        "name": "archive-rar-workflow-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013084191",
+        "sha256_github": "fcdfd5dabf291cd87a8f7da205e603b0c42523e8c16d67b937704a5997b842e5",
+        "created_at": "2026-11-13T05:46:10Z",
+        "expires_at": "2026-11-27T05:46:09Z",
+        "sha256_downloaded": "fcdfd5dabf291cd87a8f7da205e603b0c42523e8c16d67b937704a5997b842e5",
+        "download_digest_matches_github": true
+      }
+    },
+    {
+      "case": "creation-rar-2g",
+      "run_attempt": 2,
+      "job": {
+        "id": 131706499674,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499674",
+        "name": "RAR5 Store creation above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:43:07Z",
+        "completed_at": "2026-11-13T05:49:00Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:48:56.1120506Z",
+      "receipt": {
+        "schema": 1,
+        "case": "creation-rar-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "RAR5 Store publishes a member and archive beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "RAR5 Store publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14013622486,
+        "name": "archive-creation-rar-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013622486",
+        "sha256_github": "e424ca4fdf99f4acaa96cb6fd68da219a76ce8d8166c080e94a5dbc3df41d1a6",
+        "created_at": "2026-11-13T05:48:56Z",
+        "expires_at": "2026-11-27T05:48:56Z",
+        "sha256_downloaded": "e424ca4fdf99f4acaa96cb6fd68da219a76ce8d8166c080e94a5dbc3df41d1a6",
+        "download_digest_matches_github": true
+      }
+    }
+  ],
+  "pending_cases": [
+    {
+      "case": "creation-zip-2g",
+      "run_attempt": 2,
+      "exact_test": "ZIP publishes a member and archive beyond 2 GiB",
+      "job_id": 131706499337,
+      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499337",
+      "observed_job_status": "in_progress",
+      "observed_job_conclusion": null
+    },
+    {
+      "case": "creation-7z-2g",
+      "run_attempt": 2,
+      "exact_test": "7z publishes a member and archive beyond 2 GiB",
+      "job_id": 131706499584,
+      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499584",
+      "observed_job_status": "in_progress",
+      "observed_job_conclusion": null
+    },
+    {
+      "case": "creation-tgz-2g",
+      "run_attempt": 2,
+      "exact_test": "TAR.GZ publishes a member and archive beyond 2 GiB",
+      "job_id": 131706499622,
+      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499622",
+      "observed_job_status": "in_progress",
+      "observed_job_conclusion": null
+    },
+    {
+      "case": "workspace-tgz-2g",
+      "run_attempt": 2,
+      "exact_test": "native TGZ can review, publish and reopen a member larger than 2 GiB",
+      "job_id": 131706499669,
+      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499669",
+      "observed_job_status": "queued",
+      "observed_job_conclusion": null
+    },
+    {
+      "case": "writers-2g",
+      "run_attempt": 2,
+      "exact_test": "ZIP, TGZ and 7z stream a source larger than 2GiB with bounded memory",
+      "job_id": 131706499761,
+      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499761",
+      "observed_job_status": "queued",
+      "observed_job_conclusion": null
+    }
+  ],
+  "attempt_1_cancellation": {
+    "conclusion": "cancelled",
+    "github_updated_at_utc": "2026-11-13T05:14:38Z",
+    "cause": "Not established by the available GitHub metadata.",
+    "normal_completed_successfully_before_cancellation": true,
+    "completed_large_cases": 0,
+    "cancelled_large_receipts_count_as_acceptance": false
+  },
+  "separate_direct_codec_proof": {
+    "normal_skipped_test": "RAR5 Store writes and fully reads a container larger than 2 GiB",
+    "dedicated_hosted_matrix_case": false,
+    "direct_function": "verifyRarStoredLarge",
+    "report": "docs/archive-rar-store-verification.md",
+    "receipt": "docs/evidence/archive-rar-store-verification.json"
+  },
+  "scope_notes": [
+    "The normal job executed in attempt 1; attempt 2 resumed only unsuccessful jobs.",
+    "GitHub still reported the overall run as queued at this observation while individual jobs were active or completed.",
+    "Normal skip event reasons were null; source-declared opt-in conditions and the nine hosted mappings are documented in the runtime report.",
+    "Completed artifact ZIP digests were calculated after download and matched GitHub artifact metadata.",
+    "This receipt omits authentication material, environment dumps, and complete test logs.",
+    "The 8 GiB limits are implementation guards; the large acceptance fixtures measure members and, where asserted, outer containers above 2 GiB."
+  ]
+}
