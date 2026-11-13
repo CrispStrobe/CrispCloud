@@ -20,22 +20,21 @@ This is newer than the original format/license audit at `9b9af85`.
   The continuation is on the existing feature branch; it does not merge or
   release the work.
 
-## Current continuation
+## Completed continuation
 
-1. Retain the completed Linux/browser result in the validation receipts.
-2. Expose the native DOC/DOT model's already parsed auxiliary stories in the
+1. Retained the completed Linux/browser result in the validation receipts.
+2. Exposed the native DOC/DOT model's already parsed auxiliary stories in the
    app preview, with consistent search/copy behavior and clear story labels.
-3. Investigate the linked-picture mapping, WPS table-border range, and unresolved
-   textbox-shape cases independently. Any parser changes belong in the
-   standalone `CrispStrobe/legacy-doc-parser` source and must be committed there
-   before the verified mirror sync updates CrispCloud.
-4. Run focused regression and provenance checks, record their actual scope,
-   and save incremental remote commits. The historical comparison results
+3. Fixed the linked-picture mapping, WPS table-border range, and unresolved
+   textbox-shape cases independently. The parser changes were saved in the
+   standalone `CrispStrobe/legacy-doc-parser` source before the verified mirror
+   sync updated CrispCloud.
+4. Ran focused regression and provenance checks, recorded their actual scope,
+   and saved incremental remote commits. The historical comparison results
    remain identified as measurements of their original source checkpoint.
 
-Implementation and final validation results will be appended as each portion
-finishes. Existing input/allocation guards and source fingerprints remain part
-of the acceptance criteria.
+Existing input/allocation guards and source fingerprints remain part of the
+acceptance criteria. The implementation and executed checks are recorded below.
 
 ## Saved implementation checkpoints
 
@@ -48,6 +47,7 @@ of the acceptance criteria.
 | legacy-doc-parser | [`22f2daf`](https://github.com/CrispStrobe/legacy-doc-parser/commit/22f2dafeeb28a5a469cf436d26dca0e0da7a7730) | First bounded compatibility fixes and 27 authored positive/negative controls. |
 | legacy-doc-parser | [`e442772`](https://github.com/CrispStrobe/legacy-doc-parser/commit/e4427725cc720eaefad97c2cb921a6fe1e36749d) | Canonical parser `419864b` preserved, with 1,019 passing tests, clean full analysis and a fresh 19/19 differential probe. |
 | CrispCloud | [`e8e46b5`](https://github.com/CrispStrobe/CrispCloud/commit/e8e46b5ef04dcea3b4a65f5b4f1c797559528f5b) | Exact standalone parser mirror, source pin and evidence synced with the repository's guarded tool. |
+| CrispCloud | [`66843aa`](https://github.com/CrispStrobe/CrispCloud/commit/66843aa48cc23a647cfdd4bde85554a4574d527e) | Final recovered-placement labels, updated comparison and passing app/provenance receipts retained. |
 
 The source guard verified all **1,500 Office-managed files** against the updated
 inventory and exact standalone Git commit, including tracked file modes and
@@ -77,9 +77,14 @@ resolution and normal native hooks. The initial filtered-environment Rustup
 failure is retained separately; genuine workspace compiler launchers resolved
 that environment issue without replacing a dependency or disabling a hook.
 
-The production JavaScript web release build is being checked separately. Its
-result and the remaining platform qualification limits are recorded in the
-same receipt, rather than inferred from unit/widget success.
+The production JavaScript web release build also **passed**, with unchanged
+release/O4 settings and the optional separate Flutter-WASM dry run disabled.
+The initial default invocation's terminated compiler output is retained along
+with the successful invocation. All **131** selected runtime/notice/host files
+in the actual web bundle match their source hashes; the format engines' WASM
+files remain included. Flutter-WASM application output and interactive device
+qualification remain outside this result. The [build receipt](../evidence/file-viewer-continuation-20261113/web-release.json)
+retains the output size, digest and packaging checks.
 
 ## Reproducible local engine checks
 

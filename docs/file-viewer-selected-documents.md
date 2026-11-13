@@ -137,6 +137,15 @@ record commands, versions and evidence:
   Dart 3.13.7 JavaScript web release** builds successfully. Its optional
   Flutter-WASM dry run reported exit 247; no Flutter-WASM build is claimed.
 
+The subsequent DOC/DOT continuation has its own fresh receipt: **42 DOC/review/
+metafile tests**, **36 MBOX/email/routing/source tests**, and **11 F3 email/search
+tests**, all passing with normal native hooks. The focused analyzer is clean;
+**23** provenance controls also pass. The production JavaScript release build
+passed with `--no-wasm-dry-run`, retaining normal O4/minification and all document
+engine WASM assets. **131** packaged runtime/notice/host files match the source
+hashes. These results are separate from the original 69-test receipt and are
+retained in the [continuation evidence](evidence/file-viewer-continuation-20261113/README.md).
+
 The same run's Linux job compiled the real WebKitGTK-enabled plugin and release
 consumer, verified 42 runtime assets and 27 XML chooser filesystem-policy cases,
 and verified installation of its executable startup probe. It did not launch

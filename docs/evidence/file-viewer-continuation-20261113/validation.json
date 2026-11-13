@@ -43,7 +43,7 @@
     "documentRuntimeAndSourceRecords": 174
   },
   "webRelease": {
-    "status": "retrying-js-only",
+    "status": "passed",
     "command": "flutter build web --no-pub --release --no-wasm-dry-run",
     "firstAttempt": {
       "command": "flutter build web --no-pub --release",
@@ -54,7 +54,12 @@
       "log": "web-release-first-attempt.log"
     },
     "retryScope": "Same production JavaScript release/O4 settings; optional separate WASM diagnostic disabled; no source/SDK/graph edits",
-    "flutterWasmBuildClaimed": false
+    "flutterWasmBuildClaimed": false,
+    "exitCode": 0,
+    "compileSeconds": 193.7,
+    "log": "web-release.log",
+    "artifactReceipt": "web-release.json",
+    "runtimeBundleFilesVerified": 131
   },
   "historicalEngineChecks": {
     "nodeNativeWasmPassed": 61,

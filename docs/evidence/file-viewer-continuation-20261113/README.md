@@ -17,6 +17,7 @@ bytes independently of the subsequent checkpoint commit.
 | Focused analyzer over nine app/test paths | **No issues found** | [app-analyze.log](app-analyze.log) |
 | Parser mirror sync and runtime-verifier positive/negative controls | **23/23 passed** | [provenance-tests.log](provenance-tests.log) |
 | Selected engine test entry after the default-checkout repair | **61/61 passed; zero skips** | [selected-engine-tests.log](selected-engine-tests.log) |
+| Production JavaScript web release, unchanged O4/minification | **Passed; 193.7 seconds** | [web-release.log](web-release.log) · [artifact/bundle hashes](web-release.json) |
 
 The three Flutter invocations contain **89 distinct tests**, including 18 newly
 authored story-projection/service/widget cases. They are not added to the
@@ -83,7 +84,14 @@ source diagnostic. The [complete failure log](web-release-first-attempt.log)
 is retained; that signal alone does not establish its cause. A targeted second
 invocation uses Flutter's documented `--no-wasm-dry-run` option to run the same
 JavaScript release/O4 target without the separate optional WASM diagnostic.
-Its result is recorded in `validation.json` when complete. Native Word pagination,
+That invocation **passed**, producing the actual 27,099,728-byte `main.dart.js`
+whose SHA-256 is retained in [web-release.json](web-release.json). All **42**
+selected runtime assets, **86** original notice files, and the three host/manifest/
+aggregate-notice files in the built web bundle matched the pinned source hashes:
+**131 packaged files verified**. The tested app source and lockfile hashes also
+remained unchanged through compilation. The document engines' own WASM assets
+remain in the bundle; Flutter's separate WASM application target is not claimed.
+Native Word pagination,
 new external DOCX round-trip acceptance, and interactive desktop/mobile WebView
 qualification are not inferred from these app tests. The separate completed
 [Linux/Chromium receipt](../file-viewer-selected-documents-20261113/ci-ddfd695.json)
