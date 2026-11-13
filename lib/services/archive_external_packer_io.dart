@@ -69,16 +69,15 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
     CommandEntryHost? executableHost,
     Future<bool> Function(String)? hasAccess,
     ArchiveExternalPackerProcessRunner? runner,
-    Future<String> Function()? stagingRoot,
+    this.stagingRoot,
   }) : _host = executableHost ?? const NativeCommandEntryHost(),
        _hasAccess = hasAccess ?? LocalFileService().hasAccessToPath,
-       _runner = runner ?? runArchiveExternalPackerProcess,
-       _stagingRoot = stagingRoot;
+       _runner = runner ?? runArchiveExternalPackerProcess;
 
   final CommandEntryHost _host;
   final Future<bool> Function(String) _hasAccess;
   final ArchiveExternalPackerProcessRunner _runner;
-  final Future<String> Function()? _stagingRoot;
+  final Future<String> Function()? stagingRoot;
   @override
   String? get platform => _host.platform;
 
@@ -222,7 +221,7 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
   }) async {
     _check(isCancelled);
     final identity = await _identity(configuration);
-    final stage = await _PackerStage.create(_stagingRoot);
+    final stage = await _PackerStage.create(stagingRoot);
     var cleanup = true;
     late String version;
     try {
@@ -314,7 +313,11 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
     ArchiveExternalPackerCompression compression,
     bool Function()? cancelled,
   ) async {
-    final bytes = utf8.encode('CrispCloud installed packer verification\n');
+    // Compressible data must be long enough that Normal/Maximum actually
+    // exercise the decoder, rather than the tool choosing Store for a tiny file.
+    final bytes = utf8.encode(
+      'CrispCloud installed packer verification\n' * 128,
+    );
     final date = DateTime.utc(
       2024,
       1,
@@ -364,6 +367,10 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
       ),
       maxBytes: 2 * 1024 * 1024,
     );
+    if (compression != ArchiveExternalPackerCompression.store &&
+        output.length >= bytes.length) {
+      _fail(ArchiveExternalPackerFailure.invalidOutput);
+    }
     final archive = await openViewerArchive(
       output,
       name: 'probe${format.extension}',
@@ -430,7 +437,7 @@ class NativeArchiveExternalPackerEngine implements ArchiveExternalPackerEngine {
     }
     _validateEntries(entries, installation.configuration.kind);
     await _revalidate(installation);
-    final stage = await _PackerStage.create(_stagingRoot);
+    final stage = await _PackerStage.create(stagingRoot);
     var cleanup = true;
     try {
       await stage.capture(
@@ -583,7 +590,6 @@ List<String> _arguments(
       '-r-',
       '-mt2',
       '-idq',
-      '-p-',
       '-scfl',
       '-tsm+',
       '-tsc-',
@@ -843,8 +849,9 @@ class _PackerStage {
               File(object.path).openRead(0, entry.size + 1).map((bytes) {
                 _check(cancelled);
                 length += bytes.length;
-                if (length > entry.size)
+                if (length > entry.size) {
                   _fail(ArchiveExternalPackerFailure.changed);
+                }
                 return bytes;
               }),
             )

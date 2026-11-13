@@ -25,6 +25,13 @@ class ArchiveFormatCapability {
 
 const archiveFormatCapabilities = <ArchiveFormatCapability>[
   ArchiveFormatCapability(
+    id: '7z-volumes',
+    label: 'Split 7-Zip archive',
+    suffixes: ['.7z.001', '.7z.0001', '.7z.00001', '.7z.000001'],
+    mimeType: 'application/x-7z-compressed',
+    notes: 'Open the first volume with all numbered parts in the same folder. The complete volume set is captured and checked for browsing and extraction. Volume sets are read-only.',
+  ),
+  ArchiveFormatCapability(
     id: 'sfx',
     label: 'Self-extracting archive',
     suffixes: ['.exe', '.sfx'],

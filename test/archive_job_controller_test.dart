@@ -6,6 +6,7 @@ import 'package:crisp_cloud/models/archive_job.dart';
 import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/storage_reference.dart';
 import 'package:crisp_cloud/services/archive_creation_service.dart';
+import 'package:crisp_cloud/services/archive_creation_batch.dart';
 import 'package:crisp_cloud/services/archive_creation_worker.dart';
 import 'package:crisp_cloud/services/archive_job_controller.dart';
 import 'package:crisp_cloud/services/archive_job_journal.dart';
@@ -212,6 +213,79 @@ void main() {
       target.jobs.every((job) => job.status == ArchiveJobStatus.completed),
       isTrue,
     );
+  });
+
+  test('a reviewed batch is durable before work and retains each independent result', () async {
+    final target = controller();
+    backend.put('/input/source.csv', [2]);
+    final items = planArchiveCreationBatch(
+      files: [
+        (await backend.stat('/input/source.txt'))!,
+        (await backend.stat('/input/source.csv'))!,
+      ],
+      destinationDirectory: '/output',
+      options: const ArchiveCreationOptions(
+        name: 'ignored.zip',
+        password: 'ephemeral',
+      ),
+    );
+    final records = await target.enqueueBatch(items);
+    expect(records.map((record) => record.request.name), [
+      'source.txt.zip',
+      'source.csv.zip',
+    ]);
+    final saved = ArchiveJobJournal(storage: store);
+    await saved.load();
+    expect(saved.records.length, 2);
+    expect(store.values.values.single, isNot(contains('ephemeral')));
+    await started(1);
+    await workers.first.finish();
+    await started(2);
+    workers.last.completed.completeError(StateError('Second output failed'));
+    await target.idle;
+    expect(target.job(records.first.id)!.status, ArchiveJobStatus.completed);
+    expect(target.job(records.last.id)!.status, ArchiveJobStatus.failed);
+    expect(target.job(records.first.id)!.prepared, isNotNull);
+  });
+
+  test('a late batch collision rejects every new intent and leaves the queue usable', () async {
+    final target = controller();
+    await target.initialize();
+    await target.setQueuePaused(true);
+    backend.put('/input/second.txt', [2]);
+    backend.put('/output/second.txt.zip', [9]);
+    final items = planArchiveCreationBatch(
+      files: [
+        (await backend.stat('/input/source.txt'))!,
+        (await backend.stat('/input/second.txt'))!,
+      ],
+      destinationDirectory: '/output',
+      options: const ArchiveCreationOptions(name: 'ignored.zip'),
+    );
+    await expectLater(
+      target.enqueueBatch(items),
+      throwsA(isA<ArchiveCreationException>()),
+    );
+    expect(target.jobs, isEmpty);
+    expect(target.isReady, isTrue);
+    expect(workers, isEmpty);
+    expect(backend.contents['/output/second.txt.zip'], [9]);
+    await target.enqueueBatch([items.first]);
+    expect(target.jobs.single.request.name, 'source.txt.zip');
+  });
+
+  test('duplicate batch output names are refused before admission', () async {
+    final target = controller();
+    final file = (await backend.stat('/input/source.txt'))!;
+    final item = ArchiveCreationBatchItem(
+      files: [file],
+      destinationDirectory: '/output',
+      options: const ArchiveCreationOptions(name: 'same.zip'),
+    );
+    await expectLater(target.enqueueBatch([item, item]), throwsStateError);
+    expect(target.jobs, isEmpty);
+    expect(target.isReady, isTrue);
+    expect(workers, isEmpty);
   });
 
   test('queue pause and reordering survive in the durable catalog', () async {

@@ -42,84 +42,15 @@ class _ArchiveJobsDialogState extends ConsumerState<ArchiveJobsDialog> {
     ArchiveJobController controller,
     ArchiveJobRecord record,
   ) async {
-    final password = TextEditingController();
-    try {
-      final approved = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(archiveJobText(context, 'Restart archive job')),
-          content: SizedBox(
-            width: 520,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(archiveJobText(context, 'Source selection')),
-                  for (final file in record.request.files)
-                    SelectableText(
-                      file.path!,
-                      textDirection: TextDirection.ltr,
-                    ),
-                  const SizedBox(height: 12),
-                  Text(archiveJobText(context, 'Destination')),
-                  SelectableText(
-                    record.request.outputPath,
-                    textDirection: TextDirection.ltr,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    archiveJobText(
-                      context,
-                      'Sources are checked when a job starts. Restarting rebuilds from the saved paths. Existing files are never replaced.',
-                    ),
-                  ),
-                  if (record.request.passwordRequired) ...[
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: password,
-                      obscureText: true,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      decoration: InputDecoration(
-                        labelText: archiveCreationText(context, 'Password'),
-                      ),
-                    ),
-                    Text(
-                      archiveJobText(
-                        context,
-                        'Passwords are not saved. Enter the password again after restarting the app.',
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(archiveCreationText(context, 'Cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(archiveJobText(context, 'Restart from source')),
-            ),
-          ],
-        ),
+    final approved = await showDialog<_ArchiveJobRestartChoice>(
+      context: context,
+      builder: (_) => _ArchiveJobRestartDialog(record: record),
+    );
+    if (approved != null && mounted) {
+      await _action(
+        record.id,
+        () => controller.restart(record.id, password: approved.password),
       );
-      if (approved == true && mounted) {
-        await _action(
-          record.id,
-          () => controller.restart(
-            record.id,
-            password: record.request.passwordRequired ? password.text : null,
-          ),
-        );
-      }
-    } finally {
-      password.clear();
-      password.dispose();
     }
   }
 
@@ -168,15 +99,16 @@ class _ArchiveJobsDialogState extends ConsumerState<ArchiveJobsDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _busy == null
-              ? () => _action('reload', () async {
-                  await controller.close();
-                  ref.invalidate(archiveJobsProvider);
-                })
-              : null,
-          child: Text(tr('Reload')),
-        ),
+        if (!controller.isReady)
+          TextButton(
+            onPressed: _busy == null
+                ? () => _action('reload', () async {
+                    await controller.close();
+                    ref.invalidate(archiveJobsProvider);
+                  })
+                : null,
+            child: Text(tr('Reload')),
+          ),
         TextButton(
           onPressed: available
               ? () => _action(
@@ -297,6 +229,109 @@ class _ArchiveJobsDialogState extends ConsumerState<ArchiveJobsDialog> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ArchiveJobRestartChoice {
+  const _ArchiveJobRestartChoice(this.password);
+  final String? password;
+}
+
+/// Own the password controller through the route's dismissal animation. A
+/// showDialog future completes before its outgoing text field is unmounted.
+class _ArchiveJobRestartDialog extends StatefulWidget {
+  const _ArchiveJobRestartDialog({required this.record});
+  final ArchiveJobRecord record;
+  @override
+  State<_ArchiveJobRestartDialog> createState() =>
+      _ArchiveJobRestartDialogState();
+}
+
+class _ArchiveJobRestartDialogState extends State<_ArchiveJobRestartDialog> {
+  final _password = TextEditingController();
+  bool _missing = false;
+  @override
+  void dispose() {
+    _password.clear();
+    _password.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final request = widget.record.request;
+    return AlertDialog(
+      title: Text(archiveJobText(context, 'Restart archive job')),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(archiveJobText(context, 'Source selection')),
+              for (final file in request.files)
+                SelectableText(file.path!, textDirection: TextDirection.ltr),
+              const SizedBox(height: 12),
+              Text(archiveJobText(context, 'Destination')),
+              SelectableText(
+                request.outputPath,
+                textDirection: TextDirection.ltr,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                archiveJobText(
+                  context,
+                  'Sources are checked when a job starts. Restarting rebuilds from the saved paths. Existing files are never replaced.',
+                ),
+              ),
+              if (request.passwordRequired) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _password,
+                  obscureText: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: InputDecoration(
+                    labelText: archiveCreationText(context, 'Password'),
+                    errorText: _missing
+                        ? archiveCreationText(context, 'Enter a password.')
+                        : null,
+                  ),
+                ),
+                Text(
+                  archiveJobText(
+                    context,
+                    'Passwords are not saved. Enter the password again after restarting the app.',
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(archiveCreationText(context, 'Cancel')),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (request.passwordRequired && _password.text.isEmpty) {
+              setState(() => _missing = true);
+              return;
+            }
+            Navigator.pop(
+              context,
+              _ArchiveJobRestartChoice(
+                request.passwordRequired ? _password.text : null,
+              ),
+            );
+          },
+          child: Text(archiveJobText(context, 'Restart from source')),
+        ),
+      ],
     );
   }
 }

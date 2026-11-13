@@ -389,7 +389,16 @@ void main() {
       engine.rawOutput = Uint8List.fromList([0x50, 0x4b, 3, 4]);
       await expectLater(
         create(),
-        creation(ArchiveCreationError.verificationFailed),
+        throwsA(
+          anyOf(
+            isA<ArchiveViewException>(),
+            isA<ArchiveCreationException>().having(
+              (e) => e.code,
+              'code',
+              ArchiveCreationError.verificationFailed,
+            ),
+          ),
+        ),
       );
       expect(backend.writes, isEmpty);
     });

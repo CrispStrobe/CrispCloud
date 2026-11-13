@@ -138,8 +138,9 @@ void main() {
           'literal wildcard and shell characters are data in 7-Zip list files',
           () async {
             if (kind != ArchiveExternalPackerKind.sevenZip ||
-                Platform.isWindows)
+                Platform.isWindows) {
               return;
+            }
             final names = [
               '-switch',
               '@list',

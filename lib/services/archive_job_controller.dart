@@ -8,6 +8,7 @@ import '../models/archive_job.dart';
 import '../models/file_item.dart';
 import '../utils/async_lock.dart';
 import 'archive_creation_service.dart';
+import 'archive_creation_batch.dart';
 import 'archive_creation_worker.dart';
 import 'archive_job_journal.dart';
 import 'archive_publication_lease.dart';
@@ -178,47 +179,98 @@ class ArchiveJobController extends ChangeNotifier {
     required List<FileItem> files,
     required String destinationDirectory,
     required ArchiveCreationOptions options,
-  }) async {
+  }) async => (await enqueueBatch([
+    ArchiveCreationBatchItem(
+      files: files,
+      destinationDirectory: destinationDirectory,
+      options: options,
+    ),
+  ])).single;
+
+  /// Admit every reviewed output in one durable update. A collision or invalid
+  /// item never leaves only a prefix of the batch queued.
+  Future<List<ArchiveJobRecord>> enqueueBatch(
+    List<ArchiveCreationBatchItem> items,
+  ) async {
+    items = List.unmodifiable(items);
     await initialize();
     _authority();
-    options.validate();
-    final request = ArchiveJobRequest(
-      id: const Uuid().v4(),
-      storageId: _storage(),
-      created: DateTime.now().toUtc(),
-      destinationDirectory: destinationDirectory,
-      name: options.name,
-      format: options.format,
-      compression: options.compression,
-      files: files,
-      passwordRequired: options.password != null,
-      encryptNames: options.encryptNames,
-    );
-    final record = ArchiveJobRecord(
-      request: request,
-      status: ArchiveJobStatus.queued,
-      updated: request.created,
-    );
-    if (options.password != null) _passwords[record.id] = options.password!;
+    if (items.isEmpty || items.length > ArchiveJobJournal.maximumJobs) {
+      throw StateError(
+        'Choose between 1 and ${ArchiveJobJournal.maximumJobs} archive jobs.',
+      );
+    }
+    final storage = _storage();
+    final incoming = <ArchiveJobRecord>[];
+    for (final item in items) {
+      item.options.validate();
+      final request = ArchiveJobRequest(
+        id: const Uuid().v4(),
+        storageId: storage,
+        created: DateTime.now().toUtc(),
+        destinationDirectory: item.destinationDirectory,
+        name: item.options.name,
+        format: item.options.format,
+        compression: item.options.compression,
+        files: item.files,
+        passwordRequired: item.options.password != null,
+        encryptNames: item.options.encryptNames,
+      );
+      if (incoming.any(
+        (record) =>
+            _backend.samePath(record.request.outputPath, request.outputPath),
+      )) {
+        throw StateError('Two archive jobs have the same destination.');
+      }
+      incoming.add(
+        ArchiveJobRecord(
+          request: request,
+          status: ArchiveJobStatus.queued,
+          updated: request.created,
+        ),
+      );
+    }
+    for (var index = 0; index < incoming.length; index++) {
+      final password = items[index].options.password;
+      if (password != null) _passwords[incoming[index].id] = password;
+    }
     try {
-      await _edit((records) {
-        if (records.any(
-          (old) =>
-              !old.terminal &&
-              _backend.samePath(old.request.outputPath, request.outputPath),
-        )) {
+      await _edit((records) async {
+        if (records.length + incoming.length > ArchiveJobJournal.maximumJobs) {
           throw StateError(
-            'Another archive job already owns this destination.',
+            'Archive job history is full. Remove finished jobs before adding this batch.',
           );
         }
-        return [...records, record];
+        for (final record in incoming) {
+          if (records.any(
+            (old) =>
+                !old.terminal &&
+                _backend.samePath(
+                  old.request.outputPath,
+                  record.request.outputPath,
+                ),
+          )) {
+            throw StateError(
+              'Another archive job already owns this destination.',
+            );
+          }
+          if (await _backend.stat(record.request.outputPath) != null) {
+            throw const ArchiveCreationException(
+              ArchiveCreationError.destinationExists,
+            );
+          }
+          _authority();
+        }
+        return [...records, ...incoming];
       });
     } catch (_) {
-      _passwords.remove(record.id);
+      for (final record in incoming) {
+        _passwords.remove(record.id);
+      }
       rethrow;
     }
     _schedule();
-    return record;
+    return List.unmodifiable(incoming);
   }
 
   Future<void> setQueuePaused(bool paused) async {

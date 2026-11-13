@@ -72,6 +72,14 @@ class ArchiveEndpointPolicy {
     ViewerArchive archive,
     String? password,
   ) async {
+    if (archive.formatName.startsWith('volumes/')) {
+      return ArchiveEndpointPolicy(
+        ArchiveEndpointFormat.readOnly,
+        encrypted: archive.members.any((member) => member.isEncrypted),
+        encryptNames: false,
+        reason: 'Volume sets support browsing and extraction. Updating only one part would damage the complete archive.',
+      );
+    }
     if (archive.formatName.startsWith('sfx/')) {
       return ArchiveEndpointPolicy(
         ArchiveEndpointFormat.readOnly,

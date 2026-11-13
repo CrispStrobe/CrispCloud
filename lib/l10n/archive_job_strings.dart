@@ -24,6 +24,57 @@ String archiveJobText(
 }
 
 const _messages = <String, List<String>>{
+  'One archive per selected item': [
+    'Ein Archiv pro ausgewähltem Element',
+    'Une archive par élément sélectionné',
+    'Un archivo por elemento seleccionado',
+    'Um arquivo por item selecionado',
+    '为每个选中项目创建一个压缩包',
+    '選択項目ごとにアーカイブを作成',
+    '선택 항목마다 압축 파일 만들기',
+    'أرشيف لكل عنصر محدد',
+  ],
+  'Each archive becomes a separate background job. Source files are retained.':
+      [
+        'Jedes Archiv wird ein eigener Hintergrundauftrag. Quelldateien bleiben erhalten.',
+        'Chaque archive devient une tâche distincte en arrière-plan. Les fichiers sources sont conservés.',
+        'Cada archivo será una tarea independiente en segundo plano. Se conservan los archivos de origen.',
+        'Cada arquivo será uma tarefa separada em segundo plano. Os arquivos de origem são mantidos.',
+        '每个压缩包都是独立的后台任务。源文件会保留。',
+        '各アーカイブを個別のバックグラウンドジョブとして処理します。元のファイルは保持されます。',
+        '각 압축 파일은 별도 백그라운드 작업으로 처리됩니다. 원본 파일은 유지됩니다.',
+        'يصبح كل أرشيف مهمة مستقلة في الخلفية. تُحتفظ بالملفات المصدر.',
+      ],
+  'Planned archives': [
+    'Geplante Archive',
+    'Archives prévues',
+    'Archivos previstos',
+    'Arquivos planejados',
+    '计划创建的压缩包',
+    '作成予定のアーカイブ',
+    '생성할 압축 파일',
+    'الأرشيفات المخطط لها',
+  ],
+  'Queue {0} archives': [
+    '{0} Archive einreihen',
+    'Mettre {0} archives en file',
+    'Poner {0} archivos en cola',
+    'Colocar {0} arquivos na fila',
+    '将 {0} 个压缩包加入队列',
+    '{0} 個のアーカイブをキューに追加',
+    '압축 파일 {0}개를 대기열에 추가',
+    'إضافة {0} أرشيفات إلى قائمة الانتظار',
+  ],
+  'Queued {0} archives.': [
+    '{0} Archive eingereiht.',
+    '{0} archives mises en file.',
+    '{0} archivos en cola.',
+    '{0} arquivos na fila.',
+    '已将 {0} 个压缩包加入队列。',
+    '{0} 個のアーカイブをキューに追加しました。',
+    '압축 파일 {0}개를 대기열에 추가했습니다.',
+    'أُضيفت {0} أرشيفات إلى قائمة الانتظار.',
+  ],
   'Archive jobs': [
     'Archivaufträge',
     'Tâches d’archivage',

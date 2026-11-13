@@ -9,6 +9,7 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
+import 'archive_created_zip_metadata.dart';
 import 'archive_disk_verification.dart';
 import 'archive_dmg_writer.dart';
 import 'archive_hfs_writer.dart';
@@ -1113,6 +1114,7 @@ class ArchiveCreationService {
         }
         await sink.close();
         final packed = memory.getBytes();
+        if (zip != null) finalizeCreatedZipMetadata(packed, captured);
         await emit(packed);
       }
       await spool.finish();

@@ -33,6 +33,7 @@ import 'archive_unix_compress_codec.dart';
 import 'archive_package_readers.dart';
 import 'archive_pbzx_source.dart';
 import 'archive_rpm_reader.dart';
+import 'archive_rar_metadata_reader.dart';
 import 'archive_sfx_source.dart';
 import 'archive_slice_source.dart';
 import 'archive_types.dart';
@@ -674,6 +675,19 @@ Future<ViewerArchive> _openWithKoni(
   }
 
   final entries = reader.entries;
+  List<DateTime?>? rarTimes;
+  if (reader.format.name == 'rar') {
+    try {
+      rarTimes = await readRar5ModifiedTimes(source, entries);
+    } catch (_) {
+      try {
+        await reader.close();
+      } finally {
+        await source.close();
+      }
+      rethrow;
+    }
+  }
   final members = <ViewerArchiveMember>[];
   for (var i = 0; i < entries.length; i++) {
     final entry = entries[i];
@@ -684,7 +698,7 @@ Future<ViewerArchive> _openWithKoni(
         isFile: entry.isFile,
         isEncrypted: entry.isEncrypted,
         isSpecial: !entry.isFile && !entry.isDirectory,
-        modified: entry.modified,
+        modified: rarTimes?[i] ?? entry.modified,
         posixMode: entry.posixMode,
         pathEscapedRoot: entry.pathEscapedRoot,
         index: i,

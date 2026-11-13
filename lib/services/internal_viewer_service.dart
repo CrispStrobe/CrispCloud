@@ -464,7 +464,10 @@ class InternalViewerService {
 
     // Compound archive suffixes must win over content-based text guessing.
     final archiveFormat = archiveFormatForName(filename);
-    if (archiveFormat != null && !archiveFormat.singleFileCompression) {
+    // Ordinary executables keep their binary view. The explicit archive mode
+    // and pane Browse Archive action can inspect supported SFX overlays.
+    final executableHint = archiveFormat?.id == 'sfx' && lower.endsWith('.exe');
+    if (archiveFormat != null && !archiveFormat.singleFileCompression && !executableHint) {
       return ViewerMode.archive;
     }
 
@@ -488,7 +491,7 @@ class InternalViewerService {
       }
     }
 
-    final mode = archiveFormat != null
+    final mode = archiveFormat != null && !executableHint
         ? ViewerMode.archive
         : _modeForName(lower, header);
     // Content sniffing for extension-less / generic markup files. The magic

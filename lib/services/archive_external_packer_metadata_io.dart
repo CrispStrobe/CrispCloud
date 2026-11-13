@@ -94,8 +94,9 @@ Future<void> setArchiveExternalPackerModified(
 }
 
 bool _posix(String path, DateTime time) {
-  if (!(Platform.isLinux || Platform.isMacOS) || sizeOf<Long>() != 8)
+  if (!(Platform.isLinux || Platform.isMacOS) || sizeOf<Long>() != 8) {
     return false;
+  }
   final nativePath = path.toNativeUtf8();
   final times = calloc<_Timespec>(2);
   try {

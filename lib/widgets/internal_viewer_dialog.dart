@@ -52,6 +52,8 @@ import '../services/archive_streamed_reader.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/archive_viewer_source.dart';
 import '../services/archive_viewer_streaming.dart';
+import '../services/archive_volume_backend.dart';
+import '../services/archive_volume_source.dart';
 import '../services/binary_structure_service.dart';
 import '../services/binary_structure_source.dart';
 import '../services/file_bytes_loader.dart';
@@ -1306,6 +1308,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     var retained = false;
     try {
       ViewerArchive archive;
+      if (widget.bytesOverride == null &&
+          _expansionName == null &&
+          sevenZipVolumeBaseName(widget.file.name) != null) {
+        final backend = _capturedBackend();
+        final selected = widget.file.copyWith(
+          path: widget.file.path ?? backend.paths.join(_origin!.source.currentPath, widget.file.name),
+        );
+        final opened = await openSevenZipVolumeArchive(
+          backend,
+          selected,
+          password: password,
+          isCancelled: () => !isCurrent(),
+        );
+        retained = true;
+        return (archive: opened.archive, source: borrowed);
+      }
       final streamed =
           !kIsWeb &&
           widget.bytesOverride == null &&

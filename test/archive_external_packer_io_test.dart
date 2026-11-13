@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -37,11 +38,12 @@ class _FixtureProcess {
         : request.outputPath!.endsWith('.7z')
         ? ArchiveExternalPackerFormat.sevenZip
         : ArchiveExternalPackerFormat.zip;
-    if (exit != 0 || !supported.contains(format))
+    if (exit != 0 || !supported.contains(format)) {
       return ArchiveExternalPackerProcessResult(
         exit == 0 ? 2 : exit,
         'untrusted private log',
       );
+    }
     final entries = <ArchiveWriteEntry>[];
     await for (final object in Directory(
       request.directory,
@@ -124,8 +126,9 @@ void main() {
       ],
       ...utf8.encode('inert fixture executable; process calls are injected'),
     ]);
-    if (!Platform.isWindows)
+    if (!Platform.isWindows) {
       expect(setFileMode(executable.path, 0x1c0), isTrue);
+    }
     final stat = await executable.stat();
     configuration = ArchiveExternalPackerConfiguration(
       platform: Platform.operatingSystem,
@@ -268,6 +271,46 @@ void main() {
       await clean();
     },
   );
+
+  test('RAR uses a complete literal list and no password switch', () async {
+    final rar = ArchiveExternalPackerInstallation(
+      configuration: ArchiveExternalPackerConfiguration(
+        platform: configuration.platform,
+        kind: ArchiveExternalPackerKind.rar,
+        executable: configuration.executable,
+      ),
+      identity: installation.identity,
+      version: '7.23',
+      formats: {ArchiveExternalPackerFormat.rar},
+    );
+    process.mutate = (request) async {
+      expect(
+        request.arguments,
+        containsAll(['-cfg-', '-ma5', '-s-', '-r-', '-scfl']),
+      );
+      expect(
+        request.arguments.any(
+          (value) => value.startsWith('-p') || value.startsWith('-hp'),
+        ),
+        isFalse,
+      );
+      final list = request.arguments
+          .singleWhere((value) => value.startsWith('@'))
+          .substring(1);
+      expect(await File(list).readAsString(), './folder\n./folder/雪.txt\n');
+    };
+    await engine.write(
+      installation: rar,
+      options: const ArchiveExternalPackerOptions(
+        name: 'result.rar',
+        format: ArchiveExternalPackerFormat.rar,
+      ),
+      entries: entries(),
+      sink: (_) async {},
+      maxOutputBytes: 1024 * 1024,
+    );
+    await clean();
+  });
   test('script wrappers are refused before launching a process', () async {
     await executable.writeAsString('#!/bin/sh\necho fake\n');
     await expectLater(
@@ -479,4 +522,45 @@ void main() {
       expect((await outside.stat()).modified, before);
     });
   });
+
+  group('native owned process cancellation', () {
+    test('cancellation awaits shutdown of a foreground process', () async {
+      var cancelled = false;
+      final timer = Timer(
+        const Duration(milliseconds: 150),
+        () => cancelled = true,
+      );
+      try {
+        await expectLater(
+          runArchiveExternalPackerProcess(
+            ArchiveExternalPackerInvocation(
+              executable: '/bin/sleep',
+              arguments: ['10'],
+              directory: root.path,
+              environment: {'HOME': root.path, 'LANG': 'C'},
+              timeout: const Duration(seconds: 3),
+              isCancelled: () => cancelled,
+            ),
+          ),
+          failure(ArchiveExternalPackerFailure.cancelled),
+        );
+      } finally {
+        timer.cancel();
+      }
+    });
+    test('a timed-out foreground process is closed before returning', () async {
+      await expectLater(
+        runArchiveExternalPackerProcess(
+          ArchiveExternalPackerInvocation(
+            executable: '/bin/sleep',
+            arguments: ['10'],
+            directory: root.path,
+            environment: {'HOME': root.path, 'LANG': 'C'},
+            timeout: const Duration(milliseconds: 80),
+          ),
+        ),
+        failure(ArchiveExternalPackerFailure.timeout),
+      );
+    });
+  }, skip: Platform.isWindows || !File('/bin/sleep').existsSync());
 }
