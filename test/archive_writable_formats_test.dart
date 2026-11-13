@@ -81,16 +81,21 @@ class _WorkspaceFixture {
   final String path;
   Uint8List get saved => client.files[path]!;
 
-  static Future<_WorkspaceFixture> open(String name, Uint8List bytes) async {
+  static Future<_WorkspaceFixture> open(
+    String name,
+    Uint8List bytes, {
+    ArchiveWorkflowClient? client,
+  }) async {
     final path = '/$name';
-    final client = ArchiveWorkflowClient()..put(path, bytes);
-    final backend = ArchiveWorkflowBackend(client, isCurrent: () => true);
+    final source = client ?? ArchiveWorkflowClient();
+    source.put(path, bytes);
+    final backend = ArchiveWorkflowBackend(source, isCurrent: () => true);
     final workspace = await ArchiveWorkspace.open(
       backend,
       (await backend.stat(path))!,
     );
     addTearDown(workspace.close);
-    return _WorkspaceFixture(client, workspace, path);
+    return _WorkspaceFixture(source, workspace, path);
   }
 
   Future<ViewerArchive> reopen() async {
@@ -107,6 +112,26 @@ class _WorkspaceFixture {
     expect(workspace.canUpdate, isTrue, reason: workspace.updateSupport);
     expect(client.files.keys, [path]);
     expect(workspace.file.path, path);
+  }
+}
+
+class _MetadataArchiveClient extends ArchiveWorkflowClient {
+  @override
+  Stream<List<int>> downloadStream(
+    String path, {
+    Function(int, int)? onProgress,
+  }) async* {
+    // Repeated ISO publications verify the complete image several times. Use
+    // realistic bounded chunks for this metadata fixture; the shared fake keeps
+    // its two-byte chunks for the existing fragmented-stream regressions.
+    final bytes = await downloadFileBytes(path, onProgress: onProgress);
+    const chunkSize = 64 * 1024;
+    for (var offset = 0; offset < bytes.length; offset += chunkSize) {
+      final end = offset + chunkSize < bytes.length
+          ? offset + chunkSize
+          : bytes.length;
+      yield Uint8List.sublistView(bytes, offset, end);
+    }
   }
 }
 
@@ -502,7 +527,11 @@ void main() {
         labelOffset + 32,
         ascii.encode('KEEP_VOLUME_LABEL'.padRight(32)),
       );
-      final fixture = await _WorkspaceFixture.open('data.iso', iso.bytes);
+      final fixture = await _WorkspaceFixture.open(
+        'data.iso',
+        iso.bytes,
+        client: _MetadataArchiveClient(),
+      );
       final workspace = fixture.workspace;
       expect(workspace.canUpdate, isTrue, reason: workspace.updateSupport);
       expect(workspace.endpointCapabilities.format, ArchiveEndpointFormat.iso);
