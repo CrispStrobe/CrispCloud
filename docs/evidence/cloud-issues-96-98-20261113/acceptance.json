@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-13",
+  "scope": "Owner-provided prepared Nextcloud instance over a loopback SSH tunnel; no public TLS deployment certification.",
+  "server": {
+    "nextcloud": "33.0.11",
+    "php": "8.3.36",
+    "delta_sync_commit": "f6117d940f273e7e0ce9f63fd7fafbc53c63dc22",
+    "core_integrity_exit": 0,
+    "maintenance": false,
+    "database_upgrade_pending": false,
+    "prior_source_and_database_retained": true,
+    "private_temp": true,
+    "dedicated_php_pool": true,
+    "apparmor_policy_changed": false
+  },
+  "delta_live_checks": {
+    "passed": 12,
+    "failed": 0,
+    "concurrent_readers": 8
+  },
+  "browser_before_cors": {
+    "origin": "http://127.0.0.1:18765",
+    "nextcloud_version": "33.0.11",
+    "result": {
+      "ok": false,
+      "error": "TypeError: Failed to fetch"
+    },
+    "network_failures": [
+      {
+        "error": "net::ERR_FAILED",
+        "cors": {
+          "corsError": "PreflightMissingAllowOriginHeader",
+          "failedParameter": ""
+        },
+        "blocked": null
+      }
+    ]
+  },
+  "browser_after_cors": {
+    "origin": "http://127.0.0.1:18765",
+    "nextcloud_version": "33.0.11",
+    "result": {
+      "ok": true,
+      "status": 207,
+      "multistatus": true,
+      "put": 201,
+      "get": 200,
+      "delete": 204,
+      "roundtripVerified": true
+    },
+    "network_failures": [
+      {
+        "error": "net::ERR_ABORTED",
+        "cors": null,
+        "blocked": null
+      }
+    ]
+  },
+  "browser_unapproved_origin": {
+    "origin": "http://127.0.0.1:18766",
+    "nextcloud_version": "33.0.11",
+    "result": {
+      "ok": false,
+      "error": "TypeError: Failed to fetch"
+    },
+    "network_failures": [
+      {
+        "error": "net::ERR_FAILED",
+        "cors": {
+          "corsError": "PreflightMissingAllowOriginHeader",
+          "failedParameter": ""
+        },
+        "blocked": null
+      }
+    ]
+  },
+  "apache_policy": {
+    "apache_template_sha256": "437c9440447d88cbd282039c587e968581c6d1f85d8fa5deb0b0b0196641c235",
+    "actual_dav_without_credentials": 401,
+    "unauthenticated_response_origin": "http://127.0.0.1:18765",
+    "unapproved_origin_preflight": 401,
+    "unapproved_origin_allow_header": null
+  },
+  "app_validation": {
+    "native_focused_passed": 60,
+    "chrome_http_date_and_transport_passed": 9,
+    "actual_app_live_passed": 2,
+    "two_independent_accounts": true,
+    "both_panes_verified_without_listing_errors": true
+  },
+  "dependency_change": "http_parser 4.1.2 was already locked and in the application; promoted to a direct dependency. No package version or checksum changed.",
+  "reporter_instance": "Not supplied; its actual CORS/TLS/network configuration is not verified."
+}

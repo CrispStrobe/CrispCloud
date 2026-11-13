@@ -16,6 +16,7 @@ import 'dart:io' as dart_io;
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show parseHttpDate;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart' as xml;
@@ -870,7 +871,18 @@ class NextcloudClientAdapter extends CloudStorageClient
             .findAllElements('getlastmodified', namespace: 'DAV:')
             .firstOrNull;
         if (modNode != null) {
-          lastModified = modNode.innerText;
+          final raw = modNode.innerText.trim();
+          final iso = DateTime.tryParse(raw);
+          if (iso != null) {
+            lastModified = iso.toUtc().toIso8601String();
+          } else {
+            try {
+              lastModified = parseHttpDate(raw).toIso8601String();
+            } on FormatException {
+              // An invalid optional timestamp must not hide a readable folder.
+              lastModified = null;
+            }
+          }
         }
 
         // ETag

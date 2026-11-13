@@ -336,6 +336,16 @@ as `ETag`, `Content-Range` and `Accept-Ranges`. Keep normal DAV authentication
 for actual requests. Do not solve this by disabling authentication or using an
 untrusted public CORS proxy.
 
+A tested Apache example is provided in
+[`nextcloud-apache-cors.inc`](examples/nextcloud-apache-cors.inc). Include it
+inside the Nextcloud virtual host after replacing every example origin with
+the exact scheme/host/port displayed by CrispCloud. Run `apache2ctl configtest`
+before a graceful reload. It permits unauthenticated, empty DAV preflight for
+that one origin while preserving authentication on actual file requests. It
+covers DAV routes; OCS sharing and custom delta APIs require separate scoped
+configuration. Existing proxy CORS settings must agree to avoid duplicate
+`Access-Control-Allow-Origin` headers.
+
 An HTTPS-hosted app needs an HTTPS Nextcloud URL and a certificate trusted by
 the browser. App custom-CA settings cannot override browser certificate policy.
 Inspect the browser Network/Console for the precise blocked request; JavaScript

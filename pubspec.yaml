@@ -117,6 +117,7 @@ dependencies:
   
   # Networking & Crypto
   http: ^1.2.0
+  http_parser: ^4.1.2
   dio: ^5.10.0
   args: ^2.4.2
   crypto: ^3.0.3
