@@ -1,0 +1,1351 @@
+{
+  "source_revision": "a065ee6e7c2aa18574a72ac6232d4d01845bdee9",
+  "source_tree": "1338fc761f25271a9b8139c3bca4499263d46302",
+  "baseline_revision": "09cb60be02c65f8a20dea92a8f05ac7e94a69353",
+  "baseline_result": "09cb60be passed60 focused tests and a release JS build; earlier5d combined165-file gate passed3107, found one corrected missed-tap test failure, and explicitly skipped13 >2GiB opt-ins",
+  "baseline_receipt": "../final-09cb60be/receipt.json",
+  "original_combined_receipt": "../candidate-5d0814fd/receipt.json",
+  "changed_paths_from_baseline": [
+    "README.md",
+    "analysis_options.yaml",
+    "docs/apple-export-policy.json",
+    "docs/cloud-issues-96-98-verification.md",
+    "docs/crypto-inventory.json",
+    "docs/evidence/archive-integration-20261113/historical-ci-triage.json",
+    "docs/integration-20261113.md",
+    "docs/recovery/archive-integration-20261113.md",
+    "lib/services/editor_highlighting.dart",
+    "lib/services/syntax_highlight_theme.dart",
+    "lib/widgets/file_column_view.dart",
+    "lib/widgets/file_editor_dialog.dart",
+    "lib/widgets/file_panel.dart",
+    "lib/widgets/internal_viewer_dialog.dart",
+    "lib/widgets/preview_pane.dart",
+    "lib/widgets/syntax_line_view.dart",
+    "packages/legacy_doc_parser/CHANGELOG.md",
+    "packages/legacy_doc_parser/README.md",
+    "packages/legacy_doc_parser/UPSTREAM.json",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/README.md",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/auxiliary-manifest.json",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/auxiliary.tar.xz",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/baseline-manifest.json",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/baseline.tar.xz",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/build_evidence.py",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/seal.json",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/test_verifier.py",
+    "packages/legacy_doc_parser/doc/evidence/conversion-path-matrix-20261113/verify.py",
+    "packages/legacy_doc_parser/doc/evidence/independent-acceptance-1b8cc9e2/README.md",
+    "packages/legacy_doc_parser/doc/evidence/independent-acceptance-1b8cc9e2/seal_validation_evidence.py",
+    "packages/legacy_doc_parser/doc/evidence/independent-acceptance-1b8cc9e2/validation-artifacts.manifest.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-acceptance-1b8cc9e2/validation-artifacts.tar.xz",
+    "packages/legacy_doc_parser/doc/evidence/independent-acceptance-1b8cc9e2/verification-normal.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-acceptance-1b8cc9e2/verification-optimized.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/README.md",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/build_bundle.py",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/checksums.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/manifest.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/observations.zip",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/test_verifier.py",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/verification-before-combined.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/verification.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/verifier-development-failure.json",
+    "packages/legacy_doc_parser/doc/evidence/independent-symbol-font-20261113/verify.py",
+    "packages/legacy_doc_parser/doc/evidence/parser-audit-20261113-fourth-pass/README.md",
+    "packages/legacy_doc_parser/doc/evidence/parser-audit-20261113-fourth-pass/SHA256SUMS",
+    "packages/legacy_doc_parser/doc/evidence/parser-audit-20261113-fourth-pass/manifest.json",
+    "packages/legacy_doc_parser/doc/evidence/parser-audit-20261113-fourth-pass/parser-audit-20261113-fourth-pass.zip",
+    "packages/legacy_doc_parser/doc/fidelity-status.md",
+    "packages/legacy_doc_parser/doc/parser-audit-20261113-fourth-pass.md",
+    "packages/legacy_doc_parser/lib/src/conversion.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_document.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_render.dart",
+    "packages/legacy_doc_parser/lib/src/word_compound_storage_validation.dart",
+    "packages/legacy_doc_parser/lib/src/word_media_writer.dart",
+    "packages/legacy_doc_parser/lib/src/word_numbering_writer.dart",
+    "packages/legacy_doc_parser/test/legacy_word_list_metadata_test.dart",
+    "packages/legacy_doc_parser/test/legacy_word_list_text_preservation_test.dart",
+    "packages/legacy_doc_parser/test/legacy_word_public_compound_test.dart",
+    "packages/legacy_doc_parser/test/legacy_word_text_unicode_test.dart",
+    "packages/legacy_doc_parser/test/support/list_metadata_fixture.dart",
+    "packages/legacy_doc_parser/test/support/public_compound_fixture.dart",
+    "packages/legacy_doc_parser/test/support/text_unicode_fixture.dart",
+    "packages/legacy_doc_parser/tool/fidelity/public_compound_fixture.dart",
+    "packages/legacy_doc_parser/tool/fidelity/schema.py",
+    "packages/legacy_doc_parser/tool/list_metadata_web_acceptance.dart",
+    "packages/legacy_doc_parser/tool/office-validation/README.md",
+    "packages/legacy_doc_parser/tool/public_compound_web_acceptance.dart",
+    "packages/legacy_doc_parser/tool/text_unicode_web_acceptance.dart",
+    "packages/legacy_doc_parser/tool/verify_web.py",
+    "packages/quds_office_editor/lib/src/editor_word/paint_run_text.dart",
+    "packages/quds_office_editor/lib/src/embed/office_context_menu.dart",
+    "packages/quds_office_editor/test/goldens/continued_notes_1.png",
+    "packages/quds_office_editor/test/goldens/continued_notes_2.png",
+    "packages/quds_office_editor/test/paint_font_fallback_test.dart",
+    "packages/quds_office_engine/test/legacy_word_conversion_test.dart",
+    "pubspec.yaml",
+    "test/support/check_archive_iso_multiextent.py",
+    "test/widget/internal_viewer_widget_test.dart",
+    "test/widget/panel_listing_placeholder_test.dart",
+    "tool/office_fidelity_manifest.json"
+  ],
+  "implementation_delta": [
+    "lib/services/editor_highlighting.dart",
+    "lib/services/syntax_highlight_theme.dart",
+    "lib/widgets/file_column_view.dart",
+    "lib/widgets/file_editor_dialog.dart",
+    "lib/widgets/file_panel.dart",
+    "lib/widgets/internal_viewer_dialog.dart",
+    "lib/widgets/preview_pane.dart",
+    "lib/widgets/syntax_line_view.dart"
+  ],
+  "started_at_utc": "2026-11-13T22:03:47.035124+00:00",
+  "complete": true,
+  "passed": true,
+  "toolchain": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "framework_revision": "737ba8f885dc774b53b442759999a312c9461e4e"
+  },
+  "native_test_profile": "Optional native ebook hook disabled only during tests; verified system SQLite3.46.1 and pinned libsmb2; real Clang19.1.7",
+  "web_build_profile": "Original production manifest; standard JavaScript release; separate optional Wasm dry run disabled",
+  "app_version": "1.2.9+22",
+  "git_hash": "a065ee6e",
+  "test_files": [
+    "test/widget/internal_viewer_widget_test.dart",
+    "test/widget/panel_listing_placeholder_test.dart",
+    "test/widget/file_column_view_test.dart",
+    "test/widget/archive_container_viewer_test.dart",
+    "test/editor_highlighting_test.dart",
+    "test/syntax_line_highlighting_test.dart",
+    "test/large_code_editor_highlighting_test.dart",
+    "test/legacy_word_preview_test.dart",
+    "test/widget/legacy_word_story_preview_test.dart",
+    "test/office_pdf_service_test.dart",
+    "test/widget/office_font_fallback_preview_test.dart",
+    "test/office_css_font_test.dart",
+    "test/widget/transfer_history_dialog_test.dart",
+    "test/operations_i18n_test.dart",
+    "test/viewer_spool_lifecycle_test.dart"
+  ],
+  "input_manifest_sha256": {
+    "pubspec.yaml": "97d2fd4022f462b2c109e26cc1341349f1561dfeb3f15852da24fb926d368801",
+    "pubspec.lock": "cb86f16b47bf8f9e8380d56573248576779f8277090e2f48adc36371a4c78864"
+  },
+  "analysis_policy": {
+    "errors": "fatal",
+    "warnings": "fatal",
+    "infos": "seven inherited style diagnostics are retained and nonfatal",
+    "initial_strict_output": "analysis-strict-initial.log",
+    "initial_strict_receipt": "initial-strict-receipt.json",
+    "provenance": "inherited-analysis-infos.json",
+    "dart_cli_note": "--fatal-infos is opt-in and non-negatable; omitted for this qualified run",
+    "unsupported_cli_receipt": "unsupported-cli-receipt.json"
+  },
+  "phases": [
+    {
+      "name": "dependencies",
+      "command": [
+        "flutter",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "exit_code": 0,
+      "seconds": 2.062,
+      "log": "dependencies.log",
+      "log_sha256": "78dfcb9ec4958dbbe161f380460db41e6dc2e6e6a1e49abf7582ec1575a4810f"
+    },
+    {
+      "name": "analysis",
+      "command": [
+        "dart",
+        "analyze",
+        "--fatal-warnings",
+        "lib/services/editor_highlighting.dart",
+        "lib/services/syntax_highlight_theme.dart",
+        "lib/widgets/file_column_view.dart",
+        "lib/widgets/file_editor_dialog.dart",
+        "lib/widgets/file_panel.dart",
+        "lib/widgets/internal_viewer_dialog.dart",
+        "lib/widgets/preview_pane.dart",
+        "lib/widgets/syntax_line_view.dart",
+        "test/widget/internal_viewer_widget_test.dart",
+        "test/widget/panel_listing_placeholder_test.dart",
+        "test/widget/archive_container_viewer_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 48.672,
+      "log": "analysis.log",
+      "log_sha256": "ade877c96da5fb916aa4f19619a746592d03540190927fd72f18caecf3abcdfa"
+    },
+    {
+      "name": "office-source",
+      "command": [
+        "python3",
+        "tool/verify_office_fidelity.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "seconds": 1.2,
+      "log": "office-source.log",
+      "log_sha256": "52364eac2acb3094915c39ebc9b8add5b8df4fcb18f2b1589e9d7e256e11214f"
+    },
+    {
+      "name": "document-source",
+      "command": [
+        "python3",
+        "tool/verify_document_runtime.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2,
+      "log": "document-source.log",
+      "log_sha256": "c2a484d3cb77b954cb8070a5f142decbff80bb868d6594029e0f5bc228963419"
+    },
+    {
+      "name": "ebook-source",
+      "command": [
+        "python3",
+        "tool/verify_ebook_sources.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.125,
+      "log": "ebook-source.log",
+      "log_sha256": "80c86b462e0a1b40650be631c113c215bd6c9f20b756ad82ffeaf07555bfb958"
+    },
+    {
+      "name": "crypto-inputs",
+      "command": [
+        "python3",
+        "tool/crypto_release_evidence.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.281,
+      "log": "crypto-inputs.log",
+      "log_sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177"
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/workspace/scratch/1f4900d040c9/toolchains/with_archive_native_profile.sh",
+        "/workspace/scratch/1f4900d040c9/CrispCloud-validation",
+        "flutter",
+        "test",
+        "--no-pub",
+        "--concurrency=2",
+        "--reporter",
+        "expanded",
+        "--file-reporter",
+        "json:/workspace/scratch/1f4900d040c9/validation-logs/final-a065ee6e/test-events.json",
+        "test/widget/internal_viewer_widget_test.dart",
+        "test/widget/panel_listing_placeholder_test.dart",
+        "test/widget/file_column_view_test.dart",
+        "test/widget/archive_container_viewer_test.dart",
+        "test/editor_highlighting_test.dart",
+        "test/syntax_line_highlighting_test.dart",
+        "test/large_code_editor_highlighting_test.dart",
+        "test/legacy_word_preview_test.dart",
+        "test/widget/legacy_word_story_preview_test.dart",
+        "test/office_pdf_service_test.dart",
+        "test/widget/office_font_fallback_preview_test.dart",
+        "test/office_css_font_test.dart",
+        "test/widget/transfer_history_dialog_test.dart",
+        "test/operations_i18n_test.dart",
+        "test/viewer_spool_lifecycle_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 108.014,
+      "log": "tests.log",
+      "log_sha256": "0229ef9cc10aa47ffa589cc2b5909a89e999c50c60284298e74c9ff028954785"
+    },
+    {
+      "name": "web-build",
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub",
+        "--no-wasm-dry-run",
+        "--dart-define=APP_VERSION=1.2.9+22",
+        "--dart-define=GIT_HASH=a065ee6e"
+      ],
+      "exit_code": 0,
+      "seconds": 210.16,
+      "log": "web-build.log",
+      "log_sha256": "2d36b662671f3949609cfc8f9bbb9fc1be1e5012937847727c81dab790d4d818"
+    }
+  ],
+  "tests": {
+    "passed": 173,
+    "failed": 0,
+    "skipped": 0,
+    "results": [
+      {
+        "name": "text mode literal whitespace and 0x text, case toggle and edited-query reset agree",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "text mode every match remains reachable past the bounded result page in both directions",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "text mode reload cancels an active scan and any pending query debounce",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "text mode renders decoded lines for a text file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "text mode search finds and counts text matches",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "byte modes ASCII mode keeps control bytes visible as dots",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "byte modes Binary mode keeps only printable ASCII",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "byte modes Hex mode renders the dump for any file type",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "byte modes hex mode is available for binary data",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "byte modes hex goto uses decimal numbers and explicit hexadecimal offsets",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes CSV renders as a table",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes ZIP shows a member list and opens members",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes 7z lists members and opens them",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes RAR lists real members",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes encrypted 7z asks for a password and opens members",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes single-file .gz opens decompressed content",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes markdown renders as a document",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes office documents render formatted text and plain text",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes HTML renders and can switch to source",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes XML renders as a tree and can switch to source",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "quick-find reserves space below the final matched file row",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes PPTX opens the slide viewer by default",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes truncated legacy PPT shows its localized extraction reason",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rich modes PNG auto-detects image mode",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "list keeps an empty folder parent row navigable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "column keeps an empty folder parent row navigable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "grid keeps an empty folder parent row navigable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "tiles keeps an empty folder parent row navigable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "gallery keeps an empty folder parent row navigable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "list explains a parent-only filtered listing and clears the filter",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "streaming view UTF-8 page boundaries preserve the whole character and paging survives a parent rebuild",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "column explains a parent-only filtered listing and clears the filter",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "streaming view long rows keep UTF-16 surrogate pairs and UTF-8 chunk-edge scalars together",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "streaming view indexes lines and shows byte offsets",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "text goto reaches a match beyond 64 MiB without indexing the prefix",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "streamed UTF-16 text retains encoding and newline alignment",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mode bar offers the core viewer modes",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "grid keeps a failed listing visible until its own retry succeeds",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mode bar unknown binaries do not offer an image decoder",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mode bar a failed raster decoder removes the Image choice",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mode bar recognized SVG bytes keep their image view",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "column keeps a failed listing visible until its own retry succeeds",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mode bar F3 shares F4 token colours and its black dark canvas",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/internal_viewer_widget_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a disconnected selected source shows recovery even in a visual layout",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "right-pane local permission recovery grants its own folder",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "browser synthetic root differs from a selected empty folder and cloud root",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "browser welcome action opens the captured provider root",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/panel_listing_placeholder_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "opening an executable keeps its ordinary viewer action",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a direct deep location hydrates parents without blocking its live column",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a refreshed listing rejects older ancestor hydration",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ancestor hydration stays with the original account at identical paths",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "unavailable ancestors stay skipped until an explicit refresh",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "remote ancestors stop at the advertised source root",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "local ancestor reads preserve shared state and stay inside the grant",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "named local roots reject snapshots from a replaced grant",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a replaced local grant discards already published ancestor rows",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a replaced local grant rejects an ancestor action before rebuilding",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a grant replaced during ancestor reload cannot select its matching row",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "very deep navigation keeps root context with bounded ancestor work",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "keeps ancestor listings and renders actual horizontal columns",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "dragging into a hydrated ancestor folder reviews copy without navigating (variant: TargetPlatform.linux)",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "dragging into a hydrated ancestor folder reviews move without navigating (variant: TargetPlatform.linux)",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a removed ancestor folder cannot receive a captured drop",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ancestor destinations cannot become drag sources",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "filters the live column without replacing ancestor snapshots",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ancestor selection reloads and selects the exact fresh row",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "ancestor context menu captures the original directory and row",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a missing ancestor item cannot open a stale context menu",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "modifier clicks mark a folder without navigating",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "keyboard navigation keeps focus and forwards modified Enter",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "inline rename uses the shared editor and keeps text keys local",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "changing tabs does not reuse another tabs ancestor snapshots",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a delayed ancestor action cannot cross an account switch",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/file_column_view_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "language selection maps common extensions through the shared viewer mapping",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "language selection detects a shebang when the extension is unknown",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "highlight theme registers only the requested language",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "highlight theme is disabled for plain text, unknown languages and the toggle",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "highlight theme uses a dark theme for dark mode",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "tokenization regressions JSON strings, attribute names and numbers are styled",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "tokenization regressions an unfinished string ending in a backslash is safe",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "NXC uses C-family lexing in both the viewer and editor",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/syntax_line_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "large Dart keeps source text and scopes across virtualized lines",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/syntax_line_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "multiline scope survives line boundaries without altering characters",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/syntax_line_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "chunk boundaries retain a long multiline comment and following code",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/syntax_line_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "the editor paints syntax colors for large generated Dart",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/large_code_editor_highlighting_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "recovered textbox placement is qualified in every localized heading",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "hidden or deleted textbox shape without encoded ID remains invisible: false",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "hidden or deleted textbox shape without encoded ID remains invisible: true",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "keeps CP order, shared occurrences, identities and page variants",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "no auxiliary content leaves main-only previews byte-for-byte unchanged",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "all story roles and generated headings localize without changing content",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "hidden-only references stay hidden; one visible reference keeps a story",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "bounded projection rejects excess text and stories instead of truncating",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "hidden comment parents suppress replies transitively in any source order",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "large markup falls back to complete extracted text without composing it",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "DOC and DOT include real parsed headers, footers, notes and comments",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "private-field note and comment bodies do not leak through the adapter",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native fixture linked-textboxes-extended.doc retains every recovered textbox in DOC/DOT preview",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native fixture word14-margin-origin.doc retains every recovered textbox in DOC/DOT preview",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/legacy_word_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "F3 formatted, search and Copy all share the complete DOC projection",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/legacy_word_story_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "DOT auxiliary headings localize in the real F3 formatted view",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/legacy_word_story_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "F3 displays native textbox-only document",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/legacy_word_story_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "Side preview displays native textbox-only document",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/legacy_word_story_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "Pages embeds requested existing families and reports uncovered text",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_pdf_service_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "PPTX is laid out as a PDF",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_pdf_service_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "DOCM with a relocated main part is laid out as a PDF",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_pdf_service_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "DOTM with a relocated main part is laid out as a PDF",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_pdf_service_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "invalid Office input is rejected with a typed error",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_pdf_service_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "oversized input is rejected before layout",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_pdf_service_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "missing font assets leave formatted Office reading available",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/office_font_fallback_preview_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "decodes the bounded font strings emitted by legacy-doc-parser",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_css_font_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "decoded punctuation stays literal text for TextStyle",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_css_font_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "rejects invalid scalar values, control characters and oversized names",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/office_css_font_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "Resolve conflict reviews a waiting job and continues it with the chosen decision",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "review and finish a verified saved move without copying again",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "changed sources require explicit exclusion and fit narrow windows",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "operations panel retains recovery and concurrency controls after hiding rows",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "operation translations preserve keys and parameters",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/operations_i18n_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "operation panel displays translated controls",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/operations_i18n_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "new queue displays localized batch and typed file errors",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/operations_i18n_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "completed bytes retain their owned copy until explicit close",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "input waits for each written chunk before requesting another",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "cancellation interrupts an initial metadata future and observes its late error",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "observed account loss stays latched after an apparent reconnect",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "default inactivity deadline bounds a hung initial stat",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a final metadata timeout removes the completed temporary file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "cancellation during final stat cannot hand a late spool to its caller",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a stalled first chunk is cancelled without awaiting the provider acknowledgement",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "account loss cancels a stalled stream before another byte arrives",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "inactivity after a written prefix removes the partial file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "small continuing writes cannot extend the overall deadline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "empty chunks do not reset inactivity",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a source error remains primary when cancellation acknowledgement hangs",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "secondary provider cleanup errors do not replace cancellation or leak raw details",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned etag map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned eTag map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned version map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned versionId map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned revision map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned rev map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned cTag map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mutable revision values fail before subscribing or creating files",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "overflow and truncated streams remove their incomplete copies",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "unknown source length is bounded while a genuinely empty file succeeds",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "changed file identity, type and storage scope refuse handoff",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "invalid time and byte bounds do not start source work",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "concurrent close callers await the same directory deletion",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an explicit close failure remains retryable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "partial cleanup failure preserves the read failure and reports only the owned location",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native F3 checks a 65 MiB member while previews remain bounded",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native protected ZIP reopens fresh borrowed sources",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.zip",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.7z",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.tar",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.tgz",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a native 80 MiB ISO lists and reopens without releasing its viewer source",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an SFX payload is browsed explicitly without replacing the executable binary view",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native F3 joins numbered 7z parts and previews a spanning member",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native split 7z stays readable after encrypted entry unlock on the first password",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native split 7z stays readable after encrypted entry unlock with a password retry",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "late split 7z password cannot reopen an abandoned archive mode",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a zlib DMG lists HFS+ members and opens a file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a stored CAB lists files, explains its limits and previews text",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a mszip CAB lists files, explains its limits and previews text",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an RPM exposes payload files and previews its text member",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an installer opens extensionless PBZX Payload and its ODC files",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "empty ZIP packages still display their container details",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "switching modes cancels an in-flight archive member read",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "closing while native access opens releases the late source",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an incorrect archive password can retry using the same viewer",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a late password result cannot reopen an abandoned archive mode",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "header encryption allows exactly three submitted passwords",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "unlocking preserves the selected duplicate-name ZIP member",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      }
+    ],
+    "errors": [],
+    "completion_events": [
+      {
+        "success": true,
+        "type": "done",
+        "time": 103673
+      }
+    ]
+  },
+  "free_bytes_before_build": 2352910336,
+  "web": {
+    "main_dart_js_bytes": 27494207,
+    "main_dart_js_sha256": "e67f6a33256db81ce676e0c69b7fb682d45afd86453c3b6238f6ae8804af8da0",
+    "app_version_embedded": true,
+    "git_hash_embedded": true,
+    "file_count": 245,
+    "total_bytes": 111121998
+  },
+  "manifests_restored": true,
+  "restored_manifest_sha256": {
+    "pubspec.yaml": "97d2fd4022f462b2c109e26cc1341349f1561dfeb3f15852da24fb926d368801",
+    "pubspec.lock": "cb86f16b47bf8f9e8380d56573248576779f8277090e2f48adc36371a4c78864"
+  },
+  "git_status": "",
+  "free_bytes_after_build": 2157924352,
+  "finished_at_utc": "2026-11-13T22:09:57.828874+00:00"
+}

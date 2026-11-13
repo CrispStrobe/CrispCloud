@@ -1,0 +1,46 @@
+{
+  "scope": "Read-only triage of historical PR97 CI failures; these are not results for the integrated candidate.",
+  "historical_tested_revision": "84aed4f709c8e479c7176becfe3ae9f72890e3d0",
+  "compared_candidate": "e2d48cae41c3ee0977379682e6199b55181e4f94",
+  "jobs": [
+    {
+      "name": "Analyze + Test",
+      "id": 131875185766,
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43422352389/job/131875185766",
+      "result": "failure",
+      "tests": {
+        "passed": 11912,
+        "failed": 1,
+        "skipped": 60
+      },
+      "failure": "operations_i18n_test.dart expected one Pausieren label but found two.",
+      "current_source_resolution": "Baseline main223fb771 scopes the pause assertion to PopupMenuItem<String>(value: pause). The integration retains that correction."
+    },
+    {
+      "name": "Workspace behavior regressions",
+      "id": 131875183759,
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43422352357/job/131875183759",
+      "result": "failure",
+      "tests": {
+        "passed": 938,
+        "failed": 1
+      },
+      "failure": "Same operations_i18n_test.dart Pausieren assertion.",
+      "current_source_resolution": "Same baseline-main correction; this is not a separate product defect."
+    },
+    {
+      "name": "AVFoundation / unsigned iOS",
+      "id": 131875183883,
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43422352320/job/131875183883",
+      "result": "failure",
+      "successful_earlier_steps": [
+        "Both real macOS audio/video integration tests passed.",
+        "Independent output and pixel verification passed."
+      ],
+      "failure": "Unsigned iOS pod install failed after a pinned-source download raised HTTP500; packages/crisp_ios_shell/tool/prepare.py:46, then ios/Podfile:34.",
+      "current_source_resolution": "Preparation script, manifest and Podfile are unchanged. This historical run does not qualify an iOS build; no retry or platform build was added in this archive continuation."
+    }
+  ],
+  "validation_followup": "The final targeted gate includes operations_i18n_test.dart. See its exact-source receipt; do not sum historical and current test totals.",
+  "ci_reruns_triggered_by_triage": false
+}

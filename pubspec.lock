@@ -212,8 +212,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/crisp_ebook"
-      ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
-      resolved-ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
+      ref: "a18b93c1b066df323ef167359a70801db1359c83"
+      resolved-ref: "a18b93c1b066df323ef167359a70801db1359c83"
       url: "https://github.com/CrispStrobe/crisperbooks.git"
     source: git
     version: "0.1.0"
@@ -221,8 +221,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/crisp_ebook_conversion"
-      ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
-      resolved-ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
+      ref: "a18b93c1b066df323ef167359a70801db1359c83"
+      resolved-ref: "a18b93c1b066df323ef167359a70801db1359c83"
       url: "https://github.com/CrispStrobe/crisperbooks.git"
     source: git
     version: "0.1.0"
@@ -230,8 +230,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/crisp_ebook_reader"
-      ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
-      resolved-ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
+      ref: "a18b93c1b066df323ef167359a70801db1359c83"
+      resolved-ref: "a18b93c1b066df323ef167359a70801db1359c83"
       url: "https://github.com/CrispStrobe/crisperbooks.git"
     source: git
     version: "0.1.0"
@@ -260,8 +260,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
-      resolved-ref: "37963811423d33ef57c0bcab858de91093d4b9ed"
+      ref: "a18b93c1b066df323ef167359a70801db1359c83"
+      resolved-ref: "a18b93c1b066df323ef167359a70801db1359c83"
       url: "https://github.com/CrispStrobe/crisperbooks.git"
     source: git
     version: "0.1.0"

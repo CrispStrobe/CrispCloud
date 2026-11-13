@@ -1011,6 +1011,7 @@
     "packages/legacy_doc_parser/lib/legacy_doc_parser.dart",
     "packages/legacy_doc_parser/lib/src/bounded_cfb_reader.dart",
     "packages/legacy_doc_parser/lib/src/compound/byte_source.dart",
+    "packages/legacy_doc_parser/lib/src/compound/cfbf_names.dart",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_reader.dart",
     "packages/legacy_doc_parser/lib/src/compound/cfbf_writer.dart",
     "packages/legacy_doc_parser/lib/src/conversion.dart",
@@ -1054,6 +1055,7 @@
     "packages/legacy_doc_parser/lib/src/word_compatibility_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_decoration_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_field_binary_metadata.dart",
+    "packages/legacy_doc_parser/lib/src/word_font_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_image_appearance_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_layout_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_media_writer.dart",
@@ -1106,7 +1108,8 @@
     "Custom-keychain locking is distinct from the persisted security-scoped file grant. A typed pre-operation locked error now requests Security.framework unlock for the same selected file and retries once. Passwords never enter Dart or preferences. Concurrent requests share one unlock; cancellation suppresses additional prompts until deliberate Retry. Only a genuine custom_keychain_access_required failure offers another file grant. Default keychain, search list, sleep/timeout settings and existing credentials remain unchanged. The protected browser stays hidden during a resume policy check. Column sizing changes only presentation.",
     "The qualified archive-operation queue moves packing to bounded local workers and journals restart recipes, source witnesses and publication proofs. Archive passwords remain in memory and must be re-entered after restart; recipe validation uses a non-authorizing placeholder only. Pause/cancel guards preserve existing publication ownership, source-removal authority and verified destination receipts. Queued workspace retention does not add account destinations or cryptographic algorithms. Code matches the6eab6a33 qualification; subsequent archive commits add acceptance evidence only.",
     "The merged Commander archive controls retain reviewed publication, recovery and password boundaries. Document runtime assets and notices now match the verified 158-file inventory; original grants remain in the shipped aggregate and corresponding MPL source is retained. Shared font registration adds rendering and substitution diagnostics, not cryptographic algorithms. The canonical parser is 6c880a0 and Quds is 8faf535. Nextcloud HTTP-date parsing and scoped browser CORS diagnostics do not change encryption or distribution classification.",
-    "Final reconciliation pins CrisperBooks 3796381, canonical legacy parser 0f9f085 and Quds 05a581d. Real Chrome selection and fixed-layout bridge checks passed. ADC/XZ UDIF and ISO multi-extent decoding add bounded read-only compression/container parsing; independent 7-Zip 26.06 extraction verifies complete member bytes. Shared black syntax canvases, matching token colours, empty-directory parent navigation and capability-based image choices are presentation changes; cryptographic algorithms and distribution classification are unchanged."
+    "Final concurrent-main reconciliation pins CrisperBooks a18b93c1, canonical legacy parser 0f9f085 and Quds 05a581d. Earlier real Chrome selection and fixed-layout bridge checks belong to CrisperBooks 3796381 and predate the final synchronous-disposal cleanup. ADC/XZ UDIF and ISO multi-extent decoding add bounded read-only compression/container parsing; independent 7-Zip 26.06 extraction verifies complete member bytes. Shared black syntax canvases, matching token colours, empty-directory parent navigation and capability-based image choices are presentation changes; cryptographic algorithms and distribution classification are unchanged.",
+    "The archive continuation and concurrent main are merged with both histories retained. The reviewed path set is the union of both source inventories, including both retained CFB-name and Word-font sources. Distribution declarations are unchanged. Encrypted split-7z lifetime fixes, bounded reader selections and explicit pane-source capture add no cipher, credential store or network destination. All original branch/PR heads and exact-source validation receipts remain reachable."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

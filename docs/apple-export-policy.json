@@ -13,9 +13,9 @@
     "prior_distribution_review": "no_prior_distribution",
     "reference": "App Store Connect app 6789570314 has only two 1.0.0 PREPARE_FOR_SUBMISSION versions (macOS and iOS), no released App Store version; the public storefront returned 404. On 2026-11-08 availability was created with all territories except France, and FRA is explicitly available=false with contentStatus CANNOT_SELL."
   },
-  "inventory_sha256": "219655ad63fbc51306cf0a1a7cdce1576109fc76af716c277057e7dc43011db4",
-  "pubspec_lock_sha256": "7e09a27cb6656b5fa927c8acdba37f7ccfcd333132950e4f3f9c89a6db6d07a9",
-  "reviewed_source_sha256": "af33325e66d6616a128efab4df61fc5ee38f35c83b574b3b52e87d06ec774cca",
+  "inventory_sha256": "cb849f3c3a92299b09d48fefd67993eefdd929394a624bad855a4dd8bcc95da5",
+  "pubspec_lock_sha256": "cb86f16b47bf8f9e8380d56573248576779f8277090e2f48adc36371a4c78864",
+  "reviewed_source_sha256": "abf3d4afd2b0aa09946fbf683dceb283b9134e991c44347863fc267cbd27c6ff",
   "testflight": {
     "distribution_review": "no_france",
     "reference": "Reviewed external group b044f8c9-394b-47dd-a470-796fd052580a is invitation-only (publicLinkEnabled=false) and contains exactly the project owner (cstr+beta@mailbox.org), who is outside France. The previous public-link group 2649c41c-6c58-4dfd-b07a-03b2f537e73f had its public link disabled on 2026-11-08 and is not used for this release.",

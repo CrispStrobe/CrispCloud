@@ -216,6 +216,23 @@ Future<void> _waitFor(
 ChoiceChip _chip(WidgetTester tester, String label) =>
     tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, label));
 
+Future<_NativeIso> _nativeEncryptedVolumes(WidgetTester tester) =>
+    _NativeIso.create(
+      tester,
+      name: 'locked.7z.001',
+      allowSmallReads: true,
+      writeArchive: (file) async {
+        final parts = volumeSplitBytes(
+          await File('test/fixtures/archives/encrypted.7z').readAsBytes(),
+        );
+        for (var i = 0; i < parts.length; i++) {
+          await File(
+            '${file.parent.path}/locked.7z.${(i + 1).toString().padLeft(3, '0')}',
+          ).writeAsBytes(parts[i]);
+        }
+      },
+    );
+
 Future<void> _writeLargeTar(File file) async {
   const memberBytes = 65 * 1024 * 1024;
   // Reuse an independently generated Python USTAR regular-file header and
@@ -503,6 +520,73 @@ void main() {
       }
     },
   );
+
+  for (final retry in [false, true]) {
+    testWidgets(
+      'native split 7z stays readable after encrypted entry unlock '
+      '${retry ? 'with a password retry' : 'on the first password'}',
+      (tester) async {
+        final native = await _nativeEncryptedVolumes(tester);
+        try {
+          await native.mount(tester);
+          await _waitFor(
+            tester,
+            () => find.text('hello.txt').evaluate().isNotEmpty,
+          );
+          await tester.tap(find.text('hello.txt'));
+          await tester.pumpAndSettle();
+          expect(find.text('Password required'), findsOneWidget);
+          if (retry) {
+            await tester.enterText(find.byType(TextField), 'incorrect');
+            await tester.tap(find.text('OK'));
+            await tester.pumpAndSettle();
+            await _waitFor(
+              tester,
+              () => find.text('Wrong password').evaluate().isNotEmpty,
+            );
+            await tester.pumpAndSettle();
+          }
+          await tester.enterText(find.byType(TextField), 'secret');
+          await tester.tap(find.text('OK'));
+          await _waitFor(
+            tester,
+            () => find
+                .textContaining('hello, 7z!', findRichText: true)
+                .evaluate()
+                .isNotEmpty,
+          );
+          expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+          expect(tester.takeException(), isNull);
+        } finally {
+          await native.dispose(tester);
+        }
+      },
+    );
+  }
+
+  testWidgets('late split 7z password cannot reopen an abandoned archive mode', (
+    tester,
+  ) async {
+    final native = await _nativeEncryptedVolumes(tester);
+    try {
+      await native.mount(tester);
+      await _waitFor(tester, () => find.text('hello.txt').evaluate().isNotEmpty);
+      await tester.tap(find.text('hello.txt'));
+      await tester.pumpAndSettle();
+      expect(find.text('Password required'), findsOneWidget);
+      _chip(tester, 'Hex').onSelected!(true);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'secret');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(InternalViewerDialog), findsOneWidget);
+      expect(find.byType(HexViewer), findsOneWidget);
+      expect(find.text('hello.txt'), findsNothing);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await native.dispose(tester);
+    }
+  });
 
   testWidgets('a zlib DMG lists HFS+ members and opens a file', (tester) async {
     final image = DmgFixture(HfsFixture().bytes, method: 0x80000005);

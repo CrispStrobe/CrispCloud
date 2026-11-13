@@ -1,0 +1,563 @@
+{
+  "source_revision": "09cb60be02c65f8a20dea92a8f05ac7e94a69353",
+  "source_tree": "bb90d1dd62cadf3fb7407753d0b73e49185457bc",
+  "baseline_revision": "5d0814fdf8dfa2257e3000d1d3e3792864a4901e",
+  "baseline_result": "3107 passed; one reproduced missed-tap test failure corrected in this candidate; 13 explicit >2GiB opt-in skips",
+  "baseline_receipt": "../candidate-5d0814fd/receipt.json",
+  "changed_paths_from_baseline": [
+    "docs/apple-export-policy.json",
+    "docs/archive-format-coverage.md",
+    "docs/crypto-inventory.json",
+    "docs/ebook-source-manifest.json",
+    "docs/evidence/archive-integration-20261113/README.md",
+    "docs/evidence/archive-integration-20261113/baseline-analysis-inputs.txt",
+    "docs/evidence/archive-integration-20261113/baseline-logs.json",
+    "docs/evidence/archive-integration-20261113/baseline-logs.tar.gz",
+    "docs/evidence/archive-integration-20261113/baseline-receipt.json",
+    "docs/evidence/archive-integration-20261113/baseline-test-files.txt",
+    "docs/evidence/archive-integration-20261113/branch-ancestry.json",
+    "docs/evidence/archive-integration-20261113/pr-heads.json",
+    "docs/recovery/archive-integration-20261113.md",
+    "lib/widgets/internal_viewer_dialog.dart",
+    "pubspec.lock",
+    "pubspec.yaml",
+    "test/widget/archive_container_viewer_test.dart",
+    "test/widget/transfer_history_dialog_test.dart"
+  ],
+  "implementation_delta": [
+    "lib/widgets/internal_viewer_dialog.dart"
+  ],
+  "started_at_utc": "2026-11-13T21:48:04.200806+00:00",
+  "complete": true,
+  "passed": true,
+  "toolchain": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "framework_revision": "737ba8f885dc774b53b442759999a312c9461e4e"
+  },
+  "native_test_profile": "Optional native ebook hook disabled only during tests; verified system SQLite3.46.1 and pinned libsmb2; real Clang19.1.7",
+  "web_build_profile": "Original production manifest; standard JavaScript release; separate optional Wasm dry run disabled",
+  "app_version": "1.2.9+22",
+  "git_hash": "09cb60be",
+  "test_files": [
+    "test/widget/archive_container_viewer_test.dart",
+    "test/viewer_spool_lifecycle_test.dart",
+    "test/widget/transfer_history_dialog_test.dart",
+    "test/operations_i18n_test.dart"
+  ],
+  "input_manifest_sha256": {
+    "pubspec.yaml": "40246a57f360963ba5d2d8c2a08511d9bdd6ce89df313db2c5e26e0d3d825bdc",
+    "pubspec.lock": "cb86f16b47bf8f9e8380d56573248576779f8277090e2f48adc36371a4c78864"
+  },
+  "phases": [
+    {
+      "name": "dependencies",
+      "command": [
+        "flutter",
+        "pub",
+        "get",
+        "--offline",
+        "--enforce-lockfile"
+      ],
+      "exit_code": 0,
+      "seconds": 2.195,
+      "log": "dependencies.log",
+      "log_sha256": "78dfcb9ec4958dbbe161f380460db41e6dc2e6e6a1e49abf7582ec1575a4810f"
+    },
+    {
+      "name": "analysis",
+      "command": [
+        "dart",
+        "analyze",
+        "--fatal-infos",
+        "lib/widgets/internal_viewer_dialog.dart",
+        "lib/widgets/transfer_history_dialog.dart",
+        "test/widget/archive_container_viewer_test.dart",
+        "test/widget/transfer_history_dialog_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 36.941,
+      "log": "analysis.log",
+      "log_sha256": "0223ffc642a9183a7b3439379e263f5d1d1c1e37090a19420adde277e9f4372f"
+    },
+    {
+      "name": "office-source",
+      "command": [
+        "python3",
+        "tool/verify_office_fidelity.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "seconds": 1.575,
+      "log": "office-source.log",
+      "log_sha256": "294622786ce7a3cefadcbfd06f33ac05dca9b542a07fd7736e533f6c379f2acc"
+    },
+    {
+      "name": "document-source",
+      "command": [
+        "python3",
+        "tool/verify_document_runtime.py",
+        "--require-tracked"
+      ],
+      "exit_code": 0,
+      "seconds": 0.222,
+      "log": "document-source.log",
+      "log_sha256": "c2a484d3cb77b954cb8070a5f142decbff80bb868d6594029e0f5bc228963419"
+    },
+    {
+      "name": "ebook-source",
+      "command": [
+        "python3",
+        "tool/verify_ebook_sources.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.155,
+      "log": "ebook-source.log",
+      "log_sha256": "80c86b462e0a1b40650be631c113c215bd6c9f20b756ad82ffeaf07555bfb958"
+    },
+    {
+      "name": "crypto-inputs",
+      "command": [
+        "python3",
+        "tool/crypto_release_evidence.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.303,
+      "log": "crypto-inputs.log",
+      "log_sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177"
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/workspace/scratch/1f4900d040c9/toolchains/with_archive_native_profile.sh",
+        "/workspace/scratch/1f4900d040c9/CrispCloud-validation",
+        "flutter",
+        "test",
+        "--no-pub",
+        "--concurrency=2",
+        "--reporter",
+        "expanded",
+        "--file-reporter",
+        "json:/workspace/scratch/1f4900d040c9/validation-logs/final-09cb60be/test-events.json",
+        "test/widget/archive_container_viewer_test.dart",
+        "test/viewer_spool_lifecycle_test.dart",
+        "test/widget/transfer_history_dialog_test.dart",
+        "test/operations_i18n_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 111.352,
+      "log": "tests.log",
+      "log_sha256": "ee4a13d95712dfb011277ea46a08492ec8f309f65ccaa263b28aac1b682c4d9c"
+    },
+    {
+      "name": "web-build",
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub",
+        "--no-wasm-dry-run",
+        "--dart-define=APP_VERSION=1.2.9+22",
+        "--dart-define=GIT_HASH=09cb60be"
+      ],
+      "exit_code": 0,
+      "seconds": 262.002,
+      "log": "web-build.log",
+      "log_sha256": "a62f672a20caa703b41d2169a1aa5a1ff2081a70ae7609d46291a2a4edfa6daa"
+    }
+  ],
+  "tests": {
+    "passed": 60,
+    "failed": 0,
+    "skipped": 0,
+    "results": [
+      {
+        "name": "completed bytes retain their owned copy until explicit close",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "input waits for each written chunk before requesting another",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "cancellation interrupts an initial metadata future and observes its late error",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "observed account loss stays latched after an apparent reconnect",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "default inactivity deadline bounds a hung initial stat",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a final metadata timeout removes the completed temporary file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "cancellation during final stat cannot hand a late spool to its caller",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a stalled first chunk is cancelled without awaiting the provider acknowledgement",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "account loss cancels a stalled stream before another byte arrives",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "inactivity after a written prefix removes the partial file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "small continuing writes cannot extend the overall deadline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "empty chunks do not reset inactivity",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a source error remains primary when cancellation acknowledgement hangs",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "secondary provider cleanup errors do not replace cancellation or leak raw details",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned etag map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned eTag map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned version map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned versionId map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned revision map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned rev map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a provider-owned cTag map cannot mutate the captured baseline",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "mutable revision values fail before subscribing or creating files",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "overflow and truncated streams remove their incomplete copies",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "unknown source length is bounded while a genuinely empty file succeeds",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "changed file identity, type and storage scope refuse handoff",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "invalid time and byte bounds do not start source work",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "concurrent close callers await the same directory deletion",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an explicit close failure remains retryable",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "partial cleanup failure preserves the read failure and reports only the owned location",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/viewer_spool_lifecycle_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "Resolve conflict reviews a waiting job and continues it with the chosen decision",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "review and finish a verified saved move without copying again",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "changed sources require explicit exclusion and fit narrow windows",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "operations panel retains recovery and concurrency controls after hiding rows",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/transfer_history_dialog_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "operation translations preserve keys and parameters",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/operations_i18n_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "operation panel displays translated controls",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/operations_i18n_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "new queue displays localized batch and typed file errors",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/operations_i18n_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native F3 checks a 65 MiB member while previews remain bounded",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native protected ZIP reopens fresh borrowed sources",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.zip",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.7z",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.tar",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native pane and F3 still sniff the contents of wrong.tgz",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a native 80 MiB ISO lists and reopens without releasing its viewer source",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an SFX payload is browsed explicitly without replacing the executable binary view",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native F3 joins numbered 7z parts and previews a spanning member",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native split 7z stays readable after encrypted entry unlock on the first password",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "native split 7z stays readable after encrypted entry unlock with a password retry",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "late split 7z password cannot reopen an abandoned archive mode",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a zlib DMG lists HFS+ members and opens a file",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a stored CAB lists files, explains its limits and previews text",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a mszip CAB lists files, explains its limits and previews text",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an RPM exposes payload files and previews its text member",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an installer opens extensionless PBZX Payload and its ODC files",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "empty ZIP packages still display their container details",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "switching modes cancels an in-flight archive member read",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "closing while native access opens releases the late source",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "an incorrect archive password can retry using the same viewer",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "a late password result cannot reopen an abandoned archive mode",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "header encryption allows exactly three submitted passwords",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      },
+      {
+        "name": "unlocking preserves the selected duplicate-name ZIP member",
+        "suite": "/workspace/scratch/1f4900d040c9/CrispCloud-validation/test/widget/archive_container_viewer_test.dart",
+        "result": "success",
+        "skipped": false
+      }
+    ],
+    "errors": [],
+    "completion_events": [
+      {
+        "success": true,
+        "type": "done",
+        "time": 100617
+      }
+    ]
+  },
+  "free_bytes_before_build": 3362795520,
+  "web": {
+    "main_dart_js_bytes": 27498372,
+    "main_dart_js_sha256": "3aaa99410722b41d4ff564eb43ac9ba91feb43430350c31f07ba05dd8c6a2e6d",
+    "app_version_embedded": true,
+    "git_hash_embedded": true,
+    "file_count": 245,
+    "total_bytes": 111125477
+  },
+  "manifests_restored": true,
+  "restored_manifest_sha256": {
+    "pubspec.yaml": "40246a57f360963ba5d2d8c2a08511d9bdd6ce89df313db2c5e26e0d3d825bdc",
+    "pubspec.lock": "cb86f16b47bf8f9e8380d56573248576779f8277090e2f48adc36371a4c78864"
+  },
+  "git_status": "",
+  "free_bytes_after_build": 2644045824,
+  "finished_at_utc": "2026-11-13T21:54:59.287603+00:00"
+}
