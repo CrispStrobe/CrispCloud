@@ -1,0 +1,50 @@
+{
+  "archiveBytes": 609608,
+  "archiveSha256": "3c17c7afc099c7afebf903d7071fbb4aae09679f411043adda612eebc00659e5",
+  "branch": "feature/office-fidelity-gaps-20261113",
+  "cohortInputCount": 1179,
+  "cohortTests": 107,
+  "controlCounts": {
+    "apple-preflight-controls": [
+      38,
+      0
+    ],
+    "crypto-evidence-controls": [
+      42,
+      2
+    ],
+    "ebook-source-controls": [
+      22,
+      0
+    ],
+    "sync-controls": [
+      27,
+      0
+    ]
+  },
+  "hostedCiSha256": "1aaa8d9416b94248adc295490bfeed462b08ed2fc0bfc79ef89f06e8ba33c508",
+  "managedOfficeFiles": 1226,
+  "manifestSha256": "d55b027955048a14fb0c3c0c9f0dd76a2a0e38ed4935327bab4cb7c1a8fe1b9d",
+  "measuredAppCommit": "0233ed8e9501538a9e68051b58a048407b2e29d0",
+  "measuredAppTree": "bea1c6b8a9d4f6533462e715b82017a6a62f4b6c",
+  "nativeAssertions": 13,
+  "parserCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+  "parserSourceFiles": 805,
+  "qudsCommit": "6d6e77d14ead33de90c57ec5feb2ab3cc44f6501",
+  "readmeSha256": "c0d084228b75d2357cbea4d1e122961cc457e71ec5ff5927d1a6d3ef30ce5c71",
+  "recordCount": 98,
+  "recordedUtc": "2026-11-13T06:16:06.511597+00:00",
+  "schemaVersion": 1,
+  "scope": [
+    "Exact published runtime accepted before the later evidence commit.",
+    "107 import-only data tests; no Flutter widget or full app build execution.",
+    "13 actual native assertions are distinct from the cohort fake-process tests.",
+    "Native tool retains partialFormatting and deletes its temporary PDF.",
+    "Native glyph/page exactness, Microsoft Word execution and release readiness are not established.",
+    "Initial online dependency setup ran during branch reconciliation; final offline locked resolution and acceptance use the clean measured app commit.",
+    "Intermediate baseline/probe records retain their original source identities."
+  ],
+  "trackedSourceFileCount": 7108,
+  "uncompressedRecordBytes": 5334692,
+  "verifierSha256": "22e7c7a0c0834d2c33dab19c6b244634e901fc6bc1732110740b29560bcba5e2"
+}

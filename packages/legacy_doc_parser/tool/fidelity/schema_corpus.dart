@@ -438,6 +438,7 @@ void main(List<String> arguments) {
     'shared-header-textbox-table',
     'header-textbox-page-variants',
     'bookmarks-native-hyperlink',
+    'line-number-style',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }

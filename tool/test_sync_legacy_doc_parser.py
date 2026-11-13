@@ -142,6 +142,69 @@ class StandaloneParserSyncTest(unittest.TestCase):
         failures = verifier.verify(self.host, legacy_source=self.source)[1]
         self.assertIn(f'standalone parser mode mismatch: {name}', failures)
 
+    def test_git_index_check_rejects_ignored_upstream_evidence(self):
+        name = 'doc/evidence/retained/formatter.log'
+        self.write(self.source, name, b'original diagnostic record\n')
+        after = self.commit(self.source)
+        office.apply(self.host, legacy.plan(self.source, self.host, after))
+        self.git(self.host, 'init', '-q')
+        self.write(self.host, '.gitignore', b'*.log\n')
+        self.git(self.host, 'add', '-A')
+        # Filesystem verification succeeds, even though an ordinary git add
+        # silently omits this immutable upstream source from the next commit.
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source)[1], [])
+        path = f'{legacy.PREFIX}/{name}'
+        failures = verifier.verify(self.host, legacy_source=self.source,
+                                   require_tracked=True)[1]
+        self.assertEqual(failures, [f'Office source missing from Git index: {path}'])
+        self.git(self.host, 'add', '-f', '--', path)
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1], [])
+
+    def test_git_index_check_rejects_stale_source_pins_and_modes(self):
+        office.apply(self.host, legacy.plan(self.source, self.host, self.before))
+        self.git(self.host, 'init', '-q')
+        self.git(self.host, 'config', 'core.filemode', 'true')
+        self.git(self.host, 'add', '-A')
+        after = self.update()
+        office.apply(self.host, legacy.plan(self.source, self.host, after))
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source)[1], [])
+        failures = verifier.verify(self.host, legacy_source=self.source,
+                                   require_tracked=True)[1]
+        for name in ('pubspec.yaml', 'tool/office_fidelity_manifest.json',
+                     f'{legacy.PREFIX}/UPSTREAM.json',
+                     f'{legacy.PREFIX}/lib/legacy_doc_parser.dart'):
+            self.assertIn(f'Office source differs from Git index: {name}', failures)
+        self.git(self.host, 'add', '-A')
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1], [])
+        name = f'{legacy.PREFIX}/lib/legacy_doc_parser.dart'
+        self.git(self.host, 'update-index', '--chmod=+x', '--', name)
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1],
+                         [f'Office source differs from Git index: {name}'])
+
+    def test_git_index_check_rejects_unstaged_upstream_deletions(self):
+        office.apply(self.host, legacy.plan(self.source, self.host, self.before))
+        self.git(self.host, 'init', '-q')
+        self.git(self.host, 'add', '-A')
+        after = self.update()
+        office.apply(self.host, legacy.plan(self.source, self.host, after))
+        manifest = json.loads((self.host / 'tool/office_fidelity_manifest.json').read_text())
+        # Staging every surviving file misses the deletion: the old source
+        # would reappear after the resulting commit is checked out elsewhere.
+        self.git(self.host, 'add', '--', 'pubspec.yaml',
+                 'tool/office_fidelity_manifest.json', f'{legacy.PREFIX}/UPSTREAM.json',
+                 *manifest['files'])
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source)[1], [])
+        deleted = f'{legacy.PREFIX}/doc/old.md'
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1],
+                         [f'Unexpected parser source in Git index: {deleted}'])
+        self.git(self.host, 'add', '-u', '--', deleted)
+        self.assertEqual(verifier.verify(self.host, legacy_source=self.source,
+                                         require_tracked=True)[1], [])
+
     def test_modified_or_extra_mirror_source_refuses_every_write(self):
         after = self.update()
         original = (self.host / 'pubspec.yaml').read_bytes()

@@ -95,6 +95,7 @@ class LegacyWordDocument {
     this.evenAndOddHeaders = false,
     this.defaultTabStopTwips,
     this.compatibility = const LegacyWordCompatibility.unspecified(),
+    this.lineNumberStyle,
   });
   final List<LegacyWordBlock> blocks;
   final List<LegacyWordSection> sections;
@@ -122,6 +123,11 @@ class LegacyWordDocument {
   final bool evenAndOddHeaders;
   final int? defaultTabStopTwips;
   final LegacyWordCompatibility compatibility;
+
+  /// Resolved character formatting of an explicitly stored built-in Line
+  /// Number style (MS-DOC StdfBase.sti 40). Null preserves its absence; an
+  /// ordinary style with the same display name does not define this value.
+  final LegacyWordCharacterStyle? lineNumberStyle;
 }
 
 enum LegacyWordStoryKind {

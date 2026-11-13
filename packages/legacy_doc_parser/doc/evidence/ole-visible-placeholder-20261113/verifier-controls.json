@@ -1,0 +1,21 @@
+{
+  "controls": {
+    "archive_byte_corruption": {
+      "lastErrorLine": "ValueError: Archive bytes differ",
+      "rejected": true
+    },
+    "displayed_receipt_corruption": {
+      "lastErrorLine": "ValueError: Displayed report differs: receipt.json",
+      "rejected": true
+    },
+    "rehashed_native_geometry_claim": {
+      "lastErrorLine": "ValueError: Native image geometry differs",
+      "rejected": true
+    },
+    "rehashed_schema_input_claim": {
+      "lastErrorLine": "ValueError: Schema input bytes differ",
+      "rejected": true
+    }
+  },
+  "pythonOptimization": true
+}

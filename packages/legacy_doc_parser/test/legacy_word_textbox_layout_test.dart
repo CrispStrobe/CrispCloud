@@ -24,7 +24,9 @@ XmlDocument _convert(
   int wrap = 3,
   int? groupProperties,
   LegacyWordOfficeArtWrapDistances? distances,
+  LegacyWordOfficeArtFill? fill,
   LegacyWordOfficeArtLine? line,
+  LegacyWordOfficeArtShadow? shadow,
   LegacyWordOfficeArtPosition? position,
   int shapeType = 202,
   int sourceFlags = 0,
@@ -83,7 +85,9 @@ XmlDocument _convert(
               flipHorizontal: flip,
               text: layout,
               wrapDistances: distances,
+              fill: fill,
               line: line,
+              shadow: shadow,
               position: position,
               unsupportedProperties: unsupported,
               groupShapeBooleanProperties: groupProperties,
@@ -106,6 +110,121 @@ XmlDocument _convert(
 }
 
 void main() {
+  test(
+    'textbox paint retains independently resolved opacity, line and shadow',
+    () {
+      final xml = _convert(
+        null,
+        fill: const LegacyWordOfficeArtFill(
+          color: '336699',
+          opacityFixed16: 32768,
+        ),
+        line: const LegacyWordOfficeArtLine(
+          color: '993366',
+          widthEmu: 25400,
+          opacityFixed16: 16384,
+          dash: 4,
+          join: 1,
+          cap: 0,
+        ),
+        shadow: const LegacyWordOfficeArtShadow(
+          enabled: true,
+          color: '112233',
+          opacityFixed16: 49152,
+          offsetXEmu: -38100,
+          offsetYEmu: 63500,
+          obscured: false,
+        ),
+      );
+      final box = xml.findAllElements('rect', namespace: _v).single;
+      expect(box.getAttribute('fillcolor'), '#336699');
+      expect(box.getAttribute('strokecolor'), '#993366');
+      expect(box.getAttribute('strokeweight'), '2.0pt');
+      expect(
+        box.findElements('fill', namespace: _v).single.getAttribute('opacity'),
+        '0.5',
+      );
+      final stroke = box.findElements('stroke', namespace: _v).single;
+      expect(stroke.getAttribute('opacity'), '0.25');
+      expect(stroke.getAttribute('dashstyle'), 'shortdashdotdot');
+      expect(stroke.getAttribute('joinstyle'), 'miter');
+      expect(stroke.getAttribute('endcap'), 'round');
+      final shadow = box.findElements('shadow', namespace: _v).single;
+      expect(shadow.getAttribute('on'), 't');
+      expect(shadow.getAttribute('type'), 'single');
+      expect(shadow.getAttribute('color'), '#112233');
+      expect(shadow.getAttribute('opacity'), '0.75');
+      expect(shadow.getAttribute('offset'), '-3.0pt,5.0pt');
+      expect(shadow.getAttribute('obscured'), 'f');
+      expect(xml.toXmlString(), contains('One editable story'));
+    },
+  );
+
+  test('textbox zero opacity and disabled shadow remain explicit', () {
+    final xml = _convert(
+      null,
+      fill: const LegacyWordOfficeArtFill(opacityFixed16: 0),
+      line: const LegacyWordOfficeArtLine(enabled: false, opacityFixed16: 0),
+      shadow: const LegacyWordOfficeArtShadow(
+        enabled: false,
+        offsetXEmu: 0,
+        offsetYEmu: 0,
+        opacityFixed16: 0,
+      ),
+    );
+    final box = xml.findAllElements('rect', namespace: _v).single;
+    expect(box.getAttribute('stroked'), 'f');
+    for (final element in ['fill', 'stroke', 'shadow']) {
+      expect(
+        box.findElements(element, namespace: _v).single.getAttribute('opacity'),
+        '0.0',
+      );
+    }
+    final shadow = box.findElements('shadow', namespace: _v).single;
+    expect(shadow.getAttribute('on'), 'f');
+    expect(shadow.getAttribute('offset'), '0.0pt,0.0pt');
+    final absent = _convert(null);
+    expect(absent.findAllElements('fill', namespace: _v), isEmpty);
+    expect(absent.findAllElements('stroke', namespace: _v), isEmpty);
+    expect(absent.findAllElements('shadow', namespace: _v), isEmpty);
+  });
+
+  test(
+    'unresolved textbox paint does not suppress another resolved component',
+    () {
+      for (final unsupported in [0x0186, 0x01d5, 0x0207]) {
+        final xml = _convert(
+          null,
+          fill: const LegacyWordOfficeArtFill(opacityFixed16: 32768),
+          line: const LegacyWordOfficeArtLine(dash: 1),
+          shadow: const LegacyWordOfficeArtShadow(enabled: true),
+          unsupported: [unsupported],
+        );
+        final box = xml.findAllElements('rect', namespace: _v).single;
+        for (final (name, first, last) in [
+          ('fill', 0x0180, 0x01bf),
+          ('stroke', 0x01c0, 0x01ff),
+          ('shadow', 0x0200, 0x023f),
+        ]) {
+          expect(
+            box.findElements(name, namespace: _v),
+            hasLength(unsupported >= first && unsupported <= last ? 0 : 1),
+          );
+        }
+        expect(xml.toXmlString(), contains('One editable story'));
+      }
+      final unknownTypes = _convert(
+        null,
+        fill: const LegacyWordOfficeArtFill(type: 2, opacityFixed16: 32768),
+        line: const LegacyWordOfficeArtLine(compoundStyle: 1),
+        shadow: const LegacyWordOfficeArtShadow(enabled: true, type: 2),
+      );
+      expect(unknownTypes.findAllElements('fill', namespace: _v), isEmpty);
+      expect(unknownTypes.findAllElements('stroke', namespace: _v), isEmpty);
+      expect(unknownTypes.findAllElements('shadow', namespace: _v), isEmpty);
+    },
+  );
+
   test('simple explicit borders convert the inner anchor to outer frame', () {
     // Literal source widths and expected outer coordinates, in twips. These
     // include even/odd widths, zero, hairline, and a fractional-twip boundary.
@@ -152,7 +271,8 @@ void main() {
       ),
       _convert(
         null,
-        line: const LegacyWordOfficeArtLine(widthEmu: 9525, dash: 1),
+        line: const LegacyWordOfficeArtLine(widthEmu: 9525),
+        shadow: const LegacyWordOfficeArtShadow(enabled: true, type: 2),
       ),
       _convert(
         null,
@@ -205,6 +325,30 @@ void main() {
           'margin-left:72.0pt;margin-top:72.0pt;width:144.0pt;height:72.0pt;',
         ),
       );
+    }
+  });
+
+  test('simple dashed borders and offset shadows share the outside frame', () {
+    for (final dash in [0, 1, 2, 6, 10]) {
+      for (final enabled in [null, false, true]) {
+        final box = _convert(
+          null,
+          line: LegacyWordOfficeArtLine(widthEmu: 25400, dash: dash),
+          shadow: LegacyWordOfficeArtShadow(
+            enabled: enabled,
+            type: 0,
+            offsetXEmu: -25400,
+            offsetYEmu: 50800,
+          ),
+        ).findAllElements('rect', namespace: _v).single;
+        expect(
+          box.getAttribute('style'),
+          contains(
+            'margin-left:71.0pt;margin-top:71.0pt;width:146.0pt;height:74.0pt;',
+          ),
+        );
+        expect(box.getAttribute('strokeweight'), '2.0pt');
+      }
     }
   });
 

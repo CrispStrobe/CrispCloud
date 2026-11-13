@@ -14,6 +14,7 @@ evidence parts.
 | --- | --- | --- |
 | `fillBackColor` (`0x0183`) | Inactive when the resolved fill is scalar/default solid. The [MS-ODRAW fill-color table](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/1c43c247-d23b-450c-b729-b0b4a54aa617) explicitly marks this color unused for solid fill. | Complex operands, unresolved fill type, pattern and gradient contexts. An inactive system color is never decoded as foreground RGB. |
 | `lineBackColor` (`0x01C2`) | Inactive for scalar/default solid line when no used opaque-background flag enables an additional stroke. [MS-ODRAW line Boolean properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/b359a9d1-941b-49ad-8462-7c0bb894d125) define the extra background-colored line and its independent use bit. | Complex operands, non-solid or unresolved line types, and active opaque-background strokes. |
+| `fNoLineDrawDash` in `0x01FF` | Value bit 0 is effective only when use bit 16 is set. An absent, unused, or explicitly false value does not request an extra stroke. The fallback is dormant when `fLine` is true, including its source default. | Explicit true combined with resolved `fLine=false` requests a dashed indication. This fallback stroke has no validated mapping, so `0x01FF` remains unsupported and the original OfficeArt is retained. |
 | `fLayoutInCell` in `0x03BF` | Value bit 15 is used only when bit 31 is set. Absent/unused means the source default, true. Explicit values map to VML `o:allowincell` for shapes/textboxes and DrawingML `wp:anchor/@layoutInCell` for pictures. | Every other explicitly used group Boolean remains unsupported for editable shape emission; complex group words remain unsupported. |
 
 [MS-ODRAW Group Shape Boolean Properties](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-odraw/a0ae6aa5-16e4-4550-87a2-b8ca180c7fd7)
@@ -24,6 +25,16 @@ wrapping or overlap flag. The resolved word is exposed on the model; the actual
 source property words remain in the retained OfficeArt artifact. The high use
 bit is checked in both the Dart VM and compiled JavaScript, including the
 inherited-hidden adversarial case.
+
+The same per-use-bit merge applies to line Boolean properties. A local
+`fLine=false` cannot clear an inherited `fNoLineDrawDash=true`; a local explicitly
+false dash flag can clear it. An active dash request prevents the normal editable
+shape path from presenting a plain invisible line as a complete interpretation.
+Overriding the ordinary line to true makes an inherited fallback flag dormant
+and retains supported editable output.
+It also keeps such textbox borders outside the resolved frame-geometry subset.
+The converter retains source evidence and reports `partialFormatting`; it does
+not claim to render that fallback dash.
 
 ## Zero-count SymmetricCurve editing hint
 

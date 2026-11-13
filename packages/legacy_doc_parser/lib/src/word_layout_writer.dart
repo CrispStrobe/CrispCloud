@@ -2,6 +2,26 @@
 part of 'conversion.dart';
 
 extension _WordLayout on _StructuredWordWriter {
+  void _lineNumberStyleXml(_BoundedWordXml xml) {
+    final style = document.lineNumberStyle;
+    if (style == null) return;
+    xml.add(
+      '<w:style w:type="character" w:styleId="LineNumber">'
+      '<w:name w:val="line number"/><w:rPr>',
+    );
+    // Preserve the decoded source style rather than using a paragraph's direct
+    // formatting. Reuse the same bounded character-property serialization.
+    final previous = _xml;
+    _xml = xml;
+    try {
+      _runStyle(style);
+    } finally {
+      _xml = previous;
+    }
+    xml.add('</w:rPr></w:style>');
+    _count('lineNumberStyles');
+  }
+
   void _paragraphLayoutBeforeSpacing(LegacyWordParagraphLayout layout) {
     _bool('suppressAutoHyphens', layout.suppressAutoHyphens);
     for (final (name, value) in [

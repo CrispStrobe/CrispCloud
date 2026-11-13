@@ -96,6 +96,78 @@ void main() {
   });
 
   test(
+    'disabled-line dash requests cannot become an ordinary invisible line',
+    () {
+      final bytes = officeArtShapeWordFixture(values: {0x01ff: 0x00090001});
+      final parsed = _shape(bytes);
+      expect(parsed.line!.enabled, isFalse);
+      expect(parsed.unsupportedProperties, contains(0x01ff));
+      final result = convertLegacyWord(bytes);
+      expect(result.preservedCounts['editableShapes'], isNull);
+      expect(_xml(result).findAllElements('shape', namespace: _v), isEmpty);
+      expect(result.preservedCounts['evidenceArtifacts'], greaterThan(0));
+      expect(
+        result.limitations,
+        contains(LegacyWordConversionLimitation.partialFormatting),
+      );
+    },
+  );
+
+  test('enabled or default source lines leave fallback dash flags dormant', () {
+    for (final (raw, enabled) in [
+      (0x00090009, true),
+      (0x00010001, null),
+      (0x00010009, null),
+    ]) {
+      final bytes = officeArtShapeWordFixture(values: {0x01ff: raw});
+      final parsed = _shape(bytes);
+      expect(parsed.line!.enabled, enabled);
+      expect(parsed.unsupportedProperties, isEmpty);
+      final result = convertLegacyWord(bytes);
+      expect(result.preservedCounts['editableShapes'], 1);
+      final shape = _xml(result).findAllElements('shape', namespace: _v).single;
+      expect(shape.getAttribute('stroked'), 't');
+    }
+    final enabled = officeArtShapeWordFixture(
+      defaults: {0x01ff: 0x00090001},
+      values: {0x01ff: 0x00080008},
+    );
+    expect(_shape(enabled).line!.enabled, isTrue);
+    expect(_shape(enabled).unsupportedProperties, isEmpty);
+    expect(convertLegacyWord(enabled).preservedCounts['editableShapes'], 1);
+  });
+
+  test(
+    'inactive dash requests respect their use bit and inherited overrides',
+    () {
+      for (final raw in [0x00080000, 0x00080001, 0x00090000]) {
+        final bytes = officeArtShapeWordFixture(values: {0x01ff: raw});
+        expect(_shape(bytes).line!.enabled, isFalse);
+        expect(_shape(bytes).unsupportedProperties, isEmpty);
+        final result = convertLegacyWord(bytes);
+        final shape = _xml(
+          result,
+        ).findAllElements('shape', namespace: _v).single;
+        expect(shape.getAttribute('stroked'), 'f');
+        expect(result.preservedCounts['editableShapes'], 1);
+      }
+      final inherited = officeArtShapeWordFixture(
+        defaults: {0x01ff: 0x00090001},
+        values: {0x01ff: 0x00080000},
+      );
+      expect(_shape(inherited).line!.enabled, isFalse);
+      expect(_shape(inherited).unsupportedProperties, contains(0x01ff));
+      final disabled = officeArtShapeWordFixture(
+        defaults: {0x01ff: 0x00090001},
+        values: {0x01ff: 0x00010000},
+      );
+      expect(_shape(disabled).line!.enabled, isFalse);
+      expect(_shape(disabled).unsupportedProperties, isEmpty);
+      expect(convertLegacyWord(disabled).preservedCounts['editableShapes'], 1);
+    },
+  );
+
+  test(
     'explicit cell layout maps to VML and DrawingML with source defaults',
     () {
       for (final (raw, layout, attribute) in [

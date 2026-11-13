@@ -352,6 +352,22 @@ extension _WordFormattingTables on _StructuredWordParser {
     return _resolvedStyles[index] = _ResolvedStyle(paragraph, character);
   }
 
+  LegacyWordCharacterStyle? _lineNumberStyle() {
+    // StdfBase.sti is the semantic built-in identity, independent of the
+    // stylesheet index and localized display name. These generated characters
+    // have no CP/CHPX run from which the usual text writer can recover it.
+    final matches = styles.entries
+        .where((entry) => entry.value.builtinId == 40)
+        .toList();
+    if (matches.isEmpty) return null;
+    if (matches.length != 1 || matches.single.value.kind != 2) {
+      throw const FormatException(
+        'Invalid or duplicate Word line number style.',
+      );
+    }
+    return _characterStyle(_resolveStyle(matches.single.key).character);
+  }
+
   void _readAuthors() {
     final (offset, length) = source.pair(51);
     if (length == 0) return;

@@ -1,0 +1,844 @@
+{
+  "schema": "legacy-doc-parser/picture-scaling",
+  "version": 1,
+  "sourcePath": "test/fixtures/fidelity/image-appearance/binary/inline-horizontal.doc",
+  "sourceSha256": "d7e50ad0b14d4b7d54e74c2ff86e7f9c449ddf8f1aa432f679b1d2e346ecc084",
+  "parserCommit": "78c88b357ad66934abf9b467e3903748b7742e3c",
+  "parserWorktreeDirty": false,
+  "officeVersion": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "scope": "Integer-twip PICMID scaling only; no renderer-only crop compensation.",
+  "cases": {
+    "integral": {
+      "sourceSha256": "d7e50ad0b14d4b7d54e74c2ff86e7f9c449ddf8f1aa432f679b1d2e346ecc084",
+      "sourceFields": {
+        "goalsTwips": [
+          1200,
+          600
+        ],
+        "scaleTenthsPercent": [
+          1200,
+          1200
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [],
+        "picfHeaderHex": "79010000440064004508220400000000000000000000000000000000b0045802b004b0040000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        1440,
+        720
+      ],
+      "native": {
+        "extentEmu": [
+          914400,
+          457200
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          914400,
+          457200
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 1440,
+        "heightTwips": 720,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        914400,
+        457200
+      ],
+      "binaryRender": {
+        "pdfSha256": "43b0a8a846339e6ee236877240b601015aaece0b60a7258b13569c6942fd7adf",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          72.0000228881836,
+          143.95001220703125,
+          107.9000244140625
+        ],
+        "imageSizePoints": [
+          71.90000915527344,
+          35.900001525878906
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "fcb7447ebd6b4573fc9e857d937d59717766ac50c8c753eb8052ca0cb1cf9d7b",
+        "imageBoundsPoints": [
+          72.0,
+          71.95001220703125,
+          144.0,
+          107.95001220703125
+        ],
+        "imageSizePoints": [
+          72.0,
+          36.0
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.09999847412109375,
+      "parserMaximumSizeDriftFromAuthoredPoints": 0.0,
+      "sourceUnchanged": true,
+      "checksPass": true
+    },
+    "below-half": {
+      "sourceSha256": "cc54dcb56e49d752308370daf9fa4badc17843bdaaf76c332c60c453b804c71a",
+      "sourceFields": {
+        "goalsTwips": [
+          1001,
+          1001
+        ],
+        "scaleTenthsPercent": [
+          1499,
+          499
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "picfHeaderHex": "79010000440064004508220400000000000000000000000000000000e903e903db05f3010000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        1500,
+        499
+      ],
+      "native": {
+        "extentEmu": [
+          952500,
+          316865
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          952500,
+          316865
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 1500,
+        "heightTwips": 499,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        952500,
+        316865
+      ],
+      "binaryRender": {
+        "pdfSha256": "d86caf1573c326bf99e9f586fc2f276739d7950e8b8b7f68201f5086424c2843",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          71.9999771118164,
+          146.95001220703125,
+          96.8499755859375
+        ],
+        "imageSizePoints": [
+          74.90000915527344,
+          24.849998474121094
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "5517d2ccf7fb1630ac21cede6b9fb5ec81d711c81c02ea92ec9ce2a81e965676",
+        "imageBoundsPoints": [
+          72.0,
+          71.95002746582031,
+          147.0,
+          96.9000244140625
+        ],
+        "imageSizePoints": [
+          75.0,
+          24.949996948242188
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.09999847412109375,
+      "parserMaximumSizeDriftFromAuthoredPoints": 3.0517578117894573e-06,
+      "sourceUnchanged": true,
+      "checksPass": true
+    },
+    "half": {
+      "sourceSha256": "6b460ec3f6e74cb219b428a8405444cb4d1ff312ac5b8a93ccf96e5502509c17",
+      "sourceFields": {
+        "goalsTwips": [
+          1001,
+          1003
+        ],
+        "scaleTenthsPercent": [
+          1500,
+          500
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "picfHeaderHex": "79010000440064004508220400000000000000000000000000000000e903eb03dc05f4010000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        1501,
+        501
+      ],
+      "native": {
+        "extentEmu": [
+          953135,
+          318135
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          953135,
+          318135
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 1501,
+        "heightTwips": 501,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        953135,
+        318135
+      ],
+      "binaryRender": {
+        "pdfSha256": "3b2ad99151ee1b81ecf3d3b04f299b402c3408aea3b1ffa1aaa59a0e1e638124",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          72.00001525878906,
+          147.0,
+          96.95001220703125
+        ],
+        "imageSizePoints": [
+          74.94999694824219,
+          24.949996948242188
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "878d05bd72167f6441be5fc930bcf851d739c411205cbea76af0b1b5a936f9a7",
+        "imageBoundsPoints": [
+          72.0,
+          71.94999694824219,
+          147.0500030517578,
+          97.0
+        ],
+        "imageSizePoints": [
+          75.05000305175781,
+          25.050003051757812
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.100006103515625,
+      "parserMaximumSizeDriftFromAuthoredPoints": 3.051757815342171e-06,
+      "sourceUnchanged": true,
+      "checksPass": true
+    },
+    "above-half": {
+      "sourceSha256": "33e18279f8a86a29b13fa903fd36b2cdeb23b88966b15010f213a0a8c99e8904",
+      "sourceFields": {
+        "goalsTwips": [
+          1001,
+          1001
+        ],
+        "scaleTenthsPercent": [
+          1501,
+          501
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "picfHeaderHex": "79010000440064004508220400000000000000000000000000000000e903e903dd05f5010000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        1502,
+        501
+      ],
+      "native": {
+        "extentEmu": [
+          953770,
+          318135
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          953770,
+          318135
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 1502,
+        "heightTwips": 501,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        953770,
+        318135
+      ],
+      "binaryRender": {
+        "pdfSha256": "f0f5db8259a1770ea203ed1ac3ff1ad90ff8aaaed595db756115f23514ffe846",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          72.00001525878906,
+          147.0500030517578,
+          96.95001220703125
+        ],
+        "imageSizePoints": [
+          75.0,
+          24.949996948242188
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "b225a3924bc11072508194d7069fcc4fb9c828fbce18537f79df4378c54520d0",
+        "imageBoundsPoints": [
+          72.0,
+          71.94999694824219,
+          147.10000610351562,
+          97.0
+        ],
+        "imageSizePoints": [
+          75.10000610351562,
+          25.050003051757812
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.100006103515625,
+      "parserMaximumSizeDriftFromAuthoredPoints": 6.103515630684342e-06,
+      "sourceUnchanged": true,
+      "checksPass": true
+    },
+    "one-thousandth": {
+      "sourceSha256": "28cae7772df9372d89997a77fb22f02c4db2bfa2bd8620cc908eb8a6ab27379b",
+      "sourceFields": {
+        "goalsTwips": [
+          1001,
+          1001
+        ],
+        "scaleTenthsPercent": [
+          1001,
+          1999
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "picfHeaderHex": "79010000440064004508220400000000000000000000000000000000e903e903e903cf070000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        1002,
+        2000
+      ],
+      "native": {
+        "extentEmu": [
+          636270,
+          1270000
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          636270,
+          1270000
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 1002,
+        "heightTwips": 2000,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        636270,
+        1270000
+      ],
+      "binaryRender": {
+        "pdfSha256": "da62576baca0887428aae6a1509bdb0368e087e2fb90fbd3ae8c4fc92dd56349",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          72.0000228881836,
+          122.05000305175781,
+          171.9000244140625
+        ],
+        "imageSizePoints": [
+          50.0,
+          99.9000015258789
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "9a5f96635910b6c77ae8de0dd2a56071975a31ac5e8e4222670aded70a821f1c",
+        "imageBoundsPoints": [
+          72.0,
+          71.95001220703125,
+          122.0999984741211,
+          171.95001220703125
+        ],
+        "imageSizePoints": [
+          50.099998474121094,
+          100.0
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.09999847412109375,
+      "parserMaximumSizeDriftFromAuthoredPoints": 1.5258789076710855e-06,
+      "sourceUnchanged": true,
+      "checksPass": true
+    },
+    "retained-emf-ratio": {
+      "sourceSha256": "3a1088ac26a9f5234ad4560fc5021dc03e9b630d7bd1aea191a542c755a1180b",
+      "sourceFields": {
+        "goalsTwips": [
+          9001,
+          5401
+        ],
+        "scaleTenthsPercent": [
+          960,
+          960
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "picfHeaderHex": "7901000044006400450822040000000000000000000000000000000029231915c003c0030000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        8640,
+        5184
+      ],
+      "native": {
+        "extentEmu": [
+          5486400,
+          3291840
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          5486400,
+          3291840
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 8640,
+        "heightTwips": 5184,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        5486400,
+        3291840
+      ],
+      "binaryRender": {
+        "pdfSha256": "8f76a24fd9ea3d052c59fe98b91db59ce6942043f899da1388c120d82a676783",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          72.0,
+          503.95001220703125,
+          331.1000061035156
+        ],
+        "imageSizePoints": [
+          431.90000915527344,
+          259.1000061035156
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "a3b366cc9c0fcb95be72092a095139cbe8c295f5b8474913cf38c65dba56830f",
+        "imageBoundsPoints": [
+          72.0,
+          71.94998168945312,
+          504.0,
+          331.1499938964844
+        ],
+        "imageSizePoints": [
+          432.0,
+          259.20001220703125
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.100006103515625,
+      "parserMaximumSizeDriftFromAuthoredPoints": 1.2207031261368684e-05,
+      "sourceUnchanged": true,
+      "checksPass": true
+    },
+    "retained-wmf-ratio": {
+      "sourceSha256": "4867d71009e4e8e56f44fc994dfffd878ed209e45486a875fc186f3999ed3668",
+      "sourceFields": {
+        "goalsTwips": [
+          9000,
+          5400
+        ],
+        "scaleTenthsPercent": [
+          960,
+          960
+        ],
+        "dataStreamSize": 377,
+        "picfOffset": 0,
+        "physicalFieldOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "changedPhysicalOffsets": [
+          4124,
+          4125,
+          4126,
+          4127,
+          4128,
+          4129,
+          4130,
+          4131
+        ],
+        "picfHeaderHex": "7901000044006400450822040000000000000000000000000000000028231815c003c0030000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expectedTwips": [
+        8640,
+        5184
+      ],
+      "native": {
+        "extentEmu": [
+          5486400,
+          3291840
+        ],
+        "crop": {
+          "l": "-47",
+          "t": "-95",
+          "r": "-47",
+          "b": "-95"
+        },
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parser": {
+        "extentEmu": [
+          5486400,
+          3291840
+        ],
+        "crop": null,
+        "imagesSha256": {
+          "word/media/image1.png": "2939ad8263b6d9a7a2c0171732b1352930d39ee6601d6eb845c6a28892b3b08a"
+        }
+      },
+      "parserModel": {
+        "widthTwips": 8640,
+        "heightTwips": 5184,
+        "cropFixed16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "counts": {
+          "evidenceArtifacts": 4,
+          "images": 1,
+          "pictureReferences": 1,
+          "paragraphs": 1,
+          "sections": 1,
+          "compatibilityFlags": 61
+        }
+      },
+      "expectedEmu": [
+        5486400,
+        3291840
+      ],
+      "binaryRender": {
+        "pdfSha256": "101ee533ebad09a4bddba51d708446e9af3ada4e5840b73fa88ea48e2f4f126a",
+        "imageBoundsPoints": [
+          72.05000305175781,
+          72.0,
+          503.95001220703125,
+          331.1000061035156
+        ],
+        "imageSizePoints": [
+          431.90000915527344,
+          259.1000061035156
+        ]
+      },
+      "parserRender": {
+        "pdfSha256": "a750beeb8a7e641dd928b47e8d7192bad45a5ce5e6c88b01734ee90379f7a2cf",
+        "imageBoundsPoints": [
+          72.0,
+          71.94998168945312,
+          504.0,
+          331.1499938964844
+        ],
+        "imageSizePoints": [
+          432.0,
+          259.20001220703125
+        ]
+      },
+      "nativeMatchesAuthoredTwips": true,
+      "parserMatchesAuthoredTwips": true,
+      "parserCropUnchanged": true,
+      "maximumImageSizeDifferencePoints": 0.100006103515625,
+      "parserMaximumSizeDriftFromAuthoredPoints": 1.2207031261368684e-05,
+      "sourceUnchanged": true,
+      "checksPass": true
+    }
+  },
+  "errors": []
+}

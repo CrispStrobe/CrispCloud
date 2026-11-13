@@ -57,25 +57,36 @@ combinations; its SDK result is a separate validity gate. Shared-image and
 private-field controls retain distinct occurrence metadata without exposing
 private payloads.
 
-Embedded OLE payloads with no recovered preview use a generic icon whose VML
-markup includes "Embedded object / Preview unavailable". The original storage bytes
-remain the relationship target and `partialFormatting` remains disclosed.
-This is a converter placeholder, not an inferred rendering of the source
-object. Its self-contained [VML shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.shape)
-has an explicit rectangular path, and the OLE `ShapeID` resolves to that
-`v:shape`. `DrawAspect="Icon"` distinguishes it from a content snapshot;
+Embedded OLE payloads with no recovered preview use a generic PNG icon labelled
+"Embedded object / Preview unavailable". Its 288 by 144 reviewed pixels are
+embedded once per package and displayed in a 72 by 36 point picture-frame
+shape. The original storage bytes remain the OLE relationship target and
+`partialFormatting` remains disclosed. This is a converter placeholder, not
+an inferred rendering of the source object. Its self-contained
+[VML picture shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.office.oleobject)
+has a local type-75 definition and an explicit image relationship; the OLE
+`ShapeID` resolves to that `v:shape`. `DrawAspect="Icon"` distinguishes it from a
+content snapshot. Alt/title text independently identifies the missing preview;
+no textbox label or font resolution is required to display the raster.
+Generated images have separate `generatedPlaceholderImages` and
+`embeddedObjectPlaceholders` counts and explicit per-occurrence evidence with
+`sourcePreviewRecovered=false`. They are not counted as preserved source images.
+Each occurrence keeps its own object/shape/revision identities, including when
+several objects share the generic icon pixels.
+
 `ObjectID` uses the underscore-plus-int32 form required by
 [MS-OI29500 2.1.1834](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c9af80fa-3ee4-4a79-ace6-4fd46ff83957).
 `ProgID` is retained only when present in the source; no application identity is
 invented. Schema validity does not establish a native application's ability to
 activate every embedded payload or render its unavailable original preview.
-In the [retained native check](evidence/ole-placeholder-d4a19b9/README.md),
+In the [historical native check](evidence/ole-placeholder-d4a19b9/README.md),
 LibreOfficeDev 26.8 renders the generic grey rectangle but suppresses both
 textbox label lines. The same occurs after a controlled insertion-acceptance
-projection, so accepted insertion alone does not restore the label on that
-renderer. This is an explicit remaining visual limitation; the check does not
-establish Word rendering, embedded-handler activation, or original-preview
-fidelity. A more portable visible placeholder remains followup work.
+projection. That original failure is retained; the current picture-frame icon
+does not rely on that suppressed textbox content. The reviewed generated PNG
+and its bounded reproduction recipe are checked in. Neither the generic icon
+nor its native display establishes original-preview fidelity, Microsoft Word
+rendering, or activation of an embedded application.
 
 These checks do not reconstruct moved objects, formatting histories of objects,
 comment range editing, automatic cleanup of unreferenced stories, or arbitrary

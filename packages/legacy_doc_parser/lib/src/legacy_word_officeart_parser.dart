@@ -282,7 +282,13 @@ class _OfficeArtShapeReader {
     if (_used(0x01bf, 1) == true || _used(0x01bf, 6) == true) {
       unsupported.add(0x01bf);
     }
-    if (_used(0x01ff, 6) == true || _used(0x01ff, 9) == true) {
+    // fNoLineDrawDash requests a dashed indication even when the ordinary
+    // line is disabled (MS-ODRAW 2.3.8.38). Merely writing stroked="f" would
+    // lose that source appearance. Preserve the flag as unsupported evidence
+    // until this distinct fallback stroke has a validated native mapping.
+    if ((_used(0x01ff, 0) == true && line?.enabled == false) ||
+        _used(0x01ff, 6) == true ||
+        _used(0x01ff, 9) == true) {
       unsupported.add(0x01ff);
     }
     return LegacyWordOfficeArtShape(

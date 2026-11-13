@@ -1,0 +1,48 @@
+{
+  "runtimeCommit": "cd9ab85aa43fb2955105d5fa34d802f1017307cf",
+  "runtimeTree": "0398f0101b9dbf4ea2c94b810f092d2170580e6c",
+  "inputFiles": 800,
+  "members": {
+    "analyze.log": {
+      "size": 48,
+      "sha256": "ad2ea1afd8dc83bdc28ef93f2914a0b11e1b8d54f1cae177bf068620befcbe86"
+    },
+    "corpus-integrity.log": {
+      "size": 51,
+      "sha256": "11baa5f95b1e9f5e530e9280e15f7e105fea388dfcc79b7619eac0f8b4c5bb3d"
+    },
+    "dart-tests.log": {
+      "size": 112109,
+      "sha256": "0b3bafeae6ddd04a3012ab84a3981c7a5de63efee16a39786e46033855010212"
+    },
+    "dart-version.log": {
+      "size": 82,
+      "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+    },
+    "format.log": {
+      "size": 49,
+      "sha256": "64282ec9a868fc11fcaef117b2080ad2f2bcbf8b63695bd4d9c6d378006d40e8"
+    },
+    "javascript.log": {
+      "size": 469,
+      "sha256": "94e6e1aa1f692a46fa6ad88853da78131e36569e9e01ebe25d8443e54779fd15"
+    },
+    "publish-dry-run.log": {
+      "size": 52880,
+      "sha256": "3ef4505b147d10c049a054e64c207ed14f182c253e93fa17a6d60920afdf5739"
+    },
+    "python-tests.log": {
+      "size": 510,
+      "sha256": "e6823af852fdb4e083d97ef685206a1163379fc562adfae374010fc0caf82d74"
+    },
+    "receipt.json": {
+      "size": 211724,
+      "sha256": "7b9874d0ea0cf849588a595d03e231c9fe9351d998b0beb6e8e4c70674b600ec"
+    }
+  },
+  "archive": {
+    "path": "portable.tar.xz",
+    "size": 43360,
+    "sha256": "5c75cfe8e1232430ee3f5aceeb67e9fdad9c8b31c82e4efa298a879a7b64c2d0"
+  }
+}

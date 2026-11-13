@@ -1,0 +1,136 @@
+{
+  "Files": 26,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/accepted.docx",
+      "Sha256": "ded21cd9d085475d16ec87d39818aecd269e4197ef8c6a32cb3789e2cca285f2",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/comment-anchor-deleted.docx",
+      "Sha256": "0faec19071b25221d34ec9965c017dac60734df6a6f262174a86f6097eda984c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/comment-anchor-inserted.docx",
+      "Sha256": "7101a515bfc6e2b652a45683514d18d1e488a22856b52ff2f1256558352ac495",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/comment-anchor-overlapping.docx",
+      "Sha256": "85a0d27525253273e40aa5a2685635973f013a58cbaf6f7b673456584678c7ac",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/editable-shape-deleted.docx",
+      "Sha256": "6e74040bdbf6172a262553943fc3b3728828f51e55d4407c0dd547bd9cd41486",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/editable-shape-inserted.docx",
+      "Sha256": "9de5d6e24d1535c6027d87527a530c200107faee4dbd9bbcf4beee8c8b49b6b8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/editable-shape-overlapping.docx",
+      "Sha256": "d5801b617a48de5b4af83856adeaf6e48710de6a39cc2d47a8cea322f690b81d",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/embedded-object-deleted.docx",
+      "Sha256": "7f04bed9e28a6fc0e7f1f3b8611f3ee5a656e8b3d69ec2f20f796fa4695f2167",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/embedded-object-inserted.docx",
+      "Sha256": "549f93fd46273158162f9a644a161328f26470077332d2ed92c11315d7c09055",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/embedded-object-overlapping.docx",
+      "Sha256": "11b778dc993e51ec0ed477a1611787d241a86aafccb1222f0c89eba31a6f32ea",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/endnote-anchor-deleted.docx",
+      "Sha256": "2c4bd416c568998abf017e2548d88112b8798b1fc0f0d2f26064f1ac8ec820b4",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/endnote-anchor-inserted.docx",
+      "Sha256": "4649fd644d929f0387f9de002ef5f7e9cc4ffae31ebe2a0f663b1378c8879e5b",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/endnote-anchor-overlapping.docx",
+      "Sha256": "3b06b82786093228c467c8c693a9ff3a27b8499c909258c82e636857f948cc23",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/floating-picture-deleted.docx",
+      "Sha256": "6f26783ce86c9d0cb1868112324085e902f8555e6cf7a2e79411d8e83add51e6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/floating-picture-inserted.docx",
+      "Sha256": "9950e7a4751a946d5e01e0412d790dab11f9aff66bcf797203411788928d0ea3",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/floating-picture-overlapping.docx",
+      "Sha256": "26b50a2d3b70ad12e8e8d6c8c671608bcaeda8289fccafd048db11ce06a18bae",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/footnote-anchor-deleted.docx",
+      "Sha256": "ac0e906c591738eba222653e6f775ec734a12fdc5ec9e9ee959d0fe45d35a82f",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/footnote-anchor-inserted.docx",
+      "Sha256": "660240ba131989afa90d36f769d91c4fe1d41b3746425fb5a41bb9d16a4f54f7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/footnote-anchor-overlapping.docx",
+      "Sha256": "c9ee22a514b47b5899b26d686e6d8c4d11921585a1cf97d62eb900ae7e781b62",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/footnote-picture-deleted.docx",
+      "Sha256": "36134b32a162c9d0bacd13f17c7e7e0ba47da40d4b3919fd1fe79e4f7431c376",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/footnote-picture-inserted.docx",
+      "Sha256": "89aa858ce7ceec681e152be44b329554b67280fb6b418519d11af69240a0dbba",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/footnote-picture-overlapping.docx",
+      "Sha256": "4f0857fb5ba6ca17eb4c1d5f55f2d4b9881cd4c18d4d709bbdc739ecc0d3a070",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/inline-picture-deleted.docx",
+      "Sha256": "71bbf73738a1e03dcef8228606fd31c658b7444b913fa8247ed4624dc90684b7",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/inline-picture-inserted.docx",
+      "Sha256": "fbb6cdb2981b226cee6a5b8f134c4502a4b327fd3cc3dc7fff7c03069a4e41b0",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/fixtures/inline-picture-overlapping.docx",
+      "Sha256": "c56d918c2071ece1e395ab9cade81ad923b3e80538312cd646865946940eb27c",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/c1ca2a1344e9/root-gap-probes/ole/d086-native/schema/rejected.docx",
+      "Sha256": "a03c9df309f0e8069939036c8aa6e3f1bdbebd94d17519b76b0a2304ce1683a3",
+      "Errors": []
+    }
+  ]
+}

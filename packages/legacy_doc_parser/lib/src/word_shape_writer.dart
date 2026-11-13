@@ -229,12 +229,17 @@ extension _WordShapes on _StructuredWordWriter {
     return '${value / 65536}';
   }
 
-  void _shapePaintElements(LegacyWordOfficeArtShape shape) {
+  void _shapePaintElements(
+    LegacyWordOfficeArtShape shape, {
+    bool includeFill = true,
+    bool includeStroke = true,
+    bool includeShadow = true,
+  }) {
     final fill = shape.fill, line = shape.line, shadow = shape.shadow;
-    if (fill?.opacityFixed16 != null) {
+    if (includeFill && fill?.opacityFixed16 != null) {
       _xml.add('<v:fill opacity="${_shapeOpacity(fill!.opacityFixed16!)}"/>');
     }
-    {
+    if (includeStroke) {
       _xml.add('<v:stroke');
       if (line?.opacityFixed16 != null) {
         _xml.add(' opacity="${_shapeOpacity(line!.opacityFixed16!)}"');
@@ -262,7 +267,7 @@ extension _WordShapes on _StructuredWordWriter {
       }
       _xml.add('/>');
     }
-    if (shadow != null) {
+    if (includeShadow && shadow != null) {
       // Shadow properties do not enable a shadow unless its used flag does.
       _xml.add(
         '<v:shadow on="${shadow.enabled == true ? 't' : 'f'}" type="single"',
