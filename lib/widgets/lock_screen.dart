@@ -13,11 +13,13 @@ import '../l10n/web_vault_strings.dart';
 class LockScreen extends StatefulWidget {
   final AppLockService lockService;
   final VoidCallback onUnlocked;
+  final void Function(Object error, StackTrace stack)? onStorageFailure;
 
   const LockScreen({
     super.key,
     required this.lockService,
     required this.onUnlocked,
+    this.onStorageFailure,
   });
 
   @override
@@ -42,7 +44,13 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   Future<void> _checkBiometric() async {
-    final enabled = await widget.lockService.isBiometricEnabled();
+    final bool enabled;
+    try {
+      enabled = await widget.lockService.isBiometricEnabled();
+    } catch (error, stack) {
+      if (mounted) widget.onStorageFailure?.call(error, stack);
+      return;
+    }
     if (!enabled) return;
 
     final available = await widget.lockService.isBiometricAvailable();
@@ -255,8 +263,17 @@ class _LockScreenState extends State<LockScreen> {
       _error = null;
     });
 
-    final ok = await widget.lockService.verify(_codeController.text);
-
+    final bool ok;
+    try {
+      ok = await widget.lockService.verify(_codeController.text);
+    } catch (error, stack) {
+      if (mounted) {
+        setState(() => _isVerifying = false);
+        widget.onStorageFailure?.call(error, stack);
+      }
+      return;
+    }
+    if (!mounted) return;
     if (ok) {
       widget.onUnlocked();
     } else {

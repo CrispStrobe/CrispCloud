@@ -4,6 +4,12 @@
 
 Local, cloud and network storage. Automated unit, widget and native protocol tests. Block-level delta sync. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
+Credential-storage recovery identifies the selected store, its path where available,
+the failed operation and native status, with copyable original stack traces.
+Startup and unlock failures offer Retry, access restoration where supported, and
+an explicit choice of another store without deleting the original credentials.
+See [credential storage](docs/credential-storage.md).
+
 ## Providers
 
 | Provider | Features |

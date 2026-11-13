@@ -13,7 +13,7 @@ exec sleep 30
 EOF
 chmod 700 "$app/Contents/MacOS/CrispCloud"
 
-CRISPCLOUD_TEST_STARTUP_OUTPUT='ℹ️ [Main] Startup UI rendered' \
+CRISPCLOUD_TEST_STARTUP_OUTPUT='ℹ️ [Main] Credential policy ready' \
   "$root/tool/macos_startup_smoke.sh" "$app" 1 "$fixture/success.log"
 
 if CRISPCLOUD_TEST_STARTUP_OUTPUT='ℹ️ [Main] App starting...' \
@@ -31,6 +31,18 @@ fi
 if CRISPCLOUD_TEST_STARTUP_OUTPUT='WARNING: loading libcrypto in an unsafe way' \
     "$root/tool/macos_startup_smoke.sh" "$app" 1 "$fixture/crypto.log"; then
   echo 'error: an unsafe crypto load was accepted' >&2
+  exit 1
+fi
+
+# Rendering an application shell is not a successful credential-policy check.
+if CRISPCLOUD_TEST_STARTUP_OUTPUT='ℹ️ [Main] Startup UI rendered' \
+    "$root/tool/macos_startup_smoke.sh" "$app" 1 "$fixture/shell-only.log"; then
+  echo 'error: shell rendering bypassed the credential readiness check' >&2
+  exit 1
+fi
+if CRISPCLOUD_TEST_STARTUP_OUTPUT=$'ℹ️ [Main] Credential policy ready\n❌ [Main] Credential policy check failed' \
+    "$root/tool/macos_startup_smoke.sh" "$app" 1 "$fixture/late-policy.log"; then
+  echo 'error: a later credential-policy failure was accepted' >&2
   exit 1
 fi
 

@@ -45,7 +45,9 @@ class AppLockService {
     final hash = await _storage.read(_hashKey);
     final salt = await _storage.read(_saltKey);
     if (val == null && hash == null && salt == null) return false;
-    if (val != 'true' || hash == null || salt == null ||
+    if (val != 'true' ||
+        hash == null ||
+        salt == null ||
         !RegExp(r'^[0-9a-f]{64}$').hasMatch(hash)) {
       throw StateError('Stored app-lock policy is incomplete.');
     }
@@ -55,6 +57,17 @@ class AppLockService {
       throw StateError('Stored app-lock policy is invalid.');
     }
     return true;
+  }
+
+  /// Check every policy record needed by the initial lock UI before mounting it.
+  /// A successful temporary keychain write does not prove old policy items are readable.
+  Future<bool> validateStartupPolicy() async {
+    final enabled = await isEnabled();
+    if (enabled) {
+      await getTimeout();
+      await isBiometricEnabled();
+    }
+    return enabled;
   }
 
   /// Get auto-lock timeout in seconds (0 = immediate, -1 = disabled).
@@ -175,7 +188,9 @@ class AppLockService {
   /// (which also accepts a PIN as fallback). We therefore set `biometricOnly`
   /// to false on Windows so the plugin does not throw an unsupported-option
   /// error while still delegating to Windows Hello for authentication.
-  Future<bool> authenticateWithBiometric({String localizedReason = 'Unlock CrispCloud'}) async {
+  Future<bool> authenticateWithBiometric({
+    String localizedReason = 'Unlock CrispCloud',
+  }) async {
     if (kIsWeb) return false;
     final isWindows = !kIsWeb && Platform.isWindows;
     try {

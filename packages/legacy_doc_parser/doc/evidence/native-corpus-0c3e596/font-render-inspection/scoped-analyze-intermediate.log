@@ -1,0 +1,5 @@
+Analyzing font-render-inspection...
+
+warning - source_normal_font_operands.dart:17:9 - The value of the local variable 'source' isn't used. Try removing the variable or using it. - unused_local_variable
+
+1 issue found.

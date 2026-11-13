@@ -6,6 +6,7 @@
 // storage. Session-only storage deliberately keeps no durable credentials.
 
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/async_lock.dart';
 import 'log_service.dart';
+import 'credential_storage_diagnostics.dart';
 
 const _secureLog = Log('SecureStorage');
 
@@ -49,13 +51,16 @@ abstract class SecureStorage {
 }
 
 /// Native implementation backed by flutter_secure_storage.
-class PlatformSecureStorage extends SecureStorage {
+class PlatformSecureStorage extends SecureStorage
+    implements CredentialStorageIdentity {
   // flutter_secure_storage handles Keychain (macOS/iOS), Keystore (Android),
   // libsecret (Linux), DPAPI (Windows).
   //
   // Browser startup uses WebEncryptedStorage instead of this implementation.
   PlatformSecureStorage({bool? useDataProtectionKeyChain})
-    : _storage = FlutterSecureStorage(
+    : _useDataProtectionKeyChain =
+          useDataProtectionKeyChain ?? _macOsDataProtection,
+      _storage = FlutterSecureStorage(
         aOptions: const AndroidOptions(encryptedSharedPreferences: true),
         iOptions: const IOSOptions(
           accessibility: KeychainAccessibility.first_unlock,
@@ -67,6 +72,56 @@ class PlatformSecureStorage extends SecureStorage {
       );
 
   final FlutterSecureStorage _storage;
+  final bool _useDataProtectionKeyChain;
+
+  @override
+  String get credentialStoreName => switch (defaultTargetPlatform) {
+    TargetPlatform.macOS =>
+      _useDataProtectionKeyChain
+          ? 'macOS Data Protection Keychain'
+          : 'macOS default file keychain',
+    TargetPlatform.iOS => 'iOS Keychain',
+    TargetPlatform.android => 'Android Keystore / encrypted preferences',
+    TargetPlatform.windows => 'Windows credential storage',
+    TargetPlatform.linux => 'Linux Secret Service',
+    _ => 'Platform credential storage',
+  };
+
+  @override
+  String get credentialStoreLocation =>
+      'OS-managed store; flutter_secure_storage service. '
+      'This backend does not expose a selected file path.';
+
+  /// A unique, non-secret sentinel avoids races between app instances.
+  Future<void> verifyAvailable() async {
+    final random = Random.secure();
+    final nonce = List.generate(
+      4,
+      (_) => random.nextInt(1 << 30).toRadixString(16),
+    ).join();
+    final key =
+        '__crispcloud_keychain_probe_${DateTime.now().microsecondsSinceEpoch}_$nonce';
+    Object? failure;
+    StackTrace? failureStack;
+    try {
+      await _storage.write(key: key, value: 'ok');
+      if (await _storage.read(key: key) != 'ok') {
+        throw StateError(
+          'Credential store probe read-back did not match its write.',
+        );
+      }
+    } catch (error, stack) {
+      failure = error;
+      failureStack = stack;
+    }
+    try {
+      await _storage.delete(key: key);
+    } catch (error, stack) {
+      failure ??= error;
+      failureStack ??= stack;
+    }
+    if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+  }
 
   // macOS only: whether this build may use the data-protection keychain.
   static bool _macOsDataProtection = true;
@@ -112,12 +167,9 @@ class PlatformSecureStorage extends SecureStorage {
   /// Probe the OS keychain without exposing a secret. A locked or unavailable
   /// keychain throws/returns false instead of making every later read fail.
   Future<bool> isAvailable() async {
-    const key = '__crispcloud_keychain_probe__';
     try {
-      await _storage.write(key: key, value: 'ok');
-      final value = await _storage.read(key: key);
-      await _storage.delete(key: key);
-      return value == 'ok';
+      await verifyAvailable();
+      return true;
     } catch (_) {
       return false;
     }

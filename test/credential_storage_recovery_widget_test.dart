@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
-    'unavailable default storage offers Retry without a replacement chooser',
+    'unavailable default storage offers Retry and an explicit replacement action',
     (tester) async {
       var retries = 0;
       await tester.pumpWidget(
@@ -26,6 +26,10 @@ void main() {
       expect(find.text('Restore keychain access'), findsNothing);
       expect(find.text('Change credential storage'), findsNothing);
       expect(find.byType(CredentialStorageSetupPanel), findsNothing);
+      expect(
+        find.byKey(const ValueKey('startup-choose-store')),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Retry'));
       expect(retries, 1);
     },

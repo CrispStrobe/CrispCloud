@@ -438,6 +438,8 @@
     }
   ],
   "reviewed_files": [
+    ".github/workflows/android-release-asset.yml",
+    ".github/workflows/archive-containers.yml",
     ".github/workflows/ci.yml",
     ".github/workflows/ios-release.yml",
     ".github/workflows/macos-release.yml",
@@ -511,6 +513,9 @@
     "lib/services/archive_publication_lease_web.dart",
     "lib/services/archive_publication_storage_io.dart",
     "lib/services/archive_publication_storage_web.dart",
+    "lib/services/archive_rar_stored_format.dart",
+    "lib/services/archive_rar_stored_reader.dart",
+    "lib/services/archive_rar_stored_writer.dart",
     "lib/services/archive_rpm_reader.dart",
     "lib/services/archive_service.dart",
     "lib/services/archive_sevenz_byte_reader.dart",
@@ -549,6 +554,7 @@
     "lib/services/connection_profiles.dart",
     "lib/services/credential_storage_bootstrap.dart",
     "lib/services/credential_storage_config.dart",
+    "lib/services/credential_storage_diagnostics.dart",
     "lib/services/credential_storage_first_setup.dart",
     "lib/services/credential_storage_first_setup_io.dart",
     "lib/services/credential_storage_recovery.dart",
@@ -622,6 +628,7 @@
     "lib/widgets/archive_workspace_dialog.dart",
     "lib/widgets/command_palette.dart",
     "lib/widgets/connection_dialog.dart",
+    "lib/widgets/credential_storage_diagnostics.dart",
     "lib/widgets/credential_storage_setup.dart",
     "lib/widgets/directory_comparison_dialog.dart",
     "lib/widgets/ebook_appearance_dialog.dart",
@@ -849,12 +856,7 @@
     "windows/runner/CMakeLists.txt",
     "windows/runner/file_drag_data.h",
     "windows/runner/file_operations.cpp",
-    "windows/runner/tests/file_drag_data_test.cpp",
-    ".github/workflows/android-release-asset.yml",
-    "lib/services/archive_rar_stored_format.dart",
-    "lib/services/archive_rar_stored_reader.dart",
-    "lib/services/archive_rar_stored_writer.dart",
-    ".github/workflows/archive-containers.yml"
+    "windows/runner/tests/file_drag_data_test.cpp"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
