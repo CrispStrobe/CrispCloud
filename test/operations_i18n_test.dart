@@ -111,7 +111,13 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('queue-menu-example')));
     await tester.pumpAndSettle();
-    expect(find.text('Pausieren'), findsOneWidget);
+    final pauseMenu = find.byWidgetPredicate(
+      (widget) => widget is PopupMenuItem<String> && widget.value == 'pause',
+    );
+    expect(
+      find.descendant(of: pauseMenu, matching: find.text('Pausieren')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
   testWidgets('new queue displays localized batch and typed file errors', (
