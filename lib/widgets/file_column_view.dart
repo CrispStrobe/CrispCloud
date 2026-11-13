@@ -15,7 +15,7 @@ import '../providers/focus_area_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/providers.dart';
 import '../screens/screen_dialogs.dart' show viewSelectedFile;
-import '../services/archive_service.dart';
+import '../services/archive_format_registry.dart';
 import '../services/file_operation_backend.dart';
 import '../services/folder_drop_service.dart';
 import '../services/keyboard_shortcut_service.dart';
@@ -540,7 +540,7 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
         panel.toggleSelection(file, shiftKey: shift, ctrlKey: toggle);
       } else {
         panel.setCursorOnly(file);
-        if (file.isFolder || (open && ArchiveService.isArchive(file.name))) {
+        if (file.isFolder || (open && isDefaultArchiveFilename(file.name))) {
           await panel.navigateInto(file);
         } else if (open) {
           viewSelectedFile(context, ref);

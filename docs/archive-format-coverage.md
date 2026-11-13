@@ -17,6 +17,8 @@ metadata, protection or filesystem structures cannot be preserved.
 | --- | --- | --- | --- | --- |
 | ZIP / CBZ | Yes | Yes | Eligible ZIP policy | Native unencrypted creation/editing streams within an 8 GiB budget; ZIP64 is supported. Original supported AES-256 protection uses the smaller buffered path. Comic member order is preserved. |
 | 7z / CB7 | Yes | Yes | Eligible 7z policy | Native unencrypted Store/LZMA2 creation and eligible editing stream within an 8 GiB budget. Protected archives retain their password/header visibility on the smaller buffered path. |
+| Numbered 7z volumes | Complete `.7z.001` sets, with 3–6 digit numbering | No | No | Complete captured sibling manifest; at most 1,024 parts, 8 GiB native / 256 MiB browser aggregate input. Native eligible members stream; unsupported/encrypted methods retain bounded decoding. Read-only across pane, F3 and extraction. |
+| Windows PE SFX | Checked ZIP, 7z or RAR immediate overlays | No | No | Unsigned supported PE profiles; 32 MiB maximum stub and 16 MiB inspected metadata. Rejects ambiguous, signed and installer-specific layouts. Never executes the stub or drops it through an ordinary archive rewrite. |
 | TAR / CBT | Yes | Yes | Inspected regular-file profiles | Preserves understood ownership, names, permissions, timestamps and PAX metadata; unknown extensions, links and special records are refused. |
 | Compressed TAR | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, all seven | Eligible TAR plus one supported wrapper | Native TGZ/TAR.GZ creation/editing streams within an 8 GiB budget, including the decoded TAR headers. Other wrappers and buffered paths retain a 64 MiB decoded TAR limit. Includes short and long suffix aliases. |
 | Compressed files | gzip, bzip2, XZ, Zstandard, LZ4, LZMA, UNIX compress | Yes, one file | Replace one ordinary payload | No member add/delete/rename or filesystem modes. Output filename supplies the decompressed name. Nested archive payloads can be created/read; single-payload editing requires the immediate decoded payload and cannot flatten inner wrappers. |
@@ -33,7 +35,7 @@ metadata, protection or filesystem structures cannot be preserved.
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge | Data ISO | Inspected data-only profiles | Native creation/editing uses an 8 GiB image budget; each single-extent member must be smaller than 4 GiB. Retains inspected volume/root/Rock Ridge/Joliet metadata. Boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
 | DMG | Unencrypted supported UDIF partitions/filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | 8 GiB packed/decoded budget; raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
-| RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | RAR5 Store / CBR | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. Compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
+| RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
 | PKG / XIP | XAR members and supported nested PBZX/CPIO payloads | No | No | Preview an extensionless `Payload` or `Content` member in F3 to browse its supported inner file tree. Package metadata and signing need dedicated tools. |
@@ -46,6 +48,11 @@ The existing source-account, review, verification and recovery requirements in
 [archive endpoints](archive-endpoints.md) govern every enabled rewrite.
 
 ## Creating and editing
+
+The [Commander workflow guide](archive-commander-workflows.md) covers native
+background jobs, separate-per-selection creation, batch testing, installed
+packers, bounded 7z tuning, numbered volumes and SFX browsing. These workflows
+retain the format-specific limits in this table.
 
 Use **Create archive…** for the 35-choice format picker. It exposes only implemented
 compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress take one

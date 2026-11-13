@@ -68,6 +68,7 @@ import '../l10n/archive_job_strings.dart';
 import '../widgets/archive_jobs_dialog.dart';
 import '../widgets/archive_batch_actions.dart';
 import '../l10n/archive_batch_integrity_strings.dart';
+import '../l10n/archive_batch_extraction_strings.dart';
 import '../widgets/directory_comparison_dialog.dart';
 import '../widgets/file_context_menu.dart' show showPropertiesDialog;
 import '../widgets/status_bar.dart';
@@ -103,7 +104,6 @@ import '../widgets/extensions_dialog.dart';
 import '../l10n/extension_translations.dart';
 import '../widgets/terminal_panel.dart';
 import '../providers/focus_area_provider.dart';
-import '../providers/terminal_provider.dart';
 import '../main.dart' show appLockServiceProvider;
 import '../services/windows_integration_service.dart';
 import 'about_dialog.dart';
@@ -612,6 +612,12 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
       archiveBatchIntegrityText(context, 'Test selected archives'),
       () => showArchiveBatchIntegrityForSelection(context, ref),
       available: () => canTestArchiveSelection(ref),
+    );
+    add(
+      'archiveExtract',
+      archiveBatchExtractionText(context, 'Extract selected archives'),
+      () => showArchiveBatchExtractionForSelection(context, ref),
+      available: () => canExtractArchiveSelection(ref),
     );
     add(
       'gatherSelection',
@@ -2027,8 +2033,9 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
         dark: Theme.of(context).brightness == Brightness.dark,
         items: items,
       );
-      if (mounted && ready != _nativeToolbarReady)
+      if (mounted && ready != _nativeToolbarReady) {
         setState(() => _nativeToolbarReady = ready);
+      }
     });
   }
 
@@ -2948,7 +2955,6 @@ class _FileBrowserScreenState extends ConsumerState<FileBrowserScreen> {
   Widget _buildDrawer(BuildContext context) {
     final auth = ref.watch(authProvider);
     final transfers = ref.watch(transferProvider);
-    final d = BrowserDrawerStrings(context);
 
     return Drawer(
       child: ListView(
@@ -3401,7 +3407,6 @@ class _WindowsExplorerIntegrationTileState
   }
 
   Future<void> _toggle(bool enable) async {
-    final d = BrowserDrawerStrings(context);
     setState(() => _loading = true);
     final success = enable
         ? await _service.registerContextMenu()
@@ -3431,7 +3436,6 @@ class _WindowsExplorerIntegrationTileState
 
   @override
   Widget build(BuildContext context) {
-    final d = BrowserDrawerStrings(context);
     return SwitchListTile(
       secondary: _loading
           ? const SizedBox(

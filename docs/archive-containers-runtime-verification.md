@@ -1,5 +1,15 @@
 # Archive container runtime verification
 
+## Commander workflow continuation
+
+The later `feature/archive-commander-parity-20261113` branch and
+[PR #97](https://github.com/CrispStrobe/CrispCloud/pull/97) add queued creation,
+batch workflows, installed packers, SFX and numbered-7z reading. Its independent
+source and verification record is in the
+[Commander workflow guide](archive-commander-workflows.md). The hosted runs below
+continue to qualify their recorded source revisions; their earlier pass counts
+must not be presented as tests of every new workflow or option.
+
 ## Current integrated commit
 
 The integrated candidate is

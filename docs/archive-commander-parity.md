@@ -11,6 +11,27 @@ CrispCloud format profiles remain in [format coverage](archive-format-coverage.m
 [creation](archive-creation.md), [endpoints](archive-endpoints.md) and the
 [G18–G24 gap register](file-manager-gaps/03-archives-and-containers.md).
 
+## Implemented continuation
+
+The baseline and acceptance rows below remain a historical comparison. The
+current branch adds the following bounded capabilities; their controls, limits,
+runtime evidence and remaining work are recorded in the
+[Commander workflow guide](archive-commander-workflows.md).
+
+| Rows | Delivered continuation | Remaining boundary |
+| --- | --- | --- |
+| A06 | Durable native creation queue, isolated workers, pause/cancel/order, password-free intents, explicit restart and verified-output reconciliation | No arbitrary compressed-byte resume; existing large/protected/nested and platform limits remain |
+| A07 | Pane/context/palette batch integrity with immutable snapshots, per-file results and copyable member reports | Reader-specific decode and integrity limits remain explicit |
+| A08 | Captured extraction plan with masks, separate/shared/smart folders, flattening and complete collision preview | Native local destinations; partial results retain completed files; no overwrite or source deletion |
+| A09 | Complete separate-per-selection creation plan and atomic queue admission | Fresh batch creation retains sources; its outputs have independent terminal results |
+| A10 | Read-only complete numbered 7z sets through panes, F3 and extraction | No split creation/update, RAR volumes or ZIP split sets |
+| A11 | Bounded unsigned PE ZIP/7z/RAR payload browsing; executable F3 default retained | No signed/installer-specific overlay rewriting or SFX generation |
+| A13 | Checked installed-7z profiles: dictionary 1/4/16 MiB, threads 1/2/4, solid off/16/32 MiB | No arbitrary CLI options; buffered external limits remain |
+| A15 | Independently verified installed 7-Zip ZIP/7z and RAR RAR5 creation with owned processes/staging | Broader external actions and WCX hosting remain separate work |
+
+This is substantial archive-workflow progress, not a claim of full feature or
+plugin parity with either Commander application.
+
 ## Comparison scope
 
 The official release pages currently identify **Total Commander 11.58.1** and

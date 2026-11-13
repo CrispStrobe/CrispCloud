@@ -190,7 +190,7 @@ increment does not close the broader G20 scope.
 
 ### Large background archive jobs
 
-**Status:** Partially implemented: native foreground common-format creation/editing and eligible ISO/RAR5 Store/DMG workflows stream; durable queued packing, restart and broader platform qualification remain. **Dependencies:** G18; transfer queue.
+**Status:** Partially implemented: native streaming plus durable queued creation, worker lifecycle and explicit restart are delivered within their profiles. Large protected/nested jobs and broader provider/platform qualification remain. **Dependencies:** G18; transfer queue.
 
 **Scope:** Add worker/streaming packing, durable recovery and bounded validation.
 
@@ -224,12 +224,21 @@ passed a >4 GiB member and 65,536-entry case. Codec processes yielded to the
 event loop; this is not a Flutter UI responsiveness measurement. Receipts are
 linked from the [parity report](../archive-parity-large-continuation.md).
 
-**Remaining:** Durable queue/job records, worker lifecycle, stop/restart and
-process-interruption recovery for packing, large protected/nested profiles,
-and provider/platform acceptance. The local Flutter runner remains unavailable;
-the completed hosted common-format gate and the separate ISO/RAR/DMG acceptance
-status are recorded in [runtime verification](../archive-containers-runtime-verification.md).
-Foreground streaming does not close the durable background-job scope.
+**Commander workflow continuation (2026-11-13):** Creation jobs now persist a
+captured local request before starting an isolated worker. One leased queue
+survives dialog closure, supports ordering/pause/cancel and records a verified
+publication receipt before commit. Interruption requires explicit restart from
+sources; passwords must be supplied again. Reconciliation requires an exact
+saved-output size and SHA-256. Separate-per-selection creation admits a complete
+preflighted batch in one journal update. Pending journal writes and live workers
+drain before ownership is released. See the
+[workflow guide and verification](../archive-commander-workflows.md).
+
+**Remaining:** Large protected/nested profiles, provider/platform acceptance and
+measured native-device UI/memory acceptance. Restart rebuilds from captured
+sources rather than resuming an arbitrary codec offset. Earlier hosted large
+results remain scoped to their recorded revisions in
+[runtime verification](../archive-containers-runtime-verification.md).
 
 ## G22
 
@@ -265,10 +274,10 @@ AR/CPIO/XAR and data ISO rewrites, and a narrow prebuilt DEB payload workflow.
 Fresh ISO/HFSX/UDIF creation uses streamed private output, complete readback
 verification and verified destination staging; native disk images can exceed
 64 MiB members up to the 2 GiB output bound. Existing HFS/DMG images, signed
-packages and static-library indexes remain read-only. The creator does not
-provide durable background job restart or larger existing-container editing,
-so G21 retains the durable-job work described above. Remote/browser creation UI
-(G23) remains scoped.
+packages and static-library indexes remained read-only at that checkpoint.
+The later G21 continuation adds durable creation jobs; subsequent ISO/RAR/DMG
+profiles add their documented existing-container rewrites. Remote/browser
+creation UI (G23) remains scoped.
 
 **Delivered package-reader continuation (2026-11-12):** Portable ASCII/odc CPIO;
 classic RPM v3/v4 newc/CRC payloads with gzip/bzip2/XZ/Zstandard/no compression;
@@ -358,7 +367,7 @@ codec measurements, hosted app gates and remaining Commander parity work.
 
 ### External packer adapters
 
-**Status:** Scoped. **Dependencies:** G17 extension isolation.
+**Status:** Partially implemented: checked installed 7-Zip ZIP/7z and RAR RAR5 creation; other external actions and WCX hosting remain. **Dependencies:** G17 extension isolation.
 
 **Scope:** Add reviewed external packer commands with advertised read/write/encryption capabilities.
 
@@ -373,3 +382,13 @@ codec measurements, hosted app gates and remaining Commander parity work.
 - Cancellation, child-process cleanup, output limits and container verification complete before publication.
 
 **Starting points:** G17; existing extension/custom-command service; archive endpoints.
+
+**Commander workflow continuation (2026-11-13):** User-configured executable
+identity, runtime capability probes, direct argv invocation, private staging,
+bounded process output, child-process ownership and independent output decoding
+now protect external creation. Three compression levels and exact 7z
+dictionary/thread/solid profiles are checked before use. Initial external limits
+are 64 MiB/member/decoded folder and 256 MiB aggregate/output, with no password,
+split, SFX or arbitrary-option profile. No external binary is bundled. Linux
+7-Zip 23.01/RAR 7.23 runtime results are separate from macOS/Windows qualification.
+The [workflow guide](../archive-commander-workflows.md) records remaining actions.

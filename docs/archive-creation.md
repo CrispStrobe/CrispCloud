@@ -31,10 +31,23 @@ RAR5 Store is an independent implementation of the public container format.
 It writes files without proprietary RAR compression and does not bundle an
 external packer. It checks CRC-32 and SHA-256 across two captured source passes
 before accepting each output payload. Compressed/encrypted RAR archives remain
-on the existing read-only path.
+on the existing read-only path. The separate **Use installed packer…** workflow
+can create verified compressed RAR5 outputs with a checked, user-installed RAR
+tool. It does not change the policy for editing existing compressed RAR files.
 
 Password fields require matching confirmation and are cleared after an attempted
 operation. Passwords are not persisted in settings, operation logs or history.
+The installed-packer action is unavailable while password protection is selected;
+its initial profiles create unencrypted outputs only.
+
+On native desktop, **Queue in background** transfers built-in creation to an
+application-owned worker. Close the dialog and monitor **Archive jobs** from
+Tools. **One archive per selected item** previews and queues a separate output
+for each selection; all names are checked before any job is admitted. Jobs have
+pause, cancellation and explicit restart after interruption. Protected jobs need
+their password again after restarting the app. The
+[Commander workflow guide](archive-commander-workflows.md) explains queue
+recovery, installed packers and their separately checked compression options.
 
 Single-file compression choices take exactly one regular file; its decompressed
 name comes from the output filename. AR takes flat regular files. KMZ requires
@@ -77,7 +90,8 @@ Switching panes cannot redirect a captured source or destination.
 Progress covers scanning, packing, verification and saving. Cancel prevents
 publication at the next cancellation check; a codec may need to finish its
 current block first. A commit that already completed is reported as successful.
-Keep the dialog open until it reports completion or cancellation.
+For foreground creation, keep the dialog open until it reports completion or
+cancellation. Queued work continues independently of the dialog.
 
 Eligible native local **ZIP/CBZ, 7z/CB7, RAR5 Store/CBR and TAR.GZ/TGZ creation streams up to
 8 GiB** per source file, total source content and packed output. For TGZ the

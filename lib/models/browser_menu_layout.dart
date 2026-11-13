@@ -359,6 +359,7 @@ class BrowserMenuLayout {
           'archiveRecovery',
           'archiveJobs',
           'archiveTest',
+          'archiveExtract',
           'gatherSelection',
           'gatheringStack',
           'extensions',

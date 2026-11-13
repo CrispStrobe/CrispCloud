@@ -83,9 +83,9 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          archive_test_files=(test/archive_*_test.dart test/widget/archive_*_test.dart test/browser_menu_*_test.dart test/widget/browser_menu_*_test.dart)
+          archive_test_files=(test/archive_*_test.dart test/widget/archive_*_test.dart test/browser_menu_*_test.dart test/widget/browser_menu_*_test.dart test/widget/browser_menu_test.dart test/internal_viewer_test.dart test/widget/internal_viewer_widget_test.dart test/widget/file_column_view_test.dart)
           printf '%s\n' "${archive_test_files[@]}" > build/archive-commander-ci/test-files.txt
-          python3 tool/with_ci_system_sqlite.py flutter test --no-pub --concurrency=4 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden --reporter expanded --file-reporter json:build/archive-commander-ci/test-events.json "${archive_test_files[@]}" 2>&1 | tee build/archive-commander-ci/test.log
+          python3 tool/with_ci_system_sqlite.py flutter test --no-pub --concurrency=2 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden --reporter expanded --file-reporter json:build/archive-commander-ci/test-events.json "${archive_test_files[@]}" 2>&1 | tee build/archive-commander-ci/test.log
       - name: Build the versioned web application
         run: |
           set -euo pipefail

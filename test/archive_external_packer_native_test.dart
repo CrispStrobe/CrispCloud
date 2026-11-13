@@ -410,18 +410,14 @@ void main() {
                   maxOutputBytes: mib,
                 ),
               );
-              final archive = await openViewerArchive(
-                unbounded,
-                name: 'unbounded.7z',
+              await expectLater(
+                openViewerArchive(unbounded, name: 'unbounded.7z'),
+                throwsA(isA<ArchiveViewException>().having(
+                  (error) => error.code,
+                  'resource limit',
+                  ArchiveMessageCode.archiveLimit,
+                )),
               );
-              try {
-                await expectLater(
-                  archive.readMember(archive.members.first),
-                  throwsA(isA<ArchiveViewException>()),
-                );
-              } finally {
-                await archive.close();
-              }
             },
             timeout: const Timeout(Duration(minutes: 3)),
           );
