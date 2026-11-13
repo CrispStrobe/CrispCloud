@@ -22,8 +22,10 @@ class DmgFixture {
       final raw = logical.sublist(at, end);
       final compressed = switch (method) {
         0 || 2 => Uint8List(0),
+        0x80000004 => _adcLiterals(raw),
         0x80000005 => Uint8List.fromList(const ZLibEncoder().encode(raw)),
         0x80000006 => Uint8List.fromList(BZip2Encoder().encode(raw)),
+        0x80000008 => Uint8List.fromList(XZEncoder().encode(raw)),
         _ => raw,
       };
       chunks.add([
@@ -100,4 +102,16 @@ class DmgFixture {
 
   ByteData get trailer => ByteData.sublistView(bytes, bytes.length - 512);
   ByteData get tableData => ByteData.sublistView(table);
+}
+
+// Only literal runs are needed to wrap arbitrary filesystem test data. Real
+// match tokens are exercised by the independently sourced Apple ADC fixture.
+Uint8List _adcLiterals(Uint8List input) {
+  final output = BytesBuilder(copy: false);
+  for (var at = 0; at < input.length; at += 128) {
+    final end = (at + 128).clamp(0, input.length);
+    output.addByte(0x80 | (end - at - 1));
+    output.add(Uint8List.sublistView(input, at, end));
+  }
+  return output.takeBytes();
 }

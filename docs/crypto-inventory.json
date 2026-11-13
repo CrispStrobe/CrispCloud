@@ -482,6 +482,7 @@
     "lib/screens/screen_dialogs.dart",
     "lib/services/aes_siv.dart",
     "lib/services/app_lock_service.dart",
+    "lib/services/archive_adc_codec.dart",
     "lib/services/archive_browser_session.dart",
     "lib/services/archive_cab_reader.dart",
     "lib/services/archive_checkpoint_source.dart",

@@ -34,7 +34,7 @@ metadata, protection or filesystem structures cannot be preserved.
 | DEB / UDEB | AR wrapper and nested TAR members | No package builder | Coordinated prebuilt payload replacement | Exact original three-member wrapper/order; required control fields and present md5sums are checked. Replace prepared control/data payloads together. Nested in-app package edits are disabled. |
 | ISO | ISO 9660, Joliet and ordinary Rock Ridge | Data ISO | Inspected data-only profiles | Native creation/editing uses an 8 GiB image budget; each single-extent member must be smaller than 4 GiB. Retains inspected volume/root/Rock Ridge/Joliet metadata. Boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
 | HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
-| DMG | Unencrypted supported UDIF partitions/filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | 8 GiB packed/decoded budget; raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
+| DMG | Unencrypted UDIF raw/zero/ADC/zlib/bzip2/XZ-LZMA partitions and supported filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | Writer: 8 GiB packed/decoded budget, raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other codecs, partitions, resource forks, xattrs, signing and filesystem layouts are not rewritten. APFS file views are unsupported. |
 | RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | Built-in RAR5 Store / CBR; compressed RAR5 through a checked installed tool | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Built-in native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. External creation has a separate 64 MiB/member and 256 MiB total/output budget. Existing compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
@@ -177,6 +177,11 @@ LZMA-alone and UNIX compress lack payload checksums, and optional checksums may
 also be absent in other formats. An incomplete check is never a passing report.
 
 ## Using disk images
+
+Supported DMG compression includes ADC (UDCO) and XZ-wrapped LZMA (ULMO), with
+strict chunk-length checks and a 16 MiB compressed-chunk/dictionary ceiling.
+These added codecs are read-only; see [DMG codec profiles](archive-dmg-codecs.md)
+for integrity boundaries and independently generated verification inputs.
 
 Open a supported image as a folder to navigate its files. F3 provides a member
 listing and **Container details**, including applicable limitations and any

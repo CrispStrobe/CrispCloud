@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/archive_dmg_reader.dart';
 import 'package:crisp_cloud/services/archive_member_index.dart';
+import 'package:crisp_cloud/services/archive_streaming_unsupported.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
@@ -20,7 +21,7 @@ void main() {
       openDmgArchive(koni.MemoryByteSource(fixture.bytes), maxMemberBytes: cap);
   final content = Uint8List.fromList(List.generate(1024, (i) => i % 251));
 
-  for (final method in [1, 0x80000005, 0x80000006]) {
+  for (final method in [1, 0x80000004, 0x80000005, 0x80000006, 0x80000008]) {
     test('UDIF method $method extracts exact partition bytes', () async {
       final fixture = DmgFixture(content, method: method);
       final archive = await open(fixture);
@@ -110,6 +111,125 @@ void main() {
     );
     expect(await archive.readMember(file), 'hello iso'.codeUnits);
   });
+
+  DmgFixture independentChunk(String plain, String packed, int method) {
+    final fixture = DmgFixture(
+      File('test/fixtures/archives/dmg-codecs/$plain').readAsBytesSync(),
+      method: method,
+    );
+    fixture.packedBytes = File('test/fixtures/archives/dmg-codecs/$packed')
+        .readAsBytesSync();
+    fixture.tableData.setUint64(204 + 32, fixture.packedBytes.length);
+    fixture.rebuild();
+    return fixture;
+  }
+
+  for (final example in [
+    ('apple-hdiutil.bin', 'apple-hdiutil.adc', 0x80000004),
+    ('liblzma.bin', 'liblzma-1m.xz', 0x80000008),
+  ]) {
+    test(
+      'independent ${example.$2} bytes decode through UDIF and stream CRC',
+      () async {
+        final fixture = independentChunk(example.$1, example.$2, example.$3);
+        final archive = await open(fixture);
+        addTearDown(archive.close);
+        expect(
+          await archive.readMember(archive.members.single),
+          fixture.logical,
+        );
+        final output = BytesBuilder();
+        await for (final bytes in archive.openMember(
+          archive.members.single,
+          chunkSize: 137,
+        )) {
+          output.add(bytes);
+        }
+        expect(output.takeBytes(), fixture.logical);
+      },
+    );
+  }
+
+  test('ULMO rejects dictionaries above 16 MiB and closes source', () async {
+    final fixture = independentChunk(
+      'liblzma.bin',
+      'liblzma-32m.xz',
+      0x80000008,
+    );
+    final source = _TrackingSource(fixture.bytes);
+    await expectLater(
+      openDmgArchive(source, maxMemberBytes: kArchiveReadLimit),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    expect(source.closes, 1);
+  });
+
+  for (final method in [0x80000004, 0x80000008]) {
+    test('new method $method can browse ISO files inside a DMG', () async {
+      final archive = await open(
+        DmgFixture(IsoFixture().bytes, method: method),
+      );
+      addTearDown(archive.close);
+      final member = archive.members.singleWhere(
+        (m) => m.name.endsWith('/HELLO.TXT'),
+      );
+      expect(await archive.readMember(member), 'hello iso'.codeUnits);
+    });
+
+    test('new method $method stays outside the canonical DMG writer', () async {
+      await expectLater(
+        openStreamedDmgSource(
+          koni.MemoryByteSource(
+            DmgFixture(HfsFixture().bytes, method: method).bytes,
+          ),
+        ),
+        throwsA(isA<ArchiveStreamingUnsupported>()),
+      );
+    });
+
+    for (final mutation in ['truncate', 'append', 'oversized output']) {
+      test('new method $method rejects $mutation', () async {
+        final fixture = DmgFixture(content, method: method);
+        fixture.packedBytes = switch (mutation) {
+          'truncate' => fixture.packedBytes.sublist(
+            0,
+            fixture.packedBytes.length - 1,
+          ),
+          'append' => Uint8List.fromList([...fixture.packedBytes, 0x80, 42]),
+          _ => fixture.packedBytes,
+        };
+        fixture.tableData.setUint64(204 + 32, fixture.packedBytes.length);
+        if (mutation == 'oversized output') {
+          fixture.tableData.setUint64(204 + 16, 1);
+          fixture.tableData.setUint64(16, 1);
+        }
+        fixture.rebuild();
+        final archive = await open(fixture);
+        addTearDown(archive.close);
+        await expectLater(
+          archive.readMember(archive.members.single),
+          throwsA(isA<ArchiveViewException>()),
+        );
+      });
+    }
+
+    test(
+      'new method $method verifies present partition CRC on streamed extraction',
+      () async {
+        final fixture = DmgFixture(content, method: method);
+        fixture.tableData.setUint32(72, 1);
+        fixture.rebuild();
+        final archive = await open(fixture);
+        addTearDown(archive.close);
+        await expectLater(
+          archive
+              .openMember(archive.members.single, chunkSize: 139)
+              .drain<void>(),
+          throwsA(isA<ArchiveViewException>()),
+        );
+      },
+    );
+  }
 
   for (final method in [0, 2]) {
     test('zero-fill method $method expands without reading payload', () async {
