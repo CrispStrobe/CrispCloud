@@ -80,4 +80,5 @@ extraction. Browser selection assertions remain committed for hosted execution
 because this environment prevents Chromium from starting.
 
 All implementation and evidence changes are saved as incremental remote
-checkpoints. Original branch references are retained.
+checkpoints. Every audited original head remains reachable, and this
+continuation does not delete source branches.

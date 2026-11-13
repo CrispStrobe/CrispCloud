@@ -361,7 +361,8 @@ content checksums from publisher authentication.
   Each compressed chunk is limited to 16 MiB. One shared chunk cache avoids
   retaining an expanded buffer per partition. Declared disk geometry is
   bounded separately from allocatable memory.
-- DMG compressed-block checksums are checked when decoded. A raw partition's
+- DMG compression checksums, when present, are checked when decoded. ADC has
+  no embedded checksum. A raw partition's
   CRC is checked when that whole partition is extracted; UDIF ignore blocks
   do not contribute to the CRC. Partial file browsing does not verify the
   whole-image checksum or any publisher signature.
