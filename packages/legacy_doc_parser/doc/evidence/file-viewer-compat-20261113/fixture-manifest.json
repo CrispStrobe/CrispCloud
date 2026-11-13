@@ -1,0 +1,135 @@
+[
+  {
+    "id": "native-formatting",
+    "origin": "native",
+    "path": "test/fixtures/word_native/formatting.doc",
+    "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+    "bytes": 21504
+  },
+  {
+    "id": "native-list-continue",
+    "origin": "native",
+    "path": "test/fixtures/word_native/list-continue.doc",
+    "sha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+    "bytes": 39424
+  },
+  {
+    "id": "native-list-restart",
+    "origin": "native",
+    "path": "test/fixtures/word_native/list-restart.doc",
+    "sha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+    "bytes": 39424
+  },
+  {
+    "id": "native-linked-textboxes",
+    "origin": "native",
+    "path": "test/fixtures/word_native/linked-textboxes-extended.doc",
+    "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+    "bytes": 11264
+  },
+  {
+    "id": "native-note-table",
+    "origin": "native",
+    "path": "test/fixtures/word_native/note-table-ending.doc",
+    "sha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+    "bytes": 10752
+  },
+  {
+    "id": "native-header-table",
+    "origin": "native",
+    "path": "test/fixtures/word_native/header-ending-table.doc",
+    "sha256": "d13a28715802b429263037014e2bc362492c8b73d0ac7ba46c193bc03944ca18",
+    "bytes": 9728
+  },
+  {
+    "id": "native-footer-paragraph",
+    "origin": "native",
+    "path": "test/fixtures/word_native/footer-ending-paragraph.doc",
+    "sha256": "891b1e6e547d9249f78b009914c71be49614235966d282675823f4b0e9dc80eb",
+    "bytes": 9728
+  },
+  {
+    "id": "native-bookmark-link",
+    "origin": "native",
+    "path": "test/fixtures/word_native/bookmarks-native-hyperlink.doc",
+    "sha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+    "bytes": 11776
+  },
+  {
+    "id": "native-officeart",
+    "origin": "native",
+    "path": "test/fixtures/fidelity/officeart-shapes.doc",
+    "sha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+    "bytes": 10240
+  },
+  {
+    "id": "native-word14-textbox",
+    "origin": "native",
+    "path": "test/fixtures/word_native/word14-margin-origin.doc",
+    "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+    "bytes": 55296
+  },
+  {
+    "id": "native-image-quarter",
+    "origin": "native",
+    "path": "test/fixtures/fidelity/image-appearance/binary/floating-quarter.doc",
+    "sha256": "3d377117b97485ad212b917b44ac43471176ec39ad5502a61459151843104b8d",
+    "bytes": 9728
+  },
+  {
+    "id": "upstream-revisions",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/native-revisions/native-revisions.doc",
+    "sha256": "39407c42438ad03f80510c550296efd20ec7e8c251b01caaec491963b8680c76",
+    "bytes": 27136
+  },
+  {
+    "id": "upstream-revisions-final",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/native-revisions/native-revisions-final.doc",
+    "sha256": "6b8732c97432bb0ab9d91bddb07700dc5e9c61289ee408aa676fd27f78546e18",
+    "bytes": 27136
+  },
+  {
+    "id": "upstream-revisions-original",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/native-revisions/native-revisions-original.doc",
+    "sha256": "9c4555c6d6c258fda9ec31a33d7da602175566a63deb204055fcb8c15d7205e7",
+    "bytes": 28160
+  },
+  {
+    "id": "upstream-image-embedded",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/image-embedded.doc",
+    "sha256": "6e46729f3a4a1f517d95e8116ae0595dc9d03b6126fa0e7605b03343fb1ed0d3",
+    "bytes": 12288
+  },
+  {
+    "id": "upstream-image-linked",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/image-linked.doc",
+    "sha256": "60dcb131205a5d45e477a8ac95d4dc9c023d050f3833b817935a6b0f850296ec",
+    "bytes": 10240
+  },
+  {
+    "id": "upstream-template-dot",
+    "origin": "upstream",
+    "path": "apps/viewer-demo/public/example/template.dot",
+    "sha256": "6247c497d4adbdbe01a5b13b5d8b848d6ad384ea140d7533b622583cf431308b",
+    "bytes": 65024
+  },
+  {
+    "id": "upstream-wps-table",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/github-34-wps-table.doc",
+    "sha256": "835d3a98416317f87fce034d511ef3ec2f110de0e25d58739fc2d13cde52a77b",
+    "bytes": 31232
+  },
+  {
+    "id": "upstream-textbox-resume",
+    "origin": "upstream",
+    "path": "packages/renderers/doc/test/fixtures/github-171-textbox-resume.doc",
+    "sha256": "4f912b57ae4bff2fde6900e53b1c256b5a877f09e2e06afa63a1d66ab535a0a6",
+    "bytes": 345600
+  }
+]

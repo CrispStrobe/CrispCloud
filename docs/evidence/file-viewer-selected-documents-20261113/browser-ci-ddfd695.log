@@ -1,0 +1,178 @@
+# Retrieved excerpt: runtime job 131760905460, run 43387993185
+# Source: https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185/job/131760905460
+# Source commit: ddfd6951997b16b3e7b1b72ec43a9f2e0077e9c8
+# Only engine-contract and browser steps are retained; setup/download steps omitted.
+
+2026-11-13T08:00:38.7038969Z ##[group]Run tests=(packages/file_viewer_documents/engines/*/test/*.test.mjs)
+2026-11-13T08:00:38.7039294Z tests=(packages/file_viewer_documents/engines/*/test/*.test.mjs)
+2026-11-13T08:00:38.7039523Z node --test "${tests[@]}"
+2026-11-13T08:00:38.7057183Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T08:00:38.7057375Z env:
+2026-11-13T08:00:38.7057628Z   FILE_VIEWER_UPSTREAM_DIR: /home/runner/work/CrispCloud/CrispCloud/packages/file_viewer_documents/tooling/.source
+2026-11-13T08:00:38.7057920Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-11-13T08:00:38.7058072Z ##[endgroup]
+2026-11-13T08:00:38.8712235Z ✔ accepts topic link elements from another realm and ignores non-elements (6.618464ms)
+2026-11-13T08:00:38.8713412Z ✔ clamps caller limits and preserves stricter requested ceilings (0.673796ms)
+2026-11-13T08:00:38.8714431Z ✔ preserves parser warnings and merged-help requirements without accepting arbitrary objects (1.256756ms)
+2026-11-13T08:00:38.8715407Z ✔ rejects over-limit or empty source before creating DOM or workers (3.689826ms)
+2026-11-13T08:00:38.8716179Z ✔ keeps archive paths inside the CHM and classifies active/external URLs (0.864214ms)
+2026-11-13T08:00:38.8716942Z ✔ retains upstream CSS and SVG resource protections (3.41977ms)
+2026-11-13T08:00:38.8717607Z ✔ requires local worker/module/WASM assets (0.506854ms)
+2026-11-13T08:00:38.8718379Z ✔ checks source bounds before transfer and passes the bounded limits to the worker (26.300927ms)
+2026-11-13T08:00:38.8719409Z ✔ terminates the archive worker on cancellation or transfer failure (1.024465ms)
+2026-11-13T08:00:38.8959485Z ✔ reads real LZX-compressed topics, navigation and resources using the pinned CHM WASM (28.777795ms)
+2026-11-13T08:00:39.0702884Z ✔ selected build excludes unrelated design, CAD and copyleft engines (268.369726ms)
+2026-11-13T08:00:39.0741665Z ✔ hard execution limits cannot be raised through worker options (0.525523ms)
+2026-11-13T08:00:39.2528932Z stet: creating context...
+2026-11-13T08:00:39.3700663Z stet: wiring exec_sync...
+2026-11-13T08:00:39.3770860Z stet: building system dict...
+2026-11-13T08:00:39.3771363Z stet: registering embedded resources...
+2026-11-13T08:00:39.3793208Z stet: loading embedded CMYK ICC profile...
+2026-11-13T08:00:39.3794003Z stet: running init scripts...
+2026-11-13T08:00:39.3794370Z stet: init exec_ok=true, d_stack.len=3
+2026-11-13T08:00:39.3794725Z stet: init sync complete
+2026-11-13T08:00:39.3795061Z stet: interpreter ready
+2026-11-13T08:00:39.3795825Z stet: render() called — 168 bytes, dpi=72, file=multipage.ps
+2026-11-13T08:00:39.6728325Z ✔ real PS worker accepts exactly two pages and returns red/blue RGBA pixels (604.936955ms)
+2026-11-13T08:00:39.7964813Z stet: creating context...
+2026-11-13T08:00:39.8868368Z stet: wiring exec_sync...
+2026-11-13T08:00:39.8869102Z stet: building system dict...
+2026-11-13T08:00:39.8869611Z stet: registering embedded resources...
+2026-11-13T08:00:39.8920858Z stet: loading embedded CMYK ICC profile...
+2026-11-13T08:00:39.8926144Z stet: running init scripts...
+2026-11-13T08:00:39.8932527Z stet: init exec_ok=true, d_stack.len=3
+2026-11-13T08:00:39.8932978Z stet: init sync complete
+2026-11-13T08:00:39.8933769Z stet: interpreter ready
+2026-11-13T08:00:39.8934526Z stet: render() called — 274 bytes, dpi=72, file=shape.eps
+2026-11-13T08:00:39.8935053Z stet: EPS bbox=(0,0,144,144) size=144x144 dpi=72
+2026-11-13T08:00:40.0132046Z ✔ real EPS raster contains the authored shape and embedded-font text (340.487303ms)
+2026-11-13T08:00:40.1191622Z stet: creating context...
+2026-11-13T08:00:40.1944950Z ✔ first page beyond a lower cap rejects rather than returning a prefix (182.400556ms)
+2026-11-13T08:00:40.2410947Z ✔ bad PostScript signatures reject before requesting the native asset (44.407269ms)
+2026-11-13T08:00:40.3178259Z ✔ an altered native asset fails exact provenance before WASM execution (78.495609ms)
+2026-11-13T08:00:40.4056952Z stet: creating context...
+2026-11-13T08:00:40.4599690Z stet: wiring exec_sync...
+2026-11-13T08:00:40.4600745Z stet: building system dict...
+2026-11-13T08:00:40.4601024Z stet: registering embedded resources...
+2026-11-13T08:00:40.4601321Z stet: loading embedded CMYK ICC profile...
+2026-11-13T08:00:40.4601600Z stet: running init scripts...
+2026-11-13T08:00:40.4601846Z stet: init exec_ok=true, d_stack.len=3
+2026-11-13T08:00:40.4602089Z stet: init sync complete
+2026-11-13T08:00:40.4602300Z stet: interpreter ready
+2026-11-13T08:00:40.4602875Z stet: render() called — 62 bytes, dpi=72, file=huge.ps
+2026-11-13T08:00:40.4639155Z ✔ hostile source dimensions reject before allocating a huge raster (146.028811ms)
+2026-11-13T08:00:40.5352871Z stet: creating context...
+2026-11-13T08:00:41.4681330Z ✔ unbounded genuine PS execution is terminated by the production deadline (1002.327723ms)
+2026-11-13T08:00:41.5551536Z stet: creating context...
+2026-11-13T08:00:41.6693058Z ✔ explicit cancellation terminates the genuine interpreter worker (202.919527ms)
+2026-11-13T08:00:41.7526326Z stet: creating context...
+2026-11-13T08:00:41.8272945Z ✔ source, page index and DPI bounds reject through the real client (157.885617ms)
+2026-11-13T08:00:41.8417872Z stet: wiring exec_sync...
+2026-11-13T08:00:41.8418487Z stet: building system dict...
+2026-11-13T08:00:41.8419031Z stet: registering embedded resources...
+2026-11-13T08:00:41.8419344Z stet: loading embedded CMYK ICC profile...
+2026-11-13T08:00:41.8419597Z stet: running init scripts...
+2026-11-13T08:00:41.8420103Z stet: init exec_ok=true, d_stack.len=3
+2026-11-13T08:00:41.8420360Z stet: init sync complete
+2026-11-13T08:00:41.8420594Z stet: interpreter ready
+2026-11-13T08:00:41.8421201Z stet: render() called — 274 bytes, dpi=72, file=shape.eps
+2026-11-13T08:00:41.8421584Z stet: EPS bbox=(0,0,144,144) size=144x144 dpi=72
+2026-11-13T08:00:41.8831969Z ✔ PPT entry rejects empty, oversized, cancelled and workerless inputs before DOM work (2.564804ms)
+2026-11-13T08:00:41.8832881Z ✔ PPT model canvas limits reject huge, nonfinite and over-count slides before mounting (0.477511ms)
+2026-11-13T08:00:41.8833623Z ✔ runtime boundary closes rejected documents and preserves valid owned models (0.566575ms)
+2026-11-13T08:00:41.8834400Z ✔ pinned Apache PPT runtime parses real binary presentation and template fixtures under our limits (169.442418ms)
+2026-11-13T08:00:41.8835176Z ✔ actual PPT parser enforces record and file limits rather than returning a text substitute (4.456213ms)
+2026-11-13T08:00:41.8835896Z ✔ actual PPT runtime sends fixed parser limits to its worker and closing cancels a pending parse (3.613131ms)
+2026-11-13T08:00:41.8836599Z ✔ rejects empty, oversized, cancelled and workerless entry requests before DOM work (4.734162ms)
+2026-11-13T08:00:41.8837323Z ✔ accepts actual BIFF8 and XLSB generated containers without losing Unicode or literal markup (62.975175ms)
+2026-11-13T08:00:41.8837984Z ✔ opens the genuine upstream binary XLS embedded-image regression fixture (5.882014ms)
+2026-11-13T08:00:41.8838685Z ✔ ZIP preflight accepts stored and deflated data and rejects malformed/truncated directories (8.638283ms)
+2026-11-13T08:00:41.8839375Z ✔ ZIP preflight checks actual inflated bytes even when central-directory lengths lie (7.864935ms)
+2026-11-13T08:00:41.8840236Z ✔ ZIP preflight rejects declared expansion, encryption and ZIP64 before inflation (0.923453ms)
+2026-11-13T08:00:41.8841419Z ✔ workbook ranges and row-limited reads cannot silently become a complete preview (0.964415ms)
+2026-11-13T08:00:41.8842118Z ✔ workbook budgets cover sheets, populated cells, text, merges and decoration depth (62.535983ms)
+2026-11-13T08:00:41.8842765Z ✔ hostile row-window parameters fail before SheetJsModel allocation (0.420034ms)
+2026-11-13T08:00:41.8843395Z ✔ failed parse clears an earlier workbook instead of retaining stale content (11.345776ms)
+2026-11-13T08:00:41.8844008Z ✔ worker timeout terminates a hung parser and reports a visible failure (6.026792ms)
+2026-11-13T08:00:41.8844735Z ✔ worker cancellation, parse failure, malformed reply and transfer failure terminate ownership (15.911334ms)
+2026-11-13T08:00:41.8845763Z ✔ an answered worker request clears its deadline and late replies after termination are ignored (9.917131ms)
+2026-11-13T08:00:41.8846394Z ✔ keeps paragraphs and tables interleaved in their source order (2.10778ms)
+2026-11-13T08:00:41.8846926Z ✔ keeps a body paragraph, link and style across an embedded note (0.440194ms)
+2026-11-13T08:00:41.8847458Z ✔ preserves table placement inside headers and separates footer/notes (0.315767ms)
+2026-11-13T08:00:41.8848048Z ✔ honors Uint8Array subview offsets and stores metadata without a prototype (0.226512ms)
+2026-11-13T08:00:41.8848591Z ✔ rejects truncated, unknown and unbalanced event streams (0.934019ms)
+2026-11-13T08:00:41.8849156Z ✔ rejects excessive event, string, metadata, table and rendered-block expansion (93.18495ms)
+2026-11-13T08:00:41.8849955Z ✔ applies the source cap before copying, importing modules or starting a worker (4.085463ms)
+2026-11-13T08:00:41.8850562Z ✔ requires the real engine when workers are disabled or parsing fails (34.68097ms)
+2026-11-13T08:00:41.8851160Z ✔ terminates failed or aborted workers and rejects remote runtime URLs (1.148442ms)
+2026-11-13T08:00:41.8851789Z ✔ parses licensed real WP 4.2, 5.0, 5.1 and 6.x files with the pinned WASM engine (178.0638ms)
+2026-11-13T08:00:41.8852406Z ✔ selected XML build has no unrelated renderer or copyleft runtime (130.436768ms)
+2026-11-13T08:00:41.8853009Z ✔ pinned Playwright CommonJS entry exposes its genuine Chromium launcher (212.146667ms)
+2026-11-13T08:00:41.8853659Z ✔ allows self-contained schema and stylesheets, including XML/text output (5.803245ms)
+2026-11-13T08:00:41.8854309Z ✔ rejects entities, schema dependencies, XInclude and escaped document() (1.506042ms)
+2026-11-13T08:00:41.8854958Z ✔ runtime URL policy rejects other origins, schemes, credentials and fragments (0.36456ms)
+2026-11-13T08:00:41.8855620Z ✔ asset fetch bounds streamed bytes and cancels an oversized response (2.607834ms)
+2026-11-13T08:00:41.8856247Z ✔ already aborted resource reads do not start a request (0.198018ms)
+2026-11-13T08:00:41.8856853Z ✔ real xmllint WASM accepts valid XML and rejects invalid schema values (111.364766ms)
+2026-11-13T08:00:41.8857492Z ✔ real libxslt computes HTML and its compiled memory cannot exceed 64 MiB (39.490656ms)
+2026-11-13T08:00:41.8858192Z ✔ real libxslt returns XML and text serializations without executing markup (20.633648ms)
+2026-11-13T08:00:41.8858871Z ✔ WASM guard rejects malformed, imported-only and excessive memory declarations (0.350098ms)
+2026-11-13T08:00:41.8859289Z ℹ tests 61
+2026-11-13T08:00:41.8860205Z ℹ suites 0
+2026-11-13T08:00:41.8866351Z ℹ pass 61
+2026-11-13T08:00:41.8866739Z ℹ fail 0
+2026-11-13T08:00:41.8866873Z ℹ cancelled 0
+2026-11-13T08:00:41.8866998Z ℹ skipped 0
+2026-11-13T08:00:41.8867127Z ℹ todo 0
+2026-11-13T08:00:41.8867331Z ℹ duration_ms 3150.71813
+
+2026-11-13T08:01:00.4701173Z ##[group]Run for smoke in packages/file_viewer_documents/engines/*/test/browser-smoke.mjs; do
+2026-11-13T08:01:00.4701842Z for smoke in packages/file_viewer_documents/engines/*/test/browser-smoke.mjs; do
+2026-11-13T08:01:00.4702257Z   node "$smoke"
+2026-11-13T08:01:00.4702471Z done
+2026-11-13T08:01:00.4702766Z node packages/file_viewer_documents/tooling/host-browser-smoke.mjs
+2026-11-13T08:01:00.4722325Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T08:01:00.4722517Z env:
+2026-11-13T08:01:00.4722773Z   FILE_VIEWER_UPSTREAM_DIR: /home/runner/work/CrispCloud/CrispCloud/packages/file_viewer_documents/tooling/.source
+2026-11-13T08:01:00.4723068Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-11-13T08:01:00.4723219Z ##[endgroup]
+2026-11-13T08:01:02.4351472Z ✔ real browser PS renders exactly two allowed pages and page selection changes pixels (1909.040752ms)
+2026-11-13T08:01:02.7724728Z ✔ real browser EPS contains rasterized vector shape and embedded-font text (337.111101ms)
+2026-11-13T08:01:03.1437168Z ✔ malformed, oversized and over-page-limit files return failures without partial previews (371.059325ms)
+2026-11-13T08:01:04.1485116Z ✔ a nonterminating PostScript input cannot exceed its browser worker deadline (1004.640255ms)
+2026-11-13T08:01:04.1590295Z ✔ host abort terminates a live browser worker and leaves no canvas (10.356684ms)
+2026-11-13T08:01:04.4582330Z ✔ unmount zeros retained canvases and destroys its native worker (299.040966ms)
+2026-11-13T08:01:04.4954586Z ℹ tests 6
+2026-11-13T08:01:04.4956638Z ℹ suites 0
+2026-11-13T08:01:04.4956866Z ℹ pass 6
+2026-11-13T08:01:04.4957061Z ℹ fail 0
+2026-11-13T08:01:04.4957260Z ℹ cancelled 0
+2026-11-13T08:01:04.4957469Z ℹ skipped 0
+2026-11-13T08:01:04.4957654Z ℹ todo 0
+2026-11-13T08:01:04.4957889Z ℹ duration_ms 3976.199987
+2026-11-13T08:01:06.1833462Z Browser smoke passed: actual BIFF8/XLSB grids, worksheet switching, embedded XLS image, PPT/POT canvas paint, local workers, cancellation, disposal and worker-failure rejection.
+2026-11-13T08:01:07.5692408Z Browser smoke passed: real WPD WASM and ordered DOM/warnings; real CHM WASM, sandbox, internal topic navigation, HTML sanitization and disposal.
+2026-11-13T08:01:09.7107638Z ✔ real browser module worker validates both valid and invalid XML against XSD (1940.376312ms)
+2026-11-13T08:01:09.8932862Z ✔ user-triggered local schema chooser decodes UTF-16 and reaches the real validation engine (182.31822ms)
+2026-11-13T08:01:10.0910293Z ✔ user-triggered local stylesheet chooser reaches the real transformation engine (197.555261ms)
+2026-11-13T08:01:10.4612962Z ✔ real browser XSLT computes HTML plus exact XML and text serializations (370.12025ms)
+2026-11-13T08:01:10.5634059Z ✔ DTD, dependency and XPath external-resource requests are rejected before workers run (101.955082ms)
+2026-11-13T08:01:10.7307566Z ✔ HTML output is inert, has no file or form controls, and cannot load or navigate to external resources (167.263732ms)
+2026-11-13T08:01:10.8607356Z ✔ input, stylesheet and transformed output bounds are enforced in the browser (129.817397ms)
+2026-11-13T08:01:12.3498584Z ✔ cancel stops a genuine worker and leaves the XML tools reusable (1488.952033ms)
+2026-11-13T08:01:14.4938377Z ✔ the processing deadline also bounds an unfinished local runtime load (2143.84683ms)
+2026-11-13T08:01:14.4960111Z ✔ unmount clears source/output and releases every native worker and object URL (2.128446ms)
+2026-11-13T08:01:14.5275602Z ℹ tests 10
+2026-11-13T08:01:14.5276139Z ℹ suites 0
+2026-11-13T08:01:14.5276494Z ℹ pass 10
+2026-11-13T08:01:14.5279326Z ℹ fail 0
+2026-11-13T08:01:14.5280153Z ℹ cancelled 0
+2026-11-13T08:01:14.5280389Z ℹ skipped 0
+2026-11-13T08:01:14.5280570Z ℹ todo 0
+2026-11-13T08:01:14.5280791Z ℹ duration_ms 6763.863118
+2026-11-13T08:01:15.1513518Z Shipped host passed: wordperfect, exact local assets/CSP, nonce, chunk transfer and cleanup.
+2026-11-13T08:01:15.3252759Z Shipped host passed: chm, exact local assets/CSP, nonce, chunk transfer and cleanup.
+2026-11-13T08:01:15.5950064Z Shipped host passed: spreadsheet, exact local assets/CSP, nonce, chunk transfer and cleanup.
+2026-11-13T08:01:15.7855029Z Shipped host passed: ppt, exact local assets/CSP, nonce, chunk transfer and cleanup.
+2026-11-13T08:01:16.1792789Z Shipped host passed: postscript, exact local assets/CSP, nonce, chunk transfer and cleanup.
+2026-11-13T08:01:16.3009474Z Shipped host passed: xml, exact local assets/CSP, nonce, chunk transfer and cleanup.

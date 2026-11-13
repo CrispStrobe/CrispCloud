@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test ../test/*.test.mjs"
+    "test": "node --test ../engines/*/test/*.test.mjs"
   },
   "dependencies": {
     "@xmldom/xmldom": "0.9.12",

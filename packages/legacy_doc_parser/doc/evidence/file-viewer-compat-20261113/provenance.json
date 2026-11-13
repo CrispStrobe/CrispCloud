@@ -1,0 +1,9 @@
+{
+  "compatibilityCommit": "22f2dafeeb28a5a469cf436d26dca0e0da7a7730",
+  "canonicalMergeParent": "419864b3076cea56f3f4d170a3ace88cfc397027",
+  "upstreamFileViewerCommit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+  "historicalAppComparisonCommit": "9b9af856d4352c0d9d8d51aaffcd70aeb7ff3aad",
+  "dartVersion": "3.13.7",
+  "typescriptVersion": "6.0.3",
+  "validationScope": "New compatibility code merged with canonical source; exact library bytes identified in source-hashes.json"
+}

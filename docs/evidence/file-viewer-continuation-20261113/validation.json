@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "date": "2026-11-13",
+  "flutter": "3.47.8",
+  "frameworkCommit": "737ba8f885dc774b53b442759999a312c9461e4e",
+  "dart": "3.13.7",
+  "dependencyGraph": "Actual CrispCloud production graph; enforced lockfile; no replacement manifest",
+  "nativeHooksDisabled": false,
+  "sourceIdentity": "source-hashes.json",
+  "tests": [
+    {
+      "suite": "DOC story service/widget and Word/metafile/review",
+      "passed": 42,
+      "failed": 0,
+      "log": "app-doc-tests.log"
+    },
+    {
+      "suite": "MBOX/email components and document routing/source",
+      "passed": 36,
+      "failed": 0,
+      "log": "app-mail-routing-tests.log"
+    },
+    {
+      "suite": "F3 EML/MSG decoded search and extended formats",
+      "passed": 11,
+      "failed": 0,
+      "log": "app-f3-email-tests.log"
+    },
+    {
+      "suite": "Parser mirror sync and document runtime verifier controls",
+      "passed": 23,
+      "failed": 0,
+      "log": "provenance-tests.log"
+    }
+  ],
+  "analyzer": {
+    "result": "No issues found",
+    "paths": 9,
+    "log": "app-analyze.log"
+  },
+  "sourceGuards": {
+    "officeManagedFiles": 1500,
+    "documentRuntimeAndSourceRecords": 174
+  },
+  "webRelease": {
+    "status": "passed",
+    "command": "flutter build web --no-pub --release --no-wasm-dry-run",
+    "firstAttempt": {
+      "command": "flutter build web --no-pub --release",
+      "exitCode": 1,
+      "wasmDryRunExit": 247,
+      "dart2jsExit": -9,
+      "sourceDiagnostic": null,
+      "log": "web-release-first-attempt.log"
+    },
+    "retryScope": "Same production JavaScript release/O4 settings; optional separate WASM diagnostic disabled; no source/SDK/graph edits",
+    "flutterWasmBuildClaimed": false,
+    "exitCode": 0,
+    "compileSeconds": 193.7,
+    "log": "web-release.log",
+    "artifactReceipt": "web-release.json",
+    "runtimeBundleFilesVerified": 131
+  },
+  "historicalEngineChecks": {
+    "nodeNativeWasmPassed": 61,
+    "log": "selected-engine-tests.log",
+    "checkpoint": "ee7531cd2404cb1243c3198ebcac9e5620df87c2"
+  },
+  "qualificationLimits": [
+    "No new native Microsoft Word/LibreOffice pagination or round-trip qualification is claimed.",
+    "Linux consumer compile and Chromium passes are retained separately; they do not establish interactive desktop/mobile qualification."
+  ],
+  "logNormalization": "Trailing terminal line padding removed from copied continuation logs; diagnostic and outcome text unchanged."
+}

@@ -1,7 +1,9 @@
 # Selected document-engine validation receipts
 
-Source tested by the passing browser job:
-`540483491f4a02aad3672abe438ad4aad3696e21`.
+Latest source tested by the passing browser and Linux compiler jobs:
+`ddfd6951997b16b3e7b1b72ec43a9f2e0077e9c8`.
+The earlier browser checkpoint was
+`540483491f4a02aad3672abe438ad4aad3696e21`; its receipts remain below.
 Upstream File Viewer source:
 `d264009ca6efb3daed79a39d1ae63133e0f25558` (3.3.3).
 
@@ -82,8 +84,14 @@ pin; `RUNTIME_MANIFEST.json` records the realized dependency and artifact inputs
 Local Chromium launch was unavailable because the workspace denied its socket
 operation. Real browser execution therefore ran in GitHub CI, without substituting
 a DOM shim. The local environment also lacks GTK/WebKit/epoxy development headers
-and CMake. A dedicated CI job compiles a genuine minimal Linux consumer and rejects
-the unavailable-host stub; it does not launch or claim desktop rendering.
+and CMake. The dedicated Linux consumer job in
+[run 43387993185](https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185/job/131760905157)
+successfully compiled the real WebKit-enabled plugin and release consumer,
+verified all 42 committed runtime assets, and checked that the startup probe
+was installed as an executable. Its CMake gate rejects an unavailable-host
+stub. The [native compiler excerpt](native-linux-ci-ddfd695.log) records Flutter
+3.47.8, CMake 3.31.6 and WebKitGTK 2.52.6. This compile check does not launch
+the probe or claim desktop rendering.
 
 Native WebKit/WebView rendering on all supported OS/device combinations and full
 release qualification are not implied by these focused checks. The existing
@@ -107,8 +115,24 @@ against real temporary filesystem objects, including extension/type/size
 boundaries. This tests policy code, not an interactive GTK dialog. The updated
 XML browser suite contains ten cases, including user-click schema and stylesheet
 chooser events. The targeted XML Node/native-WASM suite passed all 11 tests.
-Updated real-browser and Linux compiler results will be appended after their CI
-run; no native dialog/device pass is implied by these source and policy checks.
+The updated
+[runtime/browser job 131760905460](https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185/job/131760905460)
+passed all 61 Node/native-WASM contracts, six PS/EPS browser cases, ten XML
+browser cases, the real XLS/PPT and WPD/CHM smoke suites, and the shipped host
+for all six engines. The [browser excerpt](browser-ci-ddfd695.log) includes
+the actual schema/stylesheet chooser, UTF-16, validation/transformation and
+inert-output checks. Its sibling native compiler job also passed the 27
+real-filesystem chooser-policy checks and compiled the complete plugin. No
+interactive GTK dialog/device pass is implied by either job.
+
+The [structured receipt](ci-ddfd695.json) retains job identities, scopes,
+versions and artifact metadata. Artifact
+[14019414075](https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185/artifacts/14019414075)
+has 19,135,984 bytes and ZIP SHA-256
+`21b94cb12281b8ce79d30504821226a1525662f5c9406c49540212e7e1618bc3`.
+The successful checkpoint job downloaded that artifact, staged the generated
+assets and corresponding-source tree against `ddfd695`, and exited at its
+unchanged-index check. No further generated-asset commit was required.
 
 The first dedicated native attempt, job `131756389063` in run
 [43385379835](https://github.com/CrispStrobe/CrispCloud/actions/runs/43385379835),

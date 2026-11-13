@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "command": "flutter build web --no-pub --release --no-wasm-dry-run",
+  "exitCode": 0,
+  "elapsedCompileSeconds": 193.7,
+  "javascript": {
+    "path": "build/web/main.dart.js",
+    "bytes": 27099728,
+    "sha256": "dd3fdf42a30a130ae7ee21d0ca2bb52cff7fa112f0f0da48f3aeb33f7db1ca20"
+  },
+  "bundle": {
+    "runtimeAssets": 42,
+    "originalNotices": 86,
+    "totalVerifiedFiles": 131,
+    "allMatchPinnedSources": true
+  },
+  "testedSourceHashesMatch": true,
+  "flutterWasmClaimed": false
+}

@@ -1,0 +1,36 @@
+{
+  "archive": {
+    "path": "word14-source-triage.tar.xz",
+    "sha256": "f9c350ecfa28c514f60b115b2bfa737ebcdc0808f010787abbf1d934765a017a",
+    "size": 16324
+  },
+  "baselineCommit": "74420eb2e0ec14401a0db5bcbb30ab6d202a2340",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "a30ece010e4544c4a470a2cb7c2aafe41e52b2e9138a161d016e95016914da8a",
+      "size": 5664
+    },
+    {
+      "path": "inspect_word14.py",
+      "sha256": "a5abf76744b29ac64c355b155da64301ef972a5c830222cd28d9970961767076",
+      "size": 13037
+    },
+    {
+      "path": "primary-sources.json",
+      "sha256": "3c85b15b5b372512bcb224ede7bd8a293bb7d223374b5e9ce95fa2366ab85ff7",
+      "size": 10392
+    },
+    {
+      "path": "review-manifest.json",
+      "sha256": "e4483e724d8d83617c6a1ad632ade8d5870098d9631314f3ecb36e0213935316",
+      "size": 1371
+    },
+    {
+      "path": "word14-source-paint.json",
+      "sha256": "dcc882a3604e032daf8cce7b3973c45011cf33d5d10f57478423c2c1940abbcc",
+      "size": 427646
+    }
+  ],
+  "sourceCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289"
+}

@@ -906,7 +906,11 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
       );
     }
 
-    final safeHtml = _portableOffice?.safeHtml;
+    final portable = _portableOffice;
+    final safeHtml = portable == null
+        ? null
+        : OfficePreviewStrings(Localizations.localeOf(context))
+              .safeHtml(portable);
     if (safeHtml != null && safeHtml.length <= 4 * 1024 * 1024) {
       final note = OfficePreviewStrings(Localizations.localeOf(context))
           .note(_portableOffice!);

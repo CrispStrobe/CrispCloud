@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "sourceCommit": "ddfd6951997b16b3e7b1b72ec43a9f2e0077e9c8",
+  "repository": "CrispStrobe/CrispCloud",
+  "run": {
+    "id": 43387993185,
+    "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185",
+    "conclusion": "success"
+  },
+  "jobs": [
+    {
+      "id": 131760905157,
+      "name": "Compile standalone Linux document host",
+      "conclusion": "success",
+      "receipt": "native-linux-ci-ddfd695.log",
+      "scope": [
+        "Real WebKit-enabled native plugin compilation",
+        "Release Flutter Linux consumer compilation",
+        "Executable startup probe installed",
+        "42 committed runtime asset hashes verified",
+        "27 native XML file chooser policy checks"
+      ],
+      "versions": {
+        "flutter": "3.47.8",
+        "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+        "cmake": "3.31.6",
+        "webkitGtkPackage": "2.52.6-0ubuntu0.24.04.1"
+      },
+      "desktopLaunched": false
+    },
+    {
+      "id": 131760905460,
+      "name": "runtime",
+      "conclusion": "success",
+      "receipt": "browser-ci-ddfd695.log",
+      "node": "24.22.2",
+      "tests": {
+        "nodeNativeWasm": {
+          "passed": 61,
+          "failed": 0,
+          "skipped": 0
+        },
+        "postscriptBrowser": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "xmlBrowser": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "officeBrowserSmoke": "passed: BIFF8/XLSB and PPT/POT",
+        "wordperfectChmBrowserSmoke": "passed",
+        "shippedHost": {
+          "passed": [
+            "wordperfect",
+            "chm",
+            "spreadsheet",
+            "ppt",
+            "postscript",
+            "xml"
+          ]
+        }
+      }
+    },
+    {
+      "id": 131767241175,
+      "name": "checkpoint",
+      "conclusion": "success",
+      "result": "The verified artifact was downloaded and staged against ddfd695. The job exited at the unchanged-index check, with no new commit required."
+    }
+  ],
+  "artifact": {
+    "id": 14019414075,
+    "name": "selected-document-runtime",
+    "bytes": 19135984,
+    "zipSha256": "21b94cb12281b8ce79d30504821226a1525662f5c9406c49540212e7e1618bc3",
+    "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185/artifacts/14019414075"
+  },
+  "limits": [
+    "The native job compiles and checks bundle contents; it does not launch the WebKit startup probe or exercise desktop rendering.",
+    "The chooser policy tests use real filesystem objects. Browser picker tests use real Chromium controls. Neither is an interactive GTK dialog test.",
+    "Successful Linux consumer compilation is distinct from full CrispCloud native release qualification."
+  ]
+}

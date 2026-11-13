@@ -1,0 +1,1967 @@
+{
+  "scope": "parser and generated HTML; no browser or native Office layout",
+  "sourceIdentity": {
+    "compatibilityCommit": "22f2dafeeb28a5a469cf436d26dca0e0da7a7730",
+    "canonicalMergeParent": "419864b3076cea56f3f4d170a3ace88cfc397027",
+    "upstreamFileViewerCommit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+    "historicalAppComparisonCommit": "9b9af856d4352c0d9d8d51aaffcd70aeb7ff3aad",
+    "dartVersion": "3.13.7",
+    "typescriptVersion": "6.0.3",
+    "validationScope": "New compatibility code merged with canonical source; exact library bytes identified in source-hashes.json"
+  },
+  "sourceHashesSha256": "e608f941a7c241cf03b73b243c970200afb20d32b39273e5f94a190b6b6ccb24",
+  "nativeExecutableSha256": "8d7256fae40d8b1dcc84ce946c7c27ed1f08345b03b56619e4f54586b7c710b4",
+  "nativeProbeSha256": "171ab5d8ab411e5c81a68b7eefd8a1cd2175590cab72b3b0aaae071b34e869c1",
+  "upstreamProbeSha256": "b87a714120b5601b371447c3d6fb132cf5d3dbaf612c884109aa2b9f0bbe914d",
+  "nodeVersion": "v24.22.1",
+  "nativeAccepted": 19,
+  "upstreamAccepted": 19,
+  "equalNormalizedMainPreviewText": 9,
+  "cases": [
+    {
+      "id": "native-formatting",
+      "origin": "native",
+      "path": "test/fixtures/word_native/formatting.doc",
+      "sha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+      "bytes": 21504,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 9,
+          "tables": 1,
+          "rows": 2,
+          "cells": 4
+        },
+        "allCounts": {
+          "paragraphs": 16,
+          "tables": 1,
+          "rows": 2,
+          "cells": 4
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 7,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 1,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 1,
+          "pictures": 1,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 195,
+        "previewTextSha256": "6e357f769aa84bc81cadbfdb26e1525666f7c517c6e907a6a146f767a48fb32e",
+        "previewImageTags": 1,
+        "stories": [
+          {
+            "kind": "footnote",
+            "textCodepoints": 37,
+            "textSha256": "a6595ff29fed147c8c2d12ccb43b9abe39d4d98586f0e397527f3522a3efbd0d"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 0,
+            "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 14,
+            "textSha256": "929584385f07dfd602343240a36428fc2f930ee89726af8d64442f016270b68c"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 0,
+            "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 14,
+            "textSha256": "706f42416ac321c05cd38d47e33f547f26747a3c14f05c0f6f7e916b9a003596"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 14,
+            "textSha256": "929584385f07dfd602343240a36428fc2f930ee89726af8d64442f016270b68c"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 14,
+            "textSha256": "706f42416ac321c05cd38d47e33f547f26747a3c14f05c0f6f7e916b9a003596"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 202
+          },
+          "counts": {
+            "paragraphs": 11,
+            "blocks": 6,
+            "assets": 1,
+            "styles": 86,
+            "fonts": 16
+          }
+        },
+        "warnings": [],
+        "paragraphs": 9,
+        "tables": 1,
+        "rows": 2,
+        "cells": 4,
+        "storyParagraphs": {
+          "main": 9
+        },
+        "assets": [
+          {
+            "type": "image"
+          }
+        ],
+        "previewTextCodepoints": 196,
+        "previewTextSha256": "c6afe9aca9a70475f7b5b391e40477fa6b9151c2a57e038d0d19186315352524",
+        "previewImageTags": 1
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-list-continue",
+      "origin": "native",
+      "path": "test/fixtures/word_native/list-continue.doc",
+      "sha256": "8eec6d255c450a5e4d3c21dd1fa7d159e53a0e49f229bc26928848ce66fda754",
+      "bytes": 39424,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 5,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 5,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [],
+        "sections": 1,
+        "numberingDefinitions": 2,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 29,
+        "previewTextSha256": "ed45ff7cd185e7b3c74d5a64e8645964f637108877b07bc0f177eac0eb0d950a",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 15
+          },
+          "counts": {
+            "paragraphs": 5,
+            "blocks": 5,
+            "assets": 0,
+            "styles": 15,
+            "fonts": 0
+          }
+        },
+        "warnings": [],
+        "paragraphs": 5,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 5
+        },
+        "assets": [],
+        "previewTextCodepoints": 14,
+        "previewTextSha256": "e5c759a46888c3d7f631d5230efe9a566c3cc64470011e8651cb8f0c690273b8",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-list-restart",
+      "origin": "native",
+      "path": "test/fixtures/word_native/list-restart.doc",
+      "sha256": "fff53b5abf0c8a4d57739945d1f3f467ee5594c58ad6a67017b67d3b93655b9e",
+      "bytes": 39424,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 6,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 6,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "numberingNotReconstructed"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 2,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 35,
+        "previewTextSha256": "f0999cabeda7d73f33a357bbc67d0752ba96c45b016ef462fd417761f9f40081",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 18
+          },
+          "counts": {
+            "paragraphs": 6,
+            "blocks": 6,
+            "assets": 0,
+            "styles": 15,
+            "fonts": 0
+          }
+        },
+        "warnings": [],
+        "paragraphs": 6,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 6
+        },
+        "assets": [],
+        "previewTextCodepoints": 17,
+        "previewTextSha256": "9ff7ed08f2aa3508c5a9e1736a498a75d4617bc2dbdaac86cc920d163957761b",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-linked-textboxes",
+      "origin": "native",
+      "path": "test/fixtures/word_native/linked-textboxes-extended.doc",
+      "sha256": "656aee3ffa9895e854a7b7c3f43a3eed38e5e03afd6f813aa229553029ce6b2c",
+      "bytes": 11264,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 2,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredTextboxChainLength"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 1,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 2,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 70,
+        "previewTextSha256": "2633ca1d6395f40a3ba1bd5bf86e63dd35d6440fe608b3fecb01fae1d12bf51f",
+        "previewImageTags": 0,
+        "stories": [
+          {
+            "kind": "textbox",
+            "textCodepoints": 191,
+            "textSha256": "52437f32b7154e5194a20fe5b0f39532dbf88f56c95691ae8a941de60c67a0c0"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 73
+          },
+          "counts": {
+            "paragraphs": 2,
+            "blocks": 2,
+            "assets": 0,
+            "styles": 21,
+            "fonts": 9
+          }
+        },
+        "warnings": [
+          {
+            "message": "Recovered text from a legacy Word text-box story; text-box positioning is unavailable, so the content was linearized after the main story.",
+            "code": "MSDOC_TEXTBOX_STORY_LINEARIZED",
+            "storyCount": 1
+          }
+        ],
+        "paragraphs": 2,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 1,
+          "textbox": 1
+        },
+        "assets": [],
+        "previewTextCodepoints": 262,
+        "previewTextSha256": "0893d4917cd10a8c3cb3165aa4ccb6b3e0d5153bd73263168e954c0c2eaf86cd",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-note-table",
+      "origin": "native",
+      "path": "test/fixtures/word_native/note-table-ending.doc",
+      "sha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115",
+      "bytes": 10752,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 4,
+          "tables": 1,
+          "rows": 3,
+          "cells": 3
+        },
+        "allCounts": {
+          "paragraphs": 6,
+          "tables": 2,
+          "rows": 4,
+          "cells": 4
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredTableStoryBoundary"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 1,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 99,
+        "previewTextSha256": "62c75cb461f4893721518bd90d7f9def658bc12903aa4c94753fb0e16cb10c46",
+        "previewImageTags": 0,
+        "stories": [
+          {
+            "kind": "footnote",
+            "textCodepoints": 40,
+            "textSha256": "843db1d95f4650b6ae46a25453dab3326fc08e0fcf02bcfe26721460cf26b0c1"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 104
+          },
+          "counts": {
+            "paragraphs": 7,
+            "blocks": 2,
+            "assets": 0,
+            "styles": 25,
+            "fonts": 10
+          }
+        },
+        "warnings": [],
+        "paragraphs": 4,
+        "tables": 1,
+        "rows": 3,
+        "cells": 3,
+        "storyParagraphs": {
+          "main": 4
+        },
+        "assets": [],
+        "previewTextCodepoints": 100,
+        "previewTextSha256": "5567c52582251013bcc57e865f26931dcd23c0f591d0de3a61044bd5b246731b",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-header-table",
+      "origin": "native",
+      "path": "test/fixtures/word_native/header-ending-table.doc",
+      "sha256": "d13a28715802b429263037014e2bc362492c8b73d0ac7ba46c193bc03944ca18",
+      "bytes": 9728,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 6,
+          "tables": 2,
+          "rows": 2,
+          "cells": 2
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredTableStoryBoundary"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 4,
+        "previewTextSha256": "30e7e41efab31a8beaa512ea48aa4d99070496095423d4d653137a7f511eb877",
+        "previewImageTags": 0,
+        "stories": [
+          {
+            "kind": "header",
+            "textCodepoints": 0,
+            "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 10,
+            "textSha256": "6e5d84b0940ed45cec3d73d3399add36a2397e9eec8cd62cd475b1856c8751ab"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 10,
+            "textSha256": "6e5d84b0940ed45cec3d73d3399add36a2397e9eec8cd62cd475b1856c8751ab"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 5
+          },
+          "counts": {
+            "paragraphs": 1,
+            "blocks": 1,
+            "assets": 0,
+            "styles": 22,
+            "fonts": 10
+          }
+        },
+        "warnings": [],
+        "paragraphs": 1,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 1
+        },
+        "assets": [],
+        "previewTextCodepoints": 4,
+        "previewTextSha256": "30e7e41efab31a8beaa512ea48aa4d99070496095423d4d653137a7f511eb877",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "native-footer-paragraph",
+      "origin": "native",
+      "path": "test/fixtures/word_native/footer-ending-paragraph.doc",
+      "sha256": "891b1e6e547d9249f78b009914c71be49614235966d282675823f4b0e9dc80eb",
+      "bytes": 9728,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 8,
+          "tables": 2,
+          "rows": 2,
+          "cells": 2
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 4,
+        "previewTextSha256": "30e7e41efab31a8beaa512ea48aa4d99070496095423d4d653137a7f511eb877",
+        "previewImageTags": 0,
+        "stories": [
+          {
+            "kind": "footer",
+            "textCodepoints": 0,
+            "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 16,
+            "textSha256": "8658eead5f8479c870df8fc8d9dee645e16e84abf642f7b10d7d60275acbdf0b"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 16,
+            "textSha256": "8658eead5f8479c870df8fc8d9dee645e16e84abf642f7b10d7d60275acbdf0b"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 5
+          },
+          "counts": {
+            "paragraphs": 1,
+            "blocks": 1,
+            "assets": 0,
+            "styles": 22,
+            "fonts": 10
+          }
+        },
+        "warnings": [],
+        "paragraphs": 1,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 1
+        },
+        "assets": [],
+        "previewTextCodepoints": 4,
+        "previewTextSha256": "30e7e41efab31a8beaa512ea48aa4d99070496095423d4d653137a7f511eb877",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "native-bookmark-link",
+      "origin": "native",
+      "path": "test/fixtures/word_native/bookmarks-native-hyperlink.doc",
+      "sha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59",
+      "bytes": 11776,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 8,
+          "tables": 1,
+          "rows": 1,
+          "cells": 1
+        },
+        "allCounts": {
+          "paragraphs": 16,
+          "tables": 1,
+          "rows": 1,
+          "cells": 1
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 16,
+        "fields": 1,
+        "noteReferences": 2,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 91,
+        "previewTextSha256": "bbd979521964b728dd965ca43267da3c9b9689e40bca600b3f65bffab94769d4",
+        "previewImageTags": 0,
+        "stories": [
+          {
+            "kind": "footnote",
+            "textCodepoints": 13,
+            "textSha256": "3050d03215563859073464ad560a2c27c33940afc2114ebcc7652fb9b7b46a40"
+          },
+          {
+            "kind": "endnote",
+            "textCodepoints": 12,
+            "textSha256": "c9b943d61e5619d56c2a6143be349ba345ae32f1a0047cf8c9540b8e504cfd13"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 11,
+            "textSha256": "308b09082d8b0350185e3e0de2ecf0c723cc06a62ede1dbc09bb4016a8b70e68"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 14,
+            "textSha256": "8eff534b4d66fd6fc18a9116b7ff8ebf21c8a3f31188c3adda022990f1e6a65e"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 11,
+            "textSha256": "1766b5fcb44ba50e28ef97ebec16d1a28c32d2e3ece99f6a0ada5e7f677cf809"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 14,
+            "textSha256": "86f62e725c8323ba4a66935840177fe92dc57aa7e13c15d4fe5a9993df43738c"
+          },
+          {
+            "kind": "header",
+            "textCodepoints": 12,
+            "textSha256": "9ed7d394ab10db35d42cf2c78c8211579b60685d279893ce9a8ce2dfc2da5e0d"
+          },
+          {
+            "kind": "footer",
+            "textCodepoints": 12,
+            "textSha256": "551417d052f575235cd2edf8ed7843631c6012918aa53e613f8021354eb4338b"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 121
+          },
+          "counts": {
+            "paragraphs": 9,
+            "blocks": 8,
+            "assets": 0,
+            "styles": 31,
+            "fonts": 10
+          }
+        },
+        "warnings": [],
+        "paragraphs": 8,
+        "tables": 1,
+        "rows": 1,
+        "cells": 1,
+        "storyParagraphs": {
+          "main": 8
+        },
+        "assets": [],
+        "previewTextCodepoints": 94,
+        "previewTextSha256": "0f11d6c4b9a3e00d84693101b925cca9ecd1abdefdfb112855669e9b54ad2dee",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-officeart",
+      "origin": "native",
+      "path": "test/fixtures/fidelity/officeart-shapes.doc",
+      "sha256": "2f9942934f293acf7ac3df6daada81c0e4799e0433a071166a8ab193b1846b6d",
+      "bytes": 10240,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "revisionMetadataIncomplete",
+          "terminalMarkFormattingUnavailable"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 3,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "recoveredVertexArrayLength",
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 81,
+        "previewTextSha256": "c98f1e3b6b7203c1eb29b87048bf63d7d4f3a1f6e54332c2db83acc7c14205ed",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 85
+          },
+          "counts": {
+            "paragraphs": 1,
+            "blocks": 1,
+            "assets": 0,
+            "styles": 20,
+            "fonts": 9
+          }
+        },
+        "warnings": [],
+        "paragraphs": 1,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 1
+        },
+        "assets": [],
+        "previewTextCodepoints": 81,
+        "previewTextSha256": "c98f1e3b6b7203c1eb29b87048bf63d7d4f3a1f6e54332c2db83acc7c14205ed",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "native-word14-textbox",
+      "origin": "native",
+      "path": "test/fixtures/word_native/word14-margin-origin.doc",
+      "sha256": "cab742e55b62e7a638ada283e877144a574e0412032ac5d797c1eb8cfedcfb9a",
+      "bytes": 55296,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 9,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 15,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredGlobalTextboxSentinel"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 1,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 6,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 6,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 0,
+        "previewTextSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "previewImageTags": 0,
+        "stories": [
+          {
+            "kind": "textbox",
+            "textCodepoints": 16,
+            "textSha256": "b66fa2ebebb876be7f6cab01220baa7ff05359c0b47572743d218839cd3c4662"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 18,
+            "textSha256": "3fee2b3becf2076f335a898ae836e87708b7878e56b6999a6de0c633b5791a75"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 18,
+            "textSha256": "60ca19c3d78ffdf7345313c2966287f010b78b790ae2d044d4ea4bd781bd13a6"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 18,
+            "textSha256": "b948978a32985111298bab6c16c6dfae1e18bf742441ed47dac66e7b448e8fca"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 18,
+            "textSha256": "17debf5018ddf06cbd8229d0a4e75a88c69bc361183fa81839168e961814e6d9"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 18,
+            "textSha256": "6b052b31314109be7a742785df90631edd60a172297e957072da250eb58ddf54"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 15
+          },
+          "counts": {
+            "paragraphs": 10,
+            "blocks": 10,
+            "assets": 0,
+            "styles": 15,
+            "fonts": 5
+          }
+        },
+        "warnings": [
+          {
+            "message": "Recovered text from a legacy Word text-box story; text-box positioning is unavailable, so the content was linearized after the main story.",
+            "code": "MSDOC_TEXTBOX_STORY_LINEARIZED",
+            "storyCount": 1
+          }
+        ],
+        "paragraphs": 10,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 4,
+          "textbox": 6
+        },
+        "assets": [],
+        "previewTextCodepoints": 111,
+        "previewTextSha256": "68fca30984a3b1a0baadb0aaf6559d3966f735e4c36e2896288f6a1b6a33c205",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "native-image-quarter",
+      "origin": "native",
+      "path": "test/fixtures/fidelity/image-appearance/binary/floating-quarter.doc",
+      "sha256": "3d377117b97485ad212b917b44ac43471176ec39ad5502a61459151843104b8d",
+      "bytes": 9728,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 1,
+          "pictures": 0,
+          "drawings": 1,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "unsupportedDrawing",
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 0,
+        "previewTextSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "previewImageTags": 1,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 2
+          },
+          "counts": {
+            "paragraphs": 0,
+            "blocks": 0,
+            "assets": 0,
+            "styles": 20,
+            "fonts": 10
+          }
+        },
+        "warnings": [],
+        "paragraphs": 0,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {},
+        "assets": [],
+        "previewTextCodepoints": 0,
+        "previewTextSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "upstream-revisions",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/native-revisions/native-revisions.doc",
+      "sha256": "39407c42438ad03f80510c550296efd20ec7e8c251b01caaec491963b8680c76",
+      "bytes": 27136,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 18,
+          "tables": 1,
+          "rows": 3,
+          "cells": 6
+        },
+        "allCounts": {
+          "paragraphs": 18,
+          "tables": 1,
+          "rows": 3,
+          "cells": 6
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 1,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 7,
+          "deletedRuns": 11,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 380,
+        "previewTextSha256": "27b795fb0582b8d088eff68f59ac0319a2f7f6dc76baf6925aec3545b6085f55",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 383
+          },
+          "counts": {
+            "paragraphs": 21,
+            "blocks": 13,
+            "assets": 0,
+            "styles": 16,
+            "fonts": 8
+          }
+        },
+        "warnings": [],
+        "paragraphs": 18,
+        "tables": 1,
+        "rows": 3,
+        "cells": 6,
+        "storyParagraphs": {
+          "main": 18
+        },
+        "assets": [],
+        "previewTextCodepoints": 378,
+        "previewTextSha256": "50dea3ed3a6fa538c3cb130f7052a67ec6dc23aaa296f7dc787d45c4af96f67c",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "upstream-revisions-final",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/native-revisions/native-revisions-final.doc",
+      "sha256": "6b8732c97432bb0ab9d91bddb07700dc5e9c61289ee408aa676fd27f78546e18",
+      "bytes": 27136,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 17,
+          "tables": 1,
+          "rows": 3,
+          "cells": 6
+        },
+        "allCounts": {
+          "paragraphs": 17,
+          "tables": 1,
+          "rows": 3,
+          "cells": 6
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 1,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 275,
+        "previewTextSha256": "a7734025e83fb660ba69a65f8ec5edbf4cf65447ce926842511fadea2ab07b45",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 280
+          },
+          "counts": {
+            "paragraphs": 20,
+            "blocks": 12,
+            "assets": 0,
+            "styles": 16,
+            "fonts": 8
+          }
+        },
+        "warnings": [],
+        "paragraphs": 17,
+        "tables": 1,
+        "rows": 3,
+        "cells": 6,
+        "storyParagraphs": {
+          "main": 17
+        },
+        "assets": [],
+        "previewTextCodepoints": 275,
+        "previewTextSha256": "a7734025e83fb660ba69a65f8ec5edbf4cf65447ce926842511fadea2ab07b45",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "upstream-revisions-original",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/native-revisions/native-revisions-original.doc",
+      "sha256": "9c4555c6d6c258fda9ec31a33d7da602175566a63deb204055fcb8c15d7205e7",
+      "bytes": 28160,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 17,
+          "tables": 1,
+          "rows": 3,
+          "cells": 6
+        },
+        "allCounts": {
+          "paragraphs": 17,
+          "tables": 1,
+          "rows": 3,
+          "cells": 6
+        },
+        "warnings": [
+          "unsupportedFormatting"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 1,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 308,
+        "previewTextSha256": "eb11d99db241979260eab0f34734c6228ede0bd2cfcef71cd6e3b4f48be1ac30",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 313
+          },
+          "counts": {
+            "paragraphs": 20,
+            "blocks": 12,
+            "assets": 0,
+            "styles": 16,
+            "fonts": 8
+          }
+        },
+        "warnings": [],
+        "paragraphs": 17,
+        "tables": 1,
+        "rows": 3,
+        "cells": 6,
+        "storyParagraphs": {
+          "main": 17
+        },
+        "assets": [],
+        "previewTextCodepoints": 308,
+        "previewTextSha256": "eb11d99db241979260eab0f34734c6228ede0bd2cfcef71cd6e3b4f48be1ac30",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "upstream-image-embedded",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/image-embedded.doc",
+      "sha256": "6e46729f3a4a1f517d95e8116ae0595dc9d03b6126fa0e7605b03343fb1ed0d3",
+      "bytes": 12288,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 5,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 5,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "imagesOmitted",
+          "revisionMetadataIncomplete",
+          "terminalMarkFormattingUnavailable"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 2,
+          "pictures": 2,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": []
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 43,
+        "previewTextSha256": "0ba5a3f160757497ca1ab4c101338c121f193f9c362a48ec1540dfe431332eae",
+        "previewImageTags": 2,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 48
+          },
+          "counts": {
+            "paragraphs": 5,
+            "blocks": 5,
+            "assets": 2,
+            "styles": 28,
+            "fonts": 8
+          }
+        },
+        "warnings": [],
+        "paragraphs": 5,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 5
+        },
+        "assets": [
+          {
+            "type": "image"
+          },
+          {
+            "type": "image"
+          }
+        ],
+        "previewTextCodepoints": 43,
+        "previewTextSha256": "0ba5a3f160757497ca1ab4c101338c121f193f9c362a48ec1540dfe431332eae",
+        "previewImageTags": 2
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "upstream-image-linked",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/image-linked.doc",
+      "sha256": "60dcb131205a5d45e477a8ac95d4dc9c023d050f3833b817935a6b0f850296ec",
+      "bytes": 10240,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 5,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 5,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults",
+          "imagesOmitted",
+          "revisionMetadataIncomplete",
+          "terminalMarkFormattingUnavailable"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 0,
+        "bookmarks": 0,
+        "fields": 2,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 2,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "externalPictureNotFetched",
+            "unsupportedImage",
+            "externalPictureNotFetched",
+            "unsupportedImage"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 99,
+        "previewTextSha256": "50965baa28955d727161202805efd1d4ab0b7b6e53261dc36776b32bc3ab748a",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 257,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 166
+          },
+          "counts": {
+            "paragraphs": 5,
+            "blocks": 5,
+            "assets": 2,
+            "styles": 28,
+            "fonts": 8
+          }
+        },
+        "warnings": [],
+        "paragraphs": 5,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "main": 5
+        },
+        "assets": [
+          {
+            "type": "image"
+          },
+          {
+            "type": "image"
+          }
+        ],
+        "previewTextCodepoints": 117,
+        "previewTextSha256": "2ef93466f49ff5eb83bf5301fbdfd4de66ea6d5c0105b92b442396d950f86da8",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    },
+    {
+      "id": "upstream-template-dot",
+      "origin": "upstream",
+      "path": "apps/viewer-demo/public/example/template.dot",
+      "sha256": "6247c497d4adbdbe01a5b13b5d8b848d6ad384ea140d7533b622583cf431308b",
+      "bytes": 65024,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 235,
+          "tables": 1,
+          "rows": 3,
+          "cells": 15
+        },
+        "allCounts": {
+          "paragraphs": 235,
+          "tables": 1,
+          "rows": 3,
+          "cells": 15
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "fieldsUseStoredResults"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 2,
+        "bookmarks": 0,
+        "fields": 3,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 11135,
+        "previewTextSha256": "ac939152e85b5e15cbc781b1a5f8a954fa12ef84dc8255834fe9a90e4b87dfe1",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 1,
+            "fComplex": false,
+            "fEncrypted": false,
+            "ccpText": 11498
+          },
+          "counts": {
+            "paragraphs": 238,
+            "blocks": 221,
+            "assets": 0,
+            "styles": 20,
+            "fonts": 12
+          }
+        },
+        "warnings": [],
+        "paragraphs": 235,
+        "tables": 1,
+        "rows": 3,
+        "cells": 15,
+        "storyParagraphs": {
+          "main": 235
+        },
+        "assets": [],
+        "previewTextCodepoints": 11135,
+        "previewTextSha256": "ac939152e85b5e15cbc781b1a5f8a954fa12ef84dc8255834fe9a90e4b87dfe1",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "upstream-wps-table",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/github-34-wps-table.doc",
+      "sha256": "835d3a98416317f87fce034d511ef3ec2f110de0e25d58739fc2d13cde52a77b",
+      "bytes": 31232,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 81,
+          "tables": 1,
+          "rows": 16,
+          "cells": 80
+        },
+        "allCounts": {
+          "paragraphs": 81,
+          "tables": 1,
+          "rows": 16,
+          "cells": 80
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "recoveredLegacyDiagonalBorder"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 0,
+        "tableStyles": 1,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 0,
+        "unpositionedTextboxes": 0,
+        "media": {
+          "assets": 0,
+          "pictures": 0,
+          "drawings": 0,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 457,
+        "previewTextSha256": "8c62d68b4b7f98ae6f72cb40a8a01552072882722d50d225d34b685e21c6f752",
+        "previewImageTags": 0,
+        "stories": []
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 0,
+            "fComplex": true,
+            "fEncrypted": false,
+            "ccpText": 475
+          },
+          "counts": {
+            "paragraphs": 97,
+            "blocks": 2,
+            "assets": 0,
+            "styles": 15,
+            "fonts": 3
+          }
+        },
+        "warnings": [],
+        "paragraphs": 81,
+        "tables": 1,
+        "rows": 16,
+        "cells": 80,
+        "storyParagraphs": {
+          "main": 81
+        },
+        "assets": [],
+        "previewTextCodepoints": 457,
+        "previewTextSha256": "8c62d68b4b7f98ae6f72cb40a8a01552072882722d50d225d34b685e21c6f752",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": true
+    },
+    {
+      "id": "upstream-textbox-resume",
+      "origin": "upstream",
+      "path": "packages/renderers/doc/test/fixtures/github-171-textbox-resume.doc",
+      "sha256": "4f912b57ae4bff2fde6900e53b1c256b5a877f09e2e06afa63a1d66ab535a0a6",
+      "bytes": 345600,
+      "native": {
+        "ok": true,
+        "bodyCounts": {
+          "paragraphs": 1,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "allCounts": {
+          "paragraphs": 38,
+          "tables": 0,
+          "rows": 0,
+          "cells": 0
+        },
+        "warnings": [
+          "unsupportedFormatting",
+          "floatingObjectsOmitted",
+          "recoveredGlobalTextboxSentinel",
+          "recoveredUnpositionedTextbox"
+        ],
+        "sections": 1,
+        "numberingDefinitions": 5,
+        "tableStyles": 1,
+        "bookmarks": 0,
+        "fields": 0,
+        "noteReferences": 0,
+        "commentReferences": 0,
+        "textboxReferences": 15,
+        "unpositionedTextboxes": 6,
+        "media": {
+          "assets": 6,
+          "pictures": 0,
+          "drawings": 22,
+          "objects": 0,
+          "vbaProjects": 0,
+          "notices": [
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing",
+            "unsupportedDrawing"
+          ]
+        },
+        "revisions": {
+          "insertedRuns": 0,
+          "deletedRuns": 0,
+          "historicalRuns": 0
+        },
+        "previewTextCodepoints": 0,
+        "previewTextSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "previewImageTags": 6,
+        "stories": [
+          {
+            "kind": "textbox",
+            "textCodepoints": 32,
+            "textSha256": "4945d3f3e8c0b4e79e7563592831d403b5a69798e08604da45b2622d02496ced"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 179,
+            "textSha256": "d1d13cd00485776c288164158e6666543e13f68a13aef43864e153f7e737e7c5"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 10,
+            "textSha256": "b8bea5aa41018995cc2b7bb5fd83936e21c34c796d272518f13b287a44916513"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 6,
+            "textSha256": "c848f425cf1ee501a5046a0d72a96d98b13c5f9aedbbb2d189f91c50abe286e7"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 4,
+            "textSha256": "6850ec4d18223292b75acde604a358b7c58901fc4414f0af3327b488c75c4e2c"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 19,
+            "textSha256": "b43978d41da55725bd3976dcb45b5bc847960061aa63b4ca7931c2cba847a2f8"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 49,
+            "textSha256": "0a8ae608f09bd672a4ca32fa6ce0b71ed6bddbd0a77704d3982e038dc4272f5f"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 4,
+            "textSha256": "c89565f599e556923fddcc660766b6b44875e601623f64cbdd3fb21560356fcf"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 74,
+            "textSha256": "f8cf52aba35d9fe0c70840ee5986cd298cad4f283ffbdf65b705d242f2f5da30"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 134,
+            "textSha256": "166b51e63daca3008f48a3288fd7376827b0b7c17276f6d327bdec32759d298c"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 4,
+            "textSha256": "3bb21b9853350c4e7d77543554bc6d40510ce1744e558c6b9b539648f00462e8"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 4,
+            "textSha256": "96fc1ad213b700fc2d3ca3b639b8ddf5454ca660a96c5116856d3b8384d9e7f4"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 4,
+            "textSha256": "c71c3d29dd741857c2771148d6afef7232c4e56adc48ac4b28068a21c90fe820"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 127,
+            "textSha256": "07f83a83270553368ce37170b8cab98a40fa6b5d231898fc96772f59d8de5d97"
+          },
+          {
+            "kind": "textbox",
+            "textCodepoints": 7,
+            "textSha256": "affc3b58c24b677f0fc489654ffa6c80fee6f20960ef51bda6a0a5ce89ba04ce"
+          }
+        ]
+      },
+      "upstream": {
+        "ok": true,
+        "meta": {
+          "fib": {
+            "wIdent": 42476,
+            "nFib": 193,
+            "fWhichTblStm": 0,
+            "fComplex": true,
+            "fEncrypted": false,
+            "ccpText": 23
+          },
+          "counts": {
+            "paragraphs": 28,
+            "blocks": 28,
+            "assets": 0,
+            "styles": 23,
+            "fonts": 10
+          }
+        },
+        "warnings": [
+          {
+            "message": "Recovered text from a legacy Word text-box story; text-box positioning is unavailable, so the content was linearized after the main story.",
+            "code": "MSDOC_TEXTBOX_STORY_LINEARIZED",
+            "storyCount": 1
+          }
+        ],
+        "paragraphs": 28,
+        "tables": 0,
+        "rows": 0,
+        "cells": 0,
+        "storyParagraphs": {
+          "textbox": 28
+        },
+        "assets": [],
+        "previewTextCodepoints": 454,
+        "previewTextSha256": "3354da8f0f40521df3d1ad894730446ca94e2afdd44946a2cf5f82d75331c5e3",
+        "previewImageTags": 0
+      },
+      "sameNormalizedMainPreviewText": false
+    }
+  ]
+}

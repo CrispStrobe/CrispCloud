@@ -451,6 +451,7 @@ extension _WordStories on _StructuredWordParser {
     }
     final base = _storyBase(index);
     final repeatedReferences = <int>{};
+    final unresolvedShapes = <int>{};
     for (var i = 0; i < plc.count - 1; i++) {
       final first = base + plc.cps[i], guardEnd = base + plc.cps[i + 1];
       final reusable = plc.data.u16(i * 22 + 8);
@@ -469,8 +470,23 @@ extension _WordStories on _StructuredWordParser {
       // intentional empty paragraphs) and their formatting remain content.
       final end = guardEnd - 1;
       final shape = plc.data.u32(i * 22 + 14), count = plc.data.u32(i * 22);
-      if (count == 0 || count > 4096 || !byShape.containsKey(shape)) {
+      if (count == 0 || count > 4096) {
         throw const FormatException('Unresolved Word textbox shape reference.');
+      }
+      final placementUnresolved = !byShape.containsKey(shape);
+      if (placementUnresolved) {
+        // Recover text only from a complete, independently bounded main-story
+        // singleton range. Keep its declared shape ID and null anchor; no
+        // chain, missing header relationship or repeated identity is guessed.
+        if (header ||
+            count != 1 ||
+            shape == 0 ||
+            !unresolvedShapes.add(shape)) {
+          throw const FormatException(
+            'Unresolved Word textbox shape reference.',
+          );
+        }
+        warnings.add(LegacyWordWarning.recoveredUnpositionedTextbox);
       }
       if (repeatedShapes.contains(shape) &&
           (count != 1 || !repeatedReferences.add(shape))) {
@@ -486,6 +502,7 @@ extension _WordStories on _StructuredWordParser {
           anchorCp: byShape[shape],
           shapeId: shape,
           chainLength: count,
+          placementUnresolved: placementUnresolved,
         ),
       );
       _addStory(

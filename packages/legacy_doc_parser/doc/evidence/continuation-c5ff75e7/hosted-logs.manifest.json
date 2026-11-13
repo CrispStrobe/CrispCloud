@@ -1,0 +1,26 @@
+{
+  "archive": {
+    "path": "hosted-logs.tar.xz",
+    "sha256": "633642d04bc392ae7bce237b5e6ac01b890260a517b42712a460b03fc6a30146",
+    "size": 42956
+  },
+  "files": [
+    {
+      "jobId": 131758984962,
+      "jobName": "openxml-schema",
+      "path": "openxml-schema.log",
+      "sha256": "44fcdc3cb12714b6c9bf79268921e234fd8b3cfa7c540dda24bf82182623d739",
+      "size": 19412
+    },
+    {
+      "jobId": 131758985202,
+      "jobName": "test",
+      "path": "test.log",
+      "sha256": "fb61ed1fbc6ad58b75fe971f6510cdbc1d1996e7aa2b6d23500d0e2a4511b90c",
+      "size": 295920
+    }
+  ],
+  "representation": "Exact decoded log strings returned by the GitHub job-log connector, encoded as UTF-8 without newline changes. This is not the original server ZIP.",
+  "runId": 43387392944,
+  "sourceCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289"
+}

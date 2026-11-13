@@ -1,0 +1,2027 @@
+{
+  "allInputsUnchanged": true,
+  "artifactCountsFromManifests": {
+    "archives": 1,
+    "documents": 312,
+    "files": 2577,
+    "gzipPages": 240,
+    "pdfs": 230,
+    "rawRasterBytes": 343330104
+  },
+  "baselineComparisonContext": {
+    "changedSourceFiles": [
+      "lib/src/legacy_word_ink.dart",
+      "lib/src/legacy_word_media_model.dart",
+      "lib/src/legacy_word_media_parser.dart",
+      "lib/src/legacy_word_officeart_model.dart",
+      "lib/src/legacy_word_officeart_parser.dart",
+      "lib/src/legacy_word_pattern_dib.dart",
+      "lib/src/word_media_writer.dart",
+      "lib/src/word_shape_writer.dart",
+      "lib/src/word_textbox_writer.dart",
+      "tool/fidelity/ink_schema_fixture.dart",
+      "tool/fidelity/schema.py",
+      "tool/fidelity/schema_corpus.dart",
+      "tool/fidelity/textbox_default_width_probe.py",
+      "tool/fidelity/textbox_fill_probe.py",
+      "tool/fidelity/textbox_fill_schema_fixture.dart",
+      "tool/fidelity/textbox_paint_probe.py",
+      "tool/fidelity/textbox_property_control.dart"
+    ],
+    "sameCorpusManifest": true,
+    "sameInstalledFontFiles": true,
+    "sameInstalledFontInventory": true,
+    "sameRenderer": true,
+    "toolIdentityComparison": {
+      "compiler": true,
+      "office": true,
+      "pdfinfo": true,
+      "pdftoppm": true,
+      "pdftotext": true
+    }
+  },
+  "bridge": {
+    "comparisons": 14,
+    "exactOnThisRenderer": 3,
+    "layoutTextExactlyMatches": 11,
+    "matchesWithinTolerance": 11,
+    "pageCountsMatch": 14,
+    "pageDimensionsMatch": 14,
+    "pageTextMatches": 12,
+    "rasterExactlyMatches": 3,
+    "rasterSettingsMatch": 14,
+    "uncomparableWordDrift": 2
+  },
+  "cases": 24,
+  "casesSummary": [
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "bookmarks",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "comment-threads",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "content-controls",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "content-controls-legacy",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "emf-vectors",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "formatting",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": null,
+        "wordDriftComparable": false
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "header-textbox-alias",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "header-textbox-first-enabled",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "linked-textboxes",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "linked-textboxes-compact",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "linked-textboxes-native",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "list-continue",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "list-restart",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "note-markers",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": null,
+        "wordDriftComparable": false
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "officeart-shapes",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "poi-simple-table2",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "story-media",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "table-borders",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "wmf-vectors",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "word",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "word-altchunk",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": null,
+            "wordDriftComparable": false
+          }
+        }
+      ],
+      "id": "word-compatibility",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": null,
+        "wordDriftComparable": false
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [
+        "converted",
+        "roundtrip-01-binary",
+        "roundtrip-01-converted",
+        "roundtrip-02-binary",
+        "roundtrip-02-converted",
+        "roundtrip-03-binary",
+        "roundtrip-03-converted"
+      ],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {
+              "exactOnThisRenderer": {
+                "after": false,
+                "before": true
+              },
+              "rasterExactlyMatches": {
+                "after": false,
+                "before": true
+              }
+            },
+            "flags": [
+              "rasterExactlyMatches: lost",
+              "exactOnThisRenderer: lost"
+            ],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {
+              "exactOnThisRenderer": {
+                "after": false,
+                "before": true
+              },
+              "rasterExactlyMatches": {
+                "after": false,
+                "before": true
+              }
+            },
+            "flags": [
+              "rasterExactlyMatches: lost",
+              "exactOnThisRenderer: lost"
+            ],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {
+              "exactOnThisRenderer": {
+                "after": false,
+                "before": true
+              },
+              "rasterExactlyMatches": {
+                "after": false,
+                "before": true
+              }
+            },
+            "flags": [
+              "rasterExactlyMatches: lost",
+              "exactOnThisRenderer: lost"
+            ],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "word14-margin-origin",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    },
+    {
+      "changedRenderFingerprints": [],
+      "cycleDeltas": [
+        {
+          "index": 1,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 2,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        },
+        {
+          "index": 3,
+          "paginationFromBinaryDoc": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromFirstImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          },
+          "paginationFromPreviousImport": {
+            "changed": {},
+            "flags": [],
+            "wordDriftChangePoints": 0.0,
+            "wordDriftComparable": true
+          }
+        }
+      ],
+      "id": "word16-page-origin",
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      },
+      "sameNativeBinaryBytes": true,
+      "sameSourceBytes": true
+    }
+  ],
+  "cycles": 72,
+  "definitions": {
+    "exact": "Pixels, layout text and word geometry match on the recorded renderer.",
+    "geometryTolerancePoints": 0.25,
+    "initial": "Native binary DOC render versus first parser DOCX render. Original DOCX to binary bridge is separate.",
+    "rasterDpi": 72,
+    "strictStructuralDifferences": "Representation and bridge changes are included; counts alone do not attribute semantic loss."
+  },
+  "environment": {
+    "corpusSha256": "972fb199dacb1156cee32677e846cff8f2631bf129e7ba8729eda4ebe173e568",
+    "fontFilesSha256": "0cb9a2201522851b9e8f85fab62b3c33238205ef9091f741322dd69963351745",
+    "fontInventorySha256": "b42e0e2c6e9834b500eb67c1a35fe672e94ad122f43abb6f1246c3a3d84c1b25",
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5"
+  },
+  "executionErrors": [],
+  "initial": {
+    "comparisons": 24,
+    "exactOnThisRenderer": 9,
+    "layoutTextExactlyMatches": 19,
+    "matchesWithinTolerance": 14,
+    "pageCountsMatch": 24,
+    "pageDimensionsMatch": 22,
+    "pageTextMatches": 21,
+    "rasterExactlyMatches": 9,
+    "rasterSettingsMatch": 24,
+    "uncomparableWordDrift": 3
+  },
+  "parserAgainstSourceGoldenStatuses": {
+    "different": 1,
+    "matched": 1,
+    "not-recorded": 22
+  },
+  "repeats": {
+    "paginationFromBinaryDoc": {
+      "comparisons": 72,
+      "exactOnThisRenderer": 36,
+      "layoutTextExactlyMatches": 60,
+      "matchesWithinTolerance": 51,
+      "pageCountsMatch": 72,
+      "pageDimensionsMatch": 72,
+      "pageTextMatches": 66,
+      "rasterExactlyMatches": 36,
+      "rasterSettingsMatch": 72,
+      "uncomparableWordDrift": 6
+    },
+    "paginationFromFirstImport": {
+      "comparisons": 72,
+      "exactOnThisRenderer": 48,
+      "layoutTextExactlyMatches": 69,
+      "matchesWithinTolerance": 63,
+      "pageCountsMatch": 72,
+      "pageDimensionsMatch": 72,
+      "pageTextMatches": 69,
+      "rasterExactlyMatches": 48,
+      "rasterSettingsMatch": 72,
+      "uncomparableWordDrift": 3
+    },
+    "paginationFromPreviousImport": {
+      "comparisons": 72,
+      "exactOnThisRenderer": 58,
+      "layoutTextExactlyMatches": 69,
+      "matchesWithinTolerance": 67,
+      "pageCountsMatch": 72,
+      "pageDimensionsMatch": 72,
+      "pageTextMatches": 69,
+      "rasterExactlyMatches": 58,
+      "rasterSettingsMatch": 72,
+      "uncomparableWordDrift": 3
+    }
+  },
+  "sourceCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+  "sourceGoldenStatuses": {
+    "matched": 2,
+    "not-recorded": 22
+  },
+  "sourceTree": "25bd05c12fa2272a32ec2aaba2cc0117be5bed96",
+  "strictInitialMatches": 0
+}
