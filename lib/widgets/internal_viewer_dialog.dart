@@ -32,6 +32,7 @@ import 'package:flutter/services.dart'
 import 'package:flutter_highlight/flutter_highlight.dart';
 
 import '../services/syntax_highlight_theme.dart';
+import '../l10n/code_document_ui_strings.dart';
 
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -350,6 +351,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   String? _decodedText;
   List<int>? _lineStarts;
   List<String>? _displayLines;
+  bool _hasOversizeTextLine = false;
+  bool _wordWrap = false;
   String? _encoding;
   String? _encodingOverride;
   String? _richText;
@@ -460,6 +463,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   bool get _isStreamed => _source?.isStreamed ?? false;
+  bool get _usesWindowedText =>
+      _isStreamed ||
+      (_mode == ViewerMode.text &&
+          (_hasOversizeTextLine || (_wordWrap && _hlLanguage == null)));
+  bool get _canWrapText =>
+      _mode == ViewerMode.text &&
+      (_hlLanguage == null || _usesWindowedText || _usingHighlightView);
 
   /// Archive members and test byte overrides have no host path to save to, so
   /// they stay view-only. Otherwise show Edit for formats F4 can save.
@@ -486,7 +496,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   bool get _usingHighlightView =>
       _mode == ViewerMode.text &&
-      !_isStreamed &&
+      !_usesWindowedText &&
       (_hlLanguage != null) &&
       ((_decodedText?.length ?? 0) <= _kHighlightMaxChars);
 
@@ -572,6 +582,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   Future<void> _initialLoad({ViewerMode? preferredMode}) async {
     final loadToken = ++_loadToken;
     _imageDecodeFailed = false;
+    _hasOversizeTextLine = false;
     bool current() => mounted && loadToken == _loadToken;
     try {
       final override = widget.bytesOverride;
@@ -1712,6 +1723,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _encoding = decoded.encoding;
     _lineStarts = _lineStartsOf(decoded.text);
     _displayLines = _splitDisplayLines(decoded.text);
+    _hasOversizeTextLine = _displayLines!.any(
+      (line) => line.length > kMaxLineRenderBytes,
+    );
     return decoded.text;
   }
 
@@ -1818,9 +1832,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     setState(() => _zoom = next);
   }
 
+  void _toggleWordWrap() {
+    if (!_canWrapText) return;
+    setState(() {
+      _wordWrap = !_wordWrap;
+      _resetSearchResults();
+    });
+    if (_searchOpen && _searchController.text.isNotEmpty) {
+      unawaited(_runSearch(_searchController.text));
+    }
+  }
+
   Future<void> _showGotoDialog() async {
     final offsetMode =
-        _mode == ViewerMode.hex || (_isStreamed && !_usesExtractedTextSearch);
+        _mode == ViewerMode.hex ||
+        (_usesWindowedText && !_usesExtractedTextSearch);
     final result = await showDialog<String>(
       context: context,
       builder: (_) => _TextPromptDialog(
@@ -1841,7 +1867,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (offset == null || offset < 0) return;
       if (_mode == ViewerMode.hex) {
         _scrollToRow(offset ~/ _bytesPerLine);
-      } else if (_isStreamed) {
+      } else if (_usesWindowedText) {
         setState(() {
           _streamScrollTo = offset;
           _streamScrollRequest++;
@@ -1951,11 +1977,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _searchDebounce?.cancel();
     setState(() {
       _resetSearchResults();
-      if (_isStreamed && !_usesExtractedTextSearch && value.isNotEmpty) {
+      if (_usesWindowedText && !_usesExtractedTextSearch && value.isNotEmpty) {
         _searchNote = 'Press Enter to scan the file';
       }
     });
-    if ((_isStreamed && !_usesExtractedTextSearch) || value.isEmpty) return;
+    if ((_usesWindowedText && !_usesExtractedTextSearch) || value.isEmpty) {
+      return;
+    }
     _searchDebounce = Timer(const Duration(milliseconds: 350), () {
       if (mounted) _runSearch(value);
     });
@@ -2099,7 +2127,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       }
       final pattern = textMode ? null : _patternFor(query);
       setState(() {
-        _isByteSearch = !textMode || source.isStreamed;
+        _isByteSearch = !textMode || (!previewMode && _usesWindowedText);
         _searchBytes = pattern;
         _searching = true;
         _searchBytesScanned = startOffset;
@@ -2144,7 +2172,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               onProgress: progress,
             );
       if (cancelled()) return;
-      final characterOffsets = textMode && !source.isStreamed;
+      final characterOffsets = textMode && (previewMode || !_usesWindowedText);
       final found = characterOffsets ? result.textOffsets : result.offsets;
       final ends = characterOffsets ? result.textEndOffsets : result.endOffsets;
       final total = startOffset == 0
@@ -2274,7 +2302,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       if (starts != null) _scrollToRow(_lineIndexOfOffset(starts, offset));
       return;
     }
-    if (_isStreamed) {
+    if (_usesWindowedText) {
       setState(() {
         _streamScrollTo = offset;
         _streamScrollRequest++;
@@ -2814,6 +2842,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true): () =>
             widget.onNext?.call(),
         const SingleActivator(LogicalKeyboardKey.f5): _reload,
+        const SingleActivator(LogicalKeyboardKey.keyZ, alt: true):
+            _toggleWordWrap,
         const SingleActivator(LogicalKeyboardKey.keyR, control: true): _reload,
         const SingleActivator(LogicalKeyboardKey.f4): () {
           if (_canEdit) Navigator.of(context).pop(InternalViewerAction.edit);
@@ -3132,6 +3162,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     ViewerMode.binary,
                   ),
                   _modeChip('Hex', ViewerMode.hex),
+                  if (_canWrapText)
+                    IconButton(
+                      key: const ValueKey('viewer-word-wrap'),
+                      tooltip: CodeDocumentUiStrings(context).text('wrap'),
+                      icon: const Icon(Icons.wrap_text, size: 20),
+                      isSelected: _wordWrap,
+                      onPressed: _toggleWordWrap,
+                    ),
                   if (_mode == ViewerMode.hex)
                     IconButton(
                       key: const ValueKey('viewer-binary-structure'),
@@ -3622,18 +3660,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Widget _buildTextBody(ThemeData theme) {
     final source = _source!;
-    if (source.isStreamed) {
+    if (_usesWindowedText) {
       return SelectionArea(
         child: StreamingSafeView(
           source: source,
           rawText: true,
-          encoding: viewerSourceEncoding(source, override: _encodingOverride),
+          encoding:
+              _encodingOverride ??
+              (!_isStreamed ? _encoding : null) ??
+              viewerSourceEncoding(source),
           fontScale: _zoom,
           controller: _vScroll,
           matchStart: _isByteSearch ? _matchHighlightStart : null,
           matchEnd: _isByteSearch ? _matchHighlightEnd : null,
           scrollToByte: _streamScrollTo,
           scrollRequest: _streamScrollRequest,
+          wordWrap: _wordWrap,
         ),
       );
     }
@@ -3641,29 +3683,26 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     final text = _ensureText();
     final language = _hlLanguage;
     if (language != null && text.length <= _kHighlightMaxChars) {
+      final highlighted = HighlightView(
+        text,
+        language: language,
+        theme: syntaxHighlightTheme(dark: theme.brightness == Brightness.dark),
+        padding: const EdgeInsets.all(8),
+        textStyle: monoTextStyle(
+          13.0 * _zoom,
+          theme.colorScheme.onSurface,
+        ).copyWith(height: 1.45),
+      );
       return SelectionArea(
         child: SingleChildScrollView(
           controller: _vScroll,
-          child: SizedBox(
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                HighlightView(
-                  text,
-                  language: language,
-                  theme: syntaxHighlightTheme(
-                    dark: theme.brightness == Brightness.dark,
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  textStyle: monoTextStyle(
-                    13.0 * _zoom,
-                    theme.colorScheme.onSurface,
-                  ).copyWith(height: 1.45),
+          child: _wordWrap
+              ? SizedBox(width: double.infinity, child: highlighted)
+              : SingleChildScrollView(
+                  key: const ValueKey('viewer-code-horizontal-scroll'),
+                  scrollDirection: Axis.horizontal,
+                  child: highlighted,
                 ),
-              ],
-            ),
-          ),
         ),
       );
     }

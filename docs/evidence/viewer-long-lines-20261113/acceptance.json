@@ -1,0 +1,39 @@
+{
+  "sample": {
+    "format": "BCAD JSON",
+    "bytes": 3073385,
+    "contentsRetained": false,
+    "pathRetained": false
+  },
+  "runtime": "Flutter 3.47.8 / Dart 3.13.7, Mac widget tests",
+  "observedMs": {
+    "firstContent": 541,
+    "indexSettled": 1115,
+    "wrap": 367,
+    "scroll": 30
+  },
+  "tests": {
+    "internalViewer": 36,
+    "actualFile": 1,
+    "affectedSearchAndHighlightEarlier": 54
+  },
+  "bounds": {
+    "unwrappedBytes": 2048,
+    "wrappedBytes": 1024,
+    "scalarBoundaryExtension": 4,
+    "sourceWindowBytes": 4194304,
+    "retainedRowKeys": 256
+  },
+  "checks": [
+    "Find near end across UTF-8 scalar boundaries",
+    "legacy encoding beyond header retained",
+    "wrapped target navigation",
+    "wrap toggle retains scrolled location",
+    "small-code wrap retains syntax palette",
+    "Alt+Z toggles wrap"
+  ],
+  "limits": [
+    "Timings are widget-test observations, not release FPS certification",
+    "Large virtualized syntax view retains fixed rows"
+  ]
+}

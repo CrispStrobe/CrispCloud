@@ -147,3 +147,29 @@ pass.
   not atomic on a server that changes between those two requests.
 - CodeMirror remains a possible embedded alternative, but it still needs a
   real WebView integration, keyboard and accessibility validation.
+
+## F3 wrapping and long lines
+
+The text viewer and F4 editor share token colours and a black dark canvas.
+F3 offers a wrap button and Alt+Z for plain/streamed text and its small-source
+syntax view. The larger virtualized syntax view retains fixed rows.
+
+An in-memory line longer than 8 KiB uses the same bounded byte-window viewer
+as streamed files. Layout blocks are limited to about 2 KiB unwrapped and
+1 KiB wrapped, extended only to preserve an encoded scalar. Wrapped blocks
+have variable heights; Find and Go To rebase at the exact byte target rather
+than using fixed-height scroll arithmetic. Toggling wrap retains the visible
+source location. Full-file decoding decisions for in-memory legacy encodings
+remain authoritative. Source bytes are never reformatted or rewritten.
+
+The real 3,073,385-byte BCAD sample passed opening, wrapping, scrolling and
+wrap-position checks. In the isolated debug test, first content appeared in
+541 ms, indexing settled in 1,115 ms, wrap took 367 ms and scrolling 30 ms.
+These are observed widget-test timings, not native release frame-rate claims.
+
+To measure another local minified text file without recording its contents:
+
+```sh
+CRISPCLOUD_VIEWER_PERF_FILE=/path/to/project.bcad \
+  flutter test tool/measure_viewer_text_test.dart --concurrency=1
+```

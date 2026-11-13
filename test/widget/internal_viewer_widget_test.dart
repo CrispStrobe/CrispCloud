@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -558,6 +559,7 @@ void main() {
             encodeViewerSearchText('${'x' * count}🙂end', encoding),
           );
           await source.open();
+          final controller = ScrollController();
           await tester.pumpWidget(
             _wrap(
               Scaffold(
@@ -566,6 +568,8 @@ void main() {
                   rawText: true,
                   encoding: encoding,
                   fontScale: 1,
+                  controller: controller,
+                  scrollToByte: count * (encoding == 'utf16le' ? 2 : 1),
                 ),
               ),
             ),
@@ -583,6 +587,7 @@ void main() {
           );
           expect(tester.takeException(), isNull);
           await tester.pumpWidget(const SizedBox());
+          controller.dispose();
           source.dispose();
         }
       },
@@ -685,6 +690,123 @@ void main() {
   });
 
   group('mode bar', () {
+    testWidgets('highlighted code wraps without changing its syntax palette', (
+      tester,
+    ) async {
+      await _pumpViewer(
+        tester,
+        Uint8List.fromList(utf8.encode('final value = "${'hello ' * 200}";')),
+        name: 'sample.dart',
+      );
+      final highlighted = find.byType(HighlightView);
+      final palette = tester.widget<HighlightView>(highlighted).theme;
+      final height = tester.getSize(highlighted).height;
+      await tester.tap(find.byKey(const ValueKey('viewer-word-wrap')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('viewer-code-horizontal-scroll')),
+        findsNothing,
+      );
+      expect(tester.getSize(highlighted).height, greaterThan(height));
+      expect(tester.widget<HighlightView>(highlighted).theme, palette);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('viewer-code-horizontal-scroll')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('windowed memory text retains its detected legacy encoding', (
+      tester,
+    ) async {
+      await _pumpViewer(
+        tester,
+        Uint8List.fromList([...List.filled(20000, 65), 0xe9, 69, 78, 68]),
+        name: 'legacy.txt',
+      );
+      await tester.tap(find.byKey(const ValueKey('viewer-word-wrap')));
+      await tester.pumpAndSettle();
+      final window = find.byType(StreamingSafeView);
+      expect(tester.widget<StreamingSafeView>(window).encoding, 'latin1');
+      await tester.tap(find.byTooltip('Search (Ctrl+F)'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('viewer-search-input')),
+        'éEND',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      expect(find.text('1/1'), findsOneWidget);
+      expect(
+        find.descendant(of: window, matching: find.textContaining('éEND')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'minified multi-megabyte text stays bounded when wrapping and finding',
+      (tester) async {
+        final source = '${'x,' * 1500000}END-β😀';
+        await _pumpViewer(
+          tester,
+          Uint8List.fromList(utf8.encode(source)),
+          name: 'project.bcad',
+        );
+        final window = find.byType(StreamingSafeView);
+        expect(window, findsOneWidget);
+        int longestPaintedParagraph() => tester
+            .widgetList<Text>(
+              find.descendant(of: window, matching: find.byType(Text)),
+            )
+            .map((text) => text.textSpan?.toPlainText().length ?? 0)
+            .fold(0, (a, b) => a > b ? a : b);
+        expect(longestPaintedParagraph(), lessThanOrEqualTo(2048));
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('viewer-word-wrap')),
+        );
+        await tester.tap(find.byKey(const ValueKey('viewer-word-wrap')));
+        await tester.pumpAndSettle();
+        expect(tester.widget<StreamingSafeView>(window).wordWrap, isTrue);
+        expect(longestPaintedParagraph(), lessThanOrEqualTo(1024));
+        expect(
+          find.descendant(
+            of: window,
+            matching: find.byType(SingleChildScrollView),
+          ),
+          findsNothing,
+        );
+
+        await tester.tap(find.byTooltip('Search (Ctrl+F)'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('viewer-search-input')),
+          'END-β😀',
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.search);
+        await tester.pumpAndSettle();
+        expect(find.text('1/1'), findsOneWidget);
+        expect(
+          find.descendant(of: window, matching: find.textContaining('END-β😀')),
+          findsOneWidget,
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('viewer-word-wrap')),
+        );
+        await tester.tap(find.byKey(const ValueKey('viewer-word-wrap')));
+        await tester.pumpAndSettle();
+        expect(tester.widget<StreamingSafeView>(window).wordWrap, isFalse);
+        expect(find.text('1/1'), findsOneWidget);
+        expect(
+          find.descendant(of: window, matching: find.textContaining('END-β😀')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('offers the core viewer modes', (tester) async {
       await _pumpViewer(tester, Uint8List.fromList(utf8.encode('x')));
 

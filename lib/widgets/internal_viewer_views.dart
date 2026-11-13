@@ -170,6 +170,7 @@ class StreamingSafeView extends StatefulWidget {
 
   /// Distinguishes repeated explicit jumps from unrelated parent rebuilds.
   final int scrollRequest;
+  final bool wordWrap;
 
   const StreamingSafeView({
     super.key,
@@ -183,6 +184,7 @@ class StreamingSafeView extends StatefulWidget {
     this.matchEnd,
     this.scrollToByte,
     this.scrollRequest = 0,
+    this.wordWrap = false,
   });
 
   @override
@@ -191,9 +193,12 @@ class StreamingSafeView extends StatefulWidget {
 
 class _StreamingSafeViewState extends State<StreamingSafeView> {
   final List<int> _lineOffsets = [0];
+  final _listKey = GlobalKey();
+  final Map<int, GlobalKey> _rowKeys = {};
   int _windowStart = 0;
   int _windowEnd = 0;
   int _indexedBytes = 0;
+  int _publishedThrough = 0;
   int? _pendingTarget;
   bool _windowDone = false;
   String? _error;
@@ -201,6 +206,8 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
   static const int _maximumLines = 200000;
 
   int get _unit => widget.rawText ? viewerCodeUnitBytes(widget.encoding) : 1;
+  // Bound each paragraph's layout work even for minified multi-megabyte lines.
+  int get _renderBudget => widget.wordWrap ? 1024 : 2048;
   double get _rowExtent => 13.0 * widget.fontScale * 1.5;
   int get _offsetDigits => (widget.source.size > 0 ? widget.source.size - 1 : 0)
       .toRadixString(16)
@@ -210,7 +217,10 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
   @override
   void initState() {
     super.initState();
-    _resetWindow(widget.scrollToByte ?? 0, center: widget.scrollToByte != null);
+    _resetWindow(
+      widget.scrollToByte ?? 0,
+      center: !widget.wordWrap && widget.scrollToByte != null,
+    );
   }
 
   @override
@@ -221,8 +231,12 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
         oldWidget.rawText != widget.rawText) {
       _resetWindow(
         widget.scrollToByte ?? 0,
-        center: widget.scrollToByte != null,
+        center: !widget.wordWrap && widget.scrollToByte != null,
       );
+      return;
+    }
+    if (oldWidget.wordWrap != widget.wordWrap) {
+      _resetWindow(_firstVisibleByte() ?? widget.scrollToByte ?? _windowStart);
       return;
     }
     final target = widget.scrollToByte;
@@ -250,13 +264,43 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       );
     }
     _indexedBytes = start;
+    _publishedThrough = start;
     _lineOffsets
       ..clear()
       ..add(start);
     _windowDone = false;
     _error = null;
     _pendingTarget = target;
+    _rowKeys.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) => _indexMore());
+  }
+
+  int? _firstVisibleByte() {
+    final viewport = _listKey.currentContext?.findRenderObject();
+    if (viewport is! RenderBox || !viewport.hasSize) return null;
+    final top = viewport.localToGlobal(Offset.zero).dy;
+    final bottom = top + viewport.size.height;
+    int? result;
+    double? firstY;
+    for (final entry in _rowKeys.entries) {
+      final row = entry.value.currentContext?.findRenderObject();
+      if (row is! RenderBox || !row.attached || !row.hasSize) continue;
+      final y = row.localToGlobal(Offset.zero).dy;
+      if (y + row.size.height > top &&
+          y < bottom &&
+          (firstY == null || y < firstY)) {
+        result = entry.key;
+        firstY = y;
+      }
+    }
+    return result;
+  }
+
+  GlobalKey _keyForRow(int offset) {
+    final existing = _rowKeys[offset];
+    if (existing != null) return existing;
+    if (_rowKeys.length >= 256) _rowKeys.remove(_rowKeys.keys.first);
+    return _rowKeys[offset] = GlobalKey();
   }
 
   int _lineIndexOfOffset(int byteOffset) {
@@ -273,11 +317,17 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
     return lo;
   }
 
-  void _jumpToByte(int requested) {
+  void _jumpToByte(int requested, {bool indexed = false}) {
     final offset = requested.clamp(
       0,
       widget.source.size > 0 ? widget.source.size - 1 : 0,
     );
+    // Wrapped blocks have variable heights. Rebase explicit navigation at the
+    // target instead of applying fixed-row scroll arithmetic to those blocks.
+    if (widget.wordWrap && !indexed) {
+      setState(() => _resetWindow(offset));
+      return;
+    }
     if (offset < _windowStart || offset >= _windowEnd) {
       setState(() => _resetWindow(offset, center: true));
       return;
@@ -293,7 +343,9 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
         controller.positions.length != 1) {
       return;
     }
-    final target = 4.0 + _lineIndexOfOffset(offset) * _rowExtent;
+    final target = widget.wordWrap
+        ? 0.0
+        : 4.0 + _lineIndexOfOffset(offset) * _rowExtent;
     controller.jumpTo(target.clamp(0.0, controller.position.maxScrollExtent));
   }
 
@@ -318,7 +370,7 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       for (var i = 0; i < bytes.length; i += _unit) {
         final next = _indexedBytes + i + _unit;
         final newline = _newline(bytes, i);
-        final longLine = next - _lineOffsets.last >= kMaxLineRenderBytes;
+        final longLine = next - _lineOffsets.last >= _renderBudget;
         final boundary =
             !widget.rawText ||
             !longLine ||
@@ -338,12 +390,20 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
       _error = '$error';
       _windowDone = true;
     }
-    setState(() {});
+    final target = _pendingTarget;
+    if (_windowDone ||
+        _publishedThrough == _windowStart ||
+        _indexedBytes - _publishedThrough >= 512 * 1024 ||
+        (target != null && target < _indexedBytes)) {
+      // Already-visible rows do not change while the index grows. Avoid
+      // rebuilding and decoding them for every scanned input chunk.
+      setState(() => _publishedThrough = _indexedBytes);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final target = _pendingTarget;
       if (target != null && (target < _indexedBytes || _windowDone)) {
-        _jumpToByte(target);
+        _jumpToByte(target, indexed: true);
       }
       if (!_windowDone) _indexMore();
     });
@@ -411,9 +471,10 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
           Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
         Expanded(
           child: ListView.builder(
+            key: _listKey,
             controller: widget.controller,
             itemCount: _lineOffsets.length,
-            itemExtent: _rowExtent,
+            itemExtent: widget.wordWrap ? null : _rowExtent,
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             itemBuilder: (context, i) {
               final start = _lineOffsets[i];
@@ -459,6 +520,8 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
                 );
               }
               return Row(
+                key: _keyForRow(start),
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     start
@@ -469,15 +532,17 @@ class _StreamingSafeViewState extends State<StreamingSafeView> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Text.rich(
-                        span,
-                        style: style,
-                        softWrap: false,
-                        maxLines: 1,
-                      ),
-                    ),
+                    child: widget.wordWrap
+                        ? Text.rich(span, style: style, softWrap: true)
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Text.rich(
+                              span,
+                              style: style,
+                              softWrap: false,
+                              maxLines: 1,
+                            ),
+                          ),
                   ),
                 ],
               );
