@@ -63,8 +63,11 @@ times and permission bits are imported. Protection follows the destination.
 Ownership, ACLs, resource forks and signatures are not copied; setuid/setgid
 inputs are refused. Same physical outer containers are rejected, including
 separate nested routes and native hard-link aliases under both captured grants.
-Eligible native top-level unencrypted ZIP/CBZ, 7z/CB7, TAR/CBT and TGZ/TAR.GZ
-workspaces use an 8 GiB member/expanded/container budget. Imports are sealed
+Eligible native top-level unencrypted ZIP/CBZ, 7z/CB7, TAR/CBT, TGZ/TAR.GZ and
+RAR5 Store/CBR workspaces use an 8 GiB member/expanded/container budget. Data
+ISO and verified canonical HFSX data-volume DMG workspaces also stream within
+8 GiB; ISO members must be smaller than 4 GiB, and both image formats have
+100,000-entry and additional name/layout bounds. Imports are sealed
 private file spools, with exact lengths and digests verified before adoption.
 Buffered, protected, nested and unsupported-codec workspaces retain 64 MiB per
 member and 256 MiB aggregate/container limits. A browsing spool alone never
@@ -272,9 +275,11 @@ container or falls back to a direct provider upload.
 | gzip / bzip2 / XZ / Zstandard / LZ4 / LZMA / UNIX compress | Exactly one immediate ordinary payload | Not applicable | Replace its bytes; name/count/permissions cannot be changed. Recursive inner-container views cannot be flattened, including same-codec nested streams. |
 | AR / CPIO / XAR | Inspected regular-file profiles | Whole seconds for imports | Known ownership, package metadata and integrity/compression policies are retained. CPIO retains newc/CRC, odc or binary byte order; unsupported or overflowing metadata is refused. |
 | DEB / UDEB | Coordinated prebuilt control/data payload replacement | Whole seconds for outer members | Exact three-member wrapper; required control fields and present md5sums checked. In-app nested payload editing is disabled. |
-| ISO | Inspected data-only ISO 9660/Rock Ridge/Joliet | Whole seconds for imports | Known volume/member metadata retained. Boot/hybrid/UDF/unknown structures block rewriting. |
+| ISO | Inspected data-only ISO 9660/Rock Ridge/Joliet | Whole seconds for imports | Known volume/root/member metadata retained and compared after candidate inspection. Native image limit 8 GiB; each file smaller than 4 GiB. Boot/hybrid/UDF/unknown structures block rewriting. |
 | Lzip | Browsing and extraction only | Not applicable | Includes TAR.LZ. Reader support does not grant a writer or authorize conversion to another wrapper. |
-| Existing HFS / DMG and other packages | Browsing and extraction only | Not applicable | Separate fresh HFSX/DMG creation does not grant existing filesystem rewrite access. |
+| RAR / CBR | Inspected RAR5 Store | Microsecond resolution on native platforms | Native streaming within 8 GiB; preserves exact retained FILETIME or Unix time records, attributes and directory markers. Compressed, encrypted, solid, split, recovery and unsupported extra metadata stay read-only. |
+| DMG | Fully inspected canonical single-volume HFSX data image | Whole seconds for imports | Native streaming within 8 GiB packed/decoded; verifies all nonpayload filesystem bytes and UDIF CRCs and preserves volume/root/member auxiliary dates. Other layouts remain read-only. |
+| Existing raw HFS and other packages | Browsing and extraction only | Not applicable | Fresh HFSX creation does not grant arbitrary filesystem rewrite access. |
 
 Legacy CPIO rewriting preserves raw device identifiers, inode/ownership fields,
 link counts, member ordering, unchanged stored-name spelling, a supported root

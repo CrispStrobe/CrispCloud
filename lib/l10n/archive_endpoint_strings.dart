@@ -26,6 +26,28 @@ String archiveEndpointText(
 }
 
 const archiveEndpointMessages = <String, List<String>>{
+  'streamedIsoBounds': [
+    'ISO data images: up to 8 GiB per image and 100,000 entries; each file must be smaller than 4 GiB. Name and directory-depth limits apply. Temporary disk space is required.',
+    'ISO-Datenabbilder: bis zu 8 GiB je Abbild und 100.000 Einträge; jede Datei muss kleiner als 4 GiB sein. Grenzen für Namen und Ordnertiefe gelten. Temporärer Speicherplatz ist erforderlich.',
+    'Images ISO de données : jusqu’à 8 Gio par image et 100 000 éléments ; chaque fichier doit faire moins de 4 Gio. Limites de noms et de profondeur applicables. Espace disque temporaire nécessaire.',
+    'Imágenes ISO de datos: hasta 8 GiB por imagen y 100.000 elementos; cada archivo debe ser menor de 4 GiB. Se aplican límites de nombres y profundidad. Requieren espacio temporal en disco.',
+    'Imagens ISO de dados: até 8 GiB por imagem e 100.000 itens; cada ficheiro deve ter menos de 4 GiB. Aplicam-se limites de nomes e profundidade. Requerem espaço temporário em disco.',
+    'ISO 数据映像：每个映像最多 8 GiB、100,000 个条目；每个文件必须小于 4 GiB。文件名和目录深度有限制。需要临时磁盘空间。',
+    'ISOデータイメージ：最大8 GiB、100,000項目。各ファイルは4 GiB未満にしてください。名前と階層の深さに制限があります。一時ディスク領域が必要です。',
+    'ISO 데이터 이미지: 이미지당 최대 8 GiB, 100,000개 항목. 각 파일은 4 GiB 미만이어야 합니다. 이름과 폴더 깊이 제한이 적용됩니다. 임시 디스크 공간이 필요합니다.',
+    'صور بيانات ISO: حتى 8 GiB للصورة و100,000 عنصر؛ يجب أن يكون كل ملف أصغر من 4 GiB. تُطبق حدود الأسماء وعمق المجلدات. تتطلب مساحة مؤقتة على القرص.',
+  ],
+  'streamedDmgBounds': [
+    'DMG data volumes: up to 8 GiB packed and decoded; 100,000 entries. Editing requires a verified single-volume HFSX profile. Temporary disk space is required.',
+    'DMG-Datenvolumes: bis zu 8 GiB gepackt und entpackt; 100.000 Einträge. Bearbeitung erfordert ein geprüftes einzelnes HFSX-Volume. Temporärer Speicherplatz ist erforderlich.',
+    'Volumes de données DMG : jusqu’à 8 Gio compressés et décodés ; 100 000 éléments. La modification exige un profil HFSX vérifié à volume unique. Espace disque temporaire nécessaire.',
+    'Volúmenes de datos DMG: hasta 8 GiB comprimidos y decodificados; 100.000 elementos. La edición requiere un perfil HFSX verificado de un solo volumen. Requieren espacio temporal en disco.',
+    'Volumes de dados DMG: até 8 GiB compactados e descodificados; 100.000 itens. A edição exige um perfil HFSX verificado de volume único. Requerem espaço temporário em disco.',
+    'DMG 数据卷：压缩及解码后的大小最多 8 GiB、100,000 个条目。编辑需要经过验证的单卷 HFSX 格式。需要临时磁盘空间。',
+    'DMGデータボリューム：圧縮後と展開後とも最大8 GiB、100,000項目。編集には検証済みの単一HFSXボリュームが必要です。一時ディスク領域が必要です。',
+    'DMG 데이터 볼륨: 압축 및 디코딩 크기 최대 8 GiB, 100,000개 항목. 편집에는 검증된 단일 HFSX 볼륨이 필요합니다. 임시 디스크 공간이 필요합니다.',
+    'وحدات بيانات DMG: حتى 8 GiB مضغوطة ومفكوكة؛ و100,000 عنصر. يتطلب التحرير ملفاً متحققاً منه لوحدة HFSX واحدة. تتطلب مساحة مؤقتة على القرص.',
+  ],
   "streamedBounds": [
     "Native streamed archives: up to 8 GiB per container and in total expanded content; 200,000 entries. Temporary disk space is required. Buffered editors, encryption and nested archives have separate limits.",
     "Native Streaming-Archive: bis zu 8 GiB pro Container und insgesamt entpacktem Inhalt; 200.000 Einträge. Temporärer Speicherplatz ist erforderlich. Editoren, Verschlüsselung und verschachtelte Archive haben eigene Grenzen.",

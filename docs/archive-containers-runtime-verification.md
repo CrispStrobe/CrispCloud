@@ -101,21 +101,92 @@ also preserved encrypted 7z header password retries, advanced the widget test's
 fake clock while waiting for native I/O, and extended the main Linux CI job
 budget to 45 minutes. The normal gate above includes those changes.
 
-## Explicit tests above 2 GiB
+## Completed hosted acceptance above 2 GiB
 
-The successful normal CI run **skipped all five opt-in archive cases above
-2 GiB**: three creation cases, one combined writer case, and one TGZ workspace
-case. It therefore does not establish hosted completion of those large cases.
-The previously recorded standalone large-codec evidence has a different scope.
+The normal main CI run above skipped the five opt-in archive cases above
+2 GiB. The subsequent focused
+[Archive containers run 43364516899](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899)
+**completed successfully in all six jobs** at commit
+[`80fbf6f2978accc3521b06ee6449d4c52c814b90`](https://github.com/CrispStrobe/CrispCloud/commit/80fbf6f2978accc3521b06ee6449d4c52c814b90).
+Attempt 1 started at `2026-11-13T04:17:13Z`; GitHub reports the completed run at
+`2026-11-13T04:32:02Z`. Each job's logs confirm Flutter 3.47.8, restored
+dependency inputs, a successful receipt check and a successful evidence upload.
 
-The focused
+These are the receipt summaries printed by the jobs, with the exact UTC
+timestamp of each summary on 2026-11-13:
+
+| Acceptance case | Hosted job | Passed | Failed | Skipped | Receipt timestamp |
+| --- | --- | ---: | ---: | ---: | --- |
+| Normal archive regression suite | [131685656432](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/job/131685656432) | 1,769 | 0 | 5 | `04:26:16.3503945Z` |
+| ZIP creation above 2 GiB | [131685656801](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/job/131685656801) | 1 | 0 | 0 | `04:23:28.9057829Z` |
+| 7z creation above 2 GiB | [131685656763](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/job/131685656763) | 1 | 0 | 0 | `04:25:03.5222981Z` |
+| TGZ creation above 2 GiB | [131685656817](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/job/131685656817) | 1 | 0 | 0 | `04:31:58.7452729Z` |
+| TGZ editing and publication above 2 GiB | [131685656785](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/job/131685656785) | 1 | 0 | 0 | `04:31:52.8468361Z` |
+| ZIP, TGZ and 7z writers above 2 GiB | [131685656802](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/job/131685656802) | 1 | 0 | 0 | `04:29:54.5707058Z` |
+
+The normal job's five skipped large cases are therefore covered separately by
+five completed, explicitly enabled acceptance jobs. The combined writer job
+contains one test that exercises all three formats.
+
+### What the completed large cases establish
+
+The ZIP, 7z and TGZ
+[creation tests at the tested commit](https://github.com/CrispStrobe/CrispCloud/blob/80fbf6f2978accc3521b06ee6449d4c52c814b90/test/archive_streamed_creation_test.dart)
+use a real source file of **2,147,487,745 bytes** (`2 GiB + 4,097`), explicitly
+select stored/uncompressed output, assert that the published archive itself
+exceeds 2 GiB, reopen and verify its members, and require no staged files to
+remain. Their passing assertions also cap observed storage reads at 65,536
+bytes and upload chunks at 262,144 bytes.
+
+The
+[TGZ workspace test](https://github.com/CrispStrobe/CrispCloud/blob/80fbf6f2978accc3521b06ee6449d4c52c814b90/test/archive_streamed_workspace_test.dart)
+opens a **2,147,483,665-byte member** (`2 GiB + 17`), renames it, produces a
+sealed streamed review, publishes it, reopens the published archive and checks
+every decoded byte and the exact length. It also checks that the buffered
+member read and buffered review-byte access are refused for this large path.
+
+The combined writer job prints these measured results:
+
+| Writer | Source bytes | Packed bytes | Elapsed | Reported RSS growth | Largest output chunk |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ZIP | 2,147,483,665 | 2,087,412 | 12,266 ms | 48,570,368 bytes | 4,109 bytes |
+| TGZ | 2,147,483,665 | 2,087,347 | 12,071 ms | 16,216,064 bytes | 4,160 bytes |
+| 7z | 2,147,483,665 | 925,824 | 40,415 ms | 27,762,688 bytes | 262,144 bytes |
+
+The exact writer evidence appears at `04:29:01.9409102Z`,
+`04:29:14.0121915Z` and `04:29:54.4278184Z` in the linked writer job.
+These compressible fixtures demonstrate streaming of an expanded member above
+2 GiB; the separate creation cases establish published containers above 2 GiB.
+RSS growth is the value reported by the test in that runner, not a universal
+process-memory guarantee.
+
+### Retained baseline artifacts
+
+GitHub lists all six uploaded artifacts as unexpired, with retention through
+2026-11-27. Their names use the complete tested commit and attempt 1:
+
+| Case | Artifact |
+| --- | --- |
+| Normal | [archive-normal-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14010057198) |
+| ZIP creation | [archive-creation-zip-2g-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14009823470) |
+| 7z creation | [archive-creation-7z-2g-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14009652964) |
+| TGZ creation | [archive-creation-tgz-2g-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14010039265) |
+| TGZ editing | [archive-workspace-tgz-2g-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14009754689) |
+| Common writers | [archive-writers-2g-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14010501256) |
+
+The counts above were read from decoded job logs and cross-checked against
+successful receipt and upload steps and the run's artifact listing. The binary
+artifact archives were not independently downloaded during this audit.
+
+## Integrated ISO, RAR and DMG acceptance gate
+
+The
 [archive-containers workflow](../.github/workflows/archive-containers.yml)
-adds six independently reported cases on pushes to
+now defines **ten independently reported cases** on relevant pushes to
 `feature/archive-iso-rar-dmg-20261113` and on `workflow_dispatch`. The normal case
 runs all `test/archive_*_test.dart` and `test/widget/archive_*_test.dart` files,
-including the streamed suites and subsequent ISO/RAR/DMG regressions using
-those naming conventions. Five additional cases select these exact test names
-and their source-declared opt-ins:
+including the new ISO/RAR/DMG suites. Nine large cases select these exact test
+names and their source-declared opt-ins:
 
 | Case | Test selection | Enablement |
 | --- | --- | --- |
@@ -124,14 +195,28 @@ and their source-declared opt-ins:
 | TGZ creation | `TAR.GZ publishes a member and archive beyond 2 GiB` | `--dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=true` |
 | TGZ editing | `native TGZ can review, publish and reopen a member larger than 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
 | Common writers | `ZIP, TGZ and 7z stream a source larger than 2GiB with bounded memory` | `CRISP_STREAMING_ARCHIVE_LARGE=1` |
+| RAR5 Store creation | `RAR5 Store publishes a member and archive beyond 2 GiB` | `--dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=true` |
+| ISO editing and publication | `ISO data image creates, edits and publishes beyond 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
+| RAR5 Store editing and publication | `RAR5 Store creates, edits and publishes beyond 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
+| DMG editing and publication | `DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
+
+The new ISO/RAR/DMG workflow cases use `2 GiB + 4,097` bytes, require a published
+outer container above 2 GiB, apply folder changes and member additions/removals,
+verify that cancellation leaves the original unchanged, then publish, reopen
+and compare the complete streamed member SHA-256. DMG uses bounded nonzero
+input blocks because UDIF represents all-zero blocks without payload even when
+zlib compression is disabled.
 
 Every case uses Flutter 3.47.8 on Ubuntu, the repository's native-assets Rust
 setup, the existing private dependency authentication convention, and the
 tested system-SQLite wrapper. Dependency resolution enforces the lockfile.
 Large cases use `--concurrency=1`; up to three isolated matrix runners operate
-in parallel. Incremental branch saves do not cancel an active acceptance run. Each job
-has a 45-minute cap, with a 35-minute test-step cap to leave time for cleanup
-and evidence upload. No deployment or release actions are included.
+in parallel. With the completed baseline preserved, the final integration gate
+cancels superseded runs on the same branch so that partial codec checkpoints
+do not delay validation of the latest integrated commit. A cancelled run does
+not count as a pass. Push path filters exclude documentation-only checkpoints.
+Each job has a 45-minute cap, with a 35-minute test-step cap to leave time for
+cleanup and evidence upload. No deployment or release actions are included.
 
 The normal command uses the main CI's deterministic-test exclusions and four
 test workers. Each large command names its exact case with `--plain-name`.
@@ -139,11 +224,22 @@ Both produce an expanded human-readable log and an additional JSON event
 report; these CLI options are supported by the
 [pinned Flutter test command](https://github.com/flutter/flutter/blob/3.47.8/packages/flutter_tools/lib/src/commands/test.dart).
 
+Before its runtime suite, the normal job validates the help guides, runs Dart
+analysis over the archive integration and test globs, and compiles
+[`verify_archive_portable_data_codecs.dart`](../test/support/verify_archive_portable_data_codecs.dart)
+with `dart compile js -O1`. Node executes the compiled probe and verifies the
+complete small ISO, RAR and DMG payloads. This is a portable codec smoke test;
+native publication and large browser writes are outside its scope. The normal
+receipt now explicitly requires the native-container workflow, DMG rewrite,
+streamed ISO and stored-RAR suites as well as the existing streamed suites.
+
 Each job retains a 14-day artifact named
 `archive-<case>-<commit>-<attempt>`, including:
 
 - The exact command, selected test files, commit SHA and Flutter version.
 - Dependency, SQLite-wrapper and expanded test logs, plus JSON test events.
+- Help-validation, analysis and portable JavaScript compile/runtime logs in
+  the normal case.
 - `receipt.json` and `SUMMARY.md` with final test counts and completion status.
 - Before/after dependency hashes and disk information.
 
@@ -155,7 +251,8 @@ suites also fail the normal case. Logs are retained through failure paths,
 known authentication tokens are redacted before upload, and Git configuration
 or environment dumps are not uploaded.
 
-**Status when authored:** the normal hosted gate above is verified. The new
-focused workflow has been authored for the feature branch; its large-case
-receipts must be checked after the workflow runs. No large hosted pass is
-claimed by this document before those results exist.
+**Verified status:** the common ZIP/7z/TGZ baseline passed both its normal
+hosted regression suite and all five explicit hosted cases above 2 GiB at
+`80fbf6f2978accc3521b06ee6449d4c52c814b90`. The expanded ten-case gate must be
+assessed at its own integrated commit before claiming hosted ISO/RAR/DMG
+acceptance; the completed baseline does not prove those subsequent changes.

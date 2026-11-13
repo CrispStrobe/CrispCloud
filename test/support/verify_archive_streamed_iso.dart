@@ -11,6 +11,8 @@ import 'package:crisp_cloud/services/archive_output_spool.dart';
 import 'package:crisp_cloud/services/archive_types.dart';
 import 'package:crisp_cloud/services/archive_write_model.dart';
 
+import 'archive_iso_fixtures.dart';
+
 void require(bool value, String message) {
   if (!value) throw StateError(message);
 }
@@ -59,7 +61,123 @@ Future<void> exportSparse(ArchiveOutputSpool spool, File file) async {
   }
 }
 
+Future<void> verifyMetadataProof() async {
+  final fixture = IsoFixture(
+    rockRidgeName: 'retained.txt',
+    rockRidgeContinuation: true,
+  );
+  final originalSpool = await ArchiveOutputSpool.create(
+    maxBytes: kArchiveStreamingLimit,
+  );
+  final candidateSpool = await ArchiveOutputSpool.create(
+    maxBytes: kArchiveStreamingLimit,
+  );
+  ViewerArchive? original, candidate;
+  try {
+    await originalSpool.write(fixture.bytes);
+    await originalSpool.finish();
+    original = await openIsoArchive(
+      await originalSpool.openByteSource(),
+      maxMemberBytes: kArchiveStreamingLimit,
+    );
+    final source = await inspect(originalSpool, original);
+    final originalArchive = original;
+    final renamed = 'renamed-${'é' * 190}-🌍.txt';
+    final entries = [
+      for (final member in original.members)
+        ArchiveWriteEntry(
+          path: member.name == 'retained.txt' ? renamed : member.name,
+          isDirectory: !member.isFile,
+          size: member.size,
+          modified: member.name == 'retained.txt'
+              ? DateTime.utc(2026, 11, 13, 4, 5, 6)
+              : member.modified,
+          mode: member.name == 'retained.txt' ? 0x8180 : member.posixMode,
+          attributes: source.attributes[member.name]!,
+          readChunks: member.isFile
+              ? () => originalArchive.openMember(member)
+              : null,
+        ),
+    ];
+    await writeIsoArchive(entries, source: source, sink: candidateSpool.write);
+    await candidateSpool.finish();
+    candidate = await openIsoArchive(
+      await candidateSpool.openByteSource(),
+      maxMemberBytes: kArchiveStreamingLimit,
+    );
+    final actual = await inspect(candidateSpool, candidate);
+    final metadataOnly = [
+      for (final entry in entries)
+        ArchiveWriteEntry(
+          path: entry.path,
+          isDirectory: entry.isDirectory,
+          size: entry.size,
+          modified: entry.modified,
+          mode: entry.mode,
+          attributes: entry.attributes,
+          readChunks: entry.isDirectory
+              ? null
+              : () =>
+                    throw StateError('Metadata proof opened a payload stream.'),
+        ),
+    ];
+    verifyIsoRewritePreservation(metadataOnly, actual, source: source);
+    require(
+      actual.attributes[renamed]?['iso.uid'] == 1000,
+      'Ownership was lost.',
+    );
+    for (final key in [
+      'iso.uid',
+      'iso.gid',
+      'iso.flags',
+      'iso.serial',
+      'iso.tf',
+      'iso.jolietMetadata',
+    ]) {
+      final attributes = {
+        for (final item in actual.attributes.entries)
+          item.key: Map<String, Object?>.of(item.value),
+      };
+      final fields = attributes[renamed]!;
+      if (key == 'iso.tf') {
+        final timestamp = base64.decode(fields[key] as String);
+        timestamp[10] = (timestamp[10] + 1) % 60;
+        fields[key] = base64.encode(timestamp);
+      } else if (key == 'iso.jolietMetadata') {
+        final alternate = Map<String, Object?>.from(fields[key] as Map);
+        alternate['iso.flags'] = (alternate['iso.flags'] as int) ^ 1;
+        fields[key] = alternate;
+      } else {
+        fields[key] = (fields[key] as int) + 1;
+      }
+      var refused = false;
+      try {
+        verifyIsoRewritePreservation(
+          metadataOnly,
+          ArchiveRewriteInspection(
+            container: actual.container,
+            attributes: attributes,
+          ),
+          source: source,
+        );
+      } on ArchiveViewException {
+        refused = true;
+      }
+      require(refused, 'Changed auxiliary metadata was accepted: $key');
+    }
+    stdout.writeln(
+      'PASS ISO auxiliary ownership, flags, timestamps, serial and alternate metadata proof; intended rename/mode/time edits retained.',
+    );
+  } finally {
+    await candidate?.close();
+    await original?.close();
+    await candidateSpool.dispose();
+    await originalSpool.dispose();
+  }
+}
+
 Future<void> main(List<String> args) async {
+  await verifyMetadataProof();
   final length = args.contains('--large')
       ? 2 * 1024 * 1024 * 1024 + 17
       : 1024 * 1024 + 17;
@@ -178,7 +296,12 @@ Future<void> main(List<String> args) async {
       await replacement.openByteSource(),
       maxMemberBytes: kArchiveStreamingLimit,
     );
-    await inspect(replacement, after);
+    final candidatePolicy = await inspect(replacement, after);
+    verifyIsoRewritePreservation(
+      replacementEntries,
+      candidatePolicy,
+      source: policy,
+    );
     final expected = replacementEntries.map((entry) => entry.path).toSet();
     require(
       after.members.length == expected.length &&
@@ -217,11 +340,12 @@ Future<void> main(List<String> args) async {
           'added',
       'Added file differs.',
     );
-    if (args.contains('--large'))
+    if (args.contains('--large')) {
       require(
         replacement.length > 2 * 1024 * 1024 * 1024,
         'Container did not exceed 2 GiB.',
       );
+    }
     if (args.contains('--oracle')) {
       final file = File('${directory.path}/rewritten.iso');
       await exportSparse(replacement, file);

@@ -159,6 +159,147 @@ Future<ArchiveRewriteInspection> inspectIsoRewriteSource(
   }
 }
 
+/// Proves that an inspected candidate retained the planned ISO/Rock Ridge
+/// metadata, including fields absent from the generic archive member model.
+///
+/// Replans metadata only; no entry stream is opened. Intentional name, mode and
+/// modification-time changes are applied by the same layout plan, while volume
+/// fields, ownership, extra timestamps, flags and alternate names must match
+/// exactly. Namespace, member lengths and payload digests still need the
+/// caller's ordinary candidate verification.
+void verifyIsoRewritePreservation(
+  List<ArchiveWriteEntry> entries,
+  ArchiveRewriteInspection actual, {
+  ArchiveRewriteInspection? source,
+}) {
+  if (!actual.supported || actual.container['iso.profile'] != 1) {
+    throw ArchiveViewException(
+      actual.reason ?? 'The ISO candidate has no supported inspection.',
+    );
+  }
+  if (source != null &&
+      (!source.supported || source.container['iso.profile'] != 1)) {
+    throw const ArchiveViewException(
+      'The original ISO inspection is unavailable.',
+    );
+  }
+  final image = _IsoImage(entries, source)..plan(kArchiveStreamingLimit);
+
+  Map<String, Object?> metadata(_IsoNode node, {required bool unicode}) {
+    final saved = unicode
+        ? _map(node.attributes['iso.jolietMetadata'])
+        : node.attributes;
+    final date = _directoryDate(node, saved);
+    final result = <String, Object?>{
+      'iso.date': base64.encode(date),
+      'iso.modified': _decodeDate(date)?.millisecondsSinceEpoch,
+      'iso.flags': _uintAttribute(saved, 'iso.flags') & 1,
+      if (!unicode) ...{
+        'iso.mode': node.mode,
+        'iso.links': node.directory
+            ? 2 + node.children.where((child) => child.directory).length
+            : 1,
+        'iso.uid': _uintAttribute(node.attributes, 'iso.uid'),
+        'iso.gid': _uintAttribute(node.attributes, 'iso.gid'),
+        'iso.serial': node.serial,
+        'iso.tf': base64.encode(_timeField(node)),
+      },
+    };
+    if (node.parent == null) {
+      if (!unicode) {
+        result['iso.er'] =
+            node.attributes['iso.er'] ??
+            base64.encode([
+              0x45,
+              0x52,
+              18,
+              1,
+              10,
+              0,
+              0,
+              1,
+              ...ascii.encode('RRIP_1991A'),
+            ]);
+      }
+    } else {
+      final identifier = unicode
+          ? String.fromCharCodes([
+              for (var at = 0; at < node.jolietName.length; at += 2)
+                node.jolietName[at] * 256 + node.jolietName[at + 1],
+            ])
+          : ascii.decode(node.primaryName);
+      var name = identifier;
+      if (!node.directory) {
+        name = name.replaceFirst(RegExp(r';[0-9]+$'), '');
+        if (name.endsWith('.')) name = name.substring(0, name.length - 1);
+      }
+      result[unicode ? 'iso.jolietIdentifier' : 'iso.identifier'] = identifier;
+      result['iso.name'] = unicode ? name : node.name;
+    }
+    return result;
+  }
+
+  Map<String, Object?> paired(_IsoNode node) {
+    final primary = metadata(node, unicode: false);
+    final alternate = metadata(node, unicode: true);
+    if (node.parent != null) {
+      primary['iso.jolietIdentifier'] = alternate['iso.jolietIdentifier'];
+    }
+    primary['iso.jolietMetadata'] = alternate;
+    return primary;
+  }
+
+  final container = <String, Object?>{
+    'iso.profile': 1,
+    'iso.volume': base64.encode(image.descriptor(false)),
+    'iso.jolietVolume': base64.encode(image.descriptor(true)),
+    'iso.root': paired(image.root),
+  };
+  if (!_sameIsoMetadata(container, actual.container)) {
+    throw const ArchiveViewException(
+      'ISO volume or root metadata changed during rewrite.',
+    );
+  }
+  final expected = <String, Map<String, Object?>>{};
+  void visit(_IsoNode node) {
+    for (final child in node.children) {
+      expected[child.path] = paired(child);
+      if (child.directory) visit(child);
+    }
+  }
+
+  visit(image.root);
+  if (expected.length != actual.attributes.length) {
+    throw const ArchiveViewException('ISO candidate metadata names differ.');
+  }
+  for (final item in expected.entries) {
+    if (!_sameIsoMetadata(item.value, actual.attributes[item.key])) {
+      throw ArchiveViewException(
+        'ISO auxiliary metadata changed during rewrite: ${item.key}',
+      );
+    }
+  }
+}
+
+bool _sameIsoMetadata(Object? expected, Object? actual) {
+  if (expected is Map && actual is Map) {
+    return expected.length == actual.length &&
+        expected.keys.every(
+          (key) =>
+              actual.containsKey(key) &&
+              _sameIsoMetadata(expected[key], actual[key]),
+        );
+  }
+  if (expected is List && actual is List) {
+    if (expected.length != actual.length) return false;
+    for (var index = 0; index < expected.length; index++) {
+      if (!_sameIsoMetadata(expected[index], actual[index])) return false;
+    }
+    return true;
+  }
+  return expected == actual;
+}
+
 const _magic = [0x43, 0x44, 0x30, 0x30, 0x31];
 
 int _round(int bytes) => (bytes + _sector - 1) ~/ _sector * _sector;

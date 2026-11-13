@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:koni_archive/koni_archive.dart' as koni;
+
 import '../models/archive_endpoint.dart';
 import 'archive_viewer_service.dart';
 import 'archive_zip_metadata.dart';
@@ -7,6 +9,7 @@ import 'archive_compression_writer.dart';
 import 'archive_format_registry.dart';
 import 'archive_iso_writer.dart';
 import 'archive_package_writers.dart';
+import 'archive_rar_stored_reader.dart';
 import 'archive_tar_writer.dart';
 import 'archive_write_model.dart';
 import 'archive_zip_package_policy.dart';
@@ -95,6 +98,7 @@ class ArchiveEndpointPolicy {
       'cpio' => ArchiveEndpointFormat.cpio,
       'xar' when lower.endsWith('.xar') => ArchiveEndpointFormat.xar,
       'iso' => ArchiveEndpointFormat.iso,
+      'rar' => ArchiveEndpointFormat.rar,
       _ => ArchiveEndpointFormat.readOnly,
     };
     final basic = ArchiveEndpointPolicy(
@@ -144,7 +148,8 @@ class ArchiveEndpointPolicy {
     }
     if (format == ArchiveEndpointFormat.readOnly) {
       reason = switch (descriptor?.id) {
-        'dmg' || 'hfs' => 'Existing disk images remain read-only. Create a new HFSX data image from regular files and folders; other filesystem metadata requires a filesystem-aware editor.',
+        'dmg' => 'DMG editing requires a native local workspace and a fully verified single-volume HFSX data profile. Other disk images support browsing and extraction.',
+        'hfs' => 'Existing HFS images remain read-only. Create a new HFSX data image from regular files and folders; other filesystem metadata requires a filesystem-aware editor.',
         'zip-package' || 'crx' || 'xar-package' || 'rpm' || 'cab' || 'pbzx' => 'This package requires a dedicated metadata or signing workflow. Browsing and extraction are available.',
         'ar-library' => 'Static object libraries require their linker or archive tool to rebuild the library symbol index.',
         _ => 'This format supports browsing and extraction, but its writer is unavailable.',
@@ -196,6 +201,12 @@ class ArchiveEndpointPolicy {
     }
     if (reason == null && expectedFormat == 'tar') {
       inspection = await inspectTarRewrite(bytes, archive, name: name);
+      reason = inspection.reason;
+    }
+    if (reason == null && format == ArchiveEndpointFormat.rar) {
+      inspection = await inspectStoredRarRewriteSource(
+        koni.MemoryByteSource(bytes),
+      );
       reason = inspection.reason;
     }
     if (reason == null &&
@@ -381,7 +392,8 @@ class ArchiveEndpointPolicy {
       ArchiveEndpointFormat.ar ||
       ArchiveEndpointFormat.cpio ||
       ArchiveEndpointFormat.xar ||
-      ArchiveEndpointFormat.iso => DateTime.fromMillisecondsSinceEpoch(
+      ArchiveEndpointFormat.iso ||
+      ArchiveEndpointFormat.dmg => DateTime.fromMillisecondsSinceEpoch(
         utc.millisecondsSinceEpoch - utc.millisecondsSinceEpoch % 1000,
         isUtc: true,
       ),

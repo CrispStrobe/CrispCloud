@@ -5,8 +5,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart' as ar;
+import 'package:crisp_cloud/models/archive_endpoint.dart';
+import 'package:crisp_cloud/services/archive_streaming_writer.dart';
 import 'package:crisp_cloud/services/archive_viewer_file_io.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
+import 'package:crisp_cloud/services/archive_write_model.dart';
 
 void require(bool condition, String message) {
   if (!condition) throw StateError(message);
@@ -60,11 +63,44 @@ Future<void> main() async {
         format: 'zip',
         limit: kArchiveStreamingLimit,
       );
+      for (final profile in [
+        ('iso', ArchiveEndpointFormat.iso, 'iso'),
+        ('rar', ArchiveEndpointFormat.rar, 'rar'),
+        ('cbr', ArchiveEndpointFormat.rar, 'rar'),
+        ('dmg', ArchiveEndpointFormat.dmg, 'dmg'),
+      ]) {
+        final packed = await collectArchiveWrite(
+          (sink) => writeStreamingArchiveEntries(
+            profile.$2,
+            [
+              ArchiveWriteEntry(
+                path: 'evidence.txt',
+                isDirectory: false,
+                size: content.length,
+                modified: DateTime.utc(2026, 11, 13),
+                mode: 0x1a4,
+                readChunks: () => Stream.value(content),
+              ),
+            ],
+            sink: sink,
+            maxOutputBytes: kArchiveStreamingLimit,
+          ),
+        );
+        await checkArchive(
+          'valid.${profile.$1}',
+          packed,
+          format: profile.$3,
+          limit: kArchiveStreamingLimit,
+        );
+      }
       for (final example in [
         (name: 'mislabeled.zip', bytes: tar, format: 'tar'),
         (name: 'mislabeled.7z', bytes: zip, format: 'zip'),
         (name: 'mislabeled.tar', bytes: zip, format: 'zip'),
         (name: 'wrapped-zip.tgz', bytes: gzip.encode(zip), format: 'zip'),
+        (name: 'mislabeled.iso', bytes: zip, format: 'zip'),
+        (name: 'mislabeled.rar', bytes: zip, format: 'zip'),
+        (name: 'mislabeled.dmg', bytes: zip, format: 'zip'),
       ]) {
         await checkArchive(
           example.name,

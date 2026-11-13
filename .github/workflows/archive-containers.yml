@@ -3,6 +3,15 @@ name: Archive containers
 on:
   push:
     branches: [feature/archive-iso-rar-dmg-20261113]
+    paths:
+      - '.github/workflows/archive-containers.yml'
+      - '.github/actions/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'packages/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tool/**'
   workflow_dispatch:
 
 permissions:
@@ -10,7 +19,9 @@ permissions:
 
 concurrency:
   group: archive-containers-${{ github.ref }}
-  cancel-in-progress: false
+  # The initial large acceptance run is retained. Subsequent source checkpoints
+  # qualify the latest integrated code; documentation-only saves do not rerun.
+  cancel-in-progress: true
 
 env:
   FLUTTER_VERSION: 3.47.8
@@ -75,6 +86,38 @@ jobs:
             creation_large: 'false'
             workspace_large: '0'
             writer_large: '1'
+          - case: creation-rar-2g
+            label: RAR5 Store creation above 2 GiB
+            mode: large
+            file: test/archive_streamed_creation_test.dart
+            test: RAR5 Store publishes a member and archive beyond 2 GiB
+            creation_large: 'true'
+            workspace_large: '0'
+            writer_large: '0'
+          - case: iso-workflow-2g
+            label: ISO creation, editing and publication above 2 GiB
+            mode: large
+            file: test/archive_native_container_workflows_test.dart
+            test: ISO data image creates, edits and publishes beyond 2 GiB
+            creation_large: 'false'
+            workspace_large: '1'
+            writer_large: '0'
+          - case: rar-workflow-2g
+            label: RAR5 Store creation, editing and publication above 2 GiB
+            mode: large
+            file: test/archive_native_container_workflows_test.dart
+            test: RAR5 Store creates, edits and publishes beyond 2 GiB
+            creation_large: 'false'
+            workspace_large: '1'
+            writer_large: '0'
+          - case: dmg-workflow-2g
+            label: DMG creation, editing and publication above 2 GiB
+            mode: large
+            file: test/archive_native_container_workflows_test.dart
+            test: DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB
+            creation_large: 'false'
+            workspace_large: '1'
+            writer_large: '0'
     env:
       ARCHIVE_CASE: ${{ matrix.case }}
       ARCHIVE_MODE: ${{ matrix.mode }}
@@ -129,6 +172,17 @@ jobs:
           set -euo pipefail
           flutter --version 2>&1 | tee build/archive-ci/flutter-version.txt
           flutter pub get --enforce-lockfile 2>&1 | tee build/archive-ci/dependencies.log
+
+      - name: Analyze archive integration and validate portable codecs
+        if: matrix.mode == 'normal'
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          python3 tool/check_help_guides.py 2>&1 | tee build/archive-ci/help.log
+          dart analyze lib/models/archive_endpoint.dart lib/services/archive_*.dart lib/widgets/archive_*.dart lib/l10n/archive_*.dart test/archive_*_test.dart test/widget/archive_*_test.dart test/support/verify_archive_portable_data_codecs.dart 2>&1 | tee build/archive-ci/analysis.log
+          mkdir -p build/archive-portable
+          dart compile js --packages=.dart_tool/package_config.json -O1 -o build/archive-portable/data-codecs.js test/support/verify_archive_portable_data_codecs.dart 2>&1 | tee build/archive-ci/portable-compile.log
+          node -e 'global.self=global; require("./build/archive-portable/data-codecs.js")' 2>&1 | tee build/archive-ci/portable-runtime.log
 
       - name: Run archive regression suite
         id: normal
@@ -229,6 +283,10 @@ jobs:
               'test/archive_streamed_workspace_test.dart',
               'test/archive_streaming_writer_test.dart',
               'test/archive_large_tar_creation_test.dart',
+              'test/archive_native_container_workflows_test.dart',
+              'test/archive_dmg_rewrite_test.dart',
+              'test/archive_iso_streamed_test.dart',
+              'test/archive_rar_stored_test.dart',
               'test/widget/archive_container_viewer_test.dart',
               'test/widget/archive_creation_dialog_test.dart',
           ]

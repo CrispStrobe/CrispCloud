@@ -25,6 +25,7 @@ const _formats = [
   ArchiveCreationFormat.zip,
   ArchiveCreationFormat.sevenZip,
   ArchiveCreationFormat.tarGzip,
+  ArchiveCreationFormat.rar,
 ];
 
 Matcher _creationError(ArchiveCreationError code) => throwsA(
@@ -49,6 +50,8 @@ void main() {
       ArchiveCreationFormat.ear,
       ArchiveCreationFormat.sevenZip,
       ArchiveCreationFormat.cb7,
+      ArchiveCreationFormat.rar,
+      ArchiveCreationFormat.cbr,
       ArchiveCreationFormat.tarGzip,
     };
     for (final format in ArchiveCreationFormat.values) {

@@ -30,10 +30,10 @@ metadata, protection or filesystem structures cannot be preserved.
 | CAB | Single-cabinet stored and MSZIP folders | No | No | Preserves MSZIP dictionary history across blocks and checks present block checksums when reading a folder. Spanned cabinets, split files, Quantum/LZX and unspecified non-ASCII legacy name encodings are refused. |
 | XAR | XAR v1, stored/zlib/bzip2/XZ members | Unsigned XAR | Inspected unsigned profiles | Preserves known IDs, ownership, permissions, times, checksums and compression policy. Unknown XML/heap data, signatures, ACLs and xattrs block rewriting. |
 | DEB / UDEB | AR wrapper and nested TAR members | No package builder | Coordinated prebuilt payload replacement | Exact original three-member wrapper/order; required control fields and present md5sums are checked. Replace prepared control/data payloads together. Nested in-app package edits are disabled. |
-| ISO | ISO 9660, Joliet and ordinary Rock Ridge | Data ISO | Inspected data-only profiles | Rock Ridge retains exact Unicode/long names; Joliet has compatible alternate names. Boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
-| HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Creation is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
-| DMG | Unencrypted supported UDIF partitions/filesystems | Fresh HFSX data-volume DMG | No | Creates unsigned, unencrypted raw/zlib/zero-block UDIF. Existing partitions, filesystem metadata, APFS and signing require another workflow. |
-| RAR / CBR | Existing reader | No | No | Existing password and compression-method limits apply. |
+| ISO | ISO 9660, Joliet and ordinary Rock Ridge | Data ISO | Inspected data-only profiles | Native creation/editing uses an 8 GiB image budget; each single-extent member must be smaller than 4 GiB. Retains inspected volume/root/Rock Ridge/Joliet metadata. Boot records, hybrid/system areas, UDF, extra sessions and unknown extensions block rewriting. |
+| HFS+ / HFSX | Hierarchy and regular data forks | Fresh HFSX data image | No | Native creation has an 8 GiB image budget and is case-sensitive, unjournaled HFSX with frozen HFS Unicode normalization. Existing filesystem metadata is not reconstructed from a partial file view. |
+| DMG | Unencrypted supported UDIF partitions/filesystems | HFSX data-volume DMG | Verified canonical single-volume HFSX data profiles on native local storage | 8 GiB packed/decoded budget; raw/zlib/zero blocks. Checks every nonpayload HFS byte and both UDIF CRC layers before writing; preserves volume/root/member dates and modes. Other partitions, resource forks, xattrs, APFS, signing and filesystem layouts remain read-only. |
+| RAR / CBR | Existing compression/password reader plus streamed RAR5 Store | RAR5 Store / CBR | Inspected unencrypted, nonsolid, single-volume RAR5 Store | Native 8 GiB container/expanded budget, CRC-protected payloads, UTF-8 names, modes and retained exact time records. Compressed, encrypted, split, recovery, owner/link and unknown metadata profiles remain read-only. No external RAR engine is bundled. |
 | Other ZIP packages | Yes | No | No | WHL, APK/APKS/XAPK, IPA/AAB, XPI, NuGet, VSIX, APPX/MSIX and bundles require package-specific rebuild/signing workflows. |
 | CRX | CRX2/CRX3 ZIP payload | No | No | Header is bounded; publisher signatures are not authenticated. |
 | PKG / XIP | XAR members and supported nested PBZX/CPIO payloads | No | No | Preview an extensionless `Payload` or `Content` member in F3 to browse its supported inner file tree. Package metadata and signing need dedicated tools. |
@@ -47,7 +47,7 @@ The existing source-account, review, verification and recovery requirements in
 
 ## Creating and editing
 
-Use **Create archive…** for the 33-choice format picker. It exposes only implemented
+Use **Create archive…** for the 35-choice format picker. It exposes only implemented
 compression choices and password options. gzip/bzip2/XZ/Zstandard/LZ4/LZMA/UNIX compress take one
 regular file; AR takes flat regular files; the other creation formats support
 folders within their format-specific name/depth limits. KMZ needs a top-level

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crisp_cloud/services/archive_iso_reader.dart';
@@ -177,8 +178,9 @@ void main() {
       } else if (variant == 'boot' || variant == 'udf') {
         fixture.bytes.setRange(18 * 2048, 19 * 2048, fixture.bytes, 17 * 2048);
         fixture.bytes[17 * 2048] = 0;
-        if (variant == 'udf')
+        if (variant == 'udf') {
           fixture.bytes.setAll(17 * 2048 + 1, [0x42, 0x45, 0x41, 0x30, 0x31]);
+        }
       } else {
         fixture.bytes[16 * 2048 + 900] = 1;
       }
@@ -304,6 +306,145 @@ void main() {
       );
     }
     expect(writes, 0);
+    expect(reads, 0);
+  });
+
+  test('candidate proof retains auxiliary metadata while allowing intentional edits', () async {
+    final fixture = IsoFixture(
+      rockRidgeName: 'retained.txt',
+      rockRidgeContinuation: true,
+    );
+    final original = await openIsoArchive(
+      koni.MemoryByteSource(fixture.bytes),
+      maxMemberBytes: kArchiveStreamingLimit,
+    );
+    addTearDown(original.close);
+    final source = await inspectIsoRewrite(fixture.bytes, original);
+    expect(source.supported, isTrue);
+    final renamed = 'renamed-${'é' * 190}-🌍.txt';
+    final changedTime = DateTime.utc(2026, 11, 13, 4, 5, 6);
+    final entries = [
+      for (final member in original.members)
+        ArchiveWriteEntry(
+          path: member.name == 'retained.txt' ? renamed : member.name,
+          isDirectory: !member.isFile,
+          size: member.size,
+          modified: member.name == 'retained.txt'
+              ? changedTime
+              : member.modified,
+          mode: member.name == 'retained.txt' ? 0x8180 : member.posixMode,
+          attributes: source.attributes[member.name]!,
+          readChunks: member.isFile ? () => original.openMember(member) : null,
+        ),
+    ];
+    final candidate = await collectArchiveWrite(
+      (sink) => writeIsoArchive(entries, source: source, sink: sink),
+    );
+    final opened = await openIsoArchive(
+      koni.MemoryByteSource(candidate),
+      maxMemberBytes: kArchiveStreamingLimit,
+    );
+    addTearDown(opened.close);
+    final actual = await inspectIsoRewrite(candidate, opened);
+    expect(actual.supported, isTrue);
+    expect(actual.attributes[renamed]?['iso.uid'], 1000);
+    expect(actual.attributes[renamed]?['iso.gid'], 1000);
+    expect(
+      opened.members.singleWhere((member) => member.name == renamed).modified,
+      changedTime,
+    );
+    var reads = 0;
+    final metadataOnly = [
+      for (final entry in entries)
+        ArchiveWriteEntry(
+          path: entry.path,
+          isDirectory: entry.isDirectory,
+          size: entry.size,
+          modified: entry.modified,
+          mode: entry.mode,
+          attributes: entry.attributes,
+          readChunks: entry.isDirectory
+              ? null
+              : () {
+                  reads++;
+                  throw StateError('Metadata proof must not read payloads.');
+                },
+        ),
+    ];
+    expect(
+      () => verifyIsoRewritePreservation(metadataOnly, actual, source: source),
+      returnsNormally,
+    );
+    expect(reads, 0);
+
+    for (final key in [
+      'iso.uid',
+      'iso.gid',
+      'iso.flags',
+      'iso.serial',
+      'iso.tf',
+      'iso.jolietMetadata',
+    ]) {
+      final attributes = {
+        for (final item in actual.attributes.entries)
+          item.key: Map<String, Object?>.of(item.value),
+      };
+      final target = attributes[renamed]!;
+      if (key == 'iso.tf') {
+        final time = base64.decode(target[key] as String);
+        time[10] = (time[10] + 1) % 60;
+        target[key] = base64.encode(time);
+      } else if (key == 'iso.jolietMetadata') {
+        final alternate = Map<String, Object?>.from(target[key] as Map);
+        alternate['iso.flags'] = ((alternate['iso.flags'] as int) ^ 1);
+        target[key] = alternate;
+      } else {
+        target[key] = (target[key] as int) + 1;
+      }
+      final changed = ArchiveRewriteInspection(
+        container: actual.container,
+        attributes: attributes,
+      );
+      expect(
+        () =>
+            verifyIsoRewritePreservation(metadataOnly, changed, source: source),
+        throwsA(isA<ArchiveViewException>()),
+        reason: '$key must not be silently altered',
+      );
+    }
+    final changedRoot = Map<String, Object?>.from(
+      actual.container['iso.root'] as Map,
+    );
+    changedRoot['iso.uid'] = (changedRoot['iso.uid'] as int) + 1;
+    expect(
+      () => verifyIsoRewritePreservation(
+        metadataOnly,
+        ArchiveRewriteInspection(
+          container: {...actual.container, 'iso.root': changedRoot},
+          attributes: actual.attributes,
+        ),
+        source: source,
+      ),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    final changedVolume = base64.decode(
+      actual.container['iso.volume'] as String,
+    );
+    changedVolume[40] = changedVolume[40] == 0x41 ? 0x42 : 0x41;
+    expect(
+      () => verifyIsoRewritePreservation(
+        metadataOnly,
+        ArchiveRewriteInspection(
+          container: {
+            ...actual.container,
+            'iso.volume': base64.encode(changedVolume),
+          },
+          attributes: actual.attributes,
+        ),
+        source: source,
+      ),
+      throwsA(isA<ArchiveViewException>()),
+    );
     expect(reads, 0);
   });
 }

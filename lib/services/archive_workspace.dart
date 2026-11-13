@@ -9,7 +9,11 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_container_publisher.dart';
+import 'archive_dmg_writer.dart' show verifyDmgRewritePreservation;
 import 'archive_endpoint_policy.dart';
+import 'archive_iso_writer.dart'
+    show kArchiveIsoSingleExtentLimit, verifyIsoRewritePreservation;
+import 'archive_rar_stored_writer.dart' show verifyStoredRarPreservation;
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
 import 'archive_output_spool.dart';
@@ -55,8 +59,11 @@ class ArchiveWorkspace {
   final _ownedSpools = <ArchiveOutputSpool>{};
   ArchiveWorkspaceReview? _latestReview;
   bool get supportsLargeFiles => _streaming;
-  int get maxMemberBytes =>
-      _streaming ? kArchiveStreamingLimit : kArchiveReadLimit;
+  int get maxMemberBytes => !_streaming
+      ? kArchiveReadLimit
+      : _policy.format == ArchiveEndpointFormat.iso
+      ? kArchiveIsoSingleExtentLimit
+      : kArchiveStreamingLimit;
   int get maxContainerBytes =>
       _streaming ? kArchiveStreamingLimit : ArchiveService.maxArchiveBytes;
   int get maxExpandedBytes =>
@@ -183,6 +190,10 @@ class ArchiveWorkspace {
       '.cbt',
       '.tgz',
       '.tar.gz',
+      '.iso',
+      '.rar',
+      '.cbr',
+      '.dmg',
     ].any(lower.endsWith);
   }
 
@@ -1453,6 +1464,47 @@ class ArchiveWorkspace {
     );
   }
 
+  List<ArchiveWriteEntry> _entriesForWriting(void Function() checkPacking) {
+    // Retained members keep their original order, including after a rename.
+    // This matters for comic page ordering and package metadata precedence.
+    final originalOrder = _entries.values.toList();
+    final ranks = {
+      for (var index = 0; index < originalOrder.length; index++)
+        originalOrder[index]: index,
+    };
+    final ordered = List<_ArchiveEntry>.of(originalOrder)
+      ..sort(
+        (a, b) => (a.member?.index ?? (200000 + ranks[a]!)).compareTo(
+          b.member?.index ?? (200000 + ranks[b]!),
+        ),
+      );
+    return [
+      for (final entry in ordered)
+        ArchiveWriteEntry(
+          path: entry.name,
+          isDirectory: entry.isFolder,
+          size: entry.isFolder ? 0 : entry.size,
+          modified: entry.modified,
+          mode: entry.mode,
+          attributes: entry.member == null
+              ? const {}
+              : _policy.inspection?.attributes[entry.member!.name] ??
+                    _policy
+                        .inspection
+                        ?.attributes[ArchiveService.safeMemberPath(
+                      entry.member!.name,
+                    )] ??
+                    const {},
+          readChunks: entry.isFolder
+              ? null
+              : () async* {
+                  checkPacking();
+                  yield* openRead('/${entry.name}');
+                },
+        ),
+    ];
+  }
+
   Future<void> _writePacked(
     Future<void> Function(List<int>) sink, {
     required int maxOutputBytes,
@@ -1493,44 +1545,7 @@ class ArchiveWorkspace {
         'Removing all protected file data would erase the archive encryption policy. Keep a protected member or use an explicit new archive.',
       );
     }
-    // Retained members keep their original order, including after a rename.
-    // This matters for comic page ordering and package metadata precedence.
-    final originalOrder = _entries.values.toList();
-    final ranks = {
-      for (var index = 0; index < originalOrder.length; index++)
-        originalOrder[index]: index,
-    };
-    final ordered = List<_ArchiveEntry>.of(originalOrder)
-      ..sort(
-        (a, b) => (a.member?.index ?? (200000 + ranks[a]!)).compareTo(
-          b.member?.index ?? (200000 + ranks[b]!),
-        ),
-      );
-    final entries = [
-      for (final entry in ordered)
-        ArchiveWriteEntry(
-          path: entry.name,
-          isDirectory: entry.isFolder,
-          size: entry.isFolder ? 0 : entry.size,
-          modified: entry.modified,
-          mode: entry.mode,
-          attributes: entry.member == null
-              ? const {}
-              : _policy.inspection?.attributes[entry.member!.name] ??
-                    _policy
-                        .inspection
-                        ?.attributes[ArchiveService.safeMemberPath(
-                      entry.member!.name,
-                    )] ??
-                    const {},
-          readChunks: entry.isFolder
-              ? null
-              : () async* {
-                  checkPacking();
-                  yield* openRead('/${entry.name}');
-                },
-        ),
-    ];
+    final entries = _entriesForWriting(checkPacking);
     final packageIssue = await archiveZipPackageIssue(file.name, entries);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
     if (_streaming) {
@@ -1797,6 +1812,46 @@ class ArchiveWorkspace {
         throw const ArchiveViewException(
           'Repacked archive protection policy could not be preserved.',
         );
+      }
+      if (const {
+        ArchiveEndpointFormat.iso,
+        ArchiveEndpointFormat.rar,
+        ArchiveEndpointFormat.dmg,
+      }.contains(policy.format)) {
+        final inspection = policy.inspection;
+        if (inspection == null) {
+          throw const ArchiveViewException(
+            'Repacked container preservation metadata is missing.',
+          );
+        }
+        final entries = _entriesForWriting(() {
+          _check(writing: true);
+          if (isCancelled?.call() ?? false) {
+            throw const FileOperationCancelled();
+          }
+        });
+        switch (policy.format) {
+          case ArchiveEndpointFormat.iso:
+            verifyIsoRewritePreservation(
+              entries,
+              inspection,
+              source: _policy.inspection,
+            );
+          case ArchiveEndpointFormat.rar:
+            verifyStoredRarPreservation(
+              entries,
+              inspection,
+              source: _policy.inspection,
+            );
+          case ArchiveEndpointFormat.dmg:
+            verifyDmgRewritePreservation(
+              entries,
+              inspection,
+              source: _policy.inspection,
+            );
+          default:
+            break;
+        }
       }
       return (archive: replacement, policy: policy);
     } catch (_) {

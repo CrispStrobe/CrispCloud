@@ -1,0 +1,81 @@
+{
+  "verifiedUtcDate": "2026-11-13",
+  "profile": "RAR5 Store, method 0, unencrypted, nonsplit, nonsolid",
+  "scope": "Direct Dart VM codec verification; no Flutter engine or application publication execution in this receipt",
+  "formatSource": "https://www.rarlab.com/technote.htm",
+  "nativeMaxBytes": 8589934592,
+  "versions": {
+    "dart": "3.13.7 stable linux_x64",
+    "dartSdkBuild": "2026-10-22",
+    "python": "3.12.14",
+    "pythonZlibRuntime": "1.3.2",
+    "libarchive": "3.7.4",
+    "archivePackage": "4.6.0",
+    "cryptoPackage": "3.0.7",
+    "koniArchivePackage": "0.9.0"
+  },
+  "commands": {
+    "environment": {
+      "TMPDIR": "/workspace/scratch/4d61c38502be/native-test-temp"
+    },
+    "dart": "/workspace/scratch/4d61c38502be/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+    "smallArguments": ["--packages=.dart_tool/package_config.json", "test/support/verify_archive_rar_stored.dart", "--oracle"],
+    "largeArguments": ["--packages=.dart_tool/package_config.json", "test/support/verify_archive_rar_stored.dart", "--oracle", "--large"],
+    "smallExitCode": 0,
+    "largeExitCode": 0,
+    "focusedAnalysis": "No issues found!"
+  },
+  "smallIndependentOracles": [
+    {"archive": "created.rar", "archiveBytes": 700288, "result": "PASS"},
+    {"archive": "rewritten.rar", "archiveBytes": 700229, "result": "PASS"},
+    {"archive": "timestamps-31.rar", "archiveBytes": 90, "result": "PASS"},
+    {"archive": "timestamps-14.rar", "archiveBytes": 90, "result": "PASS"}
+  ],
+  "checks": [
+    "Creation, rename, add, replace and delete",
+    "Unicode and literal shell-like filename characters without shell execution",
+    "Empty file, empty directory, nested paths, POSIX modes and historical timestamps",
+    "Exact Unix nanoseconds and raw FILETIME ticks, including creation/access times",
+    "Metadata-only verifier detects altered supported fields and reads no payload",
+    "Windows raw attributes retained",
+    "Unsupported compression, encryption, solid and split profiles defer or refuse",
+    "Unknown/service/recovery/locked/link/special/trailing metadata refuses mutation",
+    "Header CRC, payload CRC at EOF and truncated end marker",
+    "Oversize preflight performs no source or sink IO",
+    "Short, growing and changed-between-passes input",
+    "Cancellation closes iterators; borrowed inspection source remains open",
+    "Owned reader closes source on failed open",
+    "Awaited sink backpressure and bounded chunks"
+  ],
+  "large": {
+    "result": "PASS RAR5 Store >2 GiB",
+    "memberBytes": 2147483665,
+    "packedBytes": 2147483788,
+    "allocatedBytes": 2147491840,
+    "payload": "Byte 0=0x43, final byte=0xa5, all intervening bytes=0",
+    "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af",
+    "tailBytes": 2,
+    "tailPayloadHex": "55aa",
+    "tailSha256": "648aac5c6332f3a60b0850b160ea3b28c292c1c552f7e13b4319c21e20a8f89b",
+    "modeOctal": "0644",
+    "mtimeUtc": "2026-11-13T01:02:03.123456Z",
+    "writingMilliseconds": 73714,
+    "readingMilliseconds": 34551,
+    "rssBaselineBytes": 341999616,
+    "rssPeakBytes": 341999616,
+    "rssGrowthBytes": 0,
+    "rssSamplingMilliseconds": 20,
+    "rssGrowthAssertionBytes": 536870912,
+    "heartbeatTicks": 4544,
+    "maxOutputChunkBytes": 262144,
+    "independentOracle": "libarchive 3.7.4 full payload consumption and SHA-256; independent Python sentinel/zero checks and exact public-spec header parsing",
+    "temporaryFixtureDeleted": true
+  },
+  "caveats": [
+    "The 8 GiB resource guard is implemented; this receipt actually measures a 2 GiB+17 payload and a physical container above 2 GiB.",
+    "The large run follows small tests in a warmed Dart VM. The maximum includes the initial RSS; a zero rise does not mean zero allocation. Sampling may miss shorter peaks and excludes the Python child process.",
+    "libarchive 3.7.4 reports whole-second RAR5 timestamps for these fixtures. A separate independent Python public-spec parser verifies exact precision, including raw creation/access times.",
+    "RAR compression, encryption, volumes, solid packing, recovery and arbitrary metadata rewriting are outside this writable Store profile. Existing compatible read-only fallback remains separate.",
+    "No local Flutter test or app publication execution is represented by this codec receipt. GitHub Actions workflow verification is tracked separately."
+  ]
+}

@@ -13,6 +13,10 @@ import '../support/archive_creation_backend.dart';
 
 const _dataImageHelp =
     'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.';
+const _streamedDataImageHelp =
+    'Create a data image up to 8 GiB from local files and folders. Temporary disk space is required. Existing files are never replaced.';
+const _streamedIsoHelp =
+    'Create a data image up to 8 GiB. Each ISO file must be smaller than 4 GiB. Temporary disk space is required. Existing files are never replaced.';
 const _singleFileHelp =
     'Select one local file, up to 64 MiB. Its name after decompression comes from the output filename.';
 const _flatFilesHelp =
@@ -308,6 +312,88 @@ void main() {
       expect(service.requests.single.password, isNull);
     },
   );
+
+  for (final (value, label, extension) in [
+    (ArchiveCreationFormat.rar, 'RAR5 Store', '.rar'),
+    (ArchiveCreationFormat.cbr, 'CBR (RAR5 Store)', '.cbr'),
+  ]) {
+    testWidgets(
+      '$label selects native Store creation and clears ZIP protection',
+      (tester) async {
+        backend = _StreamingCreationBackend()
+          ..put('/input/report.txt', [1, 2, 3]);
+        await show(tester);
+        final protection = find.byKey(const ValueKey('archive-create-protect'));
+        await tester.tap(protection);
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('archive-create-password')),
+          'previous ZIP password',
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('archive-create-confirmation')),
+          'previous ZIP password',
+        );
+        await format(tester, label);
+        expect(find.text(label), findsOneWidget);
+        expect(name(tester), 'report$extension');
+        expect(compressionChoices(tester, value), [
+          ArchiveCreationCompression.none,
+        ]);
+        expect(
+          compression(tester, value).initialValue,
+          ArchiveCreationCompression.none,
+        );
+        expect(compression(tester, value).onChanged, isNull);
+        expect(find.text(_streamedCommonHelp), findsOneWidget);
+        expect(find.text(_ordinaryHelp), findsNothing);
+        expect(protection, findsNothing);
+        expect(
+          find.byKey(const ValueKey('archive-create-password')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('archive-create-confirmation')),
+          findsNothing,
+        );
+        expect(find.byType(CheckboxListTile), findsNothing);
+
+        // Returning to ZIP exposes whether the previous credentials were cleared,
+        // rather than merely being hidden while Store is selected.
+        await format(tester, 'ZIP');
+        expect(tester.widget<SwitchListTile>(protection).value, isFalse);
+        await tester.ensureVisible(protection);
+        await tester.tap(protection);
+        await tester.pumpAndSettle();
+        for (final key in [
+          'archive-create-password',
+          'archive-create-confirmation',
+        ]) {
+          expect(
+            tester
+                .widget<TextField>(find.byKey(ValueKey(key)))
+                .controller!
+                .text,
+            isEmpty,
+          );
+        }
+        await format(tester, label);
+        await submit(tester);
+        final options = service.requests.single;
+        expect(options.format, value);
+        expect(options.name, 'report$extension');
+        expect(options.compression, ArchiveCreationCompression.none);
+        expect(options.password, isNull);
+        expect(options.encryptNames, isFalse);
+        expect(service.destinationPath, '/output');
+        expect(
+          find.byKey(const ValueKey('archive-create-success')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   for (final value in [
     ArchiveCreationFormat.iso,
@@ -633,6 +719,8 @@ void main() {
       await show(tester, language: locale.$1, width: 390);
       expect(tr(tester, 'ISO data image'), locale.$2);
       for (final key in [
+        'RAR5 Store',
+        'CBR (RAR5 Store)',
         'gzip — one file',
         'bzip2 — one file',
         'XZ — one file',
@@ -650,6 +738,8 @@ void main() {
         'WAR (unsigned)',
         'EAR (unsigned)',
         _dataImageHelp,
+        _streamedDataImageHelp,
+        _streamedIsoHelp,
         _singleFileHelp,
         _flatFilesHelp,
         _compressedTarHelp,
@@ -756,7 +846,7 @@ void main() {
     'ar',
   ]) {
     testWidgets(
-      '$language distinguishes native TAR and common archive limits at narrow large text',
+      '$language distinguishes native archive and data image limits at narrow large text',
       (tester) async {
         backend = _StreamingCreationBackend()
           ..put('/input/report.txt', [1, 2, 3]);
@@ -781,6 +871,59 @@ void main() {
         expect(find.text(tr(tester, _streamedCommonHelp)), findsOneWidget);
         expect(find.text(tr(tester, _streamedTarHelp)), findsNothing);
         expect(tester.takeException(), isNull);
+        for (final value in [
+          ArchiveCreationFormat.rar,
+          ArchiveCreationFormat.cbr,
+        ]) {
+          await format(tester, tr(tester, value.label));
+          expect(find.text(tr(tester, value.label)), findsOneWidget);
+          expect(find.text(tr(tester, _streamedCommonHelp)), findsOneWidget);
+          expect(find.text(tr(tester, _ordinaryHelp)), findsNothing);
+          expect(
+            find.byKey(const ValueKey('archive-create-protect')),
+            findsNothing,
+          );
+          expect(tester.takeException(), isNull);
+        }
+        for (final value in [
+          ArchiveCreationFormat.iso,
+          ArchiveCreationFormat.hfsx,
+          ArchiveCreationFormat.dmg,
+        ]) {
+          await format(tester, tr(tester, value.label));
+          final iso = value == ArchiveCreationFormat.iso;
+          expect(
+            find.text(
+              tr(tester, iso ? _streamedIsoHelp : _streamedDataImageHelp),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.text(
+              tr(tester, iso ? _streamedDataImageHelp : _streamedIsoHelp),
+            ),
+            findsNothing,
+          );
+          expect(
+            find.text(tr(tester, iso ? _isoHelp : _hfsHelp)),
+            findsOneWidget,
+          );
+          for (final obsolete in [
+            _dataImageHelp,
+            _ordinaryHelp,
+            _streamedTarHelp,
+            _streamedCommonHelp,
+            _compressedTarHelp,
+            _encodedHelp,
+          ]) {
+            expect(find.text(tr(tester, obsolete)), findsNothing);
+          }
+          expect(
+            find.byKey(const ValueKey('archive-create-protect')),
+            findsNothing,
+          );
+          expect(tester.takeException(), isNull);
+        }
       },
     );
   }
