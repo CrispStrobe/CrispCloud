@@ -79,6 +79,7 @@ class ArchiveWorkspace {
   );
   final _entries = <String, _ArchiveEntry>{};
   bool _closed = false;
+  bool _requiresReopen = false;
   bool _dirty = false;
   bool _saving = false;
   int _revision = 0;
@@ -161,15 +162,19 @@ class ArchiveWorkspace {
     FileItem file,
     int limit, {
     bool Function()? isCancelled,
+    FileOperationControl? control,
   }) async {
     if (!source.isCurrent) throw StateError('The archive source changed.');
     if ((file.size ?? 0) > limit) {
       throw const ArchiveViewException('Archive input exceeds its size limit.');
     }
+    await control?.checkpoint();
     final builder = BytesBuilder(copy: false);
-    await for (final chunk in source.readFile(file)) {
+    final input = source.readFile(file);
+    await for (final chunk in control?.bind(input) ?? input) {
+      await control?.checkpoint();
       if (!source.isCurrent) throw StateError('The archive source changed.');
-      if (isCancelled?.call() ?? false) {
+      if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
         throw StateError('Archive operation cancelled.');
       }
       if (builder.length + chunk.length > limit) {
@@ -180,7 +185,7 @@ class ArchiveWorkspace {
       builder.add(chunk);
     }
     if (!source.isCurrent) throw StateError('The archive source changed.');
-    if (isCancelled?.call() ?? false) {
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
       throw StateError('Archive operation cancelled.');
     }
     return builder.takeBytes();
@@ -624,6 +629,11 @@ class ArchiveWorkspace {
   }
 
   void _check({bool writing = false}) {
+    if (_requiresReopen) {
+      throw StateError(
+        'The archive was saved, but its working view could not be refreshed. Reopen the saved archive.',
+      );
+    }
     if (!isCurrent) throw StateError('The original archive source changed.');
     if (writing && !canUpdate) throw UnsupportedError(updateSupport);
   }
@@ -2083,6 +2093,7 @@ class ArchiveWorkspace {
     _validateReview(selected);
     _saving = true;
     ViewerArchive? replacement;
+    ArchivePublicationReceipt? authoritativeReceipt;
     try {
       final checked = await _verifyPacked(
         selected._bytes,
@@ -2104,6 +2115,7 @@ class ArchiveWorkspace {
           file,
           ArchiveService.maxArchiveBytes,
           isCancelled: isCancelled,
+          control: control,
         );
         if (sha256.convert(current).toString() != _fingerprint) {
           throw StateError('The nested container changed after review.');
@@ -2138,6 +2150,7 @@ class ArchiveWorkspace {
           if (_pendingPublication != null) _pendingReview = selected;
           rethrow;
         }
+        authoritativeReceipt = receipt;
         _file = receipt.file;
         _lastReceipt = receipt;
         _lastPublicationWarning = publisher.observerWarning;
@@ -2180,9 +2193,20 @@ class ArchiveWorkspace {
           directoryDependency: directoryDependency,
           directorySyncAuthority: directorySyncAuthority,
         );
+        authoritativeReceipt = receipt;
         (source as _NestedArchiveBackend)._refreshParentRevision();
       }
       return receipt;
+    } catch (error) {
+      final committed = authoritativeReceipt;
+      if (committed == null) rethrow;
+      // The physical container has a verified durable receipt. A view refresh
+      // or private cleanup error cannot turn it into a failed publication or
+      // invite a retry against the already replaced original.
+      outermost._lastPublicationWarning ??= error;
+      outermost._lastReceipt = committed;
+      _requiresReopen = true;
+      return committed;
     } finally {
       await replacement?.close();
       _saving = false;

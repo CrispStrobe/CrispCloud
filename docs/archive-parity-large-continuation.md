@@ -85,12 +85,12 @@ sources for the competitor columns.
 | Large members and containers | Native/external archive engines rather than a small whole-file buffer contract | ZIP64 and large TAR support documented in change history | 8 GiB configured native bound; measured >2 GiB members in all three requested formats, >2 GiB stored ZIP/7z containers and >4 GiB ZIP64 member; see exact evidence below |
 | Archive-to-archive transfer | Archive file operations depend on plugins | Explicit archive-to-archive copy support | Captured copies and ordered native two-archive moves; destination verified before source removal |
 | Passwords and encryption | Depends on selected engine | Supported archive/packer profiles | Existing supported ZIP AES-256 and 7z encryption retained on the smaller buffered path; large encrypted writes remain open |
-| Background packing | File operations/background queues | Documented background packing | Cancellable foreground streaming; durable queued packing/resume is still open |
+| Background packing | File operations/background queues | Documented background packing | Native background worker; shared operation queue with pause/resume/stop, priority and scheduling; saved creation recipes support reviewed restart |
 | Split volumes and packer/plugin ecosystem | External archivers and WCX support | Internal/external packers and WCX ecosystem | No split-volume creation/join or external/WCX adapter in this increment |
 
 Core common-format folder operations now have a native streaming implementation.
 Full commander parity is **not closed**: external packers, split archives,
-durable background jobs, large protected/nested writes and broader platform
+large protected/nested writes and broader platform
 acceptance remain explicit work. Existing container readers are not implicitly
 made writers; signed packages and unsupported filesystem metadata stay read-only.
 

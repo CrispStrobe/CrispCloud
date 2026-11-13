@@ -96,7 +96,8 @@ class ArchiveCreationDialog extends StatefulWidget {
   /// The owner of this callback owns the resulting job, including its lifetime.
   final Future<ArchiveOperationHandle<ArchiveCreationResult>> Function(
     ArchiveCreationOptions options,
-  )? enqueue;
+  )?
+  enqueue;
 
   @override
   State<ArchiveCreationDialog> createState() => _ArchiveCreationDialogState();
@@ -265,8 +266,20 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
           if (mounted) setState(() => _progress = value);
         },
       );
-      widget.onCreated?.call();
-      if (mounted) setState(() => _result = result);
+      var published = result;
+      try {
+        widget.onCreated?.call();
+      } catch (error) {
+        // The standalone observer has the same publication boundary as a
+        // queue observer: failure after install cannot make creation retryable.
+        published = ArchiveCreationResult(
+          result.path,
+          result.entryCount,
+          result.bytes,
+          publicationWarning: result.publicationWarning ?? error,
+        );
+      }
+      if (mounted) setState(() => _result = published);
     } catch (error) {
       if (mounted) {
         setState(() {
@@ -321,6 +334,8 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
       destination: widget.destination,
     );
     final progress = _progress;
+    final publicationWarning =
+        _job?.publicationWarning ?? _result?.publicationWarning;
     return PopScope(
       canPop: !_busy,
       child: AlertDialog(
@@ -610,10 +625,10 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                     tr('Created and verified: {0}', [_result!.path]),
                     key: const ValueKey('archive-create-success'),
                   ),
-                  if (_result!.publicationWarning != null)
+                  if (publicationWarning != null)
                     Text(
                       tr('The archive was created. Recovery information: {0}', [
-                        _result!.publicationWarning,
+                        publicationWarning,
                       ]),
                       key: const ValueKey('archive-create-warning'),
                     ),

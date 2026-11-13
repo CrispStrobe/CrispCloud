@@ -214,15 +214,19 @@ class _Wait<T> implements _PendingWait {
 class _CancellationRelay {
   _CancellationRelay(this.finish);
   void Function(Object error, StackTrace? stack)? finish;
-  void cancel() => finish?.call(_cancelled, null);
+  void cancel(void _) => finish?.call(_cancelled, null);
   void fail(Object error, StackTrace stack) => finish?.call(error, stack);
 }
 
 class _Input {
-  _Input(this.id, this.iterator);
+  _Input(this.id, this.iterator, this.cancellation);
   final int id;
   final StreamIterator<List<int>> iterator;
+  final Completer<void> cancellation;
   bool ended = false;
+  void cancel() {
+    if (!cancellation.isCompleted) cancellation.complete();
+  }
 }
 
 class _WriterHost {
@@ -270,7 +274,7 @@ class _WriterHost {
       if (cancellationFuture != null) {
         unawaited(
           cancellationFuture!.then<void>(
-            (_) => cancellation.cancel(),
+            cancellation.cancel,
             onError: cancellation.fail,
           ),
         );
@@ -347,6 +351,7 @@ class _WriterHost {
     final input = _input;
     _input = null;
     if (input == null) return;
+    input.cancel();
     // A misbehaving provider's cancellation Future must not keep the codec
     // worker alive forever. No subsequent pull or output is accepted.
     unawaited(
@@ -446,9 +451,16 @@ class _WriterHost {
               entries[index].isDirectory) {
             throw const FormatException('Invalid archive input request.');
           }
+          final cancellation = Completer<void>();
           final input = _Input(
             _nextInput++,
-            StreamIterator(entries[index].openRead(chunkSize: _chunkBytes)),
+            StreamIterator(
+              entries[index].openRead(
+                chunkSize: _chunkBytes,
+                cancellationFuture: cancellation.future,
+              ),
+            ),
+            cancellation,
           );
           _input = input;
           reply = input.id;
@@ -471,6 +483,7 @@ class _WriterHost {
           if (input == null || input.id != request.value) {
             throw const FormatException('Invalid archive input close.');
           }
+          input.cancel();
           await _race(input.iterator.cancel());
           _input = null;
         case _RequestKind.output:

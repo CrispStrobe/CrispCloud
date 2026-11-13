@@ -1,0 +1,67 @@
+{
+  "evidenceRecordedUtc": "2026-11-13T06:58:08Z",
+  "evidenceKind": "Recorded direct Dart command results; no local Flutter runtime was launched",
+  "workingDirectory": "/workspace/scratch/4d61c38502be/CrispCloud",
+  "sdkExecutable": "/workspace/scratch/4d61c38502be/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+  "sdkVersion": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on linux_x64",
+  "environment": {
+    "TMPDIR": "/workspace/scratch/4d61c38502be/native-test-temp",
+    "PUB_CACHE": "/workspace/scratch/4d61c38502be/pub-cache"
+  },
+  "commands": [
+    "dart format lib/services/archive_writer_worker.dart lib/services/archive_writer_worker_io.dart lib/services/archive_writer_worker_stub.dart lib/services/archive_write_model.dart test/archive_writer_worker_test.dart test/support/verify_archive_writer_worker.dart",
+    "dart analyze lib/services/archive_writer_worker.dart lib/services/archive_writer_worker_io.dart lib/services/archive_writer_worker_stub.dart lib/services/archive_write_model.dart test/archive_writer_worker_test.dart test/support/verify_archive_writer_worker.dart",
+    "dart --packages=.dart_tool/package_config.json test/support/verify_archive_writer_worker.dart",
+    "dart --packages=.dart_tool/package_config.json test/support/verify_archive_writer_worker.dart zip 7z tgz"
+  ],
+  "commandsNote": "Each dart above denotes sdkExecutable. The commands executed sequentially with the listed environment. This file records retained command output, rather than a shell redirect of the entire original session.",
+  "analysis": {"exitCode": 0, "result": "No issues found"},
+  "focusedProbe": {
+    "exitCode": 0,
+    "results": [
+      {"check": "streamed formats and HFSX", "result": "PASS", "milliseconds": 776},
+      {"check": "buffered compression and protection options", "result": "PASS", "milliseconds": 3297},
+      {"check": "opaque DMG preservation proof", "result": "PASS", "milliseconds": 220},
+      {"check": "pause and bounded backpressure", "result": "PASS", "milliseconds": 90},
+      {"check": "stalled input and paused cancellation", "result": "PASS", "milliseconds": 30},
+      {"check": "protocol, crash and cleanup", "result": "PASS", "milliseconds": 68}
+    ]
+  },
+  "largeProbe": {
+    "exitCode": 0,
+    "source": {
+      "bytes": 2147483665,
+      "description": "First byte 0x43, last byte 0xa5, all other bytes zero; generated in at most 65536-byte chunks",
+      "expectedSha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af"
+    },
+    "results": [
+      {"check": "large worker zip", "result": "PASS", "memberBytes": 2147483665, "packedBytes": 2087416, "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af", "packingMilliseconds": 8018, "totalMilliseconds": 41574, "baselineRss": 337022976, "sampledPeakRss": 467611648, "sampledGrowthRss": 130588672, "heartbeatTicks": 434, "maxInputChunk": 65536, "maxOutputChunk": 4111},
+      {"check": "large worker 7z", "result": "PASS", "memberBytes": 2147483665, "packedBytes": 925826, "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af", "packingMilliseconds": 44649, "totalMilliseconds": 86056, "baselineRss": 449224704, "sampledPeakRss": 493424640, "sampledGrowthRss": 44199936, "heartbeatTicks": 2446, "maxInputChunk": 65536, "maxOutputChunk": 262144},
+      {"check": "large worker tgz", "result": "PASS", "memberBytes": 2147483665, "packedBytes": 2087363, "sha256": "b5c0eee7c54826eeb55e9625703f26d88693a678318e5a8534bfc570de17d5af", "packingMilliseconds": 10441, "totalMilliseconds": 52633, "baselineRss": 405868544, "sampledPeakRss": 429010944, "sampledGrowthRss": 23142400, "heartbeatTicks": 2570, "maxInputChunk": 65536, "maxOutputChunk": 4169}
+    ],
+    "measurementNotes": [
+      "The three formats ran sequentially in one Dart JIT process, so later baselines include warmed code and potentially retained allocator capacity.",
+      "RSS is sampled process-wide every 20 milliseconds and includes the writer isolate. It is evidence of observed memory usage, not an exact peak-memory proof.",
+      "Every packed output was reopened through the app's streamed reader and its complete uncompressed payload was SHA-256 checked against the fixed expected digest.",
+      "These highly compressible cases prove a logical payload beyond 2 GiB through the new isolate bridge. Their physical archive files are small; they do not establish a physical archive beyond 2 GiB or a complete UI/publication flow.",
+      "No local Flutter launcher or hosted runtime execution is represented by this receipt. The opt-in hosted cases repeat this bridge probe separately."
+    ]
+  },
+  "hostedRegistrations": {
+    "file": "test/archive_writer_worker_test.dart",
+    "environment": "CRISP_ARCHIVE_WORKER_LARGE=zip|7z|tgz (or 1 for all)",
+    "names": [
+      "ZIP worker streams and verifies a member beyond 2 GiB",
+      "7z worker streams and verifies a member beyond 2 GiB",
+      "TGZ worker streams and verifies a member beyond 2 GiB"
+    ]
+  },
+  "verifiedFileSha256": {
+    "lib/services/archive_writer_worker.dart": "2d58da2209cb065551cde57e9fe3ca3a3893a1344edb660b29d2b5e5afddbbb1",
+    "lib/services/archive_writer_worker_io.dart": "6e51a06fe026957ba785e20d31cafb9f5cd1ed39eb38f34ffbc8e66f8ec6d313",
+    "lib/services/archive_writer_worker_stub.dart": "5486c840fbceb9250637b3eb89311bb9dcda7ca14e31bdbab8388330fae2e06b",
+    "lib/services/archive_write_model.dart": "c31a60b130d46b97906209c2036bc169446696cc1feb40ae35c9f5b49d883575",
+    "test/archive_writer_worker_test.dart": "0bdb3b166603c2b555ac3ae86fb20b160d34b16558a4d71f92748dd6ec9f6858",
+    "test/support/verify_archive_writer_worker.dart": "435f3e5508d90d8b2e370c53bc1372ead5c0c3001f0e2d3606d61c9407a287bd"
+  }
+}

@@ -5,6 +5,49 @@ import 'package:crisp_cloud/services/transfer_queue.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('journal-owned jobs release completed task closures after finalization and policy changes', () async {
+    final queue = TransferQueue(maxConcurrent: 0);
+    addTearDown(queue.dispose);
+    final entered = Completer<void>();
+    final finish = Completer<void>();
+    queue.enqueue(
+      TransferTask(
+        id: 'archive',
+        operation: OperationProgress(
+          id: 'archive',
+          type: OperationType.archive,
+          sourcePath: '/source',
+          targetPath: '/target',
+          fileName: 'archive.zip',
+        ),
+        execute: () async {},
+        retainCompletedTask: false,
+        onDone: (_) async {
+          entered.complete();
+          await finish.future;
+        },
+      ),
+    );
+    queue.setPendingPriority('archive', 10);
+    queue.setPendingStart('archive', null);
+    queue.setMaxConcurrent(1);
+    await entered.future;
+    expect(
+      queue.activeCount,
+      1,
+      reason: 'finalization still owns its reservation',
+    );
+    expect(queue.completedCount, 0);
+    finish.complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(queue.activeCount, 0);
+    expect(
+      queue.completedCount,
+      0,
+      reason: 'history is owned by the journal, not codec closures',
+    );
+  });
+
   TransferTask task(
     String id,
     Future<void> Function() execute, {

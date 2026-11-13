@@ -608,6 +608,7 @@ class TransferNotifier extends ChangeNotifier {
     await _archiveWorkspaces.remove(id)?.close();
     _archiveHandles.remove(id)?.dispose();
     _operations.removeWhere((operation) => operation.id == id);
+    _queue.clearCompleted();
     notifyListeners();
   }
 
@@ -619,9 +620,12 @@ class TransferNotifier extends ChangeNotifier {
           job.id,
           () => _journal.dismiss(job.id),
         );
+        await _archiveWorkspaces.remove(job.id)?.close();
+        _archiveHandles.remove(job.id)?.dispose();
       }
     }
     await _journal.compact();
+    _queue.clearCompleted();
     _operations.removeWhere(
       (operation) =>
           operation.status == OperationStatus.completed &&
@@ -920,8 +924,10 @@ class TransferNotifier extends ChangeNotifier {
             handle.operation
               ..phaseLabel = 'archive:${progress.phase.name}'
               ..currentFilePath = progress.path
-              ..totalBytes = progress.total;
-            handle.operation.updateProgress(progress.completed);
+              ..totalBytes = progress.isByteProgress ? progress.total : 0;
+            handle.operation.updateProgress(
+              progress.isByteProgress ? progress.completed : 0,
+            );
             handle.update();
             notifyListeners();
           },
@@ -1121,7 +1127,10 @@ class TransferNotifier extends ChangeNotifier {
                     'Archive recovery must retain the original selection and destination.',
                   );
                 }
-                plan.entries[i].recovery = Map.of(saved.entries[i].recovery);
+                plan.entries[i] = FileOperationEntry(
+                  saved.entries[i].source,
+                  saved.entries[i].destination,
+                )..recovery = Map.of(saved.entries[i].recovery);
               }
               job = saved;
               priority = saved.priority;
@@ -1157,6 +1166,7 @@ class TransferNotifier extends ChangeNotifier {
                   resourceClaims: transferResourceClaims(plan),
                   notBefore: job.scheduledAt,
                   maxRetries: 0,
+                  retainCompletedTask: false,
                   priority: priority,
                   execute: () async {
                     await handle.control.checkpoint();
@@ -1228,6 +1238,7 @@ class TransferNotifier extends ChangeNotifier {
                             error,
                           );
                         }
+                        if (!_disposed) unawaited(_refreshAfterTransfer());
                       }
                       if (published || _disposed) {
                         try {
@@ -1240,6 +1251,9 @@ class TransferNotifier extends ChangeNotifier {
                       _fileOperationControls.remove(id);
                       operation.currentFilePath = null;
                       operation.phaseLabel = null;
+                      if (published && publicationWarning != null) {
+                        operation.errorMessage = '$publicationWarning';
+                      }
                       handle.settle(
                         result: value,
                         error: failure,

@@ -357,8 +357,10 @@ class ArchiveCreationProgress {
     this.phase,
     this.completed,
     this.total,
-    this.path,
-  );
+    this.path, {
+    this.isByteProgress = false,
+  });
+  final bool isByteProgress;
   final ArchiveCreationPhase phase;
   final int completed;
   final int total;
@@ -523,8 +525,11 @@ class ArchiveCreationService {
       }
     }
 
+    var pauseEpoch = 0;
+    var suppressRepeatedProgress = false;
     Future<void> checkpoint() async {
       check();
+      if (control?.isPaused ?? false) pauseEpoch++;
       try {
         await control?.checkpoint();
       } on FileOperationCancelled {
@@ -539,10 +544,19 @@ class ArchiveCreationService {
       ArchiveCreationPhase phase,
       int done,
       int total,
-      String path,
-    ) {
+      String path, {
+      bool isByteProgress = false,
+    }) {
       check();
-      onProgress?.call(ArchiveCreationProgress(phase, done, total, path));
+      onProgress?.call(
+        ArchiveCreationProgress(
+          phase,
+          done,
+          total,
+          path,
+          isByteProgress: isByteProgress,
+        ),
+      );
       check();
     }
 
@@ -754,19 +768,25 @@ class ArchiveCreationService {
       phaseBytes = total;
       bytesSinceYield = 0;
       yieldWatch.reset();
-      progress(phase, 0, total, path);
+      progress(phase, 0, total, path, isByteProgress: true);
     }
 
     Future<void> reportBytes(int count, String path) async {
       await checkpoint();
-      if (!streamed || bytePhase == null) return;
+      if (suppressRepeatedProgress || !streamed || bytePhase == null) return;
       completedBytes += count;
       if (completedBytes > phaseBytes) {
         throw const ArchiveCreationException(
           ArchiveCreationError.verificationFailed,
         );
       }
-      progress(bytePhase!, completedBytes, phaseBytes, path);
+      progress(
+        bytePhase!,
+        completedBytes,
+        phaseBytes,
+        path,
+        isByteProgress: true,
+      );
       bytesSinceYield += count;
       // Hashing and synchronous source streams must also yield to timers and
       // the UI event loop, including the source rereads after packing.
@@ -919,6 +939,9 @@ class ArchiveCreationService {
     );
     var committed = false;
     Object? publicationWarning;
+    final pauseChanges = control?.changes.listen((_) {
+      if (control.isPaused) pauseEpoch++;
+    });
     try {
       var done = 0;
       Future<void> emit(List<int> bytes) async {
@@ -941,7 +964,13 @@ class ArchiveCreationService {
           throw UnsupportedError('Background archive packing is unavailable.');
         }
         if (!streamed) {
-          progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+          progress(
+            ArchiveCreationPhase.packing,
+            0,
+            totalBytes,
+            options.name,
+            isByteProgress: true,
+          );
         }
         final level = options.compression == ArchiveCreationCompression.none
             ? 0
@@ -1005,7 +1034,13 @@ class ArchiveCreationService {
         );
       } else if (options.format.diskImage) {
         if (!streamedDisk) {
-          progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+          progress(
+            ArchiveCreationPhase.packing,
+            0,
+            totalBytes,
+            options.name,
+            isByteProgress: true,
+          );
         }
         switch (options.format) {
           case ArchiveCreationFormat.iso:
@@ -1126,7 +1161,7 @@ class ArchiveCreationService {
               try {
                 while (body.step()) {
                   await Future<void>.delayed(Duration.zero);
-                  check();
+                  await checkpoint();
                 }
                 body.finish();
               } catch (_) {
@@ -1389,7 +1424,13 @@ class ArchiveCreationService {
       }
       await checkDestination();
       if (!streamed) {
-        progress(ArchiveCreationPhase.saving, 0, spool.length, output);
+        progress(
+          ArchiveCreationPhase.saving,
+          0,
+          spool.length,
+          output,
+          isByteProgress: true,
+        );
       }
       final packedHash =
           (await sha256
@@ -1411,6 +1452,47 @@ class ArchiveCreationService {
           output,
         );
       }
+      FileItem? verifiedStage;
+      var verifiedPauseEpoch = pauseEpoch;
+      Future<void> refreshPausedVerification() async {
+        while (verifiedStage != null && verifiedPauseEpoch != pauseEpoch) {
+          final generation = pauseEpoch;
+          suppressRepeatedProgress = true;
+          try {
+            final stage = await destination.stat(verifiedStage!.path!);
+            if (stage == null ||
+                stage.size != spool.length ||
+                stage.isFolder ||
+                stage.isSymlink == true) {
+              throw const ArchiveCreationException(
+                ArchiveCreationError.verificationFailed,
+              );
+            }
+            final hash = await sha256
+                .bind(
+                  checkedOutput(
+                    destination.readFile(stage),
+                    expectedLength: spool.length,
+                    path: output,
+                  ),
+                )
+                .single;
+            if (hash.toString() != packedHash) {
+              throw const ArchiveCreationException(
+                ArchiveCreationError.verificationFailed,
+              );
+            }
+            await validateSources();
+            await checkDestination();
+            verifiedPauseEpoch = generation;
+          } finally {
+            // These are repeated proofs after a user pause, not additional
+            // planned progress; all checks and backpressure remain active.
+            suppressRepeatedProgress = false;
+          }
+        }
+      }
+
       Future<void> publicationCheckpoint(Map<String, dynamic> state) async {
         final completed = state['phase'] == 'committed';
         if (completed) {
@@ -1436,6 +1518,7 @@ class ArchiveCreationService {
           publicationWarning ??= error;
         }
         if (!completed) await checkpoint();
+        if (state['phase'] == 'committing') await refreshPausedVerification();
       }
 
       await publicationCheckpoint({'phase': 'prepared'});
@@ -1451,6 +1534,7 @@ class ArchiveCreationService {
         checkpoint: publicationCheckpoint,
         verifyStaged: (staged) async {
           await checkpoint();
+          final verificationStarted = pauseEpoch;
           final hash = await sha256
               .bind(
                 checkedOutput(
@@ -1467,6 +1551,8 @@ class ArchiveCreationService {
           }
           await validateSources();
           await checkDestination();
+          verifiedStage = staged;
+          verifiedPauseEpoch = verificationStarted;
         },
       );
       // A completed exclusive commit remains a success if cancellation arrives
@@ -1493,6 +1579,7 @@ class ArchiveCreationService {
       rethrow;
     } finally {
       try {
+        await pauseChanges?.cancel();
         await spool.dispose();
       } catch (_) {
         // Failure to remove our private temporary output must not turn a

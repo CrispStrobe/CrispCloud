@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -35,13 +36,24 @@ class ArchiveWriteEntry {
 
   /// Copies bounded chunks and rejects a short or growing source. A writer
   /// never receives a provider-owned mutable buffer to retain after yielding.
-  Stream<List<int>> openRead({int chunkSize = 256 * 1024}) async* {
+  /// [cancellationFuture] interrupts a provider that has not yielded its next
+  /// chunk. Cancelling an async generator alone cannot always reach that
+  /// pending subscription. Provider cleanup is requested but is not awaited
+  /// indefinitely; no bytes from the cancelled stream are accepted afterward.
+  Stream<List<int>> openRead({
+    int chunkSize = 256 * 1024,
+    Future<void>? cancellationFuture,
+  }) async* {
     if (chunkSize <= 0 || chunkSize > 16 * 1024 * 1024) {
       throw ArgumentError.value(chunkSize, 'chunkSize');
     }
     if (isDirectory) return;
     var received = 0;
-    await for (final chunk in _readChunks!()) {
+    final raw = _readChunks!();
+    final input = cancellationFuture == null
+        ? raw
+        : _ArchiveReadBinding(raw, cancellationFuture).stream;
+    await for (final chunk in input) {
       if (chunk.length > size - received) {
         throw ArchiveViewException('The captured member grew: $path');
       }
@@ -75,6 +87,89 @@ class ArchiveWriteEntry {
       bytes.add(chunk);
     }
     return bytes.takeBytes();
+  }
+}
+
+class _ArchiveReadCancellation {
+  bool cancelled = false;
+  void Function()? listener;
+
+  void watch(Future<void> future) {
+    unawaited(future.then<void>(_complete, onError: _error));
+  }
+
+  void _complete(void _) {
+    cancelled = true;
+    listener?.call();
+  }
+
+  void _error(Object error, StackTrace stack) => _complete(null);
+}
+
+class _ArchiveReadBinding {
+  _ArchiveReadBinding(this.input, Future<void> cancellation) {
+    _output = StreamController<List<int>>(
+      onListen: _listen,
+      onPause: () => _source?.pause(),
+      onResume: () => _source?.resume(),
+      onCancel: _stop,
+    );
+    _cancellation.watch(cancellation);
+  }
+
+  final Stream<List<int>> input;
+  final _cancellation = _ArchiveReadCancellation();
+  late final StreamController<List<int>> _output;
+  StreamSubscription<List<int>>? _source;
+  bool _stopped = false;
+  Stream<List<int>> get stream => _output.stream;
+
+  void _listen() {
+    _cancellation.listener = _cancel;
+    if (_cancellation.cancelled) {
+      _cancel();
+      return;
+    }
+    _source = input.listen(
+      (chunk) {
+        if (!_stopped) _output.add(chunk);
+      },
+      onError: (Object error, StackTrace stack) {
+        if (!_stopped) _output.addError(error, stack);
+      },
+      onDone: () {
+        _cancellation.listener = null;
+        unawaited(_output.close());
+      },
+    );
+    if (_stopped) {
+      _stopSource();
+    } else if (_output.isPaused) {
+      _source!.pause();
+    }
+  }
+
+  void _cancel() {
+    if (_stopped) return;
+    _output.addError(
+      const ArchiveViewException('Archive member reading was cancelled.'),
+    );
+    unawaited(_output.close());
+    _stop();
+  }
+
+  void _stop() {
+    _stopped = true;
+    _cancellation.listener = null;
+    _stopSource();
+  }
+
+  void _stopSource() {
+    final source = _source;
+    _source = null;
+    if (source != null) {
+      unawaited(source.cancel().then<void>((_) {}, onError: (Object _) {}));
+    }
   }
 }
 

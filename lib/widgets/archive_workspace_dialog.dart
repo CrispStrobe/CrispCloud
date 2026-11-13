@@ -13,6 +13,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../services/archive_browser_session.dart';
 import '../services/archive_workspace.dart';
+import '../services/archive_writer_worker.dart';
 import '../services/archive_endpoint.dart';
 import '../services/archive_publication_journal.dart';
 import '../services/editor_document.dart';
@@ -654,7 +655,11 @@ class _ArchiveWorkspaceDialogState
 
   Future<void> _saveInBackground() async {
     final workspace = _workspace;
-    if (_busy || workspace == null || !workspace.dirty || !workspace.isCurrent) {
+    if (!supportsArchiveWriterWorker ||
+        _busy ||
+        workspace == null ||
+        !workspace.dirty ||
+        !workspace.isCurrent) {
       return;
     }
     final revision = workspace.revision;
@@ -673,7 +678,10 @@ class _ArchiveWorkspaceDialogState
                 Text(
                   dialogContext.commanderTr(
                     'Publish these draft changes to {0} in the background? The original archive will be replaced only after packing and verification succeed.',
-                    [workspace.outermost.file.path ?? workspace.outermost.file.name],
+                    [
+                      workspace.outermost.file.path ??
+                          workspace.outermost.file.name,
+                    ],
                   ),
                 ),
                 if (workspace.nestedMemberPaths.isNotEmpty) ...[
@@ -712,9 +720,11 @@ class _ArchiveWorkspaceDialogState
     );
     if (!mounted || confirmed != true) return;
     if (!_authority.isCurrent || workspace.revision != revision) {
-      setState(() => _error = context.commanderTr(
-        'The archive draft changed. Review its current changes again.',
-      ));
+      setState(
+        () => _error = context.commanderTr(
+          'The archive draft changed. Review its current changes again.',
+        ),
+      );
       return;
     }
     final transfers = ref.read(transferProvider);
@@ -1087,24 +1097,27 @@ class _ArchiveWorkspaceDialogState
                   children: [
                     if (_busy)
                       TextButton(
-                        onPressed: _backgroundAdmission ? null : () {
-                          setState(() => _cancelled = true);
-                          _importControl?.cancel();
-                        },
+                        onPressed: _backgroundAdmission
+                            ? null
+                            : () {
+                                setState(() => _cancelled = true);
+                                _importControl?.cancel();
+                              },
                         child: Text(context.commanderTr("Stop")),
                       ),
                     TextButton(
                       onPressed: _busy ? null : _close,
                       child: Text(context.commanderTr("Close")),
                     ),
-                    OutlinedButton.icon(
-                      key: const ValueKey('archive-workspace-background'),
-                      onPressed: editable && workspace.dirty
-                          ? _saveInBackground
-                          : null,
-                      icon: const Icon(Icons.queue),
-                      label: Text(context.commanderTr('Save in background')),
-                    ),
+                    if (supportsArchiveWriterWorker)
+                      OutlinedButton.icon(
+                        key: const ValueKey('archive-workspace-background'),
+                        onPressed: editable && workspace.dirty
+                            ? _saveInBackground
+                            : null,
+                        icon: const Icon(Icons.queue),
+                        label: Text(context.commanderTr('Save in background')),
+                      ),
                     FilledButton.icon(
                       onPressed: editable && workspace.dirty ? _save : null,
                       icon: const Icon(Icons.save),

@@ -36,8 +36,10 @@ class ArchiveContainerPublisher {
   ArchivePublicationLease? _lease;
   bool _mutationAuthority = false;
   FileOperationControl? _control;
+  StreamSubscription<void>? _controlChanges;
   bool _pauseAllowed = true;
   Duration _pausedTime = Duration.zero;
+  int _pauseEpoch = 0;
   bool _publicationCommitted = false;
   Object? _observerWarning;
 
@@ -93,6 +95,7 @@ class ArchiveContainerPublisher {
     _check(isCancelled: isCancelled);
     if (_pauseAllowed && isCancelled != null && _control != null) {
       final paused = _control!.isPaused ? (Stopwatch()..start()) : null;
+      if (paused != null) _pauseEpoch++;
       try {
         await _control!.checkpoint();
       } finally {
@@ -194,37 +197,44 @@ class ArchiveContainerPublisher {
         'Archive recovery requires a bounded regular file: $path',
       );
     }
-    var count = 0;
-    final elapsed = Stopwatch()..start();
-    final pausedBefore = _pausedTime;
-    final deadline = _deadlineForBytes(file.size!);
-    Stream<List<int>> verified() async* {
-      await for (final chunk in _controlled(
-        backend.readFile(file).timeout(const Duration(seconds: 30)),
-        isCancelled,
-      )) {
-        await _checkpoint(isCancelled: isCancelled);
-        if (elapsed.elapsed - (_pausedTime - pausedBefore) > deadline) {
-          throw TimeoutException(
-            'Archive verification exceeded its size-dependent deadline.',
-          );
+    while (true) {
+      final pauseGeneration = _pauseEpoch;
+      var count = 0;
+      final elapsed = Stopwatch()..start();
+      final pausedBefore = _pausedTime;
+      final deadline = _deadlineForBytes(file.size!);
+      Stream<List<int>> verified() async* {
+        await for (final chunk in _controlled(
+          backend.readFile(file).timeout(const Duration(seconds: 30)),
+          isCancelled,
+        )) {
+          await _checkpoint(isCancelled: isCancelled);
+          if (elapsed.elapsed - (_pausedTime - pausedBefore) > deadline) {
+            throw TimeoutException(
+              'Archive verification exceeded its size-dependent deadline.',
+            );
+          }
+          count += chunk.length;
+          if (count > ArchivePublicationRecord.maximumContainerBytes ||
+              count > file.size!) {
+            throw StateError('Archive recovery file size changed: $path');
+          }
+          yield chunk;
         }
-        count += chunk.length;
-        if (count > ArchivePublicationRecord.maximumContainerBytes ||
-            count > file.size!) {
-          throw StateError('Archive recovery file size changed: $path');
-        }
-        yield chunk;
       }
-    }
 
-    final hash = await sha256.bind(verified()).first;
-    final after = await backend.stat(path);
-    _check(isCancelled: isCancelled);
-    if (count != file.size || !sameArchiveFile(file, after)) {
-      throw StateError('Archive recovery file changed while reading: $path');
+      final hash = await sha256.bind(verified()).first;
+      final after = await backend.stat(path);
+      _check(isCancelled: isCancelled);
+      if (count != file.size || !sameArchiveFile(file, after)) {
+        throw StateError('Archive recovery file changed while reading: $path');
+      }
+      if (pauseGeneration == _pauseEpoch) {
+        return (file: after!, hash: hash.toString());
+      }
+      // A pause may let an already read prefix change without changing its size
+      // or timestamp. Establish one complete, uninterrupted content proof.
     }
-    return (file: after!, hash: hash.toString());
   }
 
   Future<void> _verifyDependency(
@@ -380,6 +390,10 @@ class ArchiveContainerPublisher {
     _control = control;
     _pauseAllowed = retry?.backup == null;
     _pausedTime = Duration.zero;
+    _pauseEpoch = 0;
+    _controlChanges = control?.changes.listen((_) {
+      if (_pauseAllowed && control.isPaused) _pauseEpoch++;
+    });
     _publicationCommitted = false;
     _observerWarning = null;
     final externalCancellation = isCancelled;
@@ -486,6 +500,8 @@ class ArchiveContainerPublisher {
       _lease = null;
       _mutationAuthority = false;
       _running = false;
+      await _controlChanges?.cancel();
+      _controlChanges = null;
       _control = null;
     }
   }
@@ -722,18 +738,22 @@ class ArchiveContainerPublisher {
       await _verifyAccessPolicy(record, original.file.path!);
       await _intent(ArchivePublicationPhase.backingUp, onPhase: onPhase);
       await _guardPaths(_active!);
-      original = await _inspect(
-        record.original.path!,
-        isCancelled: isCancelled,
-      );
-      if (original == null ||
-          original.hash != record.originalSha256 ||
-          !sameArchiveFile(record.original, original.file)) {
-        throw StateError('The original archive changed before backup.');
-      }
-      await _verifyAccessPolicy(record, original.file.path!);
-      await _verifyDependency(record, isCancelled: isCancelled);
-      await _checkpoint(isCancelled: isCancelled);
+      int checkedPauseEpoch;
+      do {
+        checkedPauseEpoch = _pauseEpoch;
+        original = await _inspect(
+          record.original.path!,
+          isCancelled: isCancelled,
+        );
+        if (original == null ||
+            original.hash != record.originalSha256 ||
+            !sameArchiveFile(record.original, original.file)) {
+          throw StateError('The original archive changed before backup.');
+        }
+        await _verifyAccessPolicy(record, original.file.path!);
+        await _verifyDependency(record, isCancelled: isCancelled);
+        await _checkpoint(isCancelled: isCancelled);
+      } while (checkedPauseEpoch != _pauseEpoch);
       _pauseAllowed = false;
       if (!await backend.moveNoReplace(
         original.file,

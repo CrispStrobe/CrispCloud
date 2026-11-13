@@ -82,7 +82,9 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
   final elapsed = Stopwatch()..start();
   void check() {
     if (!backend.isCurrent) throw StateError('The source directory changed.');
-    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) throw const FileOperationCancelled();
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
+      throw const FileOperationCancelled();
+    }
     if (elapsed.elapsed > _deadline) {
       throw TimeoutException('Directory verification exceeded ten minutes.');
     }
@@ -206,7 +208,14 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
             'Directory synchronization is limited to 64 MiB per file and 256 MiB in total.',
           );
         }
-        hash = await _hashFile(local, captured, witness, check, checkpoint: boundary, control: control);
+        hash = await _hashFile(
+          local,
+          captured,
+          witness,
+          check,
+          checkpoint: boundary,
+          control: control,
+        );
       }
       entries[relative] = ArchiveDirectorySnapshotEntry._(
         relative,
@@ -315,7 +324,9 @@ Future<Uint8List> readArchiveDirectorySnapshotFile(
     if (!backend.isCurrent) {
       throw StateError('The synchronization source changed.');
     }
-    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) throw const FileOperationCancelled();
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
+      throw const FileOperationCancelled();
+    }
   }
 
   final bytes = BytesBuilder(copy: false);
@@ -419,7 +430,8 @@ Future<String> _hashFile(
       }
       check();
       count += chunk.length;
-      if (count > file.size! || count > kArchiveReadLimit ||
+      if (count > file.size! ||
+          count > kArchiveReadLimit ||
           elapsed.elapsed > _deadline) {
         throw StateError(
           'A synchronization source changed or exceeded its limits.',
@@ -429,6 +441,7 @@ Future<String> _hashFile(
       yield chunk;
     }
   }
+
   final hash = await crypto.sha256.bind(checked()).first;
   check();
   if (count != file.size ||

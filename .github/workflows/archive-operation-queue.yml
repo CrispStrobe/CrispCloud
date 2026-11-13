@@ -1,0 +1,315 @@
+name: Archive operation queue
+
+on:
+  push:
+    branches: [feature/archive-operation-queue-20261113]
+    paths:
+      - '.github/workflows/archive-operation-queue.yml'
+      - '.github/actions/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'packages/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tool/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archive-operation-queue-${{ github.ref }}
+  # The initial large acceptance run is retained. Subsequent source checkpoints
+  # qualify the latest integrated code; documentation-only saves do not rerun.
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.8
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  archive-tests:
+    name: ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      # Each case has an isolated runner; tests within a large case stay serial.
+      max-parallel: 3
+      matrix:
+        include:
+          - case: normal
+            label: Archive and transfer queue regression suite
+            mode: normal
+            file: ''
+            test: ''
+            worker_large: '0'
+          - case: worker-zip-2g
+            label: Background ZIP worker above 2 GiB
+            mode: large
+            file: test/archive_writer_worker_test.dart
+            test: ZIP worker streams and verifies a member beyond 2 GiB
+            worker_large: zip
+          - case: worker-7z-2g
+            label: Background 7z worker above 2 GiB
+            mode: large
+            file: test/archive_writer_worker_test.dart
+            test: 7z worker streams and verifies a member beyond 2 GiB
+            worker_large: 7z
+          - case: worker-tgz-2g
+            label: Background TGZ worker above 2 GiB
+            mode: large
+            file: test/archive_writer_worker_test.dart
+            test: TGZ worker streams and verifies a member beyond 2 GiB
+            worker_large: tgz
+    env:
+      ARCHIVE_CASE: ${{ matrix.case }}
+      ARCHIVE_MODE: ${{ matrix.mode }}
+      ARCHIVE_TEST_FILE: ${{ matrix.file }}
+      ARCHIVE_EXPECTED_TEST: ${{ matrix.test }}
+      ARCHIVE_CREATION_LARGE: 'false'
+      # These runtime opt-ins are distinct from creation's Dart compile define.
+      CRISP_RUN_LARGE_ARCHIVE_TESTS: '0'
+      CRISP_STREAMING_ARCHIVE_LARGE: '0'
+      CRISP_ARCHIVE_WORKER_LARGE: ${{ matrix.worker_large }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Prepare evidence and capture immutable inputs
+        run: |
+          set -euo pipefail
+          mkdir -p build/archive-ci
+          sha256sum pubspec.yaml pubspec.lock > build/archive-ci/input-sha256.txt
+          git rev-parse HEAD > build/archive-ci/REVISION.txt
+          df -h . > build/archive-ci/disk-before.txt
+
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Configure private dependency authentication
+        env:
+          ARCHIVE_DEPENDENCY_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          set -euo pipefail
+          git config --global "url.https://x-access-token:${ARCHIVE_DEPENDENCY_TOKEN}@github.com/.insteadOf" "https://github.com/"
+
+      - name: Install native test libraries
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev liblz4-1
+
+      - name: Verify SQLite wrapper cleanup contract
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tool -p test_with_ci_system_sqlite.py -v 2>&1 | tee build/archive-ci/sqlite-wrapper.log
+
+      - name: Resolve pinned application dependencies
+        run: |
+          set -euo pipefail
+          flutter --version 2>&1 | tee build/archive-ci/flutter-version.txt
+          flutter pub get --enforce-lockfile 2>&1 | tee build/archive-ci/dependencies.log
+
+      - name: Analyze archive integration and validate portable codecs
+        if: matrix.mode == 'normal'
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          python3 tool/check_help_guides.py 2>&1 | tee build/archive-ci/help.log
+          dart analyze lib/models/archive*.dart lib/models/operation_progress.dart lib/providers/transfer_provider.dart lib/services/archive_*.dart lib/services/transfer_recovery_service.dart lib/widgets/archive_*.dart lib/widgets/operations_panel.dart lib/widgets/transfer_history_dialog.dart lib/l10n/archive_*.dart lib/l10n/transfer_queue_translations.dart test/archive_*_test.dart test/widget/archive_*_test.dart test/support/verify_archive_portable_data_codecs.dart test/support/verify_archive_writer_worker.dart test/support/archive_queue_fixture.dart 2>&1 | tee build/archive-ci/analysis.log
+          mkdir -p build/archive-portable
+          dart compile js --packages=.dart_tool/package_config.json -O1 -o build/archive-portable/data-codecs.js test/support/verify_archive_portable_data_codecs.dart 2>&1 | tee build/archive-ci/portable-compile.log
+          node -e 'global.self=global; require("./build/archive-portable/data-codecs.js")' 2>&1 | tee build/archive-ci/portable-runtime.log
+
+      - name: Run archive regression suite
+        id: normal
+        if: matrix.mode == 'normal'
+        # Leave time within the job limit for cleanup and retained evidence.
+        timeout-minutes: 35
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          archive_test_files=(test/archive_*_test.dart test/widget/archive_*_test.dart test/transfer_*_test.dart test/widget/operations_panel*_test.dart test/widget/transfer_history*_test.dart test/operation_progress_test.dart)
+          ((${#archive_test_files[@]} > 0))
+          printf '%s\n' "${archive_test_files[@]}" > build/archive-ci/test-files.txt
+          archive_command=(
+            python3 tool/with_ci_system_sqlite.py flutter test --no-pub
+            --reporter expanded --file-reporter json:build/archive-ci/test-events.json
+            --concurrency=4 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false
+            --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
+            "${archive_test_files[@]}"
+          )
+          printf '%q ' "${archive_command[@]}" > build/archive-ci/COMMAND.txt
+          printf '\n' >> build/archive-ci/COMMAND.txt
+          "${archive_command[@]}" 2>&1 | tee build/archive-ci/test.log
+
+      - name: Run explicit large archive acceptance case
+        id: large
+        if: matrix.mode == 'large'
+        timeout-minutes: 35
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$ARCHIVE_TEST_FILE" > build/archive-ci/test-files.txt
+          archive_command=(
+            python3 tool/with_ci_system_sqlite.py flutter test --no-pub
+            --reporter expanded --file-reporter json:build/archive-ci/test-events.json
+            --concurrency=1
+            "--dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=$ARCHIVE_CREATION_LARGE"
+            --plain-name "$ARCHIVE_EXPECTED_TEST" "$ARCHIVE_TEST_FILE"
+          )
+          printf '%q ' "${archive_command[@]}" > build/archive-ci/COMMAND.txt
+          printf '\n' >> build/archive-ci/COMMAND.txt
+          "${archive_command[@]}" 2>&1 | tee build/archive-ci/test.log
+
+      - name: Verify dependency inputs were restored
+        id: restored
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p build/archive-ci
+          sha256sum --check build/archive-ci/input-sha256.txt 2>&1 | tee build/archive-ci/input-restoration.log
+          df -h . > build/archive-ci/disk-after.txt
+
+      - name: Record completed tests and reject skipped large cases
+        if: always()
+        env:
+          ARCHIVE_NORMAL_OUTCOME: ${{ steps.normal.outcome }}
+          ARCHIVE_LARGE_OUTCOME: ${{ steps.large.outcome }}
+          ARCHIVE_RESTORED_OUTCOME: ${{ steps.restored.outcome }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          output = Path('build/archive-ci')
+          output.mkdir(parents=True, exist_ok=True)
+          events_file = output / 'test-events.json'
+          names, results, suites = {}, {}, set()
+          completion = None
+          parse_errors = []
+          for number, line in enumerate(events_file.read_text().splitlines() if events_file.exists() else [], 1):
+              try:
+                  event = json.loads(line)
+              except (ValueError, TypeError):
+                  parse_errors.append(number)
+                  continue
+              if event.get('type') == 'suite':
+                  suites.add(str(event['suite'].get('path', '')).replace('\\', '/'))
+              elif event.get('type') == 'testStart':
+                  names[event['test']['id']] = event['test']['name']
+              elif event.get('type') == 'testDone':
+                  results[event['testID']] = event
+              elif event.get('type') == 'done':
+                  completion = event
+          tests = [
+              {'name': names.get(identifier, str(identifier)), 'result': result['result'],
+               'skipped': result.get('skipped', False)}
+              for identifier, result in results.items() if not result.get('hidden', False)
+          ]
+          counts = {
+              'passed': sum(test['result'] == 'success' and not test['skipped'] for test in tests),
+              'failed': sum(test['result'] != 'success' for test in tests),
+              'skipped': sum(test['skipped'] for test in tests),
+          }
+          required_suites = [
+              'test/archive_job_queue_test.dart',
+              'test/archive_job_recovery_test.dart',
+              'test/archive_operation_control_test.dart',
+              'test/archive_writer_worker_test.dart',
+              'test/widget/archive_background_creation_dialog_test.dart',
+              'test/transfer_job_management_test.dart',
+              'test/archive_streamed_creation_test.dart',
+              'test/archive_streamed_endpoint_test.dart',
+              'test/archive_streamed_extraction_test.dart',
+              'test/archive_streamed_publication_test.dart',
+              'test/archive_streamed_workspace_test.dart',
+              'test/archive_streaming_writer_test.dart',
+              'test/archive_large_tar_creation_test.dart',
+              'test/archive_native_container_workflows_test.dart',
+              'test/archive_dmg_rewrite_test.dart',
+              'test/archive_dmg_workspace_test.dart',
+              'test/archive_dmg_transfer_names_test.dart',
+              'test/archive_iso_streamed_test.dart',
+              'test/archive_rar_stored_test.dart',
+              'test/archive_rar_workspace_test.dart',
+              'test/widget/archive_container_viewer_test.dart',
+              'test/widget/archive_creation_dialog_test.dart',
+          ]
+          mode = os.environ['ARCHIVE_MODE']
+          expected = os.environ['ARCHIVE_EXPECTED_TEST']
+          outcome = os.environ['ARCHIVE_NORMAL_OUTCOME' if mode == 'normal' else 'ARCHIVE_LARGE_OUTCOME']
+          missing_suites = [required for required in required_suites
+                            if not any(actual.endswith(required) for actual in suites)] if mode == 'normal' else []
+          matching = [test for test in tests if test['name'] == expected] if expected else []
+          large_case_passed = mode != 'large' or (
+              len(matching) == 1 and matching[0]['result'] == 'success' and not matching[0]['skipped']
+              and counts == {'passed': 1, 'failed': 0, 'skipped': 0})
+          verified = bool(completion and completion.get('success') is True
+                          and outcome == 'success' and counts['passed'] > 0 and counts['failed'] == 0
+                          and not parse_errors and not missing_suites and large_case_passed
+                          and os.environ['ARCHIVE_RESTORED_OUTCOME'] == 'success')
+          run_url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          receipt = {
+              'schema': 1, 'case': os.environ['ARCHIVE_CASE'], 'verified': verified,
+              'repository': os.environ['GITHUB_REPOSITORY'], 'sha': os.environ['GITHUB_SHA'],
+              'ref': os.environ['GITHUB_REF'], 'run_url': run_url,
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'flutter_version': os.environ['FLUTTER_VERSION'],
+              'test_step_outcome': outcome, 'input_restoration': os.environ['ARCHIVE_RESTORED_OUTCOME'],
+              'counts': counts, 'expected_large_test': expected or None,
+              'missing_required_suites': missing_suites, 'malformed_event_lines': parse_errors,
+              'completed': completion is not None, 'tests': tests,
+          }
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          summary = (f"## Archive case: {os.environ['ARCHIVE_CASE']}\n\n"
+                     f"{'PASS' if verified else 'FAIL / incomplete'} — {counts['passed']} passed, "
+                     f"{counts['failed']} failed, {counts['skipped']} skipped.\n\n"
+                     f"Commit: `{os.environ['GITHUB_SHA']}`. [Workflow run]({run_url}).\n\n"
+                     "Large cases require their exact selected test to finish without being skipped. "
+                     "The artifact contains the command, expanded log, JSON events, receipt and input hashes.\n")
+          (output / 'SUMMARY.md').write_text(summary)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as handle:
+              handle.write(summary)
+          print(summary)
+          if not verified:
+              raise SystemExit(1)
+          PY
+
+      - name: Remove dependency authentication and redact retained logs
+        if: always()
+        env:
+          ARCHIVE_DEPENDENCY_TOKEN: ${{ secrets.GH_PAT || github.token }}
+          ARCHIVE_ACTION_TOKEN: ${{ github.token }}
+        run: |
+          git config --global --unset-all "url.https://x-access-token:${ARCHIVE_DEPENDENCY_TOKEN}@github.com/.insteadOf" || true
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+          tokens = {os.environ.get(key, '') for key in ('ARCHIVE_DEPENDENCY_TOKEN', 'ARCHIVE_ACTION_TOKEN')} - {''}
+          for path in Path('build/archive-ci').glob('*'):
+              if path.suffix not in {'.log', '.json', '.txt', '.md'} or not path.is_file():
+                  continue
+              content = path.read_text(errors='replace')
+              for token in tokens:
+                  content = content.replace(token, '[REDACTED]')
+              content = re.sub(r'https://[^/@\s]+:[^/@\s]+@github\.com', 'https://[REDACTED]@github.com', content)
+              path.write_text(content)
+          PY
+
+      - name: Upload archive runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-queue-${{ matrix.case }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/archive-ci/
+          if-no-files-found: warn
+          retention-days: 14

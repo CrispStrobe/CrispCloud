@@ -188,7 +188,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
 
   Future<void> _run(TransferJobRecord job) async {
     if (isArchiveTransferJob(job) ||
-        IntegrityRecoveryService.isIntegrityJob(job)) return;
+        IntegrityRecoveryService.isIntegrityJob(job)) {
+      return;
+    }
     final preview = _preview;
     final origin = _sourceOrigin;
     if (_busy || preview == null || origin == null) return;
@@ -239,7 +241,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   Future<void> _restoreBackup(TransferJobRecord job, int index) async {
     if (_busy ||
         isArchiveTransferJob(job) ||
-        IntegrityRecoveryService.isIntegrityJob(job)) return;
+        IntegrityRecoveryService.isIntegrityJob(job)) {
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -392,7 +396,11 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                     (saved) => DropdownMenuItem(
                                       value: saved.id,
                                       child: Text(
-                                        '${saved.created.toLocal().toString().split('.').first} · ${isArchiveTransferJob(saved) ? context.commanderTr("Archive") : IntegrityRecoveryService.isIntegrityJob(saved) ? context.commanderTr("Split/combine") : context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
+                                        '${saved.created.toLocal().toString().split('.').first} · ${isArchiveTransferJob(saved)
+                                            ? context.commanderTr("Archive")
+                                            : IntegrityRecoveryService.isIntegrityJob(saved)
+                                            ? context.commanderTr("Split/combine")
+                                            : context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -464,12 +472,15 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                 key: const ValueKey('archive-job-review'),
                                 onPressed: _busy ? null : () => _review(job),
                                 icon: const Icon(Icons.archive_outlined),
-                                label: Text(context.commanderTr(
-                                  'Review archive recovery',
-                                )),
+                                label: Text(
+                                  context.commanderTr(
+                                    'Review archive recovery',
+                                  ),
+                                ),
                               ),
                             ],
-                            if (!archive && !integrity &&
+                            if (!archive &&
+                                !integrity &&
                                 job.canRecover &&
                                 job.ready &&
                                 !job.isFinished &&

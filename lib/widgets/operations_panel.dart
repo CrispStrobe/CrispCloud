@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/archive_creation_strings.dart';
 import '../l10n/transfer_error_strings.dart';
 import '../models/archive_job.dart';
 import '../models/operation_progress.dart';
@@ -44,6 +45,12 @@ _JobState _stateOf(
     return _JobState.cancelled;
   }
   if (operation.isWaitingForDecision) return _JobState.waiting;
+  // A cleanup/checkpoint warning must not turn an installed, verified archive
+  // into a retryable failed operation.
+  if (operation.status == OperationStatus.completed &&
+      operation.type == OperationType.archive) {
+    return _JobState.completed;
+  }
   if (operation.error != null || operation.status == OperationStatus.failed) {
     return _JobState.needsReview;
   }
@@ -80,6 +87,33 @@ String _stateLabel(_JobState state) => switch (state) {
   _JobState.completed => 'Completed',
   _JobState.cancelled => 'Cancelled',
 };
+
+String _phaseText(BuildContext context, String phase) {
+  final creation = switch (phase) {
+    'archive:scanning' => 'Scanning selection…',
+    'archive:packing' => 'Packing…',
+    'archive:verifying' => 'Verifying archive…',
+    'archive:saving' => 'Saving verified archive…',
+    'archivePublication:prepared' ||
+    'archivePublication:candidateWritten' ||
+    'archivePublication:installing' ||
+    'archivePublication:published' => 'Saving verified archive…',
+    _ => null,
+  };
+  if (creation != null) return archiveCreationText(context, creation);
+  return context.commanderTr(switch (phase) {
+    'archivePublication:backingUp' ||
+    'archivePublication:backedUp' => 'Preserving original archive…',
+    'archivePublication:cleaningBackup' ||
+    'archivePublication:cleaningCandidate' => 'Cleaning up…',
+    'archivePublication:restoring' ||
+    'archivePublication:restored' => 'Restoring original archive…',
+    'archivePublication:complete' => 'Completed',
+    'archivePublication:discarded' => 'Cancelled',
+    'archivePublication:needsReview' => 'Needs review',
+    _ => phase,
+  });
+}
 
 class OperationsPanel extends ConsumerStatefulWidget {
   const OperationsPanel({super.key});
@@ -286,16 +320,10 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildQueueControls(
-                          context,
-                          transfers,
-                          finished,
-                          [
-                            for (final operation in operations)
-                              if (_canCancel(states[operation.id]!))
-                                operation.id,
-                          ],
-                        ),
+                        _buildQueueControls(context, transfers, finished, [
+                          for (final operation in operations)
+                            if (_canCancel(states[operation.id]!)) operation.id,
+                        ]),
                         const SizedBox(height: 4),
                         _buildFilters(context, operations, states, order),
                         const SizedBox(height: 6),
@@ -376,7 +404,8 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                                         context,
                                         ref,
                                         jobId: operation.id,
-                                        reviewOnOpen: operation.isWaitingForDecision,
+                                        reviewOnOpen:
+                                            operation.isWaitingForDecision,
                                       ),
                               )
                             : null,
@@ -781,7 +810,7 @@ class _OperationTile extends StatelessWidget {
     final route = '${operation.sourcePath} → ${operation.targetPath}';
     final currentWork = [
       if (operation.phaseLabel != null)
-        context.commanderTr(operation.phaseLabel!),
+        _phaseText(context, operation.phaseLabel!),
       if (operation.currentFilePath != null) operation.currentFilePath!,
     ].join(' · ');
     final localStart = scheduledAt?.toLocal();
@@ -1070,6 +1099,20 @@ class _OperationTile extends StatelessWidget {
                       color: theme.colorScheme.error,
                     ),
                   ),
+                ),
+              ),
+            if (state == _JobState.completed &&
+                operation.type == OperationType.archive &&
+                operation.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  archiveCreationText(
+                    context,
+                    'The archive was created. Recovery information: {0}',
+                    [operation.errorMessage],
+                  ),
+                  key: ValueKey('queue-publication-warning-${operation.id}'),
                 ),
               ),
             if (isExpanded && operation.isBatch)
