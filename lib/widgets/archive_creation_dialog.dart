@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../l10n/archive_creation_strings.dart';
+import '../models/archive_operation.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -41,6 +44,7 @@ Future<void> showArchiveCreationDialog(
       local: ref.read(localFileServiceProvider),
       isCurrent: () => sourceOrigin.isCurrent,
     );
+    final transfers = ref.read(transferProvider);
     await showDialog<ArchiveCreationResult>(
       context: context,
       barrierDismissible: false,
@@ -49,7 +53,14 @@ Future<void> showArchiveCreationDialog(
         destination: backend,
         files: selection,
         destinationDirectory: directory,
-        onCreated: rememberSelection,
+        enqueue: (options) => transfers.enqueueArchiveCreation(
+          source: backend,
+          destination: backend,
+          files: selection,
+          destinationDirectory: directory,
+          options: options,
+          onCreated: rememberSelection,
+        ),
       ),
     );
     if (context.mounted) await ref.read(panelProvider(side)).refresh();
@@ -71,6 +82,7 @@ class ArchiveCreationDialog extends StatefulWidget {
     required this.destinationDirectory,
     this.service = const ArchiveCreationService(),
     this.onCreated,
+    this.enqueue,
   });
 
   final FileOperationBackend source;
@@ -79,6 +91,12 @@ class ArchiveCreationDialog extends StatefulWidget {
   final String destinationDirectory;
   final ArchiveCreationService service;
   final VoidCallback? onCreated;
+
+  /// Returns only after the queue has durably accepted the original selection.
+  /// The owner of this callback owns the resulting job, including its lifetime.
+  final Future<ArchiveOperationHandle<ArchiveCreationResult>> Function(
+    ArchiveCreationOptions options,
+  )? enqueue;
 
   @override
   State<ArchiveCreationDialog> createState() => _ArchiveCreationDialogState();
@@ -90,11 +108,18 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
   final _confirmation = TextEditingController();
   ArchiveCreationFormat _format = ArchiveCreationFormat.zip;
   ArchiveCreationCompression _compression = ArchiveCreationCompression.normal;
-  bool _protect = false, _hideNames = true, _busy = false, _cancelled = false;
+  bool _protect = false, _hideNames = true, _busy = false, _admitting = false;
+  ArchiveOperationHandle<ArchiveCreationResult>? _job;
+  FileOperationControl? _localControl;
+  StreamSubscription<void>? _localControlChanges;
   ArchiveCreationProgress? _progress;
   Object? _error;
   String? _validation;
   ArchiveCreationResult? _result;
+
+  FileOperationControl? get _control => _job?.control ?? _localControl;
+  bool get _cancelled => _control?.isCancelled ?? false;
+  bool get _paused => _control?.isPaused ?? false;
 
   @override
   void initState() {
@@ -110,7 +135,11 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
 
   @override
   void dispose() {
-    _cancelled = true;
+    // A queue-owned job outlives this route. Only the standalone foreground
+    // fallback belongs to the dialog and must stop when its owner disappears.
+    _job?.removeListener(_jobChanged);
+    unawaited(_localControlChanges?.cancel());
+    _localControl?.cancel();
     _name.dispose();
     _password.dispose();
     _confirmation.dispose();
@@ -142,7 +171,42 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
     });
   }
 
-  Future<void> _create() async {
+  void _jobChanged() {
+    final job = _job;
+    if (!mounted || job == null) return;
+    setState(() {
+      _progress = job.creationProgress;
+      _result = job.result;
+      _error = job.error;
+      _busy = !job.isSettled;
+    });
+  }
+
+  void _attachJob(ArchiveOperationHandle<ArchiveCreationResult> job) {
+    _job?.removeListener(_jobChanged);
+    _job = job;
+    job.addListener(_jobChanged);
+    _jobChanged();
+  }
+
+  void _togglePause() {
+    final control = _control;
+    if (control == null || control.isCancelled) return;
+    if (control.isPaused) {
+      control.resume();
+    } else {
+      control.pause();
+    }
+    setState(() {});
+  }
+
+  void _stop() {
+    _control?.cancel();
+    setState(() {});
+  }
+
+  Future<void> _create({bool background = false}) async {
+    if (_busy || _result != null) return;
     setState(() {
       _validation = null;
       _error = null;
@@ -164,12 +228,30 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
     );
     try {
       options.validate();
+      _job?.removeListener(_jobChanged);
+      _job = null;
       setState(() {
         _busy = true;
-        _cancelled = false;
+        _admitting = widget.enqueue != null;
         _validation = null;
         _error = null;
         _progress = null;
+      });
+      final enqueue = widget.enqueue;
+      if (enqueue != null) {
+        final job = await enqueue(options);
+        // Admission may finish after an external navigator has removed this
+        // route. Ownership still belongs to the queue; do not cancel the job.
+        if (!mounted) return;
+        _admitting = false;
+        _attachJob(job);
+        if (background) Navigator.of(context).pop();
+        return;
+      }
+      final control = FileOperationControl();
+      _localControl = control;
+      _localControlChanges = control.changes.listen((_) {
+        if (mounted) setState(() {});
       });
       final result = await widget.service.create(
         source: widget.source,
@@ -177,7 +259,8 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
         files: widget.files,
         destinationDirectory: widget.destinationDirectory,
         options: options,
-        isCancelled: () => _cancelled || !mounted,
+        control: control,
+        isCancelled: () => control.isCancelled || !mounted,
         onProgress: (value) {
           if (mounted) setState(() => _progress = value);
         },
@@ -185,14 +268,23 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
       widget.onCreated?.call();
       if (mounted) setState(() => _result = result);
     } catch (error) {
-      if (mounted) setState(() => _error = error);
-    } finally {
       if (mounted) {
-        if (_busy) {
-          _password.clear();
-          _confirmation.clear();
-        }
-        setState(() => _busy = false);
+        setState(() {
+          _error = error;
+          _busy = false;
+        });
+      }
+    } finally {
+      await _localControlChanges?.cancel();
+      _localControlChanges = null;
+      _localControl = null;
+      if (mounted) {
+        _password.clear();
+        _confirmation.clear();
+        setState(() {
+          _admitting = false;
+          if (_job == null) _busy = false;
+        });
       }
     }
   }
@@ -255,6 +347,15 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                 SelectableText(
                   tr('Destination: {0}', [widget.destinationDirectory]),
                 ),
+                if (widget.enqueue != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    tr(
+                      'Background archives continue while CrispCloud is open. Manage them in the operation queue.',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 TextField(
                   key: const ValueKey('archive-create-name'),
@@ -463,13 +564,17 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                   LinearProgressIndicator(
                     value: progress == null || progress.total == 0
                         ? null
-                        : progress.completed / progress.total,
+                        : (progress.completed / progress.total).clamp(0, 1),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     tr(
                       _cancelled
                           ? 'Cancelling…'
+                          : _admitting
+                          ? 'Queueing archive…'
+                          : _paused
+                          ? 'Paused'
                           : switch (progress?.phase) {
                               ArchiveCreationPhase.packing => 'Packing…',
                               ArchiveCreationPhase.verifying =>
@@ -505,30 +610,56 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                     tr('Created and verified: {0}', [_result!.path]),
                     key: const ValueKey('archive-create-success'),
                   ),
+                  if (_result!.publicationWarning != null)
+                    Text(
+                      tr('The archive was created. Recovery information: {0}', [
+                        _result!.publicationWarning,
+                      ]),
+                      key: const ValueKey('archive-create-warning'),
+                    ),
                 ],
               ],
             ),
           ),
         ),
         actions: [
-          if (_busy)
+          if (_busy && !_admitting) ...[
             TextButton(
-              onPressed: _cancelled
-                  ? null
-                  : () => setState(() => _cancelled = true),
-              child: Text(tr('Cancel')),
-            )
-          else
+              key: const ValueKey('archive-create-pause'),
+              onPressed: _cancelled ? null : _togglePause,
+              child: Text(tr(_paused ? 'Resume' : 'Pause')),
+            ),
+            TextButton(
+              key: const ValueKey('archive-create-stop'),
+              onPressed: _cancelled ? null : _stop,
+              child: Text(tr('Stop')),
+            ),
+            if (_job != null)
+              TextButton.icon(
+                key: const ValueKey('archive-create-background-running'),
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.queue),
+                label: Text(tr('Run in background')),
+              ),
+          ] else if (!_busy)
             TextButton(
               onPressed: () => Navigator.of(context).pop(_result),
               child: Text(tr(_result == null ? 'Cancel' : 'Close')),
             ),
-          if (_result == null)
+          if (_result == null && !_busy) ...[
+            if (widget.enqueue != null)
+              OutlinedButton.icon(
+                key: const ValueKey('archive-create-background'),
+                onPressed: () => _create(background: true),
+                icon: const Icon(Icons.queue),
+                label: Text(tr('Queue in background')),
+              ),
             FilledButton(
               key: const ValueKey('archive-create-submit'),
-              onPressed: _busy ? null : _create,
+              onPressed: _create,
               child: Text(tr('Create archive')),
             ),
+          ],
         ],
       ),
     );

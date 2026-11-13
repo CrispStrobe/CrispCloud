@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
+import '../models/archive_job.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../models/storage_reference.dart';
@@ -17,6 +18,7 @@ import '../services/integrity_recovery_service.dart';
 import '../services/transfer_recovery_service.dart';
 import '../utils/formatters.dart' show formatBytes;
 import 'file_operation_conflict_dialog.dart';
+import 'archive_job_recovery_dialog.dart';
 import 'integrity_recovery_dialog.dart';
 
 Future<void> showTransferHistoryDialog(
@@ -70,7 +72,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
       if (!mounted || !widget.reviewOnOpen || widget.jobId == null) return;
       final job = transfers.savedJob(widget.jobId!);
       if (job != null &&
-          job.canRecover &&
+          (job.canRecover || isArchiveTransferJob(job)) &&
           job.ready &&
           !job.isFinished &&
           !transfers.isJobLive(job.id)) {
@@ -125,6 +127,10 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
 
   Future<void> _review(TransferJobRecord job) async {
     if (_busy) return;
+    if (isArchiveTransferJob(job)) {
+      await showArchiveJobRecoveryDialog(context, ref, jobId: job.id);
+      return;
+    }
     if (IntegrityRecoveryService.isIntegrityJob(job)) {
       await showIntegrityRecoveryDialog(context, ref, jobId: job.id);
       return;
@@ -181,7 +187,8 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   }
 
   Future<void> _run(TransferJobRecord job) async {
-    if (IntegrityRecoveryService.isIntegrityJob(job)) return;
+    if (isArchiveTransferJob(job) ||
+        IntegrityRecoveryService.isIntegrityJob(job)) return;
     final preview = _preview;
     final origin = _sourceOrigin;
     if (_busy || preview == null || origin == null) return;
@@ -230,7 +237,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
   }
 
   Future<void> _restoreBackup(TransferJobRecord job, int index) async {
-    if (_busy || IntegrityRecoveryService.isIntegrityJob(job)) return;
+    if (_busy ||
+        isArchiveTransferJob(job) ||
+        IntegrityRecoveryService.isIntegrityJob(job)) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -262,7 +271,9 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
         title: Text(context.commanderTr("Remove saved transfer?")),
         content: Text(
           context.commanderTr(
-            "This removes its recovery instructions and history. Files and saved staging or backup copies stay where they are.",
+            isArchiveTransferJob(job)
+                ? 'This removes this archive job and any retained draft. Published archives and saved publication recovery copies are kept.'
+                : "This removes its recovery instructions and history. Files and saved staging or backup copies stay where they are.",
           ),
         ),
         actions: [
@@ -279,7 +290,12 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
     );
     if (confirmed != true || !mounted) return;
     try {
-      await ref.read(transferProvider).dismissSavedJob(job.id);
+      final transfers = ref.read(transferProvider);
+      if (isArchiveTransferJob(job)) {
+        await transfers.dismissArchiveJob(job.id);
+      } else {
+        await transfers.dismissSavedJob(job.id);
+      }
       if (mounted) _select(null);
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
@@ -298,6 +314,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
     final live = job != null && transfers.isJobLive(job.id);
     final integrity =
         job != null && IntegrityRecoveryService.isIntegrityJob(job);
+    final archive = job != null && isArchiveTransferJob(job);
     final preview = _preview;
     final remainingIssues =
         preview?.issues.keys
@@ -375,7 +392,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                     (saved) => DropdownMenuItem(
                                       value: saved.id,
                                       child: Text(
-                                        '${saved.created.toLocal().toString().split('.').first} · ${IntegrityRecoveryService.isIntegrityJob(saved) ? context.commanderTr("Split/combine") : context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
+                                        '${saved.created.toLocal().toString().split('.').first} · ${isArchiveTransferJob(saved) ? context.commanderTr("Archive") : IntegrityRecoveryService.isIntegrityJob(saved) ? context.commanderTr("Split/combine") : context.commanderEnum(saved.options.kind)} · ${saved.sourceLabel} → ${saved.destinationLabel} · ${context.commanderTr(transferStatusLabel(saved.status))}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -401,7 +418,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                               '${job.sourceLabel} → ${job.destinationLabel}: ${job.targetDirectory}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            if (!job.canRecover)
+                            if (!archive && !job.canRecover)
                               _notice(
                                 'This transfer used a temporary source or browser handle. Reopen that source to create a new plan; its saved results remain available below.',
                               ),
@@ -438,7 +455,21 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                                 ),
                               ),
                             ],
-                            if (!integrity &&
+                            if (archive &&
+                                job.ready &&
+                                !job.isFinished &&
+                                !live) ...[
+                              const SizedBox(height: 10),
+                              FilledButton.tonalIcon(
+                                key: const ValueKey('archive-job-review'),
+                                onPressed: _busy ? null : () => _review(job),
+                                icon: const Icon(Icons.archive_outlined),
+                                label: Text(context.commanderTr(
+                                  'Review archive recovery',
+                                )),
+                              ),
+                            ],
+                            if (!archive && !integrity &&
                                 job.canRecover &&
                                 job.ready &&
                                 !job.isFinished &&
@@ -591,7 +622,7 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
                           onPressed: _control.cancel,
                           child: Text(context.commanderTr("Stop")),
                         ),
-                      if (preview != null && !_busy && !live)
+                      if (!archive && preview != null && !_busy && !live)
                         FilledButton.icon(
                           onPressed: remainingIssues == 0
                               ? () => _run(job)
@@ -722,7 +753,8 @@ class _TransferHistoryState extends ConsumerState<TransferHistoryDialog> {
               ],
             ),
           ),
-          if (!IntegrityRecoveryService.isIntegrityJob(job) &&
+          if (!isArchiveTransferJob(job) &&
+              !IntegrityRecoveryService.isIntegrityJob(job) &&
               backup != null &&
               saved.recovery['backupSha256'] != null &&
               saved.phase != 'backupRestored')

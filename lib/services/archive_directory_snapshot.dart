@@ -57,6 +57,8 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
   FileOperationBackend backend,
   String directory, {
   bool Function()? isCancelled,
+  FileOperationControl? control,
+  Future<void> Function()? checkpoint,
   void Function(int entries, String path)? onProgress,
   FileItem? forbiddenContainer,
 }) async {
@@ -80,13 +82,28 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
   final elapsed = Stopwatch()..start();
   void check() {
     if (!backend.isCurrent) throw StateError('The source directory changed.');
-    if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) throw const FileOperationCancelled();
     if (elapsed.elapsed > _deadline) {
       throw TimeoutException('Directory verification exceeded ten minutes.');
     }
   }
 
-  check();
+  Future<void> boundary() async {
+    check();
+    elapsed.stop();
+    try {
+      if (checkpoint != null) {
+        await checkpoint();
+      } else {
+        await control?.checkpoint();
+      }
+    } finally {
+      elapsed.start();
+    }
+    check();
+  }
+
+  await boundary();
   final root = await backend.stat(directory).timeout(_inactivity);
   check();
   if (root == null || !root.isFolder || root.isSymlink == true) {
@@ -100,7 +117,7 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
   var nameBytes = 0;
 
   Future<List<FileItem>> list(String path) async {
-    check();
+    await boundary();
     final children = await backend.list(path).timeout(_inactivity);
     check();
     if (children.length > _maximumEntries) {
@@ -141,7 +158,7 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
     final children = await list(path);
     listings[path] = names(children);
     for (final child in children) {
-      check();
+      await boundary();
       if (entries.length >= _maximumEntries ||
           !physicalPaths.add(backend.pathKey(child.path!))) {
         throw StateError('The source directory exceeds its namespace bounds.');
@@ -189,7 +206,7 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
             'Directory synchronization is limited to 64 MiB per file and 256 MiB in total.',
           );
         }
-        hash = await _hashFile(local, captured, witness, check);
+        hash = await _hashFile(local, captured, witness, check, checkpoint: boundary, control: control);
       }
       entries[relative] = ArchiveDirectorySnapshotEntry._(
         relative,
@@ -215,6 +232,7 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
     }
   }
   for (final entry in entries.values) {
+    await boundary();
     if (await _nativeWitness(local, entry.file, check) !=
         entry._nativeWitness) {
       throw StateError(
@@ -232,6 +250,7 @@ Future<ArchiveDirectorySnapshot> captureArchiveDirectorySnapshot(
   void add(Object value) => digest.add(utf8.encode('${jsonEncode(value)}\n'));
   add(['crisp-directory-snapshot-v1', rootWitness.toJson()]);
   for (final path in ordered) {
+    await boundary();
     final entry = entries[path]!;
     add([path, entry._nativeWitness.toJson(), entry.sha256]);
   }
@@ -255,6 +274,8 @@ Future<void> verifyArchiveDirectoryDependency(
   FileOperationBackend backend,
   ArchivePublicationDirectoryDependency dependency, {
   bool Function()? isCancelled,
+  FileOperationControl? control,
+  Future<void> Function()? checkpoint,
 }) async {
   _requireNative(backend);
   if (backend.storageReference != dependency.storage) {
@@ -264,6 +285,8 @@ Future<void> verifyArchiveDirectoryDependency(
     backend,
     dependency.directory.path!,
     isCancelled: isCancelled,
+    control: control,
+    checkpoint: checkpoint,
   );
   if (!_sameFile(dependency.directory, current.dependency.directory) ||
       current.dependency.sha256 != dependency.sha256 ||
@@ -281,6 +304,8 @@ Future<Uint8List> readArchiveDirectorySnapshotFile(
   FileOperationBackend backend,
   ArchiveDirectorySnapshotEntry entry, {
   bool Function()? isCancelled,
+  FileOperationControl? control,
+  Future<void> Function()? checkpoint,
 }) async {
   final local = _requireNative(backend);
   if (entry.file.isFolder || entry.sha256 == null) {
@@ -290,7 +315,7 @@ Future<Uint8List> readArchiveDirectorySnapshotFile(
     if (!backend.isCurrent) {
       throw StateError('The synchronization source changed.');
     }
-    if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) throw const FileOperationCancelled();
   }
 
   final bytes = BytesBuilder(copy: false);
@@ -300,6 +325,8 @@ Future<Uint8List> readArchiveDirectorySnapshotFile(
     entry._nativeWitness,
     check,
     bytes: bytes,
+    checkpoint: checkpoint ?? control?.checkpoint,
+    control: control,
   );
   if (hash != entry.sha256) {
     throw StateError('Selected source content changed: ${entry.relativePath}');
@@ -369,6 +396,8 @@ Future<String> _hashFile(
   _NativeDirectoryWitness witness,
   void Function() check, {
   BytesBuilder? bytes,
+  Future<void> Function()? checkpoint,
+  FileOperationControl? control,
 }) async {
   check();
   if (file.size == null || file.size! < 0 || file.size! > kArchiveReadLimit) {
@@ -379,23 +408,28 @@ Future<String> _hashFile(
   }
   var count = 0;
   final elapsed = Stopwatch()..start();
-  final hash = await crypto.sha256
-      .bind(
-        backend.readFile(file).timeout(_inactivity).map((chunk) {
-          check();
-          count += chunk.length;
-          if (count > file.size! ||
-              count > kArchiveReadLimit ||
-              elapsed.elapsed > _deadline) {
-            throw StateError(
-              'A synchronization source changed or exceeded its limits.',
-            );
-          }
-          if (bytes != null) bytes.add(Uint8List.fromList(chunk));
-          return chunk;
-        }),
-      )
-      .first;
+  Stream<List<int>> checked() async* {
+    final input = backend.readFile(file).timeout(_inactivity);
+    await for (final chunk in control?.bind(input) ?? input) {
+      elapsed.stop();
+      try {
+        await checkpoint?.call();
+      } finally {
+        elapsed.start();
+      }
+      check();
+      count += chunk.length;
+      if (count > file.size! || count > kArchiveReadLimit ||
+          elapsed.elapsed > _deadline) {
+        throw StateError(
+          'A synchronization source changed or exceeded its limits.',
+        );
+      }
+      if (bytes != null) bytes.add(Uint8List.fromList(chunk));
+      yield chunk;
+    }
+  }
+  final hash = await crypto.sha256.bind(checked()).first;
   check();
   if (count != file.size ||
       await _nativeWitness(backend, file, check) != witness) {

@@ -20,11 +20,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/file_item.dart';
+import '../models/archive_endpoint.dart';
+import '../models/archive_job.dart';
+import '../models/archive_operation.dart';
 import '../models/operation_progress.dart';
 import '../models/transfer_job.dart';
 import '../models/transfer_queue_summary.dart';
 import '../models/panel_side.dart';
 import '../services/audit_service.dart';
+import '../services/archive_creation_service.dart';
+import '../services/archive_job_recovery_service.dart';
+import '../services/archive_workspace.dart';
 import '../services/file_operation_service.dart';
 import '../services/s3_client_adapter.dart';
 import '../services/transfer_queue.dart';
@@ -54,6 +60,8 @@ class TransferNotifier extends ChangeNotifier {
   final List<OperationProgress> _operations = [];
   final Map<String, FileOperationControl> _fileOperationControls = {};
   final Map<String, StreamSubscription<void>> _controlSubscriptions = {};
+  final Map<String, ArchiveOperationHandle<Object?>> _archiveHandles = {};
+  final Map<String, ArchiveWorkspace> _archiveWorkspaces = {};
   final Map<String, Set<FileOperationEntry>> _unknownFileSizes = {};
   final Set<String> _integrityProgressIds = {};
   final AsyncLock _queueConfiguration = AsyncLock();
@@ -321,6 +329,25 @@ class TransferNotifier extends ChangeNotifier {
 
   OperationProgress _savedProgress(TransferJobRecord job) {
     if (isIntegrityTransferJob(job)) return _savedIntegrityProgress(job);
+    if (isArchiveTransferJob(job)) {
+      final header = job.entries.firstOrNull;
+      final state = header?.recovery['archivePublication'];
+      final bytes = state is Map ? state['packedBytes'] : null;
+      final complete = job.status == TransferJobStatus.completed;
+      return OperationProgress(
+        id: job.id,
+        type: OperationType.archive,
+        sourcePath: job.sourceLabel,
+        targetPath: header?.destination ?? job.targetDirectory,
+        fileName: header?.recovery['name'] as String? ?? 'Saved archive',
+        totalBytes: bytes is int ? bytes : 0,
+        currentBytes: complete && bytes is int ? bytes : 0,
+        status: complete ? OperationStatus.completed : OperationStatus.failed,
+        errorMessage: complete
+            ? null
+            : job.message ?? transferStatusLabel(job.status),
+      );
+    }
     final files = job.entries
         .map(
           (entry) => FileProgress(
@@ -578,6 +605,8 @@ class TransferNotifier extends ChangeNotifier {
       throw StateError('Finish or cancel this transfer first.');
     }
     await _journal.runExclusiveOperation(id, () => _journal.dismiss(id));
+    await _archiveWorkspaces.remove(id)?.close();
+    _archiveHandles.remove(id)?.dispose();
     _operations.removeWhere((operation) => operation.id == id);
     notifyListeners();
   }
@@ -818,6 +847,434 @@ class TransferNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  ArchiveWorkspace? archiveWorkspaceForJob(String id) => _archiveWorkspaces[id];
+
+  Future<void> dismissArchiveJob(String id) => dismissSavedJob(id);
+
+  Future<ArchiveOperationHandle<ArchiveCreationResult>> enqueueArchiveCreation({
+    required FileOperationBackend source,
+    required FileOperationBackend destination,
+    required List<FileItem> files,
+    required String destinationDirectory,
+    required ArchiveCreationOptions options,
+    ArchiveCreationService service = const ArchiveCreationService(),
+    VoidCallback? onCreated,
+    int priority = 0,
+    DateTime? notBefore,
+    String? recoveryJobId,
+  }) async {
+    await ready;
+    final plan = archiveCreationJobPlan(
+      source: source,
+      destination: destination,
+      files: files,
+      destinationDirectory: destinationDirectory,
+      options: options,
+    );
+    ArchiveCreationJobDefinition? recovered;
+    if (recoveryJobId != null) {
+      final saved = _journal.job(recoveryJobId);
+      if (saved == null) {
+        throw StateError('The saved archive job is unavailable.');
+      }
+      recovered = ArchiveCreationJobDefinition.fromJob(saved);
+      if (recovered.name != options.name ||
+          recovered.format != options.format ||
+          recovered.compression != options.compression ||
+          recovered.encryptNames != options.encryptNames ||
+          recovered.passwordRequired != (options.password != null)) {
+        throw StateError('Restart must retain the reviewed archive options.');
+      }
+    }
+    return _enqueueArchiveJob<ArchiveCreationResult>(
+      id: recoveryJobId ?? 'archive_create_${const Uuid().v4()}',
+      plan: plan,
+      recoveryJobId: recoveryJobId,
+      priority: priority,
+      notBefore: notBefore,
+      onPublished: onCreated,
+      warning: (result) => result?.publicationWarning,
+      execute: (handle) async {
+        if (recoveryJobId != null) {
+          final review = await const ArchiveJobRecoveryService()
+              .prepareCreation(
+                _journal.job(recoveryJobId)!,
+                source: source,
+                destination: destination,
+                control: handle.control,
+              );
+          if (review.alreadyPublished) return review.result!;
+        }
+        return service.create(
+          source: source,
+          destination: destination,
+          files: plan.entries.map((entry) => entry.source).toList(),
+          destinationDirectory: destinationDirectory,
+          options: options,
+          control: handle.control,
+          background: true,
+          expectedSourceManifestSha256: recovered?.sourceManifestSha256,
+          isCancelled: () => handle.control.isCancelled,
+          onProgress: (progress) {
+            handle.creationProgress = progress;
+            handle.operation
+              ..phaseLabel = 'archive:${progress.phase.name}'
+              ..currentFilePath = progress.path
+              ..totalBytes = progress.total;
+            handle.operation.updateProgress(progress.completed);
+            handle.update();
+            notifyListeners();
+          },
+          onPublicationCheckpoint: (event) async {
+            final entry = plan.entries.first;
+            entry.recovery = {
+              ...?entry.recovery,
+              'archivePublication': {
+                ...?entry.recovery?['archivePublication']
+                    as Map<String, dynamic>?,
+                ...event,
+              },
+            };
+            await _journal.checkpoint(
+              handle.id,
+              0,
+              entry,
+              event['phase'] as String,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<ArchiveOperationHandle<ArchivePublicationReceipt?>>
+  enqueueArchiveWorkspace(
+    ArchiveWorkspace workspace, {
+    ArchiveWorkspaceReview? reviewed,
+    VoidCallback? onSaved,
+    int priority = 0,
+    DateTime? notBefore,
+    String? recoveryJobId,
+  }) async {
+    await ready;
+    if (!workspace.isCurrent || !workspace.canUpdate || !workspace.dirty) {
+      throw StateError('Review an editable archive draft before queueing it.');
+    }
+    final id = recoveryJobId ?? 'archive_workspace_${const Uuid().v4()}';
+    if (_archiveWorkspaces.entries.any(
+      (entry) =>
+          entry.key != id &&
+          identical(entry.value.outermost, workspace.outermost),
+    )) {
+      throw StateError('This archive draft already belongs to another job.');
+    }
+    if (recoveryJobId != null &&
+        !identical(_archiveWorkspaces[id], workspace)) {
+      throw StateError(
+        'This archive draft is no longer available in this session.',
+      );
+    }
+    final revision = workspace.revision;
+    final plan = archiveWorkspaceJobPlan(workspace);
+    _archiveWorkspaces[id] = workspace;
+    try {
+      return await _enqueueArchiveJob<ArchivePublicationReceipt?>(
+        id: id,
+        plan: plan,
+        recoveryJobId: recoveryJobId,
+        priority: priority,
+        notBefore: notBefore,
+        onPublished: onSaved,
+        warning: (_) => workspace.lastPublicationWarning,
+        execute: (handle) async {
+          if (workspace.revision != revision || !workspace.isCurrent) {
+            throw StateError('The archive draft changed after it was queued.');
+          }
+          handle.operation.phaseLabel = 'archive:packing';
+          handle.update();
+          notifyListeners();
+          final candidate =
+              reviewed ??
+              await workspace.review(control: handle.control, background: true);
+          await handle.control.checkpoint();
+          return workspace.save(
+            reviewed: candidate,
+            control: handle.control,
+            background: true,
+            onPhase: (phase) {
+              handle.operation.phaseLabel = 'archivePublication:${phase.name}';
+              handle.update();
+              notifyListeners();
+            },
+          );
+        },
+      );
+    } catch (_) {
+      if (recoveryJobId == null) _archiveWorkspaces.remove(id);
+      rethrow;
+    }
+  }
+
+  /// Reconcile a verified installed output under the same scheduler claims as
+  /// packing. The review is refreshed at dispatch, never trusted indefinitely.
+  Future<void> confirmRecoveredArchiveCreation({
+    required TransferJobRecord job,
+    required ArchiveCreationRecoveryReview review,
+    VoidCallback? onCreated,
+  }) async {
+    if (job.id != review.jobId || !review.alreadyPublished) {
+      throw StateError('Review the installed archive before confirming it.');
+    }
+    final plan = FileOperationPlan(
+      source: review.source,
+      destination: review.destination,
+      targetDirectory: job.targetDirectory,
+      options: job.options,
+      entries: [
+        for (final entry in job.entries)
+          FileOperationEntry(entry.source, entry.destination)
+            ..recovery = Map.of(entry.recovery),
+      ],
+      errors: const [],
+    );
+    await _enqueueArchiveJob<ArchiveCreationResult>(
+      id: job.id,
+      plan: plan,
+      recoveryJobId: job.id,
+      onPublished: onCreated,
+      execute: (handle) async {
+        final fresh = await const ArchiveJobRecoveryService().prepareCreation(
+          _journal.job(job.id)!,
+          source: review.source,
+          destination: review.destination,
+          control: handle.control,
+        );
+        if (!fresh.alreadyPublished) {
+          throw StateError('The reviewed archive output is no longer present.');
+        }
+        return fresh.result!;
+      },
+    );
+  }
+
+  Future<ArchiveOperationHandle<T>> _enqueueArchiveJob<T>({
+    required String id,
+    required FileOperationPlan plan,
+    required Future<T> Function(ArchiveOperationHandle<T>) execute,
+    String? recoveryJobId,
+    int priority = 0,
+    DateTime? notBefore,
+    VoidCallback? onPublished,
+    Object? Function(T?)? warning,
+  }) async {
+    await ready;
+    if (_disposed) throw StateError('The transfer queue is closed.');
+    if (recoveryError != null) throw StateError(recoveryError!);
+    if (isJobLive(id)) throw StateError('This archive job is already queued.');
+    final operation = OperationProgress(
+      id: id,
+      type: OperationType.archive,
+      sourcePath: plan.source.label,
+      targetPath: plan.entries.first.destination,
+      fileName: plan.entries.first.recovery!['name'] as String,
+    );
+    final handle = ArchiveOperationHandle<T>(
+      id: id,
+      operation: operation,
+      control: FileOperationControl(),
+    );
+    final admitted = Completer<ArchiveOperationHandle<T>>();
+    // Keep journal ownership until finalization, while returning the durable
+    // handle as soon as queue admission succeeds. The view is only an observer.
+    unawaited(
+      _journal
+          .runExclusiveOperation(id, () async {
+            TransferJobRecord job;
+            if (recoveryJobId == null) {
+              job = await _journal.create(
+                id,
+                plan,
+                priority: priority,
+                scheduledAt: notBefore?.toUtc(),
+              );
+            } else {
+              final saved = _journal.job(id);
+              if (saved == null ||
+                  !saved.ready ||
+                  !isArchiveTransferJob(saved) ||
+                  saved.source != plan.source.storageReference ||
+                  saved.destination != plan.destination.storageReference ||
+                  saved.targetDirectory != plan.targetDirectory ||
+                  saved.entries.length != plan.entries.length ||
+                  saved.entries.first.recovery['archiveKind'] !=
+                      plan.entries.first.recovery?['archiveKind']) {
+                throw StateError(
+                  'This archive recovery does not match the original job.',
+                );
+              }
+              for (var i = 0; i < saved.entries.length; i++) {
+                if (saved.entries[i].source.path !=
+                        plan.entries[i].source.path ||
+                    saved.entries[i].destination !=
+                        plan.entries[i].destination) {
+                  throw StateError(
+                    'Archive recovery must retain the original selection and destination.',
+                  );
+                }
+                plan.entries[i].recovery = Map.of(saved.entries[i].recovery);
+              }
+              job = saved;
+              priority = saved.priority;
+              await _journal.setStatus(id, TransferJobStatus.queued);
+              if (notBefore != null) {
+                await _journal.updateQueue(id, scheduledAt: notBefore.toUtc());
+              }
+            }
+            if (_disposed) {
+              await _journal.setStatus(id, TransferJobStatus.cancelled);
+              throw StateError('The transfer queue is closed.');
+            }
+            _operations.removeWhere((value) => value.id == id);
+            _operations.add(operation);
+            _archiveHandles.remove(id)?.dispose();
+            _archiveHandles[id] = handle;
+            _fileOperationControls[id] = handle.control;
+            _controlSubscriptions[id] = handle.control.changes.listen((_) {
+              _synchronizeControl(id, handle.control, operation);
+              handle.update();
+            });
+            final done = Completer<void>();
+            var published = false;
+            T? value;
+            Object? failure;
+            Object? publicationWarning;
+            try {
+              _queue.enqueue(
+                TransferTask(
+                  id: id,
+                  operation: operation,
+                  providerNames: transferProviderNames(plan),
+                  resourceClaims: transferResourceClaims(plan),
+                  notBefore: job.scheduledAt,
+                  maxRetries: 0,
+                  priority: priority,
+                  execute: () async {
+                    await handle.control.checkpoint();
+                    await _journal.setStatus(id, TransferJobStatus.running);
+                    value = await execute(handle);
+                    published = true;
+                    publicationWarning = warning?.call(value);
+                    operation.completePublished();
+                  },
+                  onDone: (error) async {
+                    try {
+                      if (published) {
+                        // Publication is authoritative even when Stop or an observer
+                        // fails after the exclusive install has already succeeded.
+                        operation.completePublished();
+                        for (final entry in plan.entries) {
+                          entry.outcome = FileOperationOutcome.copied;
+                        }
+                        await _journal.saveEntries(id, plan.entries);
+                        await _journal.setStatus(
+                          id,
+                          TransferJobStatus.completed,
+                          message: publicationWarning == null
+                              ? null
+                              : '$publicationWarning',
+                        );
+                      } else {
+                        final cancelled =
+                            handle.control.isCancelled ||
+                            operation.isCancelled ||
+                            error is TransferCancelled ||
+                            error is FileOperationCancelled;
+                        failure = cancelled
+                            ? const FileOperationCancelled()
+                            : error ??
+                                  StateError('Archive work did not complete.');
+                        if (cancelled) {
+                          operation.cancel();
+                        } else {
+                          operation.fail('$failure');
+                        }
+                        await _journal.setStatus(
+                          id,
+                          cancelled
+                              ? TransferJobStatus.cancelled
+                              : TransferJobStatus.failed,
+                          message: cancelled
+                              ? 'Stopped. Review the saved archive job before restarting.'
+                              : '$failure',
+                        );
+                      }
+                    } catch (error) {
+                      recoveryError =
+                          'Could not save archive completion: $error';
+                      if (published) {
+                        publicationWarning ??= error;
+                      } else {
+                        failure ??= error;
+                        if (!operation.isCancelled) operation.fail('$failure');
+                      }
+                    } finally {
+                      if (published) {
+                        try {
+                          onPublished?.call();
+                        } catch (error) {
+                          publicationWarning ??= error;
+                          _log.warn(
+                            'Archive completion observer failed',
+                            error,
+                          );
+                        }
+                      }
+                      if (published || _disposed) {
+                        try {
+                          await _archiveWorkspaces.remove(id)?.close();
+                        } catch (error) {
+                          publicationWarning ??= error;
+                        }
+                      }
+                      await _controlSubscriptions.remove(id)?.cancel();
+                      _fileOperationControls.remove(id);
+                      operation.currentFilePath = null;
+                      operation.phaseLabel = null;
+                      handle.settle(
+                        result: value,
+                        error: failure,
+                        publicationWarning: publicationWarning,
+                      );
+                      notifyListeners();
+                      if (!done.isCompleted) done.complete();
+                    }
+                  },
+                ),
+              );
+              admitted.complete(handle);
+              notifyListeners();
+              await done.future;
+            } catch (error) {
+              await _controlSubscriptions.remove(id)?.cancel();
+              _fileOperationControls.remove(id);
+              operation.fail('$error');
+              rethrow;
+            }
+          })
+          .then<void>(
+            (_) {
+              notifyListeners();
+            },
+            onError: (Object error, StackTrace stack) {
+              handle.settle(error: error);
+              if (!admitted.isCompleted) admitted.completeError(error, stack);
+              notifyListeners();
+            },
+          ),
+    );
+    return admitted.future;
+  }
+
   /// The journal is flushed before a queue item can mutate storage. Recovery
   /// reuses the same stable entry indices and never auto-retries a partial job.
   Future<void> runFileOperation(
@@ -887,6 +1344,9 @@ class TransferNotifier extends ChangeNotifier {
       );
     } else {
       final saved = _journal.job(id);
+      if (saved != null && isArchiveTransferJob(saved)) {
+        throw StateError('Use archive recovery for this operation.');
+      }
       if (saved != null && isIntegrityTransferJob(saved)) {
         throw StateError('Use Split/combine recovery for this operation.');
       }
@@ -1615,6 +2075,11 @@ class TransferNotifier extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    for (final id in _archiveWorkspaces.keys.toList()) {
+      if (!isJobLive(id)) {
+        unawaited(_archiveWorkspaces.remove(id)!.close());
+      }
+    }
     for (final control in [..._fileOperationControls.values]) {
       control.cancel();
     }

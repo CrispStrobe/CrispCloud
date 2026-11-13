@@ -23,13 +23,27 @@ import 'storage_transfer_contract.dart';
 /// may briefly be absent, but a verified backup is retained until the installed
 /// candidate is read back. Every destructive intent is durably acknowledged.
 class ArchiveContainerPublisher {
-  ArchiveContainerPublisher(this.backend, this.journal);
+  ArchiveContainerPublisher(
+    this.backend,
+    this.journal, {
+    Duration Function(int bytes)? verificationDeadline,
+  }) : _deadlineForBytes = verificationDeadline ?? _verificationDeadline;
   final FileOperationBackend backend;
   final ArchivePublicationJournal journal;
+  final Duration Function(int bytes) _deadlineForBytes;
   ArchivePublicationRecord? _active;
   bool _running = false;
   ArchivePublicationLease? _lease;
   bool _mutationAuthority = false;
+  FileOperationControl? _control;
+  bool _pauseAllowed = true;
+  Duration _pausedTime = Duration.zero;
+  bool _publicationCommitted = false;
+  Object? _observerWarning;
+
+  /// A phase observer failed after verified publication. The receipt remains
+  /// authoritative; callers can surface this issue without replaying a save.
+  Object? get observerWarning => _observerWarning;
 
   static String? unsupportedReason(FileOperationBackend backend) {
     if (kIsWeb) {
@@ -72,6 +86,34 @@ class ArchiveContainerPublisher {
     }
     if (!allowCancellation && (isCancelled?.call() ?? false)) {
       throw const FileOperationCancelled();
+    }
+  }
+
+  Future<void> _checkpoint({bool Function()? isCancelled}) async {
+    _check(isCancelled: isCancelled);
+    if (_pauseAllowed && isCancelled != null && _control != null) {
+      final paused = _control!.isPaused ? (Stopwatch()..start()) : null;
+      try {
+        await _control!.checkpoint();
+      } finally {
+        if (paused != null) _pausedTime += paused.elapsed;
+      }
+    }
+    _check(isCancelled: isCancelled);
+  }
+
+  Stream<T> _controlled<T>(Stream<T> input, bool Function()? isCancelled) =>
+      isCancelled == null ? input : _control?.bind(input) ?? input;
+
+  void _notifyPhase(
+    ArchivePublicationPhase phase,
+    void Function(ArchivePublicationPhase)? observer,
+  ) {
+    try {
+      observer?.call(phase);
+    } catch (error) {
+      if (!_publicationCommitted) rethrow;
+      _observerWarning ??= error;
     }
   }
 
@@ -139,7 +181,7 @@ class ArchiveContainerPublisher {
     String path, {
     bool Function()? isCancelled,
   }) async {
-    _check(isCancelled: isCancelled);
+    await _checkpoint(isCancelled: isCancelled);
     final file = await backend.stat(path);
     _check(isCancelled: isCancelled);
     if (file == null) return null;
@@ -154,27 +196,29 @@ class ArchiveContainerPublisher {
     }
     var count = 0;
     final elapsed = Stopwatch()..start();
-    final deadline = _verificationDeadline(file.size!);
-    final hash = await sha256
-        .bind(
-          backend.readFile(file).timeout(const Duration(seconds: 30)).map((
-            chunk,
-          ) {
-            _check(isCancelled: isCancelled);
-            if (elapsed.elapsed > deadline) {
-              throw TimeoutException(
-                'Archive verification exceeded its size-dependent deadline.',
-              );
-            }
-            count += chunk.length;
-            if (count > ArchivePublicationRecord.maximumContainerBytes ||
-                count > file.size!) {
-              throw StateError('Archive recovery file size changed: $path');
-            }
-            return chunk;
-          }),
-        )
-        .first;
+    final pausedBefore = _pausedTime;
+    final deadline = _deadlineForBytes(file.size!);
+    Stream<List<int>> verified() async* {
+      await for (final chunk in _controlled(
+        backend.readFile(file).timeout(const Duration(seconds: 30)),
+        isCancelled,
+      )) {
+        await _checkpoint(isCancelled: isCancelled);
+        if (elapsed.elapsed - (_pausedTime - pausedBefore) > deadline) {
+          throw TimeoutException(
+            'Archive verification exceeded its size-dependent deadline.',
+          );
+        }
+        count += chunk.length;
+        if (count > ArchivePublicationRecord.maximumContainerBytes ||
+            count > file.size!) {
+          throw StateError('Archive recovery file size changed: $path');
+        }
+        yield chunk;
+      }
+    }
+
+    final hash = await sha256.bind(verified()).first;
     final after = await backend.stat(path);
     _check(isCancelled: isCancelled);
     if (count != file.size || !sameArchiveFile(file, after)) {
@@ -207,6 +251,8 @@ class ArchiveContainerPublisher {
       await verifyArchiveDirectoryDependency(
         backend,
         directory,
+        control: isCancelled == null ? null : _control,
+        checkpoint: () => _checkpoint(isCancelled: isCancelled),
         isCancelled: () {
           _check(isCancelled: isCancelled);
           return false;
@@ -269,6 +315,7 @@ class ArchiveContainerPublisher {
     required Uint8List bytes,
     ArchivePublicationRecord? retry,
     bool Function()? isCancelled,
+    FileOperationControl? control,
     void Function(ArchivePublicationPhase)? onPhase,
     TransferCheckpoint? beforePublication,
     ArchivePublicationDependency? dependency,
@@ -289,6 +336,7 @@ class ArchiveContainerPublisher {
       openRead: () => Stream.value(bytes),
       retry: retry,
       isCancelled: isCancelled,
+      control: control,
       onPhase: onPhase,
       beforePublication: beforePublication,
       dependency: dependency,
@@ -313,6 +361,7 @@ class ArchiveContainerPublisher {
     required Stream<List<int>> Function() openRead,
     ArchivePublicationRecord? retry,
     bool Function()? isCancelled,
+    FileOperationControl? control,
     void Function(ArchivePublicationPhase)? onPhase,
     TransferCheckpoint? beforePublication,
     ArchivePublicationDependency? dependency,
@@ -328,8 +377,17 @@ class ArchiveContainerPublisher {
     }
     _running = true;
     _active = null;
+    _control = control;
+    _pauseAllowed = retry?.backup == null;
+    _pausedTime = Duration.zero;
+    _publicationCommitted = false;
+    _observerWarning = null;
+    final externalCancellation = isCancelled;
+    isCancelled = () =>
+        (control?.isCancelled ?? false) ||
+        (externalCancellation?.call() ?? false);
     try {
-      _check(isCancelled: isCancelled);
+      await _checkpoint(isCancelled: isCancelled);
       if (unsupportedReason(backend) case final String reason) {
         throw UnsupportedError(reason);
       }
@@ -428,6 +486,7 @@ class ArchiveContainerPublisher {
       _lease = null;
       _mutationAuthority = false;
       _running = false;
+      _control = null;
     }
   }
 
@@ -464,8 +523,8 @@ class ArchiveContainerPublisher {
       throw StateError('The recorded candidate was changed.');
     }
     if (existing == null) {
-      onPhase?.call(ArchivePublicationPhase.prepared);
-      _check(isCancelled: isCancelled);
+      _notifyPhase(ArchivePublicationPhase.prepared, onPhase);
+      await _checkpoint(isCancelled: isCancelled);
       var sourceVerified = false;
       Stream<List<int>> checkedRead() async* {
         final digest = _ArchiveCandidateDigest();
@@ -473,13 +532,15 @@ class ArchiveContainerPublisher {
         var received = 0;
         var closed = false;
         final elapsed = Stopwatch()..start();
-        final deadline = _verificationDeadline(record.candidateBytes);
+        final pausedBefore = _pausedTime;
+        final deadline = _deadlineForBytes(record.candidateBytes);
         try {
-          await for (final chunk in openRead().timeout(
-            const Duration(seconds: 30),
+          await for (final chunk in _controlled(
+            openRead().timeout(const Duration(seconds: 30)),
+            isCancelled,
           )) {
-            _check(isCancelled: isCancelled);
-            if (elapsed.elapsed > deadline) {
+            await _checkpoint(isCancelled: isCancelled);
+            if (elapsed.elapsed - (_pausedTime - pausedBefore) > deadline) {
               throw TimeoutException(
                 'Archive candidate reading exceeded its size-dependent deadline.',
               );
@@ -492,7 +553,7 @@ class ArchiveContainerPublisher {
               throw StateError('The archive candidate contains invalid bytes.');
             }
             for (var offset = 0; offset < chunk.length; offset += 256 * 1024) {
-              _check(isCancelled: isCancelled);
+              await _checkpoint(isCancelled: isCancelled);
               final end = offset + 256 * 1024 < chunk.length
                   ? offset + 256 * 1024
                   : chunk.length;
@@ -504,7 +565,7 @@ class ArchiveContainerPublisher {
               yield bytes;
             }
           }
-          _check(isCancelled: isCancelled);
+          await _checkpoint(isCancelled: isCancelled);
           if (received != record.candidateBytes) {
             throw StateError('The reviewed archive candidate was truncated.');
           }
@@ -525,12 +586,12 @@ class ArchiveContainerPublisher {
         record.candidateBytes,
         replace: false,
         checkpoint: (state) async {
-          _check(
+          await _checkpoint(
             isCancelled: state['phase'] == 'committed' ? null : isCancelled,
           );
         },
         verifyStaged: (staged) async {
-          _check(isCancelled: isCancelled);
+          await _checkpoint(isCancelled: isCancelled);
           if (!sourceVerified) {
             throw StateError('The archive candidate stream was not verified.');
           }
@@ -582,7 +643,7 @@ class ArchiveContainerPublisher {
         clearMessage: true,
       ),
     );
-    onPhase?.call(ArchivePublicationPhase.candidateWritten);
+    _notifyPhase(ArchivePublicationPhase.candidateWritten, onPhase);
   }
 
   Future<void> _intent(
@@ -590,7 +651,7 @@ class ArchiveContainerPublisher {
     void Function(ArchivePublicationPhase)? onPhase,
   }) async {
     await _record(_active!.copyWith(phase: phase, clearMessage: true));
-    onPhase?.call(phase);
+    _notifyPhase(phase, onPhase);
   }
 
   Future<ArchivePublicationReceipt> _finish({
@@ -632,6 +693,26 @@ class ArchiveContainerPublisher {
     if (backup != null && backup.hash != record.originalSha256) {
       throw StateError('The recorded original backup changed.');
     }
+    if (beforePublication != null) {
+      // A caller's guard may await the shared pause control. Never invoke it
+      // while this attempt (or an interrupted earlier attempt) owns a vacant
+      // original path. Restore the verified original before such a guard.
+      if (original == null && backup != null) {
+        await _restoreVacantOriginal();
+        original = await _inspect(record.original.path!);
+        backup = await _inspect(record.backupPath(backend.paths));
+        if (original?.hash != record.originalSha256 || backup != null) {
+          throw StateError(
+            'Restore the original before revalidating the archive source.',
+          );
+        }
+        record = _active!;
+        _pauseAllowed = true;
+      }
+      await _checkpoint(isCancelled: isCancelled);
+      await beforePublication();
+      await _checkpoint(isCancelled: isCancelled);
+    }
     if (backup == null) {
       if (original == null ||
           original.hash != record.originalSha256 ||
@@ -652,7 +733,8 @@ class ArchiveContainerPublisher {
       }
       await _verifyAccessPolicy(record, original.file.path!);
       await _verifyDependency(record, isCancelled: isCancelled);
-      _check(isCancelled: isCancelled);
+      await _checkpoint(isCancelled: isCancelled);
+      _pauseAllowed = false;
       if (!await backend.moveNoReplace(
         original.file,
         record.backupPath(backend.paths),
@@ -672,21 +754,19 @@ class ArchiveContainerPublisher {
           backup: backup.file,
         ),
       );
-      onPhase?.call(ArchivePublicationPhase.backedUp);
+      _notifyPhase(ArchivePublicationPhase.backedUp, onPhase);
     } else if (original != null) {
       throw StateError(
         'Both the original name and backup are occupied. Recovery requires review.',
       );
     }
     record = _active!;
+    _pauseAllowed = false;
     await _intent(ArchivePublicationPhase.installing, onPhase: onPhase);
-    // Captured transfers revalidate their separate source after
-    // staging. Keep the final candidate/backup checks below this potentially
-    // long read, so a source check cannot weaken destination verification.
-    // Failure restores a vacant original and retains a reviewable recovery
-    // record. Already installed candidates are confirmed above without replaying
-    // a transient guard, but all durable dependencies are still verified.
-    await beforePublication?.call();
+    // The source guard already ran after staging while the original name
+    // remained available. Keep these final candidate/backup/access/dependency
+    // checks after that potentially long read. Pause no longer waits here;
+    // cancellation before installation restores the verified original.
     await _verifyDependency(record, isCancelled: isCancelled);
     await _guardPaths(_active!);
     _check(isCancelled: isCancelled);
@@ -729,6 +809,8 @@ class ArchiveContainerPublisher {
     FileItem file, {
     void Function(ArchivePublicationPhase)? onPhase,
   }) async {
+    _publicationCommitted = true;
+    _pauseAllowed = false;
     // This also guards restart confirmation of a candidate already installed
     // before a lost acknowledgement. An ordinary transient callback cannot
     // provide that guarantee after restart.
@@ -741,7 +823,7 @@ class ArchiveContainerPublisher {
         clearMessage: true,
       ),
     );
-    onPhase?.call(ArchivePublicationPhase.published);
+    _notifyPhase(ArchivePublicationPhase.published, onPhase);
     try {
       final record = _active!;
       final backup = await _inspect(record.backupPath(backend.paths));
@@ -1011,6 +1093,8 @@ class ArchiveContainerPublisher {
     }
     _running = true;
     _active = null;
+    _publicationCommitted = false;
+    _observerWarning = null;
     try {
       _lease = await journal.acquirePublication(record.id);
       if (_lease == null) {

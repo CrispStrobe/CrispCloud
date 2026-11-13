@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/commander_strings.dart';
 import '../l10n/transfer_error_strings.dart';
+import '../models/archive_job.dart';
 import '../models/operation_progress.dart';
 import '../models/transfer_job.dart';
 import '../providers/providers.dart';
 import '../utils/formatters.dart' show formatBytes, formatSpeed;
 import 'transfer_history_dialog.dart';
+import 'archive_job_recovery_dialog.dart';
 import 'transfer_file_details.dart';
 import 'transfer_schedule_dialog.dart';
 
@@ -284,7 +286,16 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildQueueControls(context, transfers, finished),
+                        _buildQueueControls(
+                          context,
+                          transfers,
+                          finished,
+                          [
+                            for (final operation in operations)
+                              if (_canCancel(states[operation.id]!))
+                                operation.id,
+                          ],
+                        ),
                         const SizedBox(height: 4),
                         _buildFilters(context, operations, states, order),
                         const SizedBox(height: 6),
@@ -355,12 +366,18 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                         onReview:
                             saved != null && !transfers.isJobLive(operation.id)
                             ? () => _action(
-                                () => showTransferHistoryDialog(
-                                  context,
-                                  ref,
-                                  jobId: operation.id,
-                                  reviewOnOpen: operation.isWaitingForDecision,
-                                ),
+                                () => isArchiveTransferJob(saved)
+                                    ? showArchiveJobRecoveryDialog(
+                                        context,
+                                        ref,
+                                        jobId: operation.id,
+                                      )
+                                    : showTransferHistoryDialog(
+                                        context,
+                                        ref,
+                                        jobId: operation.id,
+                                        reviewOnOpen: operation.isWaitingForDecision,
+                                      ),
                               )
                             : null,
                         onAction: (choice) =>
@@ -472,6 +489,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
     BuildContext context,
     TransferNotifier transfers,
     List<OperationProgress> finished,
+    List<String> stoppableIds,
   ) => Wrap(
     spacing: 8,
     runSpacing: 4,
@@ -487,6 +505,14 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
               ? context.commanderTr('Resume queue')
               : context.commanderTr('Pause queue'),
         ),
+      ),
+      TextButton.icon(
+        key: const ValueKey('queue-stop-all'),
+        onPressed: stoppableIds.isEmpty
+            ? null
+            : () => _action(() => transfers.cancelOperations(stoppableIds)),
+        icon: const Icon(Icons.stop_circle_outlined),
+        label: Text(context.commanderTr('Stop all')),
       ),
       TextButton.icon(
         onPressed: () => _action(() => showTransferHistoryDialog(context, ref)),
@@ -748,6 +774,7 @@ class _OperationTile extends StatelessWidget {
         OperationType.move => Icons.drive_file_move_outline,
         OperationType.copy => Icons.file_copy_outlined,
         OperationType.delete => Icons.delete_outline,
+        OperationType.archive => Icons.archive_outlined,
       },
     };
     final live = _canPause(state) || state == _JobState.paused;
@@ -891,6 +918,33 @@ class _OperationTile extends StatelessWidget {
                 ),
               ],
             ),
+            if (_canCancel(state))
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  if (_canPause(state))
+                    TextButton.icon(
+                      key: ValueKey('queue-pause-${operation.id}'),
+                      onPressed: () => onAction('pause'),
+                      icon: const Icon(Icons.pause),
+                      label: Text(context.commanderTr('Pause')),
+                    ),
+                  if (state == _JobState.paused)
+                    TextButton.icon(
+                      key: ValueKey('queue-resume-${operation.id}'),
+                      onPressed: () => onAction('resume'),
+                      icon: const Icon(Icons.play_arrow),
+                      label: Text(context.commanderTr('Resume')),
+                    ),
+                  TextButton.icon(
+                    key: ValueKey('queue-stop-${operation.id}'),
+                    onPressed: () => onAction('cancel'),
+                    icon: const Icon(Icons.stop_circle_outlined),
+                    label: Text(context.commanderTr('Stop')),
+                  ),
+                ],
+              ),
             Tooltip(
               message: route,
               child: Text(
