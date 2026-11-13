@@ -7,6 +7,7 @@ import 'package:koni_codecs/koni_codecs.dart' as codecs;
 import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
+import 'archive_adc_codec.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_iso_reader.dart';
@@ -462,7 +463,7 @@ class _CheckedDmgSource implements koni.ByteSource {
 }
 
 /// Reads unencrypted, single-segment UDIF disk images without mounting them.
-/// Raw/zero/zlib/bzip2 blocks form bounded random-access partition sources.
+/// Raw/zero/ADC/zlib/bzip2/XZ blocks form bounded positional partition sources.
 /// Supported HFS+/HFSX or ISO files are exposed under `files/`; raw partition
 /// images are independently available under `partitions/`.
 Future<ViewerArchive> openDmgArchive(
@@ -554,8 +555,9 @@ Future<ViewerArchive> openDmgArchive(
     final notices = <String>[
       'Read-only disk image. Files are data forks; filesystem permissions, '
           'resource forks and extended attributes are not restored.',
-      'Compressed-block checksums are checked on read. Whole-image checksums '
-          'and publisher signatures are not verified.',
+      'Present compression checksums are checked on read; ADC has no embedded '
+          'checksum. Partition CRCs are checked on full partition extraction. '
+          'Whole-image checksums and publisher signatures are not verified.',
     ];
     void add(
       ViewerArchiveMember member,
@@ -834,10 +836,18 @@ _DmgPartition _partition(
       if (sectors != 0 || packedLength != 0) _bad('Invalid comment chunk.');
       continue;
     }
-    if (!const [0, 1, 2, 0x80000005, 0x80000006].contains(type)) {
+    if (!const [
+      0,
+      1,
+      2,
+      0x80000004,
+      0x80000005,
+      0x80000006,
+      0x80000008,
+    ].contains(type)) {
       _bad(
         'Compression method 0x${type.toRadixString(16)} is unavailable '
-        '(ADC, LZFSE and LZMA are not supported).',
+        '(LZFSE and unknown methods are not supported).',
       );
     }
     _range(sectorCount, start, sectors);
@@ -971,17 +981,28 @@ class _DmgPartition implements koni.ByteSource {
             chunk.packedLength,
           );
           try {
-            expanded = chunk.type == 0x80000005
-                ? const ar.ZLibDecoder().decodeBytes(
-                    packed,
-                    verify: true,
-                    maxOutputSize: chunk.length,
-                  )
-                : ar.BZip2Decoder().decodeBytes(
-                    packed,
-                    verify: true,
-                    maxOutputSize: chunk.length,
-                  );
+            expanded = switch (chunk.type) {
+              0x80000004 => decodeArchiveAdc(
+                packed,
+                expectedBytes: chunk.length,
+              ),
+              0x80000005 => const ar.ZLibDecoder().decodeBytes(
+                packed,
+                verify: true,
+                maxOutputSize: chunk.length,
+              ),
+              0x80000006 => ar.BZip2Decoder().decodeBytes(
+                packed,
+                verify: true,
+                maxOutputSize: chunk.length,
+              ),
+              // ULMO uses an XZ stream, not an LZMA-alone byte stream.
+              0x80000008 => ar.XZDecoder(
+                maxDictionarySize: _maxChunkBytes,
+                maxPreallocateSize: chunk.length,
+              ).decodeBytes(packed, verify: true, maxOutputSize: chunk.length),
+              _ => throw const ArchiveViewException('Unsupported DMG codec.'),
+            };
           } catch (error) {
             _bad('A compressed partition chunk is corrupt: $error');
           }

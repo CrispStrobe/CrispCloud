@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-13",
+  "scope": "Exact parser mirror and standalone consumer qualification; combined application and native renderer acceptance are separate.",
+  "source": {
+    "application_base": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+    "local_sync_commit": "191037050c9f6e543a588dc8b130d682e6ced747",
+    "sync_tree": "fbea93801dc25145b99e955666390a92ed51203e",
+    "parser_repository": "https://github.com/CrispStrobe/legacy-doc-parser",
+    "parser_commit": "840f8af1f645cd6ed85277ba6e619dc120d99277",
+    "reconciled_ancestor_commits": [
+      "402b66de584fda5860c0dbeb7c370858e4568804",
+      "1b8cc9e28aa9f4da2d0f0fa9318758bce0e923f1"
+    ],
+    "parser_source_files": 1458,
+    "office_inventory_files": 1883,
+    "office_inventory_sha256": "1c4918fc399c3b936deaa7482f18eeaf99a4aedfbc1373ccb980fbdf2bce8c47",
+    "quds_source_commit": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+    "root_pubspec_lock_sha256": "fa128435bbb2ef6ce418c028742307c74623561593bdbbe6cb0a8d1baca9598d",
+    "root_lock_unchanged_from_base": true,
+    "local_parser_patches": []
+  },
+  "environment": {
+    "os": "Linux x64",
+    "flutter_pin": "3.47.8",
+    "dart": "3.13.7",
+    "node": "v24.22.1",
+    "native_ebook_hooks_used": false
+  },
+  "checks": [
+    {
+      "name": "Parser suite with app-locked archive4.6.0",
+      "passed": true,
+      "tests": 1361,
+      "log": "dart-tests-archive46.txt",
+      "configuration": "Generated package_config copied from standalone resolution, with only archive root redirected to the verified archive4.6.0 cache. Direct test entrypoint consumes this package_config; source/manifest/lock unchanged."
+    },
+    {
+      "name": "Full parser JavaScript acceptance with archive4.6.0",
+      "passed": true,
+      "log": "javascript-archive46.txt",
+      "configuration": "Existing tool/verify_web.py; generated package_config replaced during execution and restored byte-for-byte in finally."
+    },
+    {
+      "name": "Standalone parser suite with normally resolved archive4.7.1",
+      "passed": true,
+      "tests": 1361,
+      "log": "dart-tests.txt",
+      "overlaps": "Same1,361 cases as archive4.6.0; counts are not additive."
+    },
+    {
+      "name": "Full-package fatal-info analysis",
+      "passed": true,
+      "log": "dart-analysis.txt",
+      "archive_version": "4.7.1"
+    },
+    {
+      "name": "Python semantic/oracle controls",
+      "passed": true,
+      "tests": 184,
+      "log": "python-oracle-controls.txt",
+      "note": "Deliberate failing validator/compiler controls in the log are expected test assertions."
+    },
+    {
+      "name": "Retained source corpus and OOXML package graph verification",
+      "passed": true,
+      "inputs": 24,
+      "log": "corpus-integrity.txt"
+    },
+    {
+      "name": "App guarded parser sync controls",
+      "passed": true,
+      "tests": 19,
+      "command": "python3 -m unittest discover -s tool -p test_sync_legacy_doc_parser.py"
+    },
+    {
+      "name": "App guarded Office sync controls",
+      "passed": true,
+      "tests": 8,
+      "command": "python3 -m unittest discover -s tool -p test_sync_office_fidelity.py"
+    },
+    {
+      "name": "Exact mirror and Git-index verification before/after validation",
+      "passed": true,
+      "office_files": 1883,
+      "command": "python3 tool/verify_office_fidelity.py --legacy-source /path/to/legacy-doc-parser --require-tracked"
+    }
+  ],
+  "logs": {
+    "corpus-integrity.txt": {
+      "bytes": 51,
+      "sha256": "11baa5f95b1e9f5e530e9280e15f7e105fea388dfcc79b7619eac0f8b4c5bb3d"
+    },
+    "dart-analysis.txt": {
+      "bytes": 48,
+      "sha256": "ffe60d0ac6f52a01f55eded9f747c094bcadf0e059519e4b740b42c4e0e363bc"
+    },
+    "dart-tests-archive46.txt": {
+      "bytes": 161854,
+      "sha256": "b193f6880999aed02b495bccc95e333b70db7416b75e6ec475293cfbafc5f9db"
+    },
+    "dart-tests.txt": {
+      "bytes": 162602,
+      "sha256": "312c08ac281ef1ec9b2deef3b925ab4152c5ef118304c35d126efbaed9dc4b40"
+    },
+    "javascript-archive46.txt": {
+      "bytes": 3542,
+      "sha256": "3323983b5097833f62991424fcb93fdef91014bacf5d4f4f706a1df91032c7e6"
+    },
+    "python-oracle-controls.txt": {
+      "bytes": 543,
+      "sha256": "d44e0c794a95c3f69e8265e08868e46e00768f2c65312a42c0295aef87bd67a6"
+    }
+  },
+  "archive": {
+    "path": "validation-logs.tar.xz",
+    "bytes": 13348,
+    "sha256": "388a3da8930788580daff7e56f38e6fcaafbd1a21970245c2aa2d8f2980e8fdc"
+  },
+  "not_run": [
+    "Native Microsoft Word/LibreOffice renderer acceptance",
+    "Independent Open XML SDK validation",
+    "Full Flutter application release build",
+    "Combined application widget suites"
+  ],
+  "historical_evidence": "Upstream and previously retained app receipts keep their original source attribution; they are not relabeled as acceptance of this reconciliation."
+}

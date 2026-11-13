@@ -268,6 +268,89 @@ void isoBoth32(Uint8List bytes, int at, int value) {
   data.setUint32(at + 4, value, Endian.big);
 }
 
+/// ECMA-119 section-chain fixture, authored independently of the reader/writer.
+/// Payload sections are separated by a spare sector; record order supplies the
+/// logical byte order. Optional directory-sector padding separates records too.
+class IsoMultiExtentFixture {
+  IsoMultiExtentFixture({
+    List<List<int>>? contents,
+    bool joliet = false,
+    String? rockRidgeName,
+    bool separateRecordSectors = false,
+    bool symbolicLink = false,
+  }) {
+    final pieces =
+        contents ?? [utf8.encode('first part'), utf8.encode('second')];
+    if (pieces.length < 2) {
+      throw ArgumentError('Two file sections are required.');
+    }
+    final base = IsoFixture(
+      jolietName: joliet ? '複数.txt' : null,
+      rockRidgeName: rockRidgeName,
+      symbolicLink: symbolicLink,
+    );
+    final unicode = joliet && rockRidgeName == null && !symbolicLink;
+    final oldRoot =
+        (unicode ? IsoFixture.jolietRootSector : IsoFixture.rootSector) * 2048;
+    final oldFile = unicode
+        ? base.jolietFileRecordOffset!
+        : base.fileRecordOffset;
+    final template = Uint8List.fromList(
+      base.bytes.sublist(oldFile, oldFile + base.bytes[oldFile]),
+    );
+    final selfLength = base.bytes[oldRoot];
+    final parentLength = base.bytes[oldRoot + selfLength];
+    final prefix = Uint8List.fromList(
+      base.bytes.sublist(oldRoot, oldRoot + selfLength + parentLength),
+    );
+    var nextRecord = prefix.length;
+    for (var i = 0; i < pieces.length; i++) {
+      if ((separateRecordSectors && i > 0) ||
+          nextRecord % 2048 + template.length > 2048) {
+        nextRecord = (nextRecord ~/ 2048 + 1) * 2048;
+      }
+      recordOffsets.add(rootSector * 2048 + nextRecord);
+      nextRecord += template.length;
+    }
+    final directorySectors = (nextRecord + 2047) ~/ 2048;
+    var nextDataSector = rootSector + directorySectors + 1;
+    for (final piece in pieces) {
+      dataOffsets.add(nextDataSector * 2048);
+      nextDataSector += (piece.length + 2047) ~/ 2048 + 1;
+    }
+    bytes = Uint8List((nextDataSector + 1) * 2048)..setAll(0, base.bytes);
+    isoBoth32(prefix, 2, rootSector);
+    isoBoth32(prefix, 10, directorySectors * 2048);
+    isoBoth32(prefix, selfLength + 2, rootSector);
+    isoBoth32(prefix, selfLength + 10, directorySectors * 2048);
+    bytes.setAll(rootSector * 2048, prefix);
+    for (var i = 0; i < pieces.length; i++) {
+      final record = Uint8List.fromList(template);
+      isoBoth32(record, 2, dataOffsets[i] ~/ 2048);
+      isoBoth32(record, 10, pieces[i].length);
+      record[25] = (record[25] & 0x7f) | (i + 1 < pieces.length ? 0x80 : 0);
+      bytes.setAll(recordOffsets[i], record);
+      bytes.setAll(dataOffsets[i], pieces[i]);
+    }
+    isoBoth32(bytes, 16 * 2048 + 80, bytes.length ~/ 2048);
+    if (joliet) isoBoth32(bytes, 17 * 2048 + 80, bytes.length ~/ 2048);
+    final descriptor = (unicode ? 17 : 16) * 2048;
+    isoBoth32(bytes, descriptor + 158, rootSector);
+    isoBoth32(bytes, descriptor + 166, directorySectors * 2048);
+    isoBoth32(bytes, descriptor + 132, 10);
+    final data = ByteData.sublistView(bytes);
+    data.setUint32((unicode ? 22 : 20) * 2048 + 2, rootSector, Endian.little);
+    data.setUint32((unicode ? 23 : 21) * 2048 + 2, rootSector, Endian.big);
+    expected = Uint8List.fromList(pieces.expand((piece) => piece).toList());
+  }
+
+  static const rootSector = 64;
+  late final Uint8List bytes;
+  late final Uint8List expected;
+  final recordOffsets = <int>[];
+  final dataOffsets = <int>[];
+}
+
 /// Independently produced by libarchive 3.7.4's ISO writer (Joliet and Rock Ridge
 /// enabled). Contains hello.txt, folder/日本語.txt and a 179-character name that
 /// requires a Rock Ridge CE continuation. Zlib stores the sparse 382976-byte

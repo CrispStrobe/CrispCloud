@@ -2,7 +2,17 @@ name: Commander archive workflows
 
 on:
   push:
-    branches: [feature/archive-commander-parity-20261113]
+    branches: [feature/archive-commander-parity-20261113, integration/archive-containers-20261113]
+    paths:
+      - '.github/workflows/archive-commander-parity.yml'
+      - '.github/actions/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'packages/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tool/**'
+  pull_request:
     paths:
       - '.github/workflows/archive-commander-parity.yml'
       - '.github/actions/**'
@@ -77,6 +87,17 @@ jobs:
           set -euo pipefail
           flutter --version 2>&1 | tee build/archive-commander-ci/flutter-version.txt
           flutter pub get --enforce-lockfile 2>&1 | tee build/archive-commander-ci/dependencies.log
+      - name: Verify independent disk-image codec fixtures
+        run: |
+          set -euo pipefail
+          disk_image_test_engine="$RUNNER_TEMP/disk-image-test-7zip"
+          mkdir -p "$disk_image_test_engine"
+          curl --fail --location --retry 3 https://github.com/ip7z/7zip/releases/download/26.06/7z2606-linux-x64.tar.xz -o "$disk_image_test_engine/7zip.tar.xz"
+          printf '%s  %s\n' 2b539cf067b2ad48e1baa5093dbaa8818b73542d1222a0ffde9dc5f2922ea62e "$disk_image_test_engine/7zip.tar.xz" | sha256sum --check
+          tar -xJf "$disk_image_test_engine/7zip.tar.xz" -C "$disk_image_test_engine"
+          python3 test/support/check_dmg_codecs.py --sevenzip "$disk_image_test_engine/7zz" 2>&1 | tee build/archive-commander-ci/dmg-codecs.log
+          dart --packages=.dart_tool/package_config.json test/support/emit_archive_iso_multiextent.dart build/archive-commander-ci/iso-fixtures
+          python3 test/support/check_archive_iso_multiextent.py --input build/archive-commander-ci/iso-fixtures --sevenzip "$disk_image_test_engine/7zz" 2>&1 | tee build/archive-commander-ci/iso-multiextent.log
       - name: Analyze archive integration
         run: |
           set -euo pipefail
@@ -88,6 +109,8 @@ jobs:
           mkdir -p build/archive-portable
           dart compile js --packages=.dart_tool/package_config.json -O1 -o build/archive-portable/data-codecs.js test/support/verify_archive_portable_data_codecs.dart 2>&1 | tee build/archive-commander-ci/portable-compile.log
           node -e 'global.self=global; require("./build/archive-portable/data-codecs.js")' 2>&1 | tee build/archive-commander-ci/portable-runtime.log
+          dart compile js --packages=.dart_tool/package_config.json -O1 -o build/archive-portable/iso-sections.js test/support/verify_archive_iso_multiextent.dart 2>&1 | tee build/archive-commander-ci/iso-portable-compile.log
+          node -e 'global.self=global; require("./build/archive-portable/iso-sections.js")' 2>&1 | tee build/archive-commander-ci/iso-portable-runtime.log
       - name: Run archive and menu regression suites
         timeout-minutes: 35
         run: |
