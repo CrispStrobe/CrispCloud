@@ -82,6 +82,38 @@ LegacyWordDrawing _drawing(
 );
 
 void main() {
+  test(
+    'recovered textbox placement is qualified in every localized heading',
+    () {
+      final preview = projectLegacyWordPreview(
+        _document(
+          stories: [_story('recovered-box', LegacyWordStoryKind.textbox, 10)],
+          textboxes: const [
+            LegacyWordTextboxReference(
+              id: 1,
+              storyId: 'recovered-box',
+              inHeaderFooter: false,
+              shapeId: 42,
+              placementUnresolved: true,
+            ),
+          ],
+        ),
+      );
+      expect(preview.stories.single.placementUnresolved, isTrue);
+      expect(preview.plainText, contains('Text box 1 · Placement unavailable'));
+      for (final language in LocalePreference.supported) {
+        final strings = LegacyWordPreviewStrings(Locale(language));
+        final label = strings.heading(preview.stories.single);
+        expect(label, contains(' · '));
+        expect(strings.text(preview), contains(label));
+        expect(strings.html(preview), contains(label));
+        if (language != 'en') {
+          expect(label, isNot(contains('Placement unavailable')));
+        }
+      }
+    },
+  );
+
   for (final deleted in [false, true]) {
     test(
       'hidden or deleted textbox shape without encoded ID remains invisible: $deleted',

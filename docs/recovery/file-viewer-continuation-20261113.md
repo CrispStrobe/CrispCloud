@@ -37,6 +37,50 @@ Implementation and final validation results will be appended as each portion
 finishes. Existing input/allocation guards and source fingerprints remain part
 of the acceptance criteria.
 
+## Saved implementation checkpoints
+
+| Repository | Remote commit | Result |
+| --- | --- | --- |
+| CrispCloud | [`33cd37e`](https://github.com/CrispStrobe/CrispCloud/commit/33cd37eb015edc896d56136ba4fdbdf16d03d07c) | Completed Linux/Chromium evidence retained, replacing stale pending status. |
+| CrispCloud | [`ee7531c`](https://github.com/CrispStrobe/CrispCloud/commit/ee7531cd2404cb1243c3198ebcac9e5620df87c2) | Reproducible npm contract entry and common build-checkout selection; 61 contracts pass. |
+| CrispCloud | [`e5d3324`](https://github.com/CrispStrobe/CrispCloud/commit/e5d332463bd773e812da277ab3c4d74d0f183f38) | Labeled DOC/DOT auxiliary-story projection, nine-language labels, extracted-content search/copy, and focused regressions. |
+| CrispCloud | [`60794aa`](https://github.com/CrispStrobe/CrispCloud/commit/60794aa1c8982eef2dd74d3c9e4c5280f19601a0) | Canonical main snapshot `be103b4c` brought into the feature branch, preserving newer Word, archive, source-retention and runtime verification work. |
+| legacy-doc-parser | [`22f2daf`](https://github.com/CrispStrobe/legacy-doc-parser/commit/22f2dafeeb28a5a469cf436d26dca0e0da7a7730) | First bounded compatibility fixes and 27 authored positive/negative controls. |
+| legacy-doc-parser | [`e442772`](https://github.com/CrispStrobe/legacy-doc-parser/commit/e4427725cc720eaefad97c2cb921a6fe1e36749d) | Canonical parser `419864b` preserved, with 1,019 passing tests, clean full analysis and a fresh 19/19 differential probe. |
+| CrispCloud | [`e8e46b5`](https://github.com/CrispStrobe/CrispCloud/commit/e8e46b5ef04dcea3b4a65f5b4f1c797559528f5b) | Exact standalone parser mirror, source pin and evidence synced with the repository's guarded tool. |
+
+The source guard verified all **1,500 Office-managed files** against the updated
+inventory and exact standalone Git commit, including tracked file modes and
+retained evidence. The independent document-runtime guard verified **174**
+runtime, notice, overlay and matching-source records. No dependency version,
+native hook or source-verification rule was changed to make these checks pass.
+
+The [updated comparison](../file-viewer-doc-dot-comparison.md) separates the
+original 16/19 native result from the new 19/19 result. It also distinguishes
+appended reading content from original pagination and preserves the exact
+limitations of linked-image and unpositioned-textbox recovery.
+
+## Final app regression checks
+
+The final projection adds an explicit localized **Placement unavailable**
+qualifier for recovered textboxes. All nine supported languages preserve
+document text while translating the generated headings. The app tests passed
+in three nonoverlapping invocations: **42 DOC/review/metafile cases**, **36
+MBOX/email/routing/source cases**, and **11 F3 email/search/format cases**.
+All **89** tests passed; the focused analyzer over nine paths reports no issues.
+The parser-sync and document-runtime verifier controls also pass **23/23**.
+
+The [app validation receipt](../evidence/file-viewer-continuation-20261113/README.md)
+retains the real logs, exact source/lockfile hashes and commands. These commands
+used Flutter 3.47.8 / Dart 3.13.7, the actual production graph, enforced lockfile
+resolution and normal native hooks. The initial filtered-environment Rustup
+failure is retained separately; genuine workspace compiler launchers resolved
+that environment issue without replacing a dependency or disabling a hook.
+
+The production JavaScript web release build is being checked separately. Its
+result and the remaining platform qualification limits are recorded in the
+same receipt, rather than inferred from unit/widget success.
+
 ## Reproducible local engine checks
 
 The normal `npm test` entry now selects the six actual engine test directories.

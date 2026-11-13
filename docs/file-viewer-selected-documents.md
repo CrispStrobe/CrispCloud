@@ -5,8 +5,10 @@ Implementation and validation checkpoint, 13 November 2026.
 CrispCloud's F3 viewer now has the requested WordPerfect, CHM, legacy Excel,
 visual legacy PowerPoint, PostScript/EPS, MBOX, and XML schema/transformation
 routes. The selected upstream is File Viewer 3.3.3 at
-`d264009ca6efb3daed79a39d1ae63133e0f25558`. The tested source checkpoint is
+`d264009ca6efb3daed79a39d1ae63133e0f25558`. The initial tested source checkpoint is
 [`5404834`](https://github.com/CrispStrobe/CrispCloud/commit/540483491f4a02aad3672abe438ad4aad3696e21).
+The later Linux XML chooser and browser/native build results are retained at
+`ddfd695`; the DOC/DOT continuation below consumes standalone parser `e442772`.
 
 ## What opens, how it renders, and the effective licenses
 
@@ -77,25 +79,27 @@ its session and origin, limits transfers, restricts navigation and closes worker
 on replacement, failure, timeout or disposal. The [package README](../packages/file_viewer_documents/README.md)
 describes build/runtime architecture and complete limitations.
 
-## DOC and DOT: keep our parser, fix specific gaps
+## DOC and DOT: native parser retained, specific gaps fixed
 
 The [full comparison](file-viewer-doc-dot-comparison.md) examines actual source,
 models, F3 output and a runnable 19-fixture differential probe.
 
-- File Viewer opened **19/19** selected fixtures; the native parser opened
-  **16/19**. Eight mutually accepted documents had equal normalized preview text.
-  These counts measure selected compatibility/text projections, not visual fidelity.
-- Three native failures are concrete cases: an unsupported linked-picture mapping
-  mode, a WPS cell-border range and an unresolved textbox-shape reference. Upstream
-  recovered readable text. Each needs a narrow regression-backed compatibility
-  decision while keeping the native parser's malformed-input and allocation guards.
+- The original probe opened **19/19** selected fixtures upstream and **16/19**
+  natively. The fresh compatibility follow-up now opens **19/19 in both engines**,
+  with nine equal normalized main-preview text results. These counts measure
+  selected compatibility/text projections, not visual fidelity.
+- The three rejection cases now have narrow, regression-backed recovery rules:
+  inert mode-94 linked-picture evidence, a corroborated WPS diagonal-border pair,
+  and independently valid singleton textboxes without verified placement. Other
+  malformed ranges, ambiguous chains and unsupported records still reject.
 - Our parser reconstructs numbered list labels and preserves structured auxiliary
   stories, review/source provenance and editable DOCX conversion. The upstream
   browser DOC route does not replace that model/conversion work.
-- The immediate display gap is **in CrispCloud's adapter**: it forwards main-story
-  HTML/text and omits separately preserved headers, footers, notes, comments and
-  textboxes. File Viewer linearizes some textbox stories after the body. Exposing
-  the stories we already have is a better first change than replacing the engine.
+- CrispCloud's adapter now appends the already preserved visible headers,
+  footers, notes, comments and textboxes with localized role labels. F3 search
+  and copy use that extracted content. Hidden/private references remain hidden;
+  Source/Hex retain the original bytes. Unresolved placement is explicitly
+  identified, and the reading labels do not claim original pagination.
 - Upstream has useful broader container detection and explicit final/original
   review projections. Those are candidates for targeted follow-up, not changes
   included in this priority-format implementation.
@@ -105,14 +109,23 @@ source notices. File Viewer's binary DOC engine is **MIT**,
 with an Apache Word wrapper and Apache-selectable sanitizer. It is not wholly
 Apache merely because the enclosing repository is Apache.
 
+The exact parser source is now
+[`e442772`](https://github.com/CrispStrobe/legacy-doc-parser/commit/e4427725cc720eaefad97c2cb921a6fe1e36749d),
+which preserves canonical parser `419864b` and its later Word/ink improvements.
+Its **1,019-test suite** and full analyzer pass. The
+[compatibility receipt](../packages/legacy_doc_parser/doc/evidence/file-viewer-compat-20261113/README.md)
+retains the executed results and source identities; the
+[continuation checkpoint](recovery/file-viewer-continuation-20261113.md) records
+the app verification separately.
+
 ## Executed validation and its limits
 
 The [retained receipts](evidence/file-viewer-selected-documents-20261113/README.md)
 record commands, versions and evidence:
 
 - **61/61** Node/native-WASM contracts pass, zero skips.
-- [Real Chromium CI 43383695021](https://github.com/CrispStrobe/CrispCloud/actions/runs/43383695021)
-  passes 6 PS/EPS and 9 XML browser cases, both XLS/PPT and WPD/CHM smoke suites,
+- [Real Chromium CI 43387993185](https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185)
+  passes 6 PS/EPS and 10 XML browser cases, both XLS/PPT and WPD/CHM smoke suites,
   and the actual shipped host for all six engines. It checks real Canvas/Worker
   behavior, local assets/CSP, navigation, source transfer and cleanup.
 - **69/69** focused app source/routing/widget cases pass in one fresh invocation.
@@ -124,8 +137,13 @@ record commands, versions and evidence:
   Dart 3.13.7 JavaScript web release** builds successfully. Its optional
   Flutter-WASM dry run reported exit 247; no Flutter-WASM build is claimed.
 
+The same run's Linux job compiled the real WebKitGTK-enabled plugin and release
+consumer, verified 42 runtime assets and 27 XML chooser filesystem-policy cases,
+and verified installation of its executable startup probe. It did not launch
+the probe or an interactive GTK chooser. The exact job IDs and versions are in
+the [retained receipt](evidence/file-viewer-selected-documents-20261113/ci-ddfd695.json).
+
 Chromium success and a web compile do not establish desktop/mobile WebKit/WebView
-rendering on every OS. Linux has explicit compile/probe gates; its independent
-consumer compile result is recorded in the receipt when available. Full device
+rendering on every OS. Full device
 qualification and release acceptance remain separate. No release gate was
-weakened, and no merge, deployment or release is part of this work.
+weakened, and no merge into main, deployment or release is part of this work.

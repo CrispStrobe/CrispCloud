@@ -1276,8 +1276,9 @@ Future<OfficeDocument> _parseEpub(ViewerArchive archive) async {
             if (uri == null ||
                 uri.hasScheme ||
                 uri.hasAuthority ||
-                uri.path.startsWith('/'))
+                uri.path.startsWith('/')) {
               continue;
+            }
             final path = p.posix.normalize(
               p.posix.join(
                 p.posix.dirname(packagePath),

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crisp_cloud/l10n/app_localizations.dart';
 import 'package:crisp_cloud/models/file_item.dart';

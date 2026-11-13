@@ -14,6 +14,7 @@ class LegacyWordPreviewStory {
     required this.endCp,
     this.sectionIndex,
     this.headerFooterType,
+    this.placementUnresolved = false,
   });
 
   final String id;
@@ -23,6 +24,7 @@ class LegacyWordPreviewStory {
   final int endCp;
   final int? sectionIndex;
   final LegacyWordHeaderFooterType? headerFooterType;
+  final bool placementUnresolved;
 }
 
 class LegacyWordPreviewHeading {
@@ -112,6 +114,10 @@ LegacyWordPreview projectLegacyWordPreview(LegacyWordDocument document) {
     reference(item.storyId, !hiddenComments.contains(item.id));
   }
   final drawings = <(bool, int, int), LegacyWordDrawing>{};
+  final unpositionedStories = {
+    for (final item in document.textboxReferences)
+      if (item.placementUnresolved) item.storyId,
+  };
   final firstDrawings = <(bool, int), LegacyWordDrawing>{};
   final encodedDrawings = <(bool, int), LegacyWordDrawing>{};
   for (final drawing in document.media.drawings) {
@@ -184,6 +190,7 @@ LegacyWordPreview projectLegacyWordPreview(LegacyWordDocument document) {
       endCp: story.endCp,
       sectionIndex: story.sectionIndex,
       headerFooterType: story.headerFooterType,
+      placementUnresolved: unpositionedStories.contains(story.id),
     );
     descriptors.add(descriptor);
     var label = '${legacyWordStoryLabels[story.kind]} $number';
@@ -198,6 +205,7 @@ LegacyWordPreview projectLegacyWordPreview(LegacyWordDocument document) {
             LegacyWordHeaderFooterType.first => 'First page',
           }}';
     }
+    if (descriptor.placementUnresolved) label += ' · Placement unavailable';
     labels.add(label);
     if (text.length + label.length + story.plainText.length + 3 >
         maxTextUnits) {

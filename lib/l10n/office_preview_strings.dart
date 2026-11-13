@@ -80,8 +80,9 @@ class OfficePreviewStrings {
 
   String? note(OfficeDocument document) {
     if (document.notice case final notice?) return _portable.notice(notice);
-    if (document.fallback == OfficePreviewFallback.legacyPresentation)
+    if (document.fallback == OfficePreviewFallback.legacyPresentation) {
       return _values[1];
+    }
     final note = document.note;
     return note == null ? null : _word.translate(note) ?? note;
   }

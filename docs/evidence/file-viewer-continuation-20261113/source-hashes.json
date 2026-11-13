@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "branchBaseAtTest": "e8e46b5ef04dcea3b4a65f5b4f1c797559528f5b",
+  "parserCommit": "e4427725cc720eaefad97c2cb921a6fe1e36749d",
+  "files": {
+    "lib/services/legacy_word_preview.dart": "fdd80a3c273b1fac8acaffabf2237f751eae2fcadfafca73b561f6d0ad1c21a0",
+    "lib/services/office_document_service.dart": "8c82cbe0b998c47a6fc7308df59b31e381e49cf4edc3634c0dcb9f0b74e7573b",
+    "lib/l10n/legacy_word_preview_strings.dart": "7e0b853592752d80658fca99251e6743f37b2700ad73a698e51552e4d79fe0d5",
+    "lib/l10n/office_preview_strings.dart": "96a0514bbf240cd39f48688d0fc6809c5791aa181289486572dcfaafcee59597",
+    "lib/l10n/portable_office_preview_strings.dart": "ec29290f0d0a3c0303803568a4695e0f6922fdb83f790408214ada6a127c9044",
+    "lib/widgets/internal_viewer_dialog.dart": "0cb0caa0b55baa7d6e0451fdbd3b1c15b7eab93dcaa5ca8153c8a962441228ee",
+    "lib/widgets/preview_pane.dart": "24ae70d01b68cf38ae21d71f4d2efdc4fce2edabc2aee45440958cf8e30907a1",
+    "test/legacy_word_preview_test.dart": "03b344c565e0b38b96ab3875fb30d2043138aaa3076ec62d9011c7868ab2bfb0",
+    "test/widget/legacy_word_story_preview_test.dart": "ab31b5c4b8017ac8bb4066f1f1cd21b7401f1a567bc20cf1b323eb2afaeb5e59",
+    "pubspec.yaml": "b671f6a6c4e1567fede6c8ae1c6039f9d5a15e2af5ae8bd7a5280053ea628c54",
+    "pubspec.lock": "9fa9d8da120b8e8f2d7beacb9c5baddd684bd091172d0d9a4ffee4274c744a7b"
+  }
+}

@@ -1,0 +1,66 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: recovered textbox placement is qualified in every localized heading
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: hidden or deleted textbox shape without encoded ID remains invisible: false
+00:00 +2: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: hidden or deleted textbox shape without encoded ID remains invisible: true
+00:00 +3: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: keeps CP order, shared occurrences, identities and page variants
+00:00 +4: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: no auxiliary content leaves main-only previews byte-for-byte unchanged
+00:00 +5: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: all story roles and generated headings localize without changing content
+00:00 +6: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: hidden-only references stay hidden; one visible reference keeps a story
+00:00 +7: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: bounded projection rejects excess text and stories instead of truncating
+00:00 +8: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: hidden comment parents suppress replies transitively in any source order
+00:00 +9: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: large markup falls back to complete extracted text without composing it
+00:00 +10: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: DOC and DOT include real parsed headers, footers, notes and comments
+00:00 +11: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: private-field note and comment bodies do not leak through the adapter
+00:00 +12: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: native fixture linked-textboxes-extended.doc retains every recovered textbox in DOC/DOT preview
+00:00 +13: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_preview_test.dart: native fixture word14-margin-origin.doc retains every recovered textbox in DOC/DOT preview
+00:00 +14: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/office_preview_strings_test.dart
+00:00 +14: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_preview_strings_test.dart: parser marks legacy and extraction fallback prose for translation
+00:00 +15: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_preview_strings_test.dart: every portable-preview notice is translated in all supported locales
+00:00 +16: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_preview_strings_test.dart: document text and external error notes are never translated by content
+00:00 +17: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_preview_strings_test.dart: only parser-generated headings are translated in each output
+00:01 +18: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_preview_strings_test.dart: missing part messages preserve the format and part names
+00:01 +19: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart
+00:01 +19: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: reads body CPs from compressed and Unicode pieces in logical order
+00:01 +20: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: uses the selected 0Table and excludes trailing non-body stories
+00:01 +21: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: decodes documented compressed punctuation and table cells
+00:01 +22: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: shows field results without instruction text, including nested fields
+00:01 +23: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: does not fall back to a same-named embedded Word stream
+00:01 +24: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: rejects encrypted Word input before decoding tables
+00:01 +25: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: rejects missing, truncated, nonmonotonic and oversized text tables
+00:01 +26: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: DOC and DOT previews provide a structured, explicitly partial view
+00:01 +27: /workspace/scratch/60b40e52ccd6/crispcloud/test/legacy_word_document_test.dart: malformed DOC becomes a safe extraction failure
+00:01 +28: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/legacy_word_story_preview_test.dart
+00:30 +28: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/legacy_word_story_preview_test.dart: F3 formatted, search and Copy all share the complete DOC projection
+00:32 +29: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/legacy_word_story_preview_test.dart: DOT auxiliary headings localize in the real F3 formatted view
+00:32 +30: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/legacy_word_story_preview_test.dart: F3 displays native textbox-only document
+00:32 +31: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/legacy_word_story_preview_test.dart: Side preview displays native textbox-only document
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:33 +32: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart
+00:35 +32: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:37 +33: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart: MBOX navigation retains query and searches the newly selected message
+00:38 +34: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart: one malformed MBOX message leaves later messages reachable
+00:38 +35: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart: compressed BOM mailbox uses inner format and preserves expanded Source/Hex bytes
+00:38 +36: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart: compressed binary PPT keeps inner name, copies native text, and protects visual Copy all
+00:39 +37: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_review_test.dart: XML tools receive original UTF-16 bytes and Source/Hex remain exact
+00:39 +38: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_metafile_preview_test.dart
+00:41 +38: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_metafile_preview_test.dart: F3 paints referenced emf from binary DOC
+00:42 +39: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_metafile_preview_test.dart: Preview pane paints referenced emf from binary DOC
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:43 +40: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_metafile_preview_test.dart: F3 paints referenced wmf from binary DOC
+00:43 +41: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_metafile_preview_test.dart: Preview pane paints referenced wmf from binary DOC
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:44 +42: All tests passed!

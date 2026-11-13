@@ -1,0 +1,15 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/extended_format_viewer_test.dart
+00:00 +0: DOC F3 shows supported formatting and revisions with a localized notice and explicit text view
+00:01 +1: DOT F3 shows supported formatting and revisions with a localized notice and explicit text view
+00:01 +2: RTF opens a formatted safe preview without unsupported page layout
+00:01 +3: F3 decodes MIME text and searches decoded message content
+00:02 +4: decoded search bounds newline-dense messages and keeps preview
+00:02 +5: email attachments use the existing viewer without an edit target
+00:03 +6: F3 opens Outlook compound messages in the email view
+00:03 +7: gzip-expanded Outlook messages use the inner MSG filename
+00:03 +8: Autodesk keyboard profiles open as an XML tree
+00:03 +9: MIME source edits retain CRLF and untouched attachment encoding
+00:03 +10: keyboard profile source editing retains UTF-16 and line endings
+00:03 +11: All tests passed!

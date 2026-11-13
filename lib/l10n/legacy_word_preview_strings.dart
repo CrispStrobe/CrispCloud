@@ -24,6 +24,7 @@ class LegacyWordPreviewStrings {
             LegacyWordHeaderFooterType.first => 16,
           }]}';
     }
+    if (story.placementUnresolved) label += ' · ${_values[20]}';
     return label;
   }
 
@@ -82,6 +83,7 @@ class LegacyWordPreviewStrings {
       'The extracted preview is too large to search here. Copy All remains available.',
       'Searched extracted document text',
       'Only the beginning fits in this text view. Copy All includes the complete extracted preview.',
+      'Placement unavailable',
     ],
     'de': [
       'Kopfzeile',
@@ -104,6 +106,7 @@ class LegacyWordPreviewStrings {
       'Die extrahierte Vorschau ist zu groß für die Suche. Alles kopieren ist weiterhin verfügbar.',
       'Extrahierten Dokumenttext durchsucht',
       'Diese Textansicht zeigt nur den Anfang. Alles kopieren umfasst die gesamte extrahierte Vorschau.',
+      'Position nicht verfügbar',
     ],
     'fr': [
       'En-tête',
@@ -126,6 +129,7 @@ class LegacyWordPreviewStrings {
       'L’aperçu extrait est trop volumineux pour la recherche. Tout copier reste disponible.',
       'Recherche effectuée dans le texte extrait du document',
       'Cette vue affiche seulement le début. Tout copier inclut l’intégralité de l’aperçu extrait.',
+      'Position indisponible',
     ],
     'es': [
       'Encabezado',
@@ -148,6 +152,7 @@ class LegacyWordPreviewStrings {
       'La vista previa extraída es demasiado grande para buscar. Copiar todo sigue disponible.',
       'Se buscó en el texto extraído del documento',
       'Esta vista de texto solo muestra el inicio. Copiar todo incluye toda la vista previa extraída.',
+      'Posición no disponible',
     ],
     'pt': [
       'Cabeçalho',
@@ -170,6 +175,7 @@ class LegacyWordPreviewStrings {
       'A pré-visualização extraída é demasiado grande para pesquisar. Copiar tudo continua disponível.',
       'Texto extraído do documento pesquisado',
       'Esta vista de texto mostra apenas o início. Copiar tudo inclui toda a pré-visualização extraída.',
+      'Posição indisponível',
     ],
     'zh': [
       '页眉',
@@ -192,6 +198,7 @@ class LegacyWordPreviewStrings {
       '提取的预览太大，无法在此搜索。仍可使用“全部复制”。',
       '已搜索提取的文档文本',
       '此文本视图仅显示开头。“全部复制”会包含完整的提取预览。',
+      '无法确定位置',
     ],
     'ja': [
       'ヘッダー',
@@ -214,6 +221,7 @@ class LegacyWordPreviewStrings {
       '抽出したプレビューが大きすぎるため検索できません。「すべてコピー」は利用できます。',
       '抽出した文書テキストを検索しました',
       'このテキスト表示では先頭部分のみ表示します。「すべてコピー」には抽出したプレビュー全体が含まれます。',
+      '配置位置は不明です',
     ],
     'ko': [
       '머리글',
@@ -236,6 +244,7 @@ class LegacyWordPreviewStrings {
       '추출된 미리보기가 너무 커서 검색할 수 없습니다. 모두 복사는 계속 사용할 수 있습니다.',
       '추출된 문서 텍스트 검색 완료',
       '이 텍스트 보기에는 앞부분만 표시됩니다. 모두 복사에는 추출된 미리보기 전체가 포함됩니다.',
+      '위치를 확인할 수 없음',
     ],
     'ar': [
       'رأس الصفحة',
@@ -258,6 +267,7 @@ class LegacyWordPreviewStrings {
       'المعاينة المستخرجة كبيرة جدًا للبحث هنا. لا يزال نسخ الكل متاحًا.',
       'تم البحث في نص المستند المستخرج',
       'يعرض هذا العرض النصي البداية فقط. يتضمن نسخ الكل المعاينة المستخرجة كاملة.',
+      'الموضع غير متاح',
     ],
   };
 }
