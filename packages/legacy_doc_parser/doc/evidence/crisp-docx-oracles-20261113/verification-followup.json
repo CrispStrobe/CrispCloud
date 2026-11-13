@@ -1,0 +1,62 @@
+{
+  "schema": "crisp-docx-audit-derived-bindings-v1",
+  "originalAuditCommit": "2ce8deddd908c308982840fba6381e5b3a184b42",
+  "rawArchiveUnchanged": {
+    "bytes": 201568,
+    "sha256": "98bbb9d8974f12a97f7714969e845dae1107bc162f17d22cd36cba70466850cb"
+  },
+  "corruptionControls": 14,
+  "commands": [
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "test_verifier.py"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-crispdocx-audit/doc/evidence/crisp-docx-oracles-20261113",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "test_lossy_rewrite_claimed_equal (__main__.DerivedReceiptControls.test_lossy_rewrite_claimed_equal) ... ok\ntest_mutated_rewrite_claimed_byte_equal (__main__.DerivedReceiptControls.test_mutated_rewrite_claimed_byte_equal) ... ok\ntest_pair_clean_claim (__main__.DerivedReceiptControls.test_pair_clean_claim) ... ok\ntest_pair_issue_claim (__main__.DerivedReceiptControls.test_pair_issue_claim) ... ok\ntest_pair_pandoc_digest (__main__.DerivedReceiptControls.test_pair_pandoc_digest) ... ok\ntest_pair_pandoc_equality (__main__.DerivedReceiptControls.test_pair_pandoc_equality) ... ok\ntest_pair_pandoc_exit (__main__.DerivedReceiptControls.test_pair_pandoc_exit) ... ok\ntest_pair_run_equality (__main__.DerivedReceiptControls.test_pair_run_equality) ... ok\ntest_pair_run_text_array (__main__.DerivedReceiptControls.test_pair_run_text_array) ... ok\ntest_pair_summary_equality (__main__.DerivedReceiptControls.test_pair_summary_equality) ... ok\ntest_pair_text_array (__main__.DerivedReceiptControls.test_pair_text_array) ... ok\ntest_pair_text_equality (__main__.DerivedReceiptControls.test_pair_text_equality) ... ok\ntest_pandoc_record_contradicts_raw_output (__main__.DerivedReceiptControls.test_pandoc_record_contradicts_raw_output) ... ok\ntest_raw_save_part_claim_changed (__main__.DerivedReceiptControls.test_raw_save_part_claim_changed) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 0.864s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "verify.py",
+        "--source-repository",
+        "/workspace/scratch/c1ca2a1344e9/crisp-docx-oracle-review",
+        "--native-corpus",
+        "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-crispdocx-audit/doc/evidence/crisp-docx-oracles-20261113",
+      "exitCode": 0,
+      "stdout": "{\n  \"verifiedRecords\": 373,\n  \"authoredInputs\": 14,\n  \"rewrittenOutputs\": 45,\n  \"sdkInputControls\": 14,\n  \"sdkAuthoringOutputs\": 2,\n  \"retainedPairs\": 9,\n  \"directSourceGitObjects\": 68,\n  \"directRetainedDocxInputs\": 18,\n  \"scope\": \"Retained artifact/semantic bindings; no Rust, Pandoc, SDK or native workflow rerun.\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-O",
+        "test_verifier.py"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-crispdocx-audit/doc/evidence/crisp-docx-oracles-20261113",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "test_lossy_rewrite_claimed_equal (__main__.DerivedReceiptControls.test_lossy_rewrite_claimed_equal) ... ok\ntest_mutated_rewrite_claimed_byte_equal (__main__.DerivedReceiptControls.test_mutated_rewrite_claimed_byte_equal) ... ok\ntest_pair_clean_claim (__main__.DerivedReceiptControls.test_pair_clean_claim) ... ok\ntest_pair_issue_claim (__main__.DerivedReceiptControls.test_pair_issue_claim) ... ok\ntest_pair_pandoc_digest (__main__.DerivedReceiptControls.test_pair_pandoc_digest) ... ok\ntest_pair_pandoc_equality (__main__.DerivedReceiptControls.test_pair_pandoc_equality) ... ok\ntest_pair_pandoc_exit (__main__.DerivedReceiptControls.test_pair_pandoc_exit) ... ok\ntest_pair_run_equality (__main__.DerivedReceiptControls.test_pair_run_equality) ... ok\ntest_pair_run_text_array (__main__.DerivedReceiptControls.test_pair_run_text_array) ... ok\ntest_pair_summary_equality (__main__.DerivedReceiptControls.test_pair_summary_equality) ... ok\ntest_pair_text_array (__main__.DerivedReceiptControls.test_pair_text_array) ... ok\ntest_pair_text_equality (__main__.DerivedReceiptControls.test_pair_text_equality) ... ok\ntest_pandoc_record_contradicts_raw_output (__main__.DerivedReceiptControls.test_pandoc_record_contradicts_raw_output) ... ok\ntest_raw_save_part_claim_changed (__main__.DerivedReceiptControls.test_raw_save_part_claim_changed) ... ok\n\n----------------------------------------------------------------------\nRan 14 tests in 0.603s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-O",
+        "verify.py",
+        "--source-repository",
+        "/workspace/scratch/c1ca2a1344e9/crisp-docx-oracle-review",
+        "--native-corpus",
+        "/workspace/scratch/c1ca2a1344e9/final-native-c5ff75e7"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-crispdocx-audit/doc/evidence/crisp-docx-oracles-20261113",
+      "exitCode": 0,
+      "stdout": "{\n  \"verifiedRecords\": 373,\n  \"authoredInputs\": 14,\n  \"rewrittenOutputs\": 45,\n  \"sdkInputControls\": 14,\n  \"sdkAuthoringOutputs\": 2,\n  \"retainedPairs\": 9,\n  \"directSourceGitObjects\": 68,\n  \"directRetainedDocxInputs\": 18,\n  \"scope\": \"Retained artifact/semantic bindings; no Rust, Pandoc, SDK or native workflow rerun.\"\n}\n",
+      "stderr": ""
+    }
+  ],
+  "scope": "Verifier-only correction; no production edits or producer/native pipeline rerun."
+}

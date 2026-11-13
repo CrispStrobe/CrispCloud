@@ -1,0 +1,179 @@
+{
+  "schema": "legacy-doc-parser/independent-hyperlink-evidence-review",
+  "version": 1,
+  "observedUtc": "2026-11-13T11:29:26.503284+00:00",
+  "evidenceCommit": "7383791452008bd8c33d9e4b8347a54874332dd0",
+  "evidenceTree": "770457aaf0ace51980c390445567435c2407916c",
+  "evidenceFolder": "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes/doc/evidence/hyperlink-fields-20261113",
+  "filesBefore": {
+    "README.md": {
+      "bytes": 10907,
+      "sha256": "9c25339ddc1f47c1239f17a398f3ef29756ad17b4363afb79fee07660a765485"
+    },
+    "manifest.json": {
+      "bytes": 31018,
+      "sha256": "debecead91ed56f24f440a7e1ac8e30df26c559ff10b0f88ac9977a68158eeec"
+    },
+    "receipt.json": {
+      "bytes": 1215,
+      "sha256": "24a1e5ca96df07c591dbc74c63ab6837bbfe79f63043f658b4cb426ff51eb371"
+    },
+    "records.tar.xz": {
+      "bytes": 187520,
+      "sha256": "ef452b56d52ab69f06fa9b89449b104d4854bb22ac4e081cbbb0ccacf72ebbc5"
+    },
+    "source_oracle.py": {
+      "bytes": 9723,
+      "sha256": "4bb46c6a3911c307c15fdff5331a2e6b2986fbbd8daf99c69a3019c21c8378d5"
+    },
+    "test_verifier.py": {
+      "bytes": 13708,
+      "sha256": "ee55f98f8dbcd454e7a150a3159558df249cdc54003b527d9ceeb63a546f1d60"
+    },
+    "verify.py": {
+      "bytes": 30219,
+      "sha256": "8f8adbd3c6f1c165398c966de4dde46c28de76935f3df78c1d3d878af0e2f2f1"
+    }
+  },
+  "filesAfter": {
+    "README.md": {
+      "bytes": 10907,
+      "sha256": "9c25339ddc1f47c1239f17a398f3ef29756ad17b4363afb79fee07660a765485"
+    },
+    "manifest.json": {
+      "bytes": 31018,
+      "sha256": "debecead91ed56f24f440a7e1ac8e30df26c559ff10b0f88ac9977a68158eeec"
+    },
+    "receipt.json": {
+      "bytes": 1215,
+      "sha256": "24a1e5ca96df07c591dbc74c63ab6837bbfe79f63043f658b4cb426ff51eb371"
+    },
+    "records.tar.xz": {
+      "bytes": 187520,
+      "sha256": "ef452b56d52ab69f06fa9b89449b104d4854bb22ac4e081cbbb0ccacf72ebbc5"
+    },
+    "source_oracle.py": {
+      "bytes": 9723,
+      "sha256": "4bb46c6a3911c307c15fdff5331a2e6b2986fbbd8daf99c69a3019c21c8378d5"
+    },
+    "test_verifier.py": {
+      "bytes": 13708,
+      "sha256": "ee55f98f8dbcd454e7a150a3159558df249cdc54003b527d9ceeb63a546f1d60"
+    },
+    "verify.py": {
+      "bytes": 30219,
+      "sha256": "8f8adbd3c6f1c165398c966de4dde46c28de76935f3df78c1d3d878af0e2f2f1"
+    }
+  },
+  "reviewSource": {
+    "bytes": 5095,
+    "sha256": "f9fe91d2672a1cfd32d16b811cd37cea714ca92974cff1b023b083fcb602f7ab"
+  },
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes/doc/evidence/hyperlink-fields-20261113/verify.py",
+        "--repository",
+        "."
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 305,
+        "sha256": "bb624cf2c5bec7aaa1a64a96eab1af17a5eca273fac155d050cb3647d54bdb9b"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes/doc/evidence/hyperlink-fields-20261113",
+        "-p",
+        "test_verifier.py"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "bytes": 130,
+        "sha256": "c76ffcf6baf617d26c02f62bc9b926eec64c647ad145cb1b0b566b087f6ec912"
+      }
+    },
+    {
+      "argv": [
+        "python3",
+        "-O",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes/doc/evidence/hyperlink-fields-20261113",
+        "-p",
+        "test_verifier.py"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-hyperlink-probes",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "bytes": 130,
+        "sha256": "05ef46f34a69a09b602c5451ee0b1bc1532c8ae149bd656a8e02743de0130f84"
+      }
+    }
+  ],
+  "counterexampleRechecks": [
+    {
+      "name": "native body/note target ownership swap",
+      "rejected": true,
+      "guard": "Native URL story/text/target ownership: footnote-1",
+      "scope": "In-memory semantic replay after original outer seal; original observations unchanged."
+    },
+    {
+      "name": "constant-result JavaScript entrypoint",
+      "rejected": true,
+      "guard": "Exact executable JS entrypoint and native payload",
+      "scope": "In-memory semantic replay after original outer seal; original observations unchanged."
+    },
+    {
+      "name": "omitted native command input receipts",
+      "rejected": true,
+      "guard": "Required exact command input receipts",
+      "scope": "In-memory semantic replay after original outer seal; original observations unchanged."
+    }
+  ],
+  "originalResult": {
+    "externalFocusedTests": 69,
+    "finalFocusedTests": 89,
+    "gitChecked": true,
+    "javascriptFields": 7,
+    "javascriptNativeCases": 2,
+    "javascriptOwnerSwapRejected": true,
+    "nativeSources": 2,
+    "preservedUrlFields": 4,
+    "records": 183,
+    "restoredReferenceFields": 1,
+    "sdkErrors": 0,
+    "sdkPackages": 2,
+    "verified": true
+  },
+  "controls": {
+    "normal": 31,
+    "optimized": 31,
+    "semantics": "30 resealed negative controls plus the positive original"
+  },
+  "reviewFindings": "No remaining concrete discrepancy in the bounded source/command/story/JS/SDK receipt review.",
+  "scope": "Read-only evidence replay and in-memory corruption controls. No converter, renderer, production test or native workflow rerun. Does not certify all field or renderer behavior."
+}

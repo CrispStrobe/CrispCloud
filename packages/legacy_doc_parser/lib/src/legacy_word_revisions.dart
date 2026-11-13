@@ -350,7 +350,18 @@ extension _WordRevisions on _StructuredWordParser {
     final previous = properties['_oldCharacter'] as _Props?;
     final marked = properties['characterRevisionMarked'] == true;
     if (previous == null && !marked) return null;
-    final complete = previous?['_unsupportedCharacter'] != true;
+    final symbolChanged =
+        previous != null &&
+        (previous['symbolCharacterCode'] != null ||
+            properties['symbolCharacterCode'] != null) &&
+        (previous['special'] != properties['special'] ||
+            previous['symbolFontIndex'] != properties['symbolFontIndex'] ||
+            previous['symbolCharacterCode'] !=
+                properties['symbolCharacterCode']);
+    // rPrChange cannot express a previous glyph as ordinary font properties.
+    // Preserve the current symbol and disclose that content-history boundary.
+    final complete =
+        previous?['_unsupportedCharacter'] != true && !symbolChanged;
     if (!marked || previous == null || !complete) {
       warnings.add(LegacyWordWarning.revisionMetadataIncomplete);
     }

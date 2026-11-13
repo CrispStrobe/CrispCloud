@@ -1,0 +1,18 @@
+{
+  "repository": "CrispStrobe/legacy-doc-parser",
+  "commit": "c73749df59d0978c8bcd20710a2ae92184fab11a",
+  "tree": "ead7400c4cb79fe24acecb418ed8a1c41bab661e",
+  "oracleSchemaVersion": 5,
+  "sources": {
+    "tool/fidelity/oracle.py": {
+      "bytes": 61662,
+      "sha256": "fea936f53c2efcf2564f58574908eef7fe858a29d3d3f6f18f7fc4c528268e8d",
+      "gitBlob": "2b4438c23a38415bab1e57536b4909a7592290d7"
+    },
+    "tool/fidelity/structure.py": {
+      "bytes": 21742,
+      "sha256": "39cba5c9e7fe0e94e310cb0d32a6ac96698d618dd7dd02929188795a7f20f729",
+      "gitBlob": "207f5269c87e9928e2be74ecfc51c31a4d573f20"
+    }
+  }
+}

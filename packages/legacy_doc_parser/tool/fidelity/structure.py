@@ -100,6 +100,14 @@ def run_text(element, parent, *, deleted=True):
         return {'page': '\f', 'column': '\x0e'}.get(attr(element, 'type'), '\n')
     if element.tag == tag('cr'):
         return '\n'
+    if element.tag == tag('noBreakHyphen'):
+        return '\u2011'
+    if element.tag == tag('softHyphen'):
+        return '\u00ad'
+    if element.tag == tag('sym'):
+        # A font-specific glyph is one content position, not ordinary Unicode
+        # text. Its exact font/code operands are measured by inlineContent.
+        return '\ufffc'
     return None
 
 

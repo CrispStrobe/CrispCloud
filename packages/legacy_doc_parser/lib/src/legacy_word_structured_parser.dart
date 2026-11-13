@@ -50,6 +50,7 @@ class _StructuredWordParser {
   final _resolvedStyles = <int, _ResolvedStyle>{};
   final _styleActive = <int>{};
   final fonts = <String>[];
+  final fontTable = <LegacyWordFontDefinition>[];
   final authors = <String>[];
   int? defaultFont;
   int? defaultEastAsianFont;
@@ -190,6 +191,7 @@ class _StructuredWordParser {
       defaultTabStopTwips: source.defaultTabStopTwips,
       compatibility: source.compatibility,
       lineNumberStyle: lineNumberStyle,
+      fontTable: List.unmodifiable(fontTable),
     );
   }
 
@@ -498,6 +500,7 @@ class _StructuredWordParser {
       }
       var segmentStart = cp;
       var segmentEnd = cp;
+      LegacyWordSymbol? symbol;
       final text = StringBuffer();
       void flush() {
         if (text.isEmpty) return;
@@ -507,6 +510,7 @@ class _StructuredWordParser {
         if (previous != null &&
             previous.endCp == segmentStart &&
             previous.style == runStyle &&
+            previous.symbol == symbol &&
             previous.inserted == inserted &&
             previous.deleted == deleted &&
             previous.author == author &&
@@ -533,6 +537,7 @@ class _StructuredWordParser {
           deletionRevision,
           characterRevision,
           formattingSaveId,
+          symbol,
         );
       }
 
@@ -577,9 +582,47 @@ class _StructuredWordParser {
           continue;
         }
         if (_fieldResults.contains(false)) {
+          if (unit == 0x28 &&
+              character['special'] == true &&
+              character['symbolCharacterCode'] != null) {
+            // Nested instruction results are serialized from stored field
+            // syntax, which has no typed glyph slots. Keep that limit visible.
+            warnings.add(LegacyWordWarning.unsupportedFormatting);
+          }
           flush();
           cp++;
           continue;
+        }
+        LegacyWordSymbol? nextSymbol;
+        if (unit == 0x28 &&
+            character['symbolCharacterCode'] != null &&
+            character['special'] != true) {
+          // A later CFSpec=false contradicts the symbol designation. Native
+          // consumers disagree; retain literal source text with a limitation.
+          warnings.add(LegacyWordWarning.unsupportedFormatting);
+        }
+        if (character['special'] == true &&
+            character['symbolCharacterCode'] != null) {
+          if (unit == 0x28) {
+            final index = character['symbolFontIndex'] as int;
+            if (index < 0 || index >= fonts.length) {
+              throw const FormatException('Invalid Word symbol font index.');
+            }
+            nextSymbol = LegacyWordSymbol(
+              fontName: fonts[index],
+              characterCode: character['symbolCharacterCode'] as int,
+              fontTableIndex: index,
+            );
+            nextSymbol.hexadecimalCode;
+          } else {
+            // The supported symbol anchor is U+0028. Retain other literal
+            // source characters without inventing a glyph substitution.
+            warnings.add(LegacyWordWarning.unsupportedFormatting);
+          }
+        }
+        if (nextSymbol != symbol) {
+          flush();
+          symbol = nextSymbol;
         }
         var printable = unit;
         switch (unit) {
@@ -612,6 +655,7 @@ class _StructuredWordParser {
               printable = -1;
             }
         }
+        if (symbol != null) printable = 0xfffc;
         if (printable < 0) {
           flush();
           cp++;
@@ -809,6 +853,7 @@ class _PendingRun {
     this.deletionRevision,
     this.formattingRevision,
     this.formattingSaveId,
+    this.symbol,
   ) {
     text.write(value);
   }
@@ -823,6 +868,7 @@ class _PendingRun {
   final LegacyWordRevisionInfo? deletionRevision;
   final LegacyWordCharacterFormattingRevision? formattingRevision;
   final int? formattingSaveId;
+  final LegacyWordSymbol? symbol;
   final text = StringBuffer();
   LegacyWordRun finish() => LegacyWordRun(
     startCp: startCp,
@@ -837,6 +883,7 @@ class _PendingRun {
     deletionRevision: deletionRevision,
     formattingRevision: formattingRevision,
     formattingSaveId: formattingSaveId,
+    symbol: symbol,
   );
 }
 
