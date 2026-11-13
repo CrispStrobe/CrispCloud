@@ -2703,14 +2703,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         !identical(previous.members[member.index], member)) {
       return null;
     }
+    // Split-volume readers retain this guard for member reads after opening.
+    // Follow the accepted replacement, while still requiring the original
+    // handle to own the viewer during the password prompt and reopen.
+    var currentArchive = previous;
     bool current() =>
         mounted &&
         _mode == ViewerMode.archive &&
         prepareToken == _prepareToken &&
         loadToken == _loadToken &&
         identical(_source, source) &&
-        identical(_archive, previous) &&
-        !previous.isClosed;
+        identical(_archive, currentArchive) &&
+        !currentArchive.isClosed;
     final entered = await _promptArchivePassword(wrong: wrong);
     if (!mounted || entered == null || !current()) return null;
     ArchiveViewerSource? borrowed;
@@ -2748,6 +2752,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       }
       final previousSource = _archiveSource;
       setState(() {
+        currentArchive = reopened;
         _archive = reopened;
         _archiveSource = borrowed;
         _archiveMembers = reopened.members;
