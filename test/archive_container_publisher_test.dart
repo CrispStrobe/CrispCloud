@@ -529,12 +529,13 @@ void main() {
         recoverySha256: sha256.convert(original).toString(),
         publishedSha256: sha256.convert(candidate).toString(),
         checkpoint: () async {
-          if (++checkpoints == 2)
+          if (++checkpoints == 2) {
             await backup.writeAsBytes(
               Uint8List(2 * 1024 * 1024),
               mode: FileMode.append,
               flush: true,
             );
+          }
         },
       ),
       throwsStateError,

@@ -935,12 +935,15 @@ class _SevenZipResourceScanner {
 /// Presents only the metadata already checked above. Packed bytes keep their
 /// original offsets. Closing this borrowed view never closes the owned input.
 class _SevenZipCheckedSource implements koni.ByteSource {
-  _SevenZipCheckedSource(this.parent, Uint8List header)
-    : header = Uint8List.fromList(header),
-      start = Uint8List(32) {
+  _SevenZipCheckedSource(
+    this.parent,
+    Uint8List header, {
+    required this.sourceLength,
+  }) : header = Uint8List.fromList(header),
+       start = Uint8List(32) {
     start.setRange(0, 8, const [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c, 0, 4]);
     final data = ByteData.sublistView(start);
-    data.setUint32(12, parent.length - 32, Endian.little);
+    data.setUint32(12, sourceLength - 32, Endian.little);
     data.setUint32(20, header.length, Endian.little);
     data.setUint32(28, ar.getCrc32(header), Endian.little);
     data.setUint32(
@@ -950,10 +953,11 @@ class _SevenZipCheckedSource implements koni.ByteSource {
     );
   }
   final koni.ByteSource parent;
+  final int sourceLength;
   final Uint8List header, start;
   bool _closed = false;
   @override
-  int get length => parent.length + header.length;
+  int get length => sourceLength + header.length;
   @override
   String? get name => parent.name;
   @override
@@ -974,20 +978,20 @@ class _SevenZipCheckedSource implements koni.ByteSource {
       final at = offset + done;
       final boundary = at < 32
           ? 32
-          : at < parent.length
-          ? parent.length
+          : at < sourceLength
+          ? sourceLength
           : this.length;
       final take = length - done < boundary - at
           ? length - done
           : boundary - at;
       final bytes = at < 32
           ? Uint8List.sublistView(start, at, at + take)
-          : at < parent.length
+          : at < sourceLength
           ? await parent.read(at, take)
           : Uint8List.sublistView(
               header,
-              at - parent.length,
-              at - parent.length + take,
+              at - sourceLength,
+              at - sourceLength + take,
             );
       if (bytes.length != take) {
         _sevenZipInvalid('Truncated checked 7z source.');
@@ -1007,7 +1011,8 @@ Future<koni.ByteSource> _preflightSevenZipFallback(
   required String? password,
   required int limit,
 }) async {
-  if (source.length < 6 ||
+  final sourceLength = source.length;
+  if (sourceLength < 6 ||
       !_hasMagic(await source.read(0, 6), 0, const [
         0x37,
         0x7a,
@@ -1018,10 +1023,10 @@ Future<koni.ByteSource> _preflightSevenZipFallback(
       ])) {
     _sevenZipInvalid('The detected 7z signature changed before inspection.');
   }
-  if (source.length > _sevenZipFallbackInputLimit) {
+  if (sourceLength > _sevenZipFallbackInputLimit) {
     _sevenZipResourceLimit('whole input', _sevenZipFallbackInputLimit);
   }
-  if (source.length < 32) _sevenZipInvalid('Truncated 7z signature header.');
+  if (sourceLength < 32) _sevenZipInvalid('Truncated 7z signature header.');
   final prefix = await source.read(0, 32);
   if (prefix.length != 32 || prefix[6] != 0) {
     _sevenZipInvalid('Unsupported 7z signature header.');
@@ -1037,16 +1042,17 @@ Future<koni.ByteSource> _preflightSevenZipFallback(
   if (size > _sevenZipFallbackHeaderLimit) {
     _sevenZipResourceLimit('metadata', _sevenZipFallbackHeaderLimit);
   }
-  if (offset > source.length - 32 || size > source.length - 32 - offset) {
+  if (offset > sourceLength - 32 || size > sourceLength - 32 - offset) {
     _sevenZipInvalid('7z metadata extends beyond its source.');
   }
   if (size == 0) {
-    if (source.length != 32 || offset != 0) {
+    if (sourceLength != 32 || offset != 0) {
       _sevenZipInvalid('Empty 7z has unexpected data.');
     }
     return _SevenZipCheckedSource(
       source,
       Uint8List.fromList([SevenZId.header, SevenZId.end]),
+      sourceLength: sourceLength,
     );
   }
   var header = Uint8List.fromList(await source.read(32 + offset, size));
@@ -1058,7 +1064,7 @@ Future<koni.ByteSource> _preflightSevenZipFallback(
     final streamOffset = cursor.position;
     final encoded = _SevenZipResourceScanner(
       cursor,
-      source.length,
+      sourceLength,
       limit,
     ).streams();
     if (encoded.length != 1 ||
@@ -1079,6 +1085,7 @@ Future<koni.ByteSource> _preflightSevenZipFallback(
     final synthetic = _SevenZipCheckedSource(
       source,
       syntheticHeader.takeBytes(),
+      sourceLength: sourceLength,
     );
     koni.ArchiveReader? decoder;
     try {
@@ -1112,10 +1119,10 @@ Future<koni.ByteSource> _preflightSevenZipFallback(
   }
   _SevenZipResourceScanner(
     ByteReader(header),
-    source.length,
+    sourceLength,
     limit,
   ).plainHeader();
-  return _SevenZipCheckedSource(source, header);
+  return _SevenZipCheckedSource(source, header, sourceLength: sourceLength);
 }
 
 Future<bool> _requiresHeaderPassword(koni.ByteSource source, int limit) async {

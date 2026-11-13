@@ -145,6 +145,29 @@ class _ChangingMagicSource implements koni.ByteSource {
   Future<void> close() => inner.close();
 }
 
+class _ChangingLengthSource implements koni.ByteSource {
+  _ChangingLengthSource(this.inner);
+  final _SparseSource inner;
+  bool lengthChanged = false;
+  final requestsAfterChange = <(int, int)>[];
+  @override
+  int get length => lengthChanged ? kArchiveStreamingLimit : inner.length;
+  @override
+  String? get name => inner.name;
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    if (lengthChanged) requestsAfterChange.add((offset, length));
+    final bytes = await inner.read(offset, length);
+    if (offset == inner.headerOffset && length == inner.metadata.length) {
+      lengthChanged = true;
+    }
+    return bytes;
+  }
+
+  @override
+  Future<void> close() => inner.close();
+}
+
 void main() {
   Matcher limit(String detail) => throwsA(
     isA<ArchiveViewException>()
@@ -213,6 +236,64 @@ void main() {
       expect(await archive.readMember(archive.members.single), [1, 2, 3, 4]);
       await archive.close();
       expect(source.closed, isTrue);
+    },
+  );
+
+  test(
+    'checked metadata keeps captured geometry when the source length changes',
+    () async {
+      for (final encoded in [false, true]) {
+        final header = _plain(
+          _streams(packedSizes: [4], outputs: [4]),
+          name: 'tiny.txt',
+        );
+        final metadata = encoded
+            ? Uint8List.fromList([
+                23,
+                ..._streams(
+                  packedSizes: [header.length],
+                  outputs: [header.length],
+                  packPosition: 4,
+                ),
+              ])
+            : header;
+        final source = _ChangingLengthSource(
+          _SparseSource(
+            metadata,
+            payload: [1, 2, 3, 4, if (encoded) ...header],
+          ),
+        );
+        final archive = await openViewerArchiveSource(
+          source,
+          name: 'changing-length.7z',
+        );
+        try {
+          expect(source.lengthChanged, isTrue);
+          expect(source.length, kArchiveStreamingLimit);
+          expect(source.inner.length, lessThan(256));
+          expect(archive.members.single.name, 'tiny.txt');
+          expect(await archive.readMember(archive.members.single), [
+            1,
+            2,
+            3,
+            4,
+          ]);
+          expect(source.requestsAfterChange, isNotEmpty);
+          // The checked header lives in the overlay, not at the new reported
+          // end of the parent. No request may follow that changed geometry.
+          expect(
+            source.requestsAfterChange.every(
+              (request) =>
+                  request.$1 >= 0 &&
+                  request.$2 <= source.inner.length - request.$1,
+            ),
+            isTrue,
+          );
+        } finally {
+          await archive.close();
+        }
+        expect(source.inner.closed, isTrue);
+      }
     },
   );
 
