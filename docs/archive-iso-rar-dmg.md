@@ -161,6 +161,10 @@ Completed direct checks for the new formats:
   add/delete/rename, metadata preservation, 14 hidden-filesystem mutations with
   recomputed CRCs, forged markers, unknown UDIF information, extra partitions,
   ignored compressed suffixes, checksum corruption, cancellation and ownership.
+  A further direct probe created a **2,148,753,423-byte DMG**, rewrote it to a
+  **2,147,601,376-byte candidate**, and verified the full **2,147,487,745-byte
+  member**, both CRC layers, metadata and cleanup. See the
+  [large DMG receipt and reproducer](archive-dmg-streaming-verification.md).
 - **Integration routing:** the direct native viewer-file probe passed ISO,
   RAR, CBR and DMG reading, misleading filename fallbacks, existing protected
   ZIP fallback and cancellation cleanup.
