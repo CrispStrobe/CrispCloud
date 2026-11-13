@@ -249,3 +249,9 @@ publication and reopen beyond 2 GiB. Desktop drag-out offers the complete local
 selection through native macOS, Windows and Linux formats; cloud/archive members
 still require a local copy. Hosted platform builds and TestFlight remain separate
 release gates.
+
+Android release packaging regenerates Flutter plugin registration for release
+mode, matching the Android CI build. The manual `Rebuild Android release asset`
+workflow can repair an APK for an existing tag only after verifying successful
+application CI for that exact source commit; it retains release signing and
+artifact evidence and does not recreate the release or replace other assets.

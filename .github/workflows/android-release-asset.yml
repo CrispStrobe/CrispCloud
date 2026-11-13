@@ -1,0 +1,197 @@
+name: Rebuild Android release asset
+
+# Repackage an already qualified tag without recreating the release or
+# rebuilding its other assets. Keep signing and evidence checks in sync with
+# the Android job in release.yml. Flutter must regenerate release registrants.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable release tag
+        required: true
+        type: string
+      qualification_run:
+        description: Successful application CI run for exactly that tag commit
+        required: true
+        type: string
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: android-release-asset-${{ inputs.tag }}
+  cancel-in-progress: false
+env:
+  FLUTTER_CHANNEL: stable
+  FLUTTER_VERSION: 3.47.8
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Verify exact source qualification and existing release
+        id: meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          QUALIFICATION_RUN: ${{ inputs.qualification_run }}
+        run: |
+          python3 - <<'PYCODE'
+          import json, os, re, subprocess
+          tag = os.environ['RELEASE_TAG']
+          run = os.environ['QUALIFICATION_RUN']
+          if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+', tag) or not run.isdecimal():
+              raise SystemExit('An existing stable version tag and numeric CI run are required')
+          sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          evidence = json.loads(subprocess.check_output([
+              'gh', 'api', f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{run}'
+          ], text=True))
+          if (evidence['head_sha'] != sha or evidence['conclusion'] != 'success'
+                  or evidence['name'] != 'CI'):
+              raise SystemExit('The exact tagged source must have successful application CI')
+          subprocess.run(['gh', 'release', 'view', tag], check=True)
+          version = next(line.split(':', 1)[1].strip()
+                         for line in open('pubspec.yaml') if line.startswith('version:'))
+          if version.split('+')[0] != tag[1:]:
+              raise SystemExit('Tag and application version differ')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'tag={tag}\napp_version={version}\n')
+          print('Qualified tagged source:', sha)
+          PYCODE
+
+      - name: Select Xcode 26.3 on macOS
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+      - name: Set up bundled ebook converter
+        uses: ./.github/actions/setup-ebook-rust
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+          android: 'true'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Cache Flutter SDK + pub
+        uses: actions/cache@v5
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            ~/.pub-cache
+          key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: |
+            flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Git auth
+        run: |
+          TOKEN="${{ secrets.GH_PAT || github.token }}"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      # Sign the GitHub-release APK with the same upload key the Google Play
+      # and Firebase workflows use (secrets set 2026-08-21). Without
+      # key.properties, build.gradle.kts falls back to the debug config, and
+      # each runner makes a throwaway debug key, so no release APK could
+      # install as an update over the previous one (CrisperWeaver #36 found
+      # the same defect). Same layout as google-play-bundle.yml: build.gradle
+      # resolves storeFile with rootProject.file(), i.e. relative to android/
+      # (the old commented-out template put the .jks in android/app/, which
+      # rootProject.file() would never have found).
+      - name: Configure release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${KEYSTORE_B64:?ANDROID_KEYSTORE_BASE64 is required - refusing a debug-signed release}"
+          : "${KEY_ALIAS:?ANDROID_KEY_ALIAS is required}"
+          : "${KEY_PASSWORD:?ANDROID_KEY_PASSWORD is required}"
+          : "${STORE_PASSWORD:?ANDROID_STORE_PASSWORD is required}"
+          echo "$KEYSTORE_B64" | base64 --decode > android/play-upload.jks
+          chmod 600 android/play-upload.jks
+          cat > android/key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=play-upload.jks
+          EOF
+
+      - run: flutter pub get --enforce-lockfile
+
+      - name: Build APK
+        run: |
+          # flutter build apk reports "failed to produce" when the APK path
+          # doesn't match its expectation, but Gradle does build it successfully.
+          # We allow the exit code and verify the APK exists ourselves.
+          flutter build apk --release --dart-define=APP_VERSION="${{ steps.meta.outputs.app_version }}" --dart-define=GIT_HASH="$(git rev-parse --short HEAD)" || true
+          echo "=== Searching for APKs ==="
+          find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null
+
+      - name: Find and rename APK
+        run: |
+          APK=$(find . -name "app-release.apk" -not -path "*/intermediates/*" -type f 2>/dev/null | head -1)
+          if [ -z "$APK" ]; then
+            echo "::error::No app-release.apk found — build genuinely failed"
+            exit 1
+          fi
+          SIZE=$(stat -c%s "$APK")
+          echo "Found APK: $APK ($SIZE bytes)"
+          if [ "$SIZE" -lt 5000000 ]; then
+            echo "::error::APK too small ($SIZE bytes) — likely incomplete"
+            exit 1
+          fi
+          cp "$APK" crispcloud-android.apk
+
+      # Never ship a debug-signed APK again: reject the "CN=Android Debug"
+      # certificate and publish the real one's SHA-256 beside the APK.
+      - name: Verify the APK is release-signed
+        run: |
+          set -euo pipefail
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -z "$APKSIGNER" ]; then
+            sdkmanager --install "build-tools;35.0.0" >/dev/null
+            APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          fi
+          "$APKSIGNER" verify --print-certs crispcloud-android.apk | tee signing.txt
+          if grep -q "CN=Android Debug" signing.txt; then
+            echo "::error::APK is debug-signed - the release keystore was not used"
+            exit 1
+          fi
+          sed -n 's/.*certificate SHA-256 digest: //p' signing.txt | head -1 > crispcloud-android-signing-cert.sha256.txt
+          rm -f android/play-upload.jks android/key.properties
+
+      - name: Record the APK's crypto release evidence
+        run: |
+          set -euo pipefail
+          mkdir -p build/export-compliance
+          dart pub deps --json > build/export-compliance/dependencies.json
+          python3 tool/crypto_release_evidence.py --platform android --require-clean --record-generated-metadata \
+            --artifact crispcloud-android.apk --dependencies build/export-compliance/dependencies.json
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: crispcloud-android
+          path: |
+            crispcloud-android.apk
+            build/export-compliance/
+
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload "${{ steps.meta.outputs.tag }}"
+          crispcloud-android.apk crispcloud-android-signing-cert.sha256.txt
+          build/export-compliance/crypto-evidence.json --clobber
+
