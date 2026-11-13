@@ -6,8 +6,7 @@ CrispCloud uses local path overrides for `quds_office_engine` and
 SHA-256 inventory; changing a suite branch alone does not update the app.
 
 The active legacy Word continuation uses
-`feature/legacy-doc-fidelity-20261112` in the app and
-`feature/legacy-doc-fidelity-continuation-20261112` in the suite. The
+`feature/office-fidelity-gaps-20261113` in the app and standalone parser. The
 [standalone parser guide](legacy-doc-parser.md) records its exact source pins,
 conversion contracts and app acceptance. It builds on the earlier
 `feature/office-fidelity-workflows-20261112` work, including feature-directed
@@ -19,11 +18,23 @@ the named evidence documents; they do not measure this branch's changed code.
 
 ## Current vendor revision and follow-up
 
+The [qualified ink/textbox integration receipt](evidence/word-final-c5ff75e7-20261113/README.md)
+records parser `c5ff75e7` on measured app runtime `86d5a218`: 1,258 exact parser
+files and 421 unchanged other Office files. It adds bounded nonempty ink
+inspection and qualified textbox fills/frame handling while retaining the
+earlier layout corrections. Original ink stays preserved; native Word ink
+placement and editing remain unsupported. The receipt distinguishes successful
+app data/native/JavaScript checks from complete layout equivalence and from
+the earlier hosted Office run. See the [conversion guide](legacy-word-conversion.md)
+for the current user-facing behavior and limits.
+
 The [12 November workflow follow-up report](office-fidelity-followup-20261112.md)
 records its source pin, native spreadsheet font geometry, merged-table
 addressing, shared custom-tab controls and continuation acceptance.
-Reusable parsing, preservation, navigation, search and legacy Word conversion
-are maintained in Quds; the app consumes the public APIs and exact source pin.
+The reusable Office engine/editor, navigation and search are maintained in
+Quds. Binary Word parsing and structured conversion are maintained in the
+standalone `legacy_doc_parser`; the app consumes the corresponding public APIs
+and verified source pins.
 
 The [gap-closure report](office-fidelity-gap-closure-20261112.md),
 [earlier consolidation report](office-fidelity-consolidation-20261112.md)
