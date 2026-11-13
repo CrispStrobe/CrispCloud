@@ -331,7 +331,7 @@ class ArchiveBatchExtractionPlan {
           continue;
         }
         final opened = pending;
-        final index = ArchiveMemberIndex(opened.archive);
+        final index = _boundedMemberIndex(opened.archive);
         final chosen = index.members.entries
             .where((entry) => selected(entry.value))
             .toList();
@@ -859,7 +859,7 @@ Future<_OpenedArchive?> _openCaptured(
           );
         }
         check();
-        ArchiveMemberIndex(archive);
+        _boundedMemberIndex(archive);
         final encrypted = archive.members
             .where(
               (member) =>
@@ -957,6 +957,60 @@ class _HashingBackend extends ReadOnlyOperationBackend {
       yield chunk;
     }
   }
+}
+
+ArchiveMemberIndex _boundedMemberIndex(ViewerArchive archive) {
+  if (archive.members.length > ArchiveBatchExtractionPlan.maxEntries) {
+    throw const ArchiveViewException(
+      'The archive exceeds the extraction member limit.',
+    );
+  }
+  final namespace = <String>{};
+  var pathBytes = 0;
+  void checkBudget() {
+    if (namespace.length > ArchiveBatchExtractionPlan.maxEntries ||
+        pathBytes > ArchiveBatchExtractionPlan.maxPathBytes) {
+      throw const ArchiveViewException(
+        'The archive exceeds the extraction namespace limit.',
+      );
+    }
+  }
+
+  for (final member in archive.members) {
+    // Bound the raw spelling before normalizing or constructing the shared
+    // index, whose implicit-directory expansion retains ancestor strings.
+    if (member.name.length > 4096) {
+      throw const ArchiveViewException(
+        'An archive member exceeds the extraction path bounds.',
+      );
+    }
+    final rawBytes = utf8.encode(member.name).length;
+    if (rawBytes > 4096) {
+      throw const ArchiveViewException(
+        'An archive member exceeds the extraction path bounds.',
+      );
+    }
+    pathBytes += rawBytes;
+    checkBudget();
+    if (member.name == '/' && !member.isFile) continue;
+    final path = ArchiveService.safeMemberPath(member.name);
+    final components = path.split('/');
+    if (components.length > 64 ||
+        components.any((component) => utf8.encode(component).length > 255)) {
+      throw const ArchiveViewException(
+        'An archive member exceeds the extraction path bounds.',
+      );
+    }
+    var current = path;
+    while (current != '.') {
+      if (namespace.add(current)) {
+        pathBytes += utf8.encode(current).length;
+        checkBudget();
+      }
+      current = p.posix.dirname(current);
+    }
+  }
+  return ArchiveMemberIndex(archive);
 }
 
 const _revisionKeys = [

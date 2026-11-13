@@ -125,6 +125,26 @@ class _SparseSource implements koni.ByteSource {
   Future<void> close() async => closed = true;
 }
 
+class _ChangingMagicSource implements koni.ByteSource {
+  _ChangingMagicSource(this.inner);
+  final _SparseSource inner;
+  var sixByteReads = 0;
+  @override
+  int get length => inner.length;
+  @override
+  String? get name => inner.name;
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    if (offset == 0 && length == 6 && ++sixByteReads == 1) {
+      return Uint8List(6);
+    }
+    return inner.read(offset, length);
+  }
+
+  @override
+  Future<void> close() => inner.close();
+}
+
 void main() {
   Matcher limit(String detail) => throwsA(
     isA<ArchiveViewException>()
@@ -160,6 +180,23 @@ void main() {
   );
 
   test(
+    'changed magic cannot auto-detect 7z after an uninspected first sniff',
+    () async {
+      final source = _ChangingMagicSource(
+        _SparseSource(
+          _plain(_streams(packedSizes: [4], outputs: [4])),
+          payload: [1, 2, 3, 4],
+        ),
+      );
+      await expectLater(
+        openViewerArchiveSource(source, name: 'changing.7z'),
+        corrupt(),
+      );
+      expect(source.inner.closed, isTrue);
+    },
+  );
+
+  test(
     'encoded headers are decoded once then scanned as ordinary metadata',
     () async {
       final inner = _plain(_streams(packedSizes: [4], outputs: [4]));
@@ -190,7 +227,12 @@ void main() {
       limit('whole input'),
     );
     expect(source.closed, isTrue);
-    expect(source.requests.every((request) => request.$2 <= 512), isTrue);
+    // The format registry may make a bounded ZIP end-record probe before
+    // selecting 7z. It must never read an allocation-sized content range.
+    expect(
+      source.requests.every((request) => request.$2 <= 128 * 1024),
+      isTrue,
+    );
   });
 
   test(
@@ -503,37 +545,58 @@ void main() {
     }
   }
 
-  test('aggregate coder graphs are bounded before upstream metadata allocation', () async {
-    // About 0.6 MiB of metadata and no data: each individually valid graph
-    // has 64 inputs and outputs, so per-folder bounds alone are insufficient.
-    const count = 3126;
-    final metadata = BytesBuilder(copy: false)
-      ..add([1, 4, 6, 0, ..._number(count), 9])
-      ..add(Uint8List(count))
-      ..add([0, 7, 11, ..._number(count), 0]);
-    for (var i = 0; i < count; i++) {
-      metadata.add([
-        1, 0x11, 0, 64, 64,
-        for (var stream = 1; stream < 64; stream++) ...[stream, stream - 1],
-      ]);
-    }
-    metadata
-      ..addByte(12)
-      ..add(Uint8List(count * 64))
-      ..add([0, 0, 0]);
-    final source = _SparseSource(metadata.takeBytes());
-    await expectLater(openViewerArchiveSource(source, name: 'many-graphs.7z'),
-      throwsA(isA<ArchiveViewException>().having((e) => e.message, 'bounded graph count', contains('400000'))));
-    expect(source.closed, isTrue);
-  });
+  test(
+    'aggregate coder graphs are bounded before upstream metadata allocation',
+    () async {
+      // About 0.6 MiB of metadata and no data: each individually valid graph
+      // has 64 inputs and outputs, so per-folder bounds alone are insufficient.
+      const count = 3126;
+      final metadata = BytesBuilder(copy: false)
+        ..add([1, 4, 6, 0, ..._number(count), 9])
+        ..add(Uint8List(count))
+        ..add([0, 7, 11, ..._number(count), 0]);
+      for (var i = 0; i < count; i++) {
+        metadata.add([
+          1,
+          0x11,
+          0,
+          64,
+          64,
+          for (var stream = 1; stream < 64; stream++) ...[stream, stream - 1],
+        ]);
+      }
+      metadata
+        ..addByte(12)
+        ..add(Uint8List(count * 64))
+        ..add([0, 0, 0]);
+      final source = _SparseSource(metadata.takeBytes());
+      await expectLater(
+        openViewerArchiveSource(source, name: 'many-graphs.7z'),
+        throwsA(
+          isA<ArchiveViewException>().having(
+            (e) => e.message,
+            'bounded graph count',
+            contains('400000'),
+          ),
+        ),
+      );
+      expect(source.closed, isTrue);
+    },
+  );
 
-  test('repeated file vectors cannot repeatedly allocate the full entry count', () async {
-    final source = _SparseSource(Uint8List.fromList([
-      1, 5, 1, 14, 1, 0x80, 14, 1, 0x80, 0, 0,
-    ]));
-    await expectLater(openViewerArchiveSource(source, name: 'repeated.7z'), corrupt());
-    expect(source.closed, isTrue);
-  });
+  test(
+    'repeated file vectors cannot repeatedly allocate the full entry count',
+    () async {
+      final source = _SparseSource(
+        Uint8List.fromList([1, 5, 1, 14, 1, 0x80, 14, 1, 0x80, 0, 0]),
+      );
+      await expectLater(
+        openViewerArchiveSource(source, name: 'repeated.7z'),
+        corrupt(),
+      );
+      expect(source.closed, isTrue);
+    },
+  );
 
   test(
     'truncated metadata and invalid CRC remain ordinary corruption errors',

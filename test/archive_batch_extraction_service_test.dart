@@ -213,6 +213,67 @@ void main() {
   );
 
   test(
+    'deep unselected paths are refused before implicit-directory indexing',
+    () async {
+      final deepPath = '${List.filled(64, 'a').join('/')}/unselected.bin';
+      final source = _Backend()
+        ..put(
+          '/input/deep.zip',
+          _zip({
+            'selected.txt': [1],
+            deepPath: [2],
+          }),
+        );
+      await expectLater(
+        _plan(
+          source,
+          ['deep.zip'],
+          output,
+          options: const ArchiveBatchExtractionOptions(mask: 'selected.txt'),
+        ),
+        throwsA(
+          isA<ArchiveViewException>().having(
+            (error) => error.toString(),
+            'message',
+            contains('member exceeds the extraction path bounds'),
+          ),
+        ),
+      );
+      expect(await Directory(output).exists(), isFalse);
+    },
+  );
+
+  test(
+    'UTF-8 member components are bounded before implicit-directory indexing',
+    () async {
+      final source = _Backend()
+        ..put(
+          '/input/unicode.zip',
+          _zip({
+            'selected.txt': [1],
+            '${'é' * 128}/hidden.bin': [2],
+          }),
+        );
+      await expectLater(
+        _plan(
+          source,
+          ['unicode.zip'],
+          output,
+          options: const ArchiveBatchExtractionOptions(mask: 'selected.txt'),
+        ),
+        throwsA(
+          isA<ArchiveViewException>().having(
+            (error) => error.toString(),
+            'message',
+            contains('member exceeds the extraction path bounds'),
+          ),
+        ),
+      );
+      expect(await Directory(output).exists(), isFalse);
+    },
+  );
+
+  test(
     'default preview captures both archives and writes only after execution',
     () async {
       final first = _zip(

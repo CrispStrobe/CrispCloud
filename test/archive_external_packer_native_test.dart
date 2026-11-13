@@ -412,11 +412,13 @@ void main() {
               );
               await expectLater(
                 openViewerArchive(unbounded, name: 'unbounded.7z'),
-                throwsA(isA<ArchiveViewException>().having(
-                  (error) => error.code,
-                  'resource limit',
-                  ArchiveMessageCode.archiveLimit,
-                )),
+                throwsA(
+                  isA<ArchiveViewException>().having(
+                    (error) => error.code,
+                    'resource limit',
+                    ArchiveMessageCode.archiveLimit,
+                  ),
+                ),
               );
             },
             timeout: const Timeout(Duration(minutes: 3)),

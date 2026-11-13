@@ -874,12 +874,24 @@ class _SevenZipResourceScanner {
       );
     }
     final properties = <int>{};
+    var count = 0;
     for (var id = number(); id != SevenZId.end; id = number()) {
-      if (!properties.add(id)) {
+      // Padding and unknown extension properties may repeat. Only the fields
+      // that allocate per-file vectors need to be unique for this reader.
+      if (const {
+            SevenZId.emptyStream,
+            SevenZId.emptyFile,
+            SevenZId.name,
+            SevenZId.mTime,
+            SevenZId.winAttributes,
+          }.contains(id) &&
+          !properties.add(id)) {
         _sevenZipInvalid('Repeated 7z file-metadata property.');
       }
-      if (properties.length > _sevenZipFallbackCountLimit) {
-        throw const ArchiveViewException('7z file properties exceed their bounded metadata count.');
+      if (++count > _sevenZipFallbackCountLimit) {
+        throw const ArchiveViewException(
+          '7z file properties exceed their bounded metadata count.',
+        );
       }
       reader.skip(number());
     }
@@ -1163,7 +1175,9 @@ Future<ViewerArchive> _openWithKoni(
     // mutable input must not switch an uninspected format into the 7z fallback.
     final format = await koni.builtInFormats.detect(source);
     if (format == null) {
-      throw koni.UnsupportedFormatException('The archive format could not be determined.');
+      throw koni.UnsupportedFormatException(
+        'The archive format could not be determined.',
+      );
     }
     final checked = format.name == '7z'
         ? await _preflightSevenZipFallback(
