@@ -75,3 +75,37 @@ python3 tool/crypto_release_evidence.py --check
 ```
 
 These are focused tests, not live provider acceptance or a completed release build.
+
+## Prepared-instance acceptance after the maintenance refresh
+
+The owner's prepared Nextcloud instance was located from the saved deployment
+records and updated from **33.0.5 to 33.0.11** using the official verified release.
+The prior source, configuration and database remain backed up. Core integrity
+passed, maintenance is off and no database upgrade is pending. The installed
+delta app matches source `f6117d9` and passed **12/12** live checks, including the
+eight-reader finalize race. A dedicated PHP-FPM pool supplies private temp paths
+within the existing AppArmor storage policy; that policy was not weakened.
+
+The browser failure was reproduced against this real instance: native DAV
+returned **207**, while Chrome received `PreflightMissingAllowOriginHeader`.
+The [Apache recipe](examples/nextcloud-apache-cors.inc), configured for one exact
+origin, produced **204** preflight and **207** DAV. Chrome then wrote (**201**),
+read (**200**) and deleted (**204**) a test file with exact content verification.
+An unapproved origin remained blocked; a real DAV request without credentials
+still returned **401**. The endpoint was accessible through a loopback tunnel;
+these results do not validate an arbitrary public server's TLS or proxy setup.
+
+Live app testing also exposed RFC HTTP timestamps reaching an ISO-only pane
+parser. The adapter now converts valid HTTP dates to UTC ISO timestamps on native
+and web targets, while missing/malformed optional dates remain unknown. The
+existing locked `http_parser 4.1.2` supplies that parser; its version and checksum
+are unchanged. The dependency is now declared directly.
+
+Final checks: **60 focused native tests**, **9 Chrome tests**, and **2 actual app
+live tests** passed. The live two-account test requires both pane listings to
+be verified and free of listing errors; authentication flags alone are
+insufficient. No test account password or original server credential is stored
+in these records. The reporter's redacted deployment still needs its own
+configuration verification; the app cannot bypass server CORS restrictions.
+
+Machine-readable results: [acceptance.json](evidence/cloud-issues-96-98-20261113/acceptance.json).
