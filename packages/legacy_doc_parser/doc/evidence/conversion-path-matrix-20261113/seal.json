@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "baselineCommit": "c05f187b99e46b6d8d1b6aed6610307f33e1725c",
+  "fixedCommit": "1b8cc9e28aa9f4da2d0f0fa9318758bce0e923f1",
+  "fixedMeasurementIncluded": false,
+  "archives": [
+    "baseline",
+    "auxiliary"
+  ],
+  "files": {
+    "README.md": {
+      "bytes": 11655,
+      "sha256": "7c8b448a13fc7e6cb3f826148f00e0d2e7def8e01646df7f887e53a9d64a800d"
+    },
+    "build_evidence.py": {
+      "bytes": 7025,
+      "sha256": "756613250e269cf8b3f0a1758b07c1968b31eba325f4e9399cd6ec7511f5065a"
+    },
+    "verify.py": {
+      "bytes": 27281,
+      "sha256": "568d7b4ebec720e1d888ff8bc6001c80e499c544b49eeb2324e1a74a336e6e4a"
+    },
+    "test_verifier.py": {
+      "bytes": 10636,
+      "sha256": "1efa8ac1e4920f638fa83a34fc27b15e9b933443f27d43bd7cd0643e738cbbab"
+    },
+    "baseline.tar.xz": {
+      "bytes": 3634848,
+      "sha256": "e4d4019c1163cb6eeaa7047c2eab95a4779def4379d35847dd1aa9657f7bede1"
+    },
+    "baseline-manifest.json": {
+      "bytes": 404395,
+      "sha256": "2435836c5d45dd8bf738ae312221d43d0ed5a4d5287953d37cfeefd9fd1c2c49"
+    },
+    "auxiliary.tar.xz": {
+      "bytes": 69348,
+      "sha256": "aae2701460f78ae5c90b1672fea05f1d73f13d1029d4b60dd87539948a1d6d11"
+    },
+    "auxiliary-manifest.json": {
+      "bytes": 21551,
+      "sha256": "36334030b2bc4dbbf19b719e1432092eee3ee1bc6e6078aa36cd6bdc0ce9f202"
+    }
+  },
+  "result": {
+    "schema": 1,
+    "verified": true,
+    "scope": "Artifact/source/derived-observation replay; no converter execution or universal fidelity claim.",
+    "baseline": {
+      "reportVersion": 1,
+      "measuredCommit": "c05f187b99e46b6d8d1b6aed6610307f33e1725c",
+      "parserExecutableBytesVerified": true,
+      "verifiedCommands": 410,
+      "verifiedDocuments": 53,
+      "verifiedComparisons": 59,
+      "verifiedPandocProjections": 114,
+      "markdownMetadataChanges": [],
+      "summary": {
+        "cases": 5,
+        "comparisons": 59,
+        "measuredPandocComparisons": 147,
+        "equalPandocAst": 69,
+        "equalMarkdown": 66,
+        "executionErrors": 10,
+        "blockedComparisons": 0
+      },
+      "scope": "Read-only artifact and observation replay; no converter rerun or independent correctness vote.",
+      "sourceSnapshot": {
+        "measuredFiles": 154,
+        "retainedSourceAndFixtureFiles": 159,
+        "generatedResolutionFiles": 2
+      }
+    },
+    "noteOrder": {
+      "variants": 4,
+      "commands": 17,
+      "documents": 20,
+      "contracts": {
+        "original": {
+          "source": true,
+          "ooxml-resave": false,
+          "native-import": false,
+          "parser-import": false
+        },
+        "ids-only": {
+          "source": true,
+          "ooxml-resave": true,
+          "native-import": true,
+          "parser-import": true
+        },
+        "order-only": {
+          "source": true,
+          "ooxml-resave": false,
+          "native-import": false,
+          "parser-import": false
+        },
+        "ids-and-order": {
+          "source": true,
+          "ooxml-resave": true,
+          "native-import": true,
+          "parser-import": true
+        }
+      },
+      "scope": "Independent input permutations; native OOXML resave already swaps the original nonsequential joins."
+    },
+    "markdownMetadata": {
+      "commands": 5,
+      "bodyEqualBothPaths": true,
+      "ordinaryMetadataPreserved": false,
+      "standaloneMetadataPreserved": true,
+      "scope": "Prototype command records omit cwd/environment and complete per-command input receipts; outputs and recorded argv are retained."
+    },
+    "historicalReview": {
+      "argvBypassBeforeAndAfter": [
+        true,
+        false
+      ],
+      "parserHashBypassBeforeAndAfter": [
+        true,
+        false
+      ],
+      "bodyEqualityMaskedMetadataLoss": true
+    },
+    "fixedMeasurementIncluded": false
+  }
+}

@@ -27,6 +27,7 @@ abstract final class PaintRunText {
 
   /// latinFallbacks API.
   static const List<String> latinFallbacks = <String>[
+    'Liberation Sans',
     'Calibri',
     'Carlito',
     'Liberation Serif',

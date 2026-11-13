@@ -12,7 +12,7 @@ dependencies:
   crisperbooks:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52
+      ref: 37963811423d33ef57c0bcab858de91093d4b9ed
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -91,7 +91,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser.git
-      ref: 6c880a03f2dd3aeed2936ca8e8bc7d2b3fd61e2f
+      ref: 0f9f085f2c0d38d540ea31622edc4a1609ec4ae7
 
   # File Handling
   file_viewer_documents:
@@ -215,17 +215,17 @@ dependency_overrides:
   crisp_ebook:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52
+      ref: 37963811423d33ef57c0bcab858de91093d4b9ed
       path: packages/crisp_ebook
   crisp_ebook_reader:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52
+      ref: 37963811423d33ef57c0bcab858de91093d4b9ed
       path: packages/crisp_ebook_reader
   crisp_ebook_conversion:
     git:
       url: https://github.com/CrispStrobe/crisperbooks.git
-      ref: 32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52
+      ref: 37963811423d33ef57c0bcab858de91093d4b9ed
       path: packages/crisp_ebook_conversion
   # MIT 0.10.0 runtime with cancellable mobile cursor reveal on disposal.
   # Source provenance and the narrow patch are in packages/re_editor/UPSTREAM.md.

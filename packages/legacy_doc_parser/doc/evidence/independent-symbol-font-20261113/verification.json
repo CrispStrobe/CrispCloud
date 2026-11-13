@@ -1,0 +1,51 @@
+{
+  "scope": "Final bundle including combined1b8 source equivalence. The first combined binding check incorrectly treated generated pubspec.lock as tracked; that development failure is retained. Exact lock/config bytes remain bound by unchanged source receipts, and all other combined inputs match Git. No native, Dart or SDK rerun.",
+  "manifestSha256": "68eba098d198dcd17632383fd2027088c0cbd7ef2825b4635832f02d0c610f8a",
+  "verifierSha256": "3c02979d7f3b6ba6f87bb27e625303202d555fbf5815f3d6ffcd10a98b2ee017",
+  "testHelperSha256": "74c92a43102ecbda9791f8ce185da7e9326f6ce5d1b6f443c52aa161ff71ddca",
+  "commands": [
+    {
+      "label": "verify",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py",
+        "--repository",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes",
+      "exitCode": 0,
+      "stdout": "{\"archivedFiles\": 2359, \"combinedEquivalentPackages\": 1, \"combinedRetainedSourceInputs\": 159, \"finalEquivalentPackages\": 3, \"finalTrackedTestInputs\": 453, \"fontFalseGreenControls\": 1, \"historicalSchema5Snapshots\": 21, \"nativeFontCycles\": 2, \"nativeSymbolCycles\": 2, \"originalFalseGreenControls\": 4, \"rawRasters\": 16, \"schemaOutputsAcrossRetainedStages\": 13, \"verified\": true}\n",
+      "stderr": "",
+      "seconds": 1.306
+    },
+    {
+      "label": "controls-normal",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/test_verifier.py",
+        "--repository",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes",
+      "exitCode": 0,
+      "stdout": "Rejected resealed control: missing-raw-raster\nRejected resealed control: changed-source-control\nRejected resealed control: false-native-exactness\nRejected resealed control: erased-original-residual\nRejected resealed control: relabelled-old-snapshot\nRejected resealed control: changed-raw-font-charset\nRejected resealed control: changed-font-counterfactual\nRejected resealed control: changed-font-oracle-version\nRejected resealed control: rebound-final-package\nRejected resealed control: substituted-combined-source\nRejected resealed control: invented-test-command\nRejected resealed control: missing-actual-js-cohort\nRejected resealed control: invented-schema-pass\nRejected resealed control: erased-original-guard-failure\n{\"controls\": 14, \"optimizedPython\": false, \"results\": [{\"control\": \"missing-raw-raster\", \"expectedReason\": \"page-0001.ppm.gz\", \"rejected\": true}, {\"control\": \"changed-source-control\", \"expectedReason\": \"Pinned binary control identity\", \"rejected\": true}, {\"control\": \"false-native-exactness\", \"expectedReason\": \"Native initial comparison\", \"rejected\": true}, {\"control\": \"erased-original-residual\", \"expectedReason\": \"Native initial comparison\", \"rejected\": true}, {\"control\": \"relabelled-old-snapshot\", \"expectedReason\": \"Historical schema-5 snapshot\", \"rejected\": true}, {\"control\": \"changed-raw-font-charset\", \"expectedReason\": \"Raw symbol FFN\", \"rejected\": true}, {\"control\": \"changed-font-counterfactual\", \"expectedReason\": \"Counterfactual charset operand\", \"rejected\": true}, {\"control\": \"changed-font-oracle-version\", \"expectedReason\": \"Font oracle version\", \"rejected\": true}, {\"control\": \"rebound-final-package\", \"expectedReason\": \"Final output is not\", \"rejected\": true}, {\"control\": \"substituted-combined-source\", \"expectedReason\": \"Combined source identity\", \"rejected\": true}, {\"control\": \"invented-test-command\", \"expectedReason\": \"Targeted test identity\", \"rejected\": true}, {\"control\": \"missing-actual-js-cohort\", \"expectedReason\": \"Missing actual full-web cohort\", \"rejected\": true}, {\"control\": \"invented-schema-pass\", \"expectedReason\": \"Actual schema output binding\", \"rejected\": true}, {\"control\": \"erased-original-guard-failure\", \"expectedReason\": \"Original font guard failure\", \"rejected\": true}]}\n",
+      "stderr": "",
+      "seconds": 27.656
+    },
+    {
+      "label": "controls-optimized",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-O",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/test_verifier.py",
+        "--repository",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes",
+      "exitCode": 0,
+      "stdout": "Rejected resealed control: missing-raw-raster\nRejected resealed control: changed-source-control\nRejected resealed control: false-native-exactness\nRejected resealed control: erased-original-residual\nRejected resealed control: relabelled-old-snapshot\nRejected resealed control: changed-raw-font-charset\nRejected resealed control: changed-font-counterfactual\nRejected resealed control: changed-font-oracle-version\nRejected resealed control: rebound-final-package\nRejected resealed control: substituted-combined-source\nRejected resealed control: invented-test-command\nRejected resealed control: missing-actual-js-cohort\nRejected resealed control: invented-schema-pass\nRejected resealed control: erased-original-guard-failure\n{\"controls\": 14, \"optimizedPython\": true, \"results\": [{\"control\": \"missing-raw-raster\", \"expectedReason\": \"page-0001.ppm.gz\", \"rejected\": true}, {\"control\": \"changed-source-control\", \"expectedReason\": \"Pinned binary control identity\", \"rejected\": true}, {\"control\": \"false-native-exactness\", \"expectedReason\": \"Native initial comparison\", \"rejected\": true}, {\"control\": \"erased-original-residual\", \"expectedReason\": \"Native initial comparison\", \"rejected\": true}, {\"control\": \"relabelled-old-snapshot\", \"expectedReason\": \"Historical schema-5 snapshot\", \"rejected\": true}, {\"control\": \"changed-raw-font-charset\", \"expectedReason\": \"Raw symbol FFN\", \"rejected\": true}, {\"control\": \"changed-font-counterfactual\", \"expectedReason\": \"Counterfactual charset operand\", \"rejected\": true}, {\"control\": \"changed-font-oracle-version\", \"expectedReason\": \"Font oracle version\", \"rejected\": true}, {\"control\": \"rebound-final-package\", \"expectedReason\": \"Final output is not\", \"rejected\": true}, {\"control\": \"substituted-combined-source\", \"expectedReason\": \"Combined source identity\", \"rejected\": true}, {\"control\": \"invented-test-command\", \"expectedReason\": \"Targeted test identity\", \"rejected\": true}, {\"control\": \"missing-actual-js-cohort\", \"expectedReason\": \"Missing actual full-web cohort\", \"rejected\": true}, {\"control\": \"invented-schema-pass\", \"expectedReason\": \"Actual schema output binding\", \"rejected\": true}, {\"control\": \"erased-original-guard-failure\", \"expectedReason\": \"Original font guard failure\", \"rejected\": true}]}\n",
+      "stderr": "",
+      "seconds": 22.837
+    }
+  ]
+}

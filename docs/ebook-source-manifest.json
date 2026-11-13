@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "https://github.com/CrispStrobe/crisperbooks.git",
-  "revision": "32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52",
-  "git_tree": "ad8ca87ab5101b39166cb775131caa341bda176e",
+  "revision": "37963811423d33ef57c0bcab858de91093d4b9ed",
+  "git_tree": "64b895ba1e27ce949c4e9ea2b361778f73a0a71b",
   "packages": {
     "crisperbooks": ".",
     "crisp_ebook": "packages/crisp_ebook",
@@ -24,9 +24,9 @@
     },
     ".github/workflows/ebook-editor.yml": {
       "mode": "100644",
-      "git_blob": "037cb1e8fc178d15ea1f803086638946c556a3e1",
-      "bytes": 15048,
-      "sha256": "2829a3e552a95de361b1e03f4b01cc2be5d52d72edc550f10baecdb852437aa6"
+      "git_blob": "acf53c1c5f0a24118d10907bfc158446bf1a4328",
+      "bytes": 15135,
+      "sha256": "1bc23d05ef528ceedb31284bf41f4904ecda0763dbb66fdc5153415684373d61"
     },
     ".github/workflows/ebook-linux-host.yml": {
       "mode": "100644",
@@ -66,9 +66,9 @@
     },
     "README.md": {
       "mode": "100644",
-      "git_blob": "9f007f69bf78091bb8532a1b105f644e1a3e4450",
-      "bytes": 4551,
-      "sha256": "9a29020450deeb2c7053a35452a0efba0b4552e5c8c2e5c8a779342cb7329be4"
+      "git_blob": "92f5e0f6ce793a6143ee6c31b4d6b878371ad94c",
+      "bytes": 5969,
+      "sha256": "38f99ac23459e84bbed23a768e158d1299df81d9353ae4acc79269c0b195d7ad"
     },
     "analysis_options.yaml": {
       "mode": "100644",
@@ -94,6 +94,24 @@
       "bytes": 23275,
       "sha256": "f3126ddc858da2ef13ed2e6212746af5ba11808ec1c98d0473912a4021410a4f"
     },
+    "docs/evidence/native-macos-20261113/harness-progress-only.diff": {
+      "mode": "100644",
+      "git_blob": "9c460fea3b87f896db81e3a5f1579b70a7ac2842",
+      "bytes": 1458,
+      "sha256": "9cde6c6ab83e5a33ab0704841cad4d9c3e3f4b0594dad88408f98df0238f7cd1"
+    },
+    "docs/evidence/native-macos-20261113/receipt.json": {
+      "mode": "100644",
+      "git_blob": "090c1404831a1d14ec727376ca4ba01be39e2c96",
+      "bytes": 792,
+      "sha256": "f45b0791e68f2f1536b0dea0f33fd4ee600e0b6c2bd9c28b9edf5331ac68ebc6"
+    },
+    "docs/evidence/native-macos-20261113/runtime.txt": {
+      "mode": "100644",
+      "git_blob": "dff8eee8f4cafd4e164ee9e3d886988319b0d261",
+      "bytes": 919,
+      "sha256": "439abc1f0307dbbf96f1dee6aec5154eee364af6ea924cda83d3ddcbd1284cef"
+    },
     "docs/linux.md": {
       "mode": "100644",
       "git_blob": "90d482d80ecc5a141e9b4cef55134b9ddfdb53af",
@@ -111,6 +129,12 @@
       "git_blob": "152e5c51f18bcd4025ac0af89101b79a122f781e",
       "bytes": 3831,
       "sha256": "00b2e34a1fcda325404617726d0a1412a31cd6151a2af0c70ce420effb6e8b0f"
+    },
+    "docs/reader-selection-recovery-20261113.md": {
+      "mode": "100644",
+      "git_blob": "ac562e7a8962a8ae2ba8af24def03139f3e1873c",
+      "bytes": 3531,
+      "sha256": "83346b94327792682c871233d7fd896fe2734885b3ddc79874b552bd05e5ca60"
     },
     "docs/recovery/browser-conversion-2026-11-12.md": {
       "mode": "100644",
@@ -1314,9 +1338,9 @@
     },
     "packages/crisp_ebook_reader/assets/reader.js": {
       "mode": "100644",
-      "git_blob": "eff20450651eb32460d763e830a929429abae9f5",
-      "bytes": 16122,
-      "sha256": "c1c90faa0ee2482d5af77a9f4943fa2242ba85972c6d80f522ddf3e4fb09f62d"
+      "git_blob": "0b6ee18a4a804c421289fb904300fb29368889c0",
+      "bytes": 16482,
+      "sha256": "362b462e258b532ec1044d8e5d1832fee16087012da12581e4b5fc2a422fc133"
     },
     "packages/crisp_ebook_reader/assets/reader_compat.js": {
       "mode": "100644",
@@ -1344,9 +1368,9 @@
     },
     "packages/crisp_ebook_reader/assets/reader_selection.js": {
       "mode": "100644",
-      "git_blob": "1e353e559a44005834be378a3a3c8f6a9a45d4f9",
-      "bytes": 2093,
-      "sha256": "34e701af340753b389e170bd590e8847ff6a8c8db0f9108073b8eeb828823310"
+      "git_blob": "0e62fca2d3f2f77855eda0eb7c059413216f04f2",
+      "bytes": 5028,
+      "sha256": "5017ca0762777496840b1a4bbff0cdb631badbda1c900960f8f4c2b6cab3a013"
     },
     "packages/crisp_ebook_reader/assets/reader_speech.js": {
       "mode": "100644",
@@ -1500,15 +1524,15 @@
     },
     "packages/crisp_ebook_reader/test/browser/make_fixtures.py": {
       "mode": "100644",
-      "git_blob": "0e561ec82197dee65ae71591a9006fc75d2582a4",
-      "bytes": 5307,
-      "sha256": "b9804bb0fe9b1bc70f7b1ba65f28fd515332a6d6f26d25b703258804c55096fd"
+      "git_blob": "5153b6ab3ef8ab7d73ed33042cc02642b01da39e",
+      "bytes": 6216,
+      "sha256": "d1949cfc6a8886a615729c18ff894ee65d426fb76a507bd8f35cfd793badf4f6"
     },
     "packages/crisp_ebook_reader/test/browser/parser_smoke.mjs": {
       "mode": "100644",
-      "git_blob": "488a9c7b8d5f4cbf2d562b0732f19b0bdeb79eba",
-      "bytes": 12669,
-      "sha256": "38f676837869601f108c57a78198b35ed7cf90ce02e4a12fecbe71de7cb1bdc0"
+      "git_blob": "11bc1048fd318c5484a4f9d7cc05661eec5f5446",
+      "bytes": 13412,
+      "sha256": "4fe1eb5909a04d4c2bd8f375443ad951b443545ee4d47df9facf1db67378b5ea"
     },
     "packages/crisp_ebook_reader/test/browser/reader_compat.mjs": {
       "mode": "100644",
@@ -1536,15 +1560,15 @@
     },
     "packages/crisp_ebook_reader/test/browser/reader_selection.mjs": {
       "mode": "100644",
-      "git_blob": "344f1e383db7ed001b9676314ccb6a57bf6e6a91",
-      "bytes": 2803,
-      "sha256": "6fd3b0ec9bb2608e8dc6f51221f21222ea4ec9c33bed924160dac7d621e3655d"
+      "git_blob": "2a7c2acbcdb83dbf65ba788a53aa79715c672351",
+      "bytes": 10481,
+      "sha256": "1837a2a393f41d17602e1fb1c44f4781c7c7bb2bc9f787f083dfba9870eb42ff"
     },
     "packages/crisp_ebook_reader/test/browser/reader_smoke.mjs": {
       "mode": "100644",
-      "git_blob": "1b208cdcd002668890049e65113444c913422290",
-      "bytes": 17055,
-      "sha256": "0f9c08f4a2288c18788b633729133b3884cd4018cc020228307b2b0521c2e724"
+      "git_blob": "32628f3307bb37e7cd76ac413196cd9efdd25bed",
+      "bytes": 19060,
+      "sha256": "523dc92c1564a10ee8c80f3b4f1aee0e000254c413b4ce9e4ee2ed81561f00a1"
     },
     "packages/crisp_ebook_reader/test/browser/reader_speech.mjs": {
       "mode": "100644",
@@ -1638,9 +1662,9 @@
     },
     "packages/crisp_ebook_reader/tool/prepare_native_host_smoke.py": {
       "mode": "100644",
-      "git_blob": "c06e4db2c3abe0fb2948a51589e9b1bef8e437bf",
-      "bytes": 8326,
-      "sha256": "f55e843cf8f1f79d68509f67306c952ffc185372b14661175e8d2b3e15f40407"
+      "git_blob": "6dad174806a818bffafea5d1c52d011a4203accf",
+      "bytes": 9627,
+      "sha256": "8fee3b6b5915a47398d977ee392e1af70c7ad95353b1faa396472b43288ad968"
     },
     "pubspec.lock": {
       "mode": "100644",
