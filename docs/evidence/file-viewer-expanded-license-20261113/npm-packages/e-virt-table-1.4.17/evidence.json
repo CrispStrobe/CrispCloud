@@ -1,0 +1,50 @@
+{
+  "name": "e-virt-table",
+  "version": "1.4.17",
+  "metadata_url": "https://registry.npmjs.org/e-virt-table/1.4.17",
+  "metadata_sha256": "7db62d05e1c098be156f0e7b1dc34aba95eef9f91d36915679ddb38038feb836",
+  "declared_license": "MIT",
+  "tarball_url": "https://registry.npmjs.org/e-virt-table/-/e-virt-table-1.4.17.tgz",
+  "tarball_bytes": 1028636,
+  "tarball_sha256": "d30a5a440b19326b45cb472605e7b4174c6b85a2805761fdd69df86e02b0a98e",
+  "tarball_sha512": "fe11722fb5fb8024e51a35b7a1cb9c5abad87dae896c13899e7d6003d1036eaccefcb9660c390ac65d080e6db7b5e9fa9d95c84a7a3e21cdedc7cf009d971cb1",
+  "registry_integrity": "sha512-/hFyL7X7gCTlGjW3ocucWrrYfa6JbBOJnn1gA9EDbqzO/LlmDDkKxl0IDm23ten6nZXISno+Ic3tx88AnZccsQ==",
+  "integrity_verified": [
+    "sha512"
+  ],
+  "sha1_verified": true,
+  "gitHead": "73d2709f17dc2eab445b6dd53be1f28ac76f75d5",
+  "files": [
+    {
+      "archive_path": "package/LICENSE",
+      "saved_file": "package__LICENSE",
+      "bytes": 1082,
+      "sha256": "e54c148b1a9dcbbf1d4ced08cecc2c993ce3541dbe95eaa51071783be6fcb395"
+    },
+    {
+      "archive_path": "package/package.json",
+      "saved_file": "package__package.json",
+      "bytes": 1687,
+      "sha256": "4ac43c122587aaf9c68bd6296151a03a70e5c144d0705d485ac040268256ad2d"
+    }
+  ],
+  "scripts_executed": false,
+  "pinned_lock_integrity": "sha512-/hFyL7X7gCTlGjW3ocucWrrYfa6JbBOJnn1gA9EDbqzO/LlmDDkKxl0IDm23ten6nZXISno+Ic3tx88AnZccsQ==",
+  "pinned_lock_integrity_matches": true,
+  "published_manifest": {
+    "name": "e-virt-table",
+    "version": "1.4.17",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git@github.com:laichuangwen/e-virt-table.git"
+    },
+    "dependencies": {
+      "@floating-ui/dom": "^1.6.11"
+    },
+    "peerDependencies": null,
+    "optionalDependencies": null,
+    "bundledDependencies": null
+  },
+  "notice_files_found": []
+}

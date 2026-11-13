@@ -1,0 +1,24 @@
+name: file_viewer_documents
+description: Bounded offline document previews selected from File Viewer.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: 6.1.5
+  web: ^1.1.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      linux:
+        pluginClass: FileViewerDocumentsPlugin
+  assets:
+    - assets/
+    - assets/runtime/
+    - assets/licenses/

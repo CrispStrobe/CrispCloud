@@ -1,0 +1,51 @@
+{
+  "name": "@file-viewer/docx",
+  "version": "0.3.39",
+  "metadata_url": "https://registry.npmjs.org/%40file-viewer%2Fdocx/0.3.39",
+  "metadata_sha256": "a548950472d83c7d25257bc5a93714a9f09d324f4f7503eec2937a93a4a445d0",
+  "declared_license": "Apache-2.0",
+  "tarball_url": "https://registry.npmjs.org/@file-viewer/docx/-/docx-0.3.39.tgz",
+  "tarball_bytes": 719704,
+  "tarball_sha256": "a96b610b549981f23b30fbf0fd5ee362d38981ebc7382c12a7508d85f71cf539",
+  "tarball_sha512": "f9c1dcbff6244dc93d77a08a6985012555eb7832c790f9229dcd498d607d354886b1f6241a5c9233ee8d48ef62094d43a3fecf6e29dc072270647a9882c9b749",
+  "registry_integrity": "sha512-+cHcv/YkTck9d6CKaYUBJVXreDLHkPkinc1JjWB9NUiGsfYkGlySM+6NSO9iCU1Do/7PbincByJwZHqYgsm3SQ==",
+  "integrity_verified": [
+    "sha512"
+  ],
+  "sha1_verified": true,
+  "gitHead": null,
+  "files": [
+    {
+      "archive_path": "package/LICENSE",
+      "saved_file": "package__LICENSE",
+      "bytes": 11357,
+      "sha256": "0ed0b35bd10cb0d990fbecf7f1e05d113d785dfbbef8332e139fc10b84a4c3d7"
+    },
+    {
+      "archive_path": "package/package.json",
+      "saved_file": "package__package.json",
+      "bytes": 3130,
+      "sha256": "9f7539838c03c6076c52ed9e00685bc7a784d2ed7b1427ae2885b2e4feb6977c"
+    }
+  ],
+  "scripts_executed": false,
+  "pinned_lock_integrity": "sha512-+cHcv/YkTck9d6CKaYUBJVXreDLHkPkinc1JjWB9NUiGsfYkGlySM+6NSO9iCU1Do/7PbincByJwZHqYgsm3SQ==",
+  "pinned_lock_integrity_matches": true,
+  "published_manifest": {
+    "name": "@file-viewer/docx",
+    "version": "0.3.39",
+    "license": "Apache-2.0",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/flyfish-dev/docxjs.git"
+    },
+    "dependencies": {
+      "jszip": ">=3.10.2",
+      "@xmldom/xmldom": "^0.9.12"
+    },
+    "peerDependencies": null,
+    "optionalDependencies": null,
+    "bundledDependencies": null
+  },
+  "notice_files_found": []
+}

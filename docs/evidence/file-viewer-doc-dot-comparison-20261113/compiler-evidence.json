@@ -1,0 +1,8 @@
+{
+  "name": "typescript",
+  "version": "6.0.3",
+  "tarball": "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz",
+  "integrity": "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==",
+  "sha256": "33cd0ee1beaa8c9e9d15a9da836c62ddea4c34a42d7c2d349dbc80d94165d22a",
+  "install_scripts_executed": false
+}

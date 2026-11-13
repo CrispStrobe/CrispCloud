@@ -1,0 +1,15 @@
+{
+  "review_date": "2026-11-13",
+  "upstream_commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+  "upstream_version": "3.3.3",
+  "scope": "Documentation/source/license evidence only; no new runtime imported or rendering corpus run",
+  "checked_markdown_files": 4,
+  "upstream_paths_checked": 141,
+  "local_links_checked": 9,
+  "json_files_parsed": 9,
+  "exact_package_license_hashes_verified": [
+    "@file-viewer/docx@0.3.39",
+    "e-virt-table@1.4.17"
+  ],
+  "errors": []
+}

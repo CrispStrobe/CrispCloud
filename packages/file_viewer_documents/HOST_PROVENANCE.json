@@ -1,0 +1,141 @@
+{
+  "repository": "https://github.com/CrispStrobe/crisperbooks",
+  "commit": "32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52",
+  "package": "packages/crisp_ebook_reader",
+  "license": "MIT",
+  "changes": [
+    "Separate document plugin, channel, helper executable and GType names to coexist with the ebook host",
+    "Bounded document-only protocol with exact session identity and 1 MiB encoded-message limit",
+    "Session-scoped loopback asset allowlist with Host, origin, method, path, MIME and CSP checks",
+    "Single-flight asset-server startup and disposal-race cleanup; explicit absent-runtime errors",
+    "Same-origin blob-only child navigation; file/content access and permission requests denied",
+    "Ordinary text and editing keys dispatched through GTK; ebook-only arrow interception removed",
+    "Ephemeral native WebView state, command deadlines and closed-sender protection",
+    "Preserved process sandbox, native runtime version floor, isolated probe and texture allocation bounds"
+  ],
+  "files": [
+    {
+      "upstream_path": "lib/src/hosts/host_stub.dart",
+      "upstream_sha256": "689aac8d0dfb6ba4833fbcb34e883291714f83c14f2c21f1ebb57ef1e391bec7",
+      "local_path": "lib/src/hosts/host_stub.dart",
+      "upstream_bytes": 434,
+      "upstream_git_blob_sha": "4982cc2d5c59329834d7501a28e90c78085eb7f3"
+    },
+    {
+      "upstream_path": "lib/src/hosts/linux_host_status.dart",
+      "upstream_sha256": "51d0f014992e35090723d23d421e9079a1a7245e74f24fd845c639bb2ec3ead6",
+      "local_path": "lib/src/hosts/linux_host_status.dart",
+      "upstream_bytes": 494,
+      "upstream_git_blob_sha": "04911c6500c704ae131e9ca6f6b9e7b8379b0cce"
+    },
+    {
+      "upstream_path": "lib/src/hosts/host_web.dart",
+      "upstream_sha256": "39819ad27d0d3a06fafad1e0d85f10d10cc81d109ffc4baffe2b52bb05ddd5d2",
+      "local_path": "lib/src/hosts/host_web.dart",
+      "upstream_bytes": 3241,
+      "upstream_git_blob_sha": "4df0bd155e791c6f60f799808e3da035d209d4eb"
+    },
+    {
+      "upstream_path": "lib/src/hosts/linux_host_probe.dart",
+      "upstream_sha256": "03a91eeda8a36d4a2e1f8af027a7761a42485ba6fe170ae2b3651a4b633baa17",
+      "local_path": "lib/src/hosts/linux_host_probe.dart",
+      "upstream_bytes": 1963,
+      "upstream_git_blob_sha": "19cd504ddb6ef816d4cead36debe05a6cd91d484"
+    },
+    {
+      "upstream_path": "lib/src/hosts/host_linux.dart",
+      "upstream_sha256": "255d907bd2cbb2c0ca31acc6a556c5e64d5d9e3c29ae7a835d38270a29635b6b",
+      "local_path": "lib/src/hosts/host_linux.dart",
+      "upstream_bytes": 11809,
+      "upstream_git_blob_sha": "d7e60fad2e0956131543cf67995c21b578412157"
+    },
+    {
+      "upstream_path": "lib/src/hosts/asset_server.dart",
+      "upstream_sha256": "1ec220482009fc3fa595a2e11043ac54ff2633b97bfe9941d762e5bc34d27700",
+      "local_path": "lib/src/hosts/asset_server.dart",
+      "upstream_bytes": 2994,
+      "upstream_git_blob_sha": "f85bef2bf97198c9a6daeec945f6f121f49a7bd6"
+    },
+    {
+      "upstream_path": "lib/src/hosts/host.dart",
+      "upstream_sha256": "77e52e9edbba46c931eaf25e8ed51a873ec7de790d8c67c10a563a9a93bb8278",
+      "local_path": "lib/src/hosts/host.dart",
+      "upstream_bytes": 646,
+      "upstream_git_blob_sha": "9429a4fd33a0eb255f4c26c79a41dea8cb590aa2"
+    },
+    {
+      "upstream_path": "lib/src/hosts/host_native.dart",
+      "upstream_sha256": "be9fe9f2510c98e74644cadae1c51fe6df603d21a9d80766ee73149ce4211cb3",
+      "local_path": "lib/src/hosts/host_native.dart",
+      "upstream_bytes": 5269,
+      "upstream_git_blob_sha": "255ff9d3f3c16dd4be5d44bee3270f91113cc281"
+    },
+    {
+      "upstream_path": "linux/reader_surface_size.h",
+      "upstream_sha256": "3a42713709882b4d843effad7dd5e312ff2a3763b94bec5193db92d0075e1f81",
+      "local_path": "linux/reader_surface_size.h",
+      "upstream_bytes": 1084,
+      "upstream_git_blob_sha": "b7dd8b7769f0902864894f93d285604266b40bfc"
+    },
+    {
+      "upstream_path": "linux/reader_runtime_probe.h",
+      "upstream_sha256": "cc5a07b15965eeb32e6f32634a12c54614e3721d3db62b778ed29865d48d87fa",
+      "local_path": "linux/reader_runtime_probe.h",
+      "upstream_bytes": 8906,
+      "upstream_git_blob_sha": "30f8e2471860c2231fab0574e17e46910cbf122c"
+    },
+    {
+      "upstream_path": "linux/reader_webkit_settings.h",
+      "upstream_sha256": "5399db3ba080e669751f032d0087f3b43a1e394031eb9b678e4546dd0a176121",
+      "local_path": "linux/reader_webkit_settings.h",
+      "upstream_bytes": 1375,
+      "upstream_git_blob_sha": "38a2ce6dc792b7dbb13b4c9d09d961a4011d9e78"
+    },
+    {
+      "upstream_path": "linux/webkit_runtime_probe.cc",
+      "upstream_sha256": "ed0a3caaf658bc3261d1eda31d4f18179961b8719de9e2bdfe415b74f5f8f27d",
+      "local_path": "linux/webkit_runtime_probe.cc",
+      "upstream_bytes": 6950,
+      "upstream_git_blob_sha": "7c9ba0d6db60570bf274b9c29e1988d170e58cb6"
+    },
+    {
+      "upstream_path": "linux/CMakeLists.txt",
+      "upstream_sha256": "44944108f05fe0f57ec175f4a5b9f93ac52959153799205fb57543a480052f65",
+      "local_path": "linux/CMakeLists.txt",
+      "upstream_bytes": 2876,
+      "upstream_git_blob_sha": "1ca7631f15bbee09ace8b16de84b8806a6a6e5b5"
+    },
+    {
+      "upstream_path": "linux/crisp_ebook_reader_plugin.cc",
+      "upstream_sha256": "8f3410dcc55222ecd3cbbaca8cff5592a05bc0b249bc624c5b3324fbcfa51d58",
+      "local_path": "linux/file_viewer_documents_plugin.cc",
+      "upstream_bytes": 48731,
+      "upstream_git_blob_sha": "cf586c220cc06afd3b81b250024bb0ba2b7ee5f9"
+    },
+    {
+      "upstream_path": "linux/include/crisp_ebook_reader/crisp_ebook_reader_plugin.h",
+      "upstream_sha256": "02c17b5811191ea7e4834e5d23b849a5f591f15ad6fc6609341ef84c39376e58",
+      "local_path": "linux/include/file_viewer_documents/file_viewer_documents_plugin.h",
+      "upstream_bytes": 436,
+      "upstream_git_blob_sha": "2513ef35e22ea96339931e5d3461bd0c33acf5ab"
+    }
+  ],
+  "license_file": {
+    "upstream_path": "LICENSE",
+    "local_path": "assets/licenses/crisperbooks-host-MIT.txt",
+    "upstream_sha256": "b621ffc351fe263bc9b09dd0bc1c9332fda9c462a3904c1e4f0b4d3236b9c28c",
+    "bytes": 1070
+  },
+  "new_files": [
+    {
+      "path": "lib/src/hosts/host_policy.dart",
+      "license": "MIT",
+      "origin": "CrispCloud host boundary implementation"
+    },
+    {
+      "path": "linux/README.md",
+      "origin": "CrispCloud integration and validation notes"
+    }
+  ],
+  "validation_limits": "Dart policy/loopback and mocked Linux widget tests do not claim a full native plugin build or live browser pass."
+}

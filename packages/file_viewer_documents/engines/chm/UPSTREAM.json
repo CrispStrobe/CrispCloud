@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/flyfish-dev/file-viewer",
+    "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+    "package": "packages/renderers/chm"
+  },
+  "scope": "Selected renderer and worker source overlays; never the complete File Viewer runtime",
+  "original_files": [
+    {
+      "path": "packages/renderers/chm/LICENSE",
+      "role": "license-and-notice",
+      "bytes": 10759,
+      "sha256": "ff478ac8e55ccd78f44a5a50a81ecb723df50122e1a4f8722c656f59be5016e1",
+      "git_blob_sha": "d68b551c2782f720e275b4e2535b401a9badb754"
+    },
+    {
+      "path": "packages/renderers/chm/THIRD_PARTY_NOTICES.md",
+      "role": "license-and-notice",
+      "bytes": 745,
+      "sha256": "87f38c0efe292bd4d3c729a87147fd0cea3986c01e4096a38e7d7f6afce643de",
+      "git_blob_sha": "357b9c956073d86fa313402f27f60cca51877b99"
+    },
+    {
+      "path": "packages/renderers/chm/package.json",
+      "role": "source",
+      "bytes": 2436,
+      "sha256": "0763f9c842a9dc5b8780adca5399b372c7c97448c930854a83b3f8bae8ef5909",
+      "git_blob_sha": "662aa5f9f7a23e9bab0b253908716ec2e9181dd1"
+    },
+    {
+      "path": "packages/renderers/chm/rust/.gitignore",
+      "role": "source",
+      "bytes": 9,
+      "sha256": "306fd52e74fca6746e12acc750f232de15e71da917756a1270d74c91f5eb7368",
+      "git_blob_sha": "b83d22266ac8aa2f8df2edef68082c789727841d"
+    },
+    {
+      "path": "packages/renderers/chm/rust/Cargo.lock",
+      "role": "source",
+      "bytes": 6351,
+      "sha256": "8a81680e7a32a1d88656a148834dc24eb6bf866bd1366d836abac1c95e6b86ea",
+      "git_blob_sha": "e7c9e3289bd98bb4ad23fe28354c3d7abc713810"
+    },
+    {
+      "path": "packages/renderers/chm/rust/Cargo.toml",
+      "role": "source",
+      "bytes": 555,
+      "sha256": "bf4aec1a8028704d7f001a1d9793d6e2112b748f0b13d29ffa0e6ce00ad4ca0e",
+      "git_blob_sha": "02333d0554650601940ce18dc440ebd484672824"
+    },
+    {
+      "path": "packages/renderers/chm/rust/LICENSE",
+      "role": "license-and-notice",
+      "bytes": 10759,
+      "sha256": "ff478ac8e55ccd78f44a5a50a81ecb723df50122e1a4f8722c656f59be5016e1",
+      "git_blob_sha": "d68b551c2782f720e275b4e2535b401a9badb754"
+    },
+    {
+      "path": "packages/renderers/chm/rust/NOTICE.md",
+      "role": "license-and-notice",
+      "bytes": 2080,
+      "sha256": "11f149225645449dc6f525c15e080acebb696fcbf0e92ff706af1d1136465554",
+      "git_blob_sha": "21e69db05730500543d743e69f4adbfca2e9c027"
+    },
+    {
+      "path": "packages/renderers/chm/rust/THIRD_PARTY_LICENSES.md",
+      "role": "license-and-notice",
+      "bytes": 547673,
+      "sha256": "e6df6dce7b229945d3a62b0753dad6f5fc1413db190035b32f7f1ab865cdb299",
+      "git_blob_sha": "9a15c4c4245231a1bb44fcc69962604bd4ba4ad7"
+    },
+    {
+      "path": "packages/renderers/chm/rust/rust-toolchain.toml",
+      "role": "source",
+      "bytes": 505,
+      "sha256": "ef86852b4a0d64e698e6dbbed61d06544f64551b1e27e2209a75765d150be956",
+      "git_blob_sha": "c4905089527c6c4f2b056b3f9a6ff16ddb76fbaf"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/chm.rs",
+      "role": "source",
+      "bytes": 25662,
+      "sha256": "ee70e3b03892a5e9dc79cbb4b0c50ede53991cdf7b135fc0e60a4f24dfa055b0",
+      "git_blob_sha": "6fed74eb12e05a47fea05ee6e42c6c63cfeab06e"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/core.rs",
+      "role": "source",
+      "bytes": 26220,
+      "sha256": "fe87a4a9f6ad04c4b572223edb4d02fba9e78e587929905cacf4a03558372cb6",
+      "git_blob_sha": "bdbd8f1f183ba5e6c0f80348ae0d8b3cacf43ce5"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/error.rs",
+      "role": "source",
+      "bytes": 1835,
+      "sha256": "e9fe732ae9a3f5397419df9b9c36cc29f7d16c42855d2a0d64a1e06a1864c8e1",
+      "git_blob_sha": "d92c096fb69ae66391fd71e67735d4c7b6da3a27"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/lib.rs",
+      "role": "source",
+      "bytes": 3605,
+      "sha256": "580676f4fd82555613f02351899eb55c48ff8eefcf7f881e633046115db3a5fd",
+      "git_blob_sha": "1d447f74a286ed4e21466346fec57710839e2633"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/lzx.rs",
+      "role": "source",
+      "bytes": 24557,
+      "sha256": "c485e41d3ec4351d866429b69c98a00c88e6cad816de474c51155964ae40b8bc",
+      "git_blob_sha": "ad857e7c00925b09e255060fb2a89ecb476723f9"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/metadata.rs",
+      "role": "source",
+      "bytes": 29180,
+      "sha256": "49c7635f96eb1dd527ba772fea9cbbf5b5ee7d3ae6207d262ad86610992f972b",
+      "git_blob_sha": "96edd367e7972c3d915dcf25fcd4f2c5a3b26754"
+    },
+    {
+      "path": "packages/renderers/chm/rust/src/sitemap.rs",
+      "role": "source",
+      "bytes": 14803,
+      "sha256": "00b88cabf37fbf17a9dd611988facbc20b796638ee5e579f738e268e9bba74a6",
+      "git_blob_sha": "a0c403e75d4ecf2b308b7ad003a8be32d95bdfc5"
+    },
+    {
+      "path": "packages/renderers/chm/rust/tests/archive_fixture.rs",
+      "role": "test-material",
+      "bytes": 3762,
+      "sha256": "215ba769d6a2c5ed21a11ec1f5b1aac85e5d76cc3699f0b7daffc04dd180e4b9",
+      "git_blob_sha": "6664bb1bd41223e5b0994bb07ed834a1d58c3152"
+    },
+    {
+      "path": "packages/renderers/chm/rust/tests/fixtures/complete.chm",
+      "role": "test-material",
+      "bytes": 11225,
+      "sha256": "bafdb0dc7e499630ed02751843f6401c5f718341ac3a97aed2deee234e25c35d",
+      "git_blob_sha": "fe760ee1f4863e49a1f35771183f319ce7c227bf"
+    },
+    {
+      "path": "packages/renderers/chm/scripts/build-wasm.mjs",
+      "role": "source",
+      "bytes": 3222,
+      "sha256": "d4c6bfa852dc2d63f074672ad10e0c5845550e08fb0f562dc8819394b76a1d88",
+      "git_blob_sha": "3997cbb731f4630c29ff41f5294a3f4050b4e0e0"
+    },
+    {
+      "path": "packages/renderers/chm/scripts/build-worker.mjs",
+      "role": "source",
+      "bytes": 1401,
+      "sha256": "5c9673a4297636420869279b8b4d87bbbc5639741901d3c1e38fbd3d40380c7e",
+      "git_blob_sha": "e9ba27dc07c94e2411b54bc8850cc3e813837445"
+    },
+    {
+      "path": "packages/renderers/chm/src/chm.ts",
+      "role": "source",
+      "bytes": 27488,
+      "sha256": "2bb579a2c8736ccf335fcdd265a43c44ae7356baf9642ca38ee6920d06bac7a9",
+      "git_blob_sha": "5efc9d5d0dfd971e4039c2a563206f2d26a4aebe"
+    },
+    {
+      "path": "packages/renderers/chm/src/chm.worker.ts",
+      "role": "source",
+      "bytes": 7610,
+      "sha256": "273edb206c24d777a4cac11c861e6c395a199511e7732b5960fbd867a34ea8ac",
+      "git_blob_sha": "444e902faeb245708a7732aa6fa90274f03dff2c"
+    },
+    {
+      "path": "packages/renderers/chm/src/index.ts",
+      "role": "source",
+      "bytes": 1689,
+      "sha256": "0bfea0921eaac67293c8fea6c5747fe3eb81f581a2747bbc49278ffdc21ee0e8",
+      "git_blob_sha": "8d63c0da935f6c07f023c235e24f48b13b6602ac"
+    },
+    {
+      "path": "packages/renderers/chm/src/model.ts",
+      "role": "source",
+      "bytes": 7384,
+      "sha256": "f32a769a90c3c2df8b77f580cbf87d9b47b8bd0272b533efc755ead5f68d36cb",
+      "git_blob_sha": "b7bd2bdb3dd6e15f62decea87419a7f4a507b0f8"
+    },
+    {
+      "path": "packages/renderers/chm/src/security.ts",
+      "role": "source",
+      "bytes": 31832,
+      "sha256": "0da8eaa417c80c356bac1efae26bb363659ea7671a1fa1dee292d7c9049f96e0",
+      "git_blob_sha": "4a4b5eb40b45e7534ff84129a57cb011e565e10d"
+    },
+    {
+      "path": "packages/renderers/chm/src/style.ts",
+      "role": "source",
+      "bytes": 7027,
+      "sha256": "d72b0590dbb6b3f33c35e58e46eff699a95f5aa597b59b80381531674e9a588d",
+      "git_blob_sha": "621db70910136d5807e49d93958ee8c244bfc100"
+    },
+    {
+      "path": "packages/renderers/chm/src/wasm/chm_wasm.d.ts",
+      "role": "runtime",
+      "bytes": 2742,
+      "sha256": "8a4968fde78fc972a14dfbce1a62ec74af0539c8d327e8ad6a4d9e582a788e66",
+      "git_blob_sha": "fb47f16378bcb8a1202aeb6866eb398405830963"
+    },
+    {
+      "path": "packages/renderers/chm/src/wasm/chm_wasm.js",
+      "role": "runtime",
+      "bytes": 20635,
+      "sha256": "e7f1a6e0de035e7178c04a0307f52806997c9971a948e333e66a49fbe73a3d5c",
+      "git_blob_sha": "5fa8923fe11c2842e6948f75b7cfd624449b0e62"
+    },
+    {
+      "path": "packages/renderers/chm/src/wasm/chm_wasm_bg.wasm",
+      "role": "runtime",
+      "bytes": 338731,
+      "sha256": "02904a83ae8be928d5c90b9fd61faf28d8ba7e67ee96e3aeeb5d5b5102691538",
+      "git_blob_sha": "ca1ef338588b71e0f65ad120004ace7a2e6753a2"
+    },
+    {
+      "path": "packages/renderers/chm/src/wasm/chm_wasm_bg.wasm.d.ts",
+      "role": "runtime",
+      "bytes": 860,
+      "sha256": "cb4eb62ce34f1b07c0a01c9a348e31f565e1fdc763e9c7b35644deeed3798dfd",
+      "git_blob_sha": "289fd1e5ec9122939d1c63a7efad462cf3e548b4"
+    },
+    {
+      "path": "packages/renderers/chm/src/workerClient.ts",
+      "role": "source",
+      "bytes": 8104,
+      "sha256": "16c8359520788776cab4af2935f3fa3a0540e1bf8e90415d5623959dab69d5db",
+      "git_blob_sha": "345fa8b6066a7fa752354fe1a327f8ee56eb9571"
+    },
+    {
+      "path": "packages/renderers/chm/src/workerProtocol.ts",
+      "role": "source",
+      "bytes": 1208,
+      "sha256": "f0ebc35d7c4f33272bf24229d2e09394aea4ed92b059e8a5efae45d26ee26cff",
+      "git_blob_sha": "7e00a212c0aefa7b2731ba16bfb354c6585f9b4a"
+    }
+  ],
+  "overlays": [
+    {
+      "path": "src/chm.ts",
+      "upstream_path": "packages/renderers/chm/src/chm.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/entry.ts",
+      "upstream_path": null,
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/links.ts",
+      "upstream_path": null,
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/model.ts",
+      "upstream_path": "packages/renderers/chm/src/model.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/workerClient.ts",
+      "upstream_path": "packages/renderers/chm/src/workerClient.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    }
+  ],
+  "native_source_modified": false,
+  "native_rebuilt": false,
+  "selected_licenses": [
+    "Apache-2.0",
+    "MIT",
+    "BSD-3-Clause",
+    "Unicode-3.0",
+    "original permissive Rust toolchain notices"
+  ],
+  "runtime_dependencies": [],
+  "runtime_notes": "Uses exactly the committed upstream WASM and JavaScript loader. Matching native source, license books and provenance remain required distribution materials.",
+  "modifications": [
+    "Bounded local worker/source protocol and strict local asset URLs",
+    "Preserve and expose parser/merged-archive warnings",
+    "Cross-realm topic link lookup",
+    "Same-origin sanitized blob topic frames with replacement/disposal revocation; script sandbox unchanged"
+  ]
+}

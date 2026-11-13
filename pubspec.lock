@@ -535,6 +535,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+5"
+  file_viewer_documents:
+    dependency: "direct main"
+    description:
+      path: "packages/file_viewer_documents"
+      relative: true
+    source: path
+    version: "0.1.0"
   filen_client:
     dependency: "direct main"
     description:

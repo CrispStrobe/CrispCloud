@@ -475,6 +475,11 @@ void main() {
         name: 'legacy.ppt',
       );
 
+      // Visual PPT is primary; the prior native text reader remains explicit.
+      await tester.ensureVisible(find.text('Text fallback'));
+      await tester.tap(find.text('Text fallback'));
+      await tester.pumpAndSettle();
+
       final text = tester
           .widgetList<SelectableText>(find.byType(SelectableText))
           .map((widget) => widget.data)

@@ -1,0 +1,340 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/flyfish-dev/file-viewer",
+    "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+    "package": "packages/renderers/wordperfect"
+  },
+  "scope": "Selected renderer and worker source overlays; never the complete File Viewer runtime",
+  "original_files": [
+    {
+      "path": "packages/renderers/wordperfect/LICENSE",
+      "role": "license-and-notice",
+      "bytes": 242,
+      "sha256": "689637ca2302817baa9301f3cee9ca994b4ea4467f41e5c8a2b9ac52f49cae46",
+      "git_blob_sha": "dfb672b10a8e3bb25a8dd781e762a4bbd2513df2"
+    },
+    {
+      "path": "packages/renderers/wordperfect/THIRD_PARTY_NOTICES.md",
+      "role": "license-and-notice",
+      "bytes": 2239,
+      "sha256": "5104aac8a297704a2136a72f50752b122619e5972781e67d3707ea11c4c8def5",
+      "git_blob_sha": "11fc96b6d2dd2b2dfa2772adc72b836894305814"
+    },
+    {
+      "path": "packages/renderers/wordperfect/package.json",
+      "role": "source",
+      "bytes": 1998,
+      "sha256": "1f9e1e7fa2b24d4362fe9b8ef853f1329c2c7a0847e85431c1a8b185a355081c",
+      "git_blob_sha": "53f1c45f9ba7c0e869ed45ce685d72735b7149a7"
+    },
+    {
+      "path": "packages/renderers/wordperfect/scripts/build-libwpd-wasm.mjs",
+      "role": "source",
+      "bytes": 3146,
+      "sha256": "39009851544497b2ba8d5053da224c154ad3b9d63fc122a11852ffd72071d4c1",
+      "git_blob_sha": "93b2b9586d07567392d30ebdd51e4a2676a30d64"
+    },
+    {
+      "path": "packages/renderers/wordperfect/scripts/build-worker.mjs",
+      "role": "source",
+      "bytes": 1352,
+      "sha256": "c53ffec5a041f8a663d7da7ea09cc49ca0b6d116158c0ecce385d1e1ea6b17e5",
+      "git_blob_sha": "5a62644eb5038b1877e700855951c65dd4c08add"
+    },
+    {
+      "path": "packages/renderers/wordperfect/src/index.ts",
+      "role": "source",
+      "bytes": 1527,
+      "sha256": "de83fa2d5e5db518d12122aa31e209995b6fe76af4ebac88b066b1760161b5cc",
+      "git_blob_sha": "bd876d17fef7bd0baea680966e4ba7a38ef904fb"
+    },
+    {
+      "path": "packages/renderers/wordperfect/src/libwpd.ts",
+      "role": "source",
+      "bytes": 9702,
+      "sha256": "f1da2e36e35029f6d3a5124024491e1fbea94dc7e070203855c326ec1c686800",
+      "git_blob_sha": "a1e566cf53c474b7328880c459ae08e51b923c56"
+    },
+    {
+      "path": "packages/renderers/wordperfect/src/parser.ts",
+      "role": "source",
+      "bytes": 3806,
+      "sha256": "957c695e72076cdf9aa9721f5d08732c05ed562dc3eddf5b00df1ed77b518ce6",
+      "git_blob_sha": "5ca8abe6fe5a8b0bc4ec5faed1a2f4991dfef36c"
+    },
+    {
+      "path": "packages/renderers/wordperfect/src/wordperfect.ts",
+      "role": "source",
+      "bytes": 5179,
+      "sha256": "d2ca27462000f64c567804657ef2213afb1925e1bba9e81e1c2c13158706c590",
+      "git_blob_sha": "94ad277794253a77f8ca8529676e48b7624861ea"
+    },
+    {
+      "path": "packages/renderers/wordperfect/src/wordperfect.worker.ts",
+      "role": "source",
+      "bytes": 1178,
+      "sha256": "5c6dea84a1c93bcfc21fdae99e72f3edddd37ccd8bca6e877a4b8a904686d68d",
+      "git_blob_sha": "637a0504fe9667f609059d0b88653ad88fb8f6de"
+    },
+    {
+      "path": "packages/renderers/wordperfect/src/workerClient.ts",
+      "role": "source",
+      "bytes": 2335,
+      "sha256": "d8ee53948c250cc8f41c6ae3007882915cf8c5a54d4ffcb94afefa2fe34dbac5",
+      "git_blob_sha": "9a1ffac23e8a8f42fbf6551b3edeb86cc4ef9d58"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/LICENSE.Apache-2.0.txt",
+      "role": "test-material",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "git_blob_sha": "d645695673349e3947e8e5ae42332d0ac3164cd7"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/LICENSE.MPL-2.0.txt",
+      "role": "test-material",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "git_blob_sha": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/PROVENANCE.md",
+      "role": "test-material",
+      "bytes": 1102,
+      "sha256": "a375ccc89fe3f8d5d8cb2186cc72485d7d276d45488c68e60ceff40499be988f",
+      "git_blob_sha": "24394be8c647ab1c6a425b7be289cd4819183782"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/corel_wp6.wpd",
+      "role": "test-material",
+      "bytes": 1099409,
+      "sha256": "3417815c24d7227a1dd3fc5b95cb3e84f895a1e608a58432cb5ffcaebb4cae90",
+      "git_blob_sha": "c6f9876a7049d3bd4f579a2648dda54527180957"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/format-matrix.wpd",
+      "role": "test-material",
+      "bytes": 75,
+      "sha256": "7055b510e46cd25d4e2e4e9e0ad732c4c03e023aaf0385c0dcad0871ac2d4a83",
+      "git_blob_sha": "acfbbfdf7c3f7f1852d1c11abf686052086f1220"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/manifest.json",
+      "role": "test-material",
+      "bytes": 3174,
+      "sha256": "14a8884a31b771d13fc1b28d005ce2d66fd09600527cae6c0cfbe956703c132f",
+      "git_blob_sha": "7df53f4adc94dce3928c74ca3475fc6fb8b1c120"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/wp42.wp",
+      "role": "test-material",
+      "bytes": 211,
+      "sha256": "5209024eff85ad86d7405503cabe4682e0d36ce2cc20d5cd40f5165e52199927",
+      "git_blob_sha": "6917b81e6619fed9892c3a13f8307c0bfb942ecc"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/wp50.wp",
+      "role": "test-material",
+      "bytes": 9915,
+      "sha256": "4cb383585f11af90a2f1c3f8e8f0244020e2008224effce981446577234273c1",
+      "git_blob_sha": "90984f55ad3604bacfcb69f18358b4e9a4734af8"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/wp51.wp",
+      "role": "test-material",
+      "bytes": 18267,
+      "sha256": "c5b3c18d2c1ba2c99c2fbb1aababcbee15b744f2539605927e589c3c7eeb6bdc",
+      "git_blob_sha": "71fa3d85fb83a5619f4303fc5e8d0731bca65adb"
+    },
+    {
+      "path": "packages/renderers/wordperfect/test/fixtures/wp6.wpd",
+      "role": "test-material",
+      "bytes": 2074,
+      "sha256": "45ec5771e60fc55c07f398ddec80e9463f3cd7b80bfadacf93743dcfcef866e7",
+      "git_blob_sha": "d577b1c1759f3d0594272dcd91ae95cf1adbeaf3"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.MPL-2.0.txt",
+      "role": "native-source-and-notice",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "git_blob_sha": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.boost-BSL-1.0.txt",
+      "role": "native-source-and-notice",
+      "bytes": 1338,
+      "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+      "git_blob_sha": "36b7cd93cdfbac762f5be4c6ce276df2ea6305c2"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Emscripten-LICENSE.txt",
+      "role": "native-source-and-notice",
+      "bytes": 5093,
+      "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86",
+      "git_blob_sha": "70cabe388d27da221bd769c50b427a35354f4f1d"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-compiler-rt-LICENSE.txt",
+      "role": "native-source-and-notice",
+      "bytes": 16708,
+      "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d",
+      "git_blob_sha": "5a79a1b9d5cb0af9a779751f07033e44ca3b14d8"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-libcxx-LICENSE.txt",
+      "role": "native-source-and-notice",
+      "bytes": 16703,
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+      "git_blob_sha": "e159d283443f92ac78b964d2bccebe8f95d5d445"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-libcxxabi-LICENSE.txt",
+      "role": "native-source-and-notice",
+      "bytes": 16706,
+      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+      "git_blob_sha": "b75c0441bcd5be32b5a07e2a1ffc7e67b6d99f16"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Musl-COPYRIGHT.txt",
+      "role": "native-source-and-notice",
+      "bytes": 6196,
+      "sha256": "b870108ec5e7790e9f9919064f1b9421d62d5f9b0e6c230c6adf7ea2da62e97b",
+      "git_blob_sha": "2f15edc7a17936b15d563363a1e9b70aa3bcbc2b"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Zlib-1.3.2-LICENSE.txt",
+      "role": "native-source-and-notice",
+      "bytes": 1002,
+      "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
+      "git_blob_sha": "b7a69d058e616651eae27b3f90c0b7fd36c099b2"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-dlmalloc-CC0-1.0.txt",
+      "role": "native-source-and-notice",
+      "bytes": 7048,
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+      "git_blob_sha": "0e259d42c996742e9e3cba14c677129b2c1b6311"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-dlmalloc-NOTICE.txt",
+      "role": "native-source-and-notice",
+      "bytes": 454,
+      "sha256": "8defa334f869217fe9d8eaa3fd91621d076ca66ca7fc7453419e286e3dabab72",
+      "git_blob_sha": "681fef6dc8a15eb256f22a17d0c82e2694cdf3e7"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.xberg-shim-MIT.txt",
+      "role": "native-source-and-notice",
+      "bytes": 1077,
+      "sha256": "081ff9e2978a771dc90f475aa5130871d85debdf120683cbb860b41662641272",
+      "git_blob_sha": "bf9c31d988af07312842dd2071ae82e30c12f2c0"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/NATIVE_PROVENANCE.json",
+      "role": "native-source-and-notice",
+      "bytes": 4636,
+      "sha256": "9b8478c55b745a4f4e6f3d4bafdb59c3451bd8e12bd63c38fbcf1b47c60fc25f",
+      "git_blob_sha": "d8de9e3ce689d4e1ea368dfe652a7ab8af81ddd5"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/PROVENANCE.md",
+      "role": "native-source-and-notice",
+      "bytes": 2238,
+      "sha256": "ffb0692e8addbecc36081ce7beefedc2ec29d4bd559ba62e79794e58698e7826",
+      "git_blob_sha": "93b5346ad322474484a97d7783f929eea52cd39d"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/boost-subset.tar.gz",
+      "role": "native-source-and-notice",
+      "bytes": 3968675,
+      "sha256": "802ee17c5e380efbcbb696468ee3c7090aa409db89c2063b4c9b8d3e3aff1e08",
+      "git_blob_sha": "2ce4d6c0dbfd67c99fe622dd9d02bdbee0388502"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/librevenge-0.0.6.tar.gz",
+      "role": "native-source-and-notice",
+      "bytes": 698506,
+      "sha256": "686cc36be3196a0a808761cfd3951a46ff809cb0e028b0902c787261a1389d0f",
+      "git_blob_sha": "f78d2d9c5f02fbf8b3e89c2d4d9ec8a5a6eab3b2"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/libwpd-0.10.3.tar.gz",
+      "role": "native-source-and-notice",
+      "bytes": 856141,
+      "sha256": "ca3575282acff8c952c12160433ad7e73e803ff3f070b8442c7ffa1f3a19f9ae",
+      "git_blob_sha": "80c5971754049a018ff0d5a54399b0723bad4171"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd-src/shim.cpp",
+      "role": "native-source-and-notice",
+      "bytes": 37882,
+      "sha256": "971308ddfd609cc6f691638f7211ac0aed3f1baffd9b1aa30e46b586b441551e",
+      "git_blob_sha": "1a01fbfcf2f0b263f4a543ac077d3abc1bc92745"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd.mjs",
+      "role": "runtime",
+      "bytes": 17313,
+      "sha256": "ccd3267ce9cac2961bb6a500761753efa05c93563e7a5e46a31594cceb5e3096",
+      "git_blob_sha": "9b3f9ea5afa16efc8cdaaf15b4c18afc132cad52"
+    },
+    {
+      "path": "packages/renderers/wordperfect/vendor/libwpd.wasm",
+      "role": "runtime",
+      "bytes": 531158,
+      "sha256": "bbfe0c7f712a357e3f9d11f9cf96d931e7cf4b9165d4379af78bf1bcb69333f0",
+      "git_blob_sha": "8c1e414556cd7668e2875692ef5ee89973f48eeb"
+    }
+  ],
+  "overlays": [
+    {
+      "path": "src/entry.ts",
+      "upstream_path": null,
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/libwpd.ts",
+      "upstream_path": "packages/renderers/wordperfect/src/libwpd.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/parser.ts",
+      "upstream_path": "packages/renderers/wordperfect/src/parser.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/wordperfect.ts",
+      "upstream_path": "packages/renderers/wordperfect/src/wordperfect.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/wordperfect.worker.ts",
+      "upstream_path": "packages/renderers/wordperfect/src/wordperfect.worker.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    },
+    {
+      "path": "src/workerClient.ts",
+      "upstream_path": "packages/renderers/wordperfect/src/workerClient.ts",
+      "license": "Apache-2.0",
+      "modification_notice": true
+    }
+  ],
+  "native_source_modified": false,
+  "native_rebuilt": false,
+  "selected_licenses": [
+    "Apache-2.0",
+    "MPL-2.0",
+    "MIT",
+    "BSL-1.0",
+    "original permissive toolchain notices"
+  ],
+  "runtime_dependencies": [],
+  "runtime_notes": "Uses exactly the committed upstream WASM and JavaScript loader. Matching native source, license books and provenance remain required distribution materials."
+}

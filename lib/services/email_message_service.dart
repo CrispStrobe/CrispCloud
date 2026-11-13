@@ -80,6 +80,37 @@ class EmailMessageDocument {
   ].join('\n');
 }
 
+/// Decoded summary fields without parsing MIME bodies or attachments.
+class EmailMessageHeaders {
+  const EmailMessageHeaders({
+    required this.subject,
+    required this.from,
+    required this.date,
+  });
+
+  final String subject;
+  final String from;
+  final String date;
+}
+
+/// [bytes] must contain only a bounded RFC 5322 header block, optionally with
+/// its terminating empty line. Uses the same charset/RFC 2047 handling as EML.
+EmailMessageHeaders parseEmailHeaders(Uint8List bytes) {
+  if (bytes.length > _maxHeaderBytes + 4) {
+    throw const FormatException('Email headers exceed the preview limit');
+  }
+  final parser = _EmailParser();
+  final headers = parser._splitPart(latin1.decode(bytes)).headers;
+  if (headers.isEmpty) {
+    throw const FormatException('This file has no email headers');
+  }
+  return EmailMessageHeaders(
+    subject: parser._header(headers['subject'] ?? ''),
+    from: parser._header(headers['from'] ?? ''),
+    date: parser._header(headers['date'] ?? ''),
+  );
+}
+
 /// Reads saved email without fetching remote content or invoking a mail client.
 ///
 /// EML supports MIME multipart nesting, transfer encodings, RFC 2047 encoded

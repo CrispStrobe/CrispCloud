@@ -1,5 +1,19 @@
 # File Viewer integration assessment for CrispCloud
 
+## Updated reuse policy
+
+The user subsequently approved MIT, BSD and similar permissive licenses, plus
+MPL, for further File Viewer integrations. The Apache-only decisions below
+describe the original binary/LRC extraction boundary; they are not a current
+rejection of MIT- or MPL-licensed candidates. The existing extracted parsers and
+their exact source guards remain unchanged.
+
+The broader [format and effective-license review](file-viewer-format-license-matrix.md)
+tracks parser/runtime licenses, distributed assets, rendering limits and actual
+new-format opportunities. LGPL, GPL/AGPL, EPL and custom asset restrictions are
+identified separately rather than silently treated as approved by the expanded
+permissive/MPL policy.
+
 Date: 2026-11-13. Upstream: [flyfish-dev/file-viewer](https://github.com/flyfish-dev/file-viewer),
 commit [`d264009ca6efb3daed79a39d1ae63133e0f25558`](https://github.com/flyfish-dev/file-viewer/commit/d264009ca6efb3daed79a39d1ae63133e0f25558),
 version `3.3.3`. CrispCloud baseline inspected:

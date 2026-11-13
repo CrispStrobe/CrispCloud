@@ -316,6 +316,7 @@ class InternalViewerService {
       '.xml',
       '.xsl',
       '.xslt',
+      '.xsd',
       '.plist',
       '.xaml',
       '.ui',
@@ -388,6 +389,16 @@ class InternalViewerService {
     ViewerMode.font: ['.ttf', '.otf', '.woff', '.woff2', '.pfb'],
     ViewerMode.csv: ['.csv', '.tsv'],
     ViewerMode.office: [
+      '.wpd',
+      '.wp',
+      '.wp5',
+      '.wp6',
+      '.chm',
+      '.xls',
+      '.xlt',
+      '.xlsb',
+      '.ps',
+      '.eps',
       '.ppt',
       '.pps',
       '.pot',
@@ -409,7 +420,7 @@ class InternalViewerService {
       '.odp',
       '.epub',
     ],
-    ViewerMode.email: ['.eml', '.msg'],
+    ViewerMode.email: ['.eml', '.msg', '.mbox'],
     ViewerMode.binary: [
       '.exe',
       '.dll',
@@ -460,9 +471,18 @@ class InternalViewerService {
     if (header != null && header.isNotEmpty) {
       final magic = _detectMagic(header);
       if (magic != null) {
-        // A text BOM selects the decoder; it does not erase the LRC format.
-        if (magic == ViewerMode.text && _extensionOf(lower) == '.lrc') {
-          return ViewerMode.lyrics;
+        // A text BOM selects a decoder, not the document's presentation.
+        if (magic == ViewerMode.text) {
+          final named = _modeForName(lower, header);
+          if (const {
+            ViewerMode.lyrics,
+            ViewerMode.xml,
+            ViewerMode.html,
+            ViewerMode.markdown,
+            ViewerMode.email,
+          }.contains(named)) {
+            return named;
+          }
         }
         return magic;
       }
@@ -651,7 +671,9 @@ class InternalViewerService {
         mimeType = _mimeForOffice(filename.toLowerCase());
 
       case ViewerMode.email:
-        mimeType = filename.toLowerCase().endsWith('.msg')
+        mimeType = filename.toLowerCase().endsWith('.mbox')
+            ? 'application/mbox'
+            : filename.toLowerCase().endsWith('.msg')
             ? 'application/vnd.ms-outlook'
             : 'message/rfc822';
 
@@ -1072,6 +1094,11 @@ class InternalViewerService {
   static String _mimeForOffice(String lower) {
     final ext = _extensionOf(lower);
     return switch (ext) {
+      '.wpd' || '.wp' || '.wp5' || '.wp6' => 'application/vnd.wordperfect',
+      '.chm' => 'application/vnd.ms-htmlhelp',
+      '.xls' || '.xlt' => 'application/vnd.ms-excel',
+      '.xlsb' => 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+      '.ps' || '.eps' => 'application/postscript',
       '.doc' || '.dot' => 'application/msword',
       '.ppt' || '.pps' || '.pot' => 'application/vnd.ms-powerpoint',
       '.rtf' => 'application/rtf',
