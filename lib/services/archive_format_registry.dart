@@ -281,7 +281,7 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     mimeType: 'application/x-iso9660-image',
     canCreate: true,
     canModify: true,
-    notes: 'Create and rewrite inspected data ISO images with Rock Ridge and Joliet. Native images support up to 8 GiB; an individual single-extent file is limited to 4 GiB minus one byte. Boot, hybrid and UDF images remain read-only.',
+    notes: 'Read ISO9660/Joliet/Rock Ridge and bounded multi-extent regular files. Create and rewrite inspected single-extent data images up to 8 GiB; each written file is limited to 4 GiB minus one byte. Multi-extent, boot, hybrid and UDF images remain outside the writer profile.',
   ),
   ArchiveFormatCapability(
     id: 'dmg',

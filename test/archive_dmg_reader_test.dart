@@ -165,6 +165,21 @@ void main() {
   });
 
   for (final method in [0x80000004, 0x80000008]) {
+    for (final name in ['image.dmg', 'misleading.xz', 'download']) {
+      test('new method $method keeps UDIF routing for $name', () async {
+        final archive = await openViewerArchive(
+          DmgFixture(HfsFixture().bytes, method: method).bytes,
+          name: name,
+        );
+        addTearDown(archive.close);
+        expect(archive.formatName, 'dmg');
+        final member = archive.members.singleWhere(
+          (m) => m.name.endsWith('/hello.txt'),
+        );
+        expect(await archive.readMember(member), HfsFixture.helloBytes);
+      });
+    }
+
     test('new method $method can browse ISO files inside a DMG', () async {
       final archive = await open(
         DmgFixture(IsoFixture().bytes, method: method),
