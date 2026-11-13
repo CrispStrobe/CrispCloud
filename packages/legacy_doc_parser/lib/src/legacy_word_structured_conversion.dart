@@ -454,6 +454,8 @@ class _StructuredWordWriter {
     if (section.titlePage) {
       _xml.add('<w:titlePg/>');
     }
+    if (section.layout.rightToLeft) _xml.add('<w:bidi/>');
+    if (section.layout.rightToLeftGutter) _xml.add('<w:rtlGutter/>');
     _sectionGrid(section.layout);
   }
 

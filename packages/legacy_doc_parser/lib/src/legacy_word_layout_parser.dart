@@ -70,6 +70,10 @@ bool _applySectionLayout(
       output[key] = columns;
     case 0x3019:
       output['columnSeparator'] = _boolean(value);
+    case 0x3228:
+      output['sectionRightToLeft'] = _boolean(value);
+    case 0x322a:
+      output['sectionRightToLeftGutter'] = _boolean(value);
     case 0x301a:
       output['pageVerticalAlignment'] = bounded(value.u8(0), 0, 3);
     case 0x3013:
@@ -175,6 +179,8 @@ LegacyWordSectionLayout _sectionLayout(_Props properties) {
           : const <LegacyWordPageColumn>[],
     ),
     columnSeparator: properties['columnSeparator'] == true,
+    rightToLeft: properties['sectionRightToLeft'] == true,
+    rightToLeftGutter: properties['sectionRightToLeftGutter'] == true,
     verticalAlignment: LegacyWordPageVerticalAlignment
         .values[properties['pageVerticalAlignment'] as int? ?? 0],
     lineNumberInterval: properties['lineNumberInterval'] as int? ?? 0,

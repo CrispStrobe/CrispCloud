@@ -33,3 +33,8 @@ made available in source form. See `docs/STORAGE_ENGINE_ARCHITECTURE.md`.
 The gateway trash-name correction from `CrispStrobe/crisp-cloud-rs` commit `6b61faa8228e3be2eb71d0710975babbc03e5f8e` and its endpoint regressions are applied to the app consumer. Files retain their extension and exact UUID across pagination; folders and extensionless files preserve their names. Existing host transport and dependency patches are retained. This is a protocol metadata backport beyond the historical manifest-only patch list above.
 
 The host also backports the 9b57bee one-shot Internxt trash/restore API and its reference tests. Receipt mutations disable protocol retries and redirects, retain the host proxy/TLS policy, and invalidate stale local overlays even when the remote outcome is uncertain.
+
+The Windows accepted-socket fixture correction and fragmented-request regression
+from `841ebb1e516d27841d2a231899edcb0ed4d45d20` are also mirrored. This changes
+only test transport setup; production retries, redirects and receipt behavior
+remain unchanged.

@@ -20,6 +20,7 @@ extension _WordShapes on _StructuredWordWriter {
         (geometry.preset == null && geometry.path.isEmpty) ||
         (shape.fill?.type ?? 0) != 0 ||
         (shape.line?.type ?? 0) != 0 ||
+        (shape.line?.compoundStyle ?? 0) != 0 ||
         (shape.shadow?.type ?? 0) != 0) {
       return false;
     }

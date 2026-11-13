@@ -235,6 +235,11 @@ class _WordMediaReader {
           'OfficeArt wrap distance cannot reference a BLIP.',
         );
       }
+      if (id == 0x01cd && (opid & 0x4000) != 0) {
+        throw const FormatException(
+          'OfficeArt line style cannot reference a BLIP.',
+        );
+      }
       if ((opid & 0x8000) != 0) {
         var size = value;
         if (id == 0x0145 && value != 0) {

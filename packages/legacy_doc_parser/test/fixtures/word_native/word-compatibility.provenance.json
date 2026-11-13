@@ -1,0 +1,10 @@
+{
+  "source": "test/fixtures/fidelity/word-compatibility.docx",
+  "sourceSha256": "8fccf5c41ac4f51136635322933065ecc786e1365709a7a10edb8734024049fe",
+  "binary": "word-compatibility.doc",
+  "binarySha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+  "retainedEvidence": "doc/evidence/native-corpus-0c3e596/sealed/03-word-compatibility",
+  "archiveMember": "run/word-compatibility/bridge/word-compatibility.doc",
+  "nativeBuild": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "purpose": "Preserve the exact binary section-direction, gutter, line-numbering and effective-version note-numbering source; do not replace the authored source or native goldens."
+}

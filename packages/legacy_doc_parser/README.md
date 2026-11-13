@@ -12,7 +12,8 @@ The codebase currently supports:
   bookmarks, with original UTF-16 character positions retained in the model.
 - Supported character and paragraph styles, independent script font slots,
   tabs, borders, shading, numbering,
-  list continuation and section settings.
+  list continuation, section/gutter direction and explicit manual-break
+  justification compatibility settings.
 - Nested tables, supported cell merges and conditional table styles, row
   properties, and modeled floating-table anchors. Source note endings are
   preserved without adding layout-changing paragraphs after final tables.
@@ -22,6 +23,9 @@ The codebase currently supports:
 - Supported raster images, bounded EMF/WMF preservation and vector previews,
   basic editable OfficeArt shapes and paths, explicit drawing wrap clearances,
   and corroborated textbox chains and independent header/footer instances.
+  Explicit simple textbox borders retain their source anchors while bounded
+  DOCX frame conversion accounts for their outer border extent; see the
+  [frame contract](doc/textbox-frame-borders.md).
 - Structured DOCX conversion, safe HTML and plain-text extraction, and explicit
   DOCM output that can retain one structurally complete VBA project. Embedded
   objects, macros and signature evidence are retained only within the documented

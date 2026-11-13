@@ -405,12 +405,33 @@ void main() {
         LegacyWordParagraph,
         LegacyWordTable,
       ]);
+      // The native DOC importer flattens this footnote table, so its DOCX
+      // export is not a structural oracle. Literal PAPX/TDefTable bytes retain
+      // CP 124..147, one 2000-twip cell, and 108-twip side margins. See the
+      // independently decoded source anchors in table-note-oracle-20261113.
+      final table = note.blocks.last as LegacyWordTable;
+      expect((table.startCp, table.endCp), (124, 147));
+      expect(table.rows, hasLength(1));
+      final row = table.rows.single;
+      expect(row.originTwips, 0);
+      expect(row.cells, hasLength(1));
+      expect(row.cells.single.widthTwips, 2000);
+      expect(row.defaultCellMargins[LegacyWordBorderSide.left], 108);
+      expect(row.defaultCellMargins[LegacyWordBorderSide.right], 108);
       final xml = _xml(bytes, 'footnotes');
       expect(
         xml.rootElement.childElements.last.childElements.map(
           (e) => e.name.local,
         ),
         ['p', 'tbl'],
+      );
+      expect(
+        _attr(xml.findAllElements('tblW', namespace: _w).single, 'w'),
+        '2000',
+      );
+      expect(
+        _attr(xml.findAllElements('gridCol', namespace: _w).single, 'w'),
+        '2000',
       );
       expect(file.readAsBytesSync(), bytes);
     },

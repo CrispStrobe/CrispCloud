@@ -1,0 +1,74 @@
+{
+  "scope": "Diagnostic helpers only; no parser runtime modification or native rerun",
+  "commands": [
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "doc/evidence/native-corpus-0c3e596/font-render-inspection"
+      ],
+      "exitCode": 0,
+      "log": "formatter-apply.log",
+      "sha256": "9b03402085f31d0ac476bea3bb3a9e10934a63352821ef30769694a95e133d75"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "doc/evidence/native-corpus-0c3e596/font-render-inspection"
+      ],
+      "exitCode": 0,
+      "log": "formatter-check.log",
+      "sha256": "a8665628d3d8dc8a51632550dfb214cf87c098912f4250420d0df700431790e6"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "analyze",
+        "--fatal-infos",
+        "doc/evidence/native-corpus-0c3e596/font-render-inspection"
+      ],
+      "exitCode": 0,
+      "log": "scoped-analyze.log",
+      "sha256": "8821c7e8403f27a04a30fcc50cb42969daaffae6f94a6f3a98dd137b0a9af884"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "doc/evidence/native-corpus-0c3e596/font-render-inspection/formatting_font_source.dart",
+        "test/fixtures/word_native/formatting.doc"
+      ],
+      "exitCode": 0,
+      "output": "source-font-slots.json",
+      "outputByteIdentical": true,
+      "sha256": "e9c161123bb516990324703d26ec26244244fde3e8dae5bde8eacfb0ced1e8be"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "doc/evidence/native-corpus-0c3e596/font-render-inspection/verify_font_bytes.dart",
+        "test/fixtures/word_native/formatting.doc"
+      ],
+      "exitCode": 0,
+      "output": "normal-style-byte-evidence.json",
+      "outputByteIdentical": true,
+      "sha256": "ef379b1e896f4bd3825e2926b55ad34eb80210eac31548a079181cf283436c9d"
+    },
+    {
+      "command": [
+        "/home/agent/.codex/skills/remote-skills/office-recovery-0905ba96fd2d/flutter-3.47.8/bin/cache/dart-sdk/bin/dart",
+        "--packages=.dart_tool/package_config.json",
+        "doc/evidence/native-corpus-0c3e596/font-render-inspection/source_normal_font_operands.dart",
+        "test/fixtures/word_native/formatting.doc"
+      ],
+      "exitCode": 0,
+      "output": "source-normal-font-operands.json",
+      "outputByteIdentical": true,
+      "sha256": "e9f13e14778a0c4414abab6a365e006cae51080b3648d252777919474bbbaa04"
+    }
+  ]
+}

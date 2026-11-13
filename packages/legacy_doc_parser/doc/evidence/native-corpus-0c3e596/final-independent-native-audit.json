@@ -1,0 +1,253 @@
+{
+  "schema": "legacy-doc-parser/independent-final-artifact-audit",
+  "version": 1,
+  "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "indexSha256": "ed05cf1264ceb23f33a1d6b9e076e52c64b85e1a0b5e567c4815b9ccf25b2a99",
+  "verifiedAt": "2026-11-12T23:13:15.728679+00:00",
+  "verifiedCases": 24,
+  "files": 2646,
+  "bytes": 194128812,
+  "verifiedGzipPages": 240,
+  "cases": [
+    {
+      "id": "formatting",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 13036653,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "66175b3238515281706d0bc40e2f6e3ee88959e0774b95d72a514c97c35c66be",
+      "extracted": null
+    },
+    {
+      "id": "word",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 12087560,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "2d12ea5b3ec66ee924e9d7e75b257204f939178b7d64011a6cc6a0efd38c9dcd",
+      "extracted": null
+    },
+    {
+      "id": "word-compatibility",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 124,
+      "bytes": 11588352,
+      "verifiedGzipPages": 20,
+      "archiveSha256": "8c9d08a04ad0b0d76b886b68679b38e7717adc2afa768f36aa887e51383f118b",
+      "extracted": null
+    },
+    {
+      "id": "table-borders",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 8735993,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "f5d5bf2e4ea861605cac11b1115310ce538a24060eb614edbb4fddce560da65b",
+      "extracted": null
+    },
+    {
+      "id": "story-media",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 5006773,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "ef814d29e17ddd1d05653de56ba433dcca2ab9740d7dd2467195ff0ac2fcfdff",
+      "extracted": null
+    },
+    {
+      "id": "comment-threads",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 3035804,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "9cfd0fef42a56b8e8708147fbf97afe9e3358b0b4cc73b4a4afa7a8086aa4ea3",
+      "extracted": null
+    },
+    {
+      "id": "note-markers",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 9305562,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "4f14d52d703cff7f85c46bbc266d225251057959fa62144d23d0dbc81faec6cb",
+      "extracted": null
+    },
+    {
+      "id": "bookmarks",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 9731620,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "12863e6b501fcaaf1361dcf4b1850542382f904fd17c0eb8f72fb7858431b9a0",
+      "extracted": null
+    },
+    {
+      "id": "content-controls",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 7594264,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "c9244821e88101d9733e78744592e7fcf4ac4cd166cbbde793d25b1aab2b2bb8",
+      "extracted": null
+    },
+    {
+      "id": "content-controls-legacy",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 7594715,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "a044c0ab766f4e37fec79ed4916a6b867fb0d7bbe6d3ee82a2e503022e7098bd",
+      "extracted": null
+    },
+    {
+      "id": "word-altchunk",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 9570379,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "bcc03149dbd3a69353fae809f2fe68f237dec61034bf6b3260c5c7af186bebad",
+      "extracted": null
+    },
+    {
+      "id": "linked-textboxes",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 2834881,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "06609ab45e0bbb7be96ab679ddb0b2a8c215af8cd0d1510c470eca2c09894174",
+      "extracted": null
+    },
+    {
+      "id": "officeart-shapes",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 1709088,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "41a5b49c376c1ff64d221720619aa00ac718011b5754dbddbf6f7217340256a7",
+      "extracted": null
+    },
+    {
+      "id": "linked-textboxes-native",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 2727702,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "ed99a1edc48e48f25eb5c418142def180ab783907a3b9d6550e0633819eb8990",
+      "extracted": null
+    },
+    {
+      "id": "emf-vectors",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 2354806,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "f9e11078f05ea320751d5d6b1c40f9936870aff9d8608d15d14e80f6cdd2196e",
+      "extracted": null
+    },
+    {
+      "id": "wmf-vectors",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 114,
+      "bytes": 2348100,
+      "verifiedGzipPages": 10,
+      "archiveSha256": "f19bdac53dfe83aadceb720462ac8789a3f9ee5d8a4221081531dc6428addae0",
+      "extracted": null
+    },
+    {
+      "id": "linked-textboxes-compact",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 4519741,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "2dadfbb945d4beef67e1cdb51463f8d43501a1e65359bf91e95dd7e318219e29",
+      "extracted": null
+    },
+    {
+      "id": "list-continue",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 13082358,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "d3c08c4f01ed8e39fc8d206c759cac9ec33b282cb9bf18fb3a3b05c46c0824a8",
+      "extracted": null
+    },
+    {
+      "id": "list-restart",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 15522967,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "7e86da150c9b5db8df4a98eb70f5e16600d2e4a1d969d03f8b0114510f5d0c8b",
+      "extracted": null
+    },
+    {
+      "id": "word14-margin-origin",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 8171362,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "5687917d1a208429f4788895edd76fdd77b0bfd71948dd317966a84cd4d31fc5",
+      "extracted": null
+    },
+    {
+      "id": "word16-page-origin",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 22266276,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "ffa9b3dbe2b7eca4da233ae00f19ad8aa80d554790870857b8ea1dd1eb29e876",
+      "extracted": null
+    },
+    {
+      "id": "poi-simple-table2",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 14062047,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "b0cedcea778b22fefc6f82e32e440f2b534d2cc23b28b300167771016760f13d",
+      "extracted": null
+    },
+    {
+      "id": "header-textbox-alias",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 3395284,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "1ae6f83aa6cab766039dc821ec17265c63d3d61714e45df455ec4c20655b92e1",
+      "extracted": null
+    },
+    {
+      "id": "header-textbox-first-enabled",
+      "verified": true,
+      "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+      "files": 104,
+      "bytes": 3846525,
+      "verifiedGzipPages": 9,
+      "archiveSha256": "d3c8f6282377c46fc605252dbef681ec65ea37fdb5ec2730bd537d743c1a07f7",
+      "extracted": null
+    }
+  ]
+}

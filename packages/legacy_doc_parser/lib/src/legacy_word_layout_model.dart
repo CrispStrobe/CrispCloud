@@ -87,6 +87,8 @@ class LegacyWordSectionLayout {
     this.equalColumnWidths = true,
     this.columns = const [],
     this.columnSeparator = false,
+    this.rightToLeft = false,
+    this.rightToLeftGutter = false,
     this.verticalAlignment = LegacyWordPageVerticalAlignment.top,
     this.lineNumberInterval = 0,
     this.lineNumberStart = 1,
@@ -107,6 +109,13 @@ class LegacyWordSectionLayout {
   final bool equalColumnWidths;
   final List<LegacyWordPageColumn> columns;
   final bool columnSeparator;
+
+  /// Section direction controls column order and the side of line numbers.
+  /// It is independent of paragraph direction and character ordering.
+  final bool rightToLeft;
+
+  /// Places a side gutter on the right, independently of section direction.
+  final bool rightToLeftGutter;
   final LegacyWordPageVerticalAlignment verticalAlignment;
   final int lineNumberInterval;
   final int lineNumberStart;

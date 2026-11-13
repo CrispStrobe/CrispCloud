@@ -190,6 +190,83 @@ void main() {
     expect(_all(_xml(document), 'pgNumType'), isEmpty);
   });
 
+  test(
+    'section direction and gutter direction are independent of paragraph direction',
+    () {
+      for (final rtl in [0, 1]) {
+        for (final gutter in [0, 1]) {
+          final document = parseLegacyWordDocument(
+            _fixture(
+              paragraph: _one(0x2441, 1 - rtl),
+              section: [
+                ..._one(0x3228, rtl),
+                ..._one(0x322a, gutter),
+                ..._two(0xb025, 240),
+              ],
+            ),
+          );
+          final section = document.sections.single;
+          expect(section.layout.rightToLeft, rtl == 1);
+          expect(section.layout.rightToLeftGutter, gutter == 1);
+          expect(section.gutterTwips, 240);
+          expect(
+            (document.blocks.single as LegacyWordParagraph)
+                .style
+                .layout
+                .rightToLeft,
+            rtl == 0,
+          );
+          final xml = _xml(document);
+          final properties = _all(xml, 'sectPr').single;
+          expect(
+            properties.findElements('bidi', namespace: _w),
+            hasLength(rtl),
+          );
+          expect(
+            properties.findElements('rtlGutter', namespace: _w),
+            hasLength(gutter),
+          );
+        }
+      }
+    },
+  );
+
+  test(
+    'section directions default to left and explicit resets use the last operation',
+    () {
+      for (final operations in <List<int>>[
+        [],
+        [
+          ..._one(0x3228, 1),
+          ..._one(0x3228, 0),
+          ..._one(0x322a, 1),
+          ..._one(0x322a, 0),
+        ],
+      ]) {
+        final document = parseLegacyWordDocument(_fixture(section: operations));
+        expect(document.sections.single.layout.rightToLeft, isFalse);
+        expect(document.sections.single.layout.rightToLeftGutter, isFalse);
+        final properties = _all(_xml(document), 'sectPr').single;
+        expect(properties.findElements('bidi', namespace: _w), isEmpty);
+        expect(properties.findElements('rtlGutter', namespace: _w), isEmpty);
+      }
+      final document = parseLegacyWordDocument(
+        StructuredWordFixture(
+          pieces: [const WordFixturePiece('A\fB\r')],
+          sections: [
+            WordFixtureSection(2, [..._one(0x3228, 1), ..._one(0x322a, 1)]),
+            const WordFixtureSection(4, []),
+          ],
+        ).build(),
+      );
+      expect(document.sections.map((s) => s.layout.rightToLeft), [true, false]);
+      expect(document.sections.map((s) => s.layout.rightToLeftGutter), [
+        true,
+        false,
+      ]);
+    },
+  );
+
   for (final (name, operations) in [
     (
       'missing column width',
@@ -205,6 +282,8 @@ void main() {
     ('grid without pitch', _two(0x5032, 1)),
     ('invalid grid pitch', _two(0x9031, 0)),
     ('invalid boolean', _one(0x3005, 2)),
+    ('invalid section direction', _one(0x3228, 2)),
+    ('invalid gutter direction', _one(0x322a, 255)),
   ]) {
     test('rejects $name rather than inventing pagination', () {
       expect(

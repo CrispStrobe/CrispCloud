@@ -635,3 +635,30 @@ It does not change the application runtime, dependency lock, cryptographic
 algorithms or protocols, Apple declarations, or reviewed distribution policy.
 The new workflow is included in the reviewed source inventory; fingerprints
 were refreshed after inspecting these packaging-only changes.
+
+
+### Canonical parser refresh for build 22, 2026-11-13
+
+The source update changes DOC section compatibility and explicit textbox frame
+geometry, plus retained acceptance evidence and the application version. The
+canonical parser and Quds source gates pass; the synchronized Office gate
+passes 1,165 mandatory engine tests and 202 host tests. Signature validity is
+still never claimed, and embedded content and macros are not executed. No
+cryptographic algorithm, protocol, dependency, Apple declaration or reviewed
+distribution setting changes. The source binding was refreshed after reviewing
+these changes; this records source consistency rather than a new binary upload.
+
+
+### Native ISO, RAR5 Store and HFSX DMG integration review, 2026-11-13
+
+The container increment adds bounded data-image and RAR5 Store workflows and
+metadata-preserving publication checks. Its RAR5 implementation is independently
+written from the container specification and emits Store records only; it adds
+no proprietary compressor or encryption scheme. CRC32 and the existing SHA-256
+content-receipt mechanism check captured data and candidates. Unsupported
+protected/solid/split RAR and encrypted or unmodeled disk images keep their
+existing guarded paths. Existing encryption, keys, transport protocols,
+dependencies and reviewed Apple distribution declarations remain unchanged.
+The three new RAR source files and qualification workflow are included in the
+reviewed-source binding. Source fingerprints were refreshed after this review;
+actual binary and live Store checks remain required for the next upload.

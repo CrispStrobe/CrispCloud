@@ -1,0 +1,185 @@
+{
+  "source": "test/fixtures/word_native/formatting.doc",
+  "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+  "mainEmojiScalarCount": 1,
+  "mainTokyoCount": 1,
+  "selectedTable": "1Table",
+  "stylesheetTableOffset": 0,
+  "stylesheetHeaderLength": 18,
+  "defaultFontSlots": {
+    "ascii": {
+      "index": 0,
+      "name": "Times New Roman",
+      "tableOffset": 14
+    },
+    "eastAsia": {
+      "index": 0,
+      "name": "Times New Roman",
+      "tableOffset": 16
+    },
+    "nonAscii": {
+      "index": 0,
+      "name": "Times New Roman",
+      "tableOffset": 18
+    }
+  },
+  "fontTable": [
+    {
+      "index": 0,
+      "name": "Times New Roman",
+      "tableOffset": 9317,
+      "ffnBytes": 72
+    },
+    {
+      "index": 1,
+      "name": "Symbol",
+      "tableOffset": 9389,
+      "ffnBytes": 54
+    },
+    {
+      "index": 2,
+      "name": "Arial",
+      "tableOffset": 9443,
+      "ffnBytes": 52
+    },
+    {
+      "index": 3,
+      "name": "Liberation Serif",
+      "tableOffset": 9495,
+      "ffnBytes": 106
+    },
+    {
+      "index": 4,
+      "name": "Cambria",
+      "tableOffset": 9601,
+      "ffnBytes": 56
+    },
+    {
+      "index": 5,
+      "name": "ＭＳ 明朝",
+      "tableOffset": 9657,
+      "ffnBytes": 52
+    },
+    {
+      "index": 6,
+      "name": "",
+      "tableOffset": 9709,
+      "ffnBytes": 42
+    },
+    {
+      "index": 7,
+      "name": "Calibri",
+      "tableOffset": 9751,
+      "ffnBytes": 56
+    },
+    {
+      "index": 8,
+      "name": "ＭＳ ゴシック",
+      "tableOffset": 9807,
+      "ffnBytes": 56
+    },
+    {
+      "index": 9,
+      "name": "Courier",
+      "tableOffset": 9863,
+      "ffnBytes": 80
+    },
+    {
+      "index": 10,
+      "name": "Cambria",
+      "tableOffset": 9943,
+      "ffnBytes": 56
+    },
+    {
+      "index": 11,
+      "name": "Liberation Sans",
+      "tableOffset": 9999,
+      "ffnBytes": 84
+    },
+    {
+      "index": 12,
+      "name": "Noto Sans CJK SC",
+      "tableOffset": 10083,
+      "ffnBytes": 74
+    },
+    {
+      "index": 13,
+      "name": "Noto Sans",
+      "tableOffset": 10157,
+      "ffnBytes": 60
+    },
+    {
+      "index": 14,
+      "name": "Noto Sans",
+      "tableOffset": 10217,
+      "ffnBytes": 60
+    },
+    {
+      "index": 15,
+      "name": "Symbol",
+      "tableOffset": 10277,
+      "ffnBytes": 54
+    }
+  ],
+  "unicodeRuns": [
+    {
+      "startCp": 36,
+      "endCp": 58,
+      "text": "Unicode café — 東京 😀. ",
+      "utf16CodeUnits": [
+        "55",
+        "6e",
+        "69",
+        "63",
+        "6f",
+        "64",
+        "65",
+        "20",
+        "63",
+        "61",
+        "66",
+        "e9",
+        "20",
+        "2014",
+        "20",
+        "6771",
+        "4eac",
+        "20",
+        "d83d",
+        "de00",
+        "2e",
+        "20"
+      ],
+      "unicodeScalars": [
+        "55",
+        "6e",
+        "69",
+        "63",
+        "6f",
+        "64",
+        "65",
+        "20",
+        "63",
+        "61",
+        "66",
+        "e9",
+        "20",
+        "2014",
+        "20",
+        "6771",
+        "4eac",
+        "20",
+        "1f600",
+        "2e",
+        "20"
+      ],
+      "ascii": "Cambria",
+      "nonAscii": "Cambria",
+      "eastAsia": "ＭＳ 明朝",
+      "complexScript": ""
+    }
+  ],
+  "rawEmojiUtf16WordDocumentOffsets": [
+    2156
+  ]
+}
