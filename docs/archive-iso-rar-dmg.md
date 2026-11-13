@@ -161,6 +161,10 @@ Completed direct checks for the new formats:
   add/delete/rename, metadata preservation, 14 hidden-filesystem mutations with
   recomputed CRCs, forged markers, unknown UDIF information, extra partitions,
   ignored compressed suffixes, checksum corruption, cancellation and ownership.
+  A further direct probe created a **2,148,753,423-byte DMG**, rewrote it to a
+  **2,147,601,376-byte candidate**, and verified the full **2,147,487,745-byte
+  member**, both CRC layers, metadata and cleanup. See the
+  [large DMG receipt and reproducer](archive-dmg-streaming-verification.md).
 - **Integration routing:** the direct native viewer-file probe passed ISO,
   RAR, CBR and DMG reading, misleading filename fallbacks, existing protected
   ZIP fallback and cancellation cleanup.
@@ -173,8 +177,24 @@ and nine explicit large cases. The new tests cover native creation, edits,
 review, cancellation without mutation, verified publication, reopen, bounded
 chunks, full payload hashes, source retention and cleanup for ISO/RAR/DMG. A
 receipt is green only when its exact selected large test completes with zero
-skips. At this checkpoint those integrated tests are authored; their completed
-hosted result must be recorded separately. No local Flutter runtime was used.
+skips. At commit `f1a03e807b1261361a17f66a37fa94858481e1e7`, the normal hosted
+suite completed with **1,856 passed, zero failed and ten opt-in cases skipped**;
+help validation, archive analysis and the portable codec checks also passed.
+The **ISO, RAR5 Store and DMG large integrated jobs also passed**, including
+creation, folder edits, review, cancellation without mutation, publication,
+reopening and full payload hashing, with one passed test and no failures or skips
+in each job. Both the initial and edited, published outer containers exceeded
+2 GiB in each format. The separate RAR5 Store creation case and all five
+common-format large cases passed on this same candidate as well. The completed
+workflow therefore has **ten successful jobs: the normal suite and nine
+explicit large cases**, each large case with one passed test and zero failures
+or skips. After attempt 1 was canceled, attempt 2 completed the unfinished jobs
+on the unchanged source revision; the overall run concluded successfully at
+`2026-11-13T06:03:13Z`.
+The additional standalone RAR codec opt-in has the separate direct evidence
+above. Exact jobs, artifact hashes and durable receipts are in
+[runtime verification](archive-containers-runtime-verification.md).
+No local Flutter runtime was used.
 
 The configured 8 GiB ceiling and all supported operating systems are not fully
 qualified by a 2 GiB Linux fixture. No macOS mounting, application-bundle

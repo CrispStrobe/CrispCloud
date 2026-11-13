@@ -1,0 +1,82 @@
+{
+  "probe": "native DMG create / reopen / rewrite / reopen over 2 GiB",
+  "scope": "Production codecs and file spools only; no Flutter or publication.",
+  "testedSourceRevision": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+  "runtime": "3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "os": "linux",
+  "startedUtc": "2026-11-13T05:25:46.418789Z",
+  "memberBytes": 2147487745,
+  "resourceLimitBytes": 8589934592,
+  "fixture": {
+    "blockBytes": 262144,
+    "lcgSeed": "0x43524953",
+    "lcgMultiplier": 1664525,
+    "lcgIncrement": 1013904223,
+    "lcgOutput": "high byte of each 32-bit state",
+    "repeatBlock": true,
+    "firstFourBytes": [
+      17,
+      34,
+      51,
+      68
+    ],
+    "lastFourBytes": [
+      85,
+      102,
+      119,
+      136
+    ]
+  },
+  "originalContainerBytes": 2148753423,
+  "expectedPayloadSha256": "5c476ddb577e294d969696ffe5592f15743448007199015e067c59aa98bc1843",
+  "rewriteInputPayloadSha256": "5c476ddb577e294d969696ffe5592f15743448007199015e067c59aa98bc1843",
+  "rewrittenContainerBytes": 2147601376,
+  "metadataPreservationVerified": true,
+  "rewrittenMemberNames": [
+    "added.txt",
+    "empty-folder",
+    "renamed.bin"
+  ],
+  "reopenedPayloadSha256": "5c476ddb577e294d969696ffe5592f15743448007199015e067c59aa98bc1843",
+  "sourcesClosedExactlyOnceAndRejectFurtherReads": true,
+  "status": "passed",
+  "temporaryStorageCleaned": true,
+  "completedUtc": "2026-11-13T05:28:53.696193Z",
+  "totalElapsedMs": 187275,
+  "phaseElapsedMs": {
+    "createRawDmg": 42864,
+    "openOriginalAndVerifyCanonicalProfileAndCrc": 2877,
+    "rewriteWithDefaultZlibSelection": 101745,
+    "openCandidateAndVerifyCanonicalProfileAndCrc": 2546,
+    "fullReopenedCandidatePayloadSha256": 37068,
+    "cleanup": 132
+  },
+  "originalSource": {
+    "logicalLength": 2148753423,
+    "readCalls": 12312,
+    "requestedBytes": 4297405059,
+    "maxPositionalReadBytes": 1048576,
+    "closeCalls": 1
+  },
+  "candidateSource": {
+    "logicalLength": 2147601376,
+    "readCalls": 12293,
+    "requestedBytes": 4297099176,
+    "maxPositionalReadBytes": 1048576,
+    "closeCalls": 1
+  },
+  "generatedInputBytes": 2147487745,
+  "originalPayloadReadForRewriteBytes": 2147487745,
+  "reopenedPayloadReadBytes": 2147487745,
+  "maxGeneratedChunkBytes": 262144,
+  "maxWriterSinkChunkBytes": 1048576,
+  "maxMemberReadChunkBytes": 262144,
+  "sourceGeneratorOpens": 1,
+  "rewriteMemberOpens": 1,
+  "initialResidentBytes": 323731456,
+  "sampledPeakResidentBytes": 432664576,
+  "sampledResidentGrowthBytes": 108933120,
+  "residentSampleCount": 3725,
+  "residentSamplingIntervalMs": 50,
+  "residentNote": "Sampled process RSS includes JIT/runtime; not a memory ceiling."
+}

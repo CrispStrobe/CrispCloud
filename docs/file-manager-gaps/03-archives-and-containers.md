@@ -49,8 +49,10 @@ cases above 2 GiB. Provider and platform release acceptance remain separate.
 now route eligible data ISO, RAR5 Store/CBR and fully inspected canonical HFSX
 data-volume DMG through the native streamed workspace. Their 8 GiB container
 budgets include format overhead; each ISO file must be smaller than 4 GiB.
-Unsupported boot/hybrid/filesystem/protection metadata keeps a container
-read-only. See the [exact profiles and verification](../archive-iso-rar-dmg.md).
+Unsupported boot/hybrid/filesystem/protection metadata blocks rewriting.
+The integrated candidate passed 1,856 normal archive tests and all nine
+explicit cases above 2 GiB in its completed ten-job hosted workflow. See the
+[exact profiles and verification](../archive-iso-rar-dmg.md).
 
 **Boundary:** Capabilities are format-specific. Mutating one member may require repacking the container; declare cost and read/write/encryption support. Keep original containers recoverable until replacement is verified.
 
@@ -151,8 +153,10 @@ common-format workspaces with their individual 8 GiB budgets. Imports use sealed
 private spools; transfer checks and source-removal hashes consume bounded
 streams. A streamed pair's combined candidate budget is the sum of its two
 workspace limits, while each archive retains its own limit. Two buffered
-workspaces retain the earlier 256 MiB combined budget. The new integration
-tests are authored and statically checked; the Flutter runtime gate remains.
+workspaces retain the earlier 256 MiB combined budget. The integration suites
+have since passed in the hosted normal archive gate. Exact tested revisions and
+the separately enabled large-case results are recorded in
+[runtime verification](../archive-containers-runtime-verification.md).
 
 **Delivered same-workspace continuation (2026-11-12):** **Move within archive…**
 preflights a selected group, supports recursive/implicit/empty directories and
