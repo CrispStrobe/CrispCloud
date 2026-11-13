@@ -1,298 +1,188 @@
-import 'package:path/path.dart' as p;
-
 import '../services/archive_creation_service.dart';
+import '../services/archive_workspace.dart';
+import '../services/file_operation_service.dart';
 import 'file_item.dart';
+import 'transfer_job.dart';
 
-enum ArchiveJobStatus {
-  queued,
-  running,
-  paused,
-  stopping,
-  interrupted,
-  completed,
-  failed,
-  cancelled,
-}
+bool isArchiveTransferJob(TransferJobRecord job) =>
+    job.id.startsWith('archive_create_') ||
+    job.id.startsWith('archive_workspace_') ||
+    job.entries.firstOrNull?.recovery['archiveKind'] != null;
 
-/// A restartable selection, not a serialization of an open pane or a password.
-/// Sources are captured by the creator when an attempt starts. Restarting an
-/// interrupted job rebuilds from those source paths after an explicit review.
-class ArchiveJobRequest {
-  ArchiveJobRequest({
-    required this.id,
-    required this.storageId,
-    required this.created,
-    required this.destinationDirectory,
+/// Credential-free creation recipe. The original sources are captured by the
+/// normal transfer journal; a password must be supplied again after restart.
+class ArchiveCreationJobDefinition {
+  ArchiveCreationJobDefinition._({
     required this.name,
     required this.format,
     required this.compression,
-    required List<FileItem> files,
-    this.passwordRequired = false,
-    this.encryptNames = false,
-  }) : files = List.unmodifiable(files.map(_copyFile)) {
-    validate();
-  }
+    required this.passwordRequired,
+    required this.encryptNames,
+    required this.files,
+    required this.destinationDirectory,
+    required this.outputPath,
+    required this.publication,
+  });
 
-  static const maximumSelections = 5000;
-  final String id;
-  final String storageId;
-  final DateTime created;
-  final String destinationDirectory;
   final String name;
   final ArchiveCreationFormat format;
   final ArchiveCreationCompression compression;
   final bool passwordRequired;
   final bool encryptNames;
   final List<FileItem> files;
-  String get outputPath => p.join(destinationDirectory, name);
+  final String destinationDirectory;
+  final String outputPath;
+  final Map<String, dynamic> publication;
 
-  static FileItem _copyFile(FileItem file) => FileItem(
-    name: file.name,
-    path: file.path,
-    uuid: file.uuid,
-    isFolder: file.isFolder,
-    size: file.size,
-    updatedAt: file.updatedAt,
-    isSymlink: file.isSymlink,
-  );
-
-  static bool validPath(String value) =>
-      value.length <= 16384 &&
-      !value.contains('\u0000') &&
-      p.isAbsolute(value) &&
-      p.normalize(value) == value;
-
-  void validate() {
-    if (!RegExp(r'^[a-z0-9-]{8,80}$').hasMatch(id) ||
-        storageId.isEmpty ||
-        storageId.length > 1024 ||
-        !validPath(destinationDirectory) ||
-        files.isEmpty ||
-        files.length > maximumSelections) {
-      throw const FormatException('Invalid archive job selection.');
-    }
-    final paths = <String>{};
-    for (final file in files) {
-      final path = file.path;
-      if (path == null ||
-          !validPath(path) ||
-          !paths.add(path) ||
-          file.name != p.basename(path) ||
-          file.isSymlink == true ||
-          file.uuid != null && file.uuid!.length > 4096 ||
-          file.size != null && (file.size! < 0 || file.size! > 0x200000000)) {
-        throw const FormatException('Invalid archive job source.');
-      }
-    }
-    options(password: passwordRequired ? 'validation-only' : null).validate();
-  }
+  String? get sourceManifestSha256 =>
+      publication['sourceManifestSha256'] as String?;
 
   ArchiveCreationOptions options({String? password}) {
     if (passwordRequired && (password == null || password.isEmpty)) {
       throw StateError('Enter the archive password again to restart this job.');
     }
-    if (!passwordRequired && password != null) {
-      throw StateError('This archive job does not use a password.');
-    }
-    return ArchiveCreationOptions(
+    final result = ArchiveCreationOptions(
       name: name,
       format: format,
       compression: compression,
-      password: password,
+      password: passwordRequired ? password : null,
       encryptNames: encryptNames,
     );
+    result.validate();
+    return result;
   }
 
-  Map<String, Object?> toJson() => {
-    'id': id,
-    'storageId': storageId,
-    'created': created.toUtc().toIso8601String(),
-    'directory': destinationDirectory,
-    'name': name,
-    'format': format.name,
-    'compression': compression.name,
-    'passwordRequired': passwordRequired,
-    'encryptNames': encryptNames,
-    'files': [
-      for (final file in files)
-        {
-          'name': file.name,
-          'path': file.path,
-          'uuid': file.uuid,
-          'directory': file.isFolder,
-          'size': file.size,
-          'modified': file.updatedAt?.toUtc().toIso8601String(),
-        },
-    ],
-  };
-
-  factory ArchiveJobRequest.fromJson(Map<String, dynamic> value) {
-    _keys(value, const {
-      'id',
-      'storageId',
-      'created',
-      'directory',
-      'name',
-      'format',
-      'compression',
-      'passwordRequired',
-      'encryptNames',
-      'files',
-    });
-    final items = value['files'];
-    if (items is! List || items.length > maximumSelections) {
-      throw const FormatException('Invalid saved archive selection.');
+  static ArchiveCreationJobDefinition fromJob(TransferJobRecord job) {
+    final header = job.entries.firstOrNull;
+    final raw = header?.recovery;
+    final format = ArchiveCreationFormat.values
+        .where((value) => value.name == raw?['format'])
+        .firstOrNull;
+    final compression = ArchiveCreationCompression.values
+        .where((value) => value.name == raw?['compression'])
+        .firstOrNull;
+    final name = raw?['name'];
+    if (!isArchiveTransferJob(job) ||
+        !job.ready ||
+        header == null ||
+        raw?['archiveVersion'] != 1 ||
+        raw?['archiveKind'] != 'create' ||
+        name is! String ||
+        format == null ||
+        compression == null ||
+        raw?['passwordRequired'] is! bool ||
+        raw?['encryptNames'] is! bool ||
+        job.entries.length != job.expectedEntries ||
+        job.entries.isEmpty ||
+        job.options.kind != FileOperationKind.copy) {
+      throw const FormatException('The saved archive recipe is incomplete.');
     }
-    return ArchiveJobRequest(
-      id: value['id'] as String,
-      storageId: value['storageId'] as String,
-      created: DateTime.parse(value['created'] as String),
-      destinationDirectory: value['directory'] as String,
-      name: value['name'] as String,
-      format: ArchiveCreationFormat.values.byName(value['format'] as String),
-      compression: ArchiveCreationCompression.values.byName(
-        value['compression'] as String,
-      ),
-      passwordRequired: value['passwordRequired'] as bool,
-      encryptNames: value['encryptNames'] as bool,
-      files: [
-        for (final item in items)
-          _fileFromJson(Map<String, dynamic>.from(item as Map)),
-      ],
+    final publication = raw?['archivePublication'];
+    if (publication != null && publication is! Map) {
+      throw const FormatException('The archive publication record is invalid.');
+    }
+    final checkedPublication = Map<String, dynamic>.from(
+      publication as Map? ?? const {},
     );
-  }
-
-  static FileItem _fileFromJson(Map<String, dynamic> value) {
-    _keys(value, const {
-      'name',
-      'path',
-      'uuid',
-      'directory',
-      'size',
-      'modified',
-    });
-    return FileItem(
-      name: value['name'] as String,
-      path: value['path'] as String,
-      uuid: value['uuid'] as String?,
-      isFolder: value['directory'] as bool,
-      size: value['size'] as int?,
-      isSymlink: false,
-      updatedAt: value['modified'] == null
-          ? null
-          : DateTime.parse(value['modified'] as String),
-    );
-  }
-}
-
-class ArchiveJobRecord {
-  const ArchiveJobRecord({
-    required this.request,
-    required this.status,
-    required this.updated,
-    this.attempt = 0,
-    this.prepared,
-    this.error,
-  });
-  final ArchiveJobRequest request;
-  final ArchiveJobStatus status;
-  final DateTime updated;
-  final int attempt;
-  final ArchiveCreationPrepared? prepared;
-  final String? error;
-  String get id => request.id;
-  bool get terminal => const {
-    ArchiveJobStatus.completed,
-    ArchiveJobStatus.failed,
-    ArchiveJobStatus.cancelled,
-  }.contains(status);
-
-  ArchiveJobRecord change(
-    ArchiveJobStatus status, {
-    DateTime? now,
-    int? attempt,
-    ArchiveCreationPrepared? prepared,
-    bool clearPrepared = false,
-    String? error,
-  }) => ArchiveJobRecord(
-    request: request,
-    status: status,
-    updated: now ?? DateTime.now().toUtc(),
-    attempt: attempt ?? this.attempt,
-    prepared: clearPrepared ? null : prepared ?? this.prepared,
-    error: error?.substring(0, error.length.clamp(0, 4096)),
-  );
-
-  Map<String, Object?> toJson() => {
-    'request': request.toJson(),
-    'status': status.name,
-    'updated': updated.toUtc().toIso8601String(),
-    'attempt': attempt,
-    'error': error,
-    'prepared': prepared == null
-        ? null
-        : {
-            'path': prepared!.path,
-            'entries': prepared!.entryCount,
-            'bytes': prepared!.bytes,
-            'sha256': prepared!.sha256,
-          },
-  };
-
-  factory ArchiveJobRecord.fromJson(Map<String, dynamic> value) {
-    _keys(value, const {
-      'request',
-      'status',
-      'updated',
-      'attempt',
-      'error',
-      'prepared',
-    });
-    final request = ArchiveJobRequest.fromJson(
-      Map<String, dynamic>.from(value['request'] as Map),
-    );
-    final saved = value['prepared'];
-    ArchiveCreationPrepared? prepared;
-    if (saved != null) {
-      final data = Map<String, dynamic>.from(saved as Map);
-      _keys(data, const {'path', 'entries', 'bytes', 'sha256'});
-      prepared = ArchiveCreationPrepared(
-        data['path'] as String,
-        data['entries'] as int,
-        data['bytes'] as int,
-        data['sha256'] as String,
-      );
-      if (prepared.path != request.outputPath ||
-          prepared.bytes < 0 ||
-          prepared.bytes > 0x200000000 ||
-          prepared.entryCount < 0 ||
-          prepared.entryCount > ArchiveCreationService.maxEntries ||
-          !RegExp(r'^[a-f0-9]{64}$').hasMatch(prepared.sha256)) {
-        throw const FormatException('Invalid archive job publication receipt.');
+    for (final key in ['packedSha256', 'sourceManifestSha256']) {
+      final hash = checkedPublication[key];
+      if (hash != null &&
+          (hash is! String || !RegExp(r'^[0-9a-f]{64}$').hasMatch(hash))) {
+        throw const FormatException('Invalid saved archive content digest.');
       }
     }
-    final attempt = value['attempt'] as int;
-    final error = value['error'] as String?;
-    final status = ArchiveJobStatus.values.byName(value['status'] as String);
-    if (attempt < 0 ||
-        attempt > 1000000 ||
-        error != null && error.length > 4096 ||
-        status == ArchiveJobStatus.completed && prepared == null) {
-      throw const FormatException('Invalid archive job state.');
+    for (final key in ['packedBytes', 'entryCount', 'sourceEntryCount']) {
+      final value = checkedPublication[key];
+      if (value != null && (value is! int || value < 0)) {
+        throw const FormatException('Invalid saved archive size.');
+      }
     }
-    return ArchiveJobRecord(
-      request: request,
-      status: status,
-      updated: DateTime.parse(value['updated'] as String),
-      attempt: attempt,
-      prepared: prepared,
-      error: error,
+    for (var i = 0; i < job.entries.length; i++) {
+      final entry = job.entries[i];
+      if (entry.index != i ||
+          entry.destination != header.destination ||
+          entry.source.path == null ||
+          entry.source.path!.isEmpty ||
+          entry.source.path!.contains('\u0000') ||
+          entry.source.name.isEmpty) {
+        throw const FormatException('Invalid saved archive selection.');
+      }
+    }
+    final result = ArchiveCreationJobDefinition._(
+      name: name,
+      format: format,
+      compression: compression,
+      passwordRequired: raw!['passwordRequired'] as bool,
+      encryptNames: raw['encryptNames'] as bool,
+      files: List.unmodifiable(job.entries.map((entry) => entry.source)),
+      destinationDirectory: job.targetDirectory,
+      outputPath: header.destination,
+      publication: Map.unmodifiable(checkedPublication),
     );
+    // Only validates the option combination; this placeholder never leaves the
+    // parser or grants authority to perform password-protected work.
+    result.options(
+      password: result.passwordRequired ? 'validation-only' : null,
+    );
+    return result;
   }
 }
 
-void _keys(Map<String, dynamic> value, Set<String> allowed) {
-  if (value.keys.any((key) => !allowed.contains(key))) {
-    throw const FormatException('Unsupported archive job fields.');
+FileOperationPlan archiveCreationJobPlan({
+  required FileOperationBackend source,
+  required FileOperationBackend destination,
+  required List<FileItem> files,
+  required String destinationDirectory,
+  required ArchiveCreationOptions options,
+}) {
+  options.validate();
+  if (files.isEmpty) {
+    throw const ArchiveCreationException(ArchiveCreationError.emptySelection);
   }
+  final output = destination.paths.join(destinationDirectory, options.name);
+  final entries = [
+    for (final file in files)
+      FileOperationEntry(transferFileFromJson(transferFileJson(file)), output),
+  ];
+  entries.first.recovery = {
+    'archiveVersion': 1,
+    'archiveKind': 'create',
+    'name': options.name,
+    'format': options.format.name,
+    'compression': options.compression.name,
+    'passwordRequired': options.password != null,
+    'encryptNames': options.encryptNames,
+  };
+  return FileOperationPlan(
+    source: source,
+    destination: destination,
+    targetDirectory: destinationDirectory,
+    options: const FileOperationOptions(kind: FileOperationKind.copy),
+    entries: entries,
+    errors: const [],
+  );
+}
+
+/// Used only for durable identity and shared scheduler resource claims. It must
+/// never be executed by the generic copy/move service.
+FileOperationPlan archiveWorkspaceJobPlan(ArchiveWorkspace workspace) {
+  final outer = workspace.outermost;
+  final entry = FileOperationEntry(outer.file, outer.file.path!)
+    ..recovery = {
+      'archiveVersion': 1,
+      'archiveKind': 'workspace',
+      'name': outer.file.name,
+      'format': workspace.format,
+      'revision': workspace.revision,
+      'fingerprint': outer.fingerprint,
+      'nestedMemberPaths': workspace.nestedMemberPaths,
+    };
+  return FileOperationPlan(
+    source: outer.source,
+    destination: outer.source,
+    targetDirectory: outer.source.paths.dirname(outer.file.path!),
+    options: const FileOperationOptions(kind: FileOperationKind.copy),
+    entries: [entry],
+    errors: const [],
+  );
 }

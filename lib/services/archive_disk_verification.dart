@@ -1,6 +1,8 @@
 import 'package:crypto/crypto.dart';
 
 import 'archive_dmg_reader.dart';
+import 'archive_checkpoint_source.dart';
+import 'file_operation_service.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_iso_reader.dart';
@@ -28,14 +30,23 @@ Future<void> verifyCreatedDiskArchive(
   List<ArchiveWriteEntry> entries, {
   required String format,
   bool Function()? isCancelled,
+  FileOperationControl? control,
   void Function(int rawPartitionBytes)? onVerificationPlan,
   Future<void> Function(int count, String path)? onDecodedBytes,
 }) async {
   void check() {
-    if (isCancelled?.call() ?? false) {
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
       throw const ArchiveViewException('Disk image verification cancelled.');
     }
   }
+
+  Future<void> checkpoint() async {
+    check();
+    await control?.checkpoint();
+    check();
+  }
+
+  Stream<T> controlled<T>(Stream<T> input) => control?.bind(input) ?? input;
 
   final kind = format.toLowerCase();
   if (!const ['iso', 'hfs', 'hfsx', 'dmg'].contains(kind)) {
@@ -65,10 +76,14 @@ Future<void> verifyCreatedDiskArchive(
       expected.putIfAbsent(parent, () => null);
     }
   }
-  final source = await spool.openByteSource();
+  final source = ArchiveCheckpointSource(
+    await spool.openByteSource(),
+    checkpoint,
+    check,
+  );
   ViewerArchive? archive;
   try {
-    check();
+    await checkpoint();
     archive = switch (kind) {
       'iso' => await openIsoArchive(source, maxMemberBytes: _diskLimit),
       'dmg' => await openDmgArchive(source, maxMemberBytes: _diskLimit),
@@ -144,17 +159,16 @@ Future<void> verifyCreatedDiskArchive(
     check();
     if (rawPartition != null) {
       // Draining is necessary: the raw-partition CRC is checked at stream end.
-      await for (final chunk in archive.openMember(
-        rawPartition,
-        maxBytes: _diskLimit,
+      await for (final chunk in controlled(
+        archive.openMember(rawPartition, maxBytes: _diskLimit),
       )) {
-        check();
+        await checkpoint();
         await onDecodedBytes?.call(chunk.length, rawPartition.name);
         check();
       }
     }
     for (final item in expected.entries) {
-      check();
+      await checkpoint();
       final entry = item.value;
       final member = actual[item.key]!;
       final directory = entry?.isDirectory ?? true;
@@ -196,8 +210,8 @@ Future<void> verifyCreatedDiskArchive(
         Stream<List<int>> input, {
         bool decoded = false,
       }) async* {
-        await for (final chunk in input) {
-          check();
+        await for (final chunk in controlled(input)) {
+          await checkpoint();
           yield chunk;
           if (decoded) {
             await onDecodedBytes?.call(chunk.length, item.key);

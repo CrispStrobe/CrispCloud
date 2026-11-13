@@ -319,6 +319,33 @@ Nextcloud is an open-source self-hosted cloud platform. CrispCloud connects via 
 | Username | Your Nextcloud username |
 | Password | App password (recommended) or account password |
 
+### Browser access (Web/PWA)
+
+Desktop access succeeding does not establish browser access: browsers enforce CORS,
+TLS trust and mixed-content restrictions. Enter the installation root, including
+any subdirectory (for example `https://cloud.example/nextcloud`), not the full DAV
+endpoint. The browser error now identifies the exact DAV endpoint and app origin.
+
+For a cross-origin deployment, the server administrator must allow the **exact
+CrispCloud origin** on the DAV route. Handle the unauthenticated `OPTIONS`
+preflight and permit `PROPFIND` plus the `Authorization`, `Depth` and
+`Content-Type` request headers. File operations additionally need the methods
+and headers they use, such as `PUT`, `MKCOL`, `COPY`, `MOVE`, `DELETE`,
+`Destination`, `Overwrite`, `If-Match` and `Range`; expose response metadata such
+as `ETag`, `Content-Range` and `Accept-Ranges`. Keep normal DAV authentication
+for actual requests. Do not solve this by disabling authentication or using an
+untrusted public CORS proxy.
+
+An HTTPS-hosted app needs an HTTPS Nextcloud URL and a certificate trusted by
+the browser. App custom-CA settings cannot override browser certificate policy.
+Inspect the browser Network/Console for the precise blocked request; JavaScript
+only receives an opaque failure for these cases and cannot determine which
+restriction caused it. Use a native CrispCloud app or host the app on the same
+origin if the server cannot permit cross-origin DAV.
+
+References: [Nextcloud WebDAV access](https://docs.nextcloud.com/server/stable/user_manual/en/files/access_webdav.html)
+and [browser CORS behavior](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS).
+
 ### Generating an App Password (Recommended)
 
 Using an app password is strongly recommended over your main account password:
@@ -340,7 +367,7 @@ If your Nextcloud server uses a self-signed TLS certificate:
 ### Notes
 
 - The Nextcloud provider supports sharing via the OCS Share API.
-- Nextcloud does not support versioning, streaming, or full-text search in the current adapter.
+- The adapter supports version history and bounded streaming. Search support depends on the server APIs.
 - The WebDAV endpoint is derived automatically from the server URL (`/remote.php/dav/files/USERNAME/`).
 
 ---
@@ -417,3 +444,15 @@ If the browser console shows CORS errors for S3 or a custom WebDAV server, you m
 ### Quota Not Displayed
 
 Some providers do not report storage quota. The status bar shows quota only when the provider returns it via the `getQuota()` API. Providers that support quota: Google Drive, OneDrive, Dropbox, Nextcloud, pCloud, SFTP (disk space), FTP (when server reports it).
+
+### Multiple simultaneous cloud connections
+
+Opening another connection keeps the existing authenticated client alive. Each
+pane can select a different connection in its source dropdown; account labels
+include the account identity. A local pane is preferred when the active pane
+already shows a cloud. Paths and file operations remain bound to their exact
+client, including its file-encryption wrapper. Connecting another server no
+longer logs out the first one or deletes its saved credentials.
+
+Additional live connections are session-only; this does not add a persistent
+multi-account profile manager. Explicit disconnect still ends that session.

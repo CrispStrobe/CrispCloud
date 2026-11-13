@@ -67,7 +67,7 @@ Primary references:
 This closes specific native folder-operation and data-image gaps. It is not a
 claim of parity with every commander plugin or external packer. Compressed RAR
 writing, large protected/nested writes, split-volume creation, external/WCX
-engines and durable background packing remain separate work. The broader
+engines remain separate work. Native background packing and shared queue controls are implemented in the [archive operation queue](archive-operation-queue.md) continuation. The broader
 [commander comparison](archive-parity-large-continuation.md) records those gaps.
 
 ## Preservation decisions

@@ -6,7 +6,7 @@ import 'dart:async';
 import '../services/log_service.dart';
 import '../utils/formatters.dart' show formatBytes;
 
-enum OperationType { upload, download, copy, move, delete }
+enum OperationType { upload, download, copy, move, delete, archive }
 
 enum OperationStatus { inProgress, waitingForDecision, completed, failed }
 
@@ -178,6 +178,14 @@ class OperationProgress implements TransferOperation {
     }
   }
 
+  /// Only a verified publication result may override a late Stop request.
+  /// The cancellation future remains signalled so no further I/O can start.
+  void completePublished() {
+    _isCancelled = false;
+    resume();
+    complete();
+  }
+
   void fail(
     String error, {
     TransferErrorCode? code,
@@ -282,6 +290,8 @@ class OperationProgress implements TransferOperation {
         return isBatch ? 'Move: $totalFiles files' : 'Move: $fileName';
       case OperationType.delete:
         return isBatch ? 'Delete: $totalFiles files' : 'Delete: $fileName';
+      case OperationType.archive:
+        return 'Archive: $fileName';
     }
   }
 

@@ -95,7 +95,7 @@ class _WritableCloud extends _Cloud with CloudTransferOperations {
 class _Auth extends ChangeNotifier implements AuthNotifier {
   _Auth(this.client);
   @override
-  final CloudStorageClient client;
+  CloudStorageClient client;
   @override
   bool isConnected = true;
   @override
@@ -134,6 +134,75 @@ void main() {
   });
 
   tearDown(() => container.dispose());
+
+  test(
+    'a retained primary remains in its pane when another cloud connects',
+    () async {
+      final right = container.read(panelProvider(PanelSide.remote));
+      await right.refresh();
+      await right.navigateToPath('/kept-folder');
+      final registry = container.read(multiCloudProvider);
+      registry.addConnection(
+        id: 'retained',
+        label: 'First cloud',
+        provider: CloudProvider.nextcloud,
+        client: actual,
+      );
+      final second = _Cloud('Second cloud', accountId: 'account-b');
+      auth.client = second;
+      auth.notifyListeners();
+      await Future<void>.delayed(Duration.zero);
+      await right.refresh();
+      expect(right.currentPath, '/kept-folder');
+      expect(
+        (right.captureCurrentOrigin().source as RemotePanelSource).client,
+        same(actual),
+      );
+      final left = container.read(panelProvider(PanelSide.local));
+      container
+          .read(panelSourceProvider(PanelSide.local).notifier)
+          .setSource(
+            RemotePanelSource(
+              providerName: second.providerName,
+              client: second,
+              path: '/second',
+            ),
+          );
+      await Future<void>.delayed(Duration.zero);
+      await left.refresh();
+      await right.createFolder('first-only');
+      await left.createFolder('second-only');
+      expect(actual.created, ['/kept-folder/first-only']);
+      expect(second.created, ['/second/second-only']);
+      final origin = right.captureCurrentOrigin();
+      registry.addConnection(
+        id: 'third',
+        label: 'Third cloud',
+        provider: CloudProvider.s3,
+        client: _Cloud('Third', accountId: 'account-c'),
+      );
+      expect(
+        origin.isCurrent,
+        isTrue,
+        reason: 'An unrelated connection cannot revoke this pane',
+      );
+      await registry.removeConnection('retained');
+      expect(origin.isCurrent, isFalse);
+      actual.authenticated = true;
+      registry.addConnection(
+        id: 'retained',
+        label: 'First cloud',
+        provider: CloudProvider.nextcloud,
+        client: actual,
+      );
+      expect(
+        origin.isCurrent,
+        isFalse,
+        reason:
+            'Removing and readding a session must not revive old capabilities',
+      );
+    },
+  );
 
   test(
     'legacy copy and move use staged queue operations on their captured cloud',

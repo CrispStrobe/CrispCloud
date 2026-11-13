@@ -183,6 +183,50 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<Completer<ArchiveCreationResult?>> showRoute(
+    WidgetTester tester, {
+    VoidCallback? onCreated,
+    ValueChanged<ArchiveCreationResult>? onPublished,
+  }) async {
+    tester.view.physicalSize = const Size(800, 950);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final selected = (await backend.stat('/input/report.txt'))!;
+    final closed = Completer<ArchiveCreationResult?>();
+    await tester.pumpWidget(
+      MaterialApp(
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                closed.complete(
+                  await showArchiveExternalPackerDialog(
+                    context,
+                    source: backend,
+                    destination: backend,
+                    files: [selected],
+                    destinationDirectory: '/captured/output',
+                    service: service,
+                    preferences: preferences,
+                    onCreated: onCreated ?? () => created++,
+                    onPublished: onPublished,
+                  ),
+                );
+              },
+              child: const Text('Open installed packer'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open installed packer'));
+    await tester.pumpAndSettle();
+    return closed;
+  }
+
   Finder key(String name) => find.byKey(ValueKey('archive-external-$name'));
   Future<void> tap(WidgetTester tester, String name) async {
     await tester.ensureVisible(key(name));
@@ -250,6 +294,116 @@ void main() {
       expect(key('create'), findsNothing);
     },
   );
+  testWidgets('publication is notified once and survives a null route result', (
+    tester,
+  ) async {
+    final notifications = <String>[];
+    final published = <ArchiveCreationResult>[];
+    final closed = await showRoute(
+      tester,
+      onCreated: () {
+        created++;
+        notifications.add('created');
+      },
+      onPublished: (result) {
+        notifications.add('published');
+        published.add(result);
+      },
+    );
+    await probe(tester);
+    final staleCreate = tester.widget<FilledButton>(key('create')).onPressed!;
+    await tap(tester, 'create');
+    expect(notifications, ['created', 'published']);
+    expect(published.single.path, '/captured/output/report.zip');
+    expect(closed.isCompleted, isFalse);
+    expect(key('success'), findsOneWidget);
+    Navigator.of(tester.element(find.byType(ArchiveExternalPackerDialog)))
+        .pop();
+    await tester.pumpAndSettle();
+    expect(await closed.future, same(published.single));
+    staleCreate();
+    await tester.pumpAndSettle();
+    expect(service.requests, hasLength(1));
+    expect(created, 1);
+    expect(published, hasLength(1));
+    expect(tester.takeException(), isNull);
+  });
+  for (final observer in ['onCreated', 'onPublished']) {
+    testWidgets(
+      '$observer failure preserves successful creation with a warning',
+      (tester) async {
+        final failure = StateError('$observer notification failed');
+        final published = <ArchiveCreationResult>[];
+        final closed = await showRoute(
+          tester,
+          onCreated: () {
+            created++;
+            if (observer == 'onCreated') throw failure;
+          },
+          onPublished: (result) {
+            published.add(result);
+            if (observer == 'onPublished') throw failure;
+          },
+        );
+        await probe(tester);
+        final staleCreate = tester
+            .widget<FilledButton>(key('create'))
+            .onPressed!;
+        await tap(tester, 'create');
+        expect(created, 1);
+        expect(published, hasLength(1));
+        expect(key('success'), findsOneWidget);
+        expect(key('warning'), findsOneWidget);
+        expect(key('error'), findsNothing);
+        expect(key('create'), findsNothing);
+        expect(find.textContaining('$failure'), findsOneWidget);
+        if (observer == 'onCreated') {
+          expect(published.single.publicationWarning, same(failure));
+        }
+        staleCreate();
+        await tester.pumpAndSettle();
+        expect(service.requests, hasLength(1));
+        expect(created, 1);
+        expect(published, hasLength(1));
+        await tap(tester, 'close');
+        final result = await closed.future;
+        expect(result!.path, '/captured/output/report.zip');
+        expect(result.publicationWarning, same(failure));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+  for (final includeReceipt in [false, true]) {
+    testWidgets(
+      'an observer may pop a ${includeReceipt ? 'published' : 'null'} result and fail without losing its warning',
+      (tester) async {
+        final failure = StateError('Observer failed after removing its route');
+        late NavigatorState navigator;
+        var published = 0;
+        final closed = await showRoute(
+          tester,
+          onPublished: (result) {
+            published++;
+            navigator.pop(includeReceipt ? result : null);
+            throw failure;
+          },
+        );
+        await probe(tester);
+        navigator = Navigator.of(
+          tester.element(find.byType(ArchiveExternalPackerDialog)),
+        );
+        await tap(tester, 'create');
+        final result = await closed.future;
+        expect(result!.path, '/captured/output/report.zip');
+        expect(result.publicationWarning, same(failure));
+        expect(created, 1);
+        expect(published, 1);
+        expect(service.requests, hasLength(1));
+        expect(find.byType(ArchiveExternalPackerDialog), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   testWidgets('saved paths never restore unverified execution capabilities', (
     tester,
   ) async {

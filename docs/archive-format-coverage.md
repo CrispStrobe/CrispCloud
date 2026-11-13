@@ -49,9 +49,9 @@ The existing source-account, review, verification and recovery requirements in
 
 ## Creating and editing
 
-The [Commander workflow guide](archive-commander-workflows.md) covers native
-background jobs, separate-per-selection creation, batch testing, installed
-packers, bounded 7z tuning, numbered volumes and SFX browsing. These workflows
+The [Commander workflow guide](archive-commander-workflows.md) covers shared
+background jobs, separate-per-selection creation, batch testing and extraction,
+installed packers, bounded 7z tuning, numbered volumes and SFX browsing. These workflows
 retain the format-specific limits in this table.
 
 Use **Create archive…** for the 35-choice format picker. It exposes only implemented
@@ -166,9 +166,11 @@ values and distinguishes checked, failed, skipped and unprocessed entries.
 Expand a row for its digest or failure details; **Copy report** copies the full
 report. Unsafe/special entries and members exceeding limits remain visible.
 
-The default check has a 64 MiB member limit and 256 MiB declared work budget;
-failed attempts still consume their declared budget. Namespace validation is
-bounded separately. Cancellation is cooperative between reads/chunks; an active
+Buffered checks retain a 64 MiB member limit and 256 MiB declared work budget.
+Eligible native streamed readers use their existing member and total-work
+limits, up to 8 GiB; protected, nested and unsupported streaming profiles retain
+their smaller bounds. Failed attempts still consume their declared budget.
+Namespace validation is bounded separately. Cancellation is cooperative between reads/chunks; an active
 buffered decode may finish first. The report never changes archive contents and
 does not repair data, authenticate a publisher or invent stored checksums.
 LZMA-alone and UNIX compress lack payload checksums, and optional checksums may
@@ -229,8 +231,11 @@ content checksums from publisher authentication.
   256 MiB in memory. These are input limits, not promised resident-memory use.
 - Native F3 borrows its existing random-access source for archive metadata
   and member reads. Large local disk images do not require a full-file buffer;
-  remote files use the existing 2 GiB spool limit. Browser F3 retains its
-  64 MiB full-data input limit. Password retries borrow a fresh reader, and
+  ordinary remote files use the existing 2 GiB spool limit. Ordinary browser F3
+  retains its 64 MiB full-data input limit. First parts of numbered 7z sets use
+  the separate 8 GiB native / 256 MiB browser input allowance; their complete
+  captured set must also fit that aggregate limit. Native remote F3 can retain
+  both its first-part spool and the set snapshots. Password retries borrow a fresh reader, and
   changing modes or closing the viewer immediately invalidates pending reads.
 - Buffered interactive member reads remain capped at 64 MiB per member.
   Eligible native top-level ZIP/CBZ, 7z/CB7, TAR/CBT, TGZ/TAR.GZ and RAR5
@@ -262,7 +267,9 @@ content checksums from publisher authentication.
   headers must also fit. Protected archives, nested writes, browser/fallback
   paths, 7z Deflate creation and other formats retain their buffered limits:
   64 MiB/member and 256 MiB total/packed, with 64 MiB for compressed streams
-  and decoded TAR wrappers. Durable background packing remains separate work.
+  and decoded TAR wrappers. Native creation and workspace saves can use the
+  [shared background queue](archive-operation-queue.md) within these same bounds;
+  queuing does not expand a codec's supported profile.
   See the [parity and verification status](archive-parity-large-continuation.md).
 - Compression wrappers are bounded by 64 MiB input/output by default and
   four nested wrappers. Readers check available integrity/framing information;
@@ -354,8 +361,10 @@ content checksums from publisher authentication.
 
 ## Dependencies and provenance
 
-No native runtime or subprocess packer is added to the app. The Dart readers,
-writers and format adapters reuse the existing locked packages;
+The app bundles no external packer. Built-in Dart readers, writers and format
+adapters reuse the existing locked packages. Optional external creation uses
+an explicitly configured installed 7-Zip/RAR executable only after its exact
+profile passes the checks described in the [workflow guide](archive-commander-workflows.md).
 `koni_codecs` 0.9.0 is an explicit direct dependency for LZMA/LZMA2 encoding:
 `koni_archive` 0.9.0 and its 0.9.0 codec/core packages (MIT), `archive` 4.6.0
 (MIT), `xml` 6.6.1 (MIT) and `crypto` 3.0.7 (BSD-3-Clause). Check `pubspec.lock`

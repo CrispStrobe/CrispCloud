@@ -143,6 +143,7 @@ class PanelNotifier extends ChangeNotifier {
   int _verifiedListingGeneration = -1;
   int _accountGeneration = 0;
   int _connectionGeneration = 0;
+  final Map<CloudStorageClient, int> _connectionRevisions = Map.identity();
   bool _swappingViews = false;
   bool _settingSwapSource = false;
   PanelFileOrigin? _currentDirectoryOrigin;
@@ -373,8 +374,24 @@ class PanelNotifier extends ChangeNotifier {
         next.client.bucketId,
       );
       if (current != account) {
+        final previousClient = account.$1;
+        final previousSource = _currentDirectoryOrigin?.source;
         _accountGeneration++;
         account = current;
+        if (!identical(previousClient, next.client) &&
+            _isRegisteredClient(previousClient) &&
+            previousSource is RemotePanelSource &&
+            identical(previousSource.client, previousClient)) {
+          // Pin an implicit primary pane to the retained connection before a
+          // newly connected primary can take ownership of its navigation.
+          final pinned = previousSource.withPath(currentPath);
+          final selected = _ref.read(panelSourceProvider(side));
+          if (selected != pinned) {
+            _ref.read(panelSourceProvider(side).notifier).setSource(pinned);
+          } else {
+            refresh();
+          }
+        }
       }
     });
     var connections = _ref
@@ -401,8 +418,24 @@ class PanelNotifier extends ChangeNotifier {
           )
           .toList();
       if (!listEquals(connections, current)) {
-        connections = current;
         _connectionGeneration++;
+        final clients = <CloudStorageClient>{
+          ...connections.map((entry) => entry.$2),
+          ...current.map((entry) => entry.$2),
+        };
+        for (final client in clients) {
+          final before = connections
+              .where((entry) => identical(entry.$2, client))
+              .toList();
+          final after = current
+              .where((entry) => identical(entry.$2, client))
+              .toList();
+          if (!listEquals(before, after)) {
+            _connectionRevisions[client] =
+                (_connectionRevisions[client] ?? 0) + 1;
+          }
+        }
+        connections = current;
       }
     });
     _restoreTabs();
@@ -685,7 +718,7 @@ class PanelNotifier extends ChangeNotifier {
     String path,
   ) {
     final generation = _accountGeneration;
-    final connectionGeneration = _connectionGeneration;
+    final connectionRevision = _connectionRevisions[client] ?? 0;
     final email = _ref.read(authProvider).userEmail;
     final primary = identical(_ref.read(authProvider).client, client);
     final reference = storageReferenceForClient(client);
@@ -697,7 +730,7 @@ class PanelNotifier extends ChangeNotifier {
         if (_isDisposed ||
             (primary
                 ? generation != _accountGeneration
-                : connectionGeneration != _connectionGeneration) ||
+                : connectionRevision != (_connectionRevisions[client] ?? 0)) ||
             !client.isAuthenticated ||
             storageReferenceForClient(client) != reference) {
           return false;
@@ -4049,8 +4082,8 @@ class PanelNotifier extends ChangeNotifier {
     final files = _files;
     if (files == null || !_containsIdentical(files, item)) return;
     final visible = displayedFiles ?? const <FileItem>[];
-    final rangeAnchor = _lastSelected != null &&
-            _containsIdentical(visible, _lastSelected!)
+    final rangeAnchor =
+        _lastSelected != null && _containsIdentical(visible, _lastSelected!)
         ? _lastSelected
         : cursorItem;
     // Ensure this panel is the active panel (drives F-key context).
@@ -4872,7 +4905,9 @@ class PanelNotifier extends ChangeNotifier {
         clearTypeahead();
       }
     }
-    final displayed = _isTypeahead && delta.abs() == 1 &&
+    final displayed =
+        _isTypeahead &&
+            delta.abs() == 1 &&
             _ref.read(quickSearchSettingsProvider).arrowNavigation
         ? _typeaheadMatches()
         : filteredFiles;
@@ -5128,7 +5163,8 @@ class PanelNotifier extends ChangeNotifier {
   /// Existing marks can therefore be removed using the same gesture.
   void shiftMoveCursor(int delta, {List<FileItem>? visibleFiles}) {
     if (delta == 0) return;
-    final displayed = visibleFiles ??
+    final displayed =
+        visibleFiles ??
         (_isTypeahead && _ref.read(quickSearchSettingsProvider).arrowNavigation
             ? _typeaheadMatches()
             : filteredFiles);
@@ -5147,6 +5183,7 @@ class PanelNotifier extends ChangeNotifier {
         if (!_selection.remove(item)) _selection.add(item);
       }
     }
+
     if (next == cur) {
       toggleRow(cur);
     } else {
@@ -5157,7 +5194,8 @@ class PanelNotifier extends ChangeNotifier {
     }
     _lastSelected = displayed[next].name == '..' ? null : displayed[next];
     _setCursorToItem(displayed[next]);
-    if (_isTypeahead) _scheduleTypeaheadReset(_ref.read(quickSearchSettingsProvider));
+    if (_isTypeahead)
+      _scheduleTypeaheadReset(_ref.read(quickSearchSettingsProvider));
     notifyListeners();
   }
 
@@ -7298,7 +7336,8 @@ class PanelNotifier extends ChangeNotifier {
         (canContinue?.call() ?? true) &&
         (capturedOrigin?.isCurrent ?? true);
     if (!stillSelected()) {
-      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      if (requireAvailable)
+        throw StateError('The tab request is no longer current.');
       return;
     }
     final target = tab!;
@@ -7335,8 +7374,11 @@ class PanelNotifier extends ChangeNotifier {
         await refresh();
         return;
       }
-      final origin = capturedOrigin ??
-          (requireAvailable ? null : resolveStorageReference(storage, target.path));
+      final origin =
+          capturedOrigin ??
+          (requireAvailable
+              ? null
+              : resolveStorageReference(storage, target.path));
       if (origin == null ||
           !origin.isCurrent ||
           origin.storageReference != storage) {
@@ -7392,7 +7434,8 @@ class PanelNotifier extends ChangeNotifier {
                 origin.source.withPath(expectedPath),
               ))) {
         throw StateError(
-          directoryListingError?.message ?? 'The saved folder could not be opened.',
+          directoryListingError?.message ??
+              'The saved folder could not be opened.',
         );
       }
       _pushHistory(currentPath);
@@ -7511,7 +7554,8 @@ class PanelNotifier extends ChangeNotifier {
         (capturedOrigin?.isCurrent ?? true) &&
         (canContinue?.call() ?? true);
     if (!requestAvailable()) {
-      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      if (requireAvailable)
+        throw StateError('The tab request is no longer current.');
       return;
     }
     _rememberNavigationCursor();
@@ -7519,7 +7563,8 @@ class PanelNotifier extends ChangeNotifier {
     ++_listingGeneration;
     if (_collectionMarks != null) await flushCollectionMarks();
     if (!requestAvailable() || navigation != _navigationRevision) {
-      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      if (requireAvailable)
+        throw StateError('The tab request is no longer current.');
       return;
     }
     if (tabId != _activeTabId) {
@@ -7797,7 +7842,8 @@ class PanelNotifier extends ChangeNotifier {
         (capturedOrigin?.isCurrent ?? true) &&
         (canContinue?.call() ?? true);
     if (!requestAvailable()) {
-      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      if (requireAvailable)
+        throw StateError('The tab request is no longer current.');
       return;
     }
     final selected = incoming[activeIndex.clamp(0, incoming.length - 1)];
@@ -7816,7 +7862,8 @@ class PanelNotifier extends ChangeNotifier {
       if (!requestAvailable() ||
           navigation != _navigationRevision ||
           previousTab != _activeTabId) {
-        if (requireAvailable) throw StateError('The tab request is no longer current.');
+        if (requireAvailable)
+          throw StateError('The tab request is no longer current.');
         return;
       }
     }
@@ -7841,7 +7888,8 @@ class PanelNotifier extends ChangeNotifier {
       requireAvailable: requireAvailable,
     );
     if (!requestAvailable()) {
-      if (requireAvailable) throw StateError('The tab request is no longer current.');
+      if (requireAvailable)
+        throw StateError('The tab request is no longer current.');
       return;
     }
     await _saveTabs(force: true, rethrowErrors: true);

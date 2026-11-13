@@ -1,14 +1,20 @@
 # Archive container runtime verification
 
+The subsequent [archive queue and background packing continuation](archive-operation-queue.md)
+passed 2,067 archive/transfer/widget regressions and three separate worker cases
+above 2 GiB at `6eab6a33ffd374bfc9343a692b3df43c85758a1b`. This document retains
+the earlier physical-container and complete creation/publication acceptance.
+
 ## Commander workflow continuation
 
 The later `feature/archive-commander-parity-20261113` branch and
-[PR #97](https://github.com/CrispStrobe/CrispCloud/pull/97) add queued creation,
-batch workflows, installed packers, SFX and numbered-7z reading. Its independent
-source and verification record is in the
-[Commander workflow guide](archive-commander-workflows.md). The hosted runs below
-continue to qualify their recorded source revisions; their earlier pass counts
-must not be presented as tests of every new workflow or option.
+[PR #97](https://github.com/CrispStrobe/CrispCloud/pull/97) build on the shared
+operation queue and add batch workflows, installed packers, SFX and numbered-7z
+reading. Their source and verification record is in the
+[Commander workflow guide](archive-commander-workflows.md). Verification of the
+combined source is pending its final frozen-revision gate. The hosted runs below
+continue to qualify their recorded revisions; their earlier pass counts are
+not tests of every new workflow or option.
 
 ## Current integrated commit
 

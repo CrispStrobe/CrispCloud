@@ -190,7 +190,7 @@ increment does not close the broader G20 scope.
 
 ### Large background archive jobs
 
-**Status:** Partially implemented: native streaming plus durable queued creation, worker lifecycle and explicit restart are delivered within their profiles. Large protected/nested jobs and broader provider/platform qualification remain. **Dependencies:** G18; transfer queue.
+**Status:** Partially implemented: native streaming, shared queued creation and workspace saves, cooperative workers and reviewed restart recovery are delivered within their profiles. Large protected/nested jobs and broader provider/platform qualification remain. **Dependencies:** G18; transfer queue.
 
 **Scope:** Add worker/streaming packing, durable recovery and bounded validation.
 
@@ -224,15 +224,21 @@ passed a >4 GiB member and 65,536-entry case. Codec processes yielded to the
 event loop; this is not a Flutter UI responsiveness measurement. Receipts are
 linked from the [parity report](../archive-parity-large-continuation.md).
 
-**Commander workflow continuation (2026-11-13):** Creation jobs now persist a
-captured local request before starting an isolated worker. One leased queue
-survives dialog closure, supports ordering/pause/cancel and records a verified
-publication receipt before commit. Interruption requires explicit restart from
-sources; passwords must be supplied again. Reconciliation requires an exact
-saved-output size and SHA-256. Separate-per-selection creation admits a complete
-preflighted batch in one journal update. Pending journal writes and live workers
-drain before ownership is released. See the
-[workflow guide and verification](../archive-commander-workflows.md).
+**Shared queue and Commander continuation (2026-11-13):** Native creation and
+workspace saves use the existing transfer scheduler and `TransferJournal`.
+They persist reviewed recipes, reserve source/destination paths, survive dialog
+closure and support cooperative pause/resume/stop, priority, ordering and
+scheduled starts. Recovery revalidates original storage and source witnesses;
+restarts build fresh candidates and require passwords again. Existing outputs
+need full matching publication proofs before reconciliation. Session workspace
+drafts can be retained for retry, but are not reconstructed after process exit.
+See the authoritative [queue contract](../archive-operation-queue.md).
+
+Separate-per-selection creation preflights all outputs and holds live dispatch
+until each job's durable save succeeds. Multiple history records are not one
+atomic transaction: interruption or a failed append can retain a review-only
+partial batch. The [workflow guide](../archive-commander-workflows.md) records
+this boundary and the pending merged verification gate.
 
 **Remaining:** Large protected/nested profiles, provider/platform acceptance and
 measured native-device UI/memory acceptance. Restart rebuilds from captured

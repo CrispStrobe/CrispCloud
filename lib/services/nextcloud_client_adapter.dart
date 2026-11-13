@@ -32,6 +32,7 @@ import 'nextcloud_config_service.dart';
 import 'secure_storage_service.dart';
 import './connection_failure.dart';
 import './nextcloud_operation_failure.dart';
+import 'nextcloud_browser_failure.dart';
 
 class NextcloudAuthenticationException implements Exception {
   const NextcloudAuthenticationException();
@@ -803,15 +804,21 @@ class NextcloudClientAdapter extends CloudStorageClient
   </d:prop>
 </d:propfind>''';
 
+    final client = http.Client();
     try {
-      final streamed = await req.send();
-      return await http.Response.fromStream(streamed);
+      return await (() async {
+        final streamed = await client.send(req);
+        return http.Response.fromStream(streamed);
+      })().timeout(const Duration(seconds: 30));
     } catch (e) {
+      if (kIsWeb) throw nextcloudBrowserFailure(uri, Uri.base, e);
       throw NextcloudOperationFailure(
         NextcloudOperationCode.propfind,
         'PROPFIND failed for $uri: $e',
         {'uri': uri, 'error': e},
       );
+    } finally {
+      client.close();
     }
   }
 

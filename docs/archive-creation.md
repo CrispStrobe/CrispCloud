@@ -40,14 +40,21 @@ operation. Passwords are not persisted in settings, operation logs or history.
 The installed-packer action is unavailable while password protection is selected;
 its initial profiles create unencrypted outputs only.
 
-On native desktop, **Queue in background** transfers built-in creation to an
-application-owned worker. Close the dialog and monitor **Archive jobs** from
-Tools. **One archive per selected item** previews and queues a separate output
-for each selection; all names are checked before any job is admitted. Jobs have
-pause, cancellation and explicit restart after interruption. Protected jobs need
-their password again after restarting the app. The
-[Commander workflow guide](archive-commander-workflows.md) explains queue
-recovery, installed packers and their separately checked compression options.
+On native desktop, **Start** keeps the progress dialog attached to a job in the
+shared Operations queue. **Queue in background** saves the job and returns to
+the file manager; **Run in background** detaches an already running dialog.
+**Archive jobs** in Tools opens the same Operations panel and history used by
+normal transfers. Pause/resume, stop, priority, ordering and scheduling follow
+the [shared archive queue contract](archive-operation-queue.md). Protected
+creation recipes require their password again after an application restart.
+
+**One archive per selected item** previews a separate output for each selection.
+All output names are checked first, and live dispatch waits until every job is
+durably saved. History records are saved individually: a failed append or
+interruption may leave a partial batch for review without starting its jobs.
+Source files are retained and each admitted output has its own result. The
+[Commander workflow guide](archive-commander-workflows.md) also describes checked
+installed packers and their separate compression options.
 
 Single-file compression choices take exactly one regular file; its decompressed
 name comes from the output filename. AR takes flat regular files. KMZ requires
@@ -150,9 +157,15 @@ qualifies the complete 8 GiB ceiling. See the
 [completed hosted gate](archive-containers-runtime-verification.md) and
 [ISO/RAR/DMG evidence](archive-iso-rar-dmg.md).
 
-Large durable background jobs remain separate work. The current creation entry
-point accepts native local selections. Other archive browsing and editing
-workflows are described in [file operations](commander-file-operations.md).
+Native background creation and workspace saves use the shared operation queue
+and cooperative writer bridge within the existing format bounds. The
+[queue qualification](archive-operation-queue.md) separately records three
+logical worker payloads above 2 GiB; those results remain attributed to their
+tested source revision. The merged Commander continuation awaits its final
+regression gate. Larger protected/nested profiles and broader device acceptance
+remain separate work. The creation entry point accepts native local selections;
+other archive browsing and editing workflows are described in
+[file operations](commander-file-operations.md).
 
 ## Validation
 

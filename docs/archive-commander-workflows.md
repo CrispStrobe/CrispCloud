@@ -11,41 +11,65 @@ Review: [PR #97](https://github.com/CrispStrobe/CrispCloud/pull/97).
 ## Background creation and separate archives
 
 On native desktop, select local files or folders and choose **Create archive…**.
-The usual foreground creation remains available. **Queue in background** saves the
-captured local selection, format, options and exact destination before a worker
-starts. **Archive jobs** in Tools or the command palette opens the same queue.
-Closing either dialog leaves the application-owned queue running.
+**Create archive** admits a job to the shared Operations queue and keeps its
+progress visible. **Queue in background** saves the captured selection, format, options
+and exact destination, then returns to the file manager. A running creation
+dialog also offers **Run in background**. **Archive jobs** in Tools or the command
+palette opens the shared Operations panel and its history. Closing a progress
+view or navigating a pane leaves the application-owned job running.
+
+In an edited archive workspace, **Save in background** reviews the draft changes
+before queuing packing, verification and publication. Creation and workspace
+saves use the same scheduler and `TransferJournal` as normal transfers. The
+[archive operation queue guide](archive-operation-queue.md) is the authoritative
+description of scheduling, cooperative controls and recovery.
 
 For two or more selected items, **One archive per selected item** previews a
 separate output for each item. The complete source name is retained in the
 output name: `report.txt.zip` and `report.csv.zip` stay distinct. The selected
-format must support each individual input. All requested jobs are admitted in
-one durable update after checking every output name; a collision does not admit
-a partial batch. Each admitted archive then has its own progress and result.
+format must support each individual input. All output names are checked before
+admission. Live dispatch is held until every job's individual durable save has
+succeeded. This is not an atomic update of multiple history records: a failed
+append or process interruption can leave part of the batch recorded for review
+without dispatching it. Each admitted archive has its own progress and result.
 Source files are retained.
 
-Jobs run serially in a native isolate. The queue provides pending-job ordering,
-pause/resume, cancellation, queue pause and terminal results. It retains the
-necessary local access scopes until the worker has actually stopped. One native
-lease protects queue ownership across application windows; closing a controller
-also drains an in-flight journal save before relinquishing that lease.
+The shared queue provides priority, pending-job ordering, scheduled starts,
+concurrency controls, pause/resume, stop and terminal results. Jobs reserve
+source and destination paths alongside normal transfers; conflicting work
+waits. A paused active job retains its worker slot and reservations. **Pause
+queue** prevents queued jobs from starting; new jobs can still be added.
+Selected-row controls also pause eligible active jobs.
 
-After an application restart, unfinished jobs are **Interrupted**. Review their
-captured source paths and output, then choose **Restart from source**. This
-rebuilds and verifies an archive from the selected sources; it does not resume
-from an arbitrary compressed byte offset. Protected jobs require their password
-again. Passwords are held only in memory, never in the ordinary job journal.
+A native writer isolate performs codec work while the parent owns source
+streams, access scopes and unpublished output. Requests and acknowledgements
+keep one bounded input/output exchange outstanding. Cooperative checkpoints
+pause scanning, encoding and verification without discarding live state. Stop
+wakes paused work and drains or cancels the owned worker resources. A short
+install/restore transaction completes before pausing, so an original is not
+left absent merely because the user pressed Pause.
 
-Before publishing an output, the worker saves an acknowledged receipt containing
-the exact output path, length, entry count and SHA-256. An output whose completion
-acknowledgement was lost can be checked with **Verify saved output**. Only an
-exact size/hash match is accepted. A mismatch remains visible and is not
-overwritten or automatically adopted. A cancellation arriving after successful
-publication cannot turn that publication into a reported rollback.
+After an application restart, **History and recovery** reviews saved creation
+recipes against their original storage, source witnesses and destination. A
+recorded source-manifest digest also protects against changed content with a
+restored size and modification time. Restart builds and verifies a fresh
+candidate; it does not resume from an arbitrary compressed byte offset.
+Protected jobs require their password again. Passwords stay in memory and never
+enter the ordinary transfer journal. Failed or stopped workspace drafts can be
+reviewed and retried in the same app session; arbitrary in-memory drafts are not
+reconstructed after process exit.
 
-The queue retains at most 128 records in a bounded 4 MiB journal. Each creation
-request retains the existing format and source limits; background execution
-does not increase encrypted, nested or codec budgets. See
+Publication checkpoints retain output length, entry count, SHA-256 and relevant
+source/staging evidence. Recovery accepts an already existing output only after
+its complete length and content hash match the saved proof. A mismatch remains
+visible and is not overwritten or automatically adopted. A verified publication
+remains completed after a late Stop or observer failure, with any later warning
+reported separately.
+
+Jobs run while CrispCloud is open; this is not an operating-system service that
+survives application termination. Each request retains the existing format and
+source limits; background execution does not increase encrypted, nested or codec
+budgets. See
 [creation](archive-creation.md) for the 35 built-in choices and their limits.
 Installed external packers use the separate foreground workflow below.
 
@@ -124,10 +148,11 @@ extract-and-delete remain outside this workflow.
 
 ## Installed packers and advanced 7z options
 
-From **Create archive…**, open **Use installed packer…** on native desktop. Configure
-the absolute path of a locally installed 7-Zip or RAR executable and run its
-check. CrispCloud records the exact executable identity and verifies generated
-probe archives with its independent reader. An executable filename or a
+From **Create archive…**, open **Use installed packer…** on native desktop builds
+that permit local processes. Installed packers are unavailable in the Mac App
+Store build. Configure the absolute path of a locally installed 7-Zip or RAR
+executable and run its check. CrispCloud records the exact executable identity
+and verifies generated probe archives with its independent reader. An executable filename or a
 successful version command alone does not enable creation.
 
 | Installed engine | Enabled new outputs | Compression | Protection |
@@ -249,16 +274,25 @@ capabilities. See [format coverage](archive-format-coverage.md) and
 
 ## Verification
 
-Focused local runs cover queue persistence and publication acknowledgement,
-native worker lifetime, complete batch admission, password retries, external
-process failures, independently decoded output, supported SFX layouts and
-numbered volume snapshots. They use Flutter 3.47.8 / Dart 3.13.7, matching the
-repository pin. The final regression record is added here after the integrated
-source is frozen.
+Final verification of the merged continuation is pending. Its gate uses Flutter
+3.47.8 / Dart 3.13.7, matching the repository pin, and will run against a frozen
+source revision. Focused pre-merge runs checked batch planning and extraction,
+password retries, external process failures, independently decoded output,
+supported SFX layouts and numbered volume snapshots. Those runs do not replace
+the merged regression gate.
 
-The branch's **Commander archive workflows** CI runs archive/menu regression,
-scoped analysis, offline-help validation and a versioned release web build. It
-retains the exact source SHA, dependency hashes, test events and logs. Earlier
+The canonical shared queue already has separate historical qualification at
+`6eab6a33ffd374bfc9343a692b3df43c85758a1b`: 2,067 normal tests passed with 13
+opt-in skips, and three separately enabled workers each verified a logical
+payload above 2 GiB. The [queue guide](archive-operation-queue.md) links the exact
+receipt and distinguishes those highly compressible worker payloads from the
+earlier physical-container acceptance. These counts qualify that revision.
+
+The combined gate covers archive/menu/viewer and shared transfer-queue
+regressions, scoped analysis, offline-help validation, portable JavaScript codec
+execution and a versioned release web build. The workflow and retained receipt
+record the merged test manifest, exact source SHA, dependency hashes, test
+events and logs. Earlier
 normal and >2 GiB hosted evidence remains recorded against its own source
 revisions in [runtime verification](archive-containers-runtime-verification.md);
 it is not retroactive qualification of every new option.

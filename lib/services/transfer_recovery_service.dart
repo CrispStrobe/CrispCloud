@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import '../models/file_item.dart';
+import '../models/archive_job.dart';
 import '../models/integrity_recovery.dart';
 import '../models/transfer_job.dart';
 import 'file_operation_service.dart';
@@ -107,6 +108,9 @@ class JournaledTransferRunner {
   }) async {
     await journal.initialize();
     final saved = journal.job(id);
+    if (saved != null && isArchiveTransferJob(saved)) {
+      throw StateError('Use archive recovery for this operation.');
+    }
     if (saved != null && isIntegrityTransferJob(saved)) {
       throw StateError('Use Split/combine recovery for this operation.');
     }
@@ -330,6 +334,9 @@ class TransferRecoveryService {
   }) async {
     if (isIntegrityTransferJob(job)) {
       throw StateError('Use Split/combine recovery for this operation.');
+    }
+    if (isArchiveTransferJob(job)) {
+      throw StateError('Use archive recovery for this operation.');
     }
     if (!job.ready ||
         job.entries.length != job.expectedEntries ||
@@ -628,6 +635,9 @@ class TransferRecoveryService {
   }) async {
     if (isIntegrityTransferJob(job)) {
       throw StateError('Use Split/combine recovery for this operation.');
+    }
+    if (isArchiveTransferJob(job)) {
+      throw StateError('Use archive recovery for this operation.');
     }
     if (job.destination != destination.storageReference ||
         !destination.isCurrent) {

@@ -9,7 +9,9 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
+import 'archive_checkpoint_source.dart';
 import 'archive_created_zip_metadata.dart';
+import 'archive_writer_worker.dart';
 import 'archive_disk_verification.dart';
 import 'archive_dmg_writer.dart';
 import 'archive_hfs_writer.dart';
@@ -356,8 +358,10 @@ class ArchiveCreationProgress {
     this.phase,
     this.completed,
     this.total,
-    this.path,
-  );
+    this.path, {
+    this.isByteProgress = false,
+  });
+  final bool isByteProgress;
   final ArchiveCreationPhase phase;
   final int completed;
   final int total;
@@ -365,27 +369,25 @@ class ArchiveCreationProgress {
 }
 
 class ArchiveCreationResult {
-  const ArchiveCreationResult(this.path, this.entryCount, this.bytes);
+  const ArchiveCreationResult(
+    this.path,
+    this.entryCount,
+    this.bytes, {
+    this.publicationWarning,
+  });
   final String path;
   final int entryCount;
   final int bytes;
-}
 
-/// A verified candidate whose destination is still unpublished. A durable job
-/// must acknowledge this exact receipt before the exclusive commit may proceed.
-class ArchiveCreationPrepared extends ArchiveCreationResult {
-  const ArchiveCreationPrepared(
-    super.path,
-    super.entryCount,
-    super.bytes,
-    this.sha256,
-  );
-  final String sha256;
+  /// Publication succeeded; a later observer or cleanup could not acknowledge
+  /// it. Callers must retain success and surface this warning separately.
+  final Object? publicationWarning;
 }
 
 /// An explicitly selected packer supplies bytes, never publication authority.
 /// The creator still captures sources, bounds output, independently reopens the
 /// result and verifies every member before its normal exclusive publication.
+/// Callbacks remain in the foreground; they cannot cross the worker protocol.
 typedef ArchiveCreationWriter = Future<void> Function({
   required List<ArchiveWriteEntry> entries,
   required Future<void> Function(List<int>) sink,
@@ -486,13 +488,24 @@ class ArchiveCreationService {
     required String destinationDirectory,
     required ArchiveCreationOptions options,
     bool Function()? isCancelled,
-    void Function(ArchiveCreationProgress)? onProgress,
+    FileOperationControl? control,
+    bool background = false,
     ArchiveCreationWriter? writer,
-    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
+    String? expectedSourceManifestSha256,
+    Future<void> Function(Map<String, dynamic> state)? onPublicationCheckpoint,
+    void Function(ArchiveCreationProgress)? onProgress,
   }) async {
     options.validate();
+    if (expectedSourceManifestSha256 != null &&
+        !RegExp(r'^[a-f0-9]{64}$').hasMatch(expectedSourceManifestSha256)) {
+      throw ArgumentError.value(
+        expectedSourceManifestSha256,
+        'expectedSourceManifestSha256',
+      );
+    }
     if (writer != null &&
-        (options.format.diskImage ||
+        (background ||
+            options.format.diskImage ||
             options.password != null ||
             !const {
               ArchiveEndpointFormat.zip,
@@ -503,6 +516,8 @@ class ArchiveCreationService {
         ArchiveCreationError.unsupportedOptions,
       );
     }
+    bool cancelled() =>
+        (control?.isCancelled ?? false) || (isCancelled?.call() ?? false);
     final streamedTar =
         writer == null &&
         supportsStreamedTarCreation(
@@ -532,7 +547,7 @@ class ArchiveCreationService {
         ? kArchiveStreamingLimit
         : maxStreamedTarBytes;
     void check() {
-      if (isCancelled?.call() ?? false) {
+      if (cancelled()) {
         throw const ArchiveCreationException(ArchiveCreationError.cancelled);
       }
       if (!source.isCurrent || !destination.isCurrent) {
@@ -542,18 +557,42 @@ class ArchiveCreationService {
       }
     }
 
+    var pauseEpoch = 0;
+    var suppressRepeatedProgress = false;
+    Future<void> checkpoint() async {
+      check();
+      if (control?.isPaused ?? false) pauseEpoch++;
+      try {
+        await control?.checkpoint();
+      } on FileOperationCancelled {
+        throw const ArchiveCreationException(ArchiveCreationError.cancelled);
+      }
+      check();
+    }
+
+    Stream<T> controlled<T>(Stream<T> input) => control?.bind(input) ?? input;
+
     void progress(
       ArchiveCreationPhase phase,
       int done,
       int total,
-      String path,
-    ) {
+      String path, {
+      bool isByteProgress = false,
+    }) {
       check();
-      onProgress?.call(ArchiveCreationProgress(phase, done, total, path));
+      onProgress?.call(
+        ArchiveCreationProgress(
+          phase,
+          done,
+          total,
+          path,
+          isByteProgress: isByteProgress,
+        ),
+      );
       check();
     }
 
-    check();
+    await checkpoint();
     if (files.isEmpty) {
       throw const ArchiveCreationException(ArchiveCreationError.emptySelection);
     }
@@ -574,7 +613,7 @@ class ArchiveCreationService {
     }
     final output = destination.paths.join(destinationDirectory, options.name);
     Future<void> checkDestination() async {
-      check();
+      await checkpoint();
       final current = await destination.stat(destinationDirectory);
       if (current == null ||
           !current.isFolder ||
@@ -622,6 +661,7 @@ class ArchiveCreationService {
     final capturePermissions =
         !options.format.singlePayload && source.capabilities.permissions;
     Future<int?> sourceMode(String path) async {
+      await checkpoint();
       if (!capturePermissions) return null;
       final metadata = await source.readMetadataFields(
         path,
@@ -651,7 +691,7 @@ class ArchiveCreationService {
     }
 
     Future<void> walk(FileItem selected, String name, int depth) async {
-      check();
+      await checkpoint();
       final path = selected.path;
       if (path == null || !source.paths.isAbsolute(path)) {
         throw ArchiveCreationException(
@@ -760,18 +800,25 @@ class ArchiveCreationService {
       phaseBytes = total;
       bytesSinceYield = 0;
       yieldWatch.reset();
-      progress(phase, 0, total, path);
+      progress(phase, 0, total, path, isByteProgress: true);
     }
 
     Future<void> reportBytes(int count, String path) async {
-      if (!streamed || bytePhase == null) return;
+      await checkpoint();
+      if (suppressRepeatedProgress || !streamed || bytePhase == null) return;
       completedBytes += count;
       if (completedBytes > phaseBytes) {
         throw const ArchiveCreationException(
           ArchiveCreationError.verificationFailed,
         );
       }
-      progress(bytePhase!, completedBytes, phaseBytes, path);
+      progress(
+        bytePhase!,
+        completedBytes,
+        phaseBytes,
+        path,
+        isByteProgress: true,
+      );
       bytesSinceYield += count;
       // Hashing and synchronous source streams must also yield to timers and
       // the UI event loop, including the source rereads after packing.
@@ -790,8 +837,9 @@ class ArchiveCreationService {
       required String path,
     }) async* {
       var received = 0;
-      await for (final chunk in input) {
-        check();
+      await checkpoint();
+      await for (final chunk in controlled(input)) {
+        await checkpoint();
         if (chunk.length > expectedLength - received ||
             chunk is! Uint8List &&
                 chunk.any((value) => value < 0 || value > 255)) {
@@ -805,6 +853,7 @@ class ArchiveCreationService {
               : chunk.length;
           final copy = Uint8List.fromList(chunk.sublist(at, end));
           received += copy.length;
+          await checkpoint();
           yield copy;
           check();
           await reportBytes(copy.length, path);
@@ -819,7 +868,7 @@ class ArchiveCreationService {
     }
 
     Future<void> validateEntry(_CreationEntry entry) async {
-      check();
+      await checkpoint();
       if (!_sameVersion(entry.file, await source.stat(entry.file.path!))) {
         throw ArchiveCreationException(
           ArchiveCreationError.sourceChanged,
@@ -840,8 +889,8 @@ class ArchiveCreationService {
       final digest = _CreationDigestSink();
       final hash = sha256.startChunkedConversion(digest);
       var length = 0;
-      await for (final chunk in source.readFile(entry.file)) {
-        check();
+      await for (final chunk in controlled(source.readFile(entry.file))) {
+        await checkpoint();
         if (chunk.length > memberLimit - length ||
             chunk.length > entry.file.size! - length ||
             chunk is! Uint8List &&
@@ -858,6 +907,7 @@ class ArchiveCreationService {
           final copy = Uint8List.fromList(chunk.sublist(at, end));
           length += copy.length;
           hash.add(copy);
+          await checkpoint();
           yield copy;
           check();
           await reportBytes(copy.length, entry.name);
@@ -919,10 +969,15 @@ class ArchiveCreationService {
           ? 2 * 1024 * 1024 * 1024
           : ArchiveService.maxArchiveBytes,
     );
+    var committed = false;
+    Object? publicationWarning;
+    final pauseChanges = control?.changes.listen((_) {
+      if (control.isPaused) pauseEpoch++;
+    });
     try {
       var done = 0;
       Future<void> emit(List<int> bytes) async {
-        check();
+        await checkpoint();
         await spool.write(bytes);
         check();
       }
@@ -937,13 +992,79 @@ class ArchiveCreationService {
         );
       }
       if (writer != null) {
-        progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+        progress(
+          ArchiveCreationPhase.packing,
+          0,
+          totalBytes,
+          options.name,
+          isByteProgress: true,
+        );
         await writer(
           entries: List.unmodifiable(captured),
           sink: emit,
           maxOutputBytes: spool.maxBytes,
-          isCancelled: isCancelled,
+          isCancelled: cancelled,
         );
+      } else if (background) {
+        if (!supportsArchiveWriterWorker) {
+          throw UnsupportedError('Background archive packing is unavailable.');
+        }
+        if (!streamed) {
+          progress(
+            ArchiveCreationPhase.packing,
+            0,
+            totalBytes,
+            options.name,
+            isByteProgress: true,
+          );
+        }
+        final level = options.compression == ArchiveCreationCompression.none
+            ? 0
+            : options.compression == ArchiveCreationCompression.lzma2
+            ? 6
+            : options.compression.deflateLevel;
+        if (options.format == ArchiveCreationFormat.hfsx) {
+          await writeHfsArchiveInWorker(
+            captured,
+            sink: emit,
+            maxOutputBytes: spool.maxBytes,
+            isCancelled: cancelled,
+            checkpoint: checkpoint,
+            cancellationFuture: control?.cancellationFuture,
+          );
+        } else {
+          await writeArchiveEntriesInWorker(
+            options.format.endpointFormat,
+            captured,
+            sink: emit,
+            maxOutputBytes: spool.maxBytes,
+            streamed: streamedCommon || streamedDisk || streamedTar,
+            compression: options.format.wrapper,
+            singlePayload: options.format.singlePayload,
+            cpioFormat: options.format.cpioFormat,
+            level: level,
+            password: options.password,
+            encryptNames: options.encryptNames,
+            entryCompression:
+                !streamed &&
+                    const {
+                      ArchiveEndpointFormat.zip,
+                      ArchiveEndpointFormat.sevenZip,
+                    }.contains(options.format.endpointFormat)
+                ? options.compression == ArchiveCreationCompression.none
+                      ? koni.ArchiveCompression.stored
+                      : options.format.endpointFormat ==
+                                ArchiveEndpointFormat.zip ||
+                            options.compression ==
+                                ArchiveCreationCompression.deflate
+                      ? koni.ArchiveCompression.deflate
+                      : koni.ArchiveCompression.lzma2
+                : null,
+            isCancelled: cancelled,
+            checkpoint: checkpoint,
+            cancellationFuture: control?.cancellationFuture,
+          );
+        }
       } else if (streamedCommon) {
         await writeStreamingArchiveEntries(
           options.format.endpointFormat,
@@ -955,11 +1076,17 @@ class ArchiveCreationService {
             ArchiveCreationCompression.lzma2 => 6,
             _ => options.compression.deflateLevel,
           },
-          isCancelled: isCancelled,
+          isCancelled: cancelled,
         );
       } else if (options.format.diskImage) {
         if (!streamedDisk) {
-          progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+          progress(
+            ArchiveCreationPhase.packing,
+            0,
+            totalBytes,
+            options.name,
+            isByteProgress: true,
+          );
         }
         switch (options.format) {
           case ArchiveCreationFormat.iso:
@@ -967,21 +1094,21 @@ class ArchiveCreationService {
               captured,
               sink: emit,
               maxOutputBytes: spool.maxBytes,
-              isCancelled: isCancelled,
+              isCancelled: cancelled,
             );
           case ArchiveCreationFormat.hfsx:
             await writeHfsArchive(
               captured,
               sink: emit,
               maxOutputBytes: spool.maxBytes,
-              isCancelled: isCancelled,
+              isCancelled: cancelled,
             );
           case ArchiveCreationFormat.dmg:
             await writeDmgArchive(
               captured,
               sink: emit,
               maxOutputBytes: spool.maxBytes,
-              isCancelled: isCancelled,
+              isCancelled: cancelled,
               compress: options.compression != ArchiveCreationCompression.none,
             );
           default:
@@ -1013,7 +1140,7 @@ class ArchiveCreationService {
           cpioFormat: options.format.cpioFormat,
           level: options.compression.deflateLevel,
           maxOutputBytes: spool.maxBytes,
-          isCancelled: isCancelled,
+          isCancelled: cancelled,
         );
       } else {
         final memory = _BoundedArchiveMemory(check);
@@ -1080,7 +1207,7 @@ class ArchiveCreationService {
               try {
                 while (body.step()) {
                   await Future<void>.delayed(Duration.zero);
-                  check();
+                  await checkpoint();
                 }
                 body.finish();
               } catch (_) {
@@ -1143,7 +1270,8 @@ class ArchiveCreationService {
           spool,
           captured,
           format: options.format.name,
-          isCancelled: isCancelled,
+          isCancelled: cancelled,
+          control: control,
           onVerificationPlan: streamedDisk
               ? (rawPartitionBytes) {
                   // Disk verification hashes both source and decoded members.
@@ -1167,7 +1295,11 @@ class ArchiveCreationService {
           );
         }
       } else if (options.format.singlePayload) {
-        final source = await spool.openByteSource();
+        final source = ArchiveCheckpointSource(
+          await spool.openByteSource(),
+          checkpoint,
+          check,
+        );
         try {
           final unpacked = decompressSingleFile(
             await source.read(0, source.length),
@@ -1185,20 +1317,24 @@ class ArchiveCreationService {
         }
       } else {
         // Decode with the regular reader, which is independent of the ZIP encoder.
-        final verificationSource = await spool.openByteSource();
+        final verificationSource = ArchiveCheckpointSource(
+          await spool.openByteSource(),
+          checkpoint,
+          check,
+        );
         final archive = streamedCommon
             ? (await openStreamedArchiveSource(
                 verificationSource,
                 name: options.name,
                 maxBytes: streamedLimit,
-                isCancelled: isCancelled,
+                isCancelled: cancelled,
               )).archive
             : writer == null &&
                   options.format.endpointFormat == ArchiveEndpointFormat.rar
             ? await openStoredRarArchive(
                 verificationSource,
                 maxBytes: ArchiveService.maxArchiveBytes,
-                isCancelled: isCancelled,
+                isCancelled: cancelled,
               )
             : await openViewerArchiveSource(
                 streamedTar
@@ -1228,7 +1364,7 @@ class ArchiveCreationService {
           }
           done = 0;
           for (final member in archive.members) {
-            check();
+            await checkpoint();
             final name = member.name.replaceFirst(RegExp(r'/+$'), '');
             final entry = expected.remove(name);
             final expectedTime = capturedByName[name]?.modified;
@@ -1292,6 +1428,7 @@ class ArchiveCreationService {
           }
         }
         for (final folder in folderChildren.entries) {
+          await checkpoint();
           final children = await source.list(folder.key);
           check();
           final old = {
@@ -1313,9 +1450,44 @@ class ArchiveCreationService {
       }
 
       await validateSources();
+      final manifestDigest = _CreationDigestSink();
+      final manifestHash = sha256.startChunkedConversion(manifestDigest);
+      final manifestEntries = List<_CreationEntry>.of(entries)
+        ..sort((a, b) => a.name.compareTo(b.name));
+      try {
+        manifestHash.add(utf8.encode('crisp-archive-source-manifest-v1\n'));
+        for (final entry in manifestEntries) {
+          await checkpoint();
+          if (!entry.file.isFolder && entry.digest == null) {
+            throw const ArchiveCreationException(
+              ArchiveCreationError.verificationFailed,
+            );
+          }
+          manifestHash.add(
+            utf8.encode(
+              '${jsonEncode({'path': entry.name, 'sourcePath': entry.file.path, 'type': entry.file.isFolder ? 'directory' : 'file', 'size': entry.file.isFolder ? 0 : entry.file.size, 'modified': entry.file.updatedAt?.toUtc().toIso8601String(), 'mode': entry.mode, 'sha256': entry.file.isFolder ? null : entry.digest})}\n',
+            ),
+          );
+        }
+      } finally {
+        manifestHash.close();
+      }
+      final sourceManifestSha256 = manifestDigest.value!;
+      if (expectedSourceManifestSha256 != null &&
+          sourceManifestSha256 != expectedSourceManifestSha256) {
+        throw const ArchiveCreationException(
+          ArchiveCreationError.sourceChanged,
+        );
+      }
       await checkDestination();
       if (!streamed) {
-        progress(ArchiveCreationPhase.saving, 0, spool.length, output);
+        progress(
+          ArchiveCreationPhase.saving,
+          0,
+          spool.length,
+          output,
+          isByteProgress: true,
+        );
       }
       final packedHash =
           (await sha256
@@ -1337,6 +1509,76 @@ class ArchiveCreationService {
           output,
         );
       }
+      FileItem? verifiedStage;
+      var verifiedPauseEpoch = pauseEpoch;
+      Future<void> refreshPausedVerification() async {
+        while (verifiedStage != null && verifiedPauseEpoch != pauseEpoch) {
+          final generation = pauseEpoch;
+          suppressRepeatedProgress = true;
+          try {
+            final stage = await destination.stat(verifiedStage!.path!);
+            if (stage == null ||
+                stage.size != spool.length ||
+                stage.isFolder ||
+                stage.isSymlink == true) {
+              throw const ArchiveCreationException(
+                ArchiveCreationError.verificationFailed,
+              );
+            }
+            final hash = await sha256
+                .bind(
+                  checkedOutput(
+                    destination.readFile(stage),
+                    expectedLength: spool.length,
+                    path: output,
+                  ),
+                )
+                .single;
+            if (hash.toString() != packedHash) {
+              throw const ArchiveCreationException(
+                ArchiveCreationError.verificationFailed,
+              );
+            }
+            await validateSources();
+            await checkDestination();
+            verifiedPauseEpoch = generation;
+          } finally {
+            // These are repeated proofs after a user pause, not additional
+            // planned progress; all checks and backpressure remain active.
+            suppressRepeatedProgress = false;
+          }
+        }
+      }
+
+      Future<void> publicationCheckpoint(Map<String, dynamic> state) async {
+        final completed = state['phase'] == 'committed';
+        if (completed) {
+          // The exclusive destination commit is authoritative even if its
+          // completion observer fails or Stop arrives while it is running.
+          committed = true;
+        } else {
+          await checkpoint();
+        }
+        final event = <String, dynamic>{
+          ...state,
+          'destination': output,
+          'packedBytes': spool.length,
+          'packedSha256': packedHash,
+          'entryCount': entries.length,
+          'sourceManifestSha256': sourceManifestSha256,
+          'sourceEntryCount': entries.length,
+        };
+        try {
+          await onPublicationCheckpoint?.call(event);
+        } catch (error) {
+          if (!completed) rethrow;
+          publicationWarning ??= error;
+        }
+        if (!completed) await checkpoint();
+        if (state['phase'] == 'committing') await refreshPausedVerification();
+      }
+
+      await publicationCheckpoint({'phase': 'prepared'});
       await destination.writePreparedFile(
         output,
         checkedOutput(
@@ -1346,11 +1588,10 @@ class ArchiveCreationService {
         ),
         spool.length,
         replace: false,
-        checkpoint: (state) async {
-          if (state['phase'] != 'committed') check();
-        },
+        checkpoint: publicationCheckpoint,
         verifyStaged: (staged) async {
-          check();
+          await checkpoint();
+          final verificationStarted = pauseEpoch;
           final hash = await sha256
               .bind(
                 checkedOutput(
@@ -1365,31 +1606,37 @@ class ArchiveCreationService {
               ArchiveCreationError.verificationFailed,
             );
           }
-          if (onPrepared != null) {
-            await onPrepared(
-              ArchiveCreationPrepared(
-                output,
-                entries.length,
-                spool.length,
-                packedHash,
-              ),
-            );
-            check();
-          }
           await validateSources();
           await checkDestination();
+          verifiedStage = staged;
+          verifiedPauseEpoch = verificationStarted;
         },
       );
       // A completed exclusive commit remains a success if cancellation arrives
       // after it; do not suggest that a published archive was rolled back.
-      return ArchiveCreationResult(output, entries.length, spool.length);
-    } catch (_) {
-      if (isCancelled?.call() ?? false) {
+      if (!committed) await publicationCheckpoint({'phase': 'committed'});
+      return ArchiveCreationResult(
+        output,
+        entries.length,
+        spool.length,
+        publicationWarning: publicationWarning,
+      );
+    } catch (error) {
+      if (committed) {
+        return ArchiveCreationResult(
+          output,
+          entries.length,
+          spool.length,
+          publicationWarning: publicationWarning ?? error,
+        );
+      }
+      if (cancelled()) {
         throw const ArchiveCreationException(ArchiveCreationError.cancelled);
       }
       rethrow;
     } finally {
       try {
+        await pauseChanges?.cancel();
         await spool.dispose();
       } catch (_) {
         // Failure to remove our private temporary output must not turn a

@@ -10,6 +10,8 @@ import 'package:path/path.dart' as p;
 import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_container_publisher.dart';
+import 'archive_checkpoint_source.dart';
+import 'archive_writer_worker.dart';
 import 'archive_dmg_writer.dart' show verifyDmgRewritePreservation;
 import 'archive_endpoint_policy.dart';
 import 'archive_hfs_writer.dart' show normalizeHfsArchivePath;
@@ -31,6 +33,14 @@ import 'archive_viewer_service.dart';
 import 'file_operation_service.dart';
 import 'file_operation_backend.dart' show LocalOperationBackend;
 import 'storage_transfer_contract.dart';
+
+/// Legacy workspace callers catch StateError for a cancelled callback, while
+/// transfer coordinators need FileOperationCancelled to distinguish a user
+/// stop from an authority or source failure. Preserve both classifications.
+class _ArchiveWorkspaceCancelled extends StateError
+    implements FileOperationCancelled {
+  _ArchiveWorkspaceCancelled(super.message);
+}
 
 class ArchiveWorkspace {
   ArchiveWorkspace._(
@@ -77,12 +87,14 @@ class ArchiveWorkspace {
   );
   final _entries = <String, _ArchiveEntry>{};
   bool _closed = false;
+  bool _requiresReopen = false;
   bool _dirty = false;
   bool _saving = false;
   int _revision = 0;
   ArchiveWorkspaceReview? _pendingReview;
   ArchivePublicationRecord? _pendingPublication;
   ArchivePublicationReceipt? _lastReceipt;
+  Object? _lastPublicationWarning;
   Object? _sourceRemovalAuthority;
   Object? _directorySyncAuthority;
   ArchivePublicationDirectoryDependency? _directorySyncDependency;
@@ -106,6 +118,7 @@ class ArchiveWorkspace {
   }
 
   ArchivePublicationReceipt? get lastReceipt => outermost._lastReceipt;
+  Object? get lastPublicationWarning => outermost._lastPublicationWarning;
   ArchivePublicationRecord? get pendingPublication =>
       outermost._pendingPublication;
   ArchiveEndpointCapabilities get endpointCapabilities =>
@@ -157,16 +170,20 @@ class ArchiveWorkspace {
     FileItem file,
     int limit, {
     bool Function()? isCancelled,
+    FileOperationControl? control,
   }) async {
     if (!source.isCurrent) throw StateError('The archive source changed.');
     if ((file.size ?? 0) > limit) {
       throw const ArchiveViewException('Archive input exceeds its size limit.');
     }
+    await control?.checkpoint();
     final builder = BytesBuilder(copy: false);
-    await for (final chunk in source.readFile(file)) {
+    final input = source.readFile(file);
+    await for (final chunk in control?.bind(input) ?? input) {
+      await control?.checkpoint();
       if (!source.isCurrent) throw StateError('The archive source changed.');
-      if (isCancelled?.call() ?? false) {
-        throw StateError('Archive operation cancelled.');
+      if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
+        throw _ArchiveWorkspaceCancelled('Archive operation cancelled.');
       }
       if (builder.length + chunk.length > limit) {
         throw const ArchiveViewException(
@@ -176,8 +193,8 @@ class ArchiveWorkspace {
       builder.add(chunk);
     }
     if (!source.isCurrent) throw StateError('The archive source changed.');
-    if (isCancelled?.call() ?? false) {
-      throw StateError('Archive operation cancelled.');
+    if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
+      throw _ArchiveWorkspaceCancelled('Archive operation cancelled.');
     }
     return builder.takeBytes();
   }
@@ -620,6 +637,11 @@ class ArchiveWorkspace {
   }
 
   void _check({bool writing = false}) {
+    if (_requiresReopen) {
+      throw StateError(
+        'The archive was saved, but its working view could not be refreshed. Reopen the saved archive.',
+      );
+    }
     if (!isCurrent) throw StateError('The original archive source changed.');
     if (writing && !canUpdate) throw UnsupportedError(updateSupport);
   }
@@ -1094,7 +1116,7 @@ class ArchiveWorkspace {
       }
       _check(writing: true);
       if (isCancelled?.call() ?? false) {
-        throw StateError('Archive move cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive move cancelled.');
       }
       final original = await sha256.bind(openRead(entry.source.path!)).single;
       final target = await plan.destination.stat(entry.destination);
@@ -1159,7 +1181,7 @@ class ArchiveWorkspace {
     }
     _check(writing: true);
     if (isCancelled?.call() ?? false) {
-      throw StateError('Archive move cancelled.');
+      throw _ArchiveWorkspaceCancelled('Archive move cancelled.');
     }
     if (removed > 0) _publish(updated);
     return removed;
@@ -1385,7 +1407,7 @@ class ArchiveWorkspace {
       }
       if (!input.isCurrent) throw StateError('The added-file source changed.');
       if (isCancelled?.call() ?? false) {
-        throw StateError('Archive update cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
       }
       if (file.isSymlink == true) {
         throw UnsupportedError('Symbolic links are not packed.');
@@ -1497,18 +1519,28 @@ class ArchiveWorkspace {
     }
   }
 
-  Future<Uint8List> repack({bool Function()? isCancelled}) async {
+  Future<Uint8List> repack({
+    bool Function()? isCancelled,
+    FileOperationControl? control,
+    bool background = false,
+  }) async {
     return collectArchiveWrite(
       (sink) => _writePacked(
         sink,
         maxOutputBytes: ArchiveService.maxArchiveBytes,
         isCancelled: isCancelled,
+        control: control,
+        background: background,
       ),
       maxBytes: ArchiveService.maxArchiveBytes,
     );
   }
 
-  List<ArchiveWriteEntry> _entriesForWriting(void Function() checkPacking) {
+  List<ArchiveWriteEntry> _entriesForWriting(
+    void Function() checkPacking, {
+    Future<void> Function()? checkpoint,
+    FileOperationControl? control,
+  }) {
     // Retained members keep their original order, including after a rename.
     // This matters for comic page ordering and package metadata precedence.
     final originalOrder = _entries.values.toList();
@@ -1543,7 +1575,14 @@ class ArchiveWorkspace {
               ? null
               : () async* {
                   checkPacking();
-                  yield* openRead('/${entry.name}');
+                  await checkpoint?.call();
+                  final stream = openRead('/${entry.name}');
+                  await for (final chunk in control?.bind(stream) ?? stream) {
+                    await checkpoint?.call();
+                    checkPacking();
+                    yield chunk;
+                  }
+                  checkPacking();
                 },
         ),
     ];
@@ -1553,16 +1592,30 @@ class ArchiveWorkspace {
     Future<void> Function(List<int>) sink, {
     required int maxOutputBytes,
     bool Function()? isCancelled,
+    FileOperationControl? control,
+    bool background = false,
   }) async {
     _check(writing: true);
     void checkPacking() {
       _check(writing: true);
-      if (isCancelled?.call() ?? false) {
-        throw StateError('Archive update cancelled.');
+      if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
       }
     }
 
-    checkPacking();
+    Future<void> checkpoint() async {
+      checkPacking();
+      await control?.checkpoint();
+      checkPacking();
+    }
+
+    Future<void> emit(List<int> bytes) async {
+      await checkpoint();
+      await sink(bytes);
+      checkPacking();
+    }
+
+    await checkpoint();
     if (_policy.packageKind == 'deb') {
       final payloads = _entries.values
           .where(
@@ -1589,14 +1642,41 @@ class ArchiveWorkspace {
         'Removing all protected file data would erase the archive encryption policy. Keep a protected member or use an explicit new archive.',
       );
     }
-    final entries = _entriesForWriting(checkPacking);
+    final entries = _entriesForWriting(
+      checkPacking,
+      checkpoint: checkpoint,
+      control: control,
+    );
     final packageIssue = await archiveZipPackageIssue(file.name, entries);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
+    if (background) {
+      await writeArchiveEntriesInWorker(
+        _policy.format,
+        entries,
+        sink: emit,
+        source: _policy.inspection,
+        streamed: _streaming,
+        compression: _policy.compression,
+        singlePayload: _policy.singlePayload,
+        gzipHeader: _policy.gzipHeader,
+        xzCheck: _policy.xzCheck,
+        password: encrypted ? password : null,
+        encryptNames: encryptNames,
+        maxOutputBytes: maxOutputBytes,
+        isCancelled: () {
+          checkPacking();
+          return false;
+        },
+        checkpoint: checkpoint,
+        cancellationFuture: control?.cancellationFuture,
+      );
+      return;
+    }
     if (_streaming) {
       await writeStreamingArchiveEntries(
         _policy.format,
         entries,
-        sink: sink,
+        sink: emit,
         source: _policy.inspection,
         gzipHeader: _policy.gzipHeader,
         maxOutputBytes: maxOutputBytes,
@@ -1610,7 +1690,7 @@ class ArchiveWorkspace {
     await writeArchiveEntries(
       _policy.format,
       entries,
-      sink: sink,
+      sink: emit,
       source: _policy.inspection,
       compression: _policy.compression,
       singlePayload: _policy.singlePayload,
@@ -1626,25 +1706,95 @@ class ArchiveWorkspace {
     );
   }
 
+  /// Current metadata-only diff. This does not pack or read member payloads.
+  List<ArchiveWorkspaceChange> get draftChanges {
+    _check();
+    final changes = <ArchiveWorkspaceChange>[];
+    final retained = <String>{};
+    for (final entry in _entries.values) {
+      final original = entry.member == null
+          ? null
+          : ArchiveService.safeMemberPath(entry.member!.name);
+      if (original != null) retained.add(original);
+      if (original != null && original != entry.name) {
+        changes.add(
+          ArchiveWorkspaceChange(
+            ArchiveWorkspaceChangeKind.rename,
+            entry.name,
+            from: original,
+            size: entry.size,
+          ),
+        );
+      }
+      if (entry.bytes != null || entry.spool != null || original == null) {
+        changes.add(
+          ArchiveWorkspaceChange(
+            entry.isFolder
+                ? ArchiveWorkspaceChangeKind.createDirectory
+                : original == null
+                ? ArchiveWorkspaceChangeKind.add
+                : ArchiveWorkspaceChangeKind.replace,
+            entry.name,
+            size: entry.size,
+          ),
+        );
+      }
+    }
+    for (final entry in ArchiveMemberIndex(_archive).members.entries) {
+      if (!retained.contains(entry.key)) {
+        changes.add(
+          ArchiveWorkspaceChange(
+            ArchiveWorkspaceChangeKind.remove,
+            entry.key,
+            size: entry.value.size,
+          ),
+        );
+      }
+    }
+    changes.sort((a, b) => a.path.compareTo(b.path));
+    return List.unmodifiable(changes);
+  }
+
   /// Packs and verifies a concrete review snapshot. Later edits invalidate it.
-  Future<ArchiveWorkspaceReview> review({bool Function()? isCancelled}) async {
-    _check(writing: true);
+  Future<ArchiveWorkspaceReview> review({
+    bool Function()? isCancelled,
+    FileOperationControl? control,
+    bool background = false,
+  }) async {
+    void check() {
+      _check(writing: true);
+      if (control?.isCancelled ?? false) throw const FileOperationCancelled();
+      if (isCancelled?.call() ?? false) {
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
+      }
+    }
+
+    Future<void> checkpoint() async {
+      check();
+      await control?.checkpoint();
+      check();
+    }
+
+    check();
     if (_saving) {
       throw StateError('The archive is already preparing a publication.');
     }
-    if (_pendingPublication != null && _pendingReview != null) {
-      return _pendingReview!;
-    }
-    if (_latestReview?.isCurrent == true) return _latestReview!;
-    final generations = <ArchiveWorkspace, int>{};
-    ArchiveWorkspace? level = this;
-    while (level != null) {
-      generations[level] = level._revision;
-      level = level._parentWorkspace;
-    }
+    // Reserve the draft before the first await, including a paused checkpoint.
+    // Synchronous edits and nested moves must not overtake an admitted review.
     _saving = true;
     ArchiveOutputSpool? spool;
     try {
+      await checkpoint();
+      if (_pendingPublication != null && _pendingReview != null) {
+        return _pendingReview!;
+      }
+      if (_latestReview?.isCurrent == true) return _latestReview!;
+      final generations = <ArchiveWorkspace, int>{};
+      ArchiveWorkspace? level = this;
+      while (level != null) {
+        generations[level] = level._revision;
+        level = level._parentWorkspace;
+      }
       Uint8List? bytes;
       if (_streaming) {
         spool = await ArchiveOutputSpool.create(maxBytes: maxContainerBytes);
@@ -1652,74 +1802,40 @@ class ArchiveWorkspace {
           spool.write,
           maxOutputBytes: maxContainerBytes,
           isCancelled: isCancelled,
+          control: control,
+          background: background,
         );
         await spool.finish();
       } else {
-        bytes = await repack(isCancelled: isCancelled);
+        bytes = await repack(
+          isCancelled: isCancelled,
+          control: control,
+          background: background,
+        );
       }
       final checked = await _verifyPacked(
         bytes,
         spool: spool,
         isCancelled: isCancelled,
+        control: control,
       );
       await checked.archive.close();
       final digest = spool == null
           ? sha256.convert(bytes!).toString()
           : (await sha256
                     .bind(
-                      spool.openRead().map((chunk) {
-                        _check(writing: true);
-                        if (isCancelled?.call() ?? false) {
-                          throw const FileOperationCancelled();
+                      (() async* {
+                        final stream = spool!.openRead();
+                        await for (final chunk
+                            in control?.bind(stream) ?? stream) {
+                          await checkpoint();
+                          yield chunk;
                         }
-                        return chunk;
-                      }),
+                      })(),
                     )
                     .single)
                 .toString();
-      final changes = <ArchiveWorkspaceChange>[];
-      final retained = <String>{};
-      for (final entry in _entries.values) {
-        final original = entry.member == null
-            ? null
-            : ArchiveService.safeMemberPath(entry.member!.name);
-        if (original != null) retained.add(original);
-        if (original != null && original != entry.name) {
-          changes.add(
-            ArchiveWorkspaceChange(
-              ArchiveWorkspaceChangeKind.rename,
-              entry.name,
-              from: original,
-              size: entry.size,
-            ),
-          );
-        }
-        if (entry.bytes != null || entry.spool != null || original == null) {
-          changes.add(
-            ArchiveWorkspaceChange(
-              entry.isFolder
-                  ? ArchiveWorkspaceChangeKind.createDirectory
-                  : original == null
-                  ? ArchiveWorkspaceChangeKind.add
-                  : ArchiveWorkspaceChangeKind.replace,
-              entry.name,
-              size: entry.size,
-            ),
-          );
-        }
-      }
-      for (final entry in ArchiveMemberIndex(_archive).members.entries) {
-        if (!retained.contains(entry.key)) {
-          changes.add(
-            ArchiveWorkspaceChange(
-              ArchiveWorkspaceChangeKind.remove,
-              entry.key,
-              size: entry.value.size,
-            ),
-          );
-        }
-      }
-      changes.sort((a, b) => a.path.compareTo(b.path));
+      final changes = draftChanges;
       final result = ArchiveWorkspaceReview._(
         this,
         generations,
@@ -1760,22 +1876,40 @@ class ArchiveWorkspace {
     Uint8List? bytes, {
     ArchiveOutputSpool? spool,
     bool Function()? isCancelled,
+    FileOperationControl? control,
   }) async {
-    if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+    bool cancelled() =>
+        (control?.isCancelled ?? false) || (isCancelled?.call() ?? false);
+    void check() {
+      _check(writing: true);
+      if (cancelled()) throw const FileOperationCancelled();
+    }
+
+    Future<void> checkpoint() async {
+      check();
+      await control?.checkpoint();
+      check();
+    }
+
+    await checkpoint();
     StreamedArchiveOpen? streamed;
     if (spool != null) {
       try {
         streamed = await openStreamedArchiveSource(
-          await spool.openByteSource(),
+          ArchiveCheckpointSource(
+            await spool.openByteSource(),
+            checkpoint,
+            check,
+          ),
           name: file.name,
           password: password,
           maxBytes: maxContainerBytes,
-          isCancelled: isCancelled,
+          isCancelled: cancelled,
         );
       } on ArchiveViewException {
         // Preserve the file-operation cancellation contract at this boundary.
         // Reader validation can yield while opening the private candidate.
-        if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+        if (cancelled()) throw const FileOperationCancelled();
         rethrow;
       }
     }
@@ -1791,8 +1925,8 @@ class ArchiveWorkspace {
         );
       }
       for (final item in actual.entries) {
-        _check(writing: true);
-        if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+        await checkpoint();
+        if (cancelled()) throw const FileOperationCancelled();
         final expected = _entries[item.key]!;
         final member = item.value;
         if (member.isFile == expected.isFolder ||
@@ -1809,9 +1943,9 @@ class ArchiveWorkspace {
         }
         if (member.isFile) {
           Stream<List<int>> checked(Stream<List<int>> stream) async* {
-            await for (final chunk in stream) {
-              _check(writing: true);
-              if (isCancelled?.call() ?? false) {
+            await for (final chunk in control?.bind(stream) ?? stream) {
+              await checkpoint();
+              if (cancelled()) {
                 throw const FileOperationCancelled();
               }
               yield chunk;
@@ -1870,7 +2004,7 @@ class ArchiveWorkspace {
         }
         final entries = _entriesForWriting(() {
           _check(writing: true);
-          if (isCancelled?.call() ?? false) {
+          if (cancelled()) {
             throw const FileOperationCancelled();
           }
         });
@@ -1908,6 +2042,8 @@ class ArchiveWorkspace {
   /// durable publication receipt. Nested member writes alone are never success.
   Future<ArchivePublicationReceipt?> save({
     bool Function()? isCancelled,
+    FileOperationControl? control,
+    bool background = false,
     ArchiveWorkspaceReview? reviewed,
     void Function(ArchivePublicationPhase)? onPhase,
     TransferCheckpoint? beforePublication,
@@ -1917,6 +2053,10 @@ class ArchiveWorkspace {
     Object? directorySyncAuthority,
   }) async {
     _check(writing: true);
+    if (control?.isCancelled ?? false) throw const FileOperationCancelled();
+    if (isCancelled?.call() ?? false) {
+      throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
+    }
     if (_sourceRemovalAuthority != null &&
         (!identical(sourceRemovalAuthority, _sourceRemovalAuthority) ||
             dependency == null && _pendingPublication?.dependency == null)) {
@@ -1938,8 +2078,12 @@ class ArchiveWorkspace {
     }
     if (_saving) throw StateError('An archive publication is already running.');
     if (!_dirty) {
+      await control?.checkpoint();
+      _check(writing: true);
       final receipt = await _parentWorkspace?.save(
         isCancelled: isCancelled,
+        control: control,
+        background: background,
         onPhase: onPhase,
         beforePublication: beforePublication,
         dependency: dependency,
@@ -1953,20 +2097,37 @@ class ArchiveWorkspace {
       return receipt;
     }
     final selected =
-        reviewed ?? _pendingReview ?? await review(isCancelled: isCancelled);
+        reviewed ??
+        _pendingReview ??
+        await review(
+          isCancelled: isCancelled,
+          control: control,
+          background: background,
+        );
     _validateReview(selected);
     _saving = true;
     ViewerArchive? replacement;
+    ArchivePublicationReceipt? authoritativeReceipt;
     try {
+      // A supplied review needs the same synchronous reservation as a newly
+      // packed review; pausing Save must not reopen its draft to mutation.
+      await control?.checkpoint();
+      _check(writing: true);
+      if (isCancelled?.call() ?? false) {
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
+      }
       final checked = await _verifyPacked(
         selected._bytes,
         spool: selected.spool,
         isCancelled: isCancelled,
+        control: control,
       );
       replacement = checked.archive;
       final replacementPolicy = checked.policy;
       _validateReview(selected);
-      if (isCancelled?.call() ?? false) throw const FileOperationCancelled();
+      if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
+        throw const FileOperationCancelled();
+      }
       ArchivePublicationReceipt? receipt;
       if (source is _NestedArchiveBackend) {
         final nested = source as _NestedArchiveBackend;
@@ -1975,6 +2136,7 @@ class ArchiveWorkspace {
           file,
           ArchiveService.maxArchiveBytes,
           isCancelled: isCancelled,
+          control: control,
         );
         if (sha256.convert(current).toString() != _fingerprint) {
           throw StateError('The nested container changed after review.');
@@ -1998,6 +2160,7 @@ class ArchiveWorkspace {
             openRead: selected.openRead,
             retry: _pendingPublication,
             isCancelled: () => _closed || (isCancelled?.call() ?? false),
+            control: control,
             onPhase: onPhase,
             beforePublication: beforePublication,
             dependency: dependency,
@@ -2008,8 +2171,10 @@ class ArchiveWorkspace {
           if (_pendingPublication != null) _pendingReview = selected;
           rethrow;
         }
+        authoritativeReceipt = receipt;
         _file = receipt.file;
         _lastReceipt = receipt;
+        _lastPublicationWarning = publisher.observerWarning;
       }
       final previous = _archive;
       _archive = replacement;
@@ -2025,8 +2190,14 @@ class ArchiveWorkspace {
       _snapshotSpool = selected.spool;
       for (final stale in _ownedSpools.toList()) {
         if (stale == _snapshotSpool) continue;
-        await stale.dispose();
-        _ownedSpools.remove(stale);
+        try {
+          await stale.dispose();
+          _ownedSpools.remove(stale);
+        } catch (error) {
+          // A verified physical publication stays successful. Retain ownership
+          // so close() can retry removing this private stale snapshot.
+          _lastPublicationWarning ??= error;
+        }
       }
       if (_closed) await _archive.close();
       // A failed enclosing publication retains its already verified child and
@@ -2034,6 +2205,8 @@ class ArchiveWorkspace {
       if (_parentWorkspace != null) {
         receipt = await _parentWorkspace!.save(
           isCancelled: isCancelled,
+          control: control,
+          background: background,
           onPhase: onPhase,
           beforePublication: beforePublication,
           dependency: dependency,
@@ -2041,9 +2214,20 @@ class ArchiveWorkspace {
           directoryDependency: directoryDependency,
           directorySyncAuthority: directorySyncAuthority,
         );
+        authoritativeReceipt = receipt;
         (source as _NestedArchiveBackend)._refreshParentRevision();
       }
       return receipt;
+    } catch (error) {
+      final committed = authoritativeReceipt;
+      if (committed == null) rethrow;
+      // The physical container has a verified durable receipt. A view refresh
+      // or private cleanup error cannot turn it into a failed publication or
+      // invite a retry against the already replaced original.
+      outermost._lastPublicationWarning ??= error;
+      outermost._lastReceipt = committed;
+      _requiresReopen = true;
+      return committed;
     } finally {
       await replacement?.close();
       _saving = false;

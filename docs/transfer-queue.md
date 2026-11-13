@@ -1,4 +1,4 @@
-# Copy and move job management
+# File and archive job management
 
 CrispCloud owns the plan, queue, progress and recovery history. Its existing
 provider adapters execute the work. The rclone and Robocopy comparisons below
@@ -53,6 +53,32 @@ one task and executes its entries serially; existing upload/download batches
 can use a task per file. The panel counts distinct jobs rather than displaying
 a 100-file upload as 100 jobs. Increasing the setting does not turn a copy/move
 plan into unbounded per-file parallelism.
+
+## Archive jobs
+
+Native archive creation and edited-archive publication use this same queue.
+**Queue in background** saves a credential-free creation recipe before admission;
+**Run in background** detaches an already-running progress view. A workspace’s
+**Save in background** confirms its current changes and transfers draft ownership
+to the job. Compression runs in a native isolate with bounded streams.
+
+Per-job Pause/Resume/Stop, bulk controls, priority, reorder and scheduling apply.
+Queue pause holds new work; selected-row pause controls cooperatively pause eligible live jobs.
+Stop wakes paused workers. The original-to-backup/install-or-restore
+transaction is not suspended with the original absent. Verified publication
+remains completed when a late Stop or completion observer fails.
+
+History routes archive jobs to archive recovery. A saved creation recipe binds
+its original storage, selection and output, and restarts into a fresh private
+candidate after review. Passwords must be entered again. Once recorded, the
+source manifest digest also detects changed bytes with restored size/time.
+An occupied output is reconciled only by a complete matching hash/length check.
+In-session stopped workspace drafts remain available for reviewed retry;
+arbitrary draft reconstruction after process exit is not implemented. Existing
+archive publication recovery still owns any recorded candidate and backup.
+
+See [archive operation queue](archive-operation-queue.md) for the implementation
+and exact acceptance evidence.
 
 ## Admission and path reservations
 

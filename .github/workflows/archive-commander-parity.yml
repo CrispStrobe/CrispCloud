@@ -26,11 +26,15 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   CI: true
   BOT: true
+  CRISP_RUN_LARGE_ARCHIVE_TESTS: '0'
+  CRISP_STREAMING_ARCHIVE_LARGE: '0'
+  CRISP_RAR_STORED_LARGE: '0'
+  CRISP_ARCHIVE_WORKER_LARGE: '0'
 
 jobs:
   archives:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     defaults:
       run:
         shell: bash
@@ -77,13 +81,19 @@ jobs:
         run: |
           set -euo pipefail
           python3 tool/check_help_guides.py 2>&1 | tee build/archive-commander-ci/help.log
-          dart analyze --fatal-infos lib/models/archive_*.dart lib/providers/archive_jobs_provider.dart lib/services/archive_*.dart lib/widgets/archive_*.dart lib/l10n/archive_*.dart test/archive_*_test.dart test/widget/archive_*_test.dart 2>&1 | tee build/archive-commander-ci/analysis.log
+          dart analyze --fatal-infos lib/models/archive*.dart lib/models/operation_progress.dart lib/providers/transfer_provider.dart lib/services/archive_*.dart lib/services/transfer_recovery_service.dart lib/widgets/archive_*.dart lib/widgets/operations_panel.dart lib/widgets/transfer_history_dialog.dart lib/l10n/archive_*.dart lib/l10n/transfer_queue_translations.dart test/archive_*_test.dart test/widget/archive_*_test.dart test/support/verify_archive_portable_data_codecs.dart test/support/verify_archive_writer_worker.dart test/support/archive_queue_fixture.dart 2>&1 | tee build/archive-commander-ci/analysis.log
+      - name: Validate portable archive codecs
+        run: |
+          set -euo pipefail
+          mkdir -p build/archive-portable
+          dart compile js --packages=.dart_tool/package_config.json -O1 -o build/archive-portable/data-codecs.js test/support/verify_archive_portable_data_codecs.dart 2>&1 | tee build/archive-commander-ci/portable-compile.log
+          node -e 'global.self=global; require("./build/archive-portable/data-codecs.js")' 2>&1 | tee build/archive-commander-ci/portable-runtime.log
       - name: Run archive and menu regression suites
-        timeout-minutes: 25
+        timeout-minutes: 35
         run: |
           set -euo pipefail
           shopt -s nullglob
-          archive_test_files=(test/archive_*_test.dart test/widget/archive_*_test.dart test/browser_menu_*_test.dart test/widget/browser_menu_*_test.dart test/widget/browser_menu_test.dart test/internal_viewer_test.dart test/widget/internal_viewer_widget_test.dart test/widget/file_column_view_test.dart)
+          archive_test_files=(test/archive_*_test.dart test/widget/archive_*_test.dart test/browser_menu_*_test.dart test/widget/browser_menu_*_test.dart test/widget/browser_menu_test.dart test/internal_viewer_test.dart test/widget/internal_viewer_widget_test.dart test/widget/file_column_view_test.dart test/transfer_*_test.dart test/widget/operations_panel*_test.dart test/widget/transfer_history*_test.dart test/operation_progress_test.dart)
           printf '%s\n' "${archive_test_files[@]}" > build/archive-commander-ci/test-files.txt
           python3 tool/with_ci_system_sqlite.py flutter test --no-pub --concurrency=2 --dart-define=CRISP_RUN_2G_ARCHIVE_TESTS=false --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden --reporter expanded --file-reporter json:build/archive-commander-ci/test-events.json "${archive_test_files[@]}" 2>&1 | tee build/archive-commander-ci/test.log
       - name: Build the versioned web application
