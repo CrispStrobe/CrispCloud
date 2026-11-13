@@ -18,9 +18,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: archive-operation-queue-${{ github.ref }}
-  # The initial large acceptance run is retained. Subsequent source checkpoints
-  # qualify the latest integrated code; documentation-only saves do not rerun.
+  # Retrying an older checkpoint must not cancel acceptance of a newer commit.
+  # Repeated runs of the same revision still share one qualification group.
+  group: archive-operation-queue-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 env:
