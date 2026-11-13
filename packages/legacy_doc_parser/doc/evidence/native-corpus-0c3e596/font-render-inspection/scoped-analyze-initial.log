@@ -1,0 +1,12 @@
+Analyzing scripts...
+
+   info - formatting-font-source.dart:1:1 - The file name 'formatting-font-source.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - formatting-font-source.dart:5:8 - The imported package 'crypto' isn't a dependency of the importing package. Try adding a dependency for 'crypto' in the 'pubspec.yaml' file. - depend_on_referenced_packages
+   info - formatting-font-source.dart:105:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - source-normal-font-operands.dart:1:1 - The file name 'source-normal-font-operands.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - source-normal-font-operands.dart:5:8 - The imported package 'crypto' isn't a dependency of the importing package. Try adding a dependency for 'crypto' in the 'pubspec.yaml' file. - depend_on_referenced_packages
+   info - source-normal-font-operands.dart:51:11 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - verify-font-bytes.dart:1:1 - The file name 'verify-font-bytes.dart' isn't a lower_case_with_underscores identifier. Try changing the name to follow the lower_case_with_underscores style. - file_names
+   info - verify-font-bytes.dart:4:8 - The imported package 'crypto' isn't a dependency of the importing package. Try adding a dependency for 'crypto' in the 'pubspec.yaml' file. - depend_on_referenced_packages
+
+8 issues found.

@@ -51,6 +51,22 @@ are not treated as source patches. Verify the exact result with:
 python3 tool/verify_office_fidelity.py --legacy-source /path/to/legacy-doc-parser
 ```
 
+Before committing an update, stage the complete mirror and its declarations,
+then check the Git index as well as the working files:
+
+```sh
+git add -- packages/legacy_doc_parser pubspec.yaml tool/office_fidelity_manifest.json
+python3 tool/verify_office_fidelity.py --legacy-source /path/to/legacy-doc-parser --require-tracked
+```
+
+The index check rejects omitted files, unstaged byte or executable-mode changes,
+and source-pin declarations that would differ in the commit. It caught six
+upstream diagnostic logs omitted by the app's general `*.log` ignore rule. The
+app now explicitly includes immutable parser evidence logs. Generated logs
+outside that evidence directory remain ignored. The Office CI entry point
+requires this check, and a published checkpoint must also be verified from its
+committed Git tree; correct working files alone do not establish remote retention.
+
 The source-mode check uses the committed `100644`/`100755` distinction, including
 new executable tools and changes that only add or remove executable permission.
 Source checkout modifications do not override the pinned Git tree. The
