@@ -370,6 +370,24 @@ class ArchiveCreationResult {
   final int bytes;
 }
 
+/// A verified candidate whose destination is still unpublished. A durable job
+/// must acknowledge this exact receipt before the exclusive commit may proceed.
+class ArchiveCreationPrepared extends ArchiveCreationResult {
+  const ArchiveCreationPrepared(super.path, super.entryCount, super.bytes,
+      this.sha256);
+  final String sha256;
+}
+
+/// An explicitly selected packer supplies bytes, never publication authority.
+/// The creator still captures sources, bounds output, independently reopens the
+/// result and verifies every member before its normal exclusive publication.
+typedef ArchiveCreationWriter = Future<void> Function({
+  required List<ArchiveWriteEntry> entries,
+  required Future<void> Function(List<int>) sink,
+  required int maxOutputBytes,
+  bool Function()? isCancelled,
+});
+
 class _CreationEntry {
   _CreationEntry(this.file, this.name, {this.mode});
   final FileItem file;
@@ -464,21 +482,29 @@ class ArchiveCreationService {
     required ArchiveCreationOptions options,
     bool Function()? isCancelled,
     void Function(ArchiveCreationProgress)? onProgress,
+    ArchiveCreationWriter? writer,
+    Future<void> Function(ArchiveCreationPrepared)? onPrepared,
   }) async {
     options.validate();
-    final streamedTar = supportsStreamedTarCreation(
+    if (writer != null &&
+        (options.format.diskImage || options.password != null ||
+            !const {ArchiveEndpointFormat.zip, ArchiveEndpointFormat.sevenZip,
+              ArchiveEndpointFormat.rar}.contains(options.format.endpointFormat))) {
+      throw const ArchiveCreationException(ArchiveCreationError.unsupportedOptions);
+    }
+    final streamedTar = writer == null && supportsStreamedTarCreation(
       format: options.format,
       source: source,
       destination: destination,
     );
-    final streamedCommon = supportsStreamedCreation(
+    final streamedCommon = writer == null && supportsStreamedCreation(
       format: options.format,
       source: source,
       destination: destination,
       password: options.password,
       compression: options.compression,
     );
-    final streamedDisk = supportsStreamedDiskCreation(
+    final streamedDisk = writer == null && supportsStreamedDiskCreation(
       format: options.format,
       source: source,
       destination: destination,
@@ -893,7 +919,11 @@ class ArchiveCreationService {
           options.name,
         );
       }
-      if (streamedCommon) {
+      if (writer != null) {
+        progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+        await writer(entries: List.unmodifiable(captured), sink: emit,
+            maxOutputBytes: spool.maxBytes, isCancelled: isCancelled);
+      } else if (streamedCommon) {
         await writeStreamingArchiveEntries(
           options.format.endpointFormat,
           captured,
@@ -1141,7 +1171,7 @@ class ArchiveCreationService {
                 maxBytes: streamedLimit,
                 isCancelled: isCancelled,
               )).archive
-            : options.format.endpointFormat == ArchiveEndpointFormat.rar
+            : writer == null && options.format.endpointFormat == ArchiveEndpointFormat.rar
             ? await openStoredRarArchive(
                 verificationSource,
                 maxBytes: ArchiveService.maxArchiveBytes,
@@ -1302,6 +1332,11 @@ class ArchiveCreationService {
             throw const ArchiveCreationException(
               ArchiveCreationError.verificationFailed,
             );
+          }
+          if (onPrepared != null) {
+            await onPrepared(ArchiveCreationPrepared(
+                output, entries.length, spool.length, packedHash));
+            check();
           }
           await validateSources();
           await checkDestination();
