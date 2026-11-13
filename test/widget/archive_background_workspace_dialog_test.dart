@@ -103,7 +103,11 @@ void main() {
     );
   }
 
-  Future<void> until(WidgetTester tester, bool Function() condition) async {
+  Future<void> until(
+    WidgetTester tester,
+    bool Function() condition, {
+    String phase = 'Waiting for the archive view',
+  }) async {
     // Workspace opening performs real native file I/O. Fake clock advances
     // alone do not allow a cold reader to finish on a shared hosted runner.
     for (var i = 0; i < 1000 && !condition(); i++) {
@@ -116,6 +120,7 @@ void main() {
       condition(),
       isTrue,
       reason: [
+        '$phase did not finish within the bounded native I/O wait.',
         ...tester.widgetList<Text>(find.byType(Text)).map((text) => text.data),
         ...tester
             .widgetList<SelectableText>(find.byType(SelectableText))
@@ -124,8 +129,48 @@ void main() {
     );
   }
 
+  Future<T> finishIo<T>(
+    WidgetTester tester,
+    Future<T> pending, {
+    required String phase,
+  }) async {
+    late T result;
+    Object? failure;
+    StackTrace? failureStack;
+    var finished = false;
+    unawaited(
+      pending.then<void>(
+        (value) {
+          result = value;
+          finished = true;
+        },
+        onError: (Object error, StackTrace stack) {
+          failure = error;
+          failureStack = stack;
+          finished = true;
+        },
+      ),
+    );
+    // The workspace's serialized reader futures belong to the widget zone.
+    // Awaiting them inside runAsync would stop that zone from making progress.
+    await until(tester, () => finished, phase: phase);
+    if (failure != null) Error.throwWithStackTrace(failure!, failureStack!);
+    return result;
+  }
+
+  Future<void> closeRetained(WidgetTester tester) async {
+    final retained = transfers.draft;
+    if (retained == null) return;
+    await finishIo(
+      tester,
+      retained.close(),
+      phase: 'Closing the retained workspace and its spools',
+    );
+    transfers.draft = null;
+  }
+
   Future<void> show(WidgetTester tester) async {
-    await tester.runAsync(prepare);
+    await tester.runAsync(() => prepare().timeout(const Duration(seconds: 20)));
     tester.view.physicalSize = const Size(1100, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -194,39 +239,48 @@ void main() {
     'background workspace admission detaches its original authority from pane navigation',
     (tester) async {
       await show(tester);
-      await confirm(tester);
-      expect(transfers.calls, 1);
-      expect(transfers.draft!.dirty, isTrue);
-      expect(
-        find.byKey(const ValueKey('archive-workspace-background')),
-        findsOneWidget,
-      );
-      expect(await tester.runAsync(archive.readAsBytes), original);
-      transfers.accept();
-      await until(
-        tester,
-        () => find
-            .byKey(const ValueKey('archive-workspace-background'))
-            .evaluate()
-            .isEmpty,
-      );
-      await tester.runAsync(
-        () => panel.navigateToPath(
-          directory.path,
-          origin: panel.captureLocalClipboardOrigin(directory.path),
-        ),
-      );
-      expect(panel.isInArchive, isFalse);
-      expect(transfers.draft!.isCurrent, isTrue);
-      final contents = await tester.runAsync(
-        () async => transfers.draft!
-            .openRead('/keep.txt')
-            .expand((chunk) => chunk)
-            .toList(),
-      );
-      expect(contents, [1, 2, 3]);
-      expect(transfers.draft!.draftChanges.single.path, 'draft-folder');
-      expect(tester.takeException(), isNull);
+      try {
+        await confirm(tester);
+        expect(transfers.calls, 1);
+        expect(transfers.draft!.dirty, isTrue);
+        expect(
+          find.byKey(const ValueKey('archive-workspace-background')),
+          findsOneWidget,
+        );
+        expect(await tester.runAsync(archive.readAsBytes), original);
+        transfers.accept();
+        await until(
+          tester,
+          () => find
+              .byKey(const ValueKey('archive-workspace-background'))
+              .evaluate()
+              .isEmpty,
+          phase: 'Closing the admitted workspace view',
+        );
+        await finishIo(
+          tester,
+          panel.navigateToPath(
+            directory.path,
+            origin: panel.captureLocalClipboardOrigin(directory.path),
+          ),
+          phase: 'Navigating away from the admitted workspace',
+        );
+        expect(panel.isInArchive, isFalse);
+        expect(transfers.draft!.isCurrent, isTrue);
+        final contents = await finishIo(
+          tester,
+          transfers.draft!
+              .openRead('/keep.txt')
+              .expand((chunk) => chunk)
+              .toList(),
+          phase: 'Reading the retained workspace member after navigation',
+        );
+        expect(contents, [1, 2, 3]);
+        expect(transfers.draft!.draftChanges.single.path, 'draft-folder');
+        expect(tester.takeException(), isNull);
+      } finally {
+        await closeRetained(tester);
+      }
     },
   );
 
@@ -234,25 +288,29 @@ void main() {
     tester,
   ) async {
     await show(tester);
-    await confirm(tester);
-    transfers.admission.completeError(
-      StateError('Could not save queue intent'),
-    );
-    await until(
-      tester,
-      () => find
-          .textContaining('Could not save queue intent')
-          .evaluate()
-          .isNotEmpty,
-    );
-    expect(
-      find.byKey(const ValueKey('archive-workspace-background')),
-      findsOneWidget,
-    );
-    expect(transfers.draft!.isCurrent, isTrue);
-    expect(transfers.draft!.dirty, isTrue);
-    expect(await tester.runAsync(archive.readAsBytes), original);
-    expect(tester.takeException(), isNull);
+    try {
+      await confirm(tester);
+      transfers.admission.completeError(
+        StateError('Could not save queue intent'),
+      );
+      await until(
+        tester,
+        () => find
+            .textContaining('Could not save queue intent')
+            .evaluate()
+            .isNotEmpty,
+      );
+      expect(
+        find.byKey(const ValueKey('archive-workspace-background')),
+        findsOneWidget,
+      );
+      expect(transfers.draft!.isCurrent, isTrue);
+      expect(transfers.draft!.dirty, isTrue);
+      expect(await tester.runAsync(archive.readAsBytes), original);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await closeRetained(tester);
+    }
   });
 
   testWidgets(

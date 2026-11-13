@@ -355,6 +355,40 @@ void main() {
   );
 
   test(
+    'workspace callback cancellation retains legacy and typed classification',
+    () async {
+      final input = codecs.Archive()
+        ..addFile(codecs.ArchiveFile.bytes('original.txt', [6, 2, 6]));
+      final original = codecs.ZipEncoder().encode(input);
+      final backend = ArchiveEndpointTestBackend()
+        ..put('/out/work.zip', original);
+      final workspace = await ArchiveWorkspace.open(
+        backend,
+        (await backend.stat('/out/work.zip'))!,
+        journal: ArchivePublicationJournal(
+          storage: MemoryFileCollectionStorage(),
+        ),
+      );
+      addTearDown(workspace.close);
+      workspace.rename('/original.txt', 'renamed.txt');
+      final cancelled = throwsA(
+        allOf(isA<StateError>(), isA<FileOperationCancelled>()),
+      );
+      await expectLater(workspace.review(isCancelled: () => true), cancelled);
+      await expectLater(workspace.repack(isCancelled: () => true), cancelled);
+      await expectLater(workspace.save(isCancelled: () => true), cancelled);
+      final control = FileOperationControl()..cancel();
+      await expectLater(
+        workspace.save(control: control),
+        throwsA(isA<FileOperationCancelled>()),
+      );
+      expect(workspace.dirty, isTrue);
+      expect(backend.mutations, isEmpty);
+      expect(backend.files['/out/work.zip'], original);
+    },
+  );
+
+  test(
     'workspace exposes its diff before paused background review and save',
     () async {
       final input = codecs.Archive()

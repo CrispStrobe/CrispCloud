@@ -34,6 +34,14 @@ import 'file_operation_service.dart';
 import 'file_operation_backend.dart' show LocalOperationBackend;
 import 'storage_transfer_contract.dart';
 
+/// Legacy workspace callers catch StateError for a cancelled callback, while
+/// transfer coordinators need FileOperationCancelled to distinguish a user
+/// stop from an authority or source failure. Preserve both classifications.
+class _ArchiveWorkspaceCancelled extends StateError
+    implements FileOperationCancelled {
+  _ArchiveWorkspaceCancelled(super.message);
+}
+
 class ArchiveWorkspace {
   ArchiveWorkspace._(
     this.source,
@@ -175,7 +183,7 @@ class ArchiveWorkspace {
       await control?.checkpoint();
       if (!source.isCurrent) throw StateError('The archive source changed.');
       if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
-        throw StateError('Archive operation cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive operation cancelled.');
       }
       if (builder.length + chunk.length > limit) {
         throw const ArchiveViewException(
@@ -186,7 +194,7 @@ class ArchiveWorkspace {
     }
     if (!source.isCurrent) throw StateError('The archive source changed.');
     if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
-      throw StateError('Archive operation cancelled.');
+      throw _ArchiveWorkspaceCancelled('Archive operation cancelled.');
     }
     return builder.takeBytes();
   }
@@ -1108,7 +1116,7 @@ class ArchiveWorkspace {
       }
       _check(writing: true);
       if (isCancelled?.call() ?? false) {
-        throw StateError('Archive move cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive move cancelled.');
       }
       final original = await sha256.bind(openRead(entry.source.path!)).single;
       final target = await plan.destination.stat(entry.destination);
@@ -1173,7 +1181,7 @@ class ArchiveWorkspace {
     }
     _check(writing: true);
     if (isCancelled?.call() ?? false) {
-      throw StateError('Archive move cancelled.');
+      throw _ArchiveWorkspaceCancelled('Archive move cancelled.');
     }
     if (removed > 0) _publish(updated);
     return removed;
@@ -1399,7 +1407,7 @@ class ArchiveWorkspace {
       }
       if (!input.isCurrent) throw StateError('The added-file source changed.');
       if (isCancelled?.call() ?? false) {
-        throw StateError('Archive update cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
       }
       if (file.isSymlink == true) {
         throw UnsupportedError('Symbolic links are not packed.');
@@ -1591,7 +1599,7 @@ class ArchiveWorkspace {
     void checkPacking() {
       _check(writing: true);
       if ((control?.isCancelled ?? false) || (isCancelled?.call() ?? false)) {
-        throw StateError('Archive update cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
       }
     }
 
@@ -1757,7 +1765,7 @@ class ArchiveWorkspace {
       _check(writing: true);
       if (control?.isCancelled ?? false) throw const FileOperationCancelled();
       if (isCancelled?.call() ?? false) {
-        throw StateError('Archive update cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
       }
     }
 
@@ -2047,7 +2055,7 @@ class ArchiveWorkspace {
     _check(writing: true);
     if (control?.isCancelled ?? false) throw const FileOperationCancelled();
     if (isCancelled?.call() ?? false) {
-      throw StateError('Archive update cancelled.');
+      throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
     }
     if (_sourceRemovalAuthority != null &&
         (!identical(sourceRemovalAuthority, _sourceRemovalAuthority) ||
@@ -2106,7 +2114,7 @@ class ArchiveWorkspace {
       await control?.checkpoint();
       _check(writing: true);
       if (isCancelled?.call() ?? false) {
-        throw StateError('Archive update cancelled.');
+        throw _ArchiveWorkspaceCancelled('Archive update cancelled.');
       }
       final checked = await _verifyPacked(
         selected._bytes,
