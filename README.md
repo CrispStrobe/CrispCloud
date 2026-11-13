@@ -263,5 +263,13 @@ explicit textbox-border frame conversion. Shared Office sources match Quds
 `6d6e77d` and parser `cd9ab85` exactly across 1,219 managed files. The source
 parser passes 931 Dart tests; the synchronized app Office gate passes 1,165
 mandatory engine tests and 202 host tests, with complete host instrumentation.
-These counts overlap the larger suites. The additional ISO/RAR/DMG archive
-increment is being qualified separately before its integration and release.
+These counts overlap the larger suites.
+
+The integration also adds native streamed editing for eligible data ISO,
+RAR5 Store/CBR and canonical HFSX data-volume DMG profiles, with reviewed
+folder changes and preservation checks. Creation offers 35 choices. These
+formats retain their documented size, metadata and profile limits; bootable,
+hybrid, encrypted and other unsupported disk images remain read-only.
+See [container profiles and verification](docs/archive-iso-rar-dmg.md). Apple's
+`hdiutil` independently verified a generated data-image fixture on this Mac;
+large hosted acceptance uses a fixed source checkpoint before release.

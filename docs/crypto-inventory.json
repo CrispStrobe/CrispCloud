@@ -850,7 +850,11 @@
     "windows/runner/file_drag_data.h",
     "windows/runner/file_operations.cpp",
     "windows/runner/tests/file_drag_data_test.cpp",
-    ".github/workflows/android-release-asset.yml"
+    ".github/workflows/android-release-asset.yml",
+    "lib/services/archive_rar_stored_format.dart",
+    "lib/services/archive_rar_stored_reader.dart",
+    "lib/services/archive_rar_stored_writer.dart",
+    ".github/workflows/archive-containers.yml"
   ],
   "technical_review_notes": [
     "CrisperBooks is consumed from a single immutable Git revision with its complete tracked tree and the exact package roots independently verified after Pub resolution. It includes the compressed browser Kindle converter, memory-only WASI source and local platform speech controls. Browser source/tests and native parity controls remain separate from binary distribution approval. The WASI shim has crypto.getRandomValues and a Math.random fallback, which is not treated as a secure RNG. Archive integration and syntax/UI changes add no cipher or credential store.",
