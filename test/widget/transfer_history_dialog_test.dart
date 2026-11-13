@@ -248,8 +248,18 @@ void main() {
       );
       expect(run.onPressed, isNull);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.byType(Checkbox));
+      // Long source paths can leave the top of this row above the viewport
+      // after the drag. Scroll the control itself clear of the fixed title.
+      final exclude = find.byType(Checkbox);
+      await tester.ensureVisible(exclude);
       await tester.pumpAndSettle();
+      expect(exclude.hitTestable(), findsOneWidget);
+      expect(tester.widget<Checkbox>(exclude).value, isFalse);
+      await tester.tap(exclude);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Checkbox>(exclude).value, isTrue);
+      expect(find.text('Excluded from this recovery'), findsOneWidget);
+      expect(tester.takeException(), isNull);
       await invoke(tester, 'Record recovered completion');
       expect(
         journal.job('saved_move')!.entries.single.outcome,
