@@ -1,0 +1,9 @@
+{
+  "runtime_manifest_sha256": "9003865814d3b192490f68837848538abbd33d4aca589eac9ec72a7a83a59639",
+  "selected_asset_bytes": 21121639,
+  "runtime_bytes_including_manifest": 19895460,
+  "distributed_notice_bytes": 1224387,
+  "source_notice_texts": 63,
+  "original_notice_sources": 86,
+  "reproducible_manifest": true
+}

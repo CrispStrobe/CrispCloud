@@ -1,0 +1,1 @@
+var r=e=>{if(!(e instanceof ArrayBuffer)||e.byteLength===0)throw new Error("WordPerfect input is empty or is not an ArrayBuffer.");if(e.byteLength>67108864)throw new Error("WordPerfect file exceeds the 64 MiB preview limit.")};export{r as a};

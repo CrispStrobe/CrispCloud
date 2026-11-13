@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "integration": {
+    "firstParent": "3167ff681b9ab6d8ab8dd9b680e3adde7aaec03b",
+    "additionalParent": "07928e070135d422fbd136fccd1bf53d0d2d47b6",
+    "mergeBase": "be103b4c1d97d69bdf44f24cad973f53dd2d4873",
+    "implementationCommit": "ab3af2f813a97e57be351366ebe9573798177e4c",
+    "scope": "Frozen main 07928e snapshot; later moving main commits were not followed."
+  },
+  "canonicalSources": {
+    "quds": {
+      "repository": "CrispStrobe/quds_office_suite",
+      "commit": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+      "unchangedByIntegration": true
+    },
+    "legacyParser": {
+      "repository": "CrispStrobe/legacy-doc-parser",
+      "commit": "402b66de584fda5860c0dbeb7c370858e4568804",
+      "tree": "690369d44661cde8010c03e7f5d465bac0ca1d42",
+      "validatedMerge": "5a4caac5c98bc8a38030be25a800e0da4f772fa0",
+      "mergeParents": [
+        "e4427725cc720eaefad97c2cb921a6fe1e36749d",
+        "d9f640693702d59470d74c56db7ebadb1bab5b10"
+      ],
+      "libTree": "3a950a601377108980c830bdfcd7b27e93e487e9",
+      "libFiles": 61,
+      "appMirrorUpdates": 228,
+      "appMirrorDeletions": 0,
+      "receipt": {
+        "path": "packages/legacy_doc_parser/doc/evidence/compat-merge-d9f6406-20261113/validation.json",
+        "sha256": "62f43f367936a2a9169846150c06ece63b044dda4e6e47562e25e5046ff72ced"
+      },
+      "pullRequest": {
+        "url": "https://github.com/CrispStrobe/legacy-doc-parser/pull/7",
+        "state": "closed_unmerged",
+        "disposition": "Superseded by canonical main, whose parser/test/non-document source trees are identical to the saved 402b checkpoint; the source branch and evidence remain preserved."
+      }
+    }
+  },
+  "resolution": {
+    "conflicts": [
+      "packages/legacy_doc_parser/UPSTREAM.json",
+      "pubspec.yaml",
+      "tool/office_fidelity_manifest.json"
+    ],
+    "method": "Preserve merged app changes; restore exact e442 parser baseline; apply the existing guarded standalone source sync to 402b; retain e82 Quds source and hashes.",
+    "historicalReceiptPolicy": "Historical selected-document comparisons and result JSONs retain their original pins. Only the active implementation report points to the combined parser.",
+    "canonicalProbeFormatting": {
+      "path": "packages/legacy_doc_parser/doc/evidence/file-viewer-compat-20261113/native_probe.dart",
+      "beforeBlob": "bb7e03e36bfe17f019ab72147f69e707018dff24",
+      "afterBlob": "b21ee98680c36daa912e8d01f5bc412a673df2d0",
+      "change": "Canonical dart format only; historical result JSONs are unchanged."
+    },
+    "supersededGeneratedXml": {
+      "previous": "packages/file_viewer_documents/assets/runtime/entry-BECWRWJ3.js",
+      "replacement": "packages/file_viewer_documents/assets/runtime/entry-PYAB52JX.js",
+      "reason": "Identical XML source and Linux resource-selection policy were already included in the feature; the feature has the validated minified build."
+    }
+  },
+  "preservation": {
+    "protectedTrees": {
+      "packages/file_viewer_documents": {
+        "gitTree": "3f42d0193b4e4192abcf5513de3f87b8e7423d86",
+        "equalsImplementation": true
+      },
+      "packages/quds_office_engine": {
+        "gitTree": "08bd52e33ff85e50829231b2b6d1e71eeb3a9128",
+        "equalsImplementation": true
+      },
+      "packages/quds_office_editor": {
+        "gitTree": "fa1654078553c90a41ea143dceb12b317ac19fd3",
+        "equalsImplementation": true
+      },
+      "packages/quds_reports": {
+        "gitTree": "adabb10e23b7464a3a7b9a282d277aeb66d6ed65",
+        "equalsImplementation": true
+      },
+      "assets/fonts": {
+        "gitTree": "bce7c1ec4055045902ab60cf4c559cb9c0cb5cc8",
+        "equalsImplementation": true
+      }
+    },
+    "fontAndDependencyDeclarations": "Byte-identical to ab3 after replacing only the standalone parser commit.",
+    "mainOnlyUnexplainedChanges": [],
+    "featureOnlyUnexplainedChanges": [],
+    "originalEvidenceCheckpointPaths": 14,
+    "currentReportException": "docs/document-font-implementation.md updates the active parser link and explicitly scopes release sizing to ab3; historical evidence files remain byte-identical to 3167."
+  },
+  "validation": {
+    "sdk": {
+      "flutter": "3.47.8",
+      "dart": "3.13.7",
+      "genuineNativeHooks": true
+    },
+    "appTests": {
+      "passed": 31,
+      "command": "flutter test --no-pub --reporter expanded --concurrency=2 test/document_fonts_test.dart test/office_pdf_service_test.dart test/office_pdf_error_localization_test.dart test/widget/office_font_fallback_preview_test.dart test/widget/office_pdf_font_notice_test.dart test/widget/viewer_installed_office_preview_test.dart test/widget/installed_office_preview_dialog_test.dart"
+    },
+    "appAnalysis": {
+      "issues": 0,
+      "command": "dart analyze lib/services/document_fonts.dart lib/services/document_font_catalog.dart lib/services/office_css_font.dart lib/services/office_pdf_service.dart lib/widgets/office_html_widget_factory.dart lib/widgets/internal_viewer_dialog.dart lib/widgets/preview_pane.dart lib/widgets/office_editor_dialog.dart lib/widgets/office_pdf_font_notice.dart",
+      "startupRetry": "A parallel SDK wrapper invocation raced a temporary engine stamp before analysis; the same analyzer command passed when run sequentially."
+    },
+    "guardControls": {
+      "total": 36,
+      "officeSync": 8,
+      "legacyParserSync": 19,
+      "runtimeRetention": 9
+    },
+    "officeRecords": 1698,
+    "runtimeRecords": 158,
+    "requiredGitIndexMatch": true,
+    "canonicalParser": {
+      "fullTests": 1055,
+      "targetedTests": 145,
+      "analyze": "pass",
+      "format": "pass",
+      "javascriptPortableAcceptance": "pass",
+      "receiptAbove": true
+    },
+    "logs": {
+      "appTests": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-app-tests.txt",
+        "bytes": 6676,
+        "sha256": "b5339d939685fecd67bc1a2b949321ae36b819013a7e3024d7eab9273bee129c"
+      },
+      "appAnalysis": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-app-analysis.txt",
+        "bytes": 262,
+        "sha256": "5affcfc4dfd1a757e477403719eeb95165b2856f498d06d0b3aa4c75c9ae79ff"
+      },
+      "officeGuard": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-office-provenance.txt",
+        "bytes": 203,
+        "sha256": "bb19a3b6690247e65e32b96aa4c4707984747dbba90732c2be1f908a83bb8f1b"
+      },
+      "runtimeGuard": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-runtime-provenance.txt",
+        "bytes": 79,
+        "sha256": "c2a484d3cb77b954cb8070a5f142decbff80bb868d6594029e0f5bc228963419"
+      },
+      "officeSyncControls": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-office-sync-controls.txt",
+        "bytes": 106,
+        "sha256": "1b5e2e3544bc939d5c6a9c389db5ca925451ad0eeeed0074c710573927106b84"
+      },
+      "parserSyncControls": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-parser-sync-controls.txt",
+        "bytes": 118,
+        "sha256": "745d0e00e91d3cc8abbcddf3d3ba5ed384c3d5435f29e2c7ba88c6bb1cc99cd4"
+      },
+      "runtimeControls": {
+        "path": "docs/evidence/document-font-implementation-20261113/integration-runtime-controls.txt",
+        "bytes": 107,
+        "sha256": "8ac0288b9e1e49a58911e840e836d2c7bd36dad7acf57d801bdfcdb1072ab4d2"
+      }
+    }
+  },
+  "releaseMeasurement": {
+    "measuredCommit": "ab3af2f813a97e57be351366ebe9573798177e4c",
+    "baselineCommit": "db5b6126fdfb7f31598c80e5adc96ea548139505",
+    "rawAssetSavings": 5437800,
+    "perFileGzip9Savings": 1085587,
+    "postMergeReleaseBuildPerformed": false,
+    "boundary": "These are the ab3 release measurements. Incoming main archive UI may alter icon tree shaking even though protected font/runtime assets and declarations are unchanged; no post-merge installer or release-size measurement is claimed."
+  }
+}

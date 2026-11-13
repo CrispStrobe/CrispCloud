@@ -6,13 +6,19 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import '../models.dart';
+import 'font_assets.dart';
 import 'host_policy.dart';
 
 /// An instance-scoped loopback server. Only allowlisted bundled assets are read;
 /// provider files, arbitrary URLs and credentials never enter this server.
 class DocumentAssetServer {
-  DocumentAssetServer(this.session, {AssetBundle? bundle})
-    : _bundle = bundle ?? rootBundle {
+  DocumentAssetServer(
+    this.session, {
+    AssetBundle? bundle,
+    List<DocumentPreviewFont> fonts = const [],
+  }) : _bundle = bundle ?? rootBundle,
+       _fonts = snapshotDocumentPreviewFonts(fonts) {
     if (!isDocumentHostSession(session)) {
       throw ArgumentError.value(
         session,
@@ -24,6 +30,9 @@ class DocumentAssetServer {
 
   final String session;
   final AssetBundle _bundle;
+  final List<DocumentPreviewFont> _fonts;
+  final _fontRoutes = <String, DocumentPreviewFont>{};
+  Uri? _location;
   HttpServer? _server;
   StreamSubscription<HttpRequest>? _subscription;
   Future<Uri>? _starting;
@@ -41,16 +50,24 @@ class DocumentAssetServer {
 
   Future<Uri> _start() async {
     final manifest = await AssetManifest.loadFromAssetBundle(_bundle);
-    final assets = manifest
-        .listAssets()
-        .where((key) => key.startsWith(_prefix))
-        .toSet();
+    final listed = manifest.listAssets().toSet();
+    final assets = listed.where((key) => key.startsWith(_prefix)).toSet();
     if (!assets.contains('${_prefix}index.html')) {
       throw StateError(
         'Bundled document browser assets are missing. Build the document runtime before packaging the app.',
       );
     }
     if (_closed) throw StateError('The document asset server has closed.');
+    // Expose only configured font keys present in this exact app build. Missing
+    // optional faces keep the renderer's existing platform fallback; no path or
+    // prefix supplied by document data can expand this allowlist.
+    for (var index = 0; index < _fonts.length; index++) {
+      final font = _fonts[index];
+      if (listed.contains(font.asset)) {
+        final extension = font.asset.split('.').last.toLowerCase();
+        _fontRoutes['fonts/$index.$extension'] = font;
+      }
+    }
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     if (_closed) {
       await server.close(force: true);
@@ -60,9 +77,20 @@ class DocumentAssetServer {
     _subscription = server.listen(
       (request) => unawaited(_serve(request, assets, server.port)),
     );
-    return Uri.parse(
+    return _location = Uri.parse(
       'http://127.0.0.1:${server.port}/$session/index.html#$session',
     );
+  }
+
+  List<DocumentJson> get fontDescriptors {
+    final location = _location;
+    if (_closed || location == null) {
+      throw StateError('The document asset server is not available.');
+    }
+    return [
+      for (final route in _fontRoutes.entries)
+        documentHostFontDescriptor(route.value, location.resolve(route.key)),
+    ];
   }
 
   Future<void> _serve(HttpRequest request, Set<String> assets, int port) async {
@@ -73,8 +101,12 @@ class DocumentAssetServer {
       final requestOrigin = request.headers.value('origin');
       final segments = uri.pathSegments;
       final relative = segments.length >= 2 ? segments.skip(1).join('/') : '';
-      final key = '$_prefix$relative';
-      final contentType = _contentType(relative);
+      final fontRoute = relative.startsWith('fonts/');
+      final font = _fontRoutes[relative];
+      final key = fontRoute ? font?.asset : '$_prefix$relative';
+      final contentType = fontRoute
+          ? (font == null ? null : documentFontAssetContentType(font.asset))
+          : _contentType(relative);
       if (_closed ||
           !const {'GET', 'HEAD'}.contains(request.method) ||
           request.headers.value(HttpHeaders.hostHeader) != '127.0.0.1:$port' ||
@@ -96,7 +128,8 @@ class DocumentAssetServer {
                 part.contains('%') ||
                 part.codeUnits.any((code) => code < 32 || code == 127),
           ) ||
-          !assets.contains(key) ||
+          key == null ||
+          (!fontRoute && !assets.contains(key)) ||
           contentType == null) {
         response.statusCode = HttpStatus.notFound;
         return;
@@ -152,6 +185,7 @@ class DocumentAssetServer {
     final subscription = _subscription;
     _server = null;
     _subscription = null;
+    _location = null;
     await server?.close(force: true);
     await subscription?.cancel();
   }

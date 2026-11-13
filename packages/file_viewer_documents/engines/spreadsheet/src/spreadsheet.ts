@@ -3,6 +3,7 @@
 // Modified for CrispCloud: bounded local workers, resource budgets and cancellation.
 // Upstream d264009ca6efb3daed79a39d1ae63133e0f25558; original source remains immutable.
 import { BoundedSpreadsheetWorker } from './boundedWorker.js';
+import type { DocumentFontContext } from '../../host/fonts.js';
 import { createSpreadsheetRangeNavigation } from './spreadsheet/rangeNavigation.js';
 import {
   createFileViewerWorkerController,
@@ -2173,7 +2174,23 @@ const renderFileViewerSpreadsheet = async (
     if (sessionId !== sheetSessionId || sheet !== getActiveSheetId()) {
       return;
     }
-    applyVirtualWindow(ws as SheetModel);
+    const fonts = (context as (FileRenderContext & DocumentFontContext) | undefined)?.crispFonts;
+    if (!fonts) { applyVirtualWindow(ws as SheetModel); return; }
+    void fonts.prepareModel(ws, 'Calibri').then(() => {
+      if (disposed || context?.signal?.aborted || sessionId !== sheetSessionId || sheet !== getActiveSheetId()) return;
+      // This is the transient display model, never the input workbook. Keep
+      // requested families first while supplying already bundled glyph fallbacks.
+      for (const cell of Object.values((ws as SheetModel).cell || {})) {
+        if (cell.style.fontFamily) cell.style.fontFamily = fonts.familyCss(cell.style.fontFamily, 'Calibri');
+        else if (cell.style.font) cell.style.font += ',' + fonts.familyCss(undefined, 'Calibri');
+        for (const run of cell.richText || []) {
+          if (run.fontFamily) run.fontFamily = fonts.familyCss(run.fontFamily, 'Calibri');
+        }
+      }
+      applyVirtualWindow(ws as SheetModel);
+    }).catch(error => {
+      if (!disposed && !context?.signal?.aborted) rejectInitialRender(error);
+    });
   });
 
   controller.onWorkerEvent('parseError', ({ sessionId, startRow, message }) => {
@@ -2285,6 +2302,10 @@ const renderFileViewerSpreadsheet = async (
   try {
     if (context?.signal?.aborted) abort();
     if (disposed) throw context?.signal?.reason || new DOMException('Spreadsheet rendering was aborted.', 'AbortError');
+    await (context as (FileRenderContext & DocumentFontContext) | undefined)?.crispFonts?.prepare([
+      {family: 'Calibri', weight: 400}, {family: 'Calibri', weight: 700},
+    ], 'Calibri');
+    if (disposed || context?.signal?.aborted) throw context?.signal?.reason || new DOMException('Spreadsheet rendering was aborted.', 'AbortError');
     ensureTable();
     const ResizeObserverCtor = getTargetWindow(target)?.ResizeObserver ||
       (typeof ResizeObserver !== 'undefined' ? ResizeObserver : undefined);

@@ -1,0 +1,59 @@
+00:00 +0: loading test/office_named_fonts_test.dart
+00:00 +0: test/office_named_fonts_test.dart: family aliases resolve real regular, bold and italic cuts
+00:00 +1: test/office_named_fonts_test.dart: Hebrew and Arabic use covering faces; absent Unicode is explicit
+00:00 +2: test/office_named_fonts_test.dart: Word measures each run before wrapping with real face and size
+00:00 +3: test/arabic_pdf_export_test.dart: WinAnsi showLatin does not UTF-8-encode middle dot
+00:00 +4: test/office_named_fonts_test.dart: PDF embeds requested outlines without double bold or slant
+00:00 +5: test/office_named_fonts_test.dart: PDF embeds requested outlines without double bold or slant
+00:00 +6: test/office_named_fonts_test.dart: PDF embeds requested outlines without double bold or slant
+00:00 +7: test/office_named_fonts_test.dart: PDF embeds requested outlines without double bold or slant
+00:00 +8: test/office_named_fonts_test.dart: PDF embeds requested outlines without double bold or slant
+00:00 +9: test/arabic_pdf_export_test.dart: Word PDF embeds Arabic as Identity-H, not WinAnsi mojibake
+00:00 +10: test/arabic_pdf_export_test.dart: Word PDF embeds Arabic as Identity-H, not WinAnsi mojibake
+00:00 +11: test/arabic_pdf_export_test.dart: Word PDF embeds Arabic as Identity-H, not WinAnsi mojibake
+00:00 +12: test/arabic_pdf_export_test.dart: Word PDF embeds Arabic as Identity-H, not WinAnsi mojibake
+00:00 +13: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +14: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +15: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +16: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +17: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +18: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +19: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +20: test/office_pdf_export_test.dart: Word PDF keeps pages, headers, tables, lists, and pictures
+00:00 +21: test/office_named_fonts_test.dart: spreadsheet PDF reads retained native family and italic without edits
+00:00 +22: test/word_layout_test.dart: justified wrapped lines stretch spaces to the column edge
+00:00 +23: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +24: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +25: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +26: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +27: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +28: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +29: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +30: test/office_pdf_export_test.dart: Excel PDF evaluates formulas and paginates every sheet
+00:00 +31: test/office_pdf_export_test.dart: PowerPoint PDF emits one page per slide including rotation
+00:00 +32: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +33: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +34: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +35: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +36: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +37: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +38: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +39: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +40: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +41: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +42: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +43: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +44: test/office_pdf_export_test.dart: fromBytes dispatches Word, Excel, and PowerPoint packages
+00:00 +45: test/variable_line_breaker_test.dart: variable widths consume Unicode and hard breaks exactly once
+00:00 +46: test/office_pdf_export_test.dart: transparent PNG pictures emit a DeviceGray SMask
+00:00 +47: test/office_pdf_export_test.dart: transparent PNG pictures emit a DeviceGray SMask
+00:00 +48: test/office_pdf_export_test.dart: keeps a distinct image XObject for each picture
+00:00 +49: test/office_pdf_export_test.dart: Excel PDF uses Helvetica for Latin when the CID face lacks it
+00:00 +50: test/office_pdf_export_test.dart: Word PDF writes TOC and web link annotations
+00:00 +51: test/office_pdf_export_test.dart: Excel PDF honors column widths, merges, and print area
+00:00 +52: test/office_pdf_export_test.dart: OfficePrint forwards sheet and slide ranges
+00:00 +53: test/office_pdf_export_test.dart: PdfReportBuilder remaps subset glyph ids
+00:00 +54: test/office_pdf_export_test.dart: Excel PDF paints cell borders and header tokens
+00:00 +55: test/office_pdf_export_test.dart: PPT PDF strokes shapes and emits URI link annots
+00:00 +56: test/office_pdf_export_test.dart: chart serializers honor ChartDisplay.rtl
+00:00 +57: All tests passed!

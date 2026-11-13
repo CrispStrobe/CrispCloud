@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
+import 'hosts/font_assets.dart';
 import 'hosts/host.dart';
 import 'models.dart';
 
@@ -19,6 +21,7 @@ class DocumentPreview extends StatefulWidget {
     this.locale = 'en',
     this.dark = false,
     this.fontScale = 1,
+    this.fonts = const [],
     this.onReady,
     this.onError,
     this.onShowSource,
@@ -30,6 +33,7 @@ class DocumentPreview extends StatefulWidget {
   final String locale;
   final bool dark;
   final double fontScale;
+  final List<DocumentPreviewFont> fonts;
   final VoidCallback? onReady;
   final ValueChanged<String>? onError;
   final VoidCallback? onShowSource;
@@ -47,6 +51,7 @@ class _DocumentPreviewState extends State<DocumentPreview> {
   bool _closed = false;
   String? _error;
   double _progress = 0;
+  List<DocumentPreviewFont> _fonts = const [];
 
   @override
   void initState() {
@@ -68,6 +73,14 @@ class _DocumentPreviewState extends State<DocumentPreview> {
     if (widget.bytes.length > documentPreviewByteLimit(widget.kind)) {
       _error = 'This file exceeds the document preview limit.';
     } else {
+      try {
+        _fonts = documentPreviewUsesSharedFonts(widget.kind)
+            ? snapshotDocumentPreviewFonts(widget.fonts)
+            : const [];
+      } on ArgumentError {
+        _error = 'The document font configuration is invalid.';
+        return;
+      }
       _deadline = Timer(const Duration(seconds: 30), () {
         _fail('The document browser did not finish starting.');
       });
@@ -79,7 +92,8 @@ class _DocumentPreviewState extends State<DocumentPreview> {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.bytes, widget.bytes) ||
         oldWidget.filename != widget.filename ||
-        oldWidget.kind != widget.kind) {
+        oldWidget.kind != widget.kind ||
+        !listEquals(oldWidget.fonts, widget.fonts)) {
       _startSession();
     } else if (_send != null &&
         (oldWidget.locale != widget.locale ||
@@ -228,6 +242,7 @@ class _DocumentPreviewState extends State<DocumentPreview> {
             key: ValueKey(_session),
             child: createDocumentHost(
               session: _session,
+              fonts: _fonts,
               onConnected: (sender) {
                 if (_active && session == _session) _send = sender;
               },

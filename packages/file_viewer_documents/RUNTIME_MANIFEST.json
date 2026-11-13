@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "upstream": {
     "repository": "https://github.com/flyfish-dev/file-viewer.git",
     "commit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
@@ -15,14 +15,14 @@
   ],
   "assets": [
     {
-      "path": "UTIF-EAV2MPGD.js",
-      "bytes": 90541,
-      "sha256": "119f9f92465e4eb11e3013968f08946ea0ef1e6ec3d77576efa7a21bb4fb3c47"
+      "path": "UTIF-QNRB2W6F.js",
+      "bytes": 38668,
+      "sha256": "200bd3a661118d1bfd68548eb5a1531c367320fe3f26337624ba3193588b92e6"
     },
     {
       "path": "chm.worker.js",
-      "bytes": 6532,
-      "sha256": "c81ca03301b55d1888bf9b56097938eb56be9187bbb34cbf784690e58415ca5b"
+      "bytes": 3409,
+      "sha256": "90a5cd0ba432966b70043e0e6b4187ac5d7cba7b494d8f61655bb6753f99156f"
     },
     {
       "path": "chm_wasm.js",
@@ -35,129 +35,129 @@
       "sha256": "02904a83ae8be928d5c90b9fd61faf28d8ba7e67ee96e3aeeb5d5b5102691538"
     },
     {
-      "path": "chunk-3E27RFED.js",
-      "bytes": 139916,
-      "sha256": "1144439b1896b69d408ae8e1d623d671fe53a9649f321bb92cb4e6c8da53ca3d"
+      "path": "chunk-2GWS2I6U.js",
+      "bytes": 30788,
+      "sha256": "b3c553ed92d39afbcccfa92ae72ce1efc0aecc733fe623b446676fd4cbbdc9ea"
     },
     {
-      "path": "chunk-B3J7LI27.js",
-      "bytes": 14704,
-      "sha256": "1b312e9927e31b2e2b982bb0ffe209a6a7be8e88237ff958cf5abd6b08530f2f"
-    },
-    {
-      "path": "chunk-G2WIWTPZ.js",
-      "bytes": 69089,
-      "sha256": "9f75e6b86372044a977dd8a3bd554de78254a93cc496da6f55da89801d2de2d0"
-    },
-    {
-      "path": "chunk-G2WIWTPZ.js.LEGAL.txt",
+      "path": "chunk-2GWS2I6U.js.LEGAL.txt",
       "bytes": 417,
       "sha256": "4245c420f535f6b11e3f590606105d70565d76e4ba670d1f1497c1f39c57800a"
     },
     {
-      "path": "chunk-OJSGNLVQ.js",
-      "bytes": 809,
-      "sha256": "5bbed17a1b6463eb8a133ca61a4e304e164864d48c5f3488e582f32276259f10"
+      "path": "chunk-2SFRAG4H.js",
+      "bytes": 869,
+      "sha256": "7b76cb5ee47ab37bd9fe74cb90203ac95689007df24a059f99a3c2d6352e555a"
     },
     {
-      "path": "chunk-PBD2UG6C.js",
-      "bytes": 129259,
-      "sha256": "726ac74e9b856397ef7aabdaa4dc7c781a3d212280c36113235e3692063d6040"
+      "path": "chunk-3BJKFY2R.js",
+      "bytes": 78978,
+      "sha256": "906920dd0e12840988741e44a2031c1da1b810e86f10b186b808d54a30ff46fc"
     },
     {
-      "path": "chunk-PIRHQTI4.js",
-      "bytes": 1788,
-      "sha256": "47e42dfbd47bb8e6ba9db884451b27f9a92888d367efe5e571c5f48e84e41c0b"
+      "path": "chunk-3RNHDNP5.js",
+      "bytes": 833,
+      "sha256": "fce38a03dea32d1a4a810a8e08246ec306c6e18736d174894b493b088c501820"
     },
     {
-      "path": "chunk-QU72KJ6R.js",
-      "bytes": 36299,
-      "sha256": "5d1359dd149812137f8fac20faf190921a4442adc53779360f16db6b52b313aa"
+      "path": "chunk-4NOHUTGO.js",
+      "bytes": 4294,
+      "sha256": "d768d508382322e5180c46e9c82732f24497cba306179b646e0eb25344879d27"
     },
     {
-      "path": "chunk-UIIGQOVD.js",
-      "bytes": 8715,
-      "sha256": "fe0369f7c356ff0e9365490479d31baae04e9bd990f0883a86e3fbb3bc09567e"
+      "path": "chunk-7HTQ7DBK.js",
+      "bytes": 125,
+      "sha256": "32f17aa01d5bfd6306856dda24b2f2f1d2a5941c8cc3fd2e5a3bd1a18c7de443"
     },
     {
-      "path": "chunk-V2DBS5C2.js",
-      "bytes": 9211,
-      "sha256": "63a5af01aafe96ad61fdb8256c97cbf25e3b472eb23f4cd82ec73cde37f6324f"
+      "path": "chunk-A4JY7UKO.js",
+      "bytes": 145021,
+      "sha256": "753e21273fd273a818e124bd7a02d53b2174b6bc0f7cee43425cef97548bc7ac"
     },
     {
-      "path": "chunk-VJWTYBFP.js",
-      "bytes": 1907,
-      "sha256": "ba501e74d11ff8beb92ed3e0f0c1ee2089aadfa6ef0e6f261313688470d1498b"
+      "path": "chunk-DZQX2M6T.js",
+      "bytes": 4328,
+      "sha256": "f5e8e4f8da0a2dd360aad335952a7935e8c32aefefc9f392e1d77d2b1572f2f1"
     },
     {
-      "path": "chunk-X3L4DUK6.js",
-      "bytes": 154445,
-      "sha256": "c182daf9f65b3e502459ff1476f1ca7cf2fcbb352fe0f54d352530e431eea23d"
+      "path": "chunk-GVIESLRK.js",
+      "bytes": 19864,
+      "sha256": "91d951c956a22beb47a9ebc6511127714dce4ffb7497d0c4464061c85bc3ab7a"
     },
     {
-      "path": "chunk-X6YCA5GR.js",
-      "bytes": 36515,
-      "sha256": "52ec5c3ae76149e509c02b44a6373d6137be8070ce03ee700e84738fe643772f"
+      "path": "chunk-QBGM2ACY.js",
+      "bytes": 45970,
+      "sha256": "dddb22edbacf3bb3f7773e4fe78b2e182b3f48d922fcd267e97e827706245e30"
     },
     {
-      "path": "chunk-XPXVZBDO.js",
-      "bytes": 307,
-      "sha256": "6631b4bf80b1c0c56ddc3e05709405ca61d14dec11490062facf8afa8cd2f478"
+      "path": "chunk-VGYQQAVY.js",
+      "bytes": 243,
+      "sha256": "ad3353efe6b01d8346a4f9c6e60bc2d3e6ab3745aa7496bfdcd0228eacdab0ff"
     },
     {
-      "path": "dist-NVM75KNJ.js",
-      "bytes": 439516,
-      "sha256": "7ff7ebd3fd6c01fa10d225a2a1931511f88a45f7aca6f5c5693d1b6c49a48f7f"
+      "path": "chunk-WJEP6OR3.js",
+      "bytes": 17030,
+      "sha256": "9322085c27e129ff408e82e669785075ccc333969e6c0a00dc03c4912a6cd5d9"
     },
     {
-      "path": "entry-7RJCH66I.js",
-      "bytes": 42006,
-      "sha256": "b2f6be12578d3ddb4d99ab1f4e1a1dbb36e82b20b4c740e2e8fc9a5b41c82cf9"
+      "path": "chunk-YTSZK2IU.js",
+      "bytes": 7061,
+      "sha256": "8d95ad369c9eb5bd527d725ff7a01f4a5e3660dd20a6c74c4985dbfa20f1aa3a"
     },
     {
-      "path": "entry-BECWRWJ3.js",
-      "bytes": 25031,
-      "sha256": "22918aa5db98fea8dbf28a2fbd4918276d3f76635c40efd859cce58ebca7bf8c"
+      "path": "dist-U6QQXCEA.js",
+      "bytes": 252796,
+      "sha256": "cd543b8511d725b1736a557ea280881b87c6e7de13c62c233f946a5fb2e0b6db"
     },
     {
-      "path": "entry-IMEYDMPT.js",
-      "bytes": 27921,
-      "sha256": "026d41e1902ec86e23938ab0d7cf236214ec1ff0d6a59f1c7abe1ad13e10a1b9"
+      "path": "entry-4YNJUMEI.js",
+      "bytes": 70698,
+      "sha256": "6dbf6b016a01d81fe08de4e1c9ca2adea8d1379951af43b75d00a8f67d1a5437"
     },
     {
-      "path": "entry-K66XL2UG.js",
-      "bytes": 29396,
-      "sha256": "3f916e3e4881a1db4c276d3b3372b37a77c527099775d3a2dfe7711952010821"
+      "path": "entry-EETRUNCO.js",
+      "bytes": 18589,
+      "sha256": "d637a440cf740184d2165bc21326e1e0b2c69a6d6bb903a2c3367f68c334908f"
     },
     {
-      "path": "entry-NDHWTUCQ.js",
-      "bytes": 8762,
-      "sha256": "87bd3711b97a128bf3984602309fb6f42eadc108d9867854a200bd8acca2cfe8"
+      "path": "entry-GNJPN2YS.js",
+      "bytes": 26278,
+      "sha256": "38b783fd2a24fd8dd664aebaa79f199ae3dfb9c1996c8e1193bd92f1e62d32f9"
     },
     {
-      "path": "entry-U22M3L7A.js",
-      "bytes": 152602,
-      "sha256": "d90ebfe0a996691620a0e392dd7b5c7c07f4af99258c48ff37bdc5e43bdbeb0f"
+      "path": "entry-PYAB52JX.js",
+      "bytes": 14919,
+      "sha256": "ee6089c16cf3d4dcdf17eb98c62a7142921fd7f2fda1440971a62ac3130fa624"
     },
     {
-      "path": "export-WDYOWQ5R.js",
-      "bytes": 30585,
-      "sha256": "48dea2c58dba49a2ed162112ede4ab27a9932c9faa72ddb0944a6b0a1c693c0e"
+      "path": "entry-V3ON5DQH.js",
+      "bytes": 5895,
+      "sha256": "e00590262f7848970a4623bd1f876005c83bc01734fdf2a82d7f9fc94c2ab99f"
+    },
+    {
+      "path": "entry-VO6AAMVR.js",
+      "bytes": 15789,
+      "sha256": "dc84089479274e26f7f68525bde811365d2a74e3e2bfa7a2521aae2e2289ed30"
+    },
+    {
+      "path": "export-ODQV3NJ3.js",
+      "bytes": 19940,
+      "sha256": "82793133c6fe333eee35e284d047f0683fb696d28d5771a60294ece421d93656"
     },
     {
       "path": "host.js",
-      "bytes": 5840,
-      "sha256": "d3cbac2c1ef2da7984bd618ce767e20192de6cab2921f15b50838153d4314f34"
+      "bytes": 13209,
+      "sha256": "1475bc32c681d265320ca30116d6a04dcb40d21e17fb16e758865648ef8d8140"
     },
     {
-      "path": "image-DBKOAVSS.js",
-      "bytes": 12476,
-      "sha256": "219f43b3c5c94900fba7362422b737ef1ba7f8179c74405bcdad0549eb2beeb5"
+      "path": "image-4KENP6VT.js",
+      "bytes": 7157,
+      "sha256": "3c12b9afa94b26801bc5e999ba3d9bf1c646c4344f778770c42ee8cc4d6d50e4"
     },
     {
-      "path": "index.es-KPAU56EJ.js",
-      "bytes": 345128,
-      "sha256": "db0be53e001d021172fe2175d612673b44ba26978d69af808f5f718b40d8f46a"
+      "path": "index.es-RGLBRJMI.js",
+      "bytes": 253007,
+      "sha256": "472631b7564baca45af315dc8eba4703b0bd3453294cc74753bc09649197ef48"
     },
     {
       "path": "libwpd.mjs",
@@ -171,28 +171,28 @@
     },
     {
       "path": "postscript.worker.js",
-      "bytes": 22165,
-      "sha256": "eb2a0c8e832194a47359658b7e1e44b334998fcc2a56fff6d4bf4db306a291b6"
+      "bytes": 11663,
+      "sha256": "00e06dccec11bfaa6ca0cf2812fee0ac947f1bfea5dbc67ca0a6ab0072197ba3"
     },
     {
       "path": "pptjs.worker.js",
-      "bytes": 499763,
-      "sha256": "5d49892f8b3f8493a118f4ef8c79b971f6d1dcc16397c9dd02fc1701161e7489"
+      "bytes": 273530,
+      "sha256": "eee6a0efe5e86c913f734a6bb5f70998f96c3111ee399079e6146f7b5a313d3c"
     },
     {
-      "path": "print-mask-WBMFUFPO.js",
-      "bytes": 19138,
-      "sha256": "6fd9cb05cbbca4f52f48d1a1686283a089502b9ba4e60352b53d9e72374bc275"
+      "path": "print-mask-CNNFMMM5.js",
+      "bytes": 10370,
+      "sha256": "7901c3a7888c2e0fa8e3290e44d3e0ac6ec61e4ae800c03a0dc785d24322d11d"
     },
     {
-      "path": "printMaskLoader-CV2G6CWF.js",
-      "bytes": 159,
-      "sha256": "22b8e5c85367b8314407d2d3a5803b8cefc4407e2ebc0690bfeb72e5b93a1e5a"
+      "path": "printMaskLoader-HMKWYRZG.js",
+      "bytes": 114,
+      "sha256": "338f70298b5011d759c71caf923b94d780d026a0ac31b865c6eb4ffcdf114295"
     },
     {
       "path": "sheet.worker.js",
-      "bytes": 1331926,
-      "sha256": "5ff5e97720102c3d34f6d17ecdd4a0f74893ac99f6d8925d19072135d6ab361e"
+      "bytes": 661637,
+      "sha256": "ff3712a1b3358fc5145fd9596b470f4ba62bd7082987a5dd659cb13f7630fc85"
     },
     {
       "path": "sheet.worker.js.LEGAL.txt",
@@ -206,8 +206,8 @@
     },
     {
       "path": "wordperfect.worker.js",
-      "bytes": 13370,
-      "sha256": "51306a0c0cff71f67c310c95f172c700651d63ed91b936f9a83805d2b38327dc"
+      "bytes": 7383,
+      "sha256": "c7fe818bc02beac2cb8117197180c8e1a6459c1c5e99d74ece248afdc27668ef"
     },
     {
       "path": "xmllint-browser.mjs",
@@ -374,433 +374,805 @@
   "notices": [
     {
       "file": "file-viewer-LICENSE",
+      "bytes": 9140,
       "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
-      "source": "LICENSE"
+      "sources": [
+        {
+          "name": "file-viewer-LICENSE",
+          "source": "LICENSE"
+        },
+        {
+          "name": "spreadsheet-root-LICENSE",
+          "source": "packages/renderers/spreadsheet/LICENSE"
+        },
+        {
+          "name": "presentation-ppt-root-LICENSE",
+          "source": "packages/renderers/presentation-ppt/LICENSE"
+        },
+        {
+          "name": "ppt-runtime-LICENSE",
+          "source": "apps/viewer-demo/public/vendor/ppt/LICENSE"
+        }
+      ]
     },
     {
       "file": "crispcloud-wordperfect-UPSTREAM.md",
-      "sha256": "62b8cc1181b38fe0ab97a7c241d46e874f92314840299cfbd249ff96550c515d",
-      "source": "engines/wordperfect/UPSTREAM.md"
+      "bytes": 6192,
+      "sha256": "260c05e8360929078fb320077da259cd68a9b478583868d3524b6377f161f01a",
+      "sources": [
+        {
+          "name": "crispcloud-wordperfect-UPSTREAM.md",
+          "source": "engines/wordperfect/UPSTREAM.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-chm-UPSTREAM.md",
+      "bytes": 5433,
       "sha256": "1b501e119bc8bc12fe2966cb5fc766e8a05fc1c946f38236136c3bb319674dcd",
-      "source": "engines/chm/UPSTREAM.md"
+      "sources": [
+        {
+          "name": "crispcloud-chm-UPSTREAM.md",
+          "source": "engines/chm/UPSTREAM.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-spreadsheet-UPSTREAM.md",
-      "sha256": "cd66c8db4562ddd9ade943edfc51d5336ca525c6ce43247e0eebfcc7ca2ccd93",
-      "source": "engines/spreadsheet/UPSTREAM.md"
+      "bytes": 4521,
+      "sha256": "ab21ebe9668ccacd754c27adb0650d9a275ada6fbd3b624c836490ae8e1ec900",
+      "sources": [
+        {
+          "name": "crispcloud-spreadsheet-UPSTREAM.md",
+          "source": "engines/spreadsheet/UPSTREAM.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-ppt-UPSTREAM.md",
-      "sha256": "5ed4c08895fd5d363741e17cfb80c69104ce0ceb138cc15aee8e9ae165854b98",
-      "source": "engines/ppt/UPSTREAM.md"
+      "bytes": 4977,
+      "sha256": "2b053bc65091535adbd6004f194f17074a47025f077ec8db5affcd29db6a11f5",
+      "sources": [
+        {
+          "name": "crispcloud-ppt-UPSTREAM.md",
+          "source": "engines/ppt/UPSTREAM.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-UPSTREAM.md",
+      "bytes": 5958,
       "sha256": "e84e28fb34243e50c0d53b20726f56ca69594ecc8e9868ed2f1c8485abe07d80",
-      "source": "engines/postscript/UPSTREAM.md"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-UPSTREAM.md",
+          "source": "engines/postscript/UPSTREAM.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-licenses-CC0-1.0.txt",
+      "bytes": 6552,
       "sha256": "469d87b5fa48f8aaf69e25f4fcac3a309c97dbb7d561b917638abdb640e004d9",
-      "source": "engines/postscript/licenses/CC0-1.0.txt"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-licenses-CC0-1.0.txt",
+          "source": "engines/postscript/licenses/CC0-1.0.txt"
+        },
+        {
+          "name": "postscript-CC0-1.0.txt",
+          "source": "packages/renderers/design/LICENSES/CC0-1.0.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-licenses-Stet-Apache-2.0.txt",
+      "bytes": 10283,
       "sha256": "281755c6f4d045a464a29eb720c3e7586175c621352675dce144ca74bd1228cb",
-      "source": "engines/postscript/licenses/Stet-Apache-2.0.txt"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-licenses-Stet-Apache-2.0.txt",
+          "source": "engines/postscript/licenses/Stet-Apache-2.0.txt"
+        },
+        {
+          "name": "postscript-Stet-Apache-2.0.txt",
+          "source": "packages/renderers/design/LICENSES/Stet-Apache-2.0.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-licenses-Stet-CMYK-Profile.txt",
+      "bytes": 1207,
       "sha256": "80d58f24890cc7abacc62651c199b79b7fa9fcc10aa781756d029312298d672f",
-      "source": "engines/postscript/licenses/Stet-CMYK-Profile.txt"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-licenses-Stet-CMYK-Profile.txt",
+          "source": "engines/postscript/licenses/Stet-CMYK-Profile.txt"
+        },
+        {
+          "name": "postscript-Stet-CMYK-Profile.txt",
+          "source": "packages/renderers/design/LICENSES/Stet-CMYK-Profile.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-licenses-Stet-MIT.txt",
+      "bytes": 1069,
       "sha256": "4e27c8bbd00f817fb6fb96e8ca8eada8f0983a50a38fe3114ba8f977d31f654b",
-      "source": "engines/postscript/licenses/Stet-MIT.txt"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-licenses-Stet-MIT.txt",
+          "source": "engines/postscript/licenses/Stet-MIT.txt"
+        },
+        {
+          "name": "postscript-Stet-MIT.txt",
+          "source": "packages/renderers/design/LICENSES/Stet-MIT.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-licenses-Stet-URW-Fonts-OFL-1.1.txt",
+      "bytes": 6631,
       "sha256": "64e0f8458b90c8305d0b89d5f0c3401e861bdda648cdcb5ae1a4d1f132171e66",
-      "source": "engines/postscript/licenses/Stet-URW-Fonts-OFL-1.1.txt"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-licenses-Stet-URW-Fonts-OFL-1.1.txt",
+          "source": "engines/postscript/licenses/Stet-URW-Fonts-OFL-1.1.txt"
+        },
+        {
+          "name": "postscript-Stet-URW-Fonts-OFL-1.1.txt",
+          "source": "packages/renderers/design/LICENSES/Stet-URW-Fonts-OFL-1.1.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-licenses-Stet_NATIVE_THIRD_PARTY_LICENSES.json",
+      "bytes": 374678,
       "sha256": "cbca7bd3c1c1d4e7cbae0fe0330a5d1589db7d219b0b858df6f5bc266ebb9dc8",
-      "source": "engines/postscript/licenses/Stet_NATIVE_THIRD_PARTY_LICENSES.json"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-licenses-Stet_NATIVE_THIRD_PARTY_LICENSES.json",
+          "source": "engines/postscript/licenses/Stet_NATIVE_THIRD_PARTY_LICENSES.json"
+        },
+        {
+          "name": "postscript-Stet_NATIVE_THIRD_PARTY_LICENSES.json",
+          "source": "packages/renderers/design/LICENSES/Stet_NATIVE_THIRD_PARTY_LICENSES.json"
+        }
+      ]
     },
     {
       "file": "crispcloud-postscript-provenance-fax-MIT.txt",
+      "bytes": 1075,
       "sha256": "7101390b4c8edd752f4c0de47f35d61b44d9cf0ee8dd032115e25644e277cfff",
-      "source": "engines/postscript/provenance/fax-MIT.txt"
+      "sources": [
+        {
+          "name": "crispcloud-postscript-provenance-fax-MIT.txt",
+          "source": "engines/postscript/provenance/fax-MIT.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-UPSTREAM.md",
+      "bytes": 5813,
       "sha256": "48b6da60d486112387ca421eb071df44648fbd145fc3621728b4ec071dcdd5f7",
-      "source": "engines/xml/UPSTREAM.md"
+      "sources": [
+        {
+          "name": "crispcloud-xml-UPSTREAM.md",
+          "source": "engines/xml/UPSTREAM.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-DOMPurify-LICENSE",
+      "bytes": 11358,
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "source": "engines/xml/licenses/DOMPurify-LICENSE"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-DOMPurify-LICENSE",
+          "source": "engines/xml/licenses/DOMPurify-LICENSE"
+        },
+        {
+          "name": "npm-dompurify-LICENSE",
+          "source": "node_modules/dompurify/LICENSE"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-NOTICE.md",
+      "bytes": 2392,
       "sha256": "8f0fae92f691506d50490166a846fe4abc8d5bc1fbce0d493ba2754ee75a5431",
-      "source": "engines/xml/licenses/NOTICE.md"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-NOTICE.md",
+          "source": "engines/xml/licenses/NOTICE.md"
+        },
+        {
+          "name": "xml-NOTICE.md",
+          "source": "packages/renderers/text/licenses/xml-profiles/NOTICE.md"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-libxml2-xsd-Copyright.txt",
+      "bytes": 1273,
       "sha256": "c99aae1afe013e50b8b3701e089222b351258043c3025b64053a233fd25b4be7",
-      "source": "engines/xml/licenses/libxml2-xsd-Copyright.txt"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-libxml2-xsd-Copyright.txt",
+          "source": "engines/xml/licenses/libxml2-xsd-Copyright.txt"
+        },
+        {
+          "name": "xml-libxml2-xsd-Copyright.txt",
+          "source": "packages/renderers/text/licenses/xml-profiles/libxml2-xsd-Copyright.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-libxml2-xslt-Copyright.txt",
+      "bytes": 1314,
       "sha256": "5d4873884a890122a4b9b20ad56ac6f7da1d796a5bfcf04a427970ac96217626",
-      "source": "engines/xml/licenses/libxml2-xslt-Copyright.txt"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-libxml2-xslt-Copyright.txt",
+          "source": "engines/xml/licenses/libxml2-xslt-Copyright.txt"
+        },
+        {
+          "name": "xml-libxml2-xslt-Copyright.txt",
+          "source": "packages/renderers/text/licenses/xml-profiles/libxml2-xslt-Copyright.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-libxslt-Copyright.txt",
+      "bytes": 2968,
       "sha256": "7e48e290b6bfccc2ec1b297023a1d77f2fd87417f71fbb9f50aabef40a851819",
-      "source": "engines/xml/licenses/libxslt-Copyright.txt"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-libxslt-Copyright.txt",
+          "source": "engines/xml/licenses/libxslt-Copyright.txt"
+        },
+        {
+          "name": "xml-libxslt-Copyright.txt",
+          "source": "packages/renderers/text/licenses/xml-profiles/libxslt-Copyright.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-xmllint-wasm-COPYING.txt",
+      "bytes": 1177,
       "sha256": "e98df1cfcec684393740037a0d82a2886b6a2c52518cab54072c29ee01755c2d",
-      "source": "engines/xml/licenses/xmllint-wasm-COPYING.txt"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-xmllint-wasm-COPYING.txt",
+          "source": "engines/xml/licenses/xmllint-wasm-COPYING.txt"
+        },
+        {
+          "name": "xml-xmllint-wasm-COPYING.txt",
+          "source": "packages/renderers/text/licenses/xml-profiles/xmllint-wasm-COPYING.txt"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-xslt-polyfill-LICENSE.txt",
+      "bytes": 1498,
       "sha256": "54c3dd9f65fffc74f4cc1295e6cd23c4378d588d9073b6363e199547043f0747",
-      "source": "engines/xml/licenses/xslt-polyfill-LICENSE.txt"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-xslt-polyfill-LICENSE.txt",
+          "source": "engines/xml/licenses/xslt-polyfill-LICENSE.txt"
+        },
+        {
+          "name": "xml-xslt-polyfill-LICENSE.txt",
+          "source": "packages/renderers/text/licenses/xml-profiles/xslt-polyfill-LICENSE.txt"
+        },
+        {
+          "name": "npm-xslt-polyfill-LICENSE",
+          "source": "node_modules/xslt-polyfill/LICENSE"
+        }
+      ]
     },
     {
       "file": "crispcloud-xml-licenses-zlib-LICENSE.txt",
+      "bytes": 1002,
       "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
-      "source": "engines/xml/licenses/zlib-LICENSE.txt"
+      "sources": [
+        {
+          "name": "crispcloud-xml-licenses-zlib-LICENSE.txt",
+          "source": "engines/xml/licenses/zlib-LICENSE.txt"
+        },
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-Zlib-1.3.2-LICENSE.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Zlib-1.3.2-LICENSE.txt"
+        },
+        {
+          "name": "xml-zlib-LICENSE.txt",
+          "source": "packages/renderers/text/licenses/xml-profiles/zlib-LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-root-LICENSE",
+      "bytes": 242,
       "sha256": "689637ca2302817baa9301f3cee9ca994b4ea4467f41e5c8a2b9ac52f49cae46",
-      "source": "packages/renderers/wordperfect/LICENSE"
+      "sources": [
+        {
+          "name": "wordperfect-root-LICENSE",
+          "source": "packages/renderers/wordperfect/LICENSE"
+        }
+      ]
     },
     {
       "file": "wordperfect-root-THIRD_PARTY_NOTICES.md",
+      "bytes": 2239,
       "sha256": "5104aac8a297704a2136a72f50752b122619e5972781e67d3707ea11c4c8def5",
-      "source": "packages/renderers/wordperfect/THIRD_PARTY_NOTICES.md"
+      "sources": [
+        {
+          "name": "wordperfect-root-THIRD_PARTY_NOTICES.md",
+          "source": "packages/renderers/wordperfect/THIRD_PARTY_NOTICES.md"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.MPL-2.0.txt",
+      "bytes": 16726,
       "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.MPL-2.0.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.MPL-2.0.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.MPL-2.0.txt"
+        },
+        {
+          "name": "npm-dompurify-LICENSE-MPL",
+          "source": "node_modules/dompurify/LICENSE-MPL"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.boost-BSL-1.0.txt",
+      "bytes": 1338,
       "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.boost-BSL-1.0.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.boost-BSL-1.0.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.boost-BSL-1.0.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-Emscripten-LICENSE.txt",
+      "bytes": 5093,
       "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Emscripten-LICENSE.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-Emscripten-LICENSE.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Emscripten-LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-LLVM-compiler-rt-LICENSE.txt",
+      "bytes": 16708,
       "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-compiler-rt-LICENSE.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-LLVM-compiler-rt-LICENSE.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-compiler-rt-LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-LLVM-libcxx-LICENSE.txt",
+      "bytes": 16703,
       "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-libcxx-LICENSE.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-LLVM-libcxx-LICENSE.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-libcxx-LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-LLVM-libcxxabi-LICENSE.txt",
+      "bytes": 16706,
       "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-libcxxabi-LICENSE.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-LLVM-libcxxabi-LICENSE.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-LLVM-libcxxabi-LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-Musl-COPYRIGHT.txt",
+      "bytes": 6196,
       "sha256": "b870108ec5e7790e9f9919064f1b9421d62d5f9b0e6c230c6adf7ea2da62e97b",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Musl-COPYRIGHT.txt"
-    },
-    {
-      "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-Zlib-1.3.2-LICENSE.txt",
-      "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Zlib-1.3.2-LICENSE.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-Musl-COPYRIGHT.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-Musl-COPYRIGHT.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-dlmalloc-CC0-1.0.txt",
+      "bytes": 7048,
       "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-dlmalloc-CC0-1.0.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-dlmalloc-CC0-1.0.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-dlmalloc-CC0-1.0.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-dlmalloc-NOTICE.txt",
+      "bytes": 454,
       "sha256": "8defa334f869217fe9d8eaa3fd91621d076ca66ca7fc7453419e286e3dabab72",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-dlmalloc-NOTICE.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.toolchain-dlmalloc-NOTICE.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.toolchain-dlmalloc-NOTICE.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-LICENSE.xberg-shim-MIT.txt",
+      "bytes": 1077,
       "sha256": "081ff9e2978a771dc90f475aa5130871d85debdf120683cbb860b41662641272",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.xberg-shim-MIT.txt"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-LICENSE.xberg-shim-MIT.txt",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/LICENSE.xberg-shim-MIT.txt"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-NATIVE_PROVENANCE.json",
+      "bytes": 4636,
       "sha256": "9b8478c55b745a4f4e6f3d4bafdb59c3451bd8e12bd63c38fbcf1b47c60fc25f",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/NATIVE_PROVENANCE.json"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-NATIVE_PROVENANCE.json",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/NATIVE_PROVENANCE.json"
+        }
+      ]
     },
     {
       "file": "wordperfect-vendor_libwpd-src-PROVENANCE.md",
+      "bytes": 2238,
       "sha256": "ffb0692e8addbecc36081ce7beefedc2ec29d4bd559ba62e79794e58698e7826",
-      "source": "packages/renderers/wordperfect/vendor/libwpd-src/PROVENANCE.md"
+      "sources": [
+        {
+          "name": "wordperfect-vendor_libwpd-src-PROVENANCE.md",
+          "source": "packages/renderers/wordperfect/vendor/libwpd-src/PROVENANCE.md"
+        }
+      ]
     },
     {
       "file": "chm-root-LICENSE",
+      "bytes": 10759,
       "sha256": "ff478ac8e55ccd78f44a5a50a81ecb723df50122e1a4f8722c656f59be5016e1",
-      "source": "packages/renderers/chm/LICENSE"
+      "sources": [
+        {
+          "name": "chm-root-LICENSE",
+          "source": "packages/renderers/chm/LICENSE"
+        },
+        {
+          "name": "chm-rust-LICENSE",
+          "source": "packages/renderers/chm/rust/LICENSE"
+        }
+      ]
     },
     {
       "file": "chm-root-THIRD_PARTY_NOTICES.md",
+      "bytes": 745,
       "sha256": "87f38c0efe292bd4d3c729a87147fd0cea3986c01e4096a38e7d7f6afce643de",
-      "source": "packages/renderers/chm/THIRD_PARTY_NOTICES.md"
-    },
-    {
-      "file": "chm-rust-LICENSE",
-      "sha256": "ff478ac8e55ccd78f44a5a50a81ecb723df50122e1a4f8722c656f59be5016e1",
-      "source": "packages/renderers/chm/rust/LICENSE"
+      "sources": [
+        {
+          "name": "chm-root-THIRD_PARTY_NOTICES.md",
+          "source": "packages/renderers/chm/THIRD_PARTY_NOTICES.md"
+        }
+      ]
     },
     {
       "file": "chm-rust-NOTICE.md",
+      "bytes": 2080,
       "sha256": "11f149225645449dc6f525c15e080acebb696fcbf0e92ff706af1d1136465554",
-      "source": "packages/renderers/chm/rust/NOTICE.md"
+      "sources": [
+        {
+          "name": "chm-rust-NOTICE.md",
+          "source": "packages/renderers/chm/rust/NOTICE.md"
+        }
+      ]
     },
     {
       "file": "chm-rust-THIRD_PARTY_LICENSES.md",
+      "bytes": 547673,
       "sha256": "e6df6dce7b229945d3a62b0753dad6f5fc1413db190035b32f7f1ab865cdb299",
-      "source": "packages/renderers/chm/rust/THIRD_PARTY_LICENSES.md"
-    },
-    {
-      "file": "spreadsheet-root-LICENSE",
-      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
-      "source": "packages/renderers/spreadsheet/LICENSE"
+      "sources": [
+        {
+          "name": "chm-rust-THIRD_PARTY_LICENSES.md",
+          "source": "packages/renderers/chm/rust/THIRD_PARTY_LICENSES.md"
+        }
+      ]
     },
     {
       "file": "spreadsheet-root-THIRD_PARTY_NOTICES.md",
+      "bytes": 427,
       "sha256": "e5d074536092aa85fa521ef718eea2f445d0d1cf755a68645b9d49dbccdc1814",
-      "source": "packages/renderers/spreadsheet/THIRD_PARTY_NOTICES.md"
-    },
-    {
-      "file": "presentation-ppt-root-LICENSE",
-      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
-      "source": "packages/renderers/presentation-ppt/LICENSE"
-    },
-    {
-      "file": "postscript-CC0-1.0.txt",
-      "sha256": "469d87b5fa48f8aaf69e25f4fcac3a309c97dbb7d561b917638abdb640e004d9",
-      "source": "packages/renderers/design/LICENSES/CC0-1.0.txt"
-    },
-    {
-      "file": "postscript-Stet-Apache-2.0.txt",
-      "sha256": "281755c6f4d045a464a29eb720c3e7586175c621352675dce144ca74bd1228cb",
-      "source": "packages/renderers/design/LICENSES/Stet-Apache-2.0.txt"
-    },
-    {
-      "file": "postscript-Stet-CMYK-Profile.txt",
-      "sha256": "80d58f24890cc7abacc62651c199b79b7fa9fcc10aa781756d029312298d672f",
-      "source": "packages/renderers/design/LICENSES/Stet-CMYK-Profile.txt"
-    },
-    {
-      "file": "postscript-Stet-MIT.txt",
-      "sha256": "4e27c8bbd00f817fb6fb96e8ca8eada8f0983a50a38fe3114ba8f977d31f654b",
-      "source": "packages/renderers/design/LICENSES/Stet-MIT.txt"
-    },
-    {
-      "file": "postscript-Stet-URW-Fonts-OFL-1.1.txt",
-      "sha256": "64e0f8458b90c8305d0b89d5f0c3401e861bdda648cdcb5ae1a4d1f132171e66",
-      "source": "packages/renderers/design/LICENSES/Stet-URW-Fonts-OFL-1.1.txt"
-    },
-    {
-      "file": "postscript-Stet_NATIVE_THIRD_PARTY_LICENSES.json",
-      "sha256": "cbca7bd3c1c1d4e7cbae0fe0330a5d1589db7d219b0b858df6f5bc266ebb9dc8",
-      "source": "packages/renderers/design/LICENSES/Stet_NATIVE_THIRD_PARTY_LICENSES.json"
-    },
-    {
-      "file": "xml-NOTICE.md",
-      "sha256": "8f0fae92f691506d50490166a846fe4abc8d5bc1fbce0d493ba2754ee75a5431",
-      "source": "packages/renderers/text/licenses/xml-profiles/NOTICE.md"
-    },
-    {
-      "file": "xml-libxml2-xsd-Copyright.txt",
-      "sha256": "c99aae1afe013e50b8b3701e089222b351258043c3025b64053a233fd25b4be7",
-      "source": "packages/renderers/text/licenses/xml-profiles/libxml2-xsd-Copyright.txt"
-    },
-    {
-      "file": "xml-libxml2-xslt-Copyright.txt",
-      "sha256": "5d4873884a890122a4b9b20ad56ac6f7da1d796a5bfcf04a427970ac96217626",
-      "source": "packages/renderers/text/licenses/xml-profiles/libxml2-xslt-Copyright.txt"
-    },
-    {
-      "file": "xml-libxslt-Copyright.txt",
-      "sha256": "7e48e290b6bfccc2ec1b297023a1d77f2fd87417f71fbb9f50aabef40a851819",
-      "source": "packages/renderers/text/licenses/xml-profiles/libxslt-Copyright.txt"
-    },
-    {
-      "file": "xml-xmllint-wasm-COPYING.txt",
-      "sha256": "e98df1cfcec684393740037a0d82a2886b6a2c52518cab54072c29ee01755c2d",
-      "source": "packages/renderers/text/licenses/xml-profiles/xmllint-wasm-COPYING.txt"
-    },
-    {
-      "file": "xml-xslt-polyfill-LICENSE.txt",
-      "sha256": "54c3dd9f65fffc74f4cc1295e6cd23c4378d588d9073b6363e199547043f0747",
-      "source": "packages/renderers/text/licenses/xml-profiles/xslt-polyfill-LICENSE.txt"
-    },
-    {
-      "file": "xml-zlib-LICENSE.txt",
-      "sha256": "e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2",
-      "source": "packages/renderers/text/licenses/xml-profiles/zlib-LICENSE.txt"
-    },
-    {
-      "file": "ppt-runtime-LICENSE",
-      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b",
-      "source": "apps/viewer-demo/public/vendor/ppt/LICENSE"
+      "sources": [
+        {
+          "name": "spreadsheet-root-THIRD_PARTY_NOTICES.md",
+          "source": "packages/renderers/spreadsheet/THIRD_PARTY_NOTICES.md"
+        }
+      ]
     },
     {
       "file": "ppt-runtime-NOTICE.md",
+      "bytes": 5712,
       "sha256": "c458b1c7bdbb66b4f00bcc1b6126ca1ba3ba2cd516db26f4e883711cae806c7c",
-      "source": "apps/viewer-demo/public/vendor/ppt/NOTICE.md"
+      "sources": [
+        {
+          "name": "ppt-runtime-NOTICE.md",
+          "source": "apps/viewer-demo/public/vendor/ppt/NOTICE.md"
+        }
+      ]
     },
     {
       "file": "ppt-runtime-package.json",
+      "bytes": 2352,
       "sha256": "27d196141d9894afaeb08b45e7b59c2f5669d40523c43554c84de01f0364310f",
-      "source": "apps/viewer-demo/public/vendor/ppt/package.json"
-    },
-    {
-      "file": "npm-dompurify-LICENSE",
-      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "source": "node_modules/dompurify/LICENSE"
-    },
-    {
-      "file": "npm-dompurify-LICENSE-MPL",
-      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
-      "source": "node_modules/dompurify/LICENSE-MPL"
+      "sources": [
+        {
+          "name": "ppt-runtime-package.json",
+          "source": "apps/viewer-demo/public/vendor/ppt/package.json"
+        }
+      ]
     },
     {
       "file": "npm-pako-LICENSE",
+      "bytes": 1104,
       "sha256": "a04665b3b2de56c66730c1f720f528175739e4104f79073614aa611da1e85539",
-      "source": "node_modules/pako/LICENSE"
+      "sources": [
+        {
+          "name": "npm-pako-LICENSE",
+          "source": "node_modules/pako/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-utif-LICENSE",
+      "bytes": 1065,
       "sha256": "c1fb8861eca211bf5aea574358aba7039396c0c1824c2a1477cc126d398efd89",
-      "source": "node_modules/utif/LICENSE"
+      "sources": [
+        {
+          "name": "npm-utif-LICENSE",
+          "source": "node_modules/utif/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-tinycolor2-LICENSE",
+      "bytes": 1081,
       "sha256": "c6cb470a9ba0a50d57611aeec1f31da609c5aefdbee8eac7f289bcb0e30625fa",
-      "source": "node_modules/tinycolor2/LICENSE"
+      "sources": [
+        {
+          "name": "npm-tinycolor2-LICENSE",
+          "source": "node_modules/tinycolor2/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-e-virt-table-LICENSE",
+      "bytes": 1082,
       "sha256": "e54c148b1a9dcbbf1d4ced08cecc2c993ce3541dbe95eaa51071783be6fcb395",
-      "source": "node_modules/e-virt-table/LICENSE"
+      "sources": [
+        {
+          "name": "npm-e-virt-table-LICENSE",
+          "source": "node_modules/e-virt-table/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-styled-exceljs-LICENSE",
+      "bytes": 11355,
       "sha256": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64",
-      "source": "node_modules/styled-exceljs/LICENSE"
+      "sources": [
+        {
+          "name": "npm-styled-exceljs-LICENSE",
+          "source": "node_modules/styled-exceljs/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-@xmldom_xmldom-LICENSE",
+      "bytes": 1298,
       "sha256": "4da724fc305d81606b245b324d4d2586916b9d248b23d82183df753ace0fdf71",
-      "source": "node_modules/@xmldom/xmldom/LICENSE"
+      "sources": [
+        {
+          "name": "npm-@xmldom_xmldom-LICENSE",
+          "source": "node_modules/@xmldom/xmldom/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-jszip-LICENSE.markdown",
+      "bytes": 33753,
       "sha256": "566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4",
-      "source": "node_modules/jszip/LICENSE.markdown"
+      "sources": [
+        {
+          "name": "npm-jszip-LICENSE.markdown",
+          "source": "node_modules/jszip/LICENSE.markdown"
+        }
+      ]
     },
     {
       "file": "npm-xmllint-wasm-COPYING",
+      "bytes": 1178,
       "sha256": "74f6fb26dabad238799d4c3bf65c26bbb1c82b7cbaefe6e9443cd7d091947cc9",
-      "source": "node_modules/xmllint-wasm/COPYING"
-    },
-    {
-      "file": "npm-xslt-polyfill-LICENSE",
-      "sha256": "54c3dd9f65fffc74f4cc1295e6cd23c4378d588d9073b6363e199547043f0747",
-      "source": "node_modules/xslt-polyfill/LICENSE"
+      "sources": [
+        {
+          "name": "npm-xmllint-wasm-COPYING",
+          "source": "node_modules/xmllint-wasm/COPYING"
+        }
+      ]
     },
     {
       "file": "npm-@floating-ui_dom-LICENSE",
+      "bytes": 1089,
       "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
-      "source": "node_modules/@floating-ui/dom/LICENSE"
+      "sources": [
+        {
+          "name": "npm-@floating-ui_dom-LICENSE",
+          "source": "node_modules/@floating-ui/dom/LICENSE"
+        },
+        {
+          "name": "npm-@floating-ui_core-LICENSE",
+          "source": "node_modules/@floating-ui/core/LICENSE"
+        },
+        {
+          "name": "npm-@floating-ui_utils-LICENSE",
+          "source": "node_modules/@floating-ui/utils/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-lie-license.md",
+      "bytes": 1084,
       "sha256": "5c81b0caa98593408b03125efa25efe622341ed87ae55561968828cd887d64a4",
-      "source": "node_modules/lie/license.md"
+      "sources": [
+        {
+          "name": "npm-lie-license.md",
+          "source": "node_modules/lie/license.md"
+        }
+      ]
     },
     {
       "file": "npm-readable-stream-LICENSE",
+      "bytes": 2337,
       "sha256": "ec62dc96da0099b87f4511736c87309335527fb7031639493e06c95728dc8c54",
-      "source": "node_modules/readable-stream/LICENSE"
+      "sources": [
+        {
+          "name": "npm-readable-stream-LICENSE",
+          "source": "node_modules/readable-stream/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-setimmediate-LICENSE.txt",
+      "bytes": 1103,
       "sha256": "c4b4ad3a5746f1f5249a6dd90396ec519264e1bb02e01e48a6522c48a3a97cb4",
-      "source": "node_modules/setimmediate/LICENSE.txt"
-    },
-    {
-      "file": "npm-@floating-ui_core-LICENSE",
-      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
-      "source": "node_modules/@floating-ui/core/LICENSE"
-    },
-    {
-      "file": "npm-@floating-ui_utils-LICENSE",
-      "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce",
-      "source": "node_modules/@floating-ui/utils/LICENSE"
+      "sources": [
+        {
+          "name": "npm-setimmediate-LICENSE.txt",
+          "source": "node_modules/setimmediate/LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "npm-immediate-LICENSE.txt",
+      "bytes": 1115,
       "sha256": "809e66de579fb7d92503848bbe6d1f348f4f6521a71e5d294fe7cc0c87a3b4ff",
-      "source": "node_modules/immediate/LICENSE.txt"
+      "sources": [
+        {
+          "name": "npm-immediate-LICENSE.txt",
+          "source": "node_modules/immediate/LICENSE.txt"
+        }
+      ]
     },
     {
       "file": "npm-core-util-is-LICENSE",
+      "bytes": 1077,
       "sha256": "33b734d60042d0fe0c92dd1fc1e874193a1c899ec3e276a2eb935d2d0bf5b710",
-      "source": "node_modules/core-util-is/LICENSE"
+      "sources": [
+        {
+          "name": "npm-core-util-is-LICENSE",
+          "source": "node_modules/core-util-is/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-inherits-LICENSE",
+      "bytes": 749,
       "sha256": "5ffe28e7ade7d8f10d85d5337a73fd793dac5c462fb9a28fbf8c5046c7fbca3b",
-      "source": "node_modules/inherits/LICENSE"
+      "sources": [
+        {
+          "name": "npm-inherits-LICENSE",
+          "source": "node_modules/inherits/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-isarray-README.md",
+      "bytes": 1890,
       "sha256": "ff138e683771b187f3629c383db72ee7d632009010a36d08e18e8d2a34222ec7",
-      "source": "node_modules/isarray/README.md"
+      "sources": [
+        {
+          "name": "npm-isarray-README.md",
+          "source": "node_modules/isarray/README.md"
+        }
+      ]
     },
     {
       "file": "npm-process-nextick-args-license.md",
+      "bytes": 1064,
       "sha256": "ecdccbcf39024f624ded480c01c0b25458e1eca8f26ecf040933865ce56d9a4f",
-      "source": "node_modules/process-nextick-args/license.md"
+      "sources": [
+        {
+          "name": "npm-process-nextick-args-license.md",
+          "source": "node_modules/process-nextick-args/license.md"
+        }
+      ]
     },
     {
       "file": "npm-safe-buffer-LICENSE",
+      "bytes": 1081,
       "sha256": "c7cc929b57080f4b9d0c6cf57669f0463fc5b39906344dfc8d3bc43426b30eac",
-      "source": "node_modules/safe-buffer/LICENSE"
+      "sources": [
+        {
+          "name": "npm-safe-buffer-LICENSE",
+          "source": "node_modules/safe-buffer/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-string_decoder-LICENSE",
+      "bytes": 2338,
       "sha256": "11f2aafb37d06b3ee5bdaf06e9811141d0da05263c316f3d627f45c20d43261b",
-      "source": "node_modules/string_decoder/LICENSE"
+      "sources": [
+        {
+          "name": "npm-string_decoder-LICENSE",
+          "source": "node_modules/string_decoder/LICENSE"
+        }
+      ]
     },
     {
       "file": "npm-util-deprecate-LICENSE",
+      "bytes": 1102,
       "sha256": "0154425673db15cdfa80ecba2c9b1f1a867f7197a006764712849bfc3a93cbb7",
-      "source": "node_modules/util-deprecate/LICENSE"
+      "sources": [
+        {
+          "name": "npm-util-deprecate-LICENSE",
+          "source": "node_modules/util-deprecate/LICENSE"
+        }
+      ]
+    }
+  ],
+  "distributionNotices": [
+    {
+      "path": "assets/licenses/THIRD_PARTY.txt",
+      "bytes": 1214177,
+      "sha256": "cbd421b5345a1004fd737429ad2e708de451a15ae6a572d27fb34d8aa5a5efa7"
+    },
+    {
+      "path": "assets/licenses/crisperbooks-host-MIT.txt",
+      "bytes": 1070,
+      "sha256": "b621ffc351fe263bc9b09dd0bc1c9332fda9c462a3904c1e4f0b4d3236b9c28c"
+    },
+    {
+      "path": "assets/licenses/file-viewer-Apache-2.0.txt",
+      "bytes": 9140,
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b"
     }
   ],
   "sourceInputs": [
@@ -1971,8 +2343,16 @@
       "sha256": "12dfffe0aad2ab441afcff4abd89b7472deaac2be5bd88869c382b850ecab593"
     },
     {
+      "path": "engines/host/fonts.ts",
+      "sha256": "1e9f19ce06a5c5f63c8dea2c78205ac6dcefef4638da3ff9e65d4155cd4137e8"
+    },
+    {
       "path": "engines/host/index.ts",
-      "sha256": "ea319cae7cd22dbd887f72e41169019d1be2c11a432a29931b4e6c1502ec7bb0"
+      "sha256": "70b5035bbe09e947dfb83390498ca4de4d4f8c05be500cf69c79534e0e5dbf11"
+    },
+    {
+      "path": "engines/host/test/fonts.test.mjs",
+      "sha256": "dd84e66937c7eccb6368797babdcbbbbc2ad266c08efe6ca9d0ff8c9c6775a7a"
     },
     {
       "path": "engines/postscript/src/entry.ts",
@@ -1996,11 +2376,11 @@
     },
     {
       "path": "engines/ppt/src/index.ts",
-      "sha256": "02b2233dc4be77b3f32071b2f9b4a69ec2da1c27a8961e1e609b9a643fd2c0f1"
+      "sha256": "4a3ce2518334c4a77b085eef1940f7eec4f6ae2f73e8c3e80bc9029f64e595c6"
     },
     {
       "path": "engines/ppt/src/limits.ts",
-      "sha256": "849e75d154e145c43a3d0c9cdd0fbb31652720b858ee7232273ed78aa570635d"
+      "sha256": "e29d69af52ce6e7925cb3f1f309cb468c97c1058fead923ae9997f512cf25f76"
     },
     {
       "path": "engines/spreadsheet/src/boundedWorker.ts",
@@ -2016,7 +2396,7 @@
     },
     {
       "path": "engines/spreadsheet/src/spreadsheet.ts",
-      "sha256": "85d6e205ff6b51625681414984fde3fa4382265a3b03f8f70a48db0156785c88"
+      "sha256": "f1c669ef305472f6b3a2d4942bb6551e1a9d1a0bd9858ca84a1ccd38276c3cec"
     },
     {
       "path": "engines/spreadsheet/src/spreadsheet/worker/sheetjs/parser.ts",
@@ -2040,7 +2420,7 @@
     },
     {
       "path": "engines/wordperfect/src/wordperfect.ts",
-      "sha256": "86df9fc77342506ff0272ddf6b24d7ab8d6e9ae05bce86341564949dd98ee961"
+      "sha256": "a9db472da0ae3af2ec56a8bcb8e71eb60210593c4caca2d048b51c6ad0ef2635"
     },
     {
       "path": "engines/wordperfect/src/wordperfect.worker.ts",
@@ -2061,6 +2441,14 @@
     {
       "path": "engines/xml/src/xmlSafety.ts",
       "sha256": "9307a8e7dfea49bca22a3994509a878a92b038f8d6e33d658a9cdac725bd9e6e"
+    },
+    {
+      "path": "tooling/build.mjs",
+      "sha256": "0c3e2bdf1334976ab5ec0601154851901925b638c85a06f97f764282e48a6e17"
+    },
+    {
+      "path": "tooling/ppt-font-patches.mjs",
+      "sha256": "eff46a69d3353bf342296a171543f3cfbc033e390a64970be743f490e2605f4e"
     }
   ],
   "correspondingSource": [

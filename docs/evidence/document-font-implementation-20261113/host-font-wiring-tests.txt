@@ -1,0 +1,10 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: missing native plugin produces an immediate bounded error (variant: TargetPlatform.linux)
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: unavailable or malformed runtime probes never create a view (variant: TargetPlatform.linux)
+00:00 +2: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: Linux document host routes typing, trusted messages and disposal (variant: TargetPlatform.linux)
+00:00 +3: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: a view created after widget disposal is released without starting (variant: TargetPlatform.linux)
+00:00 +4: loading /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/preview_fonts_test.dart
+00:01 +4: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/preview_fonts_test.dart: invalid shared-font configuration never opens a browser host
+00:01 +5: All tests passed!

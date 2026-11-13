@@ -10,8 +10,10 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:quds_office_engine/quds_office_engine.dart';
+
+import 'document_font_catalog.dart';
+import 'document_fonts.dart';
 
 const int kOfficePdfInputCap = 64 * 1024 * 1024;
 
@@ -26,12 +28,40 @@ class OfficePdfException implements Exception {
   String toString() => message;
 }
 
+/// Bounded facts from emitted glyphs, separate from the complete PDF buffer.
+class OfficePdfFontReport {
+  const OfficePdfFontReport({
+    required this.missingCodePoints,
+    required this.substitutions,
+    required this.diagnosticsTruncated,
+  });
+
+  final List<int> missingCodePoints;
+  final List<OfficeFontSubstitution> substitutions;
+  final bool diagnosticsTruncated;
+  bool get hasFontNotice =>
+      missingCodePoints.isNotEmpty ||
+      substitutions.isNotEmpty ||
+      diagnosticsTruncated;
+}
+
+class OfficePdfResult {
+  const OfficePdfResult({required this.bytes, required this.fonts});
+  final Uint8List bytes;
+  final OfficePdfFontReport fonts;
+}
+
 /// Convert [bytes] (DOCX/XLSX/PPTX) to PDF bytes.
 ///
 /// Runs on a background isolate on native platforms. Throws
 /// [OfficePdfException] for unsupported/corrupt input or when conversion
 /// exceeds the input cap.
 Future<Uint8List> convertOfficeToPdf(
+  Uint8List bytes, {
+  String? password,
+}) async => (await convertOfficeToPdfResult(bytes, password: password)).bytes;
+
+Future<OfficePdfResult> convertOfficeToPdfResult(
   Uint8List bytes, {
   String? password,
 }) async {
@@ -43,18 +73,41 @@ Future<Uint8List> convertOfficeToPdf(
     );
   }
 
-  final fontData = await rootBundle.load('assets/fonts/Roboto-Regular.ttf');
-  final fontBytes = fontData.buffer.asUint8List(
-    fontData.offsetInBytes,
-    fontData.lengthInBytes,
-  );
-
-  Uint8List render() {
-    final font = SfntFont.parse(fontBytes);
-    return OfficePdfExport.fromBytes(bytes, font: font, password: password);
-  }
-
   try {
+    final fontBytes = await DocumentFonts.loadExportFaces();
+    OfficePdfResult render() {
+      final diagnostics = OfficeFontDiagnostics();
+      final fonts = OfficeFontSet(
+        defaultFamily: 'Liberation Sans',
+        diagnostics: diagnostics,
+        faces: [
+          for (var index = 0; index < documentFontAssets.length; index++)
+            OfficeFontFace(
+              font: SfntFont.parse(fontBytes[index]),
+              family: documentFontAssets[index].family,
+              aliases: documentFontAliases(documentFontAssets[index].family),
+              weight: documentFontAssets[index].weight,
+              italic: documentFontAssets[index].italic,
+            ),
+        ],
+      );
+      final pdf = OfficePdfExport.fromBytes(
+        bytes,
+        fonts: fonts,
+        password: password,
+      );
+      return OfficePdfResult(
+        bytes: pdf,
+        fonts: OfficePdfFontReport(
+          missingCodePoints: diagnostics.missingCodePoints.toList(
+            growable: false,
+          ),
+          substitutions: diagnostics.substitutions,
+          diagnosticsTruncated: diagnostics.truncated,
+        ),
+      );
+    }
+
     if (kIsWeb) {
       // Isolates are unavailable on the web; run inline.
       return render();

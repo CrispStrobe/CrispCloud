@@ -43,6 +43,11 @@ slice does not add a native libwpd FFI build or claim native platform validation
   note. Header, footer and note content remain separately displayed.
 - Display a persistent fidelity notice: page layout, embedded images/fonts,
   equations and drawings are not reproduced; table cells use plain text.
+- When the app supplies its shared font catalog, await only the bundled
+  Liberation Serif emphasis faces used by the parsed content before layout;
+  Arabic text also requests existing Noto Naskh Arabic. The native bridge does
+  not expose original font names. This makes structured reading consistent and
+  does not claim restoration of original document typography or embedded fonts.
 - Reject source above 64 MiB before copying, importing or allocating in WASM.
   Limit the decoded wire to 32 MiB, 200,000 events, 1,000 metadata pairs,
   8 MiB aggregate string bytes, 20,000 rendered blocks, 50,000 table cells,

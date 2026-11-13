@@ -8,6 +8,7 @@ import 'host.dart' show DocumentHostSender;
 
 Widget buildDocumentHost({
   required String session,
+  List<DocumentPreviewFont> fonts = const [],
   required void Function(DocumentHostSender sender) onConnected,
   required void Function(DocumentJson message) onMessage,
   required void Function(String message) onError,

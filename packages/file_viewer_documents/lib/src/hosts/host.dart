@@ -13,11 +13,13 @@ typedef DocumentHostSender = Future<void> Function(DocumentJson message);
 
 Widget createDocumentHost({
   required String session,
+  List<DocumentPreviewFont> fonts = const [],
   required void Function(DocumentHostSender sender) onConnected,
   required void Function(DocumentJson message) onMessage,
   required void Function(String message) onError,
 }) => implementation.buildDocumentHost(
   session: session,
+  fonts: fonts,
   onConnected: onConnected,
   onMessage: onMessage,
   onError: onError,

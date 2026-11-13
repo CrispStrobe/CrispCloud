@@ -704,7 +704,7 @@ class WordLayoutEngine {
   /// Host measurement used when [fonts] and [font] do not cover a code point.
   final WordGlyphMeasure? measure;
 
-  final Map<int, FontMetrics> _metricsCache = <int, FontMetrics>{};
+  final Map<(SfntFont, double), FontMetrics> _metricsCache = {};
 
   WmlDocument? _layoutDoc;
   // Temporary tall-row shaping records absolute frame anchors without moving
@@ -823,6 +823,15 @@ class WordLayoutEngine {
     }
   }
 
+  SfntFont? _faceFor(int cp, WmlRunProps props) =>
+      fonts?.faceFor(
+        cp,
+        family: OfficeTypeface.familyForRun(props, cp),
+        weight: props.bold ? 700 : 400,
+        italic: props.italic,
+      ) ??
+      (font != null && font!.glyphIdFor(cp) != 0 ? font : null);
+
   double _advanceOf(
     int cp,
     double sizePoints,
@@ -832,18 +841,15 @@ class WordLayoutEngine {
     if (cp == 0x09) {
       return kDefaultTabWidth;
     }
-    final SfntFont? face =
-        fonts?.faceFor(cp) ??
-        (font != null && font!.glyphIdFor(cp) != 0 ? font : null);
+    final SfntFont? face = _faceFor(cp, props);
     if (face == null) {
       final WordGlyphMeasure? hostMeasure = measure;
       return hostMeasure != null
           ? hostMeasure(cp, sizePoints, props)
           : sizePoints * emFallback;
     }
-    final int key = identityHashCode(face) ^ (sizePoints * 100).round();
     final FontMetrics metrics = _metricsCache.putIfAbsent(
-      key,
+      (face, sizePoints),
       () => FontMetrics(font: face, fontSizePoints: sizePoints),
     );
     return metrics.characterWidth(cp);
@@ -1182,9 +1188,11 @@ class WordLayoutEngine {
   }) {
     final WmlRunProps runProps = WmlRunEdit.propsAt(paragraph, 0);
     final double fontSize = runProps.fontSizePoints;
-    final FontMetrics? metrics = font == null
+    final int firstCodePoint = paragraph.text.runes.firstOrNull ?? 0x20;
+    final SfntFont? firstFace = _faceFor(firstCodePoint, runProps);
+    final FontMetrics? metrics = firstFace == null
         ? null
-        : FontMetrics(font: font!, fontSizePoints: fontSize);
+        : FontMetrics(font: firstFace, fontSizePoints: fontSize);
     final double lineHeight = _lineHeight(
       paragraph.properties,
       metrics,
@@ -1231,19 +1239,35 @@ class WordLayoutEngine {
     final double em = allowBreak
         ? fallbackWidthFactor
         : math.max(fallbackWidthFactor, 0.72);
-    double widthOf(int cp) => _advanceOf(cp, fontSize, em, runProps);
-    int glyphIdOf(int cp) {
-      final SfntFont? face = fonts?.faceFor(cp) ?? font;
-      return face?.glyphIdFor(cp) ?? cp;
+    final propsByOffset = <int, WmlRunProps>{};
+    WmlRunProps propsAt(int offset) => propsByOffset.putIfAbsent(
+      offset, () => WmlRunEdit.propsAt(paragraph, offset),
+    );
+    double widthAt(int cp, int offset) {
+      final props = propsAt(offset);
+      return _advanceOf(
+        cp, props.fontSizePoints * props.vertAlign.fontScale, em, props,
+      );
     }
+    int glyphIdAt(int cp, int offset) =>
+        _faceFor(cp, propsAt(offset))?.glyphIdFor(cp) ?? 0;
 
-    final MarkAttachFn? markAttach = font == null
-        ? null
-        : GposMarkToBase.fnFor(
-            font!,
-            fontSize,
-            faceFor: (int cp) => fonts?.faceFor(cp) ?? font,
-          );
+    // Widths and glyph IDs are resolved before wrapping, using each run's
+    // actual family, style and size. Scaling only after wrapping lets bold or
+    // large runs overflow the line and produces incorrect PDF positioning.
+    ({double dx, double dy}) markAttach(ShapedGlyph base, ShapedGlyph mark) {
+      final baseProps = propsAt(base.logicalIndex);
+      final markProps = propsAt(mark.logicalIndex);
+      final baseFace = _faceFor(base.codePoint, baseProps);
+      final markFace = _faceFor(mark.codePoint, markProps);
+      final baseSize = baseProps.fontSizePoints * baseProps.vertAlign.fontScale;
+      final markSize = markProps.fontSizePoints * markProps.vertAlign.fontScale;
+      if (baseFace == null || !identical(baseFace, markFace) ||
+          baseSize != markSize) {
+        return (dx: -base.advance / 2, dy: 0);
+      }
+      return GposMarkToBase.fnFor(baseFace, baseSize)(base, mark);
+    }
     final bool wrapsFrames =
         allowBreak &&
         flow != null &&
@@ -1253,8 +1277,9 @@ class WordLayoutEngine {
     final PreparedLineBreaker? wrapBreaker = wrapsFrames
         ? LineBreaker.prepare(
             text: text,
-            widthOf: widthOf,
-            glyphIdOf: glyphIdOf,
+            widthOf: (cp) => widthAt(cp, 0),
+            widthAt: widthAt,
+            glyphIdAt: glyphIdAt,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
           )
@@ -1264,8 +1289,9 @@ class WordLayoutEngine {
         : LineBreaker.breakLines(
             text: text,
             maxWidth: maxWidth,
-            widthOf: widthOf,
-            glyphIdOf: glyphIdOf,
+            widthOf: (cp) => widthAt(cp, 0),
+            widthAt: widthAt,
+            glyphIdAt: glyphIdAt,
             markAttachOf: markAttach,
             baseLevel: paragraph.properties.bidiBaseLevel,
             breakLongWords: !allowBreak,
@@ -1418,21 +1444,18 @@ class WordLayoutEngine {
       var gx = x;
       final List<LaidOutGlyph> glyphs = <LaidOutGlyph>[];
       for (final ShapedGlyph g in line.glyphs) {
-        final WmlRunProps props = WmlRunEdit.propsAt(paragraph, g.logicalIndex);
+        final WmlRunProps props = propsAt(g.logicalIndex);
         final double baseSize = props.fontSizePoints;
         final double size = baseSize * props.vertAlign.fontScale;
-        final double scale = fontSize <= 0
-            ? props.vertAlign.fontScale
-            : size / fontSize;
         glyphs.add(
           LaidOutGlyph(
             glyph: g,
-            x: gx + g.paintDx * scale,
+            x: gx + g.paintDx,
             y:
                 cursorY +
                 (metrics?.ascender ?? baseSize * 0.8) +
                 props.vertAlign.baselineShift(baseSize) -
-                g.paintDy * scale,
+                g.paintDy,
             color: props.color,
             fontSize: size,
             bold: props.bold,
@@ -1444,12 +1467,12 @@ class WordLayoutEngine {
             vertAlign: props.vertAlign,
             hyperlink: WordLink.at(paragraph, g.logicalIndex),
             commentIds: WordComment.idsAt(paragraph, g.logicalIndex),
-            advance: g.advance * scale,
-            paintDx: g.paintDx * scale,
-            paintDy: g.paintDy * scale,
+            advance: g.advance,
+            paintDx: g.paintDx,
+            paintDy: g.paintDy,
           ),
         );
-        gx += g.advance * scale;
+        gx += g.advance;
       }
       final bool paraRtl =
           paragraph.properties.rightToLeft == true ||

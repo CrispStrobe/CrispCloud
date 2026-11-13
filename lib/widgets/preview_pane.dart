@@ -28,7 +28,10 @@ import '../services/file_bytes_loader.dart';
 import '../services/internal_viewer_service.dart';
 import '../services/email_message_service.dart';
 import '../services/office_document_service.dart';
+import '../services/document_fonts.dart';
+import '../services/document_font_catalog.dart';
 import '../l10n/office_preview_strings.dart';
+import '../l10n/office_pdf_font_notice_strings.dart';
 import '../utils/formatters.dart';
 import 'file_list_view.dart' show getFileIcon;
 import 'preview_media.dart';
@@ -229,6 +232,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
   String? _textContent;
   EmailMessageDocument? _emailMessage;
   OfficeDocument? _portableOffice;
+  bool _officeFontFallback = false;
   PdfController? _pdfController;
   PdfDocument? _pdfDocument;
   ViewerSpool? _spool;
@@ -304,6 +308,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
     _textContent = null;
     _emailMessage = null;
     _portableOffice = null;
+    _officeFontFallback = false;
     _error = null;
     _loading = false;
     _loadedFile = file;
@@ -412,6 +417,18 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
             }.contains(file.extension)
             ? await parseOfficeDocument(bytes, file.name)
             : null;
+        var fontFallback = false;
+        if (portable?.safeHtml != null) {
+          try {
+            await DocumentFonts.ensureRegistered();
+          } catch (error) {
+            _log.warn(
+              'Document fonts could not load; using available fonts',
+              error,
+            );
+            fontFallback = true;
+          }
+        }
         final text = portable == null
             ? await _extractOfficeText(bytes, file.name, mediaStrings)
             : [
@@ -430,6 +447,7 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
         }
         _textContent = text;
         _portableOffice = portable;
+        _officeFontFallback = fontFallback;
       } else if (type == PreviewType.csv ||
           type == PreviewType.text ||
           type == PreviewType.markdown) {
@@ -924,9 +942,20 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
                 Text(note, style: theme.textTheme.bodySmall),
                 const Divider(),
               ],
+              if (_officeFontFallback) ...[
+                Text(
+                  OfficePdfFontNoticeStrings(Localizations.localeOf(context))
+                      .text('previewFallback'),
+                ),
+                const Divider(),
+              ],
               HtmlWidget(
                 safeHtml,
                 factoryBuilder: OfficeHtmlWidgetFactory.new,
+                textStyle: const TextStyle(
+                  fontFamily: 'Liberation Sans',
+                  fontFamilyFallback: documentFontFallbacks,
+                ),
                 onTapUrl: (_) => true,
               ),
             ],
@@ -949,7 +978,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
               language: lang,
               theme: isDark ? monokaiSublimeTheme : githubTheme,
               textStyle: const TextStyle(
-                fontFamily: 'monospace',
+                fontFamily: 'AppMono',
+                fontFamilyFallback: documentFontFallbacks,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -965,7 +995,8 @@ class _PreviewPaneState extends ConsumerState<PreviewPane> {
           child: SelectableText(
             _textContent!,
             style: const TextStyle(
-              fontFamily: 'monospace',
+              fontFamily: 'AppMono',
+              fontFamilyFallback: documentFontFallbacks,
               fontSize: 12,
               height: 1.4,
             ),
