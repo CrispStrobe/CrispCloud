@@ -2,6 +2,9 @@
 
 import 'dart:typed_data';
 
+import 'legacy_word_ink.dart';
+export 'legacy_word_ink.dart';
+
 /// Metafile/device or OfficeArt geometry coordinates, independent of placement.
 class LegacyWordVectorBounds {
   const LegacyWordVectorBounds(this.left, this.top, this.right, this.bottom);
@@ -183,6 +186,12 @@ class LegacyWordOfficeArtInk {
   static const maxDataLength = 16 * 1024 * 1024;
   final Uint8List? data;
   final bool? annotation, hitTestInk, renderShape, renderInk;
+
+  /// Complete bounded packet/paint inspection. The original immutable ISF is
+  /// retained for unsupported or malformed streams; no partial strokes escape.
+  late final LegacyWordInkDecodeResult? decoding = data == null
+      ? null
+      : decodeLegacyWordInk(data!);
 
   LegacyWordInkHeaderStatus? get headerStatus {
     final bytes = data;

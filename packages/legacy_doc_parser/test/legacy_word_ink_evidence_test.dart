@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -254,7 +255,10 @@ void main() {
       expect(ink['story'], 'main');
       expect(ink['cp'], 1);
       expect(ink['headerStatus'], 'version1Extent');
-      expect(ink['strokeSemanticsDecoded'], isFalse);
+      expect(ink['strokeSemanticsDecoded'], isTrue);
+      expect(ink['strokeDecodeStatus'], 'decoded');
+      expect(ink['strokeCount'], 0);
+      expect(ink['pointCount'], 0);
       expect(ink['nativeInkEmitted'], isFalse);
       expect(ink['annotation'], isTrue);
       expect(ink.containsKey('commentId'), isFalse);
@@ -272,6 +276,42 @@ void main() {
       _noActiveInk(files);
     },
   );
+
+  for (final mode in ['compressed', 'uncompressed']) {
+    test(
+      'nonempty WPF $mode strokes retain exact OfficeArt occurrence evidence',
+      () {
+        final payload = File(
+          'test/fixtures/ink_wpf/pressure-ramp/$mode.isf',
+        ).readAsBytesSync();
+        final source = officeArtShapeWordFixture(
+          values: {0x073f: 0x00090009},
+          complex: {0x0700: _envelope(payload)},
+        );
+        final document = parseLegacyWordDocument(source);
+        final decoded = document.media.drawings.single.shape!.ink!.decoding!;
+        expect(decoded.status, LegacyWordInkDecodeStatus.decoded);
+        expect(
+          decoded.strokes.single.points.map((point) => point.normalPressure),
+          [0, 127, 511, 895, 1023],
+        );
+        final result = convertLegacyWordDocument(document),
+            parts = _parts(result.bytes);
+        final ink = _records(
+          parts,
+        ).singleWhere((row) => row['kind'] == 'officeArtInk');
+        expect(parts[ink['part']], orderedEquals(payload));
+        expect(ink['strokeSemanticsDecoded'], isTrue);
+        expect(ink['strokeCount'], 1);
+        expect(ink['pointCount'], 5);
+        expect(ink['nativeInkEmitted'], isFalse);
+        expect(ink.containsKey('commentId'), isFalse);
+        expect(result.preservedCounts['decodedInkPayloads'], 1);
+        expect(result.preservedCounts['decodedInkStrokes'], 1);
+        _noActiveInk(parts);
+      },
+    );
+  }
 
   test('discussion anchors do not join unrelated ink payloads to comments', () {
     final document = parseLegacyWordDocument(_unrelatedComment());

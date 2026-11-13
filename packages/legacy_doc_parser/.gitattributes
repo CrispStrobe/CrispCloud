@@ -1,0 +1,3 @@
+# Keep independently generated Windows WPF oracle bytes exactly as downloaded.
+test/fixtures/ink_wpf/** -text whitespace=cr-at-eol
+doc/evidence/wpf-isf-oracle-20261113/*.log -text whitespace=-trailing-space,cr-at-eol

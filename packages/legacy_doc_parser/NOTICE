@@ -30,3 +30,10 @@ Dependencies retain their own licenses; see each resolved package's LICENSE.
 MPL-2.0 is applied without the Exhibit B "Incompatible With Secondary Licenses"
 designation. No permission to execute an embedded third-party payload is
 conferred by parsing or retaining that payload.
+
+4. lib/src/legacy_word_ink.dart adapts bounded ISF reference algorithms and
+   Huffman table constants from the .NET WPF implementation at
+   e7acf467c05e51901b17684b1f2c330e7dc5fc4d (MIT).
+   Copyright (c) .NET Foundation and Contributors.
+   The complete grant is retained in third_party/wpf-isf/LICENSE.txt.
+   Independent runtime fixture provenance is documented in doc/ink-decoding.md.

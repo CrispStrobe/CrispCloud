@@ -3,7 +3,6 @@
 import hashlib
 import json
 from pathlib import Path
-import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / 'packages/file_viewer_documents'
@@ -47,8 +46,10 @@ def verify(package=PACKAGE, *, tracked=False):
         paths = [p.relative_to(ROOT).as_posix() for p, _ in records]
         paths += ['packages/file_viewer_documents/RUNTIME_MANIFEST.json',
                   'packages/file_viewer_documents/assets/licenses/THIRD_PARTY.txt']
-        subprocess.run(['git', '-C', str(ROOT), 'ls-files', '--error-unmatch', '--',
-                        *paths], check=True, stdout=subprocess.DEVNULL)
+        from verify_office_fidelity import verify_git_index
+        failures = verify_git_index(ROOT, paths)
+        if failures:
+            raise ValueError('Document runtime is not retained exactly in Git: ' + '\n'.join(failures))
     return len(records)
 
 

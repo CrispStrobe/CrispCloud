@@ -1,0 +1,46 @@
+{
+  "name": "pressure-ramp",
+  "purpose": "Pressure varies from zero to full with pressure-sensitive drawing.",
+  "coordinateUnit": "Himetric (1/100 millimeter)",
+  "dipPerHimetric": 0.03779527559055118,
+  "expectedStrokeCount": 1,
+  "expectedPointCounts": [
+    5
+  ],
+  "strokes": [
+    {
+      "points": [
+        {
+          "xHimetric": 0,
+          "yHimetric": 1270,
+          "pressure": 0
+        },
+        {
+          "xHimetric": 635,
+          "yHimetric": 635,
+          "pressure": 0.125
+        },
+        {
+          "xHimetric": 1270,
+          "yHimetric": 1270,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 1905,
+          "yHimetric": 635,
+          "pressure": 0.875
+        },
+        {
+          "xHimetric": 2540,
+          "yHimetric": 1270,
+          "pressure": 1
+        }
+      ],
+      "colorArgb": "#FF7020A0",
+      "widthHimetric": 212,
+      "heightHimetric": 212,
+      "ignorePressure": false,
+      "tip": 1
+    }
+  ]
+}

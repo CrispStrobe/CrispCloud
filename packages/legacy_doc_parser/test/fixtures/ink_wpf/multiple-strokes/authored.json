@@ -1,0 +1,71 @@
+{
+  "name": "multiple-strokes",
+  "purpose": "Three ordered strokes with separate colors, widths and tip shapes.",
+  "coordinateUnit": "Himetric (1/100 millimeter)",
+  "dipPerHimetric": 0.03779527559055118,
+  "expectedStrokeCount": 3,
+  "expectedPointCounts": [
+    2,
+    2,
+    2
+  ],
+  "strokes": [
+    {
+      "points": [
+        {
+          "xHimetric": 0,
+          "yHimetric": 0,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 2540,
+          "yHimetric": 0,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#FFFF0000",
+      "widthHimetric": 53,
+      "heightHimetric": 53,
+      "ignorePressure": true,
+      "tip": 1
+    },
+    {
+      "points": [
+        {
+          "xHimetric": 635,
+          "yHimetric": 635,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 635,
+          "yHimetric": 1905,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#FF008000",
+      "widthHimetric": 159,
+      "heightHimetric": 53,
+      "ignorePressure": true,
+      "tip": 0
+    },
+    {
+      "points": [
+        {
+          "xHimetric": 1270,
+          "yHimetric": 635,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 2540,
+          "yHimetric": 1905,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#FF0000FF",
+      "widthHimetric": 106,
+      "heightHimetric": 106,
+      "ignorePressure": true,
+      "tip": 1
+    }
+  ]
+}

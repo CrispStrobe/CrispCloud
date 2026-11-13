@@ -589,6 +589,7 @@
     "lib/services/internxt_flutter/secure_config_storage.dart",
     "lib/services/internxt_streaming_transfer.dart",
     "lib/services/keepass_service.dart",
+    "lib/services/legacy_doc_licenses.dart",
     "lib/services/local_api_service.dart",
     "lib/services/mac_browser_toolbar.dart",
     "lib/services/macos_keychain_service.dart",
@@ -930,6 +931,7 @@
     "packages/kpasslib/lib/src/utils/parameters_map.dart",
     "packages/kpasslib/lib/src/utils/xml_utils.dart",
     "packages/kpasslib/pubspec.yaml",
+    "packages/legacy_doc_parser/NOTICE",
     "packages/legacy_doc_parser/UPSTREAM.json",
     "packages/legacy_doc_parser/lib/legacy_doc_parser.dart",
     "packages/legacy_doc_parser/lib/src/bounded_cfb_reader.dart",
@@ -945,6 +947,7 @@
     "packages/legacy_doc_parser/lib/src/legacy_word_fields.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_format_tables.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_html_media.dart",
+    "packages/legacy_doc_parser/lib/src/legacy_word_ink.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_layout_model.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_layout_parser.dart",
     "packages/legacy_doc_parser/lib/src/legacy_word_lists.dart",
@@ -990,6 +993,7 @@
     "packages/legacy_doc_parser/lib/src/word_table_writer.dart",
     "packages/legacy_doc_parser/lib/src/word_textbox_writer.dart",
     "packages/legacy_doc_parser/pubspec.yaml",
+    "packages/legacy_doc_parser/third_party/wpf-isf/LICENSE.txt",
     "packages/quds_office_editor/pubspec.yaml",
     "packages/quds_office_engine/lib/src/opc/crypto/office_crypto.dart",
     "packages/quds_office_engine/lib/src/pdf/file/crypto/pdf_security.dart",
@@ -1022,7 +1026,8 @@
     "The 1.2.4 refresh adds bounded RPM/CAB/PBZX readers and DOC shape/metafile/schema preservation, and requires attached Word document content before a conversion warning can be cleared. The Internxt trash change only recomposes gateway filenames with their existing extension metadata. No new cipher, credential store, account destination or distribution classification is introduced.",
     "The 1.2.8 integration preserves the existing cryptography and credential stores. Reviewed archive moves verify destination receipts before source removal; archive directory synchronization retains publication dependency checks. Native desktop drag-out exports captured local file URLs with read access held until the OS drag completes, without adding account destinations or granting source deletion. The shared parser is pinned to fee9b84 and the Office snapshot to 5b32565; parser geometry and selection/Find changes introduce no encryption algorithm or distribution classification change.",
     "The large-archive continuation adds bounded streamed ZIP, 7z and TAR/GZIP parsing and writing for native files with the existing protected/buffered path retained. Its copied 7z metadata parser and LZMA/LZMA2 codecs add compression only; archive encryption continues to use the existing libraries and passwords. Wrong-password retries require independent evidence of encrypted headers. Publication continues through staged readback and destination/source checks. No new cipher, credential store or distribution classification is introduced.",
-    "The 1.2.9 recovery change retains the existing keychain/file/session backends, App Lock verifier and vault encryption/KDF. Explicit alternative-store confirmation is available at startup, unlock and resume failures; original credentials are not deleted. Diagnostic reports omit credential values/native query payloads. Per-invocation random availability probes are temporary non-secret records. The selected document engines add offline bounded parsing/WASM and an isolated local asset host with exact runtime hashes and grants; no provider credentials are supplied to the renderer. This source review adds no export classification or Apple approval."
+    "The 1.2.9 recovery change retains the existing keychain/file/session backends, App Lock verifier and vault encryption/KDF. Explicit alternative-store confirmation is available at startup, unlock and resume failures; original credentials are not deleted. Diagnostic reports omit credential values/native query payloads. Per-invocation random availability probes are temporary non-secret records. The selected document engines add offline bounded parsing/WASM and an isolated local asset host with exact runtime hashes and grants; no provider credentials are supplied to the renderer. This source review adds no export classification or Apple approval.",
+    "The bounded ISF parser adds compression/record decoding using MIT WPF reference material and independently authored WPF fixtures. It preserves raw ink without executing or activating it, and adds no encryption algorithm. The app retains the exact parser source location and WPF/Quds/JSDoc grants in its license screen. Document runtime bytes and canonical parser evidence are checked against the Git index, including ignored logs and executable modes."
   ],
   "external_source_manifests": [
     "docs/ebook-source-manifest.json"

@@ -1,0 +1,46 @@
+{
+  "name": "polyline-solid",
+  "purpose": "Black constant-width polyline with integer-Himetric coordinates.",
+  "coordinateUnit": "Himetric (1/100 millimeter)",
+  "dipPerHimetric": 0.03779527559055118,
+  "expectedStrokeCount": 1,
+  "expectedPointCounts": [
+    5
+  ],
+  "strokes": [
+    {
+      "points": [
+        {
+          "xHimetric": 0,
+          "yHimetric": 0,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 1270,
+          "yHimetric": 0,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 1270,
+          "yHimetric": 635,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 2540,
+          "yHimetric": 635,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 3175,
+          "yHimetric": 1270,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#FF000000",
+      "widthHimetric": 53,
+      "heightHimetric": 53,
+      "ignorePressure": true,
+      "tip": 1
+    }
+  ]
+}

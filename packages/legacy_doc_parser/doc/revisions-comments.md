@@ -186,7 +186,8 @@ The original 18-byte extended record is immutable in the public model and copied
 into an inert evidence part with its Table-stream offset. The ink-annotation bit
 is retained. Already supported referenced images/objects in comment stories use
 the normal media paths; the ink bit alone is never turned into invented strokes
-or an active `o:ink` element. ISF pen-stroke data is not decoded. The
+or an active `o:ink` element. Supported ISF pen-stroke data has a separate
+[bounded semantic decoder](ink-decoding.md). The
 record does not encode a resolved/done state, so none is fabricated in the native
 thread part. A hidden/private parent keeps its reply branch inert as well.
 
@@ -199,6 +200,14 @@ occurrence CP, owning story, independently used Ink Boolean flags and header
 inspection result. The `inkPayloads` count measures preserved payload
 occurrences, not rendered or editable ink. Empty, invalid-header and
 unsupported-version ISF payloads remain inert and distinguishable.
+
+The separate `decoding` result validates supported full packet/paint streams
+and exposes immutable ordered strokes, coordinates, pressure and attributes.
+Evidence records its status, reason and complete stroke/point counts. The
+`decodedInkPayloads` and `decodedInkStrokes` counts include only fully decoded
+nonempty streams; unsupported/malformed inputs expose no partial stroke list.
+Original ISF and all occurrence flags remain intact, and `nativeInkEmitted`
+remains false.
 
 `version1Extent` means only that the stream's version and declared byte extent
 match; packets, drawing attributes, compression, transforms and strokes are
@@ -213,9 +222,12 @@ comment. Neither it nor `fInkAnnotation` is used to invent a relationship to
 `ATRDPost10.fInkAtn`. The tests independently assemble the documented empty ISF
 stream and OfficeArt envelope, check byte-exact package evidence and adversarial
 headers, and verify that unrelated comment/shape flags remain independent.
-They do not establish native pen rendering or nonempty stroke round trips.
-The inspected Quds fixtures currently provide threaded comments but no ink
-payload fixture; a native ink sample and an ISF stroke oracle remain required.
+Those envelope tests do not establish native pen rendering. Separate actual
+Windows WPF fixtures now supply six authored nonempty cases, both compression
+modes and two save cycles (24 ISFs), with decoded JSON and independent raster
+outputs. They qualify the bounded decoder without establishing Word shape
+placement or native ink editing. The inspected Quds fixtures still provide no
+original ink-bearing Word document.
 
 Primary format references:
 

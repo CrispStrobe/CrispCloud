@@ -1,0 +1,76 @@
+{
+  "schema": "legacy-doc-parser/wpf-isf-evidence",
+  "version": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 8777,
+      "sha256": "6d0c46443e60dddbb6a017db334b01a168f999423fcbb0ebd1f21ff4aaa8b212"
+    },
+    {
+      "path": "first-job.log",
+      "bytes": 36068,
+      "sha256": "d6ae72639faee5d9c455ad1ae050e73df09e9b9c2b80bac0a629fd9e46787a35"
+    },
+    {
+      "path": "first-jobs.json",
+      "bytes": 1818,
+      "sha256": "34110177a1ea5c761ffaf07cc0666322c412504109fe2008f6fba770fea81e48"
+    },
+    {
+      "path": "first-run.zip",
+      "bytes": 2191,
+      "sha256": "1dad60c3499b57ff43cd690eba55f9ae6124abd783a97efc3db7d4c793b9f1b1"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 18901,
+      "sha256": "9e82671ad51b7e5a07303a5a6a78eb9abea6e5773b3f9087fa9eeae885b8c05e"
+    },
+    {
+      "path": "source/.github/workflows/ink-oracle.yml",
+      "bytes": 1690,
+      "sha256": "e73d091dcb132558152c96bc41bbaf7a3ec2c9a82f6aacd663f4e5f388edec48"
+    },
+    {
+      "path": "source/tool/ink_oracle/InkOracle.csproj",
+      "bytes": 385,
+      "sha256": "8d3f0b9f0e1b3f7be9618b3de82b38c74efd28bac1e099e508819197dc64e8ba"
+    },
+    {
+      "path": "source/tool/ink_oracle/Program.cs",
+      "bytes": 18549,
+      "sha256": "41d2bfcbc50421d8eab9b6bd9909c37e12083592865727fc6063bfbca2d2ea38"
+    },
+    {
+      "path": "source/tool/ink_oracle/README.md",
+      "bytes": 3606,
+      "sha256": "148b4495ea22661e7831fdd0d6ddc1ea39ec8ca05a40d08d3f7f9e69e698ca63"
+    },
+    {
+      "path": "source/tool/ink_oracle/global.json",
+      "bytes": 74,
+      "sha256": "fb21e5c3c690bb880374ed4ec8517639d8e73fd887022142ae60897fa73e1893"
+    },
+    {
+      "path": "successful-job.log",
+      "bytes": 19191,
+      "sha256": "4470c7da79c4db482b578bd1e75525207e3c8656d05ba9be20eff4f415cc1165"
+    },
+    {
+      "path": "successful-run.zip",
+      "bytes": 70184,
+      "sha256": "098ea413a50f21a686eb6ad75150658ea93cc6138d66d612e8972abfe8c54539"
+    },
+    {
+      "path": "test_verifier.py",
+      "bytes": 3332,
+      "sha256": "67cb7cbeb0360b9312837b95c60a8e77844b58a05820cdcd323c53e89ef22661"
+    },
+    {
+      "path": "verify.py",
+      "bytes": 20307,
+      "sha256": "f59f9fb1f4a01da1e5136b098cda82a32ad95b9ccd118a3e4686f1d62e391dde"
+    }
+  ]
+}

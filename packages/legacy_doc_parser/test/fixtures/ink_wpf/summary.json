@@ -1,0 +1,846 @@
+{
+  "schema": "legacy-doc-parser/wpf-isf-oracle",
+  "version": 1,
+  "sourceCommit": "5da4906ac8ccc76583329af23467e135dd3698a9",
+  "inspectedWpfSourceCommit": "e7acf467c05e51901b17684b1f2c330e7dc5fc4d",
+  "scope": "Actual WPF ISF encode/decode and ink rendering; not Word/OfficeArt rendering.",
+  "framework": ".NET 8.0.34",
+  "operatingSystem": "Microsoft Windows 10.0.26100",
+  "architecture": "X64",
+  "wpfAssembly": "PresentationCore, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+  "wpfInformationalVersion": "8.0.34-servicing.26522.17\u002Bc45b7b239ce0d0b210c0c7b48862804f4a038c78",
+  "wpfFileVersion": "8.0.3426.52217",
+  "wpfAssemblySha256": "cc1664768c1852d209f7c1121285c5bcc94262f9e60e38860d0143f8e28c0d11",
+  "gitHub": {
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "runId": "43382035366",
+    "runAttempt": "1",
+    "workflow": "Independent WPF ink oracle",
+    "sha": "5da4906ac8ccc76583329af23467e135dd3698a9"
+  },
+  "render": {
+    "pixelWidth": 256,
+    "pixelHeight": 192,
+    "dpi": 96,
+    "translationDip": [
+      32,
+      32
+    ],
+    "backgroundArgb": "#FFFFFFFF",
+    "modePreference": "SoftwareOnly",
+    "pixelFormat": "Pbgra32"
+  },
+  "cases": [
+    {
+      "name": "polyline-solid",
+      "purpose": "Black constant-width polyline with integer-Himetric coordinates.",
+      "strokeCount": 1,
+      "compressionChangesBytes": true,
+      "originalUnchanged": true,
+      "originalRender": {
+        "path": "original.png",
+        "pngSha256": "2b869fe1263a2d38d72ed1caea267902377b4788d16361497dabe6830c637f5f",
+        "pixelSha256": "e1072e607d866826c91db3119c98bd2db762496457369714478db4241a325c3f",
+        "nonWhitePixelCount": 364,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          153,
+          81
+        ]
+      },
+      "encodings": [
+        {
+          "mode": "uncompressed",
+          "compressArgument": false,
+          "isf": {
+            "path": "uncompressed.isf",
+            "bytes": 48,
+            "sha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f"
+          },
+          "roundtripIsf": {
+            "path": "uncompressed.roundtrip.isf",
+            "bytes": 48,
+            "sha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "uncompressed.reloaded.png",
+            "pngSha256": "2b869fe1263a2d38d72ed1caea267902377b4788d16361497dabe6830c637f5f",
+            "pixelSha256": "e1072e607d866826c91db3119c98bd2db762496457369714478db4241a325c3f",
+            "nonWhitePixelCount": 364,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              153,
+              81
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "uncompressed.second-reloaded.png",
+            "pngSha256": "2b869fe1263a2d38d72ed1caea267902377b4788d16361497dabe6830c637f5f",
+            "pixelSha256": "e1072e607d866826c91db3119c98bd2db762496457369714478db4241a325c3f",
+            "nonWhitePixelCount": 364,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              153,
+              81
+            ]
+          }
+        },
+        {
+          "mode": "compressed",
+          "compressArgument": true,
+          "isf": {
+            "path": "compressed.isf",
+            "bytes": 47,
+            "sha256": "21af32ff9a56a548f1e56c2852632d294fe6aa4c6480ab5d491ab20369b40a53"
+          },
+          "roundtripIsf": {
+            "path": "compressed.roundtrip.isf",
+            "bytes": 47,
+            "sha256": "21af32ff9a56a548f1e56c2852632d294fe6aa4c6480ab5d491ab20369b40a53"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "compressed.reloaded.png",
+            "pngSha256": "2b869fe1263a2d38d72ed1caea267902377b4788d16361497dabe6830c637f5f",
+            "pixelSha256": "e1072e607d866826c91db3119c98bd2db762496457369714478db4241a325c3f",
+            "nonWhitePixelCount": 364,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              153,
+              81
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "compressed.second-reloaded.png",
+            "pngSha256": "2b869fe1263a2d38d72ed1caea267902377b4788d16361497dabe6830c637f5f",
+            "pixelSha256": "e1072e607d866826c91db3119c98bd2db762496457369714478db4241a325c3f",
+            "nonWhitePixelCount": 364,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              153,
+              81
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "single-dot",
+      "purpose": "A single stylus sample must remain a visible elliptical dot.",
+      "strokeCount": 1,
+      "compressionChangesBytes": false,
+      "originalUnchanged": true,
+      "originalRender": {
+        "path": "original.png",
+        "pngSha256": "5870d69a79bc6f75a4437dbe624d0746f5a29030e79351945b9c45e07d895378",
+        "pixelSha256": "73080c45b3afeea5b77ae6ef760ff8ec092ca415c72f923e02e3df3296fcd957",
+        "nonWhitePixelCount": 60,
+        "nonWhiteBoundsPixels": [
+          76,
+          76,
+          84,
+          84
+        ]
+      },
+      "encodings": [
+        {
+          "mode": "uncompressed",
+          "compressArgument": false,
+          "isf": {
+            "path": "uncompressed.isf",
+            "bytes": 42,
+            "sha256": "f56dce396bc3933a92a3d30e1228f6a7e5322f46d1c4d2336f2b233254203c00"
+          },
+          "roundtripIsf": {
+            "path": "uncompressed.roundtrip.isf",
+            "bytes": 42,
+            "sha256": "f56dce396bc3933a92a3d30e1228f6a7e5322f46d1c4d2336f2b233254203c00"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "uncompressed.reloaded.png",
+            "pngSha256": "5870d69a79bc6f75a4437dbe624d0746f5a29030e79351945b9c45e07d895378",
+            "pixelSha256": "73080c45b3afeea5b77ae6ef760ff8ec092ca415c72f923e02e3df3296fcd957",
+            "nonWhitePixelCount": 60,
+            "nonWhiteBoundsPixels": [
+              76,
+              76,
+              84,
+              84
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "uncompressed.second-reloaded.png",
+            "pngSha256": "5870d69a79bc6f75a4437dbe624d0746f5a29030e79351945b9c45e07d895378",
+            "pixelSha256": "73080c45b3afeea5b77ae6ef760ff8ec092ca415c72f923e02e3df3296fcd957",
+            "nonWhitePixelCount": 60,
+            "nonWhiteBoundsPixels": [
+              76,
+              76,
+              84,
+              84
+            ]
+          }
+        },
+        {
+          "mode": "compressed",
+          "compressArgument": true,
+          "isf": {
+            "path": "compressed.isf",
+            "bytes": 42,
+            "sha256": "f56dce396bc3933a92a3d30e1228f6a7e5322f46d1c4d2336f2b233254203c00"
+          },
+          "roundtripIsf": {
+            "path": "compressed.roundtrip.isf",
+            "bytes": 42,
+            "sha256": "f56dce396bc3933a92a3d30e1228f6a7e5322f46d1c4d2336f2b233254203c00"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "compressed.reloaded.png",
+            "pngSha256": "5870d69a79bc6f75a4437dbe624d0746f5a29030e79351945b9c45e07d895378",
+            "pixelSha256": "73080c45b3afeea5b77ae6ef760ff8ec092ca415c72f923e02e3df3296fcd957",
+            "nonWhitePixelCount": 60,
+            "nonWhiteBoundsPixels": [
+              76,
+              76,
+              84,
+              84
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "compressed.second-reloaded.png",
+            "pngSha256": "5870d69a79bc6f75a4437dbe624d0746f5a29030e79351945b9c45e07d895378",
+            "pixelSha256": "73080c45b3afeea5b77ae6ef760ff8ec092ca415c72f923e02e3df3296fcd957",
+            "nonWhitePixelCount": 60,
+            "nonWhiteBoundsPixels": [
+              76,
+              76,
+              84,
+              84
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "paint-ellipse-alpha",
+      "purpose": "Independent alpha color and unequal tip width/height.",
+      "strokeCount": 1,
+      "compressionChangesBytes": true,
+      "originalUnchanged": true,
+      "originalRender": {
+        "path": "original.png",
+        "pngSha256": "9be6d8c4d5175640f14c26dd76aaf0557c72d8003335e6b15c7560674a0c2ff7",
+        "pixelSha256": "3cee36375493187f700649596fae9e1c549d083c7b716fcb4d4f4d9b03b09c8c",
+        "nonWhitePixelCount": 700,
+        "nonWhiteBoundsPixels": [
+          28,
+          54,
+          132,
+          82
+        ]
+      },
+      "encodings": [
+        {
+          "mode": "uncompressed",
+          "compressArgument": false,
+          "isf": {
+            "path": "uncompressed.isf",
+            "bytes": 49,
+            "sha256": "a8def0c25e2cd2a3a421e79403b43dc05ba2126c7a4288e87ced85cfecb55e8b"
+          },
+          "roundtripIsf": {
+            "path": "uncompressed.roundtrip.isf",
+            "bytes": 49,
+            "sha256": "a8def0c25e2cd2a3a421e79403b43dc05ba2126c7a4288e87ced85cfecb55e8b"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "uncompressed.reloaded.png",
+            "pngSha256": "9be6d8c4d5175640f14c26dd76aaf0557c72d8003335e6b15c7560674a0c2ff7",
+            "pixelSha256": "3cee36375493187f700649596fae9e1c549d083c7b716fcb4d4f4d9b03b09c8c",
+            "nonWhitePixelCount": 700,
+            "nonWhiteBoundsPixels": [
+              28,
+              54,
+              132,
+              82
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "uncompressed.second-reloaded.png",
+            "pngSha256": "9be6d8c4d5175640f14c26dd76aaf0557c72d8003335e6b15c7560674a0c2ff7",
+            "pixelSha256": "3cee36375493187f700649596fae9e1c549d083c7b716fcb4d4f4d9b03b09c8c",
+            "nonWhitePixelCount": 700,
+            "nonWhiteBoundsPixels": [
+              28,
+              54,
+              132,
+              82
+            ]
+          }
+        },
+        {
+          "mode": "compressed",
+          "compressArgument": true,
+          "isf": {
+            "path": "compressed.isf",
+            "bytes": 47,
+            "sha256": "0840027d233e3f4d7f74b035714fbb974ef99e05ff6a8d4544debc1c52eaa7a9"
+          },
+          "roundtripIsf": {
+            "path": "compressed.roundtrip.isf",
+            "bytes": 47,
+            "sha256": "0840027d233e3f4d7f74b035714fbb974ef99e05ff6a8d4544debc1c52eaa7a9"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "compressed.reloaded.png",
+            "pngSha256": "9be6d8c4d5175640f14c26dd76aaf0557c72d8003335e6b15c7560674a0c2ff7",
+            "pixelSha256": "3cee36375493187f700649596fae9e1c549d083c7b716fcb4d4f4d9b03b09c8c",
+            "nonWhitePixelCount": 700,
+            "nonWhiteBoundsPixels": [
+              28,
+              54,
+              132,
+              82
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "compressed.second-reloaded.png",
+            "pngSha256": "9be6d8c4d5175640f14c26dd76aaf0557c72d8003335e6b15c7560674a0c2ff7",
+            "pixelSha256": "3cee36375493187f700649596fae9e1c549d083c7b716fcb4d4f4d9b03b09c8c",
+            "nonWhitePixelCount": 700,
+            "nonWhiteBoundsPixels": [
+              28,
+              54,
+              132,
+              82
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "multiple-strokes",
+      "purpose": "Three ordered strokes with separate colors, widths and tip shapes.",
+      "strokeCount": 3,
+      "compressionChangesBytes": false,
+      "originalUnchanged": true,
+      "originalRender": {
+        "path": "original.png",
+        "pngSha256": "037851ded13f39d0b4f6af263268e842dda86236f0819bb68361fa380b0caca5",
+        "pixelSha256": "98292a957a90660ff320068652217490d12e7eb2f37880e898fe2e3559d308ee",
+        "nonWhitePixelCount": 848,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          130,
+          106
+        ]
+      },
+      "encodings": [
+        {
+          "mode": "uncompressed",
+          "compressArgument": false,
+          "isf": {
+            "path": "uncompressed.isf",
+            "bytes": 129,
+            "sha256": "e0d3546e3ad7d7eabc41042842dde34e04b29ce55a7fd21989e960c2e5feb278"
+          },
+          "roundtripIsf": {
+            "path": "uncompressed.roundtrip.isf",
+            "bytes": 129,
+            "sha256": "e0d3546e3ad7d7eabc41042842dde34e04b29ce55a7fd21989e960c2e5feb278"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "uncompressed.reloaded.png",
+            "pngSha256": "037851ded13f39d0b4f6af263268e842dda86236f0819bb68361fa380b0caca5",
+            "pixelSha256": "98292a957a90660ff320068652217490d12e7eb2f37880e898fe2e3559d308ee",
+            "nonWhitePixelCount": 848,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              130,
+              106
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "uncompressed.second-reloaded.png",
+            "pngSha256": "037851ded13f39d0b4f6af263268e842dda86236f0819bb68361fa380b0caca5",
+            "pixelSha256": "98292a957a90660ff320068652217490d12e7eb2f37880e898fe2e3559d308ee",
+            "nonWhitePixelCount": 848,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              130,
+              106
+            ]
+          }
+        },
+        {
+          "mode": "compressed",
+          "compressArgument": true,
+          "isf": {
+            "path": "compressed.isf",
+            "bytes": 129,
+            "sha256": "e0d3546e3ad7d7eabc41042842dde34e04b29ce55a7fd21989e960c2e5feb278"
+          },
+          "roundtripIsf": {
+            "path": "compressed.roundtrip.isf",
+            "bytes": 129,
+            "sha256": "e0d3546e3ad7d7eabc41042842dde34e04b29ce55a7fd21989e960c2e5feb278"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 0,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "compressed.reloaded.png",
+            "pngSha256": "037851ded13f39d0b4f6af263268e842dda86236f0819bb68361fa380b0caca5",
+            "pixelSha256": "98292a957a90660ff320068652217490d12e7eb2f37880e898fe2e3559d308ee",
+            "nonWhitePixelCount": 848,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              130,
+              106
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "compressed.second-reloaded.png",
+            "pngSha256": "037851ded13f39d0b4f6af263268e842dda86236f0819bb68361fa380b0caca5",
+            "pixelSha256": "98292a957a90660ff320068652217490d12e7eb2f37880e898fe2e3559d308ee",
+            "nonWhitePixelCount": 848,
+            "nonWhiteBoundsPixels": [
+              31,
+              31,
+              130,
+              106
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "pressure-ramp",
+      "purpose": "Pressure varies from zero to full with pressure-sensitive drawing.",
+      "strokeCount": 1,
+      "compressionChangesBytes": true,
+      "originalUnchanged": true,
+      "originalRender": {
+        "path": "original.png",
+        "pngSha256": "7f80e6ab65d166417d72abb0adcea1c953cbe22df3c716550060e72736454201",
+        "pixelSha256": "89d1c3621fa427c9a7b81a4d016fd8f6416d92b044edb31a185387501b3ce211",
+        "nonWhitePixelCount": 1321,
+        "nonWhiteBoundsPixels": [
+          31,
+          49,
+          135,
+          87
+        ]
+      },
+      "encodings": [
+        {
+          "mode": "uncompressed",
+          "compressArgument": false,
+          "isf": {
+            "path": "uncompressed.isf",
+            "bytes": 66,
+            "sha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d"
+          },
+          "roundtripIsf": {
+            "path": "uncompressed.roundtrip.isf",
+            "bytes": 66,
+            "sha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0.0008553266525268555,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 39,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "uncompressed.reloaded.png",
+            "pngSha256": "a23ea4f812747511f7d8ff94ca4006892489568e22710fd71f0f00258103dfe5",
+            "pixelSha256": "fba489a9474fcecddbdcf967bc450e94c39c66c24a62da5a91917116ec6083df",
+            "nonWhitePixelCount": 1320,
+            "nonWhiteBoundsPixels": [
+              31,
+              49,
+              135,
+              87
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "uncompressed.second-reloaded.png",
+            "pngSha256": "a23ea4f812747511f7d8ff94ca4006892489568e22710fd71f0f00258103dfe5",
+            "pixelSha256": "fba489a9474fcecddbdcf967bc450e94c39c66c24a62da5a91917116ec6083df",
+            "nonWhitePixelCount": 1320,
+            "nonWhiteBoundsPixels": [
+              31,
+              49,
+              135,
+              87
+            ]
+          }
+        },
+        {
+          "mode": "compressed",
+          "compressArgument": true,
+          "isf": {
+            "path": "compressed.isf",
+            "bytes": 62,
+            "sha256": "194aeee89b506b010c05cde52e4fc3858c01f316c5c6ce8d2f180e8d8463f409"
+          },
+          "roundtripIsf": {
+            "path": "compressed.roundtrip.isf",
+            "bytes": 62,
+            "sha256": "194aeee89b506b010c05cde52e4fc3858c01f316c5c6ce8d2f180e8d8463f409"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0.0008553266525268555,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 39,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "compressed.reloaded.png",
+            "pngSha256": "a23ea4f812747511f7d8ff94ca4006892489568e22710fd71f0f00258103dfe5",
+            "pixelSha256": "fba489a9474fcecddbdcf967bc450e94c39c66c24a62da5a91917116ec6083df",
+            "nonWhitePixelCount": 1320,
+            "nonWhiteBoundsPixels": [
+              31,
+              49,
+              135,
+              87
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "compressed.second-reloaded.png",
+            "pngSha256": "a23ea4f812747511f7d8ff94ca4006892489568e22710fd71f0f00258103dfe5",
+            "pixelSha256": "fba489a9474fcecddbdcf967bc450e94c39c66c24a62da5a91917116ec6083df",
+            "nonWhitePixelCount": 1320,
+            "nonWhiteBoundsPixels": [
+              31,
+              49,
+              135,
+              87
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "signed-quantization",
+      "purpose": "Signed half-Himetric boundaries disclose coordinate quantization.",
+      "strokeCount": 1,
+      "compressionChangesBytes": true,
+      "originalUnchanged": true,
+      "originalRender": {
+        "path": "original.png",
+        "pngSha256": "4cba28016de190d2d9d420fdff267d56c408621d92da0f27b85a72cbd74c2acf",
+        "pixelSha256": "737380ff512c188525aa1a5d47b4b2ba196dedac4a52ff63106f641e84853ea7",
+        "nonWhitePixelCount": 361,
+        "nonWhiteBoundsPixels": [
+          6,
+          18,
+          82,
+          58
+        ]
+      },
+      "encodings": [
+        {
+          "mode": "uncompressed",
+          "compressArgument": false,
+          "isf": {
+            "path": "uncompressed.isf",
+            "bytes": 57,
+            "sha256": "0b5c90eda45366541a19e582a042be4103ef3f932fdf0a0ab80e4f99766bfabc"
+          },
+          "roundtripIsf": {
+            "path": "uncompressed.roundtrip.isf",
+            "bytes": 57,
+            "sha256": "0b5c90eda45366541a19e582a042be4103ef3f932fdf0a0ab80e4f99766bfabc"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0.018897637795276978,
+            "maximumCoordinateDeltaHimetric": 0.5000000000000367,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 73,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "uncompressed.reloaded.png",
+            "pngSha256": "1c8620f95b09a2d3e9f6be91b5c3c90d0aeceaa0d25782cc247d4e25b1bad7c5",
+            "pixelSha256": "4b55cee160b515043fafac7c330d29cde71ed588f32c2d618a72d977e15bcf1d",
+            "nonWhitePixelCount": 372,
+            "nonWhiteBoundsPixels": [
+              6,
+              18,
+              82,
+              58
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "uncompressed.second-reloaded.png",
+            "pngSha256": "1c8620f95b09a2d3e9f6be91b5c3c90d0aeceaa0d25782cc247d4e25b1bad7c5",
+            "pixelSha256": "4b55cee160b515043fafac7c330d29cde71ed588f32c2d618a72d977e15bcf1d",
+            "nonWhitePixelCount": 372,
+            "nonWhiteBoundsPixels": [
+              6,
+              18,
+              82,
+              58
+            ]
+          }
+        },
+        {
+          "mode": "compressed",
+          "compressArgument": true,
+          "isf": {
+            "path": "compressed.isf",
+            "bytes": 57,
+            "sha256": "8604d0ffd0e931ba2bb9b1b58e9610a2ec20f4a0b7e3a680712a61a78ed70113"
+          },
+          "roundtripIsf": {
+            "path": "compressed.roundtrip.isf",
+            "bytes": 57,
+            "sha256": "8604d0ffd0e931ba2bb9b1b58e9610a2ec20f4a0b7e3a680712a61a78ed70113"
+          },
+          "bytesStableAfterReload": true,
+          "originalToReloaded": {
+            "maximumCoordinateDeltaDip": 0.018897637795276978,
+            "maximumCoordinateDeltaHimetric": 0.5000000000000367,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "reloadedToSecond": {
+            "maximumCoordinateDeltaDip": 0,
+            "maximumCoordinateDeltaHimetric": 0,
+            "maximumPressureDelta": 0,
+            "maximumWidthDeltaDip": 0,
+            "maximumHeightDeltaDip": 0,
+            "drawingAttributesExactlyEqual": true
+          },
+          "originalToReloadedChangedPixels": 73,
+          "reloadedToSecondChangedPixels": 0,
+          "reloadedRender": {
+            "path": "compressed.reloaded.png",
+            "pngSha256": "1c8620f95b09a2d3e9f6be91b5c3c90d0aeceaa0d25782cc247d4e25b1bad7c5",
+            "pixelSha256": "4b55cee160b515043fafac7c330d29cde71ed588f32c2d618a72d977e15bcf1d",
+            "nonWhitePixelCount": 372,
+            "nonWhiteBoundsPixels": [
+              6,
+              18,
+              82,
+              58
+            ]
+          },
+          "secondReloadedRender": {
+            "path": "compressed.second-reloaded.png",
+            "pngSha256": "1c8620f95b09a2d3e9f6be91b5c3c90d0aeceaa0d25782cc247d4e25b1bad7c5",
+            "pixelSha256": "4b55cee160b515043fafac7c330d29cde71ed588f32c2d618a72d977e15bcf1d",
+            "nonWhitePixelCount": 372,
+            "nonWhiteBoundsPixels": [
+              6,
+              18,
+              82,
+              58
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete"
+}

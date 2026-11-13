@@ -18,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / "tool/office-validation"
 OFFICE_SUFFIXES = {".docx", ".docm", ".dotx", ".dotm", ".xlsx", ".pptx"}
 EXPECTED_CASES = frozenset([
+    *(f"ink-strokes/{name}-{mode}" for name in (
+        "polyline-solid", "single-dot", "paint-ellipse-alpha", "multiple-strokes",
+        "pressure-ramp", "signed-quantization") for mode in ("compressed", "uncompressed")),
     *(f"table-origin/{name}" for name in (
         "default", "zero-margin", "wide-margin", "negative-origin",
         "positive-origin", "independent-gap", "cell-margin", "nested", "nested-wide")),
@@ -143,6 +146,7 @@ def source_snapshot(root: Path = ROOT) -> dict:
     for pattern in ("lib/**/*.dart", "test/support/**/*.dart", "tool/fidelity/*.dart",
                     "tool/fidelity/schema.py", "tool/office-validation/*",
                     "test/fixtures/word_native/*.doc", "test/fixtures/fidelity/image-appearance/**/*",
+                    "test/fixtures/ink_wpf/**/*",
                     "test/fixtures/fidelity/officeart-shapes.doc",
                     "pubspec.yaml", "pubspec.lock",
                     ".dart_tool/package_config.json"):

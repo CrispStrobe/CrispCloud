@@ -91,7 +91,7 @@ dependencies:
   legacy_doc_parser:
     git:
       url: https://github.com/CrispStrobe/legacy-doc-parser.git
-      ref: 3e4d9cb11535b96624edb7ee231cefa8e4d42d73
+      ref: 419864b3076cea56f3f4d170a3ace88cfc397027
 
   # File Handling
   file_viewer_documents:
@@ -279,6 +279,11 @@ flutter:
     - assets/licenses/terminal/
     - packages/file_viewer_binary/LICENSE
     - packages/file_viewer_lrc/LICENSE
+    - packages/legacy_doc_parser/UPSTREAM.json
+    - packages/legacy_doc_parser/NOTICE
+    - packages/legacy_doc_parser/third_party/wpf-isf/LICENSE.txt
+    - packages/legacy_doc_parser/third_party/quds_office_engine-MIT.txt
+    - packages/legacy_doc_parser/third_party/JSDoc-0BSD.txt
     - docs/USER_GUIDE.md
     - docs/help/USER_GUIDE.de.md
     - docs/help/USER_GUIDE.fr.md

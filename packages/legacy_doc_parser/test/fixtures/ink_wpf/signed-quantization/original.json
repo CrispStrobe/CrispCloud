@@ -1,0 +1,75 @@
+{
+  "coordinateUnit": "DIP (1/96 inch)",
+  "dipPerHimetric": 0.03779527559055118,
+  "strokeCount": 1,
+  "strokes": [
+    {
+      "index": 0,
+      "boundsDip": [
+        -25.52088188976378,
+        -13.50236220472441,
+        75.04214173228347,
+        39.023622047244096
+      ],
+      "attributes": {
+        "colorArgb": "#FFB05010",
+        "width": 3.004724409448819,
+        "height": 3.004724409448819,
+        "widthHimetric": 79.5,
+        "heightHimetric": 79.5,
+        "fitToCurve": false,
+        "ignorePressure": true,
+        "isHighlighter": false,
+        "stylusTip": "Ellipse",
+        "stylusTipTransform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "pressureMetric": {
+        "minimum": 0,
+        "maximum": 1023,
+        "unit": "None",
+        "resolution": 1
+      },
+      "points": [
+        {
+          "x": -24.01851968503937,
+          "y": -12,
+          "pressureFactor": 0.5,
+          "himetricX": -635.49,
+          "himetricY": -317.5,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": -0.01889763779527559,
+          "y": 0.01889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": -0.5,
+          "himetricY": 0.5,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 24.01851968503937,
+          "y": 12,
+          "pressureFactor": 0.5,
+          "himetricX": 635.49,
+          "himetricY": 317.5,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 48.01889763779528,
+          "y": 24.018897637795277,
+          "pressureFactor": 0.5,
+          "himetricX": 1270.5,
+          "himetricY": 635.5,
+          "pressurePropertyValue": 511
+        }
+      ]
+    }
+  ]
+}

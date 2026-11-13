@@ -26,6 +26,10 @@ The codebase currently supports:
   Explicit simple textbox borders retain their source anchors while bounded
   DOCX frame conversion accounts for their outer border extent; see the
   [frame contract](doc/textbox-frame-borders.md).
+- Bounded nonempty ISF ink inspection exposes supported strokes, pressure and
+  drawing attributes, checked against 24 independent Windows WPF inputs. Raw
+  payloads are preserved; native Word placement and editable ink are still
+  pending. See [supported ink decoding and limits](doc/ink-decoding.md).
 - Structured DOCX conversion, safe HTML and plain-text extraction, and explicit
   DOCM output that can retain one structurally complete VBA project. Embedded
   objects, macros and signature evidence are retained only within the documented
