@@ -10,8 +10,8 @@ the explicitly unresolved floating-table geometry investigation remains separate
   restored list-label painting and bounded bilingual menus.
 - legacy-doc-parser `0f9f085`: fourth parser audit and all sealed independent
   acceptance records. Commit `94294e1` is an ancestor of this pin.
-- CrisperBooks `3796381`: bounded native selections and exact fixed-layout section
-  identity. All four app dependencies resolve to this immutable tree.
+- CrisperBooks `505d3d7`: bounded native selections and exact fixed-layout section
+  identity, including synchronous disposal cleanup. All four app dependencies resolve to this immutable tree.
 - Document runtime: 158 verified runtime, notice, overlay and corresponding-source
   files. Original notices remain in the shipped aggregate.
 
