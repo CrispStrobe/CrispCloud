@@ -1,0 +1,65 @@
+{
+  "source_revision": "a065ee6e7c2aa18574a72ac6232d4d01845bdee9",
+  "scope": "Passing merged-candidate app gate and original-manifest JavaScript release build. Initial inherited-info diagnostic and invalid-flag attempt are retained separately.",
+  "archive": "final-logs.tar.gz",
+  "archive_bytes": 28937,
+  "archive_sha256": "9583e6ec4a610769f529d57525209cc9553da5d5df0b96be0786bdb63c989e7a",
+  "files": {
+    "analysis-strict-initial.log": {
+      "bytes": 1672,
+      "sha256": "ade877c96da5fb916aa4f19619a746592d03540190927fd72f18caecf3abcdfa"
+    },
+    "analysis-unsupported-cli.log": {
+      "bytes": 362,
+      "sha256": "d10dca5a8d2a8f9571d1945edd329e3278bb1879b929856f1f17a1a65f4cbe47"
+    },
+    "analysis.log": {
+      "bytes": 1672,
+      "sha256": "ade877c96da5fb916aa4f19619a746592d03540190927fd72f18caecf3abcdfa"
+    },
+    "crypto-inputs.log": {
+      "bytes": 72,
+      "sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177"
+    },
+    "dependencies.log": {
+      "bytes": 2195,
+      "sha256": "78dfcb9ec4958dbbe161f380460db41e6dc2e6e6a1e49abf7582ec1575a4810f"
+    },
+    "document-source.log": {
+      "bytes": 79,
+      "sha256": "c2a484d3cb77b954cb8070a5f142decbff80bb868d6594029e0f5bc228963419"
+    },
+    "ebook-source.log": {
+      "bytes": 335,
+      "sha256": "80c86b462e0a1b40650be631c113c215bd6c9f20b756ad82ffeaf07555bfb958"
+    },
+    "office-source.log": {
+      "bytes": 203,
+      "sha256": "52364eac2acb3094915c39ebc9b8add5b8df4fcb18f2b1589e9d7e256e11214f"
+    },
+    "tests.log": {
+      "bytes": 71710,
+      "sha256": "0229ef9cc10aa47ffa589cc2b5909a89e999c50c60284298e74c9ff028954785"
+    },
+    "web-build.log": {
+      "bytes": 779,
+      "sha256": "2d36b662671f3949609cfc8f9bbb9fc1be1e5012937847727c81dab790d4d818"
+    },
+    "inherited-analysis-infos.json": {
+      "bytes": 4893,
+      "sha256": "fc1d4c495b83cc8fdc619b5989d2b085348887f0f8857379ebb35c6036877fc5"
+    },
+    "initial-strict-receipt.json": {
+      "bytes": 9691,
+      "sha256": "f155995eb6a13a3cdfa5b953c43219d3aa40c19bcdc4e5edad2e3d79242181c8"
+    },
+    "test-events.json": {
+      "bytes": 158964,
+      "sha256": "6185a1047173ff085b712ef40bbb43262354fbd677ebc7a170fe28b1fc4d8a0e"
+    },
+    "unsupported-cli-receipt.json": {
+      "bytes": 10045,
+      "sha256": "5e84c8acf14810c1e91d79afc4ad1dd46478c0eb0ad01ad1c49b59916da1efbf"
+    }
+  }
+}

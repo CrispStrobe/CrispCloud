@@ -1,0 +1,527 @@
+{
+  "schema_version": 1,
+  "qualified_runtime_revision": "a065ee6e7c2aa18574a72ac6232d4d01845bdee9",
+  "qualified_tree": "1338fc761f25271a9b8139c3bca4499263d46302",
+  "original_live_heads": [
+    {
+      "branch": "checkpoint/app-final-next-20261113",
+      "head": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+      "ancestor": true
+    },
+    {
+      "branch": "checkpoint/app-layout-next-20261113",
+      "head": "6f2e3245b7971d620410a65e75bf54b04132319a",
+      "ancestor": true
+    },
+    {
+      "branch": "checkpoint/app-oracle-rollout-20261113",
+      "head": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+      "ancestor": true
+    },
+    {
+      "branch": "checkpoint/ebook-native-input-20261112",
+      "head": "7e20b40c1b797d463704106c881b9e84415f4fd7",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/apache-file-viewer-20261113",
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/archive-commander-parity-20261113",
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/archive-iso-rar-dmg-20261113",
+      "head": "8d17b8d28b45d987a1bb6bf8d6dae62ee000bfa2",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/archive-operation-queue-20261113",
+      "head": "2f38835ae8c9eff9955994f80ca9e309bceda994",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/ebook-parity-canary-20261112",
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/office-fidelity-gaps-20261113",
+      "head": "485d75ca6dd9b6ee6448b40685f28113b5d8fc30",
+      "ancestor": true
+    },
+    {
+      "branch": "feature/office-fidelity-oracle-validation-20261113",
+      "head": "83b8ffd8b347e0c1afb6c4d43be513f64c08e756",
+      "ancestor": true
+    },
+    {
+      "branch": "main",
+      "head": "223fb771d2f8980f7425e7e2ecbe5d7953670592",
+      "ancestor": true
+    }
+  ],
+  "original_pr_heads": [
+    {
+      "number": 5,
+      "head": "af7ef4beb93f97c89697e3780d9fd0a882f3dbaf",
+      "ancestor": true
+    },
+    {
+      "number": 6,
+      "head": "a0ada3b3cd344bbdacf01313ac2d72749b72d4d0",
+      "ancestor": true
+    },
+    {
+      "number": 7,
+      "head": "1311b04a3e7a9d810b46173dbaa73ea6265fe886",
+      "ancestor": true
+    },
+    {
+      "number": 8,
+      "head": "29580c7ddf6fca7ba74440ff146535fe5da51800",
+      "ancestor": true
+    },
+    {
+      "number": 9,
+      "head": "07df87d7ae616b702de887f3327916aeb3f67ad5",
+      "ancestor": true
+    },
+    {
+      "number": 10,
+      "head": "3ebb72f0e6f49fb2c462ac3d7c968200f7a5d438",
+      "ancestor": true
+    },
+    {
+      "number": 11,
+      "head": "7e32fef5ed563c73d617fc4933d07b88d8525a60",
+      "ancestor": true
+    },
+    {
+      "number": 12,
+      "head": "3564a5c8b30684f284063bdbbd10c7942e423fdc",
+      "ancestor": true
+    },
+    {
+      "number": 13,
+      "head": "cb2db48e5e0f623139f260b63f88405b577791ec",
+      "ancestor": true
+    },
+    {
+      "number": 14,
+      "head": "eff79b3c8ed03020aeaeac4dcd86058fb1e2e181",
+      "ancestor": true
+    },
+    {
+      "number": 15,
+      "head": "8755f0dff6ff87528a77aa6613242ce1ef5851f5",
+      "ancestor": true
+    },
+    {
+      "number": 16,
+      "head": "da52efc43c2043df9a4aa8cde69c25fbc616928d",
+      "ancestor": true
+    },
+    {
+      "number": 17,
+      "head": "6bda9f2306d36fb4a7ce3f501346b597c2000beb",
+      "ancestor": true
+    },
+    {
+      "number": 18,
+      "head": "d07804b9e0d3869bd4d20f020d7620ce7e352c43",
+      "ancestor": true
+    },
+    {
+      "number": 19,
+      "head": "261ae0a091cf87639da8feb2bcdf38efec61f106",
+      "ancestor": true
+    },
+    {
+      "number": 20,
+      "head": "02c92b6cdd2936dd9bd10d35b1d9ad22479997e7",
+      "ancestor": true
+    },
+    {
+      "number": 21,
+      "head": "4769da0812cb4c7eb19cfd88019f9c059d2b75b2",
+      "ancestor": true
+    },
+    {
+      "number": 22,
+      "head": "b71da724fc4686e45ac8235c8cf604a184b02ec8",
+      "ancestor": true
+    },
+    {
+      "number": 23,
+      "head": "8537a7e20d8fa6f36612ee29e725710a643d39f1",
+      "ancestor": true
+    },
+    {
+      "number": 24,
+      "head": "da7c3e940d022dd585708beac2de2cd5c3d10be2",
+      "ancestor": true
+    },
+    {
+      "number": 25,
+      "head": "ef149b2edd4659205cbfb6efff4cfd6789659bde",
+      "ancestor": true
+    },
+    {
+      "number": 26,
+      "head": "46976afeaaa7e5cb03203884798c7663d27ebb2b",
+      "ancestor": true
+    },
+    {
+      "number": 27,
+      "head": "da3ba2dd95ba25e37ea831dc19765d3bd15c6455",
+      "ancestor": true
+    },
+    {
+      "number": 28,
+      "head": "e5858440cfc383aae7c000372f6f223a7041c85c",
+      "ancestor": true
+    },
+    {
+      "number": 29,
+      "head": "b42e103344f5f4acb18fc4c1f60149481d9906d6",
+      "ancestor": true
+    },
+    {
+      "number": 30,
+      "head": "b5d204c6d532caff008a42b4dcf000f3a06f4b66",
+      "ancestor": true
+    },
+    {
+      "number": 31,
+      "head": "ab45ac55990233492208549c18f42dfe51e518e4",
+      "ancestor": true
+    },
+    {
+      "number": 32,
+      "head": "b31b114ed7aa368861056f183b1a61edb436a97c",
+      "ancestor": true
+    },
+    {
+      "number": 33,
+      "head": "f2eb2911cbf53833f5f385675edc4326b4787496",
+      "ancestor": true
+    },
+    {
+      "number": 34,
+      "head": "eebffef31b7bd96d03dcc939b6b6cdb46aee2c0c",
+      "ancestor": true
+    },
+    {
+      "number": 35,
+      "head": "dfe7a175148a95cc80738142c85a88e2bd8b9810",
+      "ancestor": true
+    },
+    {
+      "number": 36,
+      "head": "3d40ffc1a04be27077531b9c0e90520f36b4dc2d",
+      "ancestor": true
+    },
+    {
+      "number": 37,
+      "head": "429d9edf052dece0db48a6f41fc04b0d95b6c70b",
+      "ancestor": true
+    },
+    {
+      "number": 38,
+      "head": "d95f46c4f12beb037cd64fb2c8910173500a7ca7",
+      "ancestor": true
+    },
+    {
+      "number": 39,
+      "head": "cec4b8d11f59c0c9ddbe53706ef35fcea909aa8d",
+      "ancestor": true
+    },
+    {
+      "number": 40,
+      "head": "08c9f8453589c2d1c43f7b2f3a6f79199ad953b3",
+      "ancestor": true
+    },
+    {
+      "number": 41,
+      "head": "44aadba3b515fbbca0a7b2520be84204ee603007",
+      "ancestor": true
+    },
+    {
+      "number": 42,
+      "head": "ea4446482d7ca513160669fbb48e641397c6514f",
+      "ancestor": true
+    },
+    {
+      "number": 43,
+      "head": "1dbb98105d96fc3c9a42ce105d2f3d87f30f2eef",
+      "ancestor": true
+    },
+    {
+      "number": 45,
+      "head": "f39bcd927f32729e63194f35db019c36802d1c67",
+      "ancestor": true
+    },
+    {
+      "number": 47,
+      "head": "be318f380fc47f94975a35c0924c89190d46f990",
+      "ancestor": true
+    },
+    {
+      "number": 49,
+      "head": "b76bbfafda1cb69d7a343b9777af42db8c1b717a",
+      "ancestor": true
+    },
+    {
+      "number": 50,
+      "head": "83049a2edf71b9d8b5dcf9aebd4ee187f4c6199f",
+      "ancestor": true
+    },
+    {
+      "number": 51,
+      "head": "20aaf76d213ec0cde07c505287f8a2e48d683db2",
+      "ancestor": true
+    },
+    {
+      "number": 52,
+      "head": "c9c0f58ae1c4c73f64417e807901549e33fd77a8",
+      "ancestor": true
+    },
+    {
+      "number": 53,
+      "head": "bffdfbb49433859823081f2198f16e33be8369a6",
+      "ancestor": true
+    },
+    {
+      "number": 54,
+      "head": "28b7b9ce388e08345aa995037256ab50ab0e17b9",
+      "ancestor": true
+    },
+    {
+      "number": 55,
+      "head": "9a3e07808ed883938d2e6139593a406065a8a75c",
+      "ancestor": true
+    },
+    {
+      "number": 56,
+      "head": "d3d69c1cfa8ab35a3aa54d562a2c63d298ca9476",
+      "ancestor": true
+    },
+    {
+      "number": 57,
+      "head": "62e438e6836949207b4541b818c1c261bb7104fe",
+      "ancestor": true
+    },
+    {
+      "number": 58,
+      "head": "9887b53272d5f747cae9f73b363748985937ad05",
+      "ancestor": true
+    },
+    {
+      "number": 59,
+      "head": "132f70e746aa9815a51a046ab02e83393d084622",
+      "ancestor": true
+    },
+    {
+      "number": 60,
+      "head": "f798f27d823ee846b5e6238e167970e0345612ed",
+      "ancestor": true
+    },
+    {
+      "number": 61,
+      "head": "a452b7ade6ccdd9cd39804155309a21797f2612a",
+      "ancestor": true
+    },
+    {
+      "number": 62,
+      "head": "cdeedaf48f9892fe82191f090afccf15529db1a6",
+      "ancestor": true
+    },
+    {
+      "number": 63,
+      "head": "baccf470e946fc86fde41c96443423006eac2be7",
+      "ancestor": true
+    },
+    {
+      "number": 64,
+      "head": "c8f4561343ff0abca6aa3ffffeb45892c2fc7bd1",
+      "ancestor": true
+    },
+    {
+      "number": 65,
+      "head": "55dd210a2eb6db7cc5c100507d63be411f30b679",
+      "ancestor": true
+    },
+    {
+      "number": 66,
+      "head": "42ae79ce5dbaec184726b538c7100823a4b1edfe",
+      "ancestor": true
+    },
+    {
+      "number": 67,
+      "head": "403e942dc99779883210125a01841ef209e19d2e",
+      "ancestor": true
+    },
+    {
+      "number": 68,
+      "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "ancestor": true
+    },
+    {
+      "number": 69,
+      "head": "cd1447740f2834ec68af97beb3a3dad47cffd68b",
+      "ancestor": true
+    },
+    {
+      "number": 70,
+      "head": "5b2f1fabf9ac642a906d2275e753e098c324ddeb",
+      "ancestor": true
+    },
+    {
+      "number": 71,
+      "head": "50a9547a3a6aca251a46b5140f93fb87c789e848",
+      "ancestor": true
+    },
+    {
+      "number": 72,
+      "head": "8f117e7f85aba2adffb63bdd6511ca2d112c31a8",
+      "ancestor": true
+    },
+    {
+      "number": 73,
+      "head": "d76fe9bbb743e4194bfd54edc930abe9ad4f4854",
+      "ancestor": true
+    },
+    {
+      "number": 74,
+      "head": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "ancestor": true
+    },
+    {
+      "number": 75,
+      "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "ancestor": true
+    },
+    {
+      "number": 76,
+      "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "ancestor": true
+    },
+    {
+      "number": 77,
+      "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "ancestor": true
+    },
+    {
+      "number": 78,
+      "head": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "ancestor": true
+    },
+    {
+      "number": 79,
+      "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "ancestor": true
+    },
+    {
+      "number": 80,
+      "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "ancestor": true
+    },
+    {
+      "number": 81,
+      "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "ancestor": true
+    },
+    {
+      "number": 82,
+      "head": "085495527e0ab02f52eeded928d54cb766b79910",
+      "ancestor": true
+    },
+    {
+      "number": 83,
+      "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "ancestor": true
+    },
+    {
+      "number": 84,
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "ancestor": true
+    },
+    {
+      "number": 85,
+      "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "ancestor": true
+    },
+    {
+      "number": 86,
+      "head": "120f839ab9091bdbedf326621347ee737140e043",
+      "ancestor": true
+    },
+    {
+      "number": 87,
+      "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "ancestor": true
+    },
+    {
+      "number": 88,
+      "head": "b100cd751688f13609a8829180b487b381588d14",
+      "ancestor": true
+    },
+    {
+      "number": 89,
+      "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "ancestor": true
+    },
+    {
+      "number": 90,
+      "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "ancestor": true
+    },
+    {
+      "number": 91,
+      "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "ancestor": true
+    },
+    {
+      "number": 92,
+      "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "ancestor": true
+    },
+    {
+      "number": 93,
+      "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "ancestor": true
+    },
+    {
+      "number": 94,
+      "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "ancestor": true
+    },
+    {
+      "number": 95,
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "ancestor": true
+    },
+    {
+      "number": 97,
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "ancestor": true
+    }
+  ],
+  "original_pr_cohort_sha256": "21fa125c001d3b21fe4e288414f84913b5fefef1e42706386142ccd62251fcc8",
+  "cohort_note": "The original 12-head cohort excludes the integration branch created in this continuation. PR inventory is a same-session reconstruction excluding newly created PR100, not a timestamped original API capture.",
+  "concurrent_main": {
+    "head": "e13fb727e4cfe785219c1ef31206d2fbefa8d6c9",
+    "ancestor_of_qualified_revision": true
+  },
+  "canonical_sources": {
+    "parser": "0f9f085f2c0d38d540ea31622edc4a1609ec4ae7",
+    "quds": "05a581de9526dba2e7fffff68d56dab9180bbd2d",
+    "ebook_pin": "a18b93c1b066df323ef167359a70801db1359c83",
+    "ebook_main_merge": "505d3d7bfb922e5f0d77b7230cd38b0e266d0606"
+  },
+  "scope": "Reachability of audited original heads and concurrent main at the exact qualified runtime source; subsequent evidence-only commits do not replace this attribution."
+}

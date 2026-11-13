@@ -1,7 +1,9 @@
 # Archive continuation and complete branch reconciliation
 
 Baseline: `223fb771d2f8980f7425e7e2ecbe5d7953670592` on 13 November 2026.
-Combined implementation: `5d0814fdf8dfa2257e3000d1d3e3792864a4901e`.
+Initial combined implementation: `5d0814fdf8dfa2257e3000d1d3e3792864a4901e`.
+Later concurrent-main input: `e13fb727e4cfe785219c1ef31206d2fbefa8d6c9`.
+Final qualified runtime: `a065ee6e7c2aa18574a72ac6232d4d01845bdee9`.
 Remote continuation: `integration/archive-containers-20261113`,
 [CrispCloud PR #100](https://github.com/CrispStrobe/CrispCloud/pull/100).
 
@@ -16,7 +18,7 @@ PR #86, referenced in the original continuation handoff, was already merged.
 | --- | --- |
 | Commander archive workflows, PR #97 | True merge of `cfae329b`, preserving the canonical Operations queue, batch creation/testing/extraction, checked installed packers, SFX reading and numbered 7z sets. |
 | Document fonts and previews, PR #95 | True merge of `02160e56`, preserving shared fonts, installed preview, selected engine runtimes and attributed notices. |
-| Office oracle/gaps and related checkpoints | Preserve branch ancestry and independent evidence. Synchronize the exact canonical parser `840f8af1`, a descendant of both competing parser pins; retain the Quds/font source from #95. |
+| Office oracle/gaps and related checkpoints | Preserve branch ancestry and independent evidence. First reconcile the competing parser pins at canonical `840f8af1`, then retain concurrent main's newer exact parser `0f9f085f` and Quds `05a581de` snapshots. Earlier qualification remains attributed to its tested source. |
 | Ebook canary/native-input and PR #84 | Preserve branch ancestry after carrying missing bounded-selection and fixed-layout semantics into canonical Crisperbooks. Pin all four ebook packages to `a18b93c1`, which reconciles the recovery with concurrent canonical-main documentation. The prior extracted package structure remains the owner. |
 | Historical PR #14 | Compare each follow-up with current behavior, fix the remaining pending-source Refresh/new-tab cases, then preserve the old PR head as a merge parent. |
 | ISO/RAR/DMG, operation queue, app-layout checkpoint | Already included by baseline main. Their original commits and receipts remain reachable. |
@@ -32,6 +34,15 @@ Its final reconciliation has genuine parents `ac9925c4` and canonical main
 test, build and license bytes are unchanged. It preserves the separately
 recorded Mac Chrome acceptance with its original revision attribution. That
 acceptance predates the final disposal cleanup and was not rerun here.
+
+Concurrent app main subsequently incorporated the earlier `5d0814fd` archive
+checkpoint and advanced to `e13fb727`. Its shared F3/F4 syntax theme, image-mode
+availability, empty-directory parent navigation, newer canonical Office sources
+and independent acceptance records are retained by a genuine merge. The final
+ebook pin remains `a18b93c1`, which already includes main's `3796381` source and
+its later cleanup. The combined technical source inventory retains the union
+of both reviewed path sets: **659 files**. Source fingerprints are recalculated
+for that merged tree without changing distribution declarations.
 
 The machine-readable [branch ancestry](../evidence/archive-integration-20261113/branch-ancestry.json)
 and [PR head cohort](../evidence/archive-integration-20261113/pr-heads.json) retain
@@ -78,6 +89,20 @@ Historical branch receipts retain their exact source attribution. The combined
 candidate has its own gate and receipt under
 `docs/evidence/archive-integration-20261113/`; earlier passing totals are not
 added together as a synthetic unique count.
+
+The [final merged receipt](../evidence/archive-integration-20261113/README.md)
+records **173 passing app tests**, passing source/dependency guards and a
+successful original-manifest JavaScript release build at `a065ee6e`. The newer
+canonical parser separately passed **1,422 tests**, its Python controls and
+actual compiled-JavaScript acceptance. Focused Quds host and engine controls
+passed. Expanded app analysis had no errors/warnings and seven documented
+inherited style infos; strict canonical analysis was clean.
+
+The initial 165-file combined run retained 3,107 passes, one missed-checkbox-tap
+test failure and 13 explicit large-file skips. The interaction was reproduced
+and corrected without production recovery changes; it passes in the final
+merged gate. Its original failure receipt remains available alongside passing
+follow-ups. The final build embeds version `1.2.9+22` and commit `a065ee6e`.
 
 The local profile uses repository-pinned Flutter 3.47.8 / Dart 3.13.7, verified
 Clang/SQLite/libsmb2 and real installed packers. It temporarily disables the

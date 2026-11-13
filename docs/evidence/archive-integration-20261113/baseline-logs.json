@@ -1,0 +1,76 @@
+{
+  "source_revision": "5d0814fdf8dfa2257e3000d1d3e3792864a4901e",
+  "archive": "baseline-logs.tar.gz",
+  "archive_bytes": 209188,
+  "archive_sha256": "5383a0c31179d04700f65587b390cdea72fcb95ada7eaeb926dbb2d4febbd50c",
+  "files": {
+    "archive-analysis.log": {
+      "bytes": 7870,
+      "sha256": "a8b6f174a1c763b8503b2b7eda7ba0f68218c7587f40b638fc83d10973d3c07b"
+    },
+    "dependencies.log": {
+      "bytes": 6446,
+      "sha256": "7cb037e938538b2340cc1ad4f4fe48c9449810ffdff484ef204bd67146ceec1c"
+    },
+    "dmg-independent.log": {
+      "bytes": 347,
+      "sha256": "9f68e942f55167a07dfab18cb99506f29658eb09857e94de25803bf1cf35e06c"
+    },
+    "document-analysis.log": {
+      "bytes": 262,
+      "sha256": "5affcfc4dfd1a757e477403719eeb95165b2856f498d06d0b3aa4c75c9ae79ff"
+    },
+    "document-source.log": {
+      "bytes": 79,
+      "sha256": "c2a484d3cb77b954cb8070a5f142decbff80bb868d6594029e0f5bc228963419"
+    },
+    "ebook-source.log": {
+      "bytes": 335,
+      "sha256": "d965bce9fcffffe996c3d8b981f417d1a43d077c921cf7049b0f75dd0a32020e"
+    },
+    "help.log": {
+      "bytes": 56,
+      "sha256": "d38de33aad96cc3e53a7b3989af3d76112d80427a8b0099bb4dafcf6439e1044"
+    },
+    "iso-multiextent-fixtures.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "iso-multiextent-independent.log": {
+      "bytes": 729,
+      "sha256": "7c4db58835393888ce06e1dabba23f4067a4b4892a40afda1da33e9f56e466b0"
+    },
+    "iso-multiextent-js-compile.log": {
+      "bytes": 111,
+      "sha256": "c3a0cc1c92aef3a47eaa63e917bcb83ed847e0bf1e9d4b63aee3cc3ab5e9939c"
+    },
+    "iso-multiextent-js-runtime.log": {
+      "bytes": 426,
+      "sha256": "cc503d16a6e4fef65cf6c2672c7f29e13e1a63008faaeb75160c8c4883d1c5af"
+    },
+    "iso-multiextent-vm.log": {
+      "bytes": 426,
+      "sha256": "cc503d16a6e4fef65cf6c2672c7f29e13e1a63008faaeb75160c8c4883d1c5af"
+    },
+    "office-source.log": {
+      "bytes": 203,
+      "sha256": "294622786ce7a3cefadcbfd06f33ac05dca9b542a07fd7736e533f6c379f2acc"
+    },
+    "portable-compile.log": {
+      "bytes": 113,
+      "sha256": "1f41442a618001003b85225a116123450e9961cf45d4b16c8e23f942cb1d1a43"
+    },
+    "portable-runtime.log": {
+      "bytes": 193,
+      "sha256": "2c0ff85827682742b1ab41a9df7a65dddc362ed37d8950053eed9a010348ac1f"
+    },
+    "tests.log": {
+      "bytes": 753914,
+      "sha256": "23f810847805f869f9a9078a3870ee387480b206accb603a33af468200936aef"
+    },
+    "test-events.json": {
+      "bytes": 1814975,
+      "sha256": "4f44ff39b67d6f8bcb7d9a2e8708a3a5d368b9ec7ad8dca486c9e237f43050d9"
+    }
+  }
+}

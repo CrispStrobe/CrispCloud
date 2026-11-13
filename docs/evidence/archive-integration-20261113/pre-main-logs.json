@@ -1,0 +1,45 @@
+{
+  "source_revision": "09cb60be02c65f8a20dea92a8f05ac7e94a69353",
+  "scope": "Passing09cb60be follow-up before concurrente13fb727 main was merged; not the final merged qualification.",
+  "archive": "pre-main-logs.tar.gz",
+  "archive_bytes": 9253,
+  "archive_sha256": "0eb01e4956a031dc7079489327d4273fdec3898114afb50d504951508db50fd8",
+  "files": {
+    "analysis.log": {
+      "bytes": 159,
+      "sha256": "0223ffc642a9183a7b3439379e263f5d1d1c1e37090a19420adde277e9f4372f"
+    },
+    "crypto-inputs.log": {
+      "bytes": 72,
+      "sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177"
+    },
+    "dependencies.log": {
+      "bytes": 2195,
+      "sha256": "78dfcb9ec4958dbbe161f380460db41e6dc2e6e6a1e49abf7582ec1575a4810f"
+    },
+    "document-source.log": {
+      "bytes": 79,
+      "sha256": "c2a484d3cb77b954cb8070a5f142decbff80bb868d6594029e0f5bc228963419"
+    },
+    "ebook-source.log": {
+      "bytes": 335,
+      "sha256": "80c86b462e0a1b40650be631c113c215bd6c9f20b756ad82ffeaf07555bfb958"
+    },
+    "office-source.log": {
+      "bytes": 203,
+      "sha256": "294622786ce7a3cefadcbfd06f33ac05dca9b542a07fd7736e533f6c379f2acc"
+    },
+    "tests.log": {
+      "bytes": 24356,
+      "sha256": "ee4a13d95712dfb011277ea46a08492ec8f309f65ccaa263b28aac1b682c4d9c"
+    },
+    "web-build.log": {
+      "bytes": 852,
+      "sha256": "a62f672a20caa703b41d2169a1aa5a1ff2081a70ae7609d46291a2a4edfa6daa"
+    },
+    "test-events.json": {
+      "bytes": 54505,
+      "sha256": "9dd8c345a7b47973882cd87ed4792456380a034720a80d980e3e35d0bb76ccd0"
+    }
+  }
+}
