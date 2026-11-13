@@ -203,7 +203,7 @@ void main() {
         final member = protected ? 'hello.txt' : 'grad.bmp';
         final payload = await workspace.read('/$member');
         if (protected) {
-          expect(utf8.decode(payload), 'hello, rar!');
+          expect(utf8.decode(payload), 'hello, rar!\n');
         } else {
           expect(payload.length, 27702);
           expect(payload.sublist(0, 2), [0x42, 0x4d]);
