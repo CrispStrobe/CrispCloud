@@ -106,7 +106,8 @@ class MultiCloudService {
   CloudConnection? getConnection(String id) => _connections[id];
 
   /// Return all currently active connections.
-  List<CloudConnection> getAllConnections() => List.unmodifiable(_connections.values);
+  List<CloudConnection> getAllConnections() =>
+      List.unmodifiable(_connections.values);
 
   /// Disconnect and remove a connection.
   Future<void> removeConnection(String id) async {
@@ -145,7 +146,13 @@ class MultiCloudService {
     );
 
     final fileProgresses = files
-        .map((f) => FileProgress(name: f.name, path: f.path ?? f.name, size: f.size ?? 0))
+        .map(
+          (f) => FileProgress(
+            name: f.name,
+            path: f.path ?? f.name,
+            size: f.size ?? 0,
+          ),
+        )
         .toList();
     final totalBytes = files.fold<int>(0, (sum, f) => sum + (f.size ?? 0));
 
@@ -173,97 +180,109 @@ class MultiCloudService {
       final fileProgress = fileProgresses[i];
       final taskId = '${operation.id}_xfer_$i';
 
-      _queue.enqueue(TransferTask(
-        id: taskId,
-        operation: operation,
-        execute: () async {
-          if (operation.isCancelled) return;
-          if (operation.isPaused) await operation.pauseFuture;
-          if (operation.isCancelled) return;
+      _queue.enqueue(
+        TransferTask(
+          id: taskId,
+          operation: operation,
+          execute: () async {
+            if (operation.isCancelled) return;
+            if (operation.isPaused) await operation.pauseFuture;
+            if (operation.isCancelled) return;
 
-          final remoteFilePath =
-              file.path ?? '${sourcePath.endsWith('/') ? sourcePath : '$sourcePath/'}${file.name}';
+            final remoteFilePath =
+                file.path ??
+                '${sourcePath.endsWith('/') ? sourcePath : '$sourcePath/'}${file.name}';
 
-          _log.debug('Transferring ${file.name} (${file.size} bytes)');
+            _log.debug('Transferring ${file.name} (${file.size} bytes)');
 
-          try {
-            if (sourceClient.supportsStreaming && targetClient.supportsStreaming) {
-              // True streaming path: pipe download stream into upload stream
-              final stream = sourceClient.downloadStream(
-                remoteFilePath,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
-                  onFileProgress?.call(file.name, current, total);
-                },
-              );
-              await targetClient.uploadStream(
-                stream,
-                file.size ?? 0,
-                file.name,
-                targetPath,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
-                  onFileProgress?.call(file.name, current, total);
-                },
-              );
-            } else {
-              // Fallback: download bytes then upload
-              final bytes = await sourceClient.downloadFileBytes(
-                remoteFilePath,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
-                  onFileProgress?.call(file.name, current, total);
-                },
-              );
-              await targetClient.uploadFile(
-                bytes,
-                file.name,
-                targetPath,
-                onProgress: (current, total) {
-                  operation.currentBytes = completedBytes + current;
-                  onFileProgress?.call(file.name, current, total);
-                },
-              );
+            try {
+              if (sourceClient.supportsStreaming &&
+                  targetClient.supportsStreaming) {
+                // True streaming path: pipe download stream into upload stream
+                final stream = sourceClient.downloadStream(
+                  remoteFilePath,
+                  onProgress: (current, total) {
+                    operation.currentBytes = completedBytes + current;
+                    onFileProgress?.call(file.name, current, total);
+                  },
+                );
+                await targetClient.uploadStream(
+                  stream,
+                  file.size ?? 0,
+                  file.name,
+                  targetPath,
+                  onProgress: (current, total) {
+                    operation.currentBytes = completedBytes + current;
+                    onFileProgress?.call(file.name, current, total);
+                  },
+                );
+              } else {
+                // Fallback: download bytes then upload
+                final bytes = await sourceClient.downloadFileBytes(
+                  remoteFilePath,
+                  onProgress: (current, total) {
+                    operation.currentBytes = completedBytes + current;
+                    onFileProgress?.call(file.name, current, total);
+                  },
+                );
+                await targetClient.uploadFile(
+                  bytes,
+                  file.name,
+                  targetPath,
+                  onProgress: (current, total) {
+                    operation.currentBytes = completedBytes + current;
+                    onFileProgress?.call(file.name, current, total);
+                  },
+                );
+              }
+
+              fileProgress.isComplete = true;
+              completedBytes += fileProgress.size;
+              operation.currentBytes = completedBytes;
+            } catch (e, st) {
+              _log.error('Transfer failed for ${file.name}', e, st);
+              fileProgress.error = e.toString();
+              fileProgress.errorCause = e;
             }
-
-            fileProgress.isComplete = true;
-            completedBytes += fileProgress.size;
-            operation.currentBytes = completedBytes;
-          } catch (e, st) {
-            _log.error('Transfer failed for ${file.name}', e, st);
-            fileProgress.error = e.toString();
-            fileProgress.errorCause = e;
-          }
-        },
-        onDone: (error) {
-          if (error != null && !operation.isCancelled) {
-            fileProgress.error = error.toString();
-            fileProgress.errorCause = error;
-          }
-          tasksFinished++;
-          if (tasksFinished == files.length) {
-            _finalizeBatch(operation, fileProgresses);
-            onCompleted?.call(operation);
-          }
-        },
-      ));
+          },
+          onDone: (error) {
+            if (error != null && !operation.isCancelled) {
+              fileProgress.error = error.toString();
+              fileProgress.errorCause = error;
+            }
+            tasksFinished++;
+            if (tasksFinished == files.length) {
+              _finalizeBatch(operation, fileProgresses);
+              onCompleted?.call(operation);
+            }
+          },
+        ),
+      );
     }
 
     return operation;
   }
 
-  void _finalizeBatch(OperationProgress operation, List<FileProgress> fileProgresses) {
+  void _finalizeBatch(
+    OperationProgress operation,
+    List<FileProgress> fileProgresses,
+  ) {
     if (operation.isCancelled) {
       operation.fail('Cancelled by user', code: TransferErrorCode.cancelled);
       return;
     }
     final failed = fileProgresses.where((f) => f.error != null).length;
     if (failed == fileProgresses.length) {
-      operation.fail('All files failed', code: TransferErrorCode.allFilesFailed);
+      operation.fail(
+        'All files failed',
+        code: TransferErrorCode.allFilesFailed,
+      );
     } else if (failed > 0) {
-      operation.fail('$failed of ${fileProgresses.length} files failed',
-          code: TransferErrorCode.someFilesFailed,
-          arguments: {'failed': failed, 'total': fileProgresses.length});
+      operation.fail(
+        '$failed of ${fileProgresses.length} files failed',
+        code: TransferErrorCode.someFilesFailed,
+        arguments: {'failed': failed, 'total': fileProgresses.length},
+      );
     } else {
       operation.complete();
     }
@@ -328,16 +347,39 @@ class MultiCloudService {
       }
 
       final sizeDiff = a.size != null && b.size != null && a.size != b.size;
-      final dateDiff = a.updatedAt != null &&
+      final dateDiff =
+          a.updatedAt != null &&
           b.updatedAt != null &&
-          a.updatedAt!.difference(b.updatedAt!).abs() > const Duration(seconds: 2);
+          a.updatedAt!.difference(b.updatedAt!).abs() >
+              const Duration(seconds: 2);
 
       if (sizeDiff && dateDiff) {
-        diffs.add(FileDiff(name: name, kind: FileDiffKind.bothDiffer, itemA: a, itemB: b));
+        diffs.add(
+          FileDiff(
+            name: name,
+            kind: FileDiffKind.bothDiffer,
+            itemA: a,
+            itemB: b,
+          ),
+        );
       } else if (sizeDiff) {
-        diffs.add(FileDiff(name: name, kind: FileDiffKind.sizeDiffers, itemA: a, itemB: b));
+        diffs.add(
+          FileDiff(
+            name: name,
+            kind: FileDiffKind.sizeDiffers,
+            itemA: a,
+            itemB: b,
+          ),
+        );
       } else if (dateDiff) {
-        diffs.add(FileDiff(name: name, kind: FileDiffKind.dateDiffers, itemA: a, itemB: b));
+        diffs.add(
+          FileDiff(
+            name: name,
+            kind: FileDiffKind.dateDiffers,
+            itemA: a,
+            itemB: b,
+          ),
+        );
       }
       // Identical — omit
     }
@@ -346,9 +388,15 @@ class MultiCloudService {
     return diffs;
   }
 
-  FileItem _rawToFileItem(dynamic raw, String basePath, {bool isFolder = false}) {
+  FileItem _rawToFileItem(
+    dynamic raw,
+    String basePath, {
+    bool isFolder = false,
+  }) {
     final name = raw['name'] as String? ?? '';
-    final size = raw['size'] != null ? int.tryParse(raw['size'].toString()) : null;
+    final size = raw['size'] != null
+        ? int.tryParse(raw['size'].toString())
+        : null;
     final updatedAt = raw['updatedAt'] != null
         ? DateTime.tryParse(raw['updatedAt'].toString())
         : null;
@@ -377,7 +425,9 @@ class MultiCloudService {
     List<CloudConnection> connections,
   ) async {
     if (query.trim().isEmpty) return [];
-    _log.info('Unified search: "$query" across ${connections.length} providers');
+    _log.info(
+      'Unified search: "$query" across ${connections.length} providers',
+    );
 
     final futures = connections.map((conn) => _searchOneProvider(query, conn));
     final nested = await Future.wait(futures, eagerError: false);
@@ -395,14 +445,21 @@ class MultiCloudService {
     CloudConnection conn,
   ) async {
     try {
-      final items = await _walkAndMatch(conn.client, conn.client.rootPath, query, depth: 0);
+      final items = await _walkAndMatch(
+        conn.client,
+        conn.client.rootPath,
+        query,
+        depth: 0,
+      );
       return items
-          .map((item) => MultiCloudSearchResult(
-                connectionId: conn.id,
-                connectionLabel: conn.label,
-                providerName: conn.client.providerName,
-                item: item,
-              ))
+          .map(
+            (item) => MultiCloudSearchResult(
+              connectionId: conn.id,
+              connectionLabel: conn.label,
+              providerName: conn.client.providerName,
+              item: item,
+            ),
+          )
           .toList();
     } catch (e) {
       _log.warn('Search failed on ${conn.label}', e);
@@ -439,7 +496,13 @@ class MultiCloudService {
       }
       // Recurse into sub-folders
       try {
-        final sub = await _walkAndMatch(client, folderPath, query, depth: depth + 1, maxDepth: maxDepth);
+        final sub = await _walkAndMatch(
+          client,
+          folderPath,
+          query,
+          depth: depth + 1,
+          maxDepth: maxDepth,
+        );
         matched.addAll(sub);
       } catch (_) {}
     }
@@ -453,8 +516,10 @@ class MultiCloudService {
 
   Future<void> dispose() async {
     _queue.dispose();
-    for (final id in _connections.keys.toList()) {
-      await removeConnection(id);
-    }
+    // Leaving the provider scope/application is not an explicit account logout.
+    // Adapters' logout methods delete saved credentials (and may revoke tokens).
+    // Drop the registry so captured pane capabilities become unavailable, while
+    // retaining the user's credentials for the next launch.
+    _connections.clear();
   }
 }
