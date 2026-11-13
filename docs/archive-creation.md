@@ -166,8 +166,10 @@ These Flutter suites now have a completed hosted regression result at
 `f1a03e807b1261361a17f66a37fa94858481e1e7`: 1,856 archive tests passed, with ten
 large opt-ins skipped in that normal run. The dedicated ISO, RAR5 Store and DMG
 creation/editing/publication cases above 2 GiB also passed, as did the separate
-large RAR creation case. The common-format large cases have completed evidence
-at the earlier checkpoint and are being checked again on the integrated
-candidate. Exact tested revisions, completed receipts and remaining jobs are in
+large RAR creation case. All five common-format large cases passed again on
+the integrated candidate. The complete workflow finished with ten successful
+jobs: the normal suite and nine separately enabled large cases. Each large
+case passed with zero failures or skips. Exact tested revisions, completed
+receipts and hashes are in
 [hosted runtime verification](archive-containers-runtime-verification.md).
 Direct codec and independent Python/libarchive checks remain separate evidence.

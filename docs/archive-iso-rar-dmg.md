@@ -184,12 +184,15 @@ The **ISO, RAR5 Store and DMG large integrated jobs also passed**, including
 creation, folder edits, review, cancellation without mutation, publication,
 reopening and full payload hashing, with one passed test and no failures or skips
 in each job. Both the initial and edited, published outer containers exceeded
-2 GiB in each format. The separate RAR5 Store creation case passed as well.
-Five common-format large jobs still need completed receipts on this candidate:
-attempt 1 was canceled while the ISO/DMG cases were active, and attempt 2 reruns
-the unfinished jobs on the same source revision.
+2 GiB in each format. The separate RAR5 Store creation case and all five
+common-format large cases passed on this same candidate as well. The completed
+workflow therefore has **ten successful jobs: the normal suite and nine
+explicit large cases**, each large case with one passed test and zero failures
+or skips. After attempt 1 was canceled, attempt 2 completed the unfinished jobs
+on the unchanged source revision; the overall run concluded successfully at
+`2026-11-13T06:03:13Z`.
 The additional standalone RAR codec opt-in has the separate direct evidence
-above. Exact jobs and current completion status are in
+above. Exact jobs, artifact hashes and durable receipts are in
 [runtime verification](archive-containers-runtime-verification.md).
 No local Flutter runtime was used.
 

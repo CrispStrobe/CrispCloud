@@ -7,15 +7,30 @@
     "id": 43369528217,
     "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217",
     "latest_attempt_observed": 2,
-    "github_reported_status": "queued",
-    "observed_at_utc": "2026-11-13T05:49:57Z"
+    "github_reported_status": "completed",
+    "observed_at_utc": "2026-11-13T06:03:45Z",
+    "github_reported_conclusion": "success",
+    "github_updated_at_utc": "2026-11-13T06:03:13Z",
+    "latest_attempt_retained_normal_job_id": 131706501139
   },
   "acceptance": {
-    "status": "partial",
+    "status": "passed",
     "required_matrix_cases": 10,
-    "completed_matrix_cases": 5,
-    "pending_matrix_cases": 5,
-    "normal_result_retained_from_attempt": 1
+    "completed_matrix_cases": 10,
+    "pending_matrix_cases": 0,
+    "normal_result_retained_from_attempt": 1,
+    "latest_attempt_successful_job_ids": [
+      131706499337,
+      131706499584,
+      131706499622,
+      131706499639,
+      131706499653,
+      131706499666,
+      131706499669,
+      131706499674,
+      131706499761,
+      131706501139
+    ]
   },
   "completed_cases": [
     {
@@ -303,55 +318,279 @@
         "sha256_downloaded": "e424ca4fdf99f4acaa96cb6fd68da219a76ce8d8166c080e94a5dbc3df41d1a6",
         "download_digest_matches_github": true
       }
-    }
-  ],
-  "pending_cases": [
+    },
     {
       "case": "creation-zip-2g",
       "run_attempt": 2,
-      "exact_test": "ZIP publishes a member and archive beyond 2 GiB",
-      "job_id": 131706499337,
-      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499337",
-      "observed_job_status": "in_progress",
-      "observed_job_conclusion": null
+      "job": {
+        "id": 131706499337,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499337",
+        "name": "ZIP creation above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:46:17Z",
+        "completed_at": "2026-11-13T05:53:55Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:53:51.3373811Z",
+      "receipt": {
+        "schema": 1,
+        "case": "creation-zip-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "ZIP publishes a member and archive beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "ZIP publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14013868533,
+        "name": "archive-creation-zip-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013868533",
+        "sha256_github": "858d1fce65b9f1feea20cec4fe5169b053e8059b22a95c6daf7ccf9fdc6265dc",
+        "created_at": "2026-11-13T05:53:52Z",
+        "expires_at": "2026-11-27T05:53:51Z",
+        "sha256_downloaded": "858d1fce65b9f1feea20cec4fe5169b053e8059b22a95c6daf7ccf9fdc6265dc",
+        "download_digest_matches_github": true
+      }
     },
     {
       "case": "creation-7z-2g",
       "run_attempt": 2,
-      "exact_test": "7z publishes a member and archive beyond 2 GiB",
-      "job_id": 131706499584,
-      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499584",
-      "observed_job_status": "in_progress",
-      "observed_job_conclusion": null
+      "job": {
+        "id": 131706499584,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499584",
+        "name": "7z creation above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:48:56Z",
+        "completed_at": "2026-11-13T05:57:29Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:57:24.1050025Z",
+      "receipt": {
+        "schema": 1,
+        "case": "creation-7z-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "7z publishes a member and archive beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "7z publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14014810213,
+        "name": "archive-creation-7z-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14014810213",
+        "sha256_github": "81b0b4bc14a4932814df2fc7517ca756d13dd55c60f6408af949fc8cb18c0e99",
+        "created_at": "2026-11-13T05:57:25Z",
+        "expires_at": "2026-11-27T05:57:24Z",
+        "sha256_downloaded": "81b0b4bc14a4932814df2fc7517ca756d13dd55c60f6408af949fc8cb18c0e99",
+        "download_digest_matches_github": true
+      }
     },
     {
       "case": "creation-tgz-2g",
       "run_attempt": 2,
-      "exact_test": "TAR.GZ publishes a member and archive beyond 2 GiB",
-      "job_id": 131706499622,
-      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499622",
-      "observed_job_status": "in_progress",
-      "observed_job_conclusion": null
+      "job": {
+        "id": 131706499622,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499622",
+        "name": "TGZ creation above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:49:02Z",
+        "completed_at": "2026-11-13T05:57:47Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T05:57:44.2062639Z",
+      "receipt": {
+        "schema": 1,
+        "case": "creation-tgz-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "TAR.GZ publishes a member and archive beyond 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "TAR.GZ publishes a member and archive beyond 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14013264411,
+        "name": "archive-creation-tgz-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013264411",
+        "sha256_github": "584213832a802d20a66e160e813deaf74ad891751cacdcdef81c4dd4423220c1",
+        "created_at": "2026-11-13T05:57:44Z",
+        "expires_at": "2026-11-27T05:57:44Z",
+        "sha256_downloaded": "584213832a802d20a66e160e813deaf74ad891751cacdcdef81c4dd4423220c1",
+        "download_digest_matches_github": true
+      }
     },
     {
       "case": "workspace-tgz-2g",
       "run_attempt": 2,
-      "exact_test": "native TGZ can review, publish and reopen a member larger than 2 GiB",
-      "job_id": 131706499669,
-      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499669",
-      "observed_job_status": "queued",
-      "observed_job_conclusion": null
+      "job": {
+        "id": 131706499669,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499669",
+        "name": "TGZ edit and publication above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:55:25Z",
+        "completed_at": "2026-11-13T06:03:12Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T06:03:08.5057334Z",
+      "receipt": {
+        "schema": 1,
+        "case": "workspace-tgz-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "native TGZ can review, publish and reopen a member larger than 2 GiB",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "native TGZ can review, publish and reopen a member larger than 2 GiB",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14014631642,
+        "name": "archive-workspace-tgz-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14014631642",
+        "sha256_github": "59440a8de5a1dac1397c0f4e9172592751b97de789bd41e0fcf1eb9ee751bcde",
+        "created_at": "2026-11-13T06:03:09Z",
+        "expires_at": "2026-11-27T06:03:08Z",
+        "sha256_downloaded": "59440a8de5a1dac1397c0f4e9172592751b97de789bd41e0fcf1eb9ee751bcde",
+        "download_digest_matches_github": true
+      }
     },
     {
       "case": "writers-2g",
       "run_attempt": 2,
-      "exact_test": "ZIP, TGZ and 7z stream a source larger than 2GiB with bounded memory",
-      "job_id": 131706499761,
-      "job_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499761",
-      "observed_job_status": "queued",
-      "observed_job_conclusion": null
+      "job": {
+        "id": 131706499761,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499761",
+        "name": "ZIP, TGZ and 7z writers above 2 GiB",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-13T05:57:43Z",
+        "completed_at": "2026-11-13T06:00:53Z"
+      },
+      "receipt_log_timestamp_utc": "2026-11-13T06:00:48.1535543Z",
+      "receipt": {
+        "schema": 1,
+        "case": "writers-2g",
+        "verified": true,
+        "completed": true,
+        "flutter_version": "3.47.8",
+        "test_step_outcome": "success",
+        "input_restoration": "success",
+        "counts": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "expected_large_test": "ZIP, TGZ and 7z stream a source larger than 2GiB with bounded memory",
+        "missing_required_suites": [],
+        "malformed_event_lines": [],
+        "tests": [
+          {
+            "name": "ZIP, TGZ and 7z stream a source larger than 2GiB with bounded memory",
+            "result": "success",
+            "skipped": false
+          }
+        ]
+      },
+      "artifact": {
+        "id": 14014282046,
+        "name": "archive-writers-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2",
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14014282046",
+        "sha256_github": "d0104e3f0b0091713319509bd106bced29fac2d308103c253ca2181224336a97",
+        "created_at": "2026-11-13T06:00:49Z",
+        "expires_at": "2026-11-27T06:00:48Z",
+        "sha256_downloaded": "d0104e3f0b0091713319509bd106bced29fac2d308103c253ca2181224336a97",
+        "download_digest_matches_github": true
+      },
+      "measurements_from_job_log": [
+        {
+          "format": "zip",
+          "log_timestamp_utc": "2026-11-13T06:00:09.9460975Z",
+          "payload_bytes": 2147483665,
+          "packed_bytes": 2087412,
+          "elapsed_ms": 8547,
+          "reported_rss_growth_bytes": 46002176,
+          "maximum_output_chunk_bytes": 4109
+        },
+        {
+          "format": "tgz",
+          "log_timestamp_utc": "2026-11-13T06:00:18.5040747Z",
+          "payload_bytes": 2147483665,
+          "packed_bytes": 2087347,
+          "elapsed_ms": 8557,
+          "reported_rss_growth_bytes": 15601664,
+          "maximum_output_chunk_bytes": 4160
+        },
+        {
+          "format": "7z",
+          "log_timestamp_utc": "2026-11-13T06:00:48.0092446Z",
+          "payload_bytes": 2147483665,
+          "packed_bytes": 925824,
+          "elapsed_ms": 29504,
+          "reported_rss_growth_bytes": 28246016,
+          "maximum_output_chunk_bytes": 262144
+        }
+      ],
+      "measurement_scope": "Compressible expanded members above 2 GiB; separate creation cases establish outer containers above 2 GiB. Reported RSS growth is runner-specific, not a universal memory ceiling."
     }
   ],
+  "pending_cases": [],
   "attempt_1_cancellation": {
     "conclusion": "cancelled",
     "github_updated_at_utc": "2026-11-13T05:14:38Z",
@@ -369,10 +608,33 @@
   },
   "scope_notes": [
     "The normal job executed in attempt 1; attempt 2 resumed only unsuccessful jobs.",
-    "GitHub still reported the overall run as queued at this observation while individual jobs were active or completed.",
     "Normal skip event reasons were null; source-declared opt-in conditions and the nine hosted mappings are documented in the runtime report.",
     "Completed artifact ZIP digests were calculated after download and matched GitHub artifact metadata.",
     "This receipt omits authentication material, environment dumps, and complete test logs.",
-    "The 8 GiB limits are implementation guards; the large acceptance fixtures measure members and, where asserted, outer containers above 2 GiB."
-  ]
+    "The 8 GiB limits are implementation guards; the large acceptance fixtures measure members and, where asserted, outer containers above 2 GiB.",
+    "All nine explicit hosted large cases passed with zero failures and zero skips; normal retains ten documented opt-in skips, including the separate direct RAR codec proof."
+  ],
+  "normal_required_suites": {
+    "source_path": ".github/workflows/archive-containers.yml",
+    "source_revision": "f1a03e807b1261361a17f66a37fa94858481e1e7",
+    "names": [
+      "test/archive_streamed_creation_test.dart",
+      "test/archive_streamed_endpoint_test.dart",
+      "test/archive_streamed_extraction_test.dart",
+      "test/archive_streamed_publication_test.dart",
+      "test/archive_streamed_workspace_test.dart",
+      "test/archive_streaming_writer_test.dart",
+      "test/archive_large_tar_creation_test.dart",
+      "test/archive_native_container_workflows_test.dart",
+      "test/archive_dmg_rewrite_test.dart",
+      "test/archive_dmg_workspace_test.dart",
+      "test/archive_dmg_transfer_names_test.dart",
+      "test/archive_iso_streamed_test.dart",
+      "test/archive_rar_stored_test.dart",
+      "test/archive_rar_workspace_test.dart",
+      "test/widget/archive_container_viewer_test.dart",
+      "test/widget/archive_creation_dialog_test.dart"
+    ],
+    "missing_in_completed_normal_receipt": []
+  }
 }

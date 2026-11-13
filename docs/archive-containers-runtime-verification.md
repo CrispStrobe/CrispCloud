@@ -6,20 +6,24 @@ The integrated candidate is
 [`f1a03e807b1261361a17f66a37fa94858481e1e7`](https://github.com/CrispStrobe/CrispCloud/commit/f1a03e807b1261361a17f66a37fa94858481e1e7)
 on `feature/archive-iso-rar-dmg-20261113`. Its
 [Archive containers run 43369528217](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217)
-has a completed normal regression result: **1,856 passed, zero failed, ten
-explicitly skipped large cases**. All four new-profile large gates have also
-passed: **ISO, DMG and RAR5 Store creation/editing/publication, plus RAR5 Store
-creation**, each with one passed test, zero failures and zero skips. Five
-common-format large receipts remain pending on this candidate. The completed
-common-format baseline below remains independent evidence at its own earlier
-commit.
+**completed successfully in all ten matrix cases**. GitHub reports attempt 2
+as `completed` with conclusion `success`, updated at
+`2026-11-13T06:03:13Z`, on that exact application revision.
+
+The normal archive suite passed **1,856 tests with zero failures and ten
+explicit large-case skips**. All **nine separately enabled large cases passed
+with zero failures and zero skips**. These cover ZIP, 7z, TGZ and RAR5 Store
+creation; ISO, DMG, RAR5 Store and TGZ editing/publication; and the combined
+ZIP/TGZ/7z streaming-writer case. The completed common-format baseline below
+remains independent evidence at its own earlier commit.
 
 The repository retains a
 [compact machine-readable hosted receipt](evidence/archive-hosted-acceptance-f1a03e.json)
 with the exact production revision, attempts, completed test counts and
 selected names, verification/restoration results, job and artifact identifiers,
 download-verified artifact hashes, timestamps and explicit pending cases. This
-preserves the acceptance summary beyond the uploaded artifacts' retention.
+preserves the acceptance summary beyond the uploaded artifacts' retention;
+the final receipt contains ten completed cases and an empty pending list.
 
 ## Retained source and completed hosted gate
 
@@ -196,8 +200,9 @@ GitHub lists all six uploaded artifacts as unexpired, with retention through
 | Common writers | [archive-writers-2g-80fbf6f2978accc3521b06ee6449d4c52c814b90-1](https://github.com/CrispStrobe/CrispCloud/actions/runs/43364516899/artifacts/14010501256) |
 
 The counts above were read from decoded job logs and cross-checked against
-successful receipt and upload steps and the run's artifact listing. The binary
-artifact archives were not independently downloaded during this audit.
+successful receipt and upload steps and the run's artifact listing. These six
+baseline artifact archives were not independently downloaded during this audit;
+the final integrated artifacts below were downloaded and digest-checked.
 
 ## Integrated ISO, RAR and DMG acceptance gate
 
@@ -255,13 +260,17 @@ The other seven large jobs had not executed.
 Only unsuccessful jobs were requested again on the unchanged candidate;
 attempt 2 was queued at `2026-11-13T05:17:04Z`. The normal result above remains
 the completed attempt-1 result, rather than a newly executed normal suite.
+The latest attempt lists that retained result as
+[job 131706501139](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706501139)
+with its original execution timestamps. The original job and attempt-1
+artifact remain the evidence for its actual test execution.
 
 ### Completed integrated large results
 
-All four new-profile large cases completed successfully in attempt 2 on the
-same candidate. At the `2026-11-13T05:49:57Z` snapshot, the other five dedicated
-large cases remained running or queued; they are not included in the completed
-results below.
+All nine explicit large cases completed successfully in attempt 2 on the same
+candidate. The final API snapshot at `2026-11-13T06:03:45Z` shows all ten matrix
+jobs successful, including the retained normal result. No large case is
+pending, skipped or incomplete.
 
 | Acceptance case | Hosted job | Passed | Failed | Skipped | Receipt timestamp (UTC, 2026-11-13) | Artifact |
 | --- | --- | ---: | ---: | ---: | --- | --- |
@@ -269,6 +278,11 @@ results below.
 | RAR5 Store creation, editing and publication above 2 GiB | [131706499653](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499653) | 1 | 0 | 0 | `05:46:09.1470867Z` | [14013084191](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013084191) |
 | ISO creation, editing and publication above 2 GiB | [131706499639](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499639) | 1 | 0 | 0 | `05:48:50.4612951Z` | [14013228194](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013228194) |
 | RAR5 Store creation above 2 GiB | [131706499674](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499674) | 1 | 0 | 0 | `05:48:56.1120506Z` | [14013622486](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013622486) |
+| ZIP creation above 2 GiB | [131706499337](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499337) | 1 | 0 | 0 | `05:53:51.3373811Z` | [14013868533](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013868533) |
+| 7z creation above 2 GiB | [131706499584](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499584) | 1 | 0 | 0 | `05:57:24.1050025Z` | [14014810213](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14014810213) |
+| TGZ creation above 2 GiB | [131706499622](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499622) | 1 | 0 | 0 | `05:57:44.2062639Z` | [14013264411](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013264411) |
+| ZIP, TGZ and 7z writers above 2 GiB | [131706499761](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499761) | 1 | 0 | 0 | `06:00:48.1535543Z` | [14014282046](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14014282046) |
+| TGZ editing and publication above 2 GiB | [131706499669](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499669) | 1 | 0 | 0 | `06:03:08.5057334Z` | [14014631642](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14014631642) |
 
 The DMG job logged `19:19 +1: All tests passed!` at
 `2026-11-13T05:42:48.3316452Z` and completed at `05:42:54Z`. Its downloaded
@@ -308,6 +322,41 @@ GitHub metadata. The durable JSON receipt records those hashes and each
 artifact's retention timestamp, together with the normal, DMG and RAR workflow
 receipts.
 
+ZIP creation logged `04:46 +1: All tests passed!` at
+`2026-11-13T05:53:51.1622969Z` and completed at `05:53:55Z`. Its downloaded
+receipt confirms the selected large test passed with successful restoration
+and verification; the downloaded artifact digest matches GitHub metadata.
+The durable receipt also preserves the workflow's literal 16 required normal
+suite names and the empty missing-suite result from the completed normal job.
+The 7z and TGZ creation receipts were also downloaded: both confirm the exact
+selected test, one pass, zero failures, zero skips, completed verification and
+successful input restoration. Both artifact digests match GitHub metadata.
+
+The combined writer job logged `00:46 +1: All tests passed!` at
+`2026-11-13T06:00:48.0342855Z` and completed at `06:00:53Z`. TGZ
+editing/publication logged `04:53 +1: All tests passed!` at
+`06:03:08.3414872Z` and completed at `06:03:12Z`. Both downloaded receipts
+confirm the exact selected case, one pass, zero failures, zero skips,
+successful restoration and completed verification. Their artifact digests
+also match GitHub metadata. All ten completed artifacts, including the normal
+attempt-1 artifact, were independently downloaded and digest-checked.
+
+The final combined writer job reports these measurements on the tested
+application revision:
+
+| Writer | Source bytes | Packed bytes | Elapsed | Reported RSS growth | Largest output chunk |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ZIP | 2,147,483,665 | 2,087,412 | 8,547 ms | 46,002,176 bytes | 4,109 bytes |
+| TGZ | 2,147,483,665 | 2,087,347 | 8,557 ms | 15,601,664 bytes | 4,160 bytes |
+| 7z | 2,147,483,665 | 925,824 | 29,504 ms | 28,246,016 bytes | 262,144 bytes |
+
+These exact lines occur at `06:00:09.9460975Z`, `06:00:18.5040747Z` and
+`06:00:48.0092446Z` in the linked writer job and are retained in the durable
+JSON receipt. This fixture proves streaming of compressible expanded members
+above 2 GiB. The separate creation cases establish actual outer containers
+above 2 GiB. The measured RSS growth is specific to that runner and test; it
+is not a universal memory ceiling.
+
 ### Exact normal skips and large-case coverage
 
 The
@@ -331,7 +380,9 @@ names and their source-declared opt-ins:
 | DMG editing and publication | `DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB` | `CRISP_RUN_LARGE_ARCHIVE_TESTS=1` |
 
 Those nine test names are nine of the ten exact skips in the final normal
-artifact. Its JSON records `skip: true` and `skipReason: null` for all ten;
+artifact, and each now has a completed passing hosted case on the same
+application revision. The normal JSON records `skip: true` and
+`skipReason: null` for all ten;
 the opt-in explanations in the table come from the tested source declarations,
 not a reason string emitted by the runner. Creation and native workflow cases
 also require native exclusive-rename support, which is available in these
@@ -455,11 +506,10 @@ directory-sync and import-preview matching, with their required regression
 suites. Cancelled jobs' later dependency-restoration failures are incomplete
 cleanup evidence; they are not additional archive assertion failures.
 
-**Verified status:** the common ZIP/7z/TGZ baseline passed its normal hosted
-suite and all five explicit hosted cases above 2 GiB at
-`80fbf6f2978accc3521b06ee6449d4c52c814b90`. The integrated candidate at
+**Verified status:** the integrated application revision
 `f1a03e807b1261361a17f66a37fa94858481e1e7` passed its complete normal archive
-suite and all four new-profile large gates: ISO, DMG and RAR5 Store
-creation/editing/publication, plus RAR5 Store creation. Five common-format
-large cases on that candidate remain pending completed receipts; the earlier
-baseline does not prove subsequent changes.
+suite and all nine explicit hosted cases above 2 GiB. All ten matrix cases are
+successful, with no pending large receipt. The common ZIP/7z/TGZ baseline at
+`80fbf6f2978accc3521b06ee6449d4c52c814b90` is retained separately; final
+acceptance rests on the completed integrated run and the exact skip mapping
+above.

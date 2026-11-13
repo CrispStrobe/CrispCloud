@@ -49,8 +49,10 @@ cases above 2 GiB. Provider and platform release acceptance remain separate.
 now route eligible data ISO, RAR5 Store/CBR and fully inspected canonical HFSX
 data-volume DMG through the native streamed workspace. Their 8 GiB container
 budgets include format overhead; each ISO file must be smaller than 4 GiB.
-Unsupported boot/hybrid/filesystem/protection metadata keeps a container
-read-only. See the [exact profiles and verification](../archive-iso-rar-dmg.md).
+Unsupported boot/hybrid/filesystem/protection metadata blocks rewriting.
+The integrated candidate passed 1,856 normal archive tests and all nine
+explicit cases above 2 GiB in its completed ten-job hosted workflow. See the
+[exact profiles and verification](../archive-iso-rar-dmg.md).
 
 **Boundary:** Capabilities are format-specific. Mutating one member may require repacking the container; declare cost and read/write/encryption support. Keep original containers recoverable until replacement is verified.
 
