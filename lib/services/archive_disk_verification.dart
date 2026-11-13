@@ -8,7 +8,7 @@ import 'archive_output_spool.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
 
-const _diskLimit = 2 * 1024 * 1024 * 1024;
+const _diskLimit = kArchiveStreamingLimit;
 
 /// Reopens a newly created data image before publication and compares its exact
 /// file/directory namespace, file lengths, streamed SHA-256, supplied modes and
@@ -19,11 +19,17 @@ const _diskLimit = 2 * 1024 * 1024 * 1024;
 /// sole HFSX partition is drained separately to verify the UDIF partition CRC.
 /// This validates our fresh data-image profile, not a publisher signature or an
 /// arbitrary existing filesystem rewrite. The spool remains caller-owned.
+/// [onVerificationPlan] runs once before payload verification and supplies the
+/// extra raw-partition bytes needed for the DMG CRC pass (zero for ISO/HFSX).
+/// [onDecodedBytes] reports only decoded member and raw-partition bytes; source
+/// reads through [entries] remain the caller's responsibility to count.
 Future<void> verifyCreatedDiskArchive(
   ArchiveOutputSpool spool,
   List<ArchiveWriteEntry> entries, {
   required String format,
   bool Function()? isCancelled,
+  void Function(int rawPartitionBytes)? onVerificationPlan,
+  Future<void> Function(int count, String path)? onDecodedBytes,
 }) async {
   void check() {
     if (isCancelled?.call() ?? false) {
@@ -74,6 +80,7 @@ Future<void> verifyCreatedDiskArchive(
       );
     }
     final actual = <String, ViewerArchiveMember>{};
+    ViewerArchiveMember? rawPartition;
     var members = archive.members;
     if (kind == 'dmg') {
       // An empty valid filesystem has no translated members. Reject the
@@ -95,18 +102,12 @@ Future<void> verifyCreatedDiskArchive(
         );
       }
       final partition = partitions.single;
+      rawPartition = partition;
       final stem = partition.name.substring(
         'partitions/'.length,
         partition.name.length - '.hfs'.length,
       );
       final prefix = 'files/$stem/';
-      // Draining is necessary: the raw-partition CRC is checked at stream end.
-      await for (final _ in archive.openMember(
-        partition,
-        maxBytes: _diskLimit,
-      )) {
-        check();
-      }
       members = members.where((m) => !identical(m, partition)).toList();
       for (final member in members) {
         if (!member.name.startsWith(prefix)) {
@@ -137,6 +138,20 @@ Future<void> verifyCreatedDiskArchive(
       throw const ArchiveViewException(
         'Created disk contents do not match the captured selection.',
       );
+    }
+    check();
+    onVerificationPlan?.call(rawPartition?.size ?? 0);
+    check();
+    if (rawPartition != null) {
+      // Draining is necessary: the raw-partition CRC is checked at stream end.
+      await for (final chunk in archive.openMember(
+        rawPartition,
+        maxBytes: _diskLimit,
+      )) {
+        check();
+        await onDecodedBytes?.call(chunk.length, rawPartition.name);
+        check();
+      }
     }
     for (final item in expected.entries) {
       check();
@@ -177,17 +192,29 @@ Future<void> verifyCreatedDiskArchive(
         }
       }
       if (directory) continue;
-      Stream<List<int>> checked(Stream<List<int>> input) async* {
+      Stream<List<int>> checked(
+        Stream<List<int>> input, {
+        bool decoded = false,
+      }) async* {
         await for (final chunk in input) {
           check();
           yield chunk;
+          if (decoded) {
+            await onDecodedBytes?.call(chunk.length, item.key);
+            check();
+          }
         }
         check();
       }
 
       final before = await sha256.bind(checked(entry!.openRead())).single;
       final after = await sha256
-          .bind(checked(archive.openMember(member, maxBytes: _diskLimit)))
+          .bind(
+            checked(
+              archive.openMember(member, maxBytes: _diskLimit),
+              decoded: true,
+            ),
+          )
           .single;
       if (before != after) {
         throw ArchiveViewException(

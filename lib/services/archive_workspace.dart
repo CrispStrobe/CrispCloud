@@ -4,12 +4,19 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:koni_archive/koni_archive.dart' as koni;
 import 'package:path/path.dart' as p;
 
 import '../models/file_item.dart';
 import '../models/archive_endpoint.dart';
 import 'archive_container_publisher.dart';
+import 'archive_dmg_writer.dart' show verifyDmgRewritePreservation;
 import 'archive_endpoint_policy.dart';
+import 'archive_hfs_writer.dart' show normalizeHfsArchivePath;
+import 'archive_iso_writer.dart'
+    show kArchiveIsoSingleExtentLimit, verifyIsoRewritePreservation;
+import 'archive_rar_stored_reader.dart' show openStoredRarArchive;
+import 'archive_rar_stored_writer.dart' show verifyStoredRarPreservation;
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
 import 'archive_output_spool.dart';
@@ -55,8 +62,11 @@ class ArchiveWorkspace {
   final _ownedSpools = <ArchiveOutputSpool>{};
   ArchiveWorkspaceReview? _latestReview;
   bool get supportsLargeFiles => _streaming;
-  int get maxMemberBytes =>
-      _streaming ? kArchiveStreamingLimit : kArchiveReadLimit;
+  int get maxMemberBytes => !_streaming
+      ? kArchiveReadLimit
+      : _policy.format == ArchiveEndpointFormat.iso
+      ? kArchiveIsoSingleExtentLimit
+      : kArchiveStreamingLimit;
   int get maxContainerBytes =>
       _streaming ? kArchiveStreamingLimit : ArchiveService.maxArchiveBytes;
   int get maxExpandedBytes =>
@@ -183,7 +193,35 @@ class ArchiveWorkspace {
       '.cbt',
       '.tgz',
       '.tar.gz',
+      '.iso',
+      '.rar',
+      '.cbr',
+      '.dmg',
     ].any(lower.endsWith);
+  }
+
+  /// The generic RAR reader exposes only whole-second modification times.
+  /// Buffered and nested rewrites must use the same exact Store metadata as
+  /// native workspaces, or a rename would be mistaken for a timestamp edit.
+  static Future<ViewerArchive> _openBufferedArchive(
+    Uint8List bytes, {
+    required String name,
+    String? password,
+  }) async {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.rar') || lower.endsWith('.cbr')) {
+      try {
+        return await openStoredRarArchive(
+          koni.MemoryByteSource(bytes, name: name),
+          maxBytes: ArchiveService.maxArchiveBytes,
+        );
+      } on ArchiveStreamingUnsupported {
+        // A failed Store open closes only this memory-source handle. The
+        // bounded fallback gets a fresh handle and remains read-only unless
+        // the independent preservation inspector understands its full profile.
+      }
+    }
+    return openViewerArchive(bytes, name: name, password: password);
   }
 
   /// Captures a repeatable private snapshot without retaining file contents in
@@ -296,7 +334,7 @@ class ArchiveWorkspace {
     try {
       for (var index = 0; index < nestedMembers.length; index++) {
         final memberPath = nestedMembers[index];
-        final relative = ArchiveService.safeMemberPath(memberPath);
+        final relative = workspace._safeMemberPath(memberPath);
         final backend = _NestedArchiveBackend(workspace, '/$relative');
         final member = await backend.stat('/$relative');
         if (member == null || member.isFolder) {
@@ -420,7 +458,7 @@ class ArchiveWorkspace {
         'The archive changed since it was opened. Refresh it before editing or extracting members.',
       );
     }
-    final archive = await openViewerArchive(
+    final archive = await _openBufferedArchive(
       bytes,
       name: file.name,
       password: password,
@@ -586,11 +624,28 @@ class ArchiveWorkspace {
     if (writing && !canUpdate) throw UnsupportedError(updateSupport);
   }
 
+  /// The editable DMG namespace uses the writer's HFS Unicode 3.2 rules.
+  /// Validate before normalization, so filesystem equivalence never relaxes
+  /// traversal/absolute-path checks or changes other archive formats' names.
+  String _safeMemberPath(String path) {
+    final safe = ArchiveService.safeMemberPath(path);
+    return _policy.format == ArchiveEndpointFormat.dmg
+        ? normalizeHfsArchivePath(safe)
+        : safe;
+  }
+
+  String _lookupMemberPath(String path) {
+    final relative = path.replaceFirst(RegExp(r'^/+'), '');
+    return _policy.format == ArchiveEndpointFormat.dmg && relative.isNotEmpty
+        ? _safeMemberPath(relative)
+        : relative;
+  }
+
   List<FileItem> list([String path = '/']) {
     _check();
     final prefix = path == '/'
         ? ''
-        : '${path.replaceFirst(RegExp(r'^/+'), '').replaceAll(RegExp(r'/+$'), '')}/';
+        : '${_lookupMemberPath(path).replaceAll(RegExp(r'/+$'), '')}/';
     final items = <String, FileItem>{};
     for (final entry in _entries.values) {
       if (!entry.name.startsWith(prefix)) continue;
@@ -623,7 +678,7 @@ class ArchiveWorkspace {
 
   Future<Uint8List> read(String path) async {
     _check();
-    final name = path.replaceFirst(RegExp(r'^/+'), '');
+    final name = _lookupMemberPath(path);
     final entry = _entries[name];
     if (entry == null || entry.isFolder) {
       throw StateError('Not an archive file: $path');
@@ -645,7 +700,7 @@ class ArchiveWorkspace {
 
   Stream<List<int>> openRead(String path) async* {
     _check();
-    final name = path.replaceFirst(RegExp(r'^/+'), '');
+    final name = _lookupMemberPath(path);
     final entry = _entries[name];
     if (entry == null || entry.isFolder) {
       throw StateError('Not an archive file: $path');
@@ -673,9 +728,7 @@ class ArchiveWorkspace {
 
   void replace(String path, Uint8List bytes, {DateTime? modified, int? mode}) {
     _check(writing: true);
-    final name = ArchiveService.safeMemberPath(
-      path.replaceFirst(RegExp(r'^/+'), ''),
-    );
+    final name = _safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
     if (bytes.length > kArchiveReadLimit) {
       throw const ArchiveViewException('Member exceeds the 64 MiB limit.');
     }
@@ -699,9 +752,7 @@ class ArchiveWorkspace {
 
   void createDirectory(String path, {DateTime? modified, int? mode}) {
     _check(writing: true);
-    final name = ArchiveService.safeMemberPath(
-      path.replaceFirst(RegExp(r'^/+'), ''),
-    );
+    final name = _safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
     if (_entries[name]?.isFolder == false) {
       throw StateError('A file already uses this archive member name.');
     }
@@ -730,10 +781,12 @@ class ArchiveWorkspace {
       );
     }
     final updated = Map.of(_entries);
+    final imported = <String>{};
     for (final item in items) {
-      final name = ArchiveService.safeMemberPath(
-        item.path.replaceFirst(RegExp(r'^/+'), ''),
-      );
+      final name = _safeMemberPath(item.path.replaceFirst(RegExp(r'^/+'), ''));
+      if (_policy.format == ArchiveEndpointFormat.dmg && !imported.add(name)) {
+        throw StateError('Imported HFS names identify the same member: $name');
+      }
       final previous = updated[name];
       if (previous != null && previous.isFolder != item.isFolder) {
         throw StateError('Archive member type changed: $name');
@@ -805,19 +858,18 @@ class ArchiveWorkspace {
     }
     final scope = directory == '/'
         ? ''
-        : ArchiveService.safeMemberPath(
-            directory.replaceFirst(RegExp(r'^/'), ''),
-          );
+        : _safeMemberPath(directory.replaceFirst(RegExp(r'^/'), ''));
     if (scope.isNotEmpty &&
         _entries[scope]?.isFolder != true &&
         !_entries.keys.any((name) => name.startsWith('$scope/'))) {
       throw StateError('The synchronization destination directory changed.');
     }
     String name(String path) {
-      final canonical = ArchiveService.safeMemberPath(
+      final safe = ArchiveService.safeMemberPath(
         path.replaceFirst(RegExp(r'^/'), ''),
       );
-      if (path != '/$canonical' ||
+      final canonical = _safeMemberPath(safe);
+      if (path != '/$safe' ||
           scope.isNotEmpty && !canonical.startsWith('$scope/')) {
         throw StateError(
           'A synchronization action escapes its archive directory.',
@@ -906,9 +958,7 @@ class ArchiveWorkspace {
     _check(writing: true);
     final updated = Map.of(_entries);
     for (final path in paths) {
-      final name = ArchiveService.safeMemberPath(
-        path.replaceFirst(RegExp(r'^/+'), ''),
-      );
+      final name = _safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
       updated.removeWhere((key, _) => key == name || key.startsWith('$name/'));
     }
     _publish(updated);
@@ -961,7 +1011,7 @@ class ArchiveWorkspace {
 
     for (final member in members) {
       check();
-      final name = ArchiveService.safeMemberPath(
+      final name = _safeMemberPath(
         member.path.replaceFirst(RegExp(r'^/+'), ''),
       );
       if (!names.add(name)) {
@@ -1091,7 +1141,7 @@ class ArchiveWorkspace {
           'The copied destination changed: ${entry.destination}',
         );
       }
-      final name = entry.source.path!.replaceFirst(RegExp(r'^/+'), '');
+      final name = _lookupMemberPath(entry.source.path!);
       if (updated.remove(name) != null) removed++;
     }
     // A directory can disappear only when every remaining child is gone.
@@ -1099,7 +1149,7 @@ class ArchiveWorkspace {
     final folders =
         plan.entries
             .where((entry) => entry.source.isFolder && entry.completed)
-            .map((entry) => entry.source.path!.replaceFirst(RegExp(r'^/+'), ''))
+            .map((entry) => _lookupMemberPath(entry.source.path!))
             .toList()
           ..sort((a, b) => b.length.compareTo(a.length));
     for (final folder in folders) {
@@ -1117,10 +1167,8 @@ class ArchiveWorkspace {
 
   void rename(String path, String newPath) {
     _check(writing: true);
-    final from = ArchiveService.safeMemberPath(
-      path.replaceFirst(RegExp(r'^/+'), ''),
-    );
-    final target = ArchiveService.safeMemberPath(newPath);
+    final from = _safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
+    final target = _safeMemberPath(newPath);
     if (target == from) return;
     if (target.startsWith('$from/')) {
       throw StateError('A directory cannot be moved into itself.');
@@ -1189,7 +1237,7 @@ class ArchiveWorkspace {
       );
     }
     String canonical(String path) =>
-        ArchiveService.safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
+        _safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''));
     final directory = destinationDirectory == '/'
         ? ''
         : canonical(destinationDirectory);
@@ -1351,8 +1399,15 @@ class ArchiveWorkspace {
       if (!visited.add(input.pathKey(file.path!))) {
         throw StateError('Repeated source path while packing: ${file.path}');
       }
-      name = ArchiveService.safeMemberPath(name);
-      if (staged.containsKey(name)) return;
+      name = _safeMemberPath(name);
+      if (staged.containsKey(name)) {
+        if (_policy.format == ArchiveEndpointFormat.dmg) {
+          throw StateError(
+            'Imported HFS names identify the same member: $name',
+          );
+        }
+        return;
+      }
       if (_entries.containsKey(name) && !replaceExisting) {
         throw StateError('Archive member exists: $name');
       }
@@ -1453,6 +1508,47 @@ class ArchiveWorkspace {
     );
   }
 
+  List<ArchiveWriteEntry> _entriesForWriting(void Function() checkPacking) {
+    // Retained members keep their original order, including after a rename.
+    // This matters for comic page ordering and package metadata precedence.
+    final originalOrder = _entries.values.toList();
+    final ranks = {
+      for (var index = 0; index < originalOrder.length; index++)
+        originalOrder[index]: index,
+    };
+    final ordered = List<_ArchiveEntry>.of(originalOrder)
+      ..sort(
+        (a, b) => (a.member?.index ?? (200000 + ranks[a]!)).compareTo(
+          b.member?.index ?? (200000 + ranks[b]!),
+        ),
+      );
+    return [
+      for (final entry in ordered)
+        ArchiveWriteEntry(
+          path: entry.name,
+          isDirectory: entry.isFolder,
+          size: entry.isFolder ? 0 : entry.size,
+          modified: entry.modified,
+          mode: entry.mode,
+          attributes: entry.member == null
+              ? const {}
+              : _policy.inspection?.attributes[entry.member!.name] ??
+                    _policy
+                        .inspection
+                        ?.attributes[ArchiveService.safeMemberPath(
+                      entry.member!.name,
+                    )] ??
+                    const {},
+          readChunks: entry.isFolder
+              ? null
+              : () async* {
+                  checkPacking();
+                  yield* openRead('/${entry.name}');
+                },
+        ),
+    ];
+  }
+
   Future<void> _writePacked(
     Future<void> Function(List<int>) sink, {
     required int maxOutputBytes,
@@ -1493,44 +1589,7 @@ class ArchiveWorkspace {
         'Removing all protected file data would erase the archive encryption policy. Keep a protected member or use an explicit new archive.',
       );
     }
-    // Retained members keep their original order, including after a rename.
-    // This matters for comic page ordering and package metadata precedence.
-    final originalOrder = _entries.values.toList();
-    final ranks = {
-      for (var index = 0; index < originalOrder.length; index++)
-        originalOrder[index]: index,
-    };
-    final ordered = List<_ArchiveEntry>.of(originalOrder)
-      ..sort(
-        (a, b) => (a.member?.index ?? (200000 + ranks[a]!)).compareTo(
-          b.member?.index ?? (200000 + ranks[b]!),
-        ),
-      );
-    final entries = [
-      for (final entry in ordered)
-        ArchiveWriteEntry(
-          path: entry.name,
-          isDirectory: entry.isFolder,
-          size: entry.isFolder ? 0 : entry.size,
-          modified: entry.modified,
-          mode: entry.mode,
-          attributes: entry.member == null
-              ? const {}
-              : _policy.inspection?.attributes[entry.member!.name] ??
-                    _policy
-                        .inspection
-                        ?.attributes[ArchiveService.safeMemberPath(
-                      entry.member!.name,
-                    )] ??
-                    const {},
-          readChunks: entry.isFolder
-              ? null
-              : () async* {
-                  checkPacking();
-                  yield* openRead('/${entry.name}');
-                },
-        ),
-    ];
+    final entries = _entriesForWriting(checkPacking);
     final packageIssue = await archiveZipPackageIssue(file.name, entries);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
     if (_streaming) {
@@ -1722,7 +1781,7 @@ class ArchiveWorkspace {
     }
     final replacement =
         streamed?.archive ??
-        await openViewerArchive(bytes!, name: file.name, password: password);
+        await _openBufferedArchive(bytes!, name: file.name, password: password);
     try {
       final actual = ArchiveMemberIndex(replacement).members;
       if (_entries.length != actual.length ||
@@ -1797,6 +1856,46 @@ class ArchiveWorkspace {
         throw const ArchiveViewException(
           'Repacked archive protection policy could not be preserved.',
         );
+      }
+      if (const {
+        ArchiveEndpointFormat.iso,
+        ArchiveEndpointFormat.rar,
+        ArchiveEndpointFormat.dmg,
+      }.contains(policy.format)) {
+        final inspection = policy.inspection;
+        if (inspection == null) {
+          throw const ArchiveViewException(
+            'Repacked container preservation metadata is missing.',
+          );
+        }
+        final entries = _entriesForWriting(() {
+          _check(writing: true);
+          if (isCancelled?.call() ?? false) {
+            throw const FileOperationCancelled();
+          }
+        });
+        switch (policy.format) {
+          case ArchiveEndpointFormat.iso:
+            verifyIsoRewritePreservation(
+              entries,
+              inspection,
+              source: _policy.inspection,
+            );
+          case ArchiveEndpointFormat.rar:
+            verifyStoredRarPreservation(
+              entries,
+              inspection,
+              source: _policy.inspection,
+            );
+          case ArchiveEndpointFormat.dmg:
+            verifyDmgRewritePreservation(
+              entries,
+              inspection,
+              source: _policy.inspection,
+            );
+          default:
+            break;
+        }
       }
       return (archive: replacement, policy: policy);
     } catch (_) {
@@ -2204,6 +2303,15 @@ class ArchiveOperationBackend extends FileOperationBackend {
   @override
   p.Context get paths => p.posix;
   @override
+  String pathKey(String path) {
+    if (workspace._policy.format != ArchiveEndpointFormat.dmg || path == '/') {
+      return super.pathKey(path);
+    }
+    final name = workspace._lookupMemberPath(path);
+    return paths.isAbsolute(path) ? '/$name' : name;
+  }
+
+  @override
   bool get isCurrent => workspace.isCurrent;
   @override
   Future<List<FileItem>> list(String path) async => workspace.list(path);
@@ -2211,6 +2319,9 @@ class ArchiveOperationBackend extends FileOperationBackend {
   Future<FileItem?> stat(String path) async {
     if (!isCurrent) throw StateError('The archive workspace is closed.');
     if (path == '/') return FileItem(name: '/', path: '/', isFolder: true);
+    if (workspace._policy.format == ArchiveEndpointFormat.dmg) {
+      path = '/${workspace._lookupMemberPath(path)}';
+    }
     for (final item in workspace.list(p.posix.dirname(path))) {
       if (item.path == path) return item;
     }
@@ -2228,7 +2339,7 @@ class ArchiveOperationBackend extends FileOperationBackend {
   @override
   Future<TransferMetadata> readMetadata(String path) async {
     workspace._check();
-    final entry = workspace._entries[path.replaceFirst(RegExp(r'^/+'), '')];
+    final entry = workspace._entries[workspace._lookupMemberPath(path)];
     return TransferMetadata(mode: entry?.mode, modified: entry?.modified);
   }
 

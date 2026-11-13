@@ -4,13 +4,14 @@ Select local files or folders, open the context menu and choose **Create
 archive…**. The dialog captures the selection and the original parent folder
 before review. It shows the destination, archive name, format and available
 compression choices. Choose a new name if an output already exists. The picker
-has **33 explicit choices**; the [format matrix](archive-format-coverage.md)
+has **35 explicit choices**; the [format matrix](archive-format-coverage.md)
 separates creation from reading and editing existing containers.
 
 | Format | Compression choices | Password protection |
 | --- | --- | --- |
 | ZIP / CBZ | Store, Fast (1), Normal (6), Maximum (9) | AES-256 for file contents; filenames remain visible |
 | 7z / CB7 | Store, Deflate, LZMA2 | AES-256, with an optional encrypted header to hide filenames |
+| RAR / CBR | RAR5 Store, without compression | Unavailable |
 | TAR / CBT | Store | Unavailable |
 | TAR.GZ / gzip | Store (0), Fast (1), Normal (6), Maximum (9) | Unavailable |
 | TAR.BZ2 / TAR.XZ / TAR.ZST / TAR.LZMA; bzip2 / XZ / Zstandard / LZMA-alone | Fast, Normal, Maximum | Unavailable |
@@ -26,6 +27,12 @@ separates creation from reading and editing existing containers.
 ZIP and GZIP levels are passed to the existing codec. The 7z writer exposes
 compression methods, so its choices name those methods instead of promising
 numeric levels it cannot implement. TAR.GZ with Store still has a GZIP wrapper.
+RAR5 Store is an independent implementation of the public container format.
+It writes files without proprietary RAR compression and does not bundle an
+external packer. It checks CRC-32 and SHA-256 across two captured source passes
+before accepting each output payload. Compressed/encrypted RAR archives remain
+on the existing read-only path.
+
 Password fields require matching confirmation and are cleared after an attempted
 operation. Passwords are not persisted in settings, operation logs or history.
 
@@ -72,7 +79,7 @@ publication at the next cancellation check; a codec may need to finish its
 current block first. A commit that already completed is reported as successful.
 Keep the dialog open until it reports completion or cancellation.
 
-Eligible native local **ZIP/CBZ, 7z/CB7 and TAR.GZ/TGZ creation streams up to
+Eligible native local **ZIP/CBZ, 7z/CB7, RAR5 Store/CBR and TAR.GZ/TGZ creation streams up to
 8 GiB** per source file, total source content and packed output. For TGZ the
 decoded TAR, including its headers and padding, must also fit 8 GiB. The large
 7z path supports Store and LZMA2; choosing Deflate or password protection uses
@@ -86,9 +93,15 @@ compressors and buffered compressed TAR also cap encoded output at 64 MiB.
 All creation paths retain entry, path and depth bounds: at most 200,000 entries,
 200 folder levels and 8 MiB of member-path text, with format-specific metadata
 limits where smaller. Format headers count toward packed limits.
-Fresh native ISO/HFSX/DMG creation has a separate streamed 2 GiB image-output
-bound; it does not increase existing-container editing limits. HFSX/DMG are
-data volumes without copied resource forks, extended attributes or symlinks.
+Fresh ISO/HFSX/DMG creation on bounded native local storage streams within an
+**8 GiB image-output budget**. ISO uses single-extent files, each smaller than
+4 GiB. HFSX/DMG data volumes have an 8 GiB decoded budget including filesystem
+metadata and free space; UDIF zero runs may keep a sparse DMG physically small
+even with Store selected. Other creation backends retain the 2 GiB image bound.
+HFSX/DMG creation does not copy resource forks, extended attributes or symlinks.
+Eligible existing data ISO and verified canonical HFSX data-volume DMG images
+now use streamed reviewed editing, with their preservation checks described in
+[the ISO/RAR/DMG continuation](archive-iso-rar-dmg.md).
 Fresh native uncompressed TAR/CBT creation also has a streamed **2 GiB packed
 output limit**, including headers, extended names, alignment and the trailer.
 It accepts regular files larger than 64 MiB and source totals above 256 MiB
@@ -113,11 +126,15 @@ distinguishes actual measured fixtures from the configured upper bound.
 
 ZIP, TGZ and 7z have each processed a member larger than 2 GiB through the
 standalone writer and independent readers. ZIP64 has also processed a member
-larger than 4 GiB and an archive with 65,536 entries. The fixtures compress to
-small physical files; they do not establish a full 8 GiB application save or
-large physical-container publication. See the [writer evidence](archive-streaming-codec-verification.md),
-[reader evidence](archive-streaming-reader-verification.md) and
-[integration status](archive-parity-large-continuation.md).
+larger than 4 GiB and an archive with 65,536 entries. The original compressed
+fixtures are physically small. A completed hosted application gate now also
+creates and publishes actual ZIP, 7z and TGZ containers above 2 GiB and edits
+and republishes a TGZ containing a member above 2 GiB. None of these fixtures
+qualifies the complete 8 GiB ceiling. See the
+[writer evidence](archive-streaming-codec-verification.md),
+[reader evidence](archive-streaming-reader-verification.md),
+[completed hosted gate](archive-containers-runtime-verification.md) and
+[ISO/RAR/DMG evidence](archive-iso-rar-dmg.md).
 
 Large durable background jobs remain separate work. The current creation entry
 point accepts native local selections. Other archive browsing and editing

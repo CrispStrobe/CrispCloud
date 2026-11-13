@@ -3,17 +3,463 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as ar;
 import 'package:koni_archive/koni_archive.dart' as koni;
+import 'package:koni_codecs/koni_codecs.dart' as codecs;
 import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
 import 'archive_hfs_reader.dart';
+import 'archive_hfs_writer.dart';
 import 'archive_iso_reader.dart';
+import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
+import 'archive_write_model.dart';
 
 const _sectorBytes = 512;
 const _maxPlistBytes = 8 * 1024 * 1024;
 const _maxChunkBytes = 16 * 1024 * 1024;
 const _maxImageBytes = 2 * 1024 * 1024 * 1024 * 1024;
+const _dataProfileChunkBytes = 1024 * 1024;
+
+class StreamedDmgOpen {
+  const StreamedDmgOpen({required this.archive, required this.inspection});
+  final ViewerArchive archive;
+  final ArchiveRewriteInspection inspection;
+}
+
+/// Opaque evidence that the UDIF wrapper and its complete HFSX metadata were
+/// checked. No public constructor accepts an unverified image marker.
+class DmgRewriteProfile {
+  const DmgRewriteProfile._(this.hfsInspection);
+  final ArchiveRewriteInspection hfsInspection;
+}
+
+/// Opens only the canonical, unencrypted, single-volume HFSX data profile.
+/// The returned archive has filesystem paths directly at its root. It owns
+/// [source]; a failed open also closes the source. Other valid image profiles
+/// require a fresh source for the ordinary read-only partition/file browser.
+///
+/// Both UDIF CRC layers are checked before authorizing a rewrite. The HFSX
+/// inspector separately compares every byte outside regular file data forks.
+Future<StreamedDmgOpen> openStreamedDmgSource(
+  koni.ByteSource source, {
+  int maxBytes = kArchiveStreamingLimit,
+  bool Function()? isCancelled,
+}) async {
+  _DmgPartition? partition;
+  HfsArchiveOpen? opened;
+  final cache = _ChunkCache();
+  var opening = true;
+  void check() {
+    if (opening && (isCancelled?.call() ?? false)) {
+      throw const ArchiveViewException('DMG opening was cancelled.');
+    }
+  }
+
+  final input = _CheckedDmgSource(source, check);
+  try {
+    if (maxBytes <= 0 || maxBytes > kArchiveStreamingLimit) {
+      throw ArgumentError.value(maxBytes, 'maxBytes');
+    }
+    check();
+    if (source.length > maxBytes) {
+      throw const ArchiveViewException('The DMG exceeds its streamed limit.');
+    }
+    if (source.length < 512) _bad('Missing UDIF trailer.');
+    final trailer = await _readExact(input, input.length - 512, 512);
+    if (!_magic(trailer, 0, 'koly')) {
+      throw const ArchiveStreamingUnsupported(
+        'Only unencrypted UDIF data images can use the streamed editor.',
+      );
+    }
+    final k = ByteData.sublistView(trailer);
+    if (k.getUint32(4) != 4 || k.getUint32(8) != 512) {
+      throw const ArchiveStreamingUnsupported(
+        'This UDIF version is not a writable data-image profile.',
+      );
+    }
+    if (k.getUint32(56) != 1 || k.getUint32(60) != 1 || _u64(k, 16) != 0) {
+      throw const ArchiveStreamingUnsupported(
+        'Segmented DMG images remain read-only.',
+      );
+    }
+    final forkOffset = _u64(k, 24);
+    final forkLength = _u64(k, 32);
+    final xmlOffset = _u64(k, 216);
+    final xmlLength = _u64(k, 224);
+    final sectors = _u64(k, 492);
+    if (sectors <= 0 || sectors > _maxImageBytes ~/ _sectorBytes) {
+      _bad('The declared disk size exceeds the supported range.');
+    }
+    _range(input.length - 512, forkOffset, forkLength);
+    _range(input.length - 512, xmlOffset, xmlLength);
+    if (xmlLength <= 0 ||
+        xmlLength > _maxPlistBytes ||
+        (forkLength > 0 &&
+            xmlOffset < forkOffset + forkLength &&
+            forkOffset < xmlOffset + xmlLength)) {
+      _bad('Invalid, overlapping or oversized XML metadata.');
+    }
+    if (sectors > maxBytes ~/ _sectorBytes) {
+      throw const ArchiveStreamingUnsupported(
+        'The expanded DMG volume exceeds the streamed editing limit.',
+      );
+    }
+    final xml = await _readExact(input, xmlOffset, xmlLength);
+    final plist = _plist(utf8.decode(xml));
+    final root = _dict(plist.rootElement.getElement('dict'));
+    final resources = _dict(root['resource-fork']);
+    final blocks = resources['blkx'];
+    if (blocks == null || blocks.name.local != 'array') {
+      throw const ArchiveStreamingUnsupported(
+        'This DMG has no supported XML block map.',
+      );
+    }
+    final tables = blocks.childElements.toList();
+    if (tables.length != 1) {
+      throw const ArchiveStreamingUnsupported(
+        'DMG editing requires exactly one HFSX data volume.',
+      );
+    }
+    final entry = _dict(tables.single);
+    final encoded = entry['Data'];
+    if (encoded == null || encoded.name.local != 'data') {
+      _bad('A UDIF block map has no binary data.');
+    }
+    final table = base64.decode(
+      encoded.innerText.replaceAll(RegExp(r'\s'), ''),
+    );
+    partition = _partition(
+      input,
+      table,
+      entry['Name']?.innerText ?? 'Partition',
+      0,
+      forkOffset,
+      forkLength,
+      sectors,
+      cache,
+    );
+    _checkDataProfile(
+      input.length,
+      trailer,
+      xml,
+      table,
+      partition,
+      forkOffset,
+      forkLength,
+      xmlOffset,
+      sectors,
+    );
+    check();
+    try {
+      opened = await openHfsArchiveWithMetadata(
+        _BorrowedPartition(partition),
+        maxMemberBytes: maxBytes,
+        isCancelled: () => opening && (isCancelled?.call() ?? false),
+      );
+    } on ArchiveViewException catch (error) {
+      if (error.message.startsWith('Unsupported HFS volume:')) {
+        throw ArchiveStreamingUnsupported(error.message);
+      }
+      rethrow;
+    }
+    final hfsInspection = await inspectHfsRewriteSource(
+      partition,
+      opened,
+      maxBytes: maxBytes,
+      isCancelled: isCancelled,
+    );
+    await _verifyDataProfileChecksums(partition, k.getUint32(88), check);
+    check();
+    final filesystem = opened.archive;
+    final volume = partition;
+    final archive = ViewerArchive.reader(
+      formatName: 'dmg',
+      members: filesystem.members,
+      maxStreamingMemberBytes: maxBytes,
+      notices: const [
+        'Verified HFSX data image. File contents, volume name, dates and modes '
+            'are preserved when this image is rewritten.',
+      ],
+      read: (member, limit) => filesystem.readMember(member, maxBytes: limit),
+      streamReader: (member, chunkSize) => filesystem.openMember(
+        member,
+        maxBytes: maxBytes,
+        chunkSize: chunkSize,
+      ),
+      close: () async {
+        try {
+          await filesystem.close();
+        } finally {
+          try {
+            await volume.close();
+          } finally {
+            cache.clear();
+            await source.close();
+          }
+        }
+      },
+    );
+    final inspection = ArchiveRewriteInspection(
+      container: {
+        'package.kind': 'dmg',
+        'dmg.profile': DmgRewriteProfile._(hfsInspection),
+      },
+      attributes: hfsInspection.attributes,
+    );
+    opened = null;
+    partition = null;
+    opening = false;
+    return StreamedDmgOpen(archive: archive, inspection: inspection);
+  } catch (error) {
+    try {
+      await opened?.archive.close();
+    } finally {
+      try {
+        await partition?.close();
+      } finally {
+        cache.clear();
+        await source.close();
+      }
+    }
+    if (error is ArchiveViewException || error is ArgumentError) rethrow;
+    throw ArchiveViewException('Could not read the disk image: $error');
+  }
+}
+
+/// The deliberately exact metadata envelope emitted by the data-image writer.
+/// Keeping its serializer here lets the inspector reject unknown plist keys,
+/// opaque XML, partition names and attributes without dropping them on save.
+Uint8List encodeDmgDataProfilePlist(Uint8List table) => Uint8List.fromList(
+  utf8.encode(
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+    '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+    '<plist version="1.0"><dict><key>resource-fork</key><dict>'
+    '<key>blkx</key><array><dict>'
+    '<key>Attributes</key><string>0x0050</string>'
+    '<key>ID</key><string>0</string>'
+    '<key>Name</key><string>Apple_HFSX (CrispCloud data volume)</string>'
+    '<key>Data</key><data>${base64.encode(table)}</data>'
+    '</dict></array></dict></dict></plist>\n',
+  ),
+);
+
+void _checkDataProfile(
+  int sourceLength,
+  Uint8List trailer,
+  Uint8List xml,
+  Uint8List table,
+  _DmgPartition partition,
+  int forkOffset,
+  int forkLength,
+  int xmlOffset,
+  int sectors,
+) {
+  Never unsupported() => throw const ArchiveStreamingUnsupported(
+    'This DMG contains a noncanonical partition layout or metadata that '
+    'cannot be preserved by the data-image writer.',
+  );
+  final rawBytes = sectors * _sectorBytes;
+  if (forkOffset != 0 ||
+      xmlOffset != forkLength ||
+      sourceLength != forkLength + xml.length + 512 ||
+      partition.length != rawBytes ||
+      partition.chunks.length !=
+          (rawBytes + _dataProfileChunkBytes - 1) ~/ _dataProfileChunkBytes ||
+      partition.chunks.length >
+          kArchiveStreamingLimit ~/ _dataProfileChunkBytes ||
+      partition.checksum == null ||
+      !_equal(xml, encodeDmgDataProfilePlist(table))) {
+    unsupported();
+  }
+  final expectedTable = Uint8List(204 + 40 * (partition.chunks.length + 1));
+  final t = ByteData.sublistView(expectedTable);
+  expectedTable.setRange(0, 4, ascii.encode('mish'));
+  t.setUint32(4, 1);
+  _putU64(t, 16, sectors);
+  t.setUint32(32, _dataProfileChunkBytes ~/ _sectorBytes);
+  t.setUint32(36, 0xfffffffe);
+  _putChecksum(t, 64, partition.checksum!);
+  t.setUint32(200, partition.chunks.length + 1);
+  var packedAt = 0, rawAt = 0;
+  for (var i = 0; i < partition.chunks.length; i++) {
+    final chunk = partition.chunks[i];
+    final remaining = rawBytes - rawAt;
+    final count = remaining < _dataProfileChunkBytes
+        ? remaining
+        : _dataProfileChunkBytes;
+    if (chunk.start != rawAt ||
+        chunk.length != count ||
+        chunk.offset != packedAt ||
+        !const [0, 1, 0x80000005].contains(chunk.type) ||
+        chunk.type == 0x80000005 && chunk.packedLength >= count) {
+      unsupported();
+    }
+    final at = 204 + i * 40;
+    t.setUint32(at, chunk.type);
+    _putU64(t, at + 8, rawAt ~/ _sectorBytes);
+    _putU64(t, at + 16, count ~/ _sectorBytes);
+    _putU64(t, at + 24, packedAt);
+    _putU64(t, at + 32, chunk.packedLength);
+    rawAt += count;
+    packedAt += chunk.packedLength;
+  }
+  final end = 204 + partition.chunks.length * 40;
+  t.setUint32(end, 0xffffffff);
+  _putU64(t, end + 8, sectors);
+  _putU64(t, end + 24, packedAt);
+  if (packedAt != forkLength || !_equal(table, expectedTable)) unsupported();
+  final k = ByteData.sublistView(trailer);
+  final expectedTrailer = Uint8List(512);
+  final e = ByteData.sublistView(expectedTrailer);
+  expectedTrailer.setRange(0, 4, ascii.encode('koly'));
+  e.setUint32(4, 4);
+  e.setUint32(8, 512);
+  e.setUint32(12, 1);
+  _putU64(e, 32, forkLength);
+  e.setUint32(56, 1);
+  e.setUint32(60, 1);
+  e.setUint32(64, 0x43724331);
+  e.setUint32(68, partition.checksum!);
+  e.setUint32(72, k.getUint32(88));
+  e.setUint32(76, rawBytes & 0xffffffff);
+  _putChecksum(e, 80, k.getUint32(88));
+  _putU64(e, 216, forkLength);
+  _putU64(e, 224, xml.length);
+  final rawChecksum = Uint8List(4);
+  ByteData.sublistView(rawChecksum).setUint32(0, partition.checksum!);
+  _putChecksum(e, 352, ar.getCrc32(rawChecksum));
+  e.setUint32(488, 2);
+  _putU64(e, 492, sectors);
+  if (!_equal(trailer, expectedTrailer)) unsupported();
+}
+
+Future<void> _verifyDataProfileChecksums(
+  _DmgPartition partition,
+  int expectedPackedCrc,
+  void Function() check,
+) async {
+  var packedCrc = 0, rawCrc = 0;
+  for (final chunk in partition.chunks) {
+    check();
+    final Uint8List raw;
+    if (chunk.type == 0) {
+      raw = Uint8List(chunk.length);
+    } else {
+      final packed = await _readExact(
+        partition.source,
+        chunk.offset,
+        chunk.packedLength,
+      );
+      check();
+      packedCrc = ar.getCrc32(packed, packedCrc);
+      if (chunk.type == 1) {
+        raw = packed;
+      } else {
+        raw = _decodeDataProfileZlib(packed, chunk.length, check);
+      }
+    }
+    if (raw.length != chunk.length) _bad('Expanded chunk size mismatch.');
+    rawCrc = ar.getCrc32(raw, rawCrc);
+    await Future<void>.delayed(Duration.zero);
+    check();
+  }
+  if (rawCrc != partition.checksum || packedCrc != expectedPackedCrc) {
+    _bad('The disk-image checksums do not match.');
+  }
+}
+
+Uint8List _decodeDataProfileZlib(
+  Uint8List packed,
+  int size,
+  void Function() check,
+) {
+  // Native zlib decoders can accept bytes following the stream. Require a
+  // complete DEFLATE terminator, no unread bytes and its exact Adler trailer,
+  // so opaque suffix data cannot disappear when the image is rewritten.
+  if (packed.length < 6 ||
+      packed[0] & 15 != 8 ||
+      packed[0] >> 4 > 7 ||
+      (packed[0] * 256 + packed[1]) % 31 != 0) {
+    _bad('A compressed partition chunk has an invalid zlib header.');
+  }
+  if (packed[1] & 0x20 != 0) {
+    throw const ArchiveStreamingUnsupported(
+      'Dictionary-compressed DMG data is not a writable profile.',
+    );
+  }
+  final output = Uint8List(size);
+  var produced = 0;
+  final decoder = codecs.RawInflater(
+    onOutput: (chunk) {
+      check();
+      if (chunk.length > size - produced) {
+        _bad('Expanded chunk size mismatch.');
+      }
+      output.setRange(produced, produced + chunk.length, chunk);
+      produced += chunk.length;
+    },
+  );
+  try {
+    final deflate = Uint8List.sublistView(packed, 2, packed.length - 4);
+    final consumed = decoder.addInput(deflate);
+    decoder.finish();
+    if (consumed != deflate.length || decoder.takeLeftoverBytes().isNotEmpty) {
+      throw const ArchiveStreamingUnsupported(
+        'Trailing compressed-chunk data cannot be discarded on rewrite.',
+      );
+    }
+  } on ArchiveViewException {
+    rethrow;
+  } catch (error) {
+    _bad('A compressed partition chunk is corrupt: $error');
+  }
+  if (produced != size ||
+      ar.getAdler32(output) !=
+          ByteData.sublistView(packed).getUint32(packed.length - 4)) {
+    _bad('A compressed partition chunk has an invalid size or checksum.');
+  }
+  return output;
+}
+
+bool _equal(List<int> actual, List<int> expected) {
+  if (actual.length != expected.length) return false;
+  for (var i = 0; i < actual.length; i++) {
+    if (actual[i] != expected[i]) return false;
+  }
+  return true;
+}
+
+void _putU64(ByteData data, int at, int value) {
+  data.setUint32(at, value ~/ 0x100000000);
+  data.setUint32(at + 4, value & 0xffffffff);
+}
+
+void _putChecksum(ByteData data, int at, int crc) {
+  data.setUint32(at, 2);
+  data.setUint32(at + 4, 32);
+  data.setUint32(at + 8, crc);
+}
+
+class _CheckedDmgSource implements koni.ByteSource {
+  const _CheckedDmgSource(this.source, this.check);
+  final koni.ByteSource source;
+  final void Function() check;
+  @override
+  String? get name => source.name;
+  @override
+  int get length => source.length;
+  @override
+  Future<Uint8List> read(int offset, int length) async {
+    check();
+    final bytes = await source.read(offset, length);
+    check();
+    return bytes;
+  }
+
+  @override
+  Future<void> close() async {}
+}
 
 /// Reads unencrypted, single-segment UDIF disk images without mounting them.
 /// Raw/zero/zlib/bzip2 blocks form bounded random-access partition sources.

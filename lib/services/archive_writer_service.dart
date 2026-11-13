@@ -4,8 +4,10 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart';
+import 'archive_dmg_writer.dart';
 import 'archive_iso_writer.dart';
 import 'archive_package_writers.dart';
+import 'archive_rar_stored_writer.dart';
 import 'archive_tar_writer.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
@@ -116,6 +118,27 @@ Future<void> writeArchiveEntries(
       sink: emit,
       source: source,
       maxOutputBytes: maxOutputBytes,
+      isCancelled: isCancelled,
+    );
+    return;
+  }
+  if (format == ArchiveEndpointFormat.rar) {
+    await writeStoredRarArchive(
+      entries,
+      sink: emit,
+      source: source,
+      maxOutputBytes: maxOutputBytes,
+      isCancelled: isCancelled,
+    );
+    return;
+  }
+  if (format == ArchiveEndpointFormat.dmg) {
+    await writeDmgArchive(
+      entries,
+      sink: emit,
+      source: source,
+      maxOutputBytes: maxOutputBytes,
+      compress: level > 0,
       isCancelled: isCancelled,
     );
     return;

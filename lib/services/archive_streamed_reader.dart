@@ -5,9 +5,13 @@ import 'package:archive/archive.dart' show getCrc32;
 import 'package:koni_codecs/koni_codecs.dart' as codecs;
 
 import '../models/archive_endpoint.dart';
+import 'archive_dmg_reader.dart';
 import 'archive_endpoint_policy.dart';
 import 'archive_format_registry.dart';
+import 'archive_iso_reader.dart';
+import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
+import 'archive_rar_stored_reader.dart';
 import 'archive_sevenz_streamed_reader.dart';
 import 'archive_streaming_unsupported.dart';
 
@@ -28,12 +32,16 @@ class StreamedArchiveOpen {
 /// Opens the common writable container formats without collecting their input
 /// or members. The caller transfers source ownership, including on failure.
 /// ZIP/7z metadata stays bounded; gzip is validated into a private TAR spool.
+/// Read-only ISO viewers can omit the full preservation scan with
+/// [inspectIsoForRewrite]. Such a handle has an explicitly read-only policy;
+/// workspace opens and candidate verification retain the default full scan.
 Future<StreamedArchiveOpen> openStreamedArchiveSource(
   koni.ByteSource source, {
   required String name,
   String? password,
   int maxBytes = kArchiveStreamingLimit,
   bool Function()? isCancelled,
+  bool inspectIsoForRewrite = true,
 }) async {
   ArchiveOutputSpool? decoded;
   koni.ByteSource? decodedSource;
@@ -68,12 +76,42 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       '7z' || '7z-alias' => ArchiveEndpointFormat.sevenZip,
       'tar' || 'tar-alias' => ArchiveEndpointFormat.tar,
       'tar-gzip' => ArchiveEndpointFormat.tarGzip,
+      'iso' => ArchiveEndpointFormat.iso,
+      'rar' => ArchiveEndpointFormat.rar,
+      'dmg' => ArchiveEndpointFormat.dmg,
       _ => ArchiveEndpointFormat.readOnly,
     };
     if (format == ArchiveEndpointFormat.readOnly) {
       throw const ArchiveViewException(
         'This format has no streamed writable profile.',
       );
+    }
+    if (format == ArchiveEndpointFormat.dmg) {
+      if (input.length < 512 ||
+          !(await input.read(input.length - 512, 4)).asMap().entries.every(
+            (entry) => entry.value == const [0x6b, 0x6f, 0x6c, 0x79][entry.key],
+          )) {
+        throw const ArchiveViewException(
+          'The archive does not match its filename.',
+        );
+      }
+      final opened = await openStreamedDmgSource(
+        input,
+        maxBytes: maxBytes,
+        isCancelled: isCancelled,
+      );
+      inner = opened.archive;
+      final policy = ArchiveEndpointPolicy(
+        format,
+        encrypted: false,
+        encryptNames: false,
+        reason: opened.inspection.reason,
+        inspection: opened.inspection,
+      );
+      final ownedArchive = _own(inner, source, null, null, maxBytes);
+      inner = null;
+      opening = false;
+      return StreamedArchiveOpen(archive: ownedArchive, policy: policy);
     }
     if (format == ArchiveEndpointFormat.tarGzip) {
       decoded = await ArchiveOutputSpool.create(maxBytes: maxBytes);
@@ -118,6 +156,23 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
     }
     if (format == ArchiveEndpointFormat.sevenZip) {
       inner = await openStreamedSevenZipSource(input, maxBytes: maxBytes);
+    } else if (format == ArchiveEndpointFormat.iso) {
+      if (input.length < 16 * 2048 + 7 ||
+          !(await input.read(16 * 2048 + 1, 5)).asMap().entries.every(
+            (entry) =>
+                entry.value == const [0x43, 0x44, 0x30, 0x30, 0x31][entry.key],
+          )) {
+        throw const ArchiveViewException(
+          'The archive does not match its filename.',
+        );
+      }
+      inner = await openIsoArchive(input, maxMemberBytes: maxBytes);
+    } else if (format == ArchiveEndpointFormat.rar) {
+      inner = await openStoredRarArchive(
+        input,
+        maxBytes: maxBytes,
+        isCancelled: isCancelled,
+      );
     } else {
       if (format == ArchiveEndpointFormat.zip &&
           (prefix.length < 4 || prefix[0] != 0x50 || prefix[1] != 0x4b)) {
@@ -135,6 +190,8 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
     final expected = switch (format) {
       ArchiveEndpointFormat.zip => 'zip',
       ArchiveEndpointFormat.sevenZip => '7z',
+      ArchiveEndpointFormat.iso => 'iso',
+      ArchiveEndpointFormat.rar => 'rar',
       _ => 'tar',
     };
     if (inner.formatName != expected) {
@@ -175,6 +232,25 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       inspection = await inspectTarRewriteSource(
         input,
         inner,
+        maxBytes: maxBytes,
+        isCancelled: isCancelled,
+      );
+      reason ??= inspection.reason;
+    } else if (format == ArchiveEndpointFormat.iso) {
+      if (inspectIsoForRewrite) {
+        inspection = await inspectIsoRewriteSource(
+          input,
+          inner,
+          maxBytes: maxBytes,
+          isCancelled: isCancelled,
+        );
+        reason ??= inspection.reason;
+      } else {
+        reason = 'ISO rewriting requires a complete preservation inspection.';
+      }
+    } else if (format == ArchiveEndpointFormat.rar) {
+      inspection = await inspectStoredRarRewriteSource(
+        input,
         maxBytes: maxBytes,
         isCancelled: isCancelled,
       );

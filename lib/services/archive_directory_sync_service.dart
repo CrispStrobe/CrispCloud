@@ -173,6 +173,10 @@ class ArchiveDirectorySyncService {
           'The archive destination is not an existing directory.',
         );
       }
+      final archiveRoot = root.path!;
+      final archiveBackend = destination.backend;
+      String destinationKey(String relative) =>
+          archiveBackend.pathKey(_archivePath(relative));
       final snapshot = await captureArchiveDirectorySnapshot(
         source,
         sourceDirectory,
@@ -182,7 +186,22 @@ class ArchiveDirectorySyncService {
         forbiddenContainer: destination.file,
       );
       check();
+      // A source may distinguish names that this archive represents as one
+      // member (for example NFC/NFD spellings in HFSX). Preserve the captured
+      // source paths, but reject ambiguous destination identities up front.
+      final sourceByDestination = <String, ArchiveDirectorySnapshotEntry>{};
+      for (final entry in snapshot.entries.values) {
+        final key = destinationKey(entry.relativePath);
+        if (sourceByDestination.containsKey(key)) {
+          throw StateError(
+            'Source names collide in the destination archive: '
+            '${sourceByDestination[key]!.relativePath} and ${entry.relativePath}',
+          );
+        }
+        sourceByDestination[key] = entry;
+      }
       final archive = <String, FileItem>{};
+      final archivePaths = <String, String>{};
       final hashes = <String, String>{};
       var total = 0;
       Future<void> walk(String path, int depth) async {
@@ -202,15 +221,14 @@ class ArchiveDirectorySyncService {
               'The archive comparison exceeds its traversal bounds.',
             );
           }
-          final relative = p.posix.relative(
-            child.path!,
-            from: destinationDirectory,
-          );
+          final relative = p.posix.relative(child.path!, from: archiveRoot);
+          final key = destinationKey(relative);
           if (ArchiveService.safeMemberPath(relative) != relative ||
-              archive.containsKey(relative)) {
+              archive.containsKey(key)) {
             throw StateError('The archive comparison namespace is ambiguous.');
           }
-          archive[relative] = child;
+          archive[key] = child;
+          archivePaths[key] = relative;
           if (child.isFolder) {
             await walk(child.path!, depth + 1);
           } else {
@@ -223,39 +241,41 @@ class ArchiveDirectorySyncService {
                 'The archive comparison exceeds its content bounds.',
               );
             }
-            hashes[relative] = crypto.sha256.convert(bytes).toString();
+            hashes[key] = crypto.sha256.convert(bytes).toString();
           }
         }
       }
 
-      await walk(destinationDirectory, 0);
+      await walk(archiveRoot, 0);
       check();
-      final paths = {...snapshot.entries.keys, ...archive.keys}.toList()
-        ..sort();
+      final keys = {...sourceByDestination.keys, ...archive.keys};
       final rows = <ArchiveDirectorySyncRow>[];
-      for (final path in paths) {
-        final first = snapshot.entries[path];
-        final second = archive[path];
+      for (final key in keys) {
+        final first = sourceByDestination[key];
+        final second = archive[key];
         final status = first == null
             ? ArchiveDirectorySyncStatus.archiveOnly
             : second == null
             ? ArchiveDirectorySyncStatus.sourceOnly
             : first.file.isFolder != second.isFolder
             ? ArchiveDirectorySyncStatus.typeConflict
-            : first.file.isFolder || first.sha256 == hashes[path]
+            : first.file.isFolder || first.sha256 == hashes[key]
             ? ArchiveDirectorySyncStatus.equal
             : ArchiveDirectorySyncStatus.changed;
         rows.add(
           ArchiveDirectorySyncRow._(
-            path,
+            first?.relativePath ?? archivePaths[key]!,
             first?.file,
             second,
             status,
             first?.sha256,
-            hashes[path],
+            hashes[key],
           ),
         );
       }
+      rows.sort(
+        (first, second) => first.relativePath.compareTo(second.relativePath),
+      );
       // The archive reads above can take time. Revalidate the source's complete
       // namespace, including entries whose action will be Keep or Equal.
       await verifyArchiveDirectoryDependency(
@@ -340,7 +360,7 @@ class ArchiveDirectorySyncService {
         }
         imports.add(
           ArchiveWorkspaceImport(
-            _archivePath(path),
+            rows[path]!.archive?.path ?? _archivePath(path),
             isFolder: entry.file.isFolder,
             bytes: bytes,
             modified: entry.file.updatedAt,
@@ -357,7 +377,7 @@ class ArchiveDirectorySyncService {
       check();
       destination.applyDirectorySync(
         imports: imports,
-        removals: removals.map(_archivePath).toSet(),
+        removals: {for (final path in removals) rows[path]!.archive!.path!},
         directory: destinationDirectory,
         expectedRevision: plan._revision,
         publicationAuthority: _authority,

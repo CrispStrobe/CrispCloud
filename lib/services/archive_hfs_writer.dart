@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:koni_archive/koni_archive.dart' as koni;
+
+import 'archive_hfs_reader.dart';
+import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
 
@@ -8,6 +12,12 @@ const _blockSize = 4096;
 const _maxCatalogBytes = 32 * 1024 * 1024;
 const _maxEntries = 100000;
 const _hfsEpoch = 2082844800;
+const _dateAttributes = {
+  'hfs.created',
+  'hfs.attributesModified',
+  'hfs.accessed',
+  'hfs.backedUp',
+};
 
 /// Existing images can contain forks, attributes and links outside the file
 /// view. Creation does not establish that those structures can be rewritten.
@@ -20,6 +30,190 @@ Future<ArchiveRewriteInspection> inspectHfsRewrite(
       'regular files and folders; resource forks, attributes and links are not '
       'preserved by this creator.',
 );
+
+/// Verifies the exact HFSX data-volume layout produced by this writer, while
+/// retaining supported dates, modes and the volume label. Every byte outside
+/// regular data forks must match the regenerated plan, including both volume
+/// headers, all tree nodes, allocation bits, file slack and unused blocks.
+/// The CrC1 identifier is only a profile hint, never the preservation proof.
+/// [source] and [opened] remain caller-owned, including on failure.
+Future<ArchiveRewriteInspection> inspectHfsRewriteSource(
+  koni.ByteSource source,
+  HfsArchiveOpen opened, {
+  int maxBytes = kArchiveStreamingLimit,
+  bool Function()? isCancelled,
+}) async {
+  void check() {
+    if (isCancelled?.call() ?? false) {
+      throw const ArchiveViewException('HFS inspection was cancelled.');
+    }
+  }
+
+  check();
+  if (maxBytes <= 0 || maxBytes > kArchiveStreamingLimit) {
+    throw ArgumentError.value(maxBytes, 'maxBytes');
+  }
+  if (source.length > maxBytes || opened.archive.formatName != 'hfsx') {
+    throw const ArchiveStreamingUnsupported(
+      'Only a bounded canonical HFSX data volume can be rewritten.',
+    );
+  }
+  final archive = opened.archive;
+  final profile = _VerifiedHfsProfile(opened.metadata, {
+    for (final member in archive.members) member.name: _date(member.modified!),
+  });
+  final entries = <ArchiveWriteEntry>[];
+  for (final member in archive.members) {
+    check();
+    if (member.isSpecial || member.isEncrypted || member.pathEscapedRoot) {
+      throw const ArchiveStreamingUnsupported(
+        'Special filesystem entries cannot be rewritten as data files.',
+      );
+    }
+    entries.add(
+      ArchiveWriteEntry(
+        path: member.name,
+        isDirectory: !member.isFile,
+        size: member.size,
+        modified: member.modified,
+        mode: member.posixMode,
+        attributes: opened.metadata.attributes[member.name] ?? const {},
+        readChunks: member.isFile
+            ? () => archive.openMember(member, maxBytes: maxBytes)
+            : null,
+      ),
+    );
+  }
+  final _HfsPlan plan;
+  try {
+    plan = _HfsPlan(
+      entries,
+      opened.metadata.volumeName,
+      maxBytes,
+      preserved: profile,
+    );
+  } on ArchiveViewException catch (error) {
+    throw ArchiveStreamingUnsupported(
+      'The HFSX metadata cannot be regenerated safely: ${error.message}',
+    );
+  }
+  if (source.length != plan.totalBlocks * _blockSize) {
+    throw const ArchiveStreamingUnsupported(
+      'The HFSX volume has a noncanonical allocation layout or extra data.',
+    );
+  }
+  var offset = 0;
+  Future<void> compare(List<int> expected) async {
+    for (var at = 0; at < expected.length; at += 256 * 1024) {
+      check();
+      final count = expected.length - at < 256 * 1024
+          ? expected.length - at
+          : 256 * 1024;
+      final actual = await source.read(offset, count);
+      check();
+      if (actual.length != count) {
+        throw const ArchiveViewException('The HFSX volume is truncated.');
+      }
+      for (var i = 0; i < count; i++) {
+        if (actual[i] != expected[at + i]) {
+          throw const ArchiveStreamingUnsupported(
+            'The HFSX volume contains metadata, padding or unused data that '
+            'this writer cannot preserve.',
+          );
+        }
+      }
+      offset += count;
+    }
+  }
+
+  await _emitHfsPlan(
+    plan,
+    emit: compare,
+    writeFile: (item) async {
+      check();
+      // The already-compared catalog fixes this file's start and exact size.
+      // Only its logical data bytes are excluded from metadata comparison.
+      offset += item.size;
+    },
+  );
+  check();
+  if (offset != source.length) {
+    throw StateError('HFS preservation inspection did not cover the volume.');
+  }
+  return ArchiveRewriteInspection(
+    container: {'package.kind': 'hfsx', 'hfs.profile': profile},
+    attributes: opened.metadata.attributes,
+  );
+}
+
+// A direct caller cannot authorize rewriting with a marker or an empty
+// ArchiveRewriteInspection. This token is returned only after full comparison.
+class _VerifiedHfsProfile {
+  _VerifiedHfsProfile(this.metadata, Map<String, int> modified)
+    : modified = Map.unmodifiable(modified);
+  final HfsArchiveMetadata metadata;
+  final Map<String, int> modified;
+}
+
+/// Checks the auxiliary metadata after a candidate has passed the complete
+/// canonical inspection again. Namespace, content hashes, modification times
+/// and modes are also checked by the workspace's normal verification path.
+void verifyHfsRewritePreservation(
+  List<ArchiveWriteEntry> entries,
+  ArchiveRewriteInspection actual, {
+  ArchiveRewriteInspection? source,
+}) {
+  Never mismatch() => throw const ArchiveViewException(
+    'Rewritten HFSX volume metadata does not match the planned preservation.',
+  );
+  final actualProfile = actual.container['hfs.profile'];
+  final sourceProfile = source?.container['hfs.profile'];
+  if (!actual.supported ||
+      actualProfile is! _VerifiedHfsProfile ||
+      source != null &&
+          (!source.supported || sourceProfile is! _VerifiedHfsProfile)) {
+    mismatch();
+  }
+  final metadata = actualProfile.metadata;
+  if (sourceProfile is _VerifiedHfsProfile) {
+    final previous = sourceProfile.metadata;
+    if (metadata.volumeName != previous.volumeName ||
+        metadata.volumeCreated != previous.volumeCreated ||
+        metadata.volumeModified != previous.volumeModified ||
+        metadata.volumeBackup != previous.volumeBackup ||
+        metadata.volumeChecked != previous.volumeChecked ||
+        metadata.rootModified != previous.rootModified ||
+        metadata.rootMode != previous.rootMode ||
+        !_sameAttributes(metadata.rootAttributes, previous.rootAttributes)) {
+      mismatch();
+    }
+  }
+  for (final entry in entries) {
+    final path = normalizeHfsArchivePath(entry.path);
+    final attrs = metadata.attributes[path];
+    final modified = entry.modified == null
+        ? actualProfile.modified[path]
+        : _date(entry.modified!);
+    if (attrs == null || modified == null || attrs.length != 4) mismatch();
+    if (entry.attributes.keys.any((key) => !_dateAttributes.contains(key))) {
+      mismatch();
+    }
+    for (final key in _dateAttributes) {
+      if (attrs[key] !=
+          _dateAttribute(
+            entry.attributes,
+            key,
+            key == 'hfs.backedUp' ? 0 : modified,
+          )) {
+        mismatch();
+      }
+    }
+  }
+}
+
+bool _sameAttributes(Map<String, Object?> first, Map<String, Object?> second) =>
+    first.length == second.length &&
+    first.entries.every((item) => second[item.key] == item.value);
 
 /// HFSX compares decomposed UTF-16 names, preserving case. This normalization
 /// is frozen to Unicode 3.2 with the HFS exclusions in Apple's TN1150; current
@@ -39,16 +233,18 @@ Future<void> writeHfsArchive(
   List<ArchiveWriteEntry> entries, {
   required Future<void> Function(List<int>) sink,
   ArchiveRewriteInspection? source,
-  int maxOutputBytes = 2 * 1024 * 1024 * 1024,
+  int maxOutputBytes = kArchiveStreamingLimit,
   bool Function()? isCancelled,
   String volumeName = 'CrispCloud',
 }) async {
-  if (source != null) {
+  final preserved = source?.container['hfs.profile'];
+  if (source != null &&
+      (!source.supported || preserved is! _VerifiedHfsProfile)) {
     throw const ArchiveViewException(
-      'HFS image rewriting is unavailable; create a new data image instead.',
+      'HFS rewriting requires a verified canonical data-volume inspection.',
     );
   }
-  if (maxOutputBytes <= 0 || maxOutputBytes > 2 * 1024 * 1024 * 1024) {
+  if (maxOutputBytes <= 0 || maxOutputBytes > kArchiveStreamingLimit) {
     throw ArgumentError.value(maxOutputBytes, 'maxOutputBytes');
   }
   void check() {
@@ -58,7 +254,14 @@ Future<void> writeHfsArchive(
   }
 
   check();
-  final plan = _HfsPlan(entries, volumeName, maxOutputBytes);
+  final plan = _HfsPlan(
+    entries,
+    preserved is _VerifiedHfsProfile
+        ? preserved.metadata.volumeName
+        : volumeName,
+    maxOutputBytes,
+    preserved: preserved as _VerifiedHfsProfile?,
+  );
   var written = 0;
   Future<void> emit(List<int> bytes) async {
     check();
@@ -72,10 +275,31 @@ Future<void> writeHfsArchive(
     check();
   }
 
+  await _emitHfsPlan(
+    plan,
+    emit: emit,
+    writeFile: (item) async {
+      check();
+      await for (final chunk in item.entry!.openRead()) {
+        await emit(chunk);
+      }
+    },
+  );
+  if (written != plan.totalBlocks * _blockSize) {
+    throw StateError('HFS layout length did not match the emitted volume.');
+  }
+}
+
+Future<void> _emitHfsPlan(
+  _HfsPlan plan, {
+  required Future<void> Function(List<int>) emit,
+  required Future<void> Function(_Item) writeFile,
+}) async {
   Future<void> zeros(int count) async {
+    final buffer = Uint8List(256 * 1024);
     while (count > 0) {
-      final size = count > 256 * 1024 ? 256 * 1024 : count;
-      await emit(Uint8List(size));
+      final size = count > buffer.length ? buffer.length : count;
+      await emit(Uint8List.sublistView(buffer, 0, size));
       count -= size;
     }
   }
@@ -114,36 +338,59 @@ Future<void> writeHfsArchive(
   await zeros(_blockSize);
   for (final item in plan.items) {
     if (item.directory) continue;
-    check();
-    await for (final chunk in item.entry!.openRead()) {
-      await emit(chunk);
-    }
+    await writeFile(item);
     await zeros(item.blocks * _blockSize - item.size);
   }
-  await zeros((plan.totalBlocks - 1) * _blockSize - written);
+  await zeros((plan.totalBlocks - 1 - plan.dataEndBlock) * _blockSize);
   final last = Uint8List(_blockSize)
     ..setRange(_blockSize - 1024, _blockSize - 512, plan.header);
   await emit(last);
-  if (written != plan.totalBlocks * _blockSize) {
-    throw StateError('HFS layout length did not match the emitted volume.');
-  }
 }
 
 class _HfsPlan {
-  _HfsPlan(List<ArchiveWriteEntry> entries, String label, int limit) {
+  _HfsPlan(
+    List<ArchiveWriteEntry> entries,
+    String label,
+    int limit, {
+    _VerifiedHfsProfile? preserved,
+  }) {
     validateArchiveWriteEntries(entries, maxEntries: _maxEntries);
     final normalizedLabel = _normalizeName(label);
     _checkName(normalizedLabel);
     final now = _date(DateTime.now().toUtc());
-    final root = _Item('', normalizedLabel, true, null, 2, 1, now);
+    final metadata = preserved?.metadata;
+    final root = _Item(
+      '',
+      normalizedLabel,
+      true,
+      metadata == null
+          ? null
+          : ArchiveWriteEntry(
+              path: normalizedLabel,
+              isDirectory: true,
+              size: 0,
+              mode: metadata.rootMode,
+              attributes: metadata.rootAttributes,
+            ),
+      2,
+      1,
+      metadata?.rootModified ?? now,
+    );
     final paths = <String, _Item>{'': root};
     final explicit = <String>{};
     var nameBytes = normalizedLabel.length * 2;
     for (final entry in entries) {
-      if (entry.attributes.isNotEmpty) {
+      if (entry.attributes.isNotEmpty &&
+          (preserved == null ||
+              entry.attributes.keys.any(
+                (key) => !_dateAttributes.contains(key),
+              ))) {
         throw ArchiveViewException(
           'HFS creation cannot preserve extra member attributes: ${entry.path}',
         );
+      }
+      for (final key in entry.attributes.keys) {
+        _dateAttribute(entry.attributes, key, now);
       }
       final kind = (entry.mode ?? 0) & 0xf000;
       if ((entry.mode ?? 0) < 0 ||
@@ -269,6 +516,7 @@ class _HfsPlan {
         nextBlock += item.blocks;
       }
     }
+    dataEndBlock = nextBlock;
     bitmap = Uint8List(bitmapBlocks * _blockSize);
     for (var i = 0; i < nextBlock; i++) {
       bitmap[i >> 3] |= 0x80 >> (i & 7);
@@ -279,9 +527,10 @@ class _HfsPlan {
     h.setUint16(2, 5);
     h.setUint32(4, 0x100); // cleanly unmounted, unjournaled
     h.setUint32(8, 0x43724331); // CrC1: this creator's on-disk profile
-    h.setUint32(16, now);
-    h.setUint32(20, now);
-    h.setUint32(28, now);
+    h.setUint32(16, metadata?.volumeCreated ?? now);
+    h.setUint32(20, metadata?.volumeModified ?? now);
+    h.setUint32(24, metadata?.volumeBackup ?? 0);
+    h.setUint32(28, metadata?.volumeChecked ?? now);
     h.setUint32(32, items.where((item) => !item.directory).length);
     h.setUint32(36, items.where((item) => item.directory).length);
     h.setUint32(40, _blockSize);
@@ -302,6 +551,7 @@ class _HfsPlan {
   final nodes = <_Node>[];
   late final int lastLeaf;
   late int totalBlocks;
+  late final int dataEndBlock;
   late final Uint8List bitmap;
   final header = Uint8List(512);
 
@@ -355,6 +605,8 @@ class _Item {
   int get mode =>
       (directory ? 0x4000 : 0x8000) |
       ((entry?.mode ?? (directory ? 0x1ed : 0x1a4)) & 0xfff);
+  int dateAttribute(String key, int fallback) =>
+      _dateAttribute(entry?.attributes ?? const {}, key, fallback);
 }
 
 class _Record {
@@ -407,9 +659,14 @@ class _Record {
     d.setUint16(at + 2, node.directory ? 0x10 : 2);
     if (node.directory) d.setUint32(at + 4, node.children);
     d.setUint32(at + 8, node.id);
-    for (final offset in [12, 16, 20, 24]) {
-      d.setUint32(at + offset, node.date);
-    }
+    d.setUint32(at + 12, node.dateAttribute('hfs.created', node.date));
+    d.setUint32(at + 16, node.date);
+    d.setUint32(
+      at + 20,
+      node.dateAttribute('hfs.attributesModified', node.date),
+    );
+    d.setUint32(at + 24, node.dateAttribute('hfs.accessed', node.date));
+    d.setUint32(at + 28, node.dateAttribute('hfs.backedUp', 0));
     d.setUint16(at + 42, node.mode);
     if (node.directory) {
       d.setUint32(at + 84, node.folders);
@@ -504,6 +761,15 @@ int _date(DateTime date) {
     throw const ArchiveViewException('HFS timestamps must fit 1904–2040.');
   }
   return milliseconds ~/ 1000;
+}
+
+int _dateAttribute(Map<String, Object?> attributes, String key, int fallback) {
+  if (!attributes.containsKey(key)) return fallback;
+  final value = attributes[key];
+  if (value is! int || value < 0 || value > 0xffffffff) {
+    throw ArchiveViewException('Invalid preserved HFS timestamp: $key');
+  }
+  return value;
 }
 
 void _checkName(String name) {

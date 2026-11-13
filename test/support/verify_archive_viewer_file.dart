@@ -5,8 +5,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart' as ar;
+import 'package:crisp_cloud/models/archive_endpoint.dart';
+import 'package:crisp_cloud/services/archive_streamed_reader.dart';
+import 'package:crisp_cloud/services/archive_streaming_writer.dart';
 import 'package:crisp_cloud/services/archive_viewer_file_io.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
+import 'package:crisp_cloud/services/archive_write_model.dart';
+import 'package:koni_archive/io.dart' as koni;
+
+import 'archive_iso_fixtures.dart';
 
 void require(bool condition, String message) {
   if (!condition) throw StateError(message);
@@ -60,11 +67,44 @@ Future<void> main() async {
         format: 'zip',
         limit: kArchiveStreamingLimit,
       );
+      for (final profile in [
+        ('iso', ArchiveEndpointFormat.iso, 'iso'),
+        ('rar', ArchiveEndpointFormat.rar, 'rar'),
+        ('cbr', ArchiveEndpointFormat.rar, 'rar'),
+        ('dmg', ArchiveEndpointFormat.dmg, 'dmg'),
+      ]) {
+        final packed = await collectArchiveWrite(
+          (sink) => writeStreamingArchiveEntries(
+            profile.$2,
+            [
+              ArchiveWriteEntry(
+                path: 'evidence.txt',
+                isDirectory: false,
+                size: content.length,
+                modified: DateTime.utc(2026, 11, 13),
+                mode: 0x1a4,
+                readChunks: () => Stream.value(content),
+              ),
+            ],
+            sink: sink,
+            maxOutputBytes: kArchiveStreamingLimit,
+          ),
+        );
+        await checkArchive(
+          'valid.${profile.$1}',
+          packed,
+          format: profile.$3,
+          limit: kArchiveStreamingLimit,
+        );
+      }
       for (final example in [
         (name: 'mislabeled.zip', bytes: tar, format: 'tar'),
         (name: 'mislabeled.7z', bytes: zip, format: 'zip'),
         (name: 'mislabeled.tar', bytes: zip, format: 'zip'),
         (name: 'wrapped-zip.tgz', bytes: gzip.encode(zip), format: 'zip'),
+        (name: 'mislabeled.iso', bytes: zip, format: 'zip'),
+        (name: 'mislabeled.rar', bytes: zip, format: 'zip'),
+        (name: 'mislabeled.dmg', bytes: zip, format: 'zip'),
       ]) {
         await checkArchive(
           example.name,
@@ -73,6 +113,53 @@ Future<void> main() async {
           limit: kArchiveReadLimit,
         );
       }
+
+      final isoFixture = IsoFixture();
+      const paddedIsoBytes = 80 * 1024 * 1024;
+      isoBoth32(isoFixture.bytes, 16 * 2048 + 80, paddedIsoBytes ~/ 2048);
+      final paddedIso = await File('${directory.path}/padded.iso')
+          .writeAsBytes(isoFixture.bytes);
+      final paddedOutput = await paddedIso.open(mode: FileMode.append);
+      try {
+        await paddedOutput.truncate(paddedIsoBytes);
+        await paddedOutput.setPosition(paddedIsoBytes - 1);
+        await paddedOutput.writeByte(1);
+      } finally {
+        await paddedOutput.close();
+      }
+      final viewedIso = await openViewerArchiveFile(
+        paddedIso.path,
+        name: 'padded.iso',
+        streaming: true,
+      );
+      try {
+        require(viewedIso.formatName == 'iso', 'Padded ISO view format');
+        final member = viewedIso.members.singleWhere(
+          (member) => member.name == 'HELLO.TXT',
+        );
+        require(
+          utf8.decode(await viewedIso.readMember(member)) == 'hello iso',
+          'Padded ISO view content',
+        );
+      } finally {
+        await viewedIso.close();
+      }
+      final inspectedIso = await openStreamedArchiveSource(
+        await koni.FileByteSource.open(paddedIso.path),
+        name: 'padded.iso',
+      );
+      try {
+        require(
+          inspectedIso.policy.reason?.contains('unmodeled data') == true,
+          'Writable ISO open skipped its unclaimed-data preservation scan',
+        );
+      } finally {
+        await inspectedIso.archive.close();
+      }
+      print(
+        'PASS 80 MiB ISO: read-only viewing succeeds; rewrite inspection '
+        'still refuses unmodeled data',
+      );
       await checkArchive(
         'protected.zip',
         ar.ZipEncoder(password: 'secret').encode(fixture),

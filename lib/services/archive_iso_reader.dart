@@ -151,6 +151,7 @@ class _IsoReader {
     await _directory(root, '', 0);
     return ViewerArchive.reader(
       formatName: 'iso',
+      maxStreamingMemberBytes: maxMemberBytes,
       members: List<ViewerArchiveMember>.unmodifiable(_members),
       read: (member, requested) async {
         if (member.isSpecial || !member.isFile) {
