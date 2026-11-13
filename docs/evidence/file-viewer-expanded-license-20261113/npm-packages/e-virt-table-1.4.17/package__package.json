@@ -1,0 +1,60 @@
+{
+    "name": "e-virt-table",
+    "private": false,
+    "version": "1.4.17",
+    "description": "A powerful data table based on canvas. You can use it as data grid、Microsoft Excel or Google sheets. It supports virtual scroll、cell edit etc.",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.es.js",
+    "browser": "dist/index.umd.js",
+    "types": "dist/lib/index.d.ts",
+    "scripts": {
+        "dev": "vite",
+        "dev:install": "cd docs && npm install",
+        "dev:docs": "npm run build && npm run copy-dist && cd docs && npm run dev",
+        "install:docs": "cd docs && npm install",
+        "build:docs": "cd docs && npm run build",
+        "build": "vite build && tsc",
+        "preview": "vite preview",
+        "copy-dist": "node scripts/copy-dist.js",
+        "update-docs-dist": "npm run build && npm run copy-dist"
+    },
+    "license": "MIT",
+    "author": "laichuangwen",
+    "keywords": [
+        "vue",
+        "react",
+        "table",
+        "canvas",
+        "data",
+        "grid",
+        "edit",
+        "virtual",
+        "expand",
+        "fixed",
+        "selection",
+        "ellipsis",
+        "header",
+        "body",
+        "excel",
+        "sheets"
+    ],
+    "bugs": {
+        "url": "https://github.com/laichuangwen/e-virt-table/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:laichuangwen/e-virt-table.git"
+    },
+    "files": [
+        "dist"
+    ],
+    "devDependencies": {
+        "fs-extra": "^11.3.1",
+        "typescript": "^5.5.3",
+        "vite": "^6.4.2",
+        "vite-plugin-css-injected-by-js": "^3.5.2"
+    },
+    "dependencies": {
+        "@floating-ui/dom": "^1.6.11"
+    }
+}

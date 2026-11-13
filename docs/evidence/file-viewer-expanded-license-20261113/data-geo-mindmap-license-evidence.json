@@ -1,0 +1,626 @@
+[
+  {
+    "name": "@ljheee/xmind-parser",
+    "version": "1.1.3",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/ljheee/xmind-parser.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40ljheee%2Fxmind-parser/1.1.3"
+  },
+  {
+    "name": "@mapbox/jsonlint-lines-primitives",
+    "version": "2.0.3",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/mapbox/jsonlint.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40mapbox%2Fjsonlint-lines-primitives/2.0.3"
+  },
+  {
+    "name": "@mapbox/point-geometry",
+    "version": "1.1.0",
+    "license": "ISC",
+    "repository": {
+      "url": "git+ssh://git@github.com/mapbox/point-geometry.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40mapbox%2Fpoint-geometry/1.1.0"
+  },
+  {
+    "name": "@mapbox/tiny-sdf",
+    "version": "2.3.0",
+    "license": "BSD-2-Clause",
+    "repository": {
+      "url": "git+https://github.com/mapbox/tiny-sdf.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40mapbox%2Ftiny-sdf/2.3.0"
+  },
+  {
+    "name": "@mapbox/unitbezier",
+    "version": "1.0.0",
+    "license": "BSD-2-Clause",
+    "repository": {
+      "url": "git+ssh://git@github.com/mapbox/unitbezier.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40mapbox%2Funitbezier/1.0.0"
+  },
+  {
+    "name": "@mapbox/vector-tile",
+    "version": "3.0.0",
+    "license": "BSD-3-Clause",
+    "repository": {
+      "url": "git+https://github.com/mapbox/vector-tile-js.git"
+    },
+    "source": "https://registry.npmjs.org/%40mapbox%2Fvector-tile/3.0.0"
+  },
+  {
+    "name": "@maplibre/geojson-vt",
+    "version": "6.3.0",
+    "license": "ISC",
+    "repository": {
+      "url": "git+https://github.com/maplibre/geojson-vt.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40maplibre%2Fgeojson-vt/6.3.0"
+  },
+  {
+    "name": "@maplibre/maplibre-gl-style-spec",
+    "version": "26.4.4",
+    "license": "ISC",
+    "repository": {
+      "url": "git+https://github.com/maplibre/maplibre-style-spec.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40maplibre%2Fmaplibre-gl-style-spec/26.4.4"
+  },
+  {
+    "name": "@maplibre/mlt",
+    "version": "1.3.0",
+    "license": "(MIT OR Apache-2.0)",
+    "repository": {
+      "url": "git+https://github.com/maplibre/maplibre-tile-spec.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40maplibre%2Fmlt/1.3.0"
+  },
+  {
+    "name": "@maplibre/vt-pbf",
+    "version": "4.3.3",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/maplibre/vt-pbf.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40maplibre%2Fvt-pbf/4.3.3"
+  },
+  {
+    "name": "@panzoom/panzoom",
+    "version": "4.6.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/timmywil/panzoom.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40panzoom%2Fpanzoom/4.6.2"
+  },
+  {
+    "name": "@petamoriken/float16",
+    "version": "3.9.3",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/petamoriken/float16.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40petamoriken%2Ffloat16/3.9.3"
+  },
+  {
+    "name": "@tmcw/togeojson",
+    "version": "7.1.3",
+    "license": "BSD-2-Clause",
+    "repository": {
+      "url": "git://github.com/placemark/togeojson.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40tmcw%2Ftogeojson/7.1.3"
+  },
+  {
+    "name": "@types/geojson",
+    "version": "7946.0.16",
+    "license": "MIT",
+    "repository": {
+      "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "type": "git",
+      "directory": "types/geojson"
+    },
+    "source": "https://registry.npmjs.org/%40types%2Fgeojson/7946.0.16"
+  },
+  {
+    "name": "@xmldom/xmldom",
+    "version": "0.9.12",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/xmldom/xmldom.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/%40xmldom%2Fxmldom/0.9.12"
+  },
+  {
+    "name": "ag-psd",
+    "version": "31.0.3",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/Agamnentzar/ag-psd.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/ag-psd/31.0.3"
+  },
+  {
+    "name": "avsc",
+    "version": "5.7.9",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/mtth/avsc.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/avsc/5.7.9"
+  },
+  {
+    "name": "base64-js",
+    "version": "1.5.1",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/beatgammit/base64-js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/base64-js/1.5.1"
+  },
+  {
+    "name": "bidi-js",
+    "version": "1.1.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/lojjic/bidi-js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/bidi-js/1.1.0"
+  },
+  {
+    "name": "but-unzip",
+    "version": "0.1.10",
+    "license": "Apache-2.0",
+    "repository": null,
+    "source": "https://registry.npmjs.org/but-unzip/0.1.10"
+  },
+  {
+    "name": "core-util-is",
+    "version": "1.0.3",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/isaacs/core-util-is.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/core-util-is/1.0.3"
+  },
+  {
+    "name": "earcut",
+    "version": "3.2.4",
+    "license": "ISC",
+    "repository": {
+      "url": "git://github.com/mapbox/earcut.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/earcut/3.2.4"
+  },
+  {
+    "name": "geotiff",
+    "version": "3.0.5",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/geotiffjs/geotiff.js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/geotiff/3.0.5"
+  },
+  {
+    "name": "gl-matrix",
+    "version": "3.4.4",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/toji/gl-matrix.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/gl-matrix/3.4.4"
+  },
+  {
+    "name": "hyparquet",
+    "version": "1.31.5",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/hyparam/hyparquet.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/hyparquet/1.31.5"
+  },
+  {
+    "name": "immediate",
+    "version": "3.0.6",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/calvinmetcalf/immediate.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/immediate/3.0.6"
+  },
+  {
+    "name": "inherits",
+    "version": "2.0.4",
+    "license": "ISC",
+    "repository": {
+      "url": "git://github.com/isaacs/inherits.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/inherits/2.0.4"
+  },
+  {
+    "name": "isarray",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/juliangruber/isarray.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/isarray/1.0.0"
+  },
+  {
+    "name": "json-stringify-pretty-compact",
+    "version": "4.0.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/lydell/json-stringify-pretty-compact.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/json-stringify-pretty-compact/4.0.0"
+  },
+  {
+    "name": "jszip",
+    "version": "3.10.2",
+    "license": "(MIT OR GPL-3.0-or-later)",
+    "repository": {
+      "url": "git+https://github.com/Stuk/jszip.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/jszip/3.10.2"
+  },
+  {
+    "name": "kdbush",
+    "version": "4.1.0",
+    "license": "ISC",
+    "repository": {
+      "url": "git://github.com/mourner/kdbush.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/kdbush/4.1.0"
+  },
+  {
+    "name": "lerc",
+    "version": "3.0.0",
+    "license": "Apache-2.0",
+    "repository": {
+      "url": "git+https://github.com/Esri/lerc.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/lerc/3.0.0"
+  },
+  {
+    "name": "lie",
+    "version": "3.3.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/calvinmetcalf/lie.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/lie/3.3.0"
+  },
+  {
+    "name": "maplibre-gl",
+    "version": "6.16.0",
+    "license": "BSD-3-Clause",
+    "repository": {
+      "url": "git+https://github.com/maplibre/maplibre-gl-js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/maplibre-gl/6.16.0"
+  },
+  {
+    "name": "mgrs",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/proj4js/mgrs.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/mgrs/1.0.0"
+  },
+  {
+    "name": "minimist",
+    "version": "1.2.8",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/minimistjs/minimist.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/minimist/1.2.8"
+  },
+  {
+    "name": "murmurhash-js",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/mikolalysenko/murmurhash-js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/murmurhash-js/1.0.0"
+  },
+  {
+    "name": "pako",
+    "version": "1.0.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/nodeca/pako.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/pako/1.0.2"
+  },
+  {
+    "name": "pako",
+    "version": "2.1.0",
+    "license": "(MIT AND Zlib)",
+    "repository": {
+      "url": "git+https://github.com/nodeca/pako.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/pako/2.1.0"
+  },
+  {
+    "name": "pako",
+    "version": "2.2.0",
+    "license": "(MIT AND Zlib)",
+    "repository": {
+      "url": "git+https://github.com/nodeca/pako.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/pako/2.2.0"
+  },
+  {
+    "name": "parse-headers",
+    "version": "2.0.6",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/kesla/parse-headers.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/parse-headers/2.0.6"
+  },
+  {
+    "name": "parsedbf",
+    "version": "2.0.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/calvinmetcalf/parseDBF.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/parsedbf/2.0.0"
+  },
+  {
+    "name": "pbf",
+    "version": "5.1.2",
+    "license": "BSD-3-Clause",
+    "repository": {
+      "url": "git+ssh://git@github.com/mapbox/pbf.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/pbf/5.1.2"
+  },
+  {
+    "name": "potpack",
+    "version": "2.1.0",
+    "license": "ISC",
+    "repository": {
+      "url": "git+https://github.com/mapbox/potpack.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/potpack/2.1.0"
+  },
+  {
+    "name": "process-nextick-args",
+    "version": "2.0.1",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/calvinmetcalf/process-nextick-args.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/process-nextick-args/2.0.1"
+  },
+  {
+    "name": "proj4",
+    "version": "2.22.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/proj4js/proj4js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/proj4/2.22.0"
+  },
+  {
+    "name": "protocol-buffers-schema",
+    "version": "3.6.1",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/mafintosh/protocol-buffers-schema.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/protocol-buffers-schema/3.6.1"
+  },
+  {
+    "name": "quick-lru",
+    "version": "6.1.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/sindresorhus/quick-lru.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/quick-lru/6.1.2"
+  },
+  {
+    "name": "quickselect",
+    "version": "3.0.0",
+    "license": "ISC",
+    "repository": {
+      "url": "git+https://github.com/mourner/quickselect.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/quickselect/3.0.0"
+  },
+  {
+    "name": "readable-stream",
+    "version": "2.3.6",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/nodejs/readable-stream.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/readable-stream/2.3.6"
+  },
+  {
+    "name": "require-from-string",
+    "version": "2.0.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/floatdrop/require-from-string.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/require-from-string/2.0.2"
+  },
+  {
+    "name": "resolve-protobuf-schema",
+    "version": "2.1.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/mafintosh/resolve-protobuf-schema.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/resolve-protobuf-schema/2.1.0"
+  },
+  {
+    "name": "safe-buffer",
+    "version": "5.1.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/feross/safe-buffer.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/safe-buffer/5.1.2"
+  },
+  {
+    "name": "setimmediate",
+    "version": "1.0.5",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/yuzujs/setImmediate.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/setimmediate/1.0.5"
+  },
+  {
+    "name": "shpjs",
+    "version": "6.2.0",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/calvinmetcalf/shapefile-js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/shpjs/6.2.0"
+  },
+  {
+    "name": "sql.js",
+    "version": "1.15.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git+ssh://git@github.com/sql-js/sql.js.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/sql.js/1.15.2"
+  },
+  {
+    "name": "string_decoder",
+    "version": "1.1.1",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/nodejs/string_decoder.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/string_decoder/1.1.1"
+  },
+  {
+    "name": "tinyqueue",
+    "version": "3.0.0",
+    "license": "ISC",
+    "repository": {
+      "url": "git+https://github.com/mourner/tinyqueue.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/tinyqueue/3.0.0"
+  },
+  {
+    "name": "util-deprecate",
+    "version": "1.0.2",
+    "license": "MIT",
+    "repository": {
+      "url": "git://github.com/TooTallNate/util-deprecate.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/util-deprecate/1.0.2"
+  },
+  {
+    "name": "web-worker",
+    "version": "1.5.0",
+    "license": "Apache-2.0",
+    "repository": {
+      "url": "git+https://github.com/developit/web-worker.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/web-worker/1.5.0"
+  },
+  {
+    "name": "wkt-parser",
+    "version": "1.5.6",
+    "license": "MIT",
+    "repository": {
+      "url": "git+https://github.com/proj4js/wkt-parser.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/wkt-parser/1.5.6"
+  },
+  {
+    "name": "xml-utils",
+    "version": "1.10.2",
+    "license": "CC0-1.0",
+    "repository": {
+      "url": "git+https://github.com/DanielJDufour/xml-utils.git",
+      "type": "git"
+    },
+    "source": "https://registry.npmjs.org/xml-utils/1.10.2"
+  },
+  {
+    "name": "zstddec",
+    "version": "0.2.0",
+    "license": "MIT AND BSD-3-Clause",
+    "repository": "github:donmccurdy/zstddec",
+    "source": "https://registry.npmjs.org/zstddec/0.2.0"
+  }
+]
