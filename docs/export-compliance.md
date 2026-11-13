@@ -623,3 +623,15 @@ the dependency-format references were recorded on 2026-11-07.
 22. [ANSSI: current forms and filing route](https://cyber.gouv.fr/reglementation/reglementation-identite-confiance-numerique/controles-reglementaires-cryptographie/controle-moyen-de-cryptologie/controle-reglementaire-cryptographie-formulaires/).
 23. [BIS Encryption FAQs, published March 2017: whole-item classification, changed functionality and former Note 4](https://media.bis.gov/media/documents/encryption-faqs). Read older reporting language with current §740.17(e)(3) and the 2021 amendment in sources 1 and 2.
 24. [KeePass: published KDBX 4.1 format, keys, block authentication and inner encryption](https://keepass.info/help/kb/kdbx.html).
+
+### Android release packaging review, 2026-11-13
+
+The Android release command now permits Flutter's release-mode plugin
+registration, matching the successful Android CI command. The separate tagged
+APK recovery workflow checks successful application CI for the exact source
+commit, requires the existing matching release/version, and retains the same
+release keystore, certificate rejection check and crypto artifact evidence.
+It does not change the application runtime, dependency lock, cryptographic
+algorithms or protocols, Apple declarations, or reviewed distribution policy.
+The new workflow is included in the reviewed source inventory; fingerprints
+were refreshed after inspecting these packaging-only changes.
