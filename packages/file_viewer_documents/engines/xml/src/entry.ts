@@ -180,8 +180,10 @@ export async function renderXml(buffer: ArrayBuffer, target: HTMLDivElement, con
           frame.setAttribute('referrerpolicy', 'no-referrer');
           // Navigation is not restricted by default-src: remove links too, so
           // an inert preview cannot navigate its own frame to a remote page.
+          // Sandbox alone does not stop user-activated file pickers. Keep all
+          // form controls in the trusted XML tools, outside document output.
           const sanitized = DOMPurify.sanitize(result.html, {
-            FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'base', 'link', 'meta'],
+            FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'option', 'optgroup', 'datalist', 'base', 'link', 'meta'],
             FORBID_ATTR: ['srcset', 'href', 'xlink:href', 'action', 'formaction', 'target', 'download'],
           });
           const page = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; object-src 'none'; base-uri 'none'; form-action 'none'"></head><body>${sanitized}</body></html>`;

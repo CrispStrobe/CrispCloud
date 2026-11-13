@@ -8,10 +8,11 @@
     "Bounded document-only protocol with exact session identity and 1 MiB encoded-message limit",
     "Session-scoped loopback asset allowlist with Host, origin, method, path, MIME and CSP checks",
     "Single-flight asset-server startup and disposal-race cleanup; explicit absent-runtime errors",
-    "Same-origin blob-only child navigation; file/content access and permission requests denied",
+    "Same-origin blob-only child navigation; direct file/content URL access and general permission requests denied",
     "Ordinary text and editing keys dispatched through GTK; ebook-only arrow interception removed",
     "Ephemeral native WebView state, command deadlines and closed-sender protection",
-    "Preserved process sandbox, native runtime version floor, isolated probe and texture allocation bounds"
+    "Preserved process sandbox, native runtime version floor, isolated probe and texture allocation bounds",
+    "Visible Flutter-window-parented XML resource chooser only for the focused trusted top-frame XSD/XSLT input; single local regular file, 2 MiB cap, exact-session recheck and cancellation on disposal/navigation/stale callbacks"
   ],
   "files": [
     {
@@ -135,6 +136,16 @@
     {
       "path": "linux/README.md",
       "origin": "CrispCloud integration and validation notes"
+    },
+    {
+      "path": "linux/xml_file_selection.h",
+      "license": "MIT",
+      "origin": "CrispCloud XML resource chooser policy"
+    },
+    {
+      "path": "linux/test/xml_file_selection_test.cc",
+      "license": "MIT",
+      "origin": "CrispCloud real-filesystem XML chooser boundary tests"
     }
   ],
   "validation_limits": "Dart policy/loopback and mocked Linux widget tests do not claim a full native plugin build or live browser pass."

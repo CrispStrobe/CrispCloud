@@ -38,9 +38,11 @@ source archives. [runtime-checkpoint.json](runtime-checkpoint.json) retains the
 comparison and individual hashes; the result is durable in Git rather than
 depending only on the expiring Actions artifact.
 
-The subsequent spreadsheet chart-scope correction changes documentation and
-notice provenance only. All 42 runtime asset records and the dependency
-inventory remain identical to the passing browser build.
+At documentation checkpoint `5f7b46d`, the spreadsheet chart-scope correction
+changed documentation and notice provenance only. All 42 runtime asset records
+and the dependency inventory then remained identical to the passing browser
+build. The later XML chooser correction changes the XML browser entry and Linux
+host, so its verification is recorded separately below.
 
 ## Genuine application checks
 
@@ -86,3 +88,29 @@ the unavailable-host stub; it does not launch or claim desktop rendering.
 Native WebKit/WebView rendering on all supported OS/device combinations and full
 release qualification are not implied by these focused checks. The existing
 Office evidence and Apple export-review gates remain intact.
+
+
+## XML resource chooser correction
+
+The native Linux host previously cancelled every browser file chooser, including
+the trusted XML tools' XSD/XSLT selectors. The correction verifies the exact
+loaded session and focused top-frame XML input, presents an asynchronous GTK
+chooser parented to the visible Flutter window, and returns only a matching
+local regular file up to 2 MiB. It rechecks the input and file after selection
+and cancels on stale callbacks, navigation, disposal or parent destruction.
+Document-driven navigation/network policies and the process sandbox remain in
+force. Transformed HTML now also removes file/form controls; original output
+remains in its text-only source panel.
+
+The [native file-policy receipt](native-file-policy.log) records 27 checks
+against real temporary filesystem objects, including extension/type/size
+boundaries. This tests policy code, not an interactive GTK dialog. The updated
+XML browser suite contains ten cases, including user-click schema and stylesheet
+chooser events. The targeted XML Node/native-WASM suite passed all 11 tests.
+Updated real-browser and Linux compiler results will be appended after their CI
+run; no native dialog/device pass is implied by these source and policy checks.
+
+The first dedicated native attempt, job `131756389063` in run
+[43385379835](https://github.com/CrispStrobe/CrispCloud/actions/runs/43385379835),
+was cancelled while queued, with no steps. Its runtime/browser job succeeded;
+the cancelled native job is not counted as an executed compiler check.

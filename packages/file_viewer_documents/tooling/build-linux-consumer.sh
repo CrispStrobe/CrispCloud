@@ -8,13 +8,56 @@ document_package_dir="$(cd -- "$document_tooling_dir/.." && pwd)"
 pkg-config --print-errors --atleast-version=2.48.4 webkit2gtk-4.1
 pkg-config --print-errors --exists gtk+-3.0 gmodule-2.0 epoxy
 python3 - "$document_package_dir" <<'PY'
+import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import sys
 
 package = Path(sys.argv[1])
+
+def verify_runtime_assets(package):
+    manifest_bytes = (package / 'RUNTIME_MANIFEST.json').read_bytes()
+    manifest = json.loads(manifest_bytes)
+    if manifest.get('schema') != 1 or manifest.get('upstream', {}).get('repository') != 'https://github.com/flyfish-dev/file-viewer.git' or manifest.get('upstream', {}).get('commit') != 'd264009ca6efb3daed79a39d1ae63133e0f25558':
+        raise SystemExit('The committed document runtime has an unexpected source pin or schema.')
+    runtime = package / 'assets/runtime'
+    if (runtime / 'manifest.json').read_bytes() != manifest_bytes:
+        raise SystemExit('The embedded and package runtime manifests differ.')
+    records = manifest.get('assets')
+    if not isinstance(records, list) or not records:
+        raise SystemExit('The committed runtime asset manifest is empty.')
+    listed = set()
+    for record in records:
+        name = record.get('path', '')
+        relative = PurePosixPath(name)
+        if not name or '\\' in name or relative.is_absolute() or '..' in relative.parts or relative.as_posix() != name or name in listed:
+            raise SystemExit('Invalid or duplicate committed runtime asset path.')
+        candidate = runtime / relative
+        if candidate.is_symlink() or not candidate.is_file() or not candidate.resolve().is_relative_to(runtime.resolve()):
+            raise SystemExit('Missing or unsafe committed runtime asset: ' + name)
+        if type(record.get('bytes')) is not int or candidate.stat().st_size != record['bytes'] or not re.fullmatch(r'[0-9a-f]{64}', record.get('sha256', '')):
+            raise SystemExit('Committed runtime asset size or digest metadata differs: ' + name)
+        digest = hashlib.sha256()
+        with candidate.open('rb') as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b''):
+                digest.update(chunk)
+        if digest.hexdigest() != record['sha256']:
+            raise SystemExit('Committed runtime asset SHA256 differs: ' + name)
+        listed.add(name)
+    present = set()
+    for candidate in runtime.rglob('*'):
+        if candidate.is_symlink():
+            raise SystemExit('Symlinks are not accepted in the committed document runtime.')
+        if candidate.is_file() and candidate != runtime / 'manifest.json':
+            present.add(candidate.relative_to(runtime).as_posix())
+    if present != listed or not {'host.js', 'libwpd.wasm', 'chm_wasm_bg.wasm'} <= listed:
+        raise SystemExit('The committed runtime asset allowlist is incomplete.')
+    if not (package / 'assets/index.html').is_file():
+        raise SystemExit('The committed document host entry is missing.')
+    print(f'Verified {len(listed)} committed runtime assets against the pinned manifest.')
+
 cmake = subprocess.check_output(['cmake', '--version'], text=True).splitlines()[0]
 match = re.match(r'^cmake version (\d+)\.(\d+)', cmake)
 if not match or tuple(map(int, match.groups())) < (3, 19):
@@ -23,17 +66,15 @@ sdk = json.loads(subprocess.check_output(['flutter', '--version', '--machine'], 
 if sdk.get('frameworkVersion') != '3.47.8':
     raise SystemExit('This consumer check requires the unmodified Flutter 3.47.8 SDK.')
 print(f"Flutter {sdk['frameworkVersion']} ({sdk.get('frameworkRevision', 'unknown revision')}); {cmake}")
-manifest = json.loads((package / 'RUNTIME_MANIFEST.json').read_text())
-if manifest['upstream']['commit'] != 'd264009ca6efb3daed79a39d1ae63133e0f25558':
-    raise SystemExit('The downloaded document runtime has an unexpected upstream pin.')
-for relative in ['assets/index.html', 'assets/runtime/host.js',
-                 'assets/runtime/libwpd.wasm', 'assets/runtime/chm_wasm_bg.wasm']:
-    if not (package / relative).is_file():
-        raise SystemExit('Download the selected-document-runtime artifact first: missing ' + relative)
+verify_runtime_assets(package)
 PY
 
 document_consumer_root="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/document-linux-consumer.XXXXXX")"
 trap 'rm -rf -- "$document_consumer_root"' EXIT
+"${CXX:-c++}" -std=c++17 -Wall -Wextra -Werror -pedantic \
+  "$document_package_dir/linux/test/xml_file_selection_test.cc" \
+  -o "$document_consumer_root/xml-file-selection-test"
+"$document_consumer_root/xml-file-selection-test"
 document_consumer_app="$document_consumer_root/app"
 flutter config --enable-linux-desktop
 flutter create --platforms=linux --project-name=document_host_consumer \

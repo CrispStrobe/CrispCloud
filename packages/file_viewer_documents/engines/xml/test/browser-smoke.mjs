@@ -31,6 +31,15 @@ async function runXslt(value) {
   await browser.page.getByRole('textbox', {name: 'XSLT stylesheet', exact: true}).fill(value);
   await browser.page.getByRole('button', {name: 'Transform with XSLT', exact: true}).click();
 }
+async function chooseLocalResource(label, file) {
+  const selected = browser.page.waitForEvent('filechooser');
+  await browser.page.getByLabel(label, {exact: true}).click();
+  const chooser = await selected;
+  assert.equal(chooser.isMultiple(), false);
+  assert.equal(await chooser.element().evaluate(input =>
+    input === document.activeElement && input.matches('.xml-tools input[type="file"]')), true);
+  await chooser.setFiles(file);
+}
 
 test('real browser module worker validates both valid and invalid XML against XSD', {timeout: 60000}, async () => {
   await browser.open(source, 'order.xml');
@@ -44,15 +53,27 @@ test('real browser module worker validates both valid and invalid XML against XS
   assert.ok(browser.requests.includes('/runtime/xmllint.wasm'));
 });
 
-test('local UTF-16 schema upload decodes and reaches the real validation engine', {timeout: 30000}, async () => {
+test('user-triggered local schema chooser decodes UTF-16 and reaches the real validation engine', {timeout: 30000}, async () => {
   await browser.open(source, 'order.xml');
   const utf16 = schema.replace(/<\?xml[^?]*\?>/, '<?xml version="1.0" encoding="UTF-16"?>');
-  await browser.page.getByLabel('Choose XML Schema', {exact: true}).setInputFiles({
+  await chooseLocalResource('Choose XML Schema', {
     name: 'order.xsd', mimeType: 'application/xml', buffer: Buffer.from(`\ufeff${utf16}`, 'utf16le'),
   });
   await browser.page.waitForFunction(() => document.querySelector('textarea[aria-label="XML Schema"]').value.includes('schema'));
   await browser.page.getByRole('button', {name: 'Validate with XSD', exact: true}).click();
   assert.match(await waitForStatus(/^Valid:/), /conforms/);
+});
+
+test('user-triggered local stylesheet chooser reaches the real transformation engine', {timeout: 30000}, async () => {
+  await browser.open(source, 'order.xml');
+  await chooseLocalResource('Choose XSLT stylesheet', {
+    name: 'table.xsl', mimeType: 'application/xslt+xml', buffer: Buffer.from(stylesheet, 'utf8'),
+  });
+  await browser.page.waitForFunction(() => document.querySelector('textarea[aria-label="XSLT stylesheet"]').value.includes('xsl:stylesheet'));
+  await browser.page.getByRole('button', {name: 'Transform with XSLT', exact: true}).click();
+  await waitForStatus(/^Transformation complete/);
+  assert.match(await browser.page.locator('[data-xml-output]').textContent(), /<td>6<\/td>/);
+  assert.equal(await browser.page.frameLocator('iframe').locator('td').first().textContent(), 'Tea & biscuits');
 });
 
 test('real browser XSLT computes HTML plus exact XML and text serializations', {timeout: 60000}, async () => {
@@ -91,14 +112,17 @@ test('DTD, dependency and XPath external-resource requests are rejected before w
   assert.equal(browser.requests.some(path => path.startsWith('/tripwire')), false);
 });
 
-test('HTML output is inert and cannot load or navigate to external resources', {timeout: 30000}, async () => {
+test('HTML output is inert, has no file or form controls, and cannot load or navigate to external resources', {timeout: 30000}, async () => {
   await browser.open(source, 'order.xml');
-  await runXslt('<x:stylesheet xmlns:x="http://www.w3.org/1999/XSL/Transform" version="1.0"><x:output method="html"/><x:template match="/"><html><body><script>parent.xmlScriptRan = true</script><a href="/tripwire">Link</a><img src="/tripwire" onerror="parent.xmlScriptRan = true"/><p>Safe result</p></body></html></x:template></x:stylesheet>');
+  await runXslt('<x:stylesheet xmlns:x="http://www.w3.org/1999/XSL/Transform" version="1.0"><x:output method="html"/><x:template match="/"><html><body><script>parent.xmlScriptRan = true</script><a href="/tripwire">Link</a><img src="/tripwire" onerror="parent.xmlScriptRan = true"/><form><input type="file" id="inside-form"/></form><input type="file" accept=".xsd" id="outside-form"/><button>Untrusted chooser</button><textarea>Untrusted text</textarea><select><optgroup label="Untrusted choices"><option>Choice</option></optgroup></select><datalist><option value="Choice"/></datalist><p>Safe result</p></body></html></x:template></x:stylesheet>');
   await waitForStatus(/^Transformation complete/);
   assert.equal(await browser.page.locator('iframe').getAttribute('sandbox'), '');
   const frame = browser.page.frameLocator('iframe');
   await frame.getByText('Safe result', {exact: true}).waitFor();
   assert.equal(await frame.locator('script').count(), 0);
+  assert.equal(await frame.locator('form,input,button,textarea,select,option,optgroup,datalist').count(), 0);
+  assert.equal(await browser.page.locator('.xml-tools input[type="file"]').count(), 2);
+  assert.match(await browser.page.locator('[data-xml-output]').textContent(), /<input[^>]+type="file"/);
   assert.equal(await frame.locator('a').getAttribute('href'), null);
   assert.equal(await frame.locator('img').getAttribute('onerror'), null);
   await frame.locator('a').click();

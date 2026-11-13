@@ -380,7 +380,7 @@ The original source checkout remains unchanged. During the root build, these `sr
 
 ## Modifications and execution boundary
 
-The selected entry retains the original styled grid, worksheet tabs, supported styles, formula display, images and charts. It requires a local module worker, removes the upstream main-thread fallback, waits for the first displayed grid window, and propagates initial failures. Cancellation, worker errors and a 30-second deadline release resources. `unmount()` releases owned DOM and the active worker.
+The selected entry retains the original styled grid, worksheet tabs, supported styles, formula display and supported embedded images. Shared OOXML chart-rendering code also remains, but does not establish chart support for the newly routed XLS/XLT/XLSB formats: BIFF inputs skip chart extraction, and the ZIP chart extractor requires `xl/workbook.xml` rather than XLSB's `xl/workbook.bin`. It requires a local module worker, removes the upstream main-thread fallback, waits for the first displayed grid window, and propagates initial failures. Cancellation, worker errors and a 30-second deadline release resources. `unmount()` releases owned DOM and the active worker.
 
 Added limits cover source bytes, actual streamed ZIP inflation, aggregate expanded data, worksheet count/dimensions/cell text, merges/drawings/metadata and row-window requests. A row-limited parse that reports a larger original range is rejected, not presented as a complete workbook. Defaults are detailed in [README.md](README.md) and the original integration source. File input is 32 MiB; ZIP expansion is 64 MiB total/32 MiB per entry; display ceilings are 128 sheets, 100,000 rows, 512 columns and one million populated cells. There is no text substitute on failure and no added macro execution.
 
@@ -3389,7 +3389,10 @@ from 15 seconds to at least 100 ms. Higher host values never raise hard caps.
   decoding bounded output. Only HTML creates a preview iframe.
 - HTML output is sanitized and sandboxed without script permissions. It has
   a `default-src 'none'` CSP; links, forms, refresh/base elements and external
-  navigation attributes are removed. Source output is inserted as text.
+  navigation attributes are removed. File inputs and other form controls are
+  also removed because a sandbox alone does not prevent user-activated native
+  file pickers. Only the trusted XML tools retain schema/stylesheet selectors.
+  The exact original transformation output remains available as text.
 - Cancellation destroys disposable workers. New resources invalidate older
   results; local file reads cannot replace a later selection. Destroy aborts
   work, clears data, removes listeners and revokes preview object URLs.
@@ -3416,7 +3419,10 @@ FILE_VIEWER_UPSTREAM_DIR=/path/to/file-viewer node packages/file_viewer_document
 Install the pinned tooling dependencies and Playwright Chromium first (or set
 `CHROMIUM_EXECUTABLE` to an available compatible Chromium). Browser cases cover
 valid/invalid XSD, real HTML/XML/text transformation, external-resource
-rejection, output bounds, cancellation, cleanup and inert HTML. Local Chromium
+rejection, user-click schema/stylesheet file chooser events, output bounds,
+cancellation, cleanup and inert HTML without form controls. Browser chooser
+events exercise the selected File API inputs; platform-native chooser dialogs
+are qualified separately by their host tests. Local Chromium
 was unavailable because process socket creation was denied; browser success is
 not claimed until the real CI script completes. No fake compiler or replacement
 WASM is used by either set of engine tests.
