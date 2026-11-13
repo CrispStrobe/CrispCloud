@@ -163,7 +163,9 @@ extension _WordNumberingWriter on _StructuredWordWriter {
         }
         if (level.legal) xml.add('<w:isLgl/>');
         xml.add('<w:suff w:val="${level.suffix.name}"/><w:lvlText w:val="');
-        xml.text(level.text, attribute: true);
+        // Character references preserve source TABs through XML attribute
+        // normalization; literal tabs must not reject the entire conversion.
+        xml.text(level.text, attribute: true, preserveWhitespace: true);
         xml.add('"/>');
         xml.add(
           '<w:lvlJc w:val="${level.markerAlignment == LegacyWordAlignment.justify ? 'both' : level.markerAlignment.name}"/>',

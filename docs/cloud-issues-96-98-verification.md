@@ -42,9 +42,10 @@ and authentication errors retain their existing semantics.
 
 [Provider setup](PROVIDER_SETUP.md#browser-access-webpwa) explains installation
 root URLs, preflight, response metadata, and safe same-origin/native alternatives.
-The reported server URL is redacted; no live reproduction or server configuration
-change was possible. Issue 96 therefore still needs verification against the
-reporter's real deployment. These client changes cannot bypass server CORS policy.
+The reported server URL is redacted. The prepared-instance reproduction below
+verifies the browser failure and scoped server fix on the owner's test server;
+the reporter's particular deployment still needs verification. These client
+changes cannot bypass server CORS policy.
 
 ## Observed validation
 
@@ -57,7 +58,7 @@ Flutter 3.47.8 / Dart 3.13.7, macOS arm64:
   receives a deliberately opaque HTTP failure; checks verify structured
   diagnostics and that no authenticated session or saved credentials are created.
 - Source-bound crypto release inputs and dependency checks passed. No encryption
-  algorithm, dependency lockfile, or distribution policy changed.
+  algorithm, locked package version, or distribution classification changed.
 
 Commands:
 
@@ -74,7 +75,8 @@ flutter test --no-pub --platform chrome test/nextcloud_browser_failure_test.dart
 python3 tool/crypto_release_evidence.py --check
 ```
 
-These are focused tests, not live provider acceptance or a completed release build.
+These initial checks were followed by the prepared-instance acceptance below.
+They do not establish completion of a release build.
 
 ## Prepared-instance acceptance after the maintenance refresh
 
@@ -109,3 +111,7 @@ in these records. The reporter's redacted deployment still needs its own
 configuration verification; the app cannot bypass server CORS restrictions.
 
 Machine-readable results: [acceptance.json](evidence/cloud-issues-96-98-20261113/acceptance.json).
+
+Both generated test accounts and the private local credential file were removed
+after acceptance. The upgraded service remains available through its private
+loopback listener; the maintenance backup was retained.

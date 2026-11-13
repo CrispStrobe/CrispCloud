@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import subprocess
 import tempfile
+import unicodedata
 
 
 def main():
@@ -34,7 +35,12 @@ def main():
                 raise RuntimeError(f'7-Zip failed for {image.name}: {run.stdout}\n{run.stderr}')
             files = sorted(path.relative_to(output).as_posix()
                            for path in output.rglob('*') if path.is_file())
-            if files != [record['memberName']]:
+            # macOS may expose decomposed filenames after extraction. Compare
+            # canonical names while retaining the exact complete namespace
+            # check and reading the actual extracted path below.
+            if [unicodedata.normalize('NFC', name) for name in files] != [
+                unicodedata.normalize('NFC', record['memberName'])
+            ]:
                 raise ValueError(f'Unexpected independent namespace: {files}')
             data = (output / files[0]).read_bytes()
             digest = hashlib.sha256(data).hexdigest()

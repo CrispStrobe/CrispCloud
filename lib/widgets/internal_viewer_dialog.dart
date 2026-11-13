@@ -30,8 +30,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
     show Clipboard, ClipboardData, LogicalKeyboardKey;
 import 'package:flutter_highlight/flutter_highlight.dart';
-import 'package:flutter_highlight/themes/github.dart';
-import 'package:flutter_highlight/themes/monokai-sublime.dart';
+
+import '../services/syntax_highlight_theme.dart';
+
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -336,6 +337,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   // ---- Mode ----------------------------------------------------------------
   ViewerMode _autoMode = ViewerMode.text;
+  bool _imageDecodeFailed = false;
   ViewerMode _mode = ViewerMode.text;
   int _prepareToken = 0;
   int _bytesPerLine = 16;
@@ -569,6 +571,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Future<void> _initialLoad({ViewerMode? preferredMode}) async {
     final loadToken = ++_loadToken;
+    _imageDecodeFailed = false;
     bool current() => mounted && loadToken == _loadToken;
     try {
       final override = widget.bytesOverride;
@@ -1379,7 +1382,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           sevenZipVolumeBaseName(widget.file.name) != null) {
         final backend = _capturedBackend();
         final selected = widget.file.copyWith(
-          path: widget.file.path ?? backend.paths.join(_origin!.source.currentPath, widget.file.name),
+          path:
+              widget.file.path ??
+              backend.paths.join(_origin!.source.currentPath, widget.file.name),
         );
         final opened = await openSevenZipVolumeArchive(
           backend,
@@ -1387,10 +1392,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           password: password,
           onSnapshotCaptured: (fingerprint) {
             if (!isCurrent()) {
-              throw const ArchiveViewException('Archive opening was cancelled.');
+              throw const ArchiveViewException(
+                'Archive opening was cancelled.',
+              );
             }
-            if (_archiveVolumeFingerprint != null && _archiveVolumeFingerprint != fingerprint) {
-              throw const ArchiveViewException('The split archive changed during the password request. Reopen it before continuing.');
+            if (_archiveVolumeFingerprint != null &&
+                _archiveVolumeFingerprint != fingerprint) {
+              throw const ArchiveViewException(
+                'The split archive changed during the password request. Reopen it before continuing.',
+              );
             }
             _archiveVolumeFingerprint = fingerprint;
           },
@@ -3077,22 +3087,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   }
 
   Widget _buildToolbar(ThemeData theme) {
-    final extraModes = <ViewerMode>[
-      ViewerMode.markdown,
-      ViewerMode.html,
-      ViewerMode.xml,
-      ViewerMode.pdf,
-      ViewerMode.media,
-      ViewerMode.lyrics,
-      ViewerMode.font,
-      ViewerMode.csv,
-      ViewerMode.office,
-      ViewerMode.email,
-      ViewerMode.archive,
-    ].where((mode) =>
-        mode == _autoMode ||
-        (mode == ViewerMode.archive &&
-            _viewName.toLowerCase().endsWith('.exe')));
+    final extraModes =
+        <ViewerMode>[
+          ViewerMode.markdown,
+          ViewerMode.html,
+          ViewerMode.xml,
+          ViewerMode.pdf,
+          ViewerMode.media,
+          ViewerMode.lyrics,
+          ViewerMode.font,
+          ViewerMode.csv,
+          ViewerMode.office,
+          ViewerMode.email,
+          ViewerMode.archive,
+        ].where(
+          (mode) =>
+              mode == _autoMode ||
+              (mode == ViewerMode.archive &&
+                  _viewName.toLowerCase().endsWith('.exe')),
+        );
 
     return Container(
       height: math.max(48, MediaQuery.textScalerOf(context).scale(16) + 40),
@@ -3128,10 +3141,14 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                           ? null
                           : () => unawaited(_showBinaryStructure()),
                     ),
-                  _modeChip(
-                    InternalViewerStrings(context).text('image'),
-                    ViewerMode.image,
-                  ),
+                  if (_autoMode == ViewerMode.image &&
+                      !_imageDecodeFailed &&
+                      (_source?.size ?? 0) > 0 &&
+                      (_source?.size ?? 0) <= kViewerFullDataCap)
+                    _modeChip(
+                      InternalViewerStrings(context).text('image'),
+                      ViewerMode.image,
+                    ),
                   for (final mode in extraModes)
                     _modeChip(_modeLabelOf(mode), mode),
                   if (_mode == ViewerMode.pdf) _pdfViewToggle(),
@@ -3487,7 +3504,10 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
     switch (_mode) {
       case ViewerMode.text:
-        return _buildTextBody(theme);
+        return ColoredBox(
+          color: syntaxCanvasColor(dark: theme.brightness == Brightness.dark),
+          child: _buildTextBody(theme),
+        );
       case ViewerMode.ascii:
         return _buildSafeBody(false, theme);
       case ViewerMode.binary:
@@ -3632,9 +3652,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 HighlightView(
                   text,
                   language: language,
-                  theme: theme.brightness == Brightness.dark
-                      ? monokaiSublimeTheme
-                      : githubTheme,
+                  theme: syntaxHighlightTheme(
+                    dark: theme.brightness == Brightness.dark,
+                  ),
                   padding: const EdgeInsets.all(8),
                   textStyle: monoTextStyle(
                     13.0 * _zoom,
@@ -3791,9 +3811,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 HighlightView(
                   text,
                   language: 'xml',
-                  theme: theme.brightness == Brightness.dark
-                      ? monokaiSublimeTheme
-                      : githubTheme,
+                  theme: syntaxHighlightTheme(
+                    dark: theme.brightness == Brightness.dark,
+                  ),
                   padding: const EdgeInsets.all(8),
                   textStyle: monoTextStyle(
                     13 * _zoom,
@@ -4239,11 +4259,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                 // image-decompression bombs while remaining crisp on HiDPI.
                 cacheWidth: 4096,
                 cacheHeight: 4096,
-                errorBuilder: (_, __, ___) => Center(
-                  child: Text(
-                    context.commanderTr("Unable to decode this image."),
-                  ),
-                ),
+                errorBuilder: (_, __, ___) {
+                  if (!_imageDecodeFailed) {
+                    _imageDecodeFailed = true;
+                    final token = _loadToken;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted && token == _loadToken) setState(() {});
+                    });
+                  }
+                  return Center(
+                    child: Text(
+                      context.commanderTr("Unable to decode this image."),
+                    ),
+                  );
+                },
               ),
       ),
     );

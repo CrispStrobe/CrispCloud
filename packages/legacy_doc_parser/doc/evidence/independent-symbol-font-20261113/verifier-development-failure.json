@@ -1,0 +1,22 @@
+{
+  "scope": "Final bundle with combined1b8 source equivalence; previous successful13-control validation is retained separately with its original manifest/helper identities. No native, Dart or SDK rerun.",
+  "manifestSha256": "68eba098d198dcd17632383fd2027088c0cbd7ef2825b4635832f02d0c610f8a",
+  "verifierSha256": "afe719f60a0469081cb8a391eb6c060ca65fd1b2ebda49269e0bd8c5f4ba430e",
+  "testHelperSha256": "74c92a43102ecbda9791f8ce185da7e9326f6ce5d1b6f443c52aa161ff71ddca",
+  "commands": [
+    {
+      "label": "verify",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py",
+        "--repository",
+        "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes",
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py\", line 534, in <module>\n    main()\n  File \"/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py\", line 529, in main\n    result = verify_data(data, args.repository.resolve())\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py\", line 461, in verify_data\n    verify_git_files(repository, COMBINED, {p: h for p, h in files.items() if not p.startswith('.dart_tool/')})\n  File \"/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py\", line 98, in verify_git_files\n    require(len(header) == 3 and header[1] == 'blob', 'Missing tracked source: ' + path)\n  File \"/workspace/scratch/c1ca2a1344e9/parser-oracle-bug-probes/doc/evidence/independent-symbol-font-20261113/verify.py\", line 40, in require\n    raise ValueError(message)\nValueError: Missing tracked source: pubspec.lock\n",
+      "seconds": 1.357
+    }
+  ]
+}

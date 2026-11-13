@@ -1,5 +1,14 @@
 ## 0.1.0-dev.1
 
+- Render literal list labels and supported ancestor/legal substitutions even
+  when an unused number format is unsupported; preserve exact TAB characters
+  in native numbering attributes.
+- Validate consumed main-body UTF-16 before text-only field/control filtering,
+  preserving valid pairs across physical pieces while rejecting hidden bad
+  units and pairs manufactured by dropping source controls.
+- Reinspect immutable OLE/VBA container bytes before native activation from
+  public models. Validate reachable streams and required identities with
+  bounded cached work; retain rejected raw containers as inert evidence.
 - Validate allocated compound directory names and exclusive ownership of stream
   and metadata sectors, with cached linear scans and requested-part validation.
   Reject negative caller-built stream sizes before aggregate read accounting.

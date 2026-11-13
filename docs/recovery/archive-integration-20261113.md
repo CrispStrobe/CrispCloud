@@ -2,6 +2,7 @@
 
 Baseline: `223fb771d2f8980f7425e7e2ecbe5d7953670592` on 13 November 2026.
 Combined implementation: `5d0814fdf8dfa2257e3000d1d3e3792864a4901e`.
+Later concurrent-main input: `e13fb727e4cfe785219c1ef31206d2fbefa8d6c9`.
 Remote continuation: `integration/archive-containers-20261113`,
 [CrispCloud PR #100](https://github.com/CrispStrobe/CrispCloud/pull/100).
 
@@ -16,7 +17,7 @@ PR #86, referenced in the original continuation handoff, was already merged.
 | --- | --- |
 | Commander archive workflows, PR #97 | True merge of `cfae329b`, preserving the canonical Operations queue, batch creation/testing/extraction, checked installed packers, SFX reading and numbered 7z sets. |
 | Document fonts and previews, PR #95 | True merge of `02160e56`, preserving shared fonts, installed preview, selected engine runtimes and attributed notices. |
-| Office oracle/gaps and related checkpoints | Preserve branch ancestry and independent evidence. Synchronize the exact canonical parser `840f8af1`, a descendant of both competing parser pins; retain the Quds/font source from #95. |
+| Office oracle/gaps and related checkpoints | Preserve branch ancestry and independent evidence. First reconcile the competing parser pins at canonical `840f8af1`, then retain concurrent main's newer exact parser `0f9f085f` and Quds `05a581de` snapshots. Earlier qualification remains attributed to its tested source. |
 | Ebook canary/native-input and PR #84 | Preserve branch ancestry after carrying missing bounded-selection and fixed-layout semantics into canonical Crisperbooks. Pin all four ebook packages to `a18b93c1`, which reconciles the recovery with concurrent canonical-main documentation. The prior extracted package structure remains the owner. |
 | Historical PR #14 | Compare each follow-up with current behavior, fix the remaining pending-source Refresh/new-tab cases, then preserve the old PR head as a merge parent. |
 | ISO/RAR/DMG, operation queue, app-layout checkpoint | Already included by baseline main. Their original commits and receipts remain reachable. |
@@ -32,6 +33,15 @@ Its final reconciliation has genuine parents `ac9925c4` and canonical main
 test, build and license bytes are unchanged. It preserves the separately
 recorded Mac Chrome acceptance with its original revision attribution. That
 acceptance predates the final disposal cleanup and was not rerun here.
+
+Concurrent app main subsequently incorporated the earlier `5d0814fd` archive
+checkpoint and advanced to `e13fb727`. Its shared F3/F4 syntax theme, image-mode
+availability, empty-directory parent navigation, newer canonical Office sources
+and independent acceptance records are retained by a genuine merge. The final
+ebook pin remains `a18b93c1`, which already includes main's `3796381` source and
+its later cleanup. The combined technical source inventory retains the union
+of both reviewed path sets: **659 files**. Source fingerprints are recalculated
+for that merged tree without changing distribution declarations.
 
 The machine-readable [branch ancestry](../evidence/archive-integration-20261113/branch-ancestry.json)
 and [PR head cohort](../evidence/archive-integration-20261113/pr-heads.json) retain

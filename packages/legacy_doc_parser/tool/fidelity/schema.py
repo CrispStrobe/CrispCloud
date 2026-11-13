@@ -26,7 +26,9 @@ EXPECTED_CASES = frozenset([
     *(f"list-metadata/{name}" for name in (
         "bullet-ignored-restart", "none-ignored-restart", "none-literal",
         "none-empty-placeholder", "none-ancestor-placeholder", "literal-percent-text",
-        "percent-before-placeholder", "numbered-valid-restart", "numbered-inactive-restart")),
+        "percent-before-placeholder", "numbered-valid-restart", "numbered-inactive-restart",
+        "uncommon-format-literal", "uncommon-format-ancestor", "uncommon-format-legal",
+        "literal-label-tab", "tab-before-placeholder", "none-label-tab")),
     *(f"nested-fields/{name}" for name in (
         "nested-results", "private-result", "private-instruction-result", "unsupported-result", "formula",
         "instruction-whitespace", "nested-instruction-whitespace", "cached-controls",

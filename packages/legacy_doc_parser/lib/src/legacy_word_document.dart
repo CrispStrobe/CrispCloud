@@ -184,7 +184,18 @@ String _readableBody(String value) {
   final output = StringBuffer();
   final fields = <bool>[];
   var hiddenFields = 0;
+  var needsLowSurrogate = false;
   for (final code in value.codeUnits) {
+    // Validate the consumed main body before dropping controls or hidden
+    // instruction text. Filtering first can hide an isolated surrogate or
+    // manufacture a valid scalar from halves separated by source controls.
+    // The value is assembled in CP order, so a pair may cross physical pieces
+    // but cannot borrow its second unit from an unconsumed auxiliary story.
+    final lowSurrogate = code >= 0xdc00 && code <= 0xdfff;
+    if (needsLowSurrogate != lowSurrogate) {
+      throw const FormatException('Invalid UTF-16 in Word text.');
+    }
+    needsLowSurrogate = code >= 0xd800 && code <= 0xdbff;
     if (code == 0x13) {
       fields.add(false);
       hiddenFields++;
@@ -213,6 +224,9 @@ String _readableBody(String value) {
           if (code >= 0x20 || code == 0x0a) output.writeCharCode(code);
       }
     }
+  }
+  if (needsLowSurrogate) {
+    throw const FormatException('Invalid UTF-16 in Word text.');
   }
   return output.toString().trimRight();
 }

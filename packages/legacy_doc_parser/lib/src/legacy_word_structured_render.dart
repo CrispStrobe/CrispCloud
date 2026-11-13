@@ -193,18 +193,10 @@ class _HtmlWriter {
   String? _listText(LegacyWordResolvedNumbering marker) {
     final level = marker.level;
     if (level.format == 'bullet') return level.text;
-    const formats = {
-      // A level without its own number sequence can still carry literal text
-      // and placeholders referencing numbered ancestor levels (MS-DOC 2.4.6.3).
-      'none',
-      'decimal',
-      'decimalZero',
-      'upperRoman',
-      'lowerRoman',
-      'upperLetter',
-      'lowerLetter',
-    };
-    if (!formats.contains(level.format)) return null;
+    // Only referenced placeholders need a numeric formatter. An otherwise
+    // unsupported format can still have a literal or ancestor-only label,
+    // and fLegal can replace its numeric formatting with decimal (MS-DOC
+    // 2.4.6.3 and LVLF). Check each required substitution below.
     final output = StringBuffer();
     for (var i = 0; i < level.text.length; i++) {
       final unit = level.text.codeUnitAt(i);

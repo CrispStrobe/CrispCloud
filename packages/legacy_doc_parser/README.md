@@ -77,6 +77,11 @@ result controls, and list-label fixes. It passes 1,300 Dart tests and independen
 schema checks for 297 outputs; all 263 preceding DOCX outputs remain byte-exact.
 Literal binary list labels containing `%1`–`%9` now fail explicitly because the
 current numbering model cannot preserve that literal meaning.
+The [fourth audit pass](doc/parser-audit-20261113-fourth-pass.md) preserves
+literal/ancestor list labels and exact label TABs, validates text-only UTF-16
+before display filtering, and checks actual OLE/VBA container bytes before
+native activation. It passes 1,361 Dart tests and independent schema checks
+for 320 packages; all 297 preceding DOCX outputs remain byte-exact.
 
 Use Dart 3.8 or later. `archive` is the runtime package dependency. A development
 Git dependency can be configured as follows; pin a reviewed full commit SHA

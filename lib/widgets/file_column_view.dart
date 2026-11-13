@@ -857,7 +857,11 @@ class _FileColumnViewState extends ConsumerState<FileColumnView> {
               ),
             ),
             Expanded(
-              child: current && listingState != null
+              child:
+                  current &&
+                      listingState != null &&
+                      !(listingState == PanelListingState.empty &&
+                          files.any((file) => file.name == '..'))
                   ? PanelListingPlaceholder(
                       side: widget.side,
                       state: listingState,

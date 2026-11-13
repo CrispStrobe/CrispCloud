@@ -18,6 +18,12 @@ const listMetadataCases = [
   'percent-before-placeholder',
   'numbered-valid-restart',
   'numbered-inactive-restart',
+  'uncommon-format-literal',
+  'uncommon-format-ancestor',
+  'uncommon-format-legal',
+  'literal-label-tab',
+  'tab-before-placeholder',
+  'none-label-tab',
 ];
 
 const unsupportedListMetadataCases = [
@@ -98,6 +104,32 @@ Uint8List listMetadataFixture(String name) {
     'numbered-inactive-restart' => listWordFixture(
       levels: [listFixtureLevel(start: 7, restart: 255)],
     ),
+    'uncommon-format-literal' => listWordFixture(
+      levels: [literal('Appendix', format: 45)],
+    ),
+    'uncommon-format-ancestor' => listSequenceFixture(
+      [(1, 0), (1, 1)],
+      levels: [
+        listFixtureLevel(start: 3),
+        listFixtureLevel(
+          level: 1,
+          format: 45,
+          text: '\x00 Appendix',
+          placeholders: [1],
+        ),
+        for (var level = 2; level < 9; level++) listFixtureLevel(level: level),
+      ],
+    ),
+    'uncommon-format-legal' => listWordFixture(
+      levels: [listFixtureLevel(format: 45, start: 7, flags: 4)],
+    ),
+    'literal-label-tab' => listWordFixture(levels: [literal('A\tB')]),
+    'tab-before-placeholder' => listWordFixture(
+      levels: [
+        listFixtureLevel(start: 7, text: 'A\t\x00', placeholders: [3]),
+      ],
+    ),
+    'none-label-tab' => listWordFixture(levels: [literal('A\tB', format: 255)]),
     'literal-percent-one' => listWordFixture(levels: [literal('%1')]),
     'literal-percent-nine' => listWordFixture(levels: [literal('%9')]),
     'mixed-literal-percent' => listWordFixture(

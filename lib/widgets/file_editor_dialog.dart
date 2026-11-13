@@ -37,6 +37,7 @@ import '../services/editor_document_history.dart';
 import '../services/editor_kind.dart';
 import 'hex_editor_dialog.dart';
 import '../services/editor_highlighting.dart';
+import '../services/syntax_highlight_theme.dart';
 import '../services/file_operation_backend.dart';
 import '../services/image_edit_session.dart' show isImageEditorFileName;
 import '../services/log_service.dart';
@@ -1199,8 +1200,10 @@ class _FileEditorPageState extends ConsumerState<_FileEditorPage> {
           fontFamily: 'AppMono',
           fontFamilyFallback: const ['Menlo', 'Consolas', 'monospace'],
           fontHeight: 1.45,
-          textColor: theme.colorScheme.onSurface,
-          backgroundColor: theme.colorScheme.surface,
+          textColor: syntaxTextColor(dark: theme.brightness == Brightness.dark),
+          backgroundColor: syntaxCanvasColor(
+            dark: theme.brightness == Brightness.dark,
+          ),
           selectionColor: theme.colorScheme.primary.withValues(alpha: 0.24),
           highlightColor: theme.colorScheme.primary.withValues(alpha: 0.36),
           cursorColor: theme.colorScheme.primary,

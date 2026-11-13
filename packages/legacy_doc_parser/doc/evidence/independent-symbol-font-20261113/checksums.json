@@ -1,0 +1,38 @@
+{
+  "README.md": {
+    "sha256": "a0c4614b52edfabbb54511feb1097fda78ea1dd4b8f4d4ee0c43d60c2d2a6450",
+    "bytes": 12174
+  },
+  "build_bundle.py": {
+    "sha256": "9328d8f5dc0ab747f1a186a7582ae95412b6b70d8683cdf48e5481ec070e24b3",
+    "bytes": 3080
+  },
+  "manifest.json": {
+    "sha256": "68eba098d198dcd17632383fd2027088c0cbd7ef2825b4635832f02d0c610f8a",
+    "bytes": 519951
+  },
+  "observations.zip": {
+    "sha256": "1371371f1f6fbf9d6c70714fe16addcdc91b0bc9c0dc223344e3f1763d2bbdee",
+    "bytes": 4437953
+  },
+  "test_verifier.py": {
+    "sha256": "74c92a43102ecbda9791f8ce185da7e9326f6ce5d1b6f443c52aa161ff71ddca",
+    "bytes": 6618
+  },
+  "verification-before-combined.json": {
+    "sha256": "7e733e47fb149ff2eff8482e4e9e539e7c1d253bbe0eb0fe1f0e6da7805d4489",
+    "bytes": 6805
+  },
+  "verification.json": {
+    "sha256": "d4e7d87594d8d9e708faac3c34ff80a84caa395ad7ce0a092404d42f82f5aa08",
+    "bytes": 7439
+  },
+  "verifier-development-failure.json": {
+    "sha256": "142b4a2f29e6c7789d63e44cdb66c71bfa44932ec6d6dc696fe24adaf02fa734",
+    "bytes": 2207
+  },
+  "verify.py": {
+    "sha256": "3c02979d7f3b6ba6f87bb27e625303202d555fbf5815f3d6ffcd10a98b2ee017",
+    "bytes": 38632
+  }
+}

@@ -12,6 +12,11 @@ access restoration for a genuinely missing grant, and
 an explicit choice of another store without deleting the original credentials.
 See [credential storage](docs/credential-storage.md).
 
+New cloud connections retain the previous pane's live account, including when
+connecting another account of the same provider. Additional accounts are currently
+session-only. Nextcloud web connections provide endpoint and browser diagnostics;
+server CORS still needs configuration. See the [live verification and limits](docs/cloud-issues-96-98-verification.md).
+
 ## Providers
 
 | Provider | Features |
@@ -50,6 +55,7 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 
 ## Key Features
 
+- **Code workspace:** F3, F4 and code previews share syntax colours, with a black canvas in dark mode. Empty directories keep their `..` navigation entry. Image mode is offered for recognized image content rather than every unknown file.
 - **Flexible layout:** independent dual/single panes, an account-aware folder tree, detailed and compact lists, grids, and hierarchical columns with separately scrollable ancestor folders
 - **Recoverable navigation:** source-bound history per tab, history menus, recent locations that retain their storage identity, and reopening closed tabs with their view and history
 - **Path favorites:** a `*` menu at the top right of each pane opens searchable, grouped saved locations. Ctrl+Shift+B opens the active pane's picker. The editor supports grouping, ordering and reviewed JSON import/export while retaining each favorite's original storage account. See [path favorites](docs/path-favorites.md).

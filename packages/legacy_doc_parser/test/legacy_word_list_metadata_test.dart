@@ -19,8 +19,8 @@ List<String> _labels(LegacyWordDocument document) =>
 void main() {
   test('shared VM and JavaScript list metadata acceptance', () {
     expect(verifyListMetadataWebAcceptance(), {
-      'cases': 15,
-      'supportedCases': 9,
+      'cases': 21,
+      'supportedCases': 15,
       'unsupportedLiteralLabelsRejected': 5,
       'invalidNumberedRestartsRejected': 1,
       'literalLabelsPreserved': true,

@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,8 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/panel_side.dart';
 import 'package:crisp_cloud/services/file_bytes_loader.dart';
 import 'package:crisp_cloud/services/viewer_search_service.dart';
+import 'package:crisp_cloud/services/editor_highlighting.dart';
+import 'package:crisp_cloud/services/syntax_highlight_theme.dart';
 import 'package:crisp_cloud/widgets/hex_viewer.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_views.dart';
@@ -685,9 +688,69 @@ void main() {
     testWidgets('offers the core viewer modes', (tester) async {
       await _pumpViewer(tester, Uint8List.fromList(utf8.encode('x')));
 
-      for (final label in ['Auto', 'Text', 'ASCII', 'Binary', 'Hex', 'Image']) {
+      for (final label in ['Auto', 'Text', 'ASCII', 'Binary', 'Hex']) {
         expect(find.widgetWithText(ChoiceChip, label), findsOneWidget);
       }
+      expect(find.widgetWithText(ChoiceChip, 'Image'), findsNothing);
+    });
+
+    testWidgets('unknown binaries do not offer an image decoder', (
+      tester,
+    ) async {
+      await _pumpViewer(tester, Uint8List.fromList([0, 1, 2, 0, 255]));
+      expect(find.widgetWithText(ChoiceChip, 'Image'), findsNothing);
+      expect(find.widgetWithText(ChoiceChip, 'Hex'), findsOneWidget);
+    });
+
+    testWidgets('a failed raster decoder removes the Image choice', (
+      tester,
+    ) async {
+      await _pumpViewer(
+        tester,
+        Uint8List.fromList([1, 2, 3, 4]),
+        name: 'broken.png',
+      );
+      expect(find.text('Unable to decode this image.'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'Image'), findsNothing);
+      expect(find.widgetWithText(ChoiceChip, 'Hex'), findsOneWidget);
+    });
+
+    testWidgets('recognized SVG bytes keep their image view', (tester) async {
+      await _pumpViewer(
+        tester,
+        Uint8List.fromList(
+          utf8.encode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+          ),
+        ),
+        name: 'drawing.svg',
+      );
+      expect(find.widgetWithText(ChoiceChip, 'Image'), findsOneWidget);
+    });
+
+    testWidgets('F3 shares F4 token colours and its black dark canvas', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ThemeData.dark(),
+            home: InternalViewerDialog(
+              file: FileItem(name: 'sample.dart', isFolder: false),
+              side: PanelSide.local,
+              bytesOverride: Uint8List.fromList(
+                utf8.encode('final value = 42;'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final viewer = tester.widget<HighlightView>(find.byType(HighlightView));
+      final editor = buildEditorHighlightTheme(language: 'dart', dark: true)!;
+      expect(viewer.theme, editor.theme);
+      expect(viewer.theme['root']!.backgroundColor, Colors.black);
+      expect(syntaxCanvasColor(dark: true), Colors.black);
     });
   });
 }

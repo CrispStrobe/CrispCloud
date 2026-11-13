@@ -46,6 +46,7 @@ extension _WordMedia on _StructuredWordWriter {
   void _prepareMedia() {
     final media = document.media;
     final inkInspection = _ConversionInkInspection();
+    final compoundInspection = _ConversionCompoundInspection();
     if (media.assets.length > 4096 ||
         media.pictures.length > 20000 ||
         media.drawings.length > 20000 ||
@@ -203,7 +204,8 @@ extension _WordMedia on _StructuredWordWriter {
       if (owner == null ||
           !_displayPosition(object.cp) ||
           !object.canEmbed ||
-          object.linked != false) {
+          object.linked != false ||
+          compoundInspection.inspect(object.storage)?.linked != false) {
         limitations.add(LegacyWordConversionLimitation.embeddedObjects);
         _preserveEvidence('embeddedObject', object.storage.bytes, {
           'id': object.id,
@@ -236,7 +238,11 @@ extension _WordMedia on _StructuredWordWriter {
     final activateVba =
         format == LegacyWordOutputFormat.docm &&
         media.vbaProjects.length == 1 &&
-        media.vbaProjects.single.hasRequiredStreams;
+        media.vbaProjects.single.hasRequiredStreams &&
+        compoundInspection
+                .inspect(media.vbaProjects.single.storage)
+                ?.hasRequiredVbaStreams ==
+            true;
     for (final project in media.vbaProjects) {
       if (activateVba) {
         _package.addBytes(

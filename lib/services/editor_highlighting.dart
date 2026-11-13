@@ -9,8 +9,8 @@
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/all.dart';
-import 'package:re_highlight/styles/atom-one-dark.dart';
-import 'package:re_highlight/styles/github.dart';
+
+import 'syntax_highlight_theme.dart';
 
 import '../widgets/code_highlighting.dart';
 
@@ -55,7 +55,7 @@ CodeHighlightTheme? buildEditorHighlightTheme({
         maxLineLength: 512 * 1024,
       ),
     },
-    theme: dark ? atomOneDarkTheme : githubTheme,
+    theme: syntaxHighlightTheme(dark: dark),
   );
 }
 

@@ -46,6 +46,18 @@ Map<String, Object> verifyListMetadataWebAcceptance() {
     'percent-before-placeholder': (['%7 %'], 0, 'decimal', '%%1 %', null),
     'numbered-valid-restart': (['7.'], 0, 'decimal', '%1.', 0),
     'numbered-inactive-restart': (['7.'], 0, 'decimal', '%1.', null),
+    'uncommon-format-literal': (['Appendix'], 0, 'hebrew1', 'Appendix', null),
+    'uncommon-format-ancestor': (
+      ['3.', '3 Appendix'],
+      1,
+      'hebrew1',
+      '%1 Appendix',
+      null,
+    ),
+    'uncommon-format-legal': (['7.'], 0, 'hebrew1', '%1.', null),
+    'literal-label-tab': (['A\tB'], 0, 'decimal', 'A\tB', null),
+    'tab-before-placeholder': (['A\t7'], 0, 'decimal', 'A\t%1', null),
+    'none-label-tab': (['A\tB'], 0, 'none', 'A\tB', null),
   };
   _check(
     expected.keys.join(',') == listMetadataCases.join(','),
