@@ -36,3 +36,17 @@ This is newer than the original format/license audit at `9b9af85`.
 Implementation and final validation results will be appended as each portion
 finishes. Existing input/allocation guards and source fingerprints remain part
 of the acceptance criteria.
+
+## Reproducible local engine checks
+
+The normal `npm test` entry now selects the six actual engine test directories.
+WordPerfect/CHM and XML/PostScript test staging also reuse the build's default
+`tooling/.source` checkout, matching the existing spreadsheet/PPT behavior.
+Previously the npm script pointed to a nonexistent directory and those helpers
+required an undocumented sibling checkout unless an environment override was set.
+
+On the unmodified Node 24.22.1 runtime, `npm run build` reproduced all committed
+generated assets/notices/source materials without a Git diff. Then `npm test`
+passed all **61** native/WASM contracts, with zero failures and zero skips, using
+the default source location. The [executed log](../evidence/file-viewer-continuation-20261113/selected-engine-tests.log)
+is retained. This check changes test entry points, not production engine code.

@@ -85,7 +85,8 @@ Use Node 24 and the checked-in exact npm lockfile:
 ```sh
 cd packages/file_viewer_documents/tooling
 npm ci --ignore-scripts --no-audit --no-fund
-node build.mjs
+npm run build
+npm test
 ```
 
 By default, the build fetches the pinned upstream into ignored `tooling/.source`.
@@ -94,9 +95,11 @@ The build rejects a different commit or tracked source changes. It stages only
 the relevant source directories and overlays, then verifies the selected module
 graph excludes the CAD/OCCT, Mermaid/ELK, HEIC, archive and Draw.io bundles.
 Generated `assets/runtime` and license records are included in the app bundle.
+The contract tests reuse the same `tooling/.source` checkout by default; an
+explicit `FILE_VIEWER_UPSTREAM_DIR` also applies to them.
 
 ```sh
-node --test packages/file_viewer_documents/engines/*/test/*.test.mjs
+# From the repository root:
 cd packages/file_viewer_documents/tooling
 npx --no-install playwright install --with-deps chromium
 cd ../../..

@@ -2,6 +2,7 @@
 // Selected-engine test staging. Native outputs stay unchanged; generated files
 // live in a temporary directory and are not distributed as test dependencies.
 import {cp, mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {createServer} from 'node:http';
 import {tmpdir} from 'node:os';
@@ -13,7 +14,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const documentRoot = resolve(here, '../../..');
 const tooling = join(documentRoot, 'tooling');
 const require = createRequire(join(tooling, 'package.json'));
-export const upstreamRoot = process.env.FILE_VIEWER_UPSTREAM_DIR || resolve(here, '../../../../../../file-viewer');
+const buildCheckout = join(tooling, '.source');
+export const upstreamRoot = process.env.FILE_VIEWER_UPSTREAM_DIR ||
+  (existsSync(buildCheckout) ? buildCheckout : resolve(here, '../../../../../../file-viewer'));
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const toolingImport = name => import(pathToFileURL(require.resolve(name)).href);
 export const npmPath = name => dirname(require.resolve(`${name}/package.json`));
