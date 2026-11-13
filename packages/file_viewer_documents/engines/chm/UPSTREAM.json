@@ -281,5 +281,11 @@
     "original permissive Rust toolchain notices"
   ],
   "runtime_dependencies": [],
-  "runtime_notes": "Uses exactly the committed upstream WASM and JavaScript loader. Matching native source, license books and provenance remain required distribution materials."
+  "runtime_notes": "Uses exactly the committed upstream WASM and JavaScript loader. Matching native source, license books and provenance remain required distribution materials.",
+  "modifications": [
+    "Bounded local worker/source protocol and strict local asset URLs",
+    "Preserve and expose parser/merged-archive warnings",
+    "Cross-realm topic link lookup",
+    "Same-origin sanitized blob topic frames with replacement/disposal revocation; script sandbox unchanged"
+  ]
 }

@@ -59,7 +59,10 @@ export async function stageSelected(kind) {
 }
 
 export async function startBrowser(stage) {
-  const {chromium} = await toolingImport('playwright');
+  const imported = await toolingImport('playwright');
+  // require.resolve selects Playwright's CommonJS export, whose browser types
+  // live on the default export when imported through a file URL.
+  const {chromium} = imported.default || imported;
   const requests = [];
   const csp = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline' blob:; img-src 'self' blob: data:; font-src 'self' blob: data:; media-src 'none'; frame-src blob:; connect-src 'self' blob: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'";
   const server = createServer(async (request, response) => {

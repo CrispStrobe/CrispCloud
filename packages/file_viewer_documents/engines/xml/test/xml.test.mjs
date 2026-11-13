@@ -22,6 +22,14 @@ test('selected XML build has no unrelated renderer or copyleft runtime', () => {
   }
 });
 
+test('pinned Playwright CommonJS entry exposes its genuine Chromium launcher', async () => {
+  const imported = await toolingImport('playwright');
+  const {chromium} = imported.default || imported;
+  // Resolve the real package without attempting an unavailable local browser.
+  assert.equal(typeof chromium.launch, 'function');
+  assert.equal(chromium.name(), 'chromium');
+});
+
 test('allows self-contained schema and stylesheets, including XML/text output', async () => {
   safety.parseSafeXml((await fixture('xml','valid.xml')).toString(), documentRef, 'xml');
   safety.parseSafeXml((await fixture('xml','order.xsd')).toString(), documentRef, 'xsd');

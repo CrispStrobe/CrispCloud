@@ -37,7 +37,7 @@ try {
     await cp(resolve(upstreamRoot, 'packages/renderers', source), resolve(runtime, destination));
   }
   await writeFile(resolve(runtime, 'index.html'), `<!doctype html><html><head>
-  <meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:">
+  <meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self' blob:; frame-src 'self' blob:">
   <style>html,body{margin:0;height:100%}#target{width:100%;height:100%}</style></head><body><div id="target"></div>
   <script type="module">
   import {renderWordPerfect} from './wordperfect-entry.js';
@@ -92,6 +92,7 @@ try {
   const firstTopicUrl = await page.locator('.chm-topic-frame').getAttribute('src');
   assert.match(firstTopicUrl, /^blob:http:\/\/127\.0\.0\.1:/);
   assert.equal(await page.locator('.chm-topic-frame').getAttribute('srcdoc'), null);
+  assert.equal(await page.evaluate(async url => (await fetch(url)).ok, firstTopicUrl), true);
   const topic = page.frameLocator('.chm-topic-frame');
   await topic.locator('h1').waitFor();
   assert.equal(await topic.locator('h1').innerText(), 'Welcome');
@@ -99,6 +100,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.chm-topic-frame')?.contentDocument?.querySelector('h1')?.textContent === 'Setup', undefined, { timeout: 5000 });
   const secondTopicUrl = await page.locator('.chm-topic-frame').getAttribute('src');
   assert.notEqual(firstTopicUrl, secondTopicUrl);
+  assert.equal(await page.evaluate(async url => (await fetch(url)).ok, secondTopicUrl), true);
   assert.equal(await page.evaluate(async url => { try { await fetch(url); return true; } catch { return false; } }, firstTopicUrl), false);
   const sanitized = await page.evaluate(() => window.sanitizeTestHtml('<script>alert(1)</script><img src="https://remote.invalid/a.png" onerror="alert(1)"><object data="file:///secret"></object><p>Readable help</p>'));
   assert.ok(!sanitized.html.includes('<script'));
