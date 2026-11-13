@@ -4,6 +4,24 @@ The integration pins are recorded in `packages/legacy_doc_parser/UPSTREAM.json` 
 
 ## Current continuation checkpoint
 
+The [first layout follow-up receipt](evidence/word-layout-74420eb2-20261113/README.md)
+records clean published app `e3eaaa32` with parser
+`74420eb2e0ec14401a0db5bcbb30ab6d202a2340`. It integrates explicit Line Number
+styles, exact integer picture sizing, supported textbox paint and a visible
+generated placeholder for unavailable OLE previews. All 1,369 managed Office
+files verify: 948 exact parser files and 421 unchanged other files. Version
+`1.2.9+22`, the root lockfile, Quds and other dependency pins remain unchanged.
+
+The exact app runtime passes 107 data tests, 13 actual native assertions,
+four-format JavaScript acceptance and the source/release controls. All 7,257
+tracked file hashes and 1,180 cohort input hashes remain unchanged across
+execution. The receipt retains the source review, guarded sync, complete
+command results and independent remote-checkout verification. It preserves
+each upstream feature's measured scope and the known remaining native bridge
+differences; later textbox fill and ink work will have separate receipts.
+
+## Earlier continuation at 48bf3a
+
 The [13 November continuation receipt](evidence/word-gaps-48bf3a-20261113/README.md)
 records acceptance of clean published app `0233ed8e` with canonical parser
 `48bf3a84e822b960e369f0134d597e025c775a41`. It preserves current main's build 22,

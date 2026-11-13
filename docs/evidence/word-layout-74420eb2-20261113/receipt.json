@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "measuredAppCommit": "e3eaaa32bafa869548b30c0938aec776e99ea44e",
+  "measuredAppTree": "f7a9943e1790de253930fec3e12375277132fa3a",
+  "parserCommit": "74420eb2e0ec14401a0db5bcbb30ab6d202a2340",
+  "parserTree": "ac78b144d90bca0f44993d94ae0fd1c8115ce072",
+  "branch": "checkpoint/app-layout-next-20261113",
+  "qudsCommit": "6d6e77d14ead33de90c57ec5feb2ab3cc44f6501",
+  "managedOfficeFiles": 1369,
+  "parserSourceFiles": 948,
+  "trackedSourceFileCount": 7257,
+  "cohortInputCount": 1180,
+  "cohortTests": 107,
+  "nativeAssertions": 13,
+  "controlCounts": {
+    "sync-controls": [
+      27,
+      0
+    ],
+    "apple-preflight-controls": [
+      38,
+      0
+    ],
+    "crypto-evidence-controls": [
+      42,
+      2
+    ],
+    "ebook-source-controls": [
+      22,
+      0
+    ]
+  },
+  "scope": "Existing data-only app, actual installed Office and source-retention acceptance; no Flutter widgets, complete build, hosted CI, exact pagination or release claim.",
+  "recordCount": 84,
+  "uncompressedRecordBytes": 6240892,
+  "archiveBytes": 681164,
+  "archiveSha256": "c4777c993d33291623d15b9b3db37c41771b28ee99cde1b65c0ed28d4ce35c21",
+  "manifestSha256": "5b8ad09d47ff8ac17e78bc7896457d5fe7b10a9a49d5a1ac0dc00586a5d5566f",
+  "verifierSha256": "73d01ac3869740660028fb4e76da17540229fb1d26b1ec2db968f2c7d76759a5",
+  "selfTestSha256": "031c7ff90690c9cf0e56045301c8378fbed5d140d2b1384c4b3f6fed6b8acafc",
+  "readmeSha256": "a7aa7751dee625bd1d427955ce74629a72ee2211d00da9f4cf38c17d159bb74e"
+}
