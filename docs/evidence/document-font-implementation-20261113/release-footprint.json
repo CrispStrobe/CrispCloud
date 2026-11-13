@@ -1,0 +1,1062 @@
+{
+  "build_command": "flutter build web --no-pub --release --no-wasm-dry-run",
+  "combined_selected_and_fonts": {
+    "bytes": 33690303,
+    "files": 92,
+    "gzip9_bytes": 19678616
+  },
+  "combined_selected_and_fonts_savings": {
+    "bytes": 5437800,
+    "files": 87,
+    "gzip9_bytes": 1085587
+  },
+  "comparison_baseline": "docs/evidence/document-fonts-20261113/footprint.json",
+  "comparison_savings": {
+    "font_totals": {
+      "bytes": 1645072,
+      "files": 1,
+      "gzip9_bytes": 555431
+    },
+    "notice_totals": {
+      "bytes": 2155208,
+      "files": 86,
+      "gzip9_bytes": 339083
+    },
+    "runtime_totals_including_manifest": {
+      "bytes": 1637520,
+      "files": 0,
+      "gzip9_bytes": 191073
+    },
+    "selected_totals": {
+      "bytes": 3792728,
+      "files": 86,
+      "gzip9_bytes": 530156
+    }
+  },
+  "engine_sizes": {
+    "chm": {
+      "conservative_reachable_files": [
+        "chm.worker.js",
+        "chm_wasm.js",
+        "chm_wasm_bg.wasm",
+        "chunk-3RNHDNP5.js",
+        "chunk-WJEP6OR3.js",
+        "entry-GNJPN2YS.js"
+      ],
+      "conservative_reachable_totals": {
+        "bytes": 406916,
+        "files": 6,
+        "gzip9_bytes": 227372
+      },
+      "entry": "entry-GNJPN2YS.js",
+      "exclusive_files": [
+        "chm.worker.js",
+        "chm_wasm.js",
+        "chm_wasm_bg.wasm",
+        "chunk-WJEP6OR3.js",
+        "entry-GNJPN2YS.js"
+      ],
+      "exclusive_totals": {
+        "bytes": 406083,
+        "files": 5,
+        "gzip9_bytes": 226894
+      },
+      "explicit_auxiliary_roots": [
+        "chm.worker.js",
+        "chm_wasm.js",
+        "chm_wasm_bg.wasm"
+      ]
+    },
+    "postscript": {
+      "conservative_reachable_files": [
+        "chunk-2SFRAG4H.js",
+        "chunk-3BJKFY2R.js",
+        "chunk-3RNHDNP5.js",
+        "chunk-4NOHUTGO.js",
+        "chunk-7HTQ7DBK.js",
+        "chunk-A4JY7UKO.js",
+        "chunk-DZQX2M6T.js",
+        "chunk-YTSZK2IU.js",
+        "entry-EETRUNCO.js",
+        "image-4KENP6VT.js",
+        "postscript.worker.js",
+        "print-mask-CNNFMMM5.js",
+        "stet_wasm_bg.wasm"
+      ],
+      "conservative_reachable_totals": {
+        "bytes": 14996228,
+        "files": 13,
+        "gzip9_bytes": 11410234
+      },
+      "entry": "entry-EETRUNCO.js",
+      "exclusive_files": [
+        "chunk-2SFRAG4H.js",
+        "entry-EETRUNCO.js",
+        "postscript.worker.js",
+        "stet_wasm_bg.wasm"
+      ],
+      "exclusive_totals": {
+        "bytes": 14738061,
+        "files": 4,
+        "gzip9_bytes": 11342025
+      },
+      "explicit_auxiliary_roots": [
+        "postscript.worker.js",
+        "stet_wasm_bg.wasm"
+      ]
+    },
+    "ppt": {
+      "conservative_reachable_files": [
+        "chunk-3BJKFY2R.js",
+        "chunk-3RNHDNP5.js",
+        "chunk-4NOHUTGO.js",
+        "chunk-7HTQ7DBK.js",
+        "chunk-A4JY7UKO.js",
+        "chunk-DZQX2M6T.js",
+        "chunk-YTSZK2IU.js",
+        "dist-U6QQXCEA.js",
+        "entry-VO6AAMVR.js",
+        "image-4KENP6VT.js",
+        "pptjs.worker.js",
+        "print-mask-CNNFMMM5.js"
+      ],
+      "conservative_reachable_totals": {
+        "bytes": 800282,
+        "files": 12,
+        "gzip9_bytes": 259462
+      },
+      "entry": "entry-VO6AAMVR.js",
+      "exclusive_files": [
+        "dist-U6QQXCEA.js",
+        "entry-VO6AAMVR.js",
+        "pptjs.worker.js"
+      ],
+      "exclusive_totals": {
+        "bytes": 542115,
+        "files": 3,
+        "gzip9_bytes": 191253
+      },
+      "explicit_auxiliary_roots": [
+        "pptjs.worker.js"
+      ]
+    },
+    "spreadsheet": {
+      "conservative_reachable_files": [
+        "UTIF-QNRB2W6F.js",
+        "chunk-3BJKFY2R.js",
+        "chunk-3RNHDNP5.js",
+        "chunk-4NOHUTGO.js",
+        "chunk-7HTQ7DBK.js",
+        "chunk-A4JY7UKO.js",
+        "chunk-DZQX2M6T.js",
+        "chunk-GVIESLRK.js",
+        "chunk-QBGM2ACY.js",
+        "chunk-YTSZK2IU.js",
+        "entry-4YNJUMEI.js",
+        "image-4KENP6VT.js",
+        "index.es-RGLBRJMI.js",
+        "print-mask-CNNFMMM5.js",
+        "sheet.worker.js"
+      ],
+      "conservative_reachable_totals": {
+        "bytes": 1348011,
+        "files": 15,
+        "gzip9_bytes": 416204
+      },
+      "entry": "entry-4YNJUMEI.js",
+      "exclusive_files": [
+        "UTIF-QNRB2W6F.js",
+        "chunk-GVIESLRK.js",
+        "chunk-QBGM2ACY.js",
+        "entry-4YNJUMEI.js",
+        "index.es-RGLBRJMI.js",
+        "sheet.worker.js"
+      ],
+      "exclusive_totals": {
+        "bytes": 1089844,
+        "files": 6,
+        "gzip9_bytes": 347995
+      },
+      "explicit_auxiliary_roots": [
+        "sheet.worker.js"
+      ]
+    },
+    "wordperfect": {
+      "conservative_reachable_files": [
+        "chunk-3RNHDNP5.js",
+        "chunk-VGYQQAVY.js",
+        "entry-V3ON5DQH.js",
+        "libwpd.mjs",
+        "libwpd.wasm",
+        "wordperfect.worker.js"
+      ],
+      "conservative_reachable_totals": {
+        "bytes": 562825,
+        "files": 6,
+        "gzip9_bytes": 212126
+      },
+      "entry": "entry-V3ON5DQH.js",
+      "exclusive_files": [
+        "chunk-VGYQQAVY.js",
+        "entry-V3ON5DQH.js",
+        "libwpd.mjs",
+        "libwpd.wasm",
+        "wordperfect.worker.js"
+      ],
+      "exclusive_totals": {
+        "bytes": 561992,
+        "files": 5,
+        "gzip9_bytes": 211648
+      },
+      "explicit_auxiliary_roots": [
+        "wordperfect.worker.js",
+        "libwpd.mjs",
+        "libwpd.wasm"
+      ]
+    },
+    "xml": {
+      "conservative_reachable_files": [
+        "chunk-2GWS2I6U.js",
+        "chunk-3BJKFY2R.js",
+        "chunk-3RNHDNP5.js",
+        "chunk-4NOHUTGO.js",
+        "chunk-7HTQ7DBK.js",
+        "chunk-A4JY7UKO.js",
+        "chunk-DZQX2M6T.js",
+        "chunk-YTSZK2IU.js",
+        "entry-PYAB52JX.js",
+        "image-4KENP6VT.js",
+        "print-mask-CNNFMMM5.js",
+        "xmllint-browser.mjs",
+        "xmllint.wasm",
+        "xslt-wasm.js"
+      ],
+      "conservative_reachable_totals": {
+        "bytes": 2431744,
+        "files": 14,
+        "gzip9_bytes": 873789
+      },
+      "entry": "entry-PYAB52JX.js",
+      "exclusive_files": [
+        "chunk-2GWS2I6U.js",
+        "entry-PYAB52JX.js",
+        "xmllint-browser.mjs",
+        "xmllint.wasm",
+        "xslt-wasm.js"
+      ],
+      "exclusive_totals": {
+        "bytes": 2173577,
+        "files": 5,
+        "gzip9_bytes": 805580
+      },
+      "explicit_auxiliary_roots": [
+        "xmllint-browser.mjs",
+        "xmllint.wasm",
+        "xslt-wasm.js"
+      ]
+    }
+  },
+  "exact_duplicate_fonts": [],
+  "exact_duplicate_notice_extra_bytes": 0,
+  "exact_duplicate_notice_files": [],
+  "font_group_totals": {
+    "assets/assets/fonts": {
+      "bytes": 623712,
+      "files": 4,
+      "gzip9_bytes": 334460
+    },
+    "assets/fonts": {
+      "bytes": 77552,
+      "files": 1,
+      "gzip9_bytes": 40473
+    },
+    "cupertino_icons": {
+      "bytes": 1472,
+      "files": 1,
+      "gzip9_bytes": 1011
+    },
+    "dart_pdf_editor_assets": {
+      "bytes": 7147412,
+      "files": 24,
+      "gzip9_bytes": 3381339
+    },
+    "pro_image_editor": {
+      "bytes": 1092,
+      "files": 1,
+      "gzip9_bytes": 709
+    },
+    "quds_office_editor": {
+      "bytes": 4717424,
+      "files": 14,
+      "gzip9_bytes": 2544784
+    }
+  },
+  "font_totals": {
+    "bytes": 12568664,
+    "files": 45,
+    "gzip9_bytes": 6302776
+  },
+  "fonts": [
+    {
+      "bytes": 170760,
+      "gzip9_bytes": 90563,
+      "path": "assets/assets/fonts/Roboto-Bold.ttf",
+      "sha256": "7d0b991ee3e0be7af01ad7ea8cd2beea6c00a25e679a0226b6737f079aafff86"
+    },
+    {
+      "bytes": 172064,
+      "gzip9_bytes": 90803,
+      "path": "assets/assets/fonts/Roboto-Medium.ttf",
+      "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
+    },
+    {
+      "bytes": 171676,
+      "gzip9_bytes": 90049,
+      "path": "assets/assets/fonts/Roboto-Regular.ttf",
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+    },
+    {
+      "bytes": 109212,
+      "gzip9_bytes": 63045,
+      "path": "assets/assets/fonts/RobotoMono-Regular.ttf",
+      "sha256": "c59ecb6c18e38d4194249b6e1c555eb55c8e809258cf6d9b624d19d9268253bf"
+    },
+    {
+      "bytes": 77552,
+      "gzip9_bytes": 40473,
+      "path": "assets/fonts/MaterialIcons-Regular.otf",
+      "sha256": "d8d583c610056825458d550684710dd377b343ae62e15ec7f8ed0a8c9cf822dc"
+    },
+    {
+      "bytes": 1472,
+      "gzip9_bytes": 1011,
+      "path": "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf",
+      "sha256": "3d90c370aa4cf00dc57ee2b902f6652147c0f81e03e483df584a9c08b1687c9d"
+    },
+    {
+      "bytes": 682468,
+      "gzip9_bytes": 279345,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-Bold.ttf",
+      "sha256": "bb5d20f79b82599ec72983597437373a80f2d2085fa91fc144fd74e876a594db"
+    },
+    {
+      "bytes": 808508,
+      "gzip9_bytes": 321946,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-BoldItalic.ttf",
+      "sha256": "b32928186c119599e03ca6a1ffc680fdcb7fac95772f4b95d989cf6cd3861517"
+    },
+    {
+      "bytes": 615236,
+      "gzip9_bytes": 280876,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-Italic.ttf",
+      "sha256": "0b019225e58d702bfedcbd35c21696769f8ee115cb6343f84c2f240312450d1c"
+    },
+    {
+      "bytes": 628032,
+      "gzip9_bytes": 268221,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-Regular.ttf",
+      "sha256": "f6418f708baede9789daef5d458c0f53d2a888af9820e8062934e504fedc6595"
+    },
+    {
+      "bytes": 759720,
+      "gzip9_bytes": 381847,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/DejaVuSans.ttf",
+      "sha256": "ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280"
+    },
+    {
+      "bytes": 343140,
+      "gzip9_bytes": 203155,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/DejaVuSansMono.ttf",
+      "sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88"
+    },
+    {
+      "bytes": 380660,
+      "gzip9_bytes": 212246,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/DejaVuSerif.ttf",
+      "sha256": "8f2c103bfa3fd5de71f1b92b18f21906b5a26871fb7e19a9a4c9af539c3cc7ab"
+    },
+    {
+      "bytes": 456996,
+      "gzip9_bytes": 205431,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/FiraSans-Regular.ttf",
+      "sha256": "c29556a2719bf613ef3d5e070e40d903a8965d9c081beca1375dc1e6e0f93c23"
+    },
+    {
+      "bytes": 406076,
+      "gzip9_bytes": 147398,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Lobster-Regular.ttf",
+      "sha256": "d6568e697fd50cedc0be04d8aae4127fe95add607e7bff954ca88604be80c205"
+    },
+    {
+      "bytes": 261088,
+      "gzip9_bytes": 111888,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Spectral-Regular.ttf",
+      "sha256": "c89021dc20720c8d0dcf40b0b2f6e00c13665fa8041717f581396f51b8c78f5d"
+    },
+    {
+      "bytes": 176096,
+      "gzip9_bytes": 90433,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreAdventor-Bold.otf",
+      "sha256": "e373ae29c808c6d9149e3add46564f9acdb6ebfcd0ee311f6a55560226994720"
+    },
+    {
+      "bytes": 170364,
+      "gzip9_bytes": 88924,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreAdventor-Regular.otf",
+      "sha256": "ee265c1c9728be9491c7f0d7fcdcb2f97bc35040a6dc1f9815265cee333e155b"
+    },
+    {
+      "bytes": 87288,
+      "gzip9_bytes": 57866,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreCursor-Bold.otf",
+      "sha256": "95e9755bfa05759e8d1f8fba21a919ba46091e1275aeb5bf831dffd9c93b041e"
+    },
+    {
+      "bytes": 90360,
+      "gzip9_bytes": 59815,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreCursor-BoldItalic.otf",
+      "sha256": "6aa5c41f489b898aa890c543e7dcd5e732c63894babc65569e01ee7e46533d82"
+    },
+    {
+      "bytes": 87536,
+      "gzip9_bytes": 57552,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreCursor-Italic.otf",
+      "sha256": "545f24a2a9e5dd5ace865fe5e80134f55a37794b36e26abae5424aebff600056"
+    },
+    {
+      "bytes": 84652,
+      "gzip9_bytes": 55717,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreCursor-Regular.otf",
+      "sha256": "0667deb48aa0e88be8f499c4d308e8b9116f290e7f969b0f5a34ee15c9644272"
+    },
+    {
+      "bytes": 135204,
+      "gzip9_bytes": 63865,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreHeros-Bold.otf",
+      "sha256": "b170162835f4efc288886dd4231406dc47e19b614cf4416836635599d44a7d60"
+    },
+    {
+      "bytes": 135264,
+      "gzip9_bytes": 63940,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreHeros-BoldItalic.otf",
+      "sha256": "166fc6d068d9c9974281555cb3d730365537a9b676ab269bb5163f5a75496505"
+    },
+    {
+      "bytes": 139208,
+      "gzip9_bytes": 65396,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreHeros-Italic.otf",
+      "sha256": "6473df7fa107b3fb4be38973710afe22b0640c2ac076d5337cf126bed9aa108c"
+    },
+    {
+      "bytes": 133600,
+      "gzip9_bytes": 63443,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreHeros-Regular.otf",
+      "sha256": "6ae1a09d5a940367b7aaaa91ee8bd8a2c333bfe193e7096e23f931357d62081f"
+    },
+    {
+      "bytes": 139480,
+      "gzip9_bytes": 73741,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreTermes-Bold.otf",
+      "sha256": "2fb3e952065fa153c7e4e64e04b98b9d79225739b6025aa3f0f0782d299ff61e"
+    },
+    {
+      "bytes": 144180,
+      "gzip9_bytes": 77343,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreTermes-BoldItalic.otf",
+      "sha256": "1bf6af99cb0e26c12951317032d79b96ae009551e59ccf02a5b24f325ecfec87"
+    },
+    {
+      "bytes": 141324,
+      "gzip9_bytes": 76390,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreTermes-Italic.otf",
+      "sha256": "6dd103a1672e50568cd2f8a706ccd48443d44d7d073a59d2286f4e6f746575d6"
+    },
+    {
+      "bytes": 140932,
+      "gzip9_bytes": 74561,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/TeXGyreTermes-Regular.otf",
+      "sha256": "cc3fe7c707b81428d23d54df3eadd9228a2bf6a4d43125d94df56f5f63134659"
+    },
+    {
+      "bytes": 1092,
+      "gzip9_bytes": 709,
+      "path": "assets/packages/pro_image_editor/assets/fonts/ProImageEditorIcons.ttf",
+      "sha256": "32609b0f0106ce50ba9c7767443920ca01b66020ab73b21f65c58ce8d9438d35"
+    },
+    {
+      "bytes": 308068,
+      "gzip9_bytes": 174273,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-Bold.ttf",
+      "sha256": "50464e64aaadea741fb9516748aee296d570439406be11d63df22294e77ba867"
+    },
+    {
+      "bytes": 284184,
+      "gzip9_bytes": 166566,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-BoldItalic.ttf",
+      "sha256": "291872531f0e8013df602c412fc570241860e41b1fa1b7972537c27a19024d4d"
+    },
+    {
+      "bytes": 281608,
+      "gzip9_bytes": 164103,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-Italic.ttf",
+      "sha256": "35c3116d4366eb0e58494d8e432d4ee0c60c5735c7f775ffc096008bd2907c74"
+    },
+    {
+      "bytes": 319624,
+      "gzip9_bytes": 178985,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-Regular.ttf",
+      "sha256": "d18235f1e874771f4eaec3ddd6ddb4db849d334bdc6930c5c2185d9344834e62"
+    },
+    {
+      "bytes": 414568,
+      "gzip9_bytes": 212024,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-Bold.ttf",
+      "sha256": "b72c65e551d653b54217ffad0d1454ce0657e4e8d4a28bcc79e0acd2598f4bf3"
+    },
+    {
+      "bytes": 409108,
+      "gzip9_bytes": 213753,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-BoldItalic.ttf",
+      "sha256": "64263238517af60213cdb469165fc7e9acd0c09c35f4155f924a379f97125a57"
+    },
+    {
+      "bytes": 415920,
+      "gzip9_bytes": 217325,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-Italic.ttf",
+      "sha256": "4ccb79043bd3a6d131b5a53901abb21261b1417f6052b38a9fa9716a4e5a3d81"
+    },
+    {
+      "bytes": 410820,
+      "gzip9_bytes": 210813,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-Regular.ttf",
+      "sha256": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8"
+    },
+    {
+      "bytes": 370196,
+      "gzip9_bytes": 201481,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-Bold.ttf",
+      "sha256": "bb033fae52dcbf67a55494a08829aaa788324624d72a195af7f93da3061c928f"
+    },
+    {
+      "bytes": 376892,
+      "gzip9_bytes": 211371,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-BoldItalic.ttf",
+      "sha256": "10ec0fa22bc6f12a239d600c051752884d155997aafd19ebc24c4f4a8d2b98d0"
+    },
+    {
+      "bytes": 375760,
+      "gzip9_bytes": 210182,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-Italic.ttf",
+      "sha256": "c1882fbb05e78537b9c39dad3c07c4f231c987a3747b20c8745737aed50cd488"
+    },
+    {
+      "bytes": 393692,
+      "gzip9_bytes": 211425,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-Regular.ttf",
+      "sha256": "350f4ffd773cae53560c63dca3d89a5070595614fde12f772bf43feb63d81064"
+    },
+    {
+      "bytes": 181192,
+      "gzip9_bytes": 87407,
+      "path": "assets/packages/quds_office_editor/fonts/NotoNaskhArabic-Bold.ttf",
+      "sha256": "b5cbcb561b4b540ff11d7b6934577dbbbbb9e1d152d47f6f31f19176d58ff39c"
+    },
+    {
+      "bytes": 175792,
+      "gzip9_bytes": 85076,
+      "path": "assets/packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf",
+      "sha256": "8c67eaa2f0086872628fc3f7f760386f83c8be5c5e9a1ba3a38891237b2ac7cb"
+    }
+  ],
+  "full_material_icons_absent": true,
+  "method": {
+    "compression": "gzip.compress(data, compresslevel=9, mtime=0) per file, then sum; estimate, not measured HTTP, app-store or installer download",
+    "engine_partition": "Read actual compiled host imports, manually supply runtime auxiliary roots from source, recursively follow quoted local js/mjs/wasm filenames. Conservative all-feature dependency closure, including lazy optional imports. Shared files counted once in partition; not an initial-load network trace.",
+    "font_scope": "Standalone .ttf/.otf/.woff/.woff2 in build/web only; excludes font data embedded inside WASM or documents",
+    "license_scope": "Complete unique aggregate plus two host grants are bundled. Exact originals/source aliases are retained outside application assets in source-only notices; schema-2 manifest validates complete retention.",
+    "native_size_limit": "Raw asset bytes approximate native resource contribution only. Actual native compressed packages were not built or measured.",
+    "units": "bytes; divide by 1048576 for MiB"
+  },
+  "notice_files_beyond_generated_manifest": [],
+  "notice_totals": {
+    "bytes": 1224387,
+    "files": 3,
+    "gzip9_bytes": 145209
+  },
+  "runtime_totals_including_manifest": {
+    "bytes": 19895460,
+    "files": 43,
+    "gzip9_bytes": 13229759
+  },
+  "schema": 2,
+  "scope": "Final genuine 2026-11-13 JavaScript web release after font/packaging implementation; exact built asset validation",
+  "selected_assets_match_source": true,
+  "selected_files": [
+    {
+      "bytes": 1792,
+      "gzip9_bytes": 872,
+      "path": "index.html",
+      "sha256": "596f4f0019c3566bb04c97a098969083ac6e5c4f0aa4312782722c5c80713383"
+    },
+    {
+      "bytes": 1214177,
+      "gzip9_bytes": 141091,
+      "path": "licenses/THIRD_PARTY.txt",
+      "sha256": "cbd421b5345a1004fd737429ad2e708de451a15ae6a572d27fb34d8aa5a5efa7"
+    },
+    {
+      "bytes": 1070,
+      "gzip9_bytes": 648,
+      "path": "licenses/crisperbooks-host-MIT.txt",
+      "sha256": "b621ffc351fe263bc9b09dd0bc1c9332fda9c462a3904c1e4f0b4d3236b9c28c"
+    },
+    {
+      "bytes": 9140,
+      "gzip9_bytes": 3470,
+      "path": "licenses/file-viewer-Apache-2.0.txt",
+      "sha256": "55ce5d9fb8138a058b60c431cb9e68e13dd3f90691f73a757e38f06fed81e69b"
+    },
+    {
+      "bytes": 38668,
+      "gzip9_bytes": 15033,
+      "path": "runtime/UTIF-QNRB2W6F.js",
+      "sha256": "200bd3a661118d1bfd68548eb5a1531c367320fe3f26337624ba3193588b92e6"
+    },
+    {
+      "bytes": 3409,
+      "gzip9_bytes": 1564,
+      "path": "runtime/chm.worker.js",
+      "sha256": "90a5cd0ba432966b70043e0e6b4187ac5d7cba7b494d8f61655bb6753f99156f"
+    },
+    {
+      "bytes": 20635,
+      "gzip9_bytes": 4789,
+      "path": "runtime/chm_wasm.js",
+      "sha256": "e7f1a6e0de035e7178c04a0307f52806997c9971a948e333e66a49fbe73a3d5c"
+    },
+    {
+      "bytes": 338731,
+      "gzip9_bytes": 204595,
+      "path": "runtime/chm_wasm_bg.wasm",
+      "sha256": "02904a83ae8be928d5c90b9fd61faf28d8ba7e67ee96e3aeeb5d5b5102691538"
+    },
+    {
+      "bytes": 30788,
+      "gzip9_bytes": 11802,
+      "path": "runtime/chunk-2GWS2I6U.js",
+      "sha256": "b3c553ed92d39afbcccfa92ae72ce1efc0aecc733fe623b446676fd4cbbdc9ea"
+    },
+    {
+      "bytes": 417,
+      "gzip9_bytes": 292,
+      "path": "runtime/chunk-2GWS2I6U.js.LEGAL.txt",
+      "sha256": "4245c420f535f6b11e3f590606105d70565d76e4ba670d1f1497c1f39c57800a"
+    },
+    {
+      "bytes": 869,
+      "gzip9_bytes": 403,
+      "path": "runtime/chunk-2SFRAG4H.js",
+      "sha256": "7b76cb5ee47ab37bd9fe74cb90203ac95689007df24a059f99a3c2d6352e555a"
+    },
+    {
+      "bytes": 78978,
+      "gzip9_bytes": 21082,
+      "path": "runtime/chunk-3BJKFY2R.js",
+      "sha256": "906920dd0e12840988741e44a2031c1da1b810e86f10b186b808d54a30ff46fc"
+    },
+    {
+      "bytes": 833,
+      "gzip9_bytes": 478,
+      "path": "runtime/chunk-3RNHDNP5.js",
+      "sha256": "fce38a03dea32d1a4a810a8e08246ec306c6e18736d174894b493b088c501820"
+    },
+    {
+      "bytes": 4294,
+      "gzip9_bytes": 1849,
+      "path": "runtime/chunk-4NOHUTGO.js",
+      "sha256": "d768d508382322e5180c46e9c82732f24497cba306179b646e0eb25344879d27"
+    },
+    {
+      "bytes": 125,
+      "gzip9_bytes": 134,
+      "path": "runtime/chunk-7HTQ7DBK.js",
+      "sha256": "32f17aa01d5bfd6306856dda24b2f2f1d2a5941c8cc3fd2e5a3bd1a18c7de443"
+    },
+    {
+      "bytes": 145021,
+      "gzip9_bytes": 33750,
+      "path": "runtime/chunk-A4JY7UKO.js",
+      "sha256": "753e21273fd273a818e124bd7a02d53b2174b6bc0f7cee43425cef97548bc7ac"
+    },
+    {
+      "bytes": 4328,
+      "gzip9_bytes": 1765,
+      "path": "runtime/chunk-DZQX2M6T.js",
+      "sha256": "f5e8e4f8da0a2dd360aad335952a7935e8c32aefefc9f392e1d77d2b1572f2f1"
+    },
+    {
+      "bytes": 19864,
+      "gzip9_bytes": 7153,
+      "path": "runtime/chunk-GVIESLRK.js",
+      "sha256": "91d951c956a22beb47a9ebc6511127714dce4ffb7497d0c4464061c85bc3ab7a"
+    },
+    {
+      "bytes": 45970,
+      "gzip9_bytes": 14632,
+      "path": "runtime/chunk-QBGM2ACY.js",
+      "sha256": "dddb22edbacf3bb3f7773e4fe78b2e182b3f48d922fcd267e97e827706245e30"
+    },
+    {
+      "bytes": 243,
+      "gzip9_bytes": 188,
+      "path": "runtime/chunk-VGYQQAVY.js",
+      "sha256": "ad3353efe6b01d8346a4f9c6e60bc2d3e6ab3745aa7496bfdcd0228eacdab0ff"
+    },
+    {
+      "bytes": 17030,
+      "gzip9_bytes": 6618,
+      "path": "runtime/chunk-WJEP6OR3.js",
+      "sha256": "9322085c27e129ff408e82e669785075ccc333969e6c0a00dc03c4912a6cd5d9"
+    },
+    {
+      "bytes": 7061,
+      "gzip9_bytes": 2646,
+      "path": "runtime/chunk-YTSZK2IU.js",
+      "sha256": "8d95ad369c9eb5bd527d725ff7a01f4a5e3660dd20a6c74c4985dbfa20f1aa3a"
+    },
+    {
+      "bytes": 252796,
+      "gzip9_bytes": 89681,
+      "path": "runtime/dist-U6QQXCEA.js",
+      "sha256": "cd543b8511d725b1736a557ea280881b87c6e7de13c62c233f946a5fb2e0b6db"
+    },
+    {
+      "bytes": 70698,
+      "gzip9_bytes": 25239,
+      "path": "runtime/entry-4YNJUMEI.js",
+      "sha256": "6dbf6b016a01d81fe08de4e1c9ca2adea8d1379951af43b75d00a8f67d1a5437"
+    },
+    {
+      "bytes": 18589,
+      "gzip9_bytes": 6647,
+      "path": "runtime/entry-EETRUNCO.js",
+      "sha256": "d637a440cf740184d2165bc21326e1e0b2c69a6d6bb903a2c3367f68c334908f"
+    },
+    {
+      "bytes": 26278,
+      "gzip9_bytes": 9328,
+      "path": "runtime/entry-GNJPN2YS.js",
+      "sha256": "38b783fd2a24fd8dd664aebaa79f199ae3dfb9c1996c8e1193bd92f1e62d32f9"
+    },
+    {
+      "bytes": 14919,
+      "gzip9_bytes": 5956,
+      "path": "runtime/entry-PYAB52JX.js",
+      "sha256": "ee6089c16cf3d4dcdf17eb98c62a7142921fd7f2fda1440971a62ac3130fa624"
+    },
+    {
+      "bytes": 5895,
+      "gzip9_bytes": 2468,
+      "path": "runtime/entry-V3ON5DQH.js",
+      "sha256": "e00590262f7848970a4623bd1f876005c83bc01734fdf2a82d7f9fc94c2ab99f"
+    },
+    {
+      "bytes": 15789,
+      "gzip9_bytes": 6064,
+      "path": "runtime/entry-VO6AAMVR.js",
+      "sha256": "dc84089479274e26f7f68525bde811365d2a74e3e2bfa7a2521aae2e2289ed30"
+    },
+    {
+      "bytes": 19940,
+      "gzip9_bytes": 5256,
+      "path": "runtime/export-ODQV3NJ3.js",
+      "sha256": "82793133c6fe333eee35e284d047f0683fb696d28d5771a60294ece421d93656"
+    },
+    {
+      "bytes": 13209,
+      "gzip9_bytes": 5606,
+      "path": "runtime/host.js",
+      "sha256": "1475bc32c681d265320ca30116d6a04dcb40d21e17fb16e758865648ef8d8140"
+    },
+    {
+      "bytes": 7157,
+      "gzip9_bytes": 2908,
+      "path": "runtime/image-4KENP6VT.js",
+      "sha256": "3c12b9afa94b26801bc5e999ba3d9bf1c646c4344f778770c42ee8cc4d6d50e4"
+    },
+    {
+      "bytes": 253007,
+      "gzip9_bytes": 68366,
+      "path": "runtime/index.es-RGLBRJMI.js",
+      "sha256": "472631b7564baca45af315dc8eba4703b0bd3453294cc74753bc09649197ef48"
+    },
+    {
+      "bytes": 17313,
+      "gzip9_bytes": 4257,
+      "path": "runtime/libwpd.mjs",
+      "sha256": "ccd3267ce9cac2961bb6a500761753efa05c93563e7a5e46a31594cceb5e3096"
+    },
+    {
+      "bytes": 531158,
+      "gzip9_bytes": 201877,
+      "path": "runtime/libwpd.wasm",
+      "sha256": "bbfe0c7f712a357e3f9d11f9cf96d931e7cf4b9165d4379af78bf1bcb69333f0"
+    },
+    {
+      "bytes": 91301,
+      "gzip9_bytes": 24517,
+      "path": "runtime/manifest.json",
+      "sha256": "9003865814d3b192490f68837848538abbd33d4aca589eac9ec72a7a83a59639"
+    },
+    {
+      "bytes": 11663,
+      "gzip9_bytes": 4677,
+      "path": "runtime/postscript.worker.js",
+      "sha256": "00e06dccec11bfaa6ca0cf2812fee0ac947f1bfea5dbc67ca0a6ab0072197ba3"
+    },
+    {
+      "bytes": 273530,
+      "gzip9_bytes": 95508,
+      "path": "runtime/pptjs.worker.js",
+      "sha256": "eee6a0efe5e86c913f734a6bb5f70998f96c3111ee399079e6146f7b5a313d3c"
+    },
+    {
+      "bytes": 10370,
+      "gzip9_bytes": 3597,
+      "path": "runtime/print-mask-CNNFMMM5.js",
+      "sha256": "7901c3a7888c2e0fa8e3290e44d3e0ac6ec61e4ae800c03a0dc785d24322d11d"
+    },
+    {
+      "bytes": 114,
+      "gzip9_bytes": 116,
+      "path": "runtime/printMaskLoader-HMKWYRZG.js",
+      "sha256": "338f70298b5011d759c71caf923b94d780d026a0ac31b865c6eb4ffcdf114295"
+    },
+    {
+      "bytes": 661637,
+      "gzip9_bytes": 217572,
+      "path": "runtime/sheet.worker.js",
+      "sha256": "ff3712a1b3358fc5145fd9596b470f4ba62bd7082987a5dd659cb13f7630fc85"
+    },
+    {
+      "bytes": 640,
+      "gzip9_bytes": 368,
+      "path": "runtime/sheet.worker.js.LEGAL.txt",
+      "sha256": "f9f4db612b2a1cc772e59473cf76c73543a8992eef590f2b717c13f349a658d6"
+    },
+    {
+      "bytes": 14706940,
+      "gzip9_bytes": 11330298,
+      "path": "runtime/stet_wasm_bg.wasm",
+      "sha256": "b8d72531ec41ca497d67a79589a1dbb44748a4fefd088aa122007fbb28e06b20"
+    },
+    {
+      "bytes": 7383,
+      "gzip9_bytes": 2858,
+      "path": "runtime/wordperfect.worker.js",
+      "sha256": "c7fe818bc02beac2cb8117197180c8e1a6459c1c5e99d74ece248afdc27668ef"
+    },
+    {
+      "bytes": 28042,
+      "gzip9_bytes": 11315,
+      "path": "runtime/xmllint-browser.mjs",
+      "sha256": "5f5a2c17be12d398c640f3b494e7ded8cd8c9b0175d2c65e6f197a28b77fd01e"
+    },
+    {
+      "bytes": 778732,
+      "gzip9_bytes": 271814,
+      "path": "runtime/xmllint.wasm",
+      "sha256": "4e3cc21a67e8dd40ccb59822e4193fd1923b4cda08b40fe8ff8973de5eed9515"
+    },
+    {
+      "bytes": 1321096,
+      "gzip9_bytes": 504693,
+      "path": "runtime/xslt-wasm.js",
+      "sha256": "f1ce407622bfa5db3d6817a3923100c206d3ac9de64ea2677e9d74d831a798e1"
+    }
+  ],
+  "selected_totals": {
+    "bytes": 21121639,
+    "files": 47,
+    "gzip9_bytes": 13375840
+  },
+  "shared_catalog_fonts": [
+    {
+      "bytes": 410820,
+      "gzip9_bytes": 210813,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-Regular.ttf",
+      "sha256": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8"
+    },
+    {
+      "bytes": 414568,
+      "gzip9_bytes": 212024,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-Bold.ttf",
+      "sha256": "b72c65e551d653b54217ffad0d1454ce0657e4e8d4a28bcc79e0acd2598f4bf3"
+    },
+    {
+      "bytes": 415920,
+      "gzip9_bytes": 217325,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-Italic.ttf",
+      "sha256": "4ccb79043bd3a6d131b5a53901abb21261b1417f6052b38a9fa9716a4e5a3d81"
+    },
+    {
+      "bytes": 409108,
+      "gzip9_bytes": 213753,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSans-BoldItalic.ttf",
+      "sha256": "64263238517af60213cdb469165fc7e9acd0c09c35f4155f924a379f97125a57"
+    },
+    {
+      "bytes": 393692,
+      "gzip9_bytes": 211425,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-Regular.ttf",
+      "sha256": "350f4ffd773cae53560c63dca3d89a5070595614fde12f772bf43feb63d81064"
+    },
+    {
+      "bytes": 370196,
+      "gzip9_bytes": 201481,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-Bold.ttf",
+      "sha256": "bb033fae52dcbf67a55494a08829aaa788324624d72a195af7f93da3061c928f"
+    },
+    {
+      "bytes": 375760,
+      "gzip9_bytes": 210182,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-Italic.ttf",
+      "sha256": "c1882fbb05e78537b9c39dad3c07c4f231c987a3747b20c8745737aed50cd488"
+    },
+    {
+      "bytes": 376892,
+      "gzip9_bytes": 211371,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationSerif-BoldItalic.ttf",
+      "sha256": "10ec0fa22bc6f12a239d600c051752884d155997aafd19ebc24c4f4a8d2b98d0"
+    },
+    {
+      "bytes": 319624,
+      "gzip9_bytes": 178985,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-Regular.ttf",
+      "sha256": "d18235f1e874771f4eaec3ddd6ddb4db849d334bdc6930c5c2185d9344834e62"
+    },
+    {
+      "bytes": 308068,
+      "gzip9_bytes": 174273,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-Bold.ttf",
+      "sha256": "50464e64aaadea741fb9516748aee296d570439406be11d63df22294e77ba867"
+    },
+    {
+      "bytes": 281608,
+      "gzip9_bytes": 164103,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-Italic.ttf",
+      "sha256": "35c3116d4366eb0e58494d8e432d4ee0c60c5735c7f775ffc096008bd2907c74"
+    },
+    {
+      "bytes": 284184,
+      "gzip9_bytes": 166566,
+      "path": "assets/packages/quds_office_editor/fonts/LiberationMono-BoldItalic.ttf",
+      "sha256": "291872531f0e8013df602c412fc570241860e41b1fa1b7972537c27a19024d4d"
+    },
+    {
+      "bytes": 175792,
+      "gzip9_bytes": 85076,
+      "path": "assets/packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf",
+      "sha256": "8c67eaa2f0086872628fc3f7f760386f83c8be5c5e9a1ba3a38891237b2ac7cb"
+    },
+    {
+      "bytes": 181192,
+      "gzip9_bytes": 87407,
+      "path": "assets/packages/quds_office_editor/fonts/NotoNaskhArabic-Bold.ttf",
+      "sha256": "b5cbcb561b4b540ff11d7b6934577dbbbbb9e1d152d47f6f31f19176d58ff39c"
+    },
+    {
+      "bytes": 628032,
+      "gzip9_bytes": 268221,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-Regular.ttf",
+      "sha256": "f6418f708baede9789daef5d458c0f53d2a888af9820e8062934e504fedc6595"
+    },
+    {
+      "bytes": 682468,
+      "gzip9_bytes": 279345,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-Bold.ttf",
+      "sha256": "bb5d20f79b82599ec72983597437373a80f2d2085fa91fc144fd74e876a594db"
+    },
+    {
+      "bytes": 615236,
+      "gzip9_bytes": 280876,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-Italic.ttf",
+      "sha256": "0b019225e58d702bfedcbd35c21696769f8ee115cb6343f84c2f240312450d1c"
+    },
+    {
+      "bytes": 808508,
+      "gzip9_bytes": 321946,
+      "path": "assets/packages/dart_pdf_editor_assets/assets/fonts/Carlito-BoldItalic.ttf",
+      "sha256": "b32928186c119599e03ca6a1ffc680fdcb7fac95772f4b95d989cf6cd3861517"
+    },
+    {
+      "bytes": 171676,
+      "gzip9_bytes": 90049,
+      "path": "assets/assets/fonts/Roboto-Regular.ttf",
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+    },
+    {
+      "bytes": 172064,
+      "gzip9_bytes": 90803,
+      "path": "assets/assets/fonts/Roboto-Medium.ttf",
+      "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
+    },
+    {
+      "bytes": 170760,
+      "gzip9_bytes": 90563,
+      "path": "assets/assets/fonts/Roboto-Bold.ttf",
+      "sha256": "7d0b991ee3e0be7af01ad7ea8cd2beea6c00a25e679a0226b6737f079aafff86"
+    }
+  ],
+  "shared_font_paths_and_bytes_unique": true,
+  "shared_runtime_files": [
+    "chunk-3BJKFY2R.js",
+    "chunk-3RNHDNP5.js",
+    "chunk-4NOHUTGO.js",
+    "chunk-7HTQ7DBK.js",
+    "chunk-A4JY7UKO.js",
+    "chunk-DZQX2M6T.js",
+    "chunk-YTSZK2IU.js",
+    "image-4KENP6VT.js",
+    "print-mask-CNNFMMM5.js"
+  ],
+  "shared_runtime_totals": {
+    "bytes": 258167,
+    "files": 9,
+    "gzip9_bytes": 68209
+  },
+  "source_commit": "ab3af2f813a97e57be351366ebe9573798177e4c",
+  "source_file_hashes": {
+    "lib/services/document_font_catalog.dart": "3a074aba5dab7667d695498783684dd63029d85e6c3bf3e02238228edc481a9c",
+    "lib/services/document_fonts.dart": "d5645ef5d6b3fdc6a10ae6606bfa78ecc3365a66d66819f004b5d48b1015413b",
+    "lib/widgets/office_html_widget_factory.dart": "106626f16dd32a2a652061790cb70a1d3c071c39d69ad6923d3d4278cb5073ce",
+    "packages/file_viewer_documents/RUNTIME_MANIFEST.json": "9003865814d3b192490f68837848538abbd33d4aca589eac9ec72a7a83a59639",
+    "pubspec.lock": "fa128435bbb2ef6ce418c028742307c74623561593bdbbe6cb0a8d1baca9598d",
+    "pubspec.yaml": "8816a9c0031151aec43c49e1a647fd3871a52ae2f5d24ea8c874b386eb49350d"
+  },
+  "source_only_notices_and_mpl_not_bundled": true,
+  "tree_shaken_material_icons": {
+    "bytes": 77552,
+    "gzip9_bytes": 40473,
+    "path": "assets/fonts/MaterialIcons-Regular.otf",
+    "sha256": "d8d583c610056825458d550684710dd377b343ae62e15ec7f8ed0a8c9cf822dc"
+  },
+  "unassigned_runtime_files": [
+    "chunk-2GWS2I6U.js.LEGAL.txt",
+    "export-ODQV3NJ3.js",
+    "host.js",
+    "manifest.json",
+    "printMaskLoader-HMKWYRZG.js",
+    "sheet.worker.js.LEGAL.txt"
+  ],
+  "unassigned_runtime_totals": {
+    "bytes": 125621,
+    "files": 6,
+    "gzip9_bytes": 36155
+  },
+  "versions": {
+    "python": "3.12.14",
+    "zlib_compile": "1.3.2",
+    "zlib_runtime": "1.3.2"
+  }
+}

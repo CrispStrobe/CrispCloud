@@ -46,5 +46,60 @@
     "lib/services/office_pdf_service.dart": "bc7922fb4a173471c85e8abb9690cd3119e62bdc492294edd815251a657fbf3d",
     "lib/widgets/internal_viewer_dialog.dart": "3cb72922dfe34fe017dfb251a19c2953bba5cc649c92ffe50faa975d2e06d750",
     "packages/file_viewer_documents/RUNTIME_MANIFEST.json": "9003865814d3b192490f68837848538abbd33d4aca589eac9ec72a7a83a59639"
+  },
+  "app_implementation_commit": "ab3af2f813a97e57be351366ebe9573798177e4c",
+  "canonical_draft_pr": "https://github.com/CrispStrobe/quds_office_suite/pull/7",
+  "analysis": {
+    "issues": 0,
+    "log": "app-analysis.txt"
+  },
+  "provenance": {
+    "office_records": 1504,
+    "document_runtime_records": 158,
+    "controls_log": "provenance-controls.txt",
+    "whitespace": "Recognizes preserved canonical CRLF line endings; no source normalization or guard bypass.",
+    "controls_passed": 36
+  },
+  "logs": {
+    "host-font-tests.txt": "c9620a631e96fc2287e74b6e7f1fbd653a60607e73737355a8080d97a066c4dc",
+    "viewer-ui-analysis.txt": "7bd4abe2162d965c769d7ed586fa1085a7ec62011c819b953a0e3e5ac152f5d3",
+    "app-analysis.txt": "dbc43a6e566e3efee7140ed42c71c02a27b09c07649784a9e9ceb4f6f9ce7925",
+    "canonical-layout-tests.txt": "00455546fc50fa9a2faa1d23b7e25a4aa97334c882339ab89278ae072dcb5f88",
+    "app-font-tests.txt": "754a37f9e5374b4427dbcb89d96e567877aaa26be7feec17ece8ecda6d717377",
+    "viewer-ui-tests.txt": "9aaa71ebaac8663fc9459b4e5483000d503139853f294c8792ce7fe009da0fd2",
+    "host-font-analysis.txt": "e87a8ba24fb9bdd70c0956227a80d257af3d8737336bd8eb125e0e5cd8d38d1d",
+    "host-font-wiring-tests.txt": "7baba35039f05ee9a9064769f88a0c6b55b11a5a7eb36c5f3da2bea96d148330",
+    "installed-preview-tests.txt": "3f27295799a4787d6672d83e9487a6dcd4e1f0dcb8cd27ed1f8fff55bfe39787",
+    "canonical-editor-tests.txt": "e6c2cdfd033d7029d1d95b179eaf55762db64c375f60bdd63ebae8a54878c125",
+    "canonical-analysis.txt": "0c495e7486958b298c063acd6fe79f0f90967aebc587d1058c30a62ae7a2aef0",
+    "canonical-engine-tests.txt": "e63a2e3ca1fa76be22956ffd9db36ee0f6a6014feb78ca83ae0504d23ba56c97",
+    "provenance-controls.txt": "7d0729f613d9daafc16fcc3a63a9e652aa62a682e7d1f730157bd17a4e947da0",
+    "canonical-final-font-tests.txt": "10ece0e7dd764dcf54950a21026fd540b8fed12c033dcc266ab67bb8a983155c",
+    "release-web-build.log": "87026b095924c826123a3662595efa9f40c6fbedbaa6cc500f92da25336d29bd",
+    "selected-engine-fonts.log": "1fe7b920603aa7523d63f82dcd31225dee74d9d5c4ae9235a2dcdff89c239a04"
+  },
+  "canonical_tests": {
+    "engine_distinct_passed": 151,
+    "editor_passed": 22,
+    "final_font_cases_repeated": 8,
+    "logs": [
+      "canonical-engine-tests.txt",
+      "canonical-layout-tests.txt",
+      "canonical-editor-tests.txt",
+      "canonical-final-font-tests.txt"
+    ]
+  },
+  "browser_engine_contracts": {
+    "passed": 75,
+    "log": "selected-engine-fonts.log",
+    "local_chromium": "Blocked before startup by process singleton socket EPERM; no browser pass claimed."
+  },
+  "release_build": {
+    "exit_code": 0,
+    "commit": "ab3af2f813a97e57be351366ebe9573798177e4c",
+    "receipt": "release-web-build-receipt.json",
+    "log": "release-web-build.log",
+    "measurement": "release-footprint.json",
+    "validation": "release-web-validation.md"
   }
 }

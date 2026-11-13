@@ -160,6 +160,8 @@ assert 'assets/fonts/MaterialIcons-Regular.otf' in by_path, 'Tree-shaken Materia
 assert by_path['assets/fonts/MaterialIcons-Regular.otf']['bytes'] < full_icon.stat().st_size
 assert not (built_assets / 'notices').exists(), 'Source-only notice copies were bundled'
 assert not (built_assets / 'corresponding-source').exists(), 'Source-only MPL archives were bundled'
+assert not (built_assets.parent / 'notices').exists(), 'Source-only package notice copies were bundled'
+assert not (built_assets.parent / 'corresponding-source').exists(), 'Source-only package MPL archives were bundled'
 output['shared_catalog_fonts'] = shared
 output['shared_font_paths_and_bytes_unique'] = True
 output['full_material_icons_absent'] = True

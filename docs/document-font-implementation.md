@@ -147,11 +147,16 @@ the existing code, without another embedded general-purpose document engine.
 Measured against `db5b6126fdfb7f31598c80e5adc96ea548139505`, after the shared
 browser-font code is included:
 
-| Scope | Before | After | Saving |
-| --- | ---: | ---: | ---: |
-| Selected renderer, host, manifest and distributed notice assets | 24,914,367 B | 21,121,639 B | 3,792,728 B |
-| Explicit full Material Icons production asset | 1,645,184 B | 0 B | 1,645,184 B |
-| Combined raw asset reduction | | | **5,437,912 B (5.19 MiB)** |
+| Scope | Before | After | Raw saving | Gzip-9 saving |
+| --- | ---: | ---: | ---: | ---: |
+| Selected renderer, host, manifest and distributed notice assets | 24,914,367 B | 21,121,639 B | 3,792,728 B | 530,156 B |
+| Standalone fonts | 14,213,736 B | 12,568,664 B | 1,645,072 B | 555,431 B |
+| Combined asset reduction | 39,128,103 B | 33,690,303 B | **5,437,800 B (5.186 MiB)** | **1,085,587 B (1.035 MiB)** |
+
+The final release measurement includes the normal production icon subset,
+which grew by 112 bytes for the current icon set. Removing the extra full
+Material Icons asset alone saves 1,645,184 bytes. All 21 shared catalog font
+files appear once in the built assets, with no duplicate font hashes.
 
 Production JavaScript is minified. Complete original notices remain as 63
 distinct source texts representing all 86 origins; distribution contains one
@@ -161,14 +166,15 @@ mutations that recompute an aggregate hash after omitting a grant. All native
 WASM and corresponding MPL source hashes remain unchanged. The full icon font
 is preserved as a screenshot-test fixture.
 
-These are raw asset bytes, not APK/IPA/installer savings or measured network
-transfer. Lazy loading reduces startup work and web requests but does not remove
+These are asset bytes and the sum of per-file gzip-9 estimates, not
+APK/IPA/installer savings or measured network transfer. Lazy loading reduces startup work and web requests but does not remove
 installed asset bytes. The existing PS font set remains intact. Optional packs
 remain a future decision if package budgets justify the distribution and
 maintenance machinery.
 
 Exact measurements and validation details are in
-[the implementation evidence](evidence/document-font-implementation-20261113/).
+[the release measurement and method](evidence/document-font-implementation-20261113/release-web-validation.md)
+and [machine-readable receipt](evidence/document-font-implementation-20261113/release-footprint.json).
 
 ## Source ownership and validation
 
@@ -176,6 +182,8 @@ Core changes were first saved in the canonical Quds repository, on
 `feature/document-fonts-20261113`, at `afa8203`, `e241013`, then
 [`e82c997`](https://github.com/CrispStrobe/quds_office_suite/commit/e82c997b6df8746fe86fb83b9f416a89bb3e3b80).
 CrispCloud consumes that exact final commit through its guarded mirror sync.
+The canonical changes are reviewable in
+[Quds draft PR #7](https://github.com/CrispStrobe/quds_office_suite/pull/7).
 The independent legacy parser source boundary is preserved.
 
 Canonical verification covers 151 focused engine tests and 22 Flutter editor
@@ -185,11 +193,28 @@ alias ownership. It used the genuine workspace SDK with temporary validation
 dependency overrides for uncached standalone development packages; those
 overrides were removed and did not change shipping dependencies.
 
-The selected browser engines pass 75 Node/native/WASM/font contracts and nine
-retention mutation controls, with a reproducible production runtime build.
-The Dart host checks cover real loopback font routes as well as web URL and
-native lifecycle seams. App checks use the normal dependency graph and normal
-native hooks. Final app/build receipts are retained alongside this document.
+The app passes 45 font/PDF/preservation checks, 37 viewer/diagnostic/entry
+checks, and 17 installed-preview dialog checks. The Dart host has 23 distinct
+passing font-route/lifecycle checks. These include real loopback font routes,
+web asset URLs, real packaged font parsing, readable fallback when fonts fail,
+and Unicode diagnostics. Focused static analysis reports no issues.
+
+The selected browser engines pass 75 Node/native/WASM/font contracts. All 36
+provenance controls pass, including nine runtime-retention mutation checks.
+Tracked source verification covers 1,504 Office records and 158 selected
+runtime/source/notice records. App checks use the normal dependency graph and
+normal native hooks.
+
+The release web build passed at implementation commit
+[`ab3af2f`](https://github.com/CrispStrobe/CrispCloud/commit/ab3af2f813a97e57be351366ebe9573798177e4c),
+using `flutter build web --no-pub --release --no-wasm-dry-run`. This skips only
+Flutter's optional separate Dart-to-WASM dry-run probe; the selected document
+engines' real WASM resources remain present. All 47 selected built assets match
+their source hashes, source-only notice copies and MPL archives stay out of
+the app assets, and the normal production icon font is 77,552 bytes. The
+[app validation receipt](evidence/document-font-implementation-20261113/app-validation.json)
+and [build receipt](evidence/document-font-implementation-20261113/release-web-build-receipt.json)
+retain commands, source hashes, SDK versions and linked test logs.
 
 Local Chromium cannot start in this execution sandbox because its process
 singleton socket is denied. The updated CI smoke tests use real font bytes and
