@@ -34,6 +34,16 @@ def main():
     helper = (repository / "tool/web_acceptance.dart").as_uri()
     media_helper = (repository / "tool/media_web_acceptance.dart").as_uri()
     ink_helper = (repository / "tool/ink_web_acceptance.dart").as_uri()
+    symbol_helper = (repository / "tool/symbol_web_acceptance.dart").as_uri()
+    field_helper = (repository / "tool/field_metadata_web_acceptance.dart").as_uri()
+    field_cases = [
+        {"name": name, "base64": base64.b64encode(
+            (repository / "test/fixtures/word_native" / filename).read_bytes()).decode("ascii")}
+        for name, filename in (("external", "external-hyperlinks-native.doc"),
+                               ("reference", "reference-hyperlink-native.doc"))
+    ]
+    encoded_fields = base64.b64encode(json.dumps(field_cases).encode()).decode("ascii")
+    font_charset_helper = (repository / "tool/font_charset_web_acceptance.dart").as_uri()
     ink_cases = []
     for source in sorted((repository / "test/fixtures/ink_wpf").glob("*/*.isf")):
         snapshot = source.with_name(source.name.replace(".roundtrip.isf", ".second-reloaded.json")
@@ -62,6 +72,9 @@ def main():
             f"import {json.dumps(helper)};\n"
             f"import {json.dumps(media_helper)};\n"
             f"import {json.dumps(ink_helper)};\n"
+            f"import {json.dumps(symbol_helper)};\n"
+            f"import {json.dumps(field_helper)};\n"
+            f"import {json.dumps(font_charset_helper)};\n"
             "void main() {\n"
             f"  final result = verifyWebConversion(base64Decode('{encoded}'));\n"
             "  print('Legacy DOC JavaScript acceptance passed: ${jsonEncode(result)}');\n"
@@ -70,6 +83,10 @@ def main():
             "  print('Ink JavaScript acceptance passed: ${jsonEncode(ink)}');\n"
             f"  final inkHeaders = verifyInkWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_ink_headers}'))) as List, headerCases: true);\n"
             "  print('Ink header JavaScript acceptance passed: ${jsonEncode(inkHeaders)}');\n"
+            "  print('Symbol JavaScript acceptance passed: ${jsonEncode(verifySymbolWebAcceptance())}');\n"
+            f"  final fields = verifyFieldMetadataWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_fields}'))) as List);\n"
+            "  print('Field metadata JavaScript acceptance passed: ${jsonEncode(fields)}');\n"
+            "  print('Font charset JavaScript acceptance passed: ${jsonEncode(verifyFontCharsetWebAcceptance())}');\n"
             "}\n",
             encoding="utf-8",
         )

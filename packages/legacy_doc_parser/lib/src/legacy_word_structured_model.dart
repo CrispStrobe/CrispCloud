@@ -96,6 +96,7 @@ class LegacyWordDocument {
     this.defaultTabStopTwips,
     this.compatibility = const LegacyWordCompatibility.unspecified(),
     this.lineNumberStyle,
+    this.fontTable = const [],
   });
   final List<LegacyWordBlock> blocks;
   final List<LegacyWordSection> sections;
@@ -128,6 +129,41 @@ class LegacyWordDocument {
   /// Number style (MS-DOC StdfBase.sti 40). Null preserves its absence; an
   /// ordinary style with the same display name does not define this value.
   final LegacyWordCharacterStyle? lineNumberStyle;
+
+  /// Original FFN indices, primary names and charset bytes. Duplicate names
+  /// remain separate source definitions; they are not interchangeable indices.
+  final List<LegacyWordFontDefinition> fontTable;
+}
+
+/// The bounded font-selection metadata retained from one MS-DOC FFN record.
+/// Unknown charset bytes remain source evidence, not an inferred code page.
+class LegacyWordFontDefinition {
+  const LegacyWordFontDefinition({
+    required this.sourceIndex,
+    required this.name,
+    required this.charset,
+  });
+  final int sourceIndex;
+  final String name;
+  final int charset;
+
+  String get hexadecimalCharset {
+    if (sourceIndex < 0 ||
+        sourceIndex >= 4096 ||
+        charset < 0 ||
+        charset > 255 ||
+        name.length > 256 ||
+        name.runes.any(
+          (value) =>
+              value < 0x20 ||
+              (value >= 0xd800 && value <= 0xdfff) ||
+              value == 0xfffe ||
+              value == 0xffff,
+        )) {
+      throw const FormatException('Invalid Word font definition.');
+    }
+    return charset.toRadixString(16).padLeft(2, '0').toUpperCase();
+  }
 }
 
 enum LegacyWordStoryKind {
@@ -677,6 +713,50 @@ class LegacyWordShading {
   final String? backgroundHex;
 }
 
+/// A font-specific glyph designated by MS-DOC sprmCSymbol.
+///
+/// The character operand identifies a glyph in [fontName], not a portable
+/// Unicode character. A containing run uses U+FFFC for each occurrence so text
+/// positions remain one UTF-16 unit without fabricating an ordinary parenthesis.
+class LegacyWordSymbol {
+  const LegacyWordSymbol({
+    required this.fontName,
+    required this.characterCode,
+    this.fontTableIndex,
+  });
+  final String fontName;
+  final int characterCode;
+  final int? fontTableIndex;
+
+  String get hexadecimalCode {
+    if (characterCode < 0 ||
+        characterCode > 0xffff ||
+        fontName.isEmpty ||
+        fontName.length > 256 ||
+        (fontTableIndex != null &&
+            (fontTableIndex! < 0 || fontTableIndex! > 0xffff)) ||
+        fontName.runes.any(
+          (value) =>
+              value < 0x20 ||
+              (value >= 0xd800 && value <= 0xdfff) ||
+              value == 0xfffe ||
+              value == 0xffff,
+        )) {
+      throw const FormatException('Invalid Word symbol operand.');
+    }
+    return characterCode.toRadixString(16).padLeft(4, '0').toUpperCase();
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is LegacyWordSymbol &&
+      fontName == other.fontName &&
+      characterCode == other.characterCode &&
+      fontTableIndex == other.fontTableIndex;
+  @override
+  int get hashCode => Object.hash(fontName, characterCode, fontTableIndex);
+}
+
 class LegacyWordRun {
   const LegacyWordRun({
     required this.startCp,
@@ -691,6 +771,7 @@ class LegacyWordRun {
     this.deletionRevision,
     this.formattingRevision,
     this.formattingSaveId,
+    this.symbol,
   });
   final int startCp;
   final int endCp;
@@ -698,7 +779,9 @@ class LegacyWordRun {
   /// Paragraph/cell/section terminators are removed. Tabs remain '\t', soft
   /// line breaks are '\n', page breaks are '\f', and column breaks '\u000e'.
   /// Text marked as inserted or deleted is retained, never silently accepted.
+  /// A [symbol] run contains one U+FFFC per font-specific glyph occurrence.
   final String text;
+  final LegacyWordSymbol? symbol;
   final LegacyWordCharacterStyle style;
   final bool inserted;
   final bool deleted;

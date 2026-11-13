@@ -1,0 +1,103 @@
+{
+  "schema": "legacy-doc-parser/authored-symbol-control",
+  "version": 1,
+  "sourceFixture": "symbol-source-control.doc",
+  "sha256": "765f8c5f7a3d4eaf6366419c70a0d0b48b2848009ec9549b34c28b0de0dc549f",
+  "origin": "Independently authored binary CSymbol control derived from a retained LibreOffice26.8 native export of authored source OOXML. This is not a Word-authored corpus document.",
+  "authoredOoxml": {
+    "path": "test/fixtures/fidelity/semantic-contracts/symbol-glyphs.docx",
+    "sha256": "5fe4356b6c89cddd0d57c50497dd52d331b97cdc70f52a62e72384f8ab82a6d5"
+  },
+  "patchReceipt": {
+    "control": "symbol",
+    "origin": "Independent authored CSymbol/CFSpec control applied to retained native DOC export; not a Word-authored source.",
+    "inputSha256": "c16d1e2f9ac6c7d53a762526553a36feea466231068709f9bb00ea0c129fcdc1",
+    "outputSha256": "765f8c5f7a3d4eaf6366419c70a0d0b48b2848009ec9549b34c28b0de0dc549f",
+    "literalFc": 2068,
+    "beforeCodeUnit": 61537,
+    "afterCodeUnit": 40,
+    "chpxPageOffset": 2560,
+    "sourceFcBoundaries": [
+      2048,
+      2068,
+      2070,
+      2094,
+      2096,
+      2120,
+      2122,
+      2156
+    ],
+    "beforeProperties": [
+      80,
+      74,
+      4,
+      0,
+      94,
+      74,
+      4,
+      0,
+      79,
+      74,
+      1,
+      0,
+      81,
+      74,
+      1,
+      0
+    ],
+    "afterProperties": [
+      85,
+      8,
+      1,
+      9,
+      106,
+      1,
+      0,
+      97,
+      240
+    ],
+    "streams": [
+      {
+        "path": "\u0001CompObj",
+        "beforeSha256": "fadeb43f2f725c7d4b4d451fb0a33f220157ca22cd5eaea3737ef76f635426c7",
+        "afterSha256": "fadeb43f2f725c7d4b4d451fb0a33f220157ca22cd5eaea3737ef76f635426c7",
+        "bytes": 106
+      },
+      {
+        "path": "\u0005SummaryInformation",
+        "beforeSha256": "47cd783c91e1c0fc90d0b8784808dde8909a0a7c5bc39cec391c47f031b8e37e",
+        "afterSha256": "47cd783c91e1c0fc90d0b8784808dde8909a0a7c5bc39cec391c47f031b8e37e",
+        "bytes": 172
+      },
+      {
+        "path": "\u0005DocumentSummaryInformation",
+        "beforeSha256": "4bf70144f3e3f0b611e4aba0e93ceb37fd05a81a852137e1bf7b1f021a545c80",
+        "afterSha256": "4bf70144f3e3f0b611e4aba0e93ceb37fd05a81a852137e1bf7b1f021a545c80",
+        "bytes": 116
+      },
+      {
+        "path": "WordDocument",
+        "beforeSha256": "f85e8c776186fb881e9c62d9c4ada2d9d48f93d5767827f294d812adce7c043b",
+        "afterSha256": "3a82a14a5f72857bb2ea6bc8689c6f7e0969dcb9b7b9857092b00e27d74ecaed",
+        "bytes": 3645
+      },
+      {
+        "path": "\u0001Ole",
+        "beforeSha256": "c36c8a4b7dee703b9ce6e288032033b718feef01ca283cfaa4332a8334b2adf3",
+        "afterSha256": "c36c8a4b7dee703b9ce6e288032033b718feef01ca283cfaa4332a8334b2adf3",
+        "bytes": 20
+      },
+      {
+        "path": "1Table",
+        "beforeSha256": "8990c5e0ab8ec1531b7de96c1923a9a211785cf0b1636201fa6dea5d290b968e",
+        "afterSha256": "8990c5e0ab8ec1531b7de96c1923a9a211785cf0b1636201fa6dea5d290b968e",
+        "bytes": 1927
+      }
+    ]
+  },
+  "qualification": "One symbol-designation control. Ordinary PUA/font runs are intentionally unchanged. Later CFSpec=false is separately unsupported and retained in evidence.",
+  "references": [
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/7022285b-9621-42e9-ad4d-4e02c115ef18",
+    "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/d950b816-1794-4adf-bc44-1f1be8027f9e"
+  ]
+}

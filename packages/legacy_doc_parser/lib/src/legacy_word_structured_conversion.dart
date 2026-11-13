@@ -178,7 +178,8 @@ class _StructuredWordWriter {
         'styles.xml',
       );
     }
-    // Style serialization can add preservation counts and fallback evidence.
+    _writeFontTable();
+    // Style/font serialization can add counts and fallback evidence.
     // Serialize that evidence only once every native style has been emitted.
     _writeEvidence();
     _summarizeLimitations();
@@ -346,6 +347,21 @@ class _StructuredWordWriter {
   }
 
   void _writeRunText(LegacyWordRun run) {
+    final symbol = run.symbol;
+    if (symbol != null) {
+      final code = symbol.hexadecimalCode;
+      if (run.text.isEmpty ||
+          run.text.codeUnits.any((value) => value != 0xfffc)) {
+        throw const FormatException('Invalid Word symbol run text.');
+      }
+      for (var i = 0; i < run.text.length; i++) {
+        _xml.add('<w:sym w:font="');
+        _xml.text(symbol.fontName, attribute: true);
+        _xml.add('" w:char="$code"/>');
+        _count('symbols');
+      }
+      return;
+    }
     var start = 0;
     final text = run.text;
     for (var i = 0; i <= text.length; i++) {

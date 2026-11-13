@@ -1,0 +1,114 @@
+{
+  "bothCommandsObserved": {
+    "capturedPortableInputs": 1260,
+    "corpusFilesPerRun": 538,
+    "corpusRuns": 2,
+    "corruptionControlsRejected": 44,
+    "dartTests": 1028,
+    "files": 1546,
+    "negativeControlsRejected": 2,
+    "originalRejectionTrackedGitInputsVerified": 948,
+    "portableStages": 8,
+    "pythonControls": 162,
+    "retainedSchemaSources": 382,
+    "schemaErrors": 0,
+    "schemaOutputs": 254,
+    "schemaStages": 13,
+    "trackedGitInputsVerified": 1258,
+    "verified": true
+  },
+  "decision": "No blocking findings in scoped claims, source bindings or evidence verification.",
+  "executedVerification": [
+    {
+      "command": [
+        "python3",
+        "doc/evidence/continuation-c5ff75e7/seal_validation_evidence.py",
+        "--repository",
+        ".",
+        "--self-test"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-final-evidence",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "python3",
+        "-O",
+        "doc/evidence/continuation-c5ff75e7/seal_validation_evidence.py",
+        "--repository",
+        ".",
+        "--self-test"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/parser-final-evidence",
+      "exitCode": 0
+    }
+  ],
+  "files": {
+    "README.md": {
+      "bytes": 7487,
+      "sha256": "9aca200b4b0d933a929df0c00a452f96ae0335bfe66b39e2bcca33df26ab77dd"
+    },
+    "bundle-files.json": {
+      "bytes": 1851,
+      "sha256": "b9674949042c800b9ac85a9433e617459abf14868d91886f250e8d5b46da21ce"
+    },
+    "hosted-ci.json": {
+      "bytes": 20723,
+      "sha256": "9e8d76ca246293bd872a9ce40361ca9d86cd3cb6163ad13091e865f6f66d72e7"
+    },
+    "hosted-logs.manifest.json": {
+      "bytes": 845,
+      "sha256": "e91917aec502d27e146cdc87c4e8832d26359ad14ed7b3a28706961de25addae"
+    },
+    "hosted-logs.tar.xz": {
+      "bytes": 42956,
+      "sha256": "633642d04bc392ae7bce237b5e6ac01b890260a517b42712a460b03fc6a30146"
+    },
+    "hosted-verification.json": {
+      "bytes": 826,
+      "sha256": "de0dc40ab36a5e0a17f6d05aae06fb080f94c46d50c2dadebd74c9edc4b0aa3f"
+    },
+    "seal_validation_evidence.py": {
+      "bytes": 51255,
+      "sha256": "59a2e2778ff63590a23c468f1e8ddafd89c5982f76f1a419282293b6d266eb0d"
+    },
+    "validation-artifacts.manifest.json": {
+      "bytes": 297917,
+      "sha256": "33d0adc1402c78529d8ade57e9da6fc4011189171cc17b39daab9bd9fa534e39"
+    },
+    "validation-artifacts.tar.xz": {
+      "bytes": 1474284,
+      "sha256": "3c7180634c9d8c283b4feae748b522b3ae4fa000264dd4d5df6347c6b38ea9c5"
+    },
+    "verification.json": {
+      "bytes": 640,
+      "sha256": "b6a18e0d94f8395dd1a9ac52f1a0dca65a97639474d080b4d2b4a5bef5f709fc"
+    },
+    "verify_bundle.py": {
+      "bytes": 1578,
+      "sha256": "95cc862f578f5458ede73847f78d0b792f96d1ff86a130462a97451a015b5ac9"
+    },
+    "verify_hosted_ci.py": {
+      "bytes": 7533,
+      "sha256": "b68523959ae081290ab88fdb6a9953edec238f75c31af57bea707edad00dfe74"
+    }
+  },
+  "limitations": [
+    "Portable/schema acceptance does not certify Microsoft Word rendering, complete editing, native ink emission or full layout exactness.",
+    "Final native Word14 raster findings are recorded in separate native evidence and were not changed by this review."
+  ],
+  "parserCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+  "parserTree": "25bd05c12fa2272a32ec2aaba2cc0117be5bed96",
+  "publishedEvidenceCommit": "aa3c00aa3c5da683cb94484cbac795e172ba7525",
+  "reviewedBindings": [
+    "All final tracked source hashes bound to pinned Git blobs; earlier failed-preflight inventory independently bound to its own commit.",
+    "Exact eight portable stage and13 schema stage commands, source snapshots, launch arguments/cwd/environment and log hashes.",
+    "Actual four JavaScript result records, including32 header cases and explicit specifiedMetricDifferences=1.",
+    "Every SDK output/input hash, both complete538-file corpora, validator self-tests and malformed controls.",
+    "Both independently reviewed decoder checkpoints, exact probe scripts/source/fixture hashes and source-specific result attribution.",
+    "16 nonempty ink schema controls retain exact payloads and decoded counts while explicitly declaring nativeInkEmitted=false.",
+    "Original format and temporary-directory failures remain separate from successful final acceptance.",
+    "Verifier uses explicit exceptions; all44 semantic controls still reject under optimized Python."
+  ],
+  "scope": "Independent read-only portable/schema evidence review; no runtime/native gates rerun."
+}

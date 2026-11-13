@@ -1,0 +1,68 @@
+{
+  "schema": "crisp-docx-independent-audit-v1",
+  "sourceCommit": "ddf7830d8d92e6b59b10874d144a59f163a256e1",
+  "recordCount": 373,
+  "rawRecordBytes": 2931690,
+  "files": {
+    "LICENSE-crisp-docx.txt": {
+      "bytes": 35198,
+      "sha256": "7c010a74febf85d45919e1cde78e8e86dccad96359e86c3e73b578013e506369"
+    },
+    "README.md": {
+      "bytes": 16437,
+      "sha256": "443feaeb600f05cf9f28722e7d5ce3734f8250bfd8607a409c10c9698cfa3253"
+    },
+    "make_controls.py": {
+      "bytes": 8112,
+      "sha256": "a27bf24d14e84f01c64a84b1f6d5d34b5f1cf057e4948cd1c8654a979376bddb"
+    },
+    "ooxml_projection.py": {
+      "bytes": 7753,
+      "sha256": "aed01db582c16e1766664a73e211fa7a618a673318392829f984f8b87be08ae3"
+    },
+    "oracle_adapter.rs": {
+      "bytes": 3600,
+      "sha256": "84e591e124ccb1755dafd001a3c89b385d5d4333b9a30852fae4ed441cbc8140"
+    },
+    "prepare_rust.py": {
+      "bytes": 2048,
+      "sha256": "5d32aa03e54ff5ae7b4a3a0c30be77a7896624791e3073de144f62b1867a7eb4"
+    },
+    "record-manifest.json": {
+      "bytes": 55193,
+      "sha256": "11e643d407bd3594646feddd3e9bef1e2d5e5769d8d3ffa37bd914cf144bf1cc"
+    },
+    "records.tar.xz": {
+      "bytes": 201568,
+      "sha256": "98bbb9d8974f12a97f7714969e845dae1107bc162f17d22cd36cba70466850cb"
+    },
+    "run_command.py": {
+      "bytes": 1490,
+      "sha256": "eec9ba4d4ca3b809c3f5701d7b561b5c47b7e0382695916609414b6b95a59f83"
+    },
+    "run_probes.py": {
+      "bytes": 7049,
+      "sha256": "f4a99b0d6d30e3cfd3cc9ba77ddfbf3382f7b7b62f6c27374966192adb85dc12"
+    },
+    "run_retained_pairs.py": {
+      "bytes": 4842,
+      "sha256": "b149da1d904bcdf827de3c32d3970f14f96f1c810ccc7b63fb4bb83867090828"
+    },
+    "seal_audit.py": {
+      "bytes": 1996,
+      "sha256": "c2cdbad2c4bca49ddb2fc12bab311f36d285d76f39e676467c878f66a44296c8"
+    },
+    "test_verifier.py": {
+      "bytes": 4460,
+      "sha256": "19095829773979cc34cccbdaa8663f4d05d1f620c0629df9ab8cf55715734746"
+    },
+    "verification-followup.json": {
+      "bytes": 5705,
+      "sha256": "31f8f982b421f0bbc7d8e47d2d2f9cadffd2d31871da568f0795fff320219c49"
+    },
+    "verify.py": {
+      "bytes": 20797,
+      "sha256": "a0d6871a559952a043d96d2115af8c120249fa5c5dd2050e3532b4bdc3c9aa85"
+    }
+  }
+}

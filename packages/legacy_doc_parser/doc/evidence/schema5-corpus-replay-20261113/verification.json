@@ -1,0 +1,30 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "verify.py",
+        "--workspace",
+        "/workspace/scratch/c1ca2a1344e9",
+        "--self-test"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/schema5-corpus-replay-20261113",
+      "exitCode": 0,
+      "stdout": "{\n  \"verifiedSnapshots\": 62,\n  \"directPackageReplays\": 62,\n  \"cases\": 24,\n  \"semanticCorruptionControls\": [\n    \"false inline equality\",\n    \"changed note anchor\",\n    \"wrong snapshot identity\",\n    \"invented symbol coverage\"\n  ],\n  \"scope\": \"Read-only retained XML observations; no converter or native renderer execution.\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-O",
+        "verify.py",
+        "--self-test"
+      ],
+      "cwd": "/workspace/scratch/c1ca2a1344e9/schema5-corpus-replay-20261113",
+      "exitCode": 0,
+      "stdout": "{\n  \"verifiedSnapshots\": 62,\n  \"directPackageReplays\": 0,\n  \"cases\": 24,\n  \"semanticCorruptionControls\": [\n    \"false inline equality\",\n    \"changed note anchor\",\n    \"wrong snapshot identity\",\n    \"invented symbol coverage\"\n  ],\n  \"scope\": \"Read-only retained XML observations; no converter or native renderer execution.\"\n}\n",
+      "stderr": ""
+    }
+  ],
+  "scope": "Retained XML and receipt verification only; no converters or native runs."
+}

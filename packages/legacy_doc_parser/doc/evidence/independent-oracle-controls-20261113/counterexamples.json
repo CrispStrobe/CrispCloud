@@ -1,0 +1,64 @@
+{
+  "schema": "legacy-doc-parser/independent-oracle-counterexamples",
+  "version": 1,
+  "beforeRepositoryHead": "43027f9ddb626a4f8fccbef1c41c7f2ea9fccf47",
+  "beforeOracleSha256": "832d67e6d7b86f4ba760c2bd3ea70461fc443458baa2c879ff30e20413b67af4",
+  "beforeStructureSha256": "4ecd24dec52bc7718b2eaff47e9645b3caa6e16d029c0ce8e495c1559c5d788e",
+  "scope": "Four independently authored OOXML mutations; no binary parser or native renderer used to define expected differences. Original baseline returns no differences for all four.",
+  "cases": [
+    {
+      "case": "symbol-glyphs",
+      "mutation": [
+        "w:char=\"F061\"",
+        "w:char=\"F062\""
+      ],
+      "differenceProperties": [],
+      "sourceSha256": "5fe4356b6c89cddd0d57c50497dd52d331b97cdc70f52a62e72384f8ab82a6d5",
+      "mutatedSha256": "fcb39bf8447d32e0d5e854702af84022318e3ddaee5dfca8125cb303a8e8f661",
+      "afterDifferenceProperties": [
+        "inlineContent"
+      ]
+    },
+    {
+      "case": "locked-fields",
+      "mutation": [
+        " REF Target_A \\h ",
+        " REF WrongTarget \\h "
+      ],
+      "differenceProperties": [],
+      "sourceSha256": "e55d0ec116f75215d80069b8297d4d84347034aafbb90ca3f46e51e8efa78b4a",
+      "mutatedSha256": "7c192d57f1293bce75084f413e710003e9a554dd646169f9fbec97499c32a2a5",
+      "afterDifferenceProperties": [
+        "inlineContent"
+      ]
+    },
+    {
+      "case": "note-joins",
+      "mutation": [
+        "w:id=\"19\"",
+        "w:id=\"7\""
+      ],
+      "differenceProperties": [],
+      "sourceSha256": "add41f4c94e0329302c63b4f6839640a93b14651895995a784551452c2288914",
+      "mutatedSha256": "77f287cb2ac07cf7f0e463e0e060e4e91860b7fd1d3f642c9aaa3b729673c9e3",
+      "afterDifferenceProperties": [
+        "inlineContent"
+      ]
+    },
+    {
+      "case": "character-controls",
+      "mutation": [
+        "<w:noBreakHyphen/>",
+        ""
+      ],
+      "differenceProperties": [],
+      "sourceSha256": "cb39d584c1c8fb11f934ea0e6d776592897c47934509904088c8d46c1dd5d455",
+      "mutatedSha256": "409ba47e863890441736ac7fc137f114689d614f06c868effc3a5ff0f8bb7c0a",
+      "afterDifferenceProperties": [
+        "stories",
+        "paragraphs",
+        "structure"
+      ]
+    }
+  ]
+}

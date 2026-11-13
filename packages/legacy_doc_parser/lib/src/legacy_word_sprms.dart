@@ -278,6 +278,12 @@ void _applyCharacter(
       continue;
     }
     switch (operation.code) {
+      case 0x6a09:
+        // CSymbol designates the character as a symbol and sets fSpec.
+        // A subsequent CFSpec operation can explicitly override that flag.
+        output['symbolFontIndex'] = data.u16(0);
+        output['symbolCharacterCode'] = data.u16(2);
+        output['special'] = true;
       case 0x2a3e:
         final kind = data.u8(0);
         final name = _underlineStyles[kind];

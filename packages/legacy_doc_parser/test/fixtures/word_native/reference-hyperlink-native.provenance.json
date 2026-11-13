@@ -1,0 +1,25 @@
+{
+  "source": "independently authored locked-fields OOXML exported by installed LibreOffice; exact retained binary",
+  "fixture": "reference-hyperlink-native.doc",
+  "bytes": 9728,
+  "sha256": "20b4e506f40b733cd7d9467ec2e6f2844e0efe319a61e8c4822e371facee0292",
+  "authoredSourceSha256": "e55d0ec116f75215d80069b8297d4d84347034aafbb90ca3f46e51e8efa78b4a",
+  "producer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "sourceBuilder": "tool/fidelity/independent_semantic_cases.py (independent oracle probe branch)",
+  "referenceField": {
+    "startCp": 14,
+    "separatorCp": 33,
+    "endCp": 45,
+    "markerCp": 32,
+    "literalInstruction": " REF Target_A \\h \u0001",
+    "cachedResult": "CACHED-REF",
+    "dataOffset": 0,
+    "dataLength": 117,
+    "declaredHfdEnd": 115,
+    "extraZeroWord": true,
+    "hfdSha256": "b64d36a59640098cec205b3692277891b2215129a94a692d6606aaff1ea9fb00"
+  },
+  "producerCode": "https://github.com/LibreOffice/core/blob/2c87e51eeaa2b413ff4ae097b2705eea1995d8e5/sw/source/filter/ww8/ww8atr.cxx",
+  "purpose": "Bounded reference-only metadata padding recovery; preserves source cached results and raw bytes",
+  "sourceHistory": "Authored DOCX, native binary, prior parser/native DOCX and source CHPX/HFD inspections retained in targeted evidence."
+}

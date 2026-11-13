@@ -1,6 +1,6 @@
 # Fidelity corpus and independent oracles
 
-`tool/fidelity/corpus.json` pins 22 source cases, including ten authored Office
+`tool/fidelity/corpus.json` pins 24 source cases, including ten authored Office
 XML fixtures from the MIT Quds fork at
 `ca9853b5b08784beac50df5680176cb4e5b3cb25`, the package's existing native DOC,
 independent authored controls and public Word/Apache POI binaries.
@@ -202,7 +202,7 @@ Primary references:
 
 ## Recovered source goldens and RGB measurements
 
-The reconciled corpus contains 22 pinned source cases. `goldens.py` verifies
+The reconciled corpus contains 24 pinned source cases. `goldens.py` verifies
 two independent source-DOC page records and reviewable PNGs. It has no update
 mode. The compact and extended linked-textbox documents have separate paths
 and hashes; the extended document owns the recovered linked-box page golden.
@@ -219,3 +219,14 @@ The stronger recovered package reader selects one understood
 resolves style/numbering references, and records section-to-story assignments.
 These checks complement the existing structural graph and revision text
 projections. Their mutation tests remain independent of the Dart converter.
+
+## Additional reader and conversion paths
+
+The [conversion path matrix](conversion-path-matrix.md) compares the two DOC
+importers on identical source and regenerated binary bytes, includes an
+OOXML-only native resave, and retains independent Pandoc AST/Markdown and
+Antiword text observations. It preserves reader failures and lossy projection
+boundaries instead of treating matching Markdown as full document equality.
+The [typed inline oracle controls](independent-semantic-oracles.md) cover glyphs,
+field operands and boundaries, bookmark ranges and note/hyperlink bindings that
+equal visible text or element counts previously missed.

@@ -1,0 +1,71 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "9aca200b4b0d933a929df0c00a452f96ae0335bfe66b39e2bcca33df26ab77dd",
+      "size": 7487
+    },
+    {
+      "path": "hosted-ci.json",
+      "sha256": "9e8d76ca246293bd872a9ce40361ca9d86cd3cb6163ad13091e865f6f66d72e7",
+      "size": 20723
+    },
+    {
+      "path": "hosted-logs.manifest.json",
+      "sha256": "e91917aec502d27e146cdc87c4e8832d26359ad14ed7b3a28706961de25addae",
+      "size": 845
+    },
+    {
+      "path": "hosted-logs.tar.xz",
+      "sha256": "633642d04bc392ae7bce237b5e6ac01b890260a517b42712a460b03fc6a30146",
+      "size": 42956
+    },
+    {
+      "path": "hosted-verification.json",
+      "sha256": "de0dc40ab36a5e0a17f6d05aae06fb080f94c46d50c2dadebd74c9edc4b0aa3f",
+      "size": 826
+    },
+    {
+      "path": "independent-review.json",
+      "sha256": "3d2308dc55e3bbbe603ae7812955ec0947dc7654a8a5723149402cb19a895fe7",
+      "size": 4523
+    },
+    {
+      "path": "independent-reviewed-bundle-files.json",
+      "sha256": "b9674949042c800b9ac85a9433e617459abf14868d91886f250e8d5b46da21ce",
+      "size": 1851
+    },
+    {
+      "path": "seal_validation_evidence.py",
+      "sha256": "59a2e2778ff63590a23c468f1e8ddafd89c5982f76f1a419282293b6d266eb0d",
+      "size": 51255
+    },
+    {
+      "path": "validation-artifacts.manifest.json",
+      "sha256": "33d0adc1402c78529d8ade57e9da6fc4011189171cc17b39daab9bd9fa534e39",
+      "size": 297917
+    },
+    {
+      "path": "validation-artifacts.tar.xz",
+      "sha256": "3c7180634c9d8c283b4feae748b522b3ae4fa000264dd4d5df6347c6b38ea9c5",
+      "size": 1474284
+    },
+    {
+      "path": "verification.json",
+      "sha256": "b6a18e0d94f8395dd1a9ac52f1a0dca65a97639474d080b4d2b4a5bef5f709fc",
+      "size": 640
+    },
+    {
+      "path": "verify_bundle.py",
+      "sha256": "95cc862f578f5458ede73847f78d0b792f96d1ff86a130462a97451a015b5ac9",
+      "size": 1578
+    },
+    {
+      "path": "verify_hosted_ci.py",
+      "sha256": "b68523959ae081290ab88fdb6a9953edec238f75c31af57bea707edad00dfe74",
+      "size": 7533
+    }
+  ],
+  "sourceCommit": "c5ff75e76163d9abbdd44a9f2a7c5ad210929289",
+  "sourceTree": "25bd05c12fa2272a32ec2aaba2cc0117be5bed96"
+}

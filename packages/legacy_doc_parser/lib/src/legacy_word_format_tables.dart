@@ -206,7 +206,15 @@ extension _WordFormattingTables on _StructuredWordParser {
         throw const FormatException('Unterminated Word font name.');
       }
       _validateUnicode(units);
-      fonts.add(String.fromCharCodes(units));
+      final name = String.fromCharCodes(units);
+      fonts.add(name);
+      fontTable.add(
+        LegacyWordFontDefinition(
+          sourceIndex: index,
+          name: name,
+          charset: input.u8(position + 4),
+        ),
+      );
       position += size + extra;
     }
     if (position != input.length) {

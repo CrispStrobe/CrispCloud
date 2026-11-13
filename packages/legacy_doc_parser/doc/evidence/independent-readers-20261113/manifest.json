@@ -1,0 +1,2409 @@
+{
+  "schema": 1,
+  "archiveBytes": 436856,
+  "archiveSha256": "0d1384302eadb12cddee5f84c629df05f6800959b40b667d8d0fc0caf5b01a49",
+  "fileCount": 480,
+  "rawBytes": 2567323,
+  "files": [
+    {
+      "path": "__pycache__/run_independent_readers.cpython-312.pyc",
+      "bytes": 13052,
+      "sha256": "a3f2da0df8a02f81fdb4d9f2e0571ec050f96fde1056b40c5482fc2fe0e9f457"
+    },
+    {
+      "path": "antiword-build.json",
+      "bytes": 948,
+      "sha256": "18243cc59cc6352325334cfcba640fb736e459cfc5ae934c00f111f9b6513787"
+    },
+    {
+      "path": "antiword-build.stderr.log",
+      "bytes": 10905,
+      "sha256": "bd2cd98c808025253419af5f5fd7b72819ccb55f934b81d17e9ca80dc2df88f2"
+    },
+    {
+      "path": "antiword-build.stdout.log",
+      "bytes": 8796,
+      "sha256": "1ca32862bcef7de5e622e60aab492cce9b506a2a38f4b99ab66b8f5f5be69a3b"
+    },
+    {
+      "path": "antiword-help.json",
+      "bytes": 415,
+      "sha256": "ef302f6c5aca88340c32dbcd1fa7c89ea868044160d8717a0a27bc1018ba55b0"
+    },
+    {
+      "path": "antiword-help.stderr.log",
+      "bytes": 727,
+      "sha256": "d446f5367689178baef0a644db73909ebc7fccd843349f856d55700104f53d4a"
+    },
+    {
+      "path": "antiword-help.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "antiword-source.json",
+      "bytes": 42072,
+      "sha256": "c1aa26a19c8ce7381ccd778e454f350007f4bb4c5a06eff39eb4df6fbc567258"
+    },
+    {
+      "path": "antiword-source/DOS-only/00README.TXT",
+      "bytes": 4349,
+      "sha256": "8af558ba3c04720d0247e477747bbafefb6a00afd5896394932bbf29eb48190d"
+    },
+    {
+      "path": "antiword-source/DOS-only/dos.c",
+      "bytes": 1278,
+      "sha256": "93945bafdc81b7b97167f6af5c6ded0d757f9636b68dbca071b0038b2cb741cb"
+    },
+    {
+      "path": "antiword-source/DOS-only/getopt.c",
+      "bytes": 4232,
+      "sha256": "8b84ad94b9160d770afd2c5b71433ccad9708667910d86a44bd892102f7ef071"
+    },
+    {
+      "path": "antiword-source/Docs/COPYING",
+      "bytes": 17985,
+      "sha256": "3c6f6f8e9eda89b42eda68cf893681db1eeb03e951af8677782501ac95c9b556"
+    },
+    {
+      "path": "antiword-source/Docs/ChangeLog",
+      "bytes": 9242,
+      "sha256": "866e9e83f1ca86d63a87ae6d41aaebc2f6e051fc591fbffc88ccd9f605dbcbe0"
+    },
+    {
+      "path": "antiword-source/Docs/Emacs",
+      "bytes": 4368,
+      "sha256": "f6ac2441fe69a258ab2d3bba7f822a1f3228e8e4cd9b8dfb4ad92bcbce536c68"
+    },
+    {
+      "path": "antiword-source/Docs/Exmh",
+      "bytes": 463,
+      "sha256": "005ecc96537999a249a59d54d3155f0889a7eeb255448d42269e837f11a5a119"
+    },
+    {
+      "path": "antiword-source/Docs/FAQ",
+      "bytes": 5449,
+      "sha256": "19740145fed9bd6e77cc9fe3e330f2b9a44c008449e0d4d786ad47cdd8f12566"
+    },
+    {
+      "path": "antiword-source/Docs/History",
+      "bytes": 1539,
+      "sha256": "11e0e95f6d94581ee084f9efedb46c6d575af42f5063bada7f8e76f62a016b79"
+    },
+    {
+      "path": "antiword-source/Docs/Mozilla",
+      "bytes": 1983,
+      "sha256": "073014cec8c0926519e9b60506a8dda71a0ebe9d2a77311ae2614c0e4db2d0d8"
+    },
+    {
+      "path": "antiword-source/Docs/Mutt",
+      "bytes": 717,
+      "sha256": "43bdfab85477f03429c14119c911fb6177d8937130e657973e729ed88c755206"
+    },
+    {
+      "path": "antiword-source/Docs/Netscape",
+      "bytes": 4313,
+      "sha256": "1f6402224419d735084af236fa002dbe3200b5593fc7914ddea6505f9bdaa448"
+    },
+    {
+      "path": "antiword-source/Docs/QandA",
+      "bytes": 2909,
+      "sha256": "78cbcc2a6e41c147f1250847414731045824ed1bf5c45c9a54d90c1a7e67e4d0"
+    },
+    {
+      "path": "antiword-source/Docs/ReadMe",
+      "bytes": 3603,
+      "sha256": "422179d3b5efdd40fbba36cc529946675972e146c0dc493ea68fe18692f7d6e3"
+    },
+    {
+      "path": "antiword-source/Docs/antiword.1",
+      "bytes": 5000,
+      "sha256": "d27bc17e81d9b393ebc0fd657608e8bbaff441f5cfc7ef862a5ebefe745287d0"
+    },
+    {
+      "path": "antiword-source/Docs/antiword.man",
+      "bytes": 5911,
+      "sha256": "15a2bbe221090e20e5292af5cb9c6bd9b43b5d27138737131af87908fb1a77b9"
+    },
+    {
+      "path": "antiword-source/Docs/antiword.old.php",
+      "bytes": 926,
+      "sha256": "16fe02603e83a80eddeb096f67e75a8cbbf46e1928df6e56346f95c755638069"
+    },
+    {
+      "path": "antiword-source/Docs/antiword.php",
+      "bytes": 4618,
+      "sha256": "e9f42f6a286530f657ea21eddb39a58968a802ec4aa33b53ff7cb79be54ed0fe"
+    },
+    {
+      "path": "antiword-source/Docs/testdoc.doc",
+      "bytes": 23552,
+      "sha256": "4ea5fe94a8ff9d8cd1e21a5e233efb681f2026de48ab1ac2cbaabdb953ca25ac"
+    },
+    {
+      "path": "antiword-source/LICENSE",
+      "bytes": 18092,
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    {
+      "path": "antiword-source/Makefile",
+      "bytes": 14,
+      "sha256": "27ad67b821dd6235891c0aadb0ba987bb6e94b8f9a26cc88d6ab2c449dbc1a59"
+    },
+    {
+      "path": "antiword-source/Makefile.HP-UX",
+      "bytes": 1095,
+      "sha256": "f5b4187c02d5261a74d77d6f9eaba31c845332d3ec1cc21d0cfdfc6657fe2615"
+    },
+    {
+      "path": "antiword-source/Makefile.IRIX",
+      "bytes": 1131,
+      "sha256": "a2328b16b7bb391bb4950547b16cebad8e3737f9be1419bdc615be2f9e3c18c8"
+    },
+    {
+      "path": "antiword-source/Makefile.Linux",
+      "bytes": 2697,
+      "sha256": "0d6fd32ebabf96b919c18765ab505cd9e9cd7f6a301d74f88321e2fdedb94878"
+    },
+    {
+      "path": "antiword-source/Makefile.Linux.Debug",
+      "bytes": 2599,
+      "sha256": "e9f3fd9e1f0853b792b183aed73b00feaee6b06102ec0d753c18d67658d64078"
+    },
+    {
+      "path": "antiword-source/Makefile.RiscOS",
+      "bytes": 1217,
+      "sha256": "0c85d513e4cb1ab940a2176d3cf16ae1582e962e9b79b8fa12b3d4cbe3dcb11b"
+    },
+    {
+      "path": "antiword-source/Makefile.Solaris",
+      "bytes": 1998,
+      "sha256": "0e83e1351d314a13ba7b4d6ba216ff4c1668258400df85ede5ac99edd17f4a03"
+    },
+    {
+      "path": "antiword-source/Makefile.Solaris.gcc",
+      "bytes": 2083,
+      "sha256": "01767ae437a2f2d87a3780f810ce382d4b181b1a590f2f8cd3cc2fdd9121fa37"
+    },
+    {
+      "path": "antiword-source/Makefile.VMS",
+      "bytes": 2651,
+      "sha256": "4d2dcdd2d0b03501a5d4fd6c1fcaa60af4cf3b84ec304357568148c2e9a2f71c"
+    },
+    {
+      "path": "antiword-source/Makefile.cygming",
+      "bytes": 2990,
+      "sha256": "694e6220b0eb44a9f8ee5e6e9da1cf89db308286181066d0106d6ca1420b5346"
+    },
+    {
+      "path": "antiword-source/Makefile.cygwin",
+      "bytes": 2825,
+      "sha256": "c40023a4761fa27153a7d8d5a029caef51f304566bd50f87727df1ec6d42336e"
+    },
+    {
+      "path": "antiword-source/Makefile.dj",
+      "bytes": 1043,
+      "sha256": "74ac285be46770b6ca152dc210a271aa686f525ee6788b83a8be22e654a8a5b4"
+    },
+    {
+      "path": "antiword-source/Makefile.dos",
+      "bytes": 1522,
+      "sha256": "ea1b02da3f732027bc2cf0b48dbfc8605b0529be46352deabdcfd04be5086bb5"
+    },
+    {
+      "path": "antiword-source/Makefile.gprof",
+      "bytes": 1458,
+      "sha256": "d8c18011745190c0cda8bdf02ba83d1d848a266c5e0aee73cc2a3b26beeea962"
+    },
+    {
+      "path": "antiword-source/Makefile.lcc-win32",
+      "bytes": 12136,
+      "sha256": "e9b747a07f725dce8788268ab35ddd78fe3ce82c90c269fb4b6863191cc6c173"
+    },
+    {
+      "path": "antiword-source/Makefile.plan9",
+      "bytes": 6,
+      "sha256": "bcd54cf4db808d8d7b456048035f949eb1a68004015a8edd6c27d997702f8d4a"
+    },
+    {
+      "path": "antiword-source/Makefile.vc60",
+      "bytes": 1385,
+      "sha256": "74093bc09af5e574edc0748404c1f3d31732ff7347233be1f7cc0b4372f834b1"
+    },
+    {
+      "path": "antiword-source/Makefile32.RiscOS",
+      "bytes": 1505,
+      "sha256": "72096517949c106c8a7ad715086d6927fc04b4db8c9a96f557ed6b5bb44f9188"
+    },
+    {
+      "path": "antiword-source/NW-only/README.TXT",
+      "bytes": 499,
+      "sha256": "0564569131eaaf2cfa19c02ac8b257b092df3737af3c83ada9c42111d42d789c"
+    },
+    {
+      "path": "antiword-source/NW-only/nw_os.h",
+      "bytes": 952,
+      "sha256": "5440db338727a705eb8019294fd66189d1b44130a90ad1b49e259c3542a614db"
+    },
+    {
+      "path": "antiword-source/README.md",
+      "bytes": 1528,
+      "sha256": "a86951c518bf17f6de247c8b45d57a353d511dce081cf1d3c6733bc54812fbff"
+    },
+    {
+      "path": "antiword-source/Resources/8859-1.txt",
+      "bytes": 10592,
+      "sha256": "884eb5ae5aa74867c7b2c93a40b9460920e26731dfafa58f783e9d568fc79055"
+    },
+    {
+      "path": "antiword-source/Resources/8859-10.txt",
+      "bytes": 10989,
+      "sha256": "13339ad725052723ff6aac91ceef1a120a3231c4fac647e0b63d5565efdd2a53"
+    },
+    {
+      "path": "antiword-source/Resources/8859-11.txt",
+      "bytes": 9732,
+      "sha256": "9063aa1ee6c9b54b7e95661f41b3ef7f1c9beec99158c98b04da43325be5a4df"
+    },
+    {
+      "path": "antiword-source/Resources/8859-13.txt",
+      "bytes": 10588,
+      "sha256": "6e07d8120d8225f0556c9c7f477c7d4392141290c3ae7f6a81c3926c34c0e52c"
+    },
+    {
+      "path": "antiword-source/Resources/8859-14.txt",
+      "bytes": 11003,
+      "sha256": "79143ee49ab465f2317b9d3ade16f07ec6cf6314506426fa5b366a6e742fc15a"
+    },
+    {
+      "path": "antiword-source/Resources/8859-15.txt",
+      "bytes": 10583,
+      "sha256": "0e8c5aa710fc1e8537e84dcd86704a4a4ebb289791121acea82ac5474b1bc123"
+    },
+    {
+      "path": "antiword-source/Resources/8859-16.txt",
+      "bytes": 10868,
+      "sha256": "c2ed919e5a107c07b13d702320eb532c83360452bb0d3fbf09fb1d920343ead9"
+    },
+    {
+      "path": "antiword-source/Resources/8859-2.txt",
+      "bytes": 10816,
+      "sha256": "5c81eca66455c5b36853c8a66495f58636643f6ddb261083d877a7f2a48287b7"
+    },
+    {
+      "path": "antiword-source/Resources/8859-3.txt",
+      "bytes": 10498,
+      "sha256": "a7906a91ec3a4ac7f10ec7e25966d36d98fb720f401d595de5f9f06ab1f2b2a7"
+    },
+    {
+      "path": "antiword-source/Resources/8859-4.txt",
+      "bytes": 10792,
+      "sha256": "5bb8f1fa3fdf6df88ee3d1a17f58bdf5e336f6b665d58ea04bf7bd7bdbf259dc"
+    },
+    {
+      "path": "antiword-source/Resources/8859-5.txt",
+      "bytes": 10427,
+      "sha256": "c1244fabad6e9b7a8053da89448c42388bbe93681742e01e74f7a22b7f08e3ed"
+    },
+    {
+      "path": "antiword-source/Resources/8859-6.txt",
+      "bytes": 8308,
+      "sha256": "a2917a1017ecb3c82fc44cd57365dbda0788f7cc1e8da94d8175f6600cf03548"
+    },
+    {
+      "path": "antiword-source/Resources/8859-7.txt",
+      "bytes": 10365,
+      "sha256": "73b347025d12c050d82c1385d3756a5eb79f6e7b21e1ed91ee344590a2d1ee3f"
+    },
+    {
+      "path": "antiword-source/Resources/8859-8.txt",
+      "bytes": 8553,
+      "sha256": "4bea5cf4b048e3b7ccf704ea153edcf77d2a4c627dd8710f8f7e037afb62a171"
+    },
+    {
+      "path": "antiword-source/Resources/8859-9.txt",
+      "bytes": 10628,
+      "sha256": "976d48dfff033c7bfedd08bc61d26f0a5fefb4c3f48f8735f454e100cf40294c"
+    },
+    {
+      "path": "antiword-source/Resources/Default",
+      "bytes": 3211,
+      "sha256": "b005fff466673f0a032610d5464302cfdf7ac67485cfb5608357ffb29b51dad4"
+    },
+    {
+      "path": "antiword-source/Resources/Example",
+      "bytes": 3038,
+      "sha256": "d39b5c3fb731e84c6a056b5cb34e92e611a4739a2d3213c83550898f54a951a5"
+    },
+    {
+      "path": "antiword-source/Resources/MacCyrillic.txt",
+      "bytes": 13353,
+      "sha256": "a915d23b499d8d94d6e1ad2dbdcca06e1a5c4f36ffa37e7152b4591f1cb074f8"
+    },
+    {
+      "path": "antiword-source/Resources/MacRoman.txt",
+      "bytes": 14271,
+      "sha256": "7fabdb769c535b7f195ddf7c422a156db203ef97f11600278afb9fe297beccb3"
+    },
+    {
+      "path": "antiword-source/Resources/UTF-8.txt",
+      "bytes": 107,
+      "sha256": "2401ee812ff859a85f3b737be7daf32f19c11946ecaa5f5e66468abae4fe2d43"
+    },
+    {
+      "path": "antiword-source/Resources/Unicode01",
+      "bytes": 10858,
+      "sha256": "6fa1684cdf01960adf325cc60760d376f917c49d9a1edb4cf8b69893a8e434da"
+    },
+    {
+      "path": "antiword-source/Resources/Unicode15",
+      "bytes": 10818,
+      "sha256": "102db50381d20fc171bf64b62b3c0f199561524bf11281f35603b8c99dda50ca"
+    },
+    {
+      "path": "antiword-source/Resources/cp1250.txt",
+      "bytes": 9799,
+      "sha256": "cf79ba755416ae5628a9dd1f870306b5a45fd6b256efed0c2ac1cc2ccb3307f0"
+    },
+    {
+      "path": "antiword-source/Resources/cp1251.txt",
+      "bytes": 9474,
+      "sha256": "f87ed4480cfddb8f5f6226292338ca407ccc7b1a543f3832f1d20aff6cb72a58"
+    },
+    {
+      "path": "antiword-source/Resources/cp1252.txt",
+      "bytes": 9624,
+      "sha256": "fca3ab5882f0a562794f05d7f15a39157c59d7c07fcbac79ab7cf3d12c979541"
+    },
+    {
+      "path": "antiword-source/Resources/cp437.txt",
+      "bytes": 9847,
+      "sha256": "6e4e148eecd8c352caa0a07e5bc5bdd84966d5253235fab62e99ba36730092a3"
+    },
+    {
+      "path": "antiword-source/Resources/cp850.txt",
+      "bytes": 9693,
+      "sha256": "359d83a9335bcd298a14f1d30368803b2d327983fcff29da14a27aed0a9eccb9"
+    },
+    {
+      "path": "antiword-source/Resources/cp852.txt",
+      "bytes": 9992,
+      "sha256": "1937d70560031a7d21755e1f947d7719f719296dc12023cba38cfbcdce44273d"
+    },
+    {
+      "path": "antiword-source/Resources/cp862.txt",
+      "bytes": 9448,
+      "sha256": "273ebe82ed409ae00c26bd8c6fd77adf4859b041fcb0a627c42f4a437c5e42dc"
+    },
+    {
+      "path": "antiword-source/Resources/cp864.txt",
+      "bytes": 9612,
+      "sha256": "bfac522704129492b0669e9c5b07727bb56e076cc18f455566a117bfb8be924a"
+    },
+    {
+      "path": "antiword-source/Resources/cp866.txt",
+      "bytes": 9817,
+      "sha256": "64baadcbccc437e8e87e12c53478db8b459174c66fd269bf16cfdeb69cbb70fa"
+    },
+    {
+      "path": "antiword-source/Resources/fontnames",
+      "bytes": 4696,
+      "sha256": "cfc4c68c6c4886295bb092586b9b6b227606a17cad89a1bac55410727011a697"
+    },
+    {
+      "path": "antiword-source/Resources/fontnames.russian",
+      "bytes": 1565,
+      "sha256": "7170526252fdbdb6121230248939d59a1c6c22d6981128ba96f7798614e195d0"
+    },
+    {
+      "path": "antiword-source/Resources/koi8-r.txt",
+      "bytes": 11204,
+      "sha256": "d635512126976aec2c4fab3aeeb346bb653e9211c44d2a018dd27fbe86c654ec"
+    },
+    {
+      "path": "antiword-source/Resources/koi8-u.txt",
+      "bytes": 11259,
+      "sha256": "28c0691ea7d03241fd6d96f2bab3973cdada800c4a20af458543800279885728"
+    },
+    {
+      "path": "antiword-source/Resources/roman.txt",
+      "bytes": 14030,
+      "sha256": "28a1afa59f16f188ebd459995fb11c8679b07d30fd208b9c4009fbf9bb103274"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/!Boot",
+      "bytes": 262,
+      "sha256": "5b1ba48dbc6eee4d24d8c78b0b4d3119a68c05dcbe55e35ca154b2c939a18640"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/!Help",
+      "bytes": 36,
+      "sha256": "fd7570e125f12a12c41cafdd57a29ecf191b44491ebfa9ee6224a7dbe2ccb56e"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/!MakeAll",
+      "bytes": 373,
+      "sha256": "433ed89907776c5066539c6f494c5ff16af223d7f265c837edb6033eac4f403d"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/!Run",
+      "bytes": 1581,
+      "sha256": "46c8cb03989756e61807bfffcb83d5e9df85d3c67d4095cd30d5e8e8f640b638"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/!Sprites",
+      "bytes": 1120,
+      "sha256": "6d94471f15b24aee54377f0367895b17ee01d22897d362ef22524c76ad28f248"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/!Sprites22",
+      "bytes": 3564,
+      "sha256": "8ef5e675943e34088123b05d3a6a3eecd1c3d4b52da6933f9465e7c9abeeafaa"
+    },
+    {
+      "path": "antiword-source/RiscOS-only/Templates",
+      "bytes": 3212,
+      "sha256": "7327c623c3e1c98ebe7a640c1da4f5b894f33717649ed9d2fa8fad4de91e0306"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE1-only/Antiword.kdelnk.eu",
+      "bytes": 256,
+      "sha256": "bb337770d96d6f191c9349c23833a470722187a1dccdbd7ca14b8cdd475e27c4"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE1-only/Antiword.kdelnk.us",
+      "bytes": 260,
+      "sha256": "572f1f712a387c0dd6b9531ff2b97610bd3bae2e733a92e665661f9d9cc0191c"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE1-only/antiword.xpm",
+      "bytes": 8423,
+      "sha256": "3a9786eb4a6c1acf24063c7ae6e600a50e15dd22213df9f61b38900ac81264e4"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE1-only/kantiword.sh",
+      "bytes": 806,
+      "sha256": "16ec13f55b00d2b08a6b18556182c865bc3e853a4461c715d07f983538c2efbc"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/Antiword.desktop.eu",
+      "bytes": 157,
+      "sha256": "c67f22c216173c4a0d347da3df86a8d66d52441be15ca8545102981e15af3837"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/Antiword.desktop.us",
+      "bytes": 161,
+      "sha256": "b941ea4904d9d2fd1559187671e99f8bdc0700ffdf9db9189c4b0ddd9f13a797"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/hi32-app-antiword.png",
+      "bytes": 1510,
+      "sha256": "7d181eacc67ff34dd0ad8b1f4c97148f46684b9094bd38414fd7cd876cb80a77"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/hi48-app-antiword.png",
+      "bytes": 2285,
+      "sha256": "f0804a2114e566c8829e74c32182c89739824c5f4f9aeb1e210535ad35c9dc9a"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/kantiword.sh",
+      "bytes": 1391,
+      "sha256": "a6295c3073491604a62a51573647c92a04d17e2cfaa221030b7f999bc7127e1d"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/lo16-app-antiword.png",
+      "bytes": 330,
+      "sha256": "cbdf93e1a7530abfc7ae243f345a747efa94d2e780cbce7030171211d01e941c"
+    },
+    {
+      "path": "antiword-source/Unix-only/KDE3-only/lo32-app-antiword.png",
+      "bytes": 513,
+      "sha256": "afebf9f1af893bc8b1a93e5f9af025e7324e0dd24ab2e32386cf1b5f2deb41b7"
+    },
+    {
+      "path": "antiword-source/Unix-only/RPM-only/antiword.spec",
+      "bytes": 1407,
+      "sha256": "4d55273e46fa85581eea4591ba2b41b8d9c6966bb908876f894beb6e2b2625ea"
+    },
+    {
+      "path": "antiword-source/Unix-only/fontinfo.h",
+      "bytes": 126349,
+      "sha256": "4e7bff965c890190b4d31feca5247142674420860b11fd321d96138d1afc6145"
+    },
+    {
+      "path": "antiword-source/Unix-only/fontinfo.pl",
+      "bytes": 7360,
+      "sha256": "aec08ee04795d8784bd68bd676e9de57bf5f29d668b5e6d195008087275bb8ed"
+    },
+    {
+      "path": "antiword-source/Win32-only/antiword.dsp",
+      "bytes": 6456,
+      "sha256": "0208f1d0e328355149506bde2046f0dbb070c5a737d4b59b2a571454cbea2071"
+    },
+    {
+      "path": "antiword-source/Win32-only/antiword.dsw",
+      "bytes": 510,
+      "sha256": "d5d552a8fabf9fe10c19c451f0207027968a0133aa0577deb956db9a10fbfc56"
+    },
+    {
+      "path": "antiword-source/Win32-only/antiword.ico",
+      "bytes": 2238,
+      "sha256": "a499bee0cc3996679df630eb96d21eabf13b21d3b3c36d2af216e2d6f00b068c"
+    },
+    {
+      "path": "antiword-source/Win32-only/antiword48.ico",
+      "bytes": 3678,
+      "sha256": "91306fee309354881485588be7553a8f0f9d36df837b209953ca317752a6150d"
+    },
+    {
+      "path": "antiword-source/Win32-only/fonts_w.c",
+      "bytes": 2266,
+      "sha256": "3b1ca3ca262e81683c575fcef15e29868b404ea62785a4b176278013821216e3"
+    },
+    {
+      "path": "antiword-source/Win32-only/misc.c",
+      "bytes": 13619,
+      "sha256": "aaacec82615dc47c69404f8a2eacd1d9eec3e25a4eeceb75139c3cb782c8ad82"
+    },
+    {
+      "path": "antiword-source/antiword.h",
+      "bytes": 27877,
+      "sha256": "2bca57ffc50c3aa19d22d616d9902fc8c38700e852575d291843e2ebc8eeeda4"
+    },
+    {
+      "path": "antiword-source/asc85enc.c",
+      "bytes": 3910,
+      "sha256": "b9a62138ce6348c64d490bd21ccbb7f4b2a4cf9bfa9008cecf001a1a7adc7826"
+    },
+    {
+      "path": "antiword-source/blocklist.c",
+      "bytes": 22483,
+      "sha256": "37c65b6a72e1dbe437494f5f6d1510310f266ae2a5c8838380660bafc9afcf33"
+    },
+    {
+      "path": "antiword-source/chartrans.c",
+      "bytes": 22456,
+      "sha256": "b3e413ba51f0ec1756f8a1b24d2ede6b497370f1202acfa48f650cd2a49a9ec4"
+    },
+    {
+      "path": "antiword-source/datalist.c",
+      "bytes": 8933,
+      "sha256": "8152da9b6e4f6664b7aebf83c81b545cb9f2041765f9938cf51fb22b57701c39"
+    },
+    {
+      "path": "antiword-source/debug.h",
+      "bytes": 3153,
+      "sha256": "e624d9b3c770c876921e8f04af9c8e852d2b10b206d39a0bd1150bc1405e7c67"
+    },
+    {
+      "path": "antiword-source/depot.c",
+      "bytes": 2724,
+      "sha256": "072b04cc1bb67e579b9d00b215116fe3edad7f5e8e74e31aba063b54b4d9593b"
+    },
+    {
+      "path": "antiword-source/dib2eps.c",
+      "bytes": 12235,
+      "sha256": "b0678a6495304dec4a5d113613a745969017748670fa8503b66455572f7b4fab"
+    },
+    {
+      "path": "antiword-source/dib2sprt.c",
+      "bytes": 14486,
+      "sha256": "7edb287eed18945e4cdf7723e65c9725b3c7ab365bfe274439f2cfc137bf217c"
+    },
+    {
+      "path": "antiword-source/doclist.c",
+      "bytes": 1610,
+      "sha256": "2eb608bc1a47d4162701d54382b9dbab78f070fdc11bd71ac226b2c0c1f3aa10"
+    },
+    {
+      "path": "antiword-source/draw.c",
+      "bytes": 26682,
+      "sha256": "6df42d525a759363f776adb0ea8f817d0e2d0e46b2726b26960f97799cfebacb"
+    },
+    {
+      "path": "antiword-source/draw.h",
+      "bytes": 1012,
+      "sha256": "9bdbf20ad863216a9a492488c38eb4949b95ef4f5a4b06c1c20ef56c4b5a121f"
+    },
+    {
+      "path": "antiword-source/drawfile.c",
+      "bytes": 10881,
+      "sha256": "d01a0e64c5cde712698f43a76c3de7ad20147f8b8d9cdfc984ebdbc9c3b2fffd"
+    },
+    {
+      "path": "antiword-source/drawfile.h",
+      "bytes": 12215,
+      "sha256": "3772af17fa82ebc2b489091047f264165f6296eea27ec1f86d857093742536fe"
+    },
+    {
+      "path": "antiword-source/fail.c",
+      "bytes": 613,
+      "sha256": "5d2398ce8a97e8a38cf214d4d831c570fc10244da2c7dc0aab6cc2871971ecbb"
+    },
+    {
+      "path": "antiword-source/fail.h",
+      "bytes": 401,
+      "sha256": "52541e794793b4e5bdacb20ebe9fc5b142b356f4c1b0826e67275fd3c3687185"
+    },
+    {
+      "path": "antiword-source/finddata.c",
+      "bytes": 3797,
+      "sha256": "40e3a94d605cfb68f2feea7f6e600a3a2c191a1f6fd92d82d1b206f0e32c2648"
+    },
+    {
+      "path": "antiword-source/findtext.c",
+      "bytes": 7321,
+      "sha256": "ee4e82cc7cb6d409bdcd21bde2607713ffc4165e19f2f2ae337a4d89ff53c57b"
+    },
+    {
+      "path": "antiword-source/fmt_text.c",
+      "bytes": 3696,
+      "sha256": "6239c2eae303582f521fd454bada43cde5fe721a0d91438b498e4138976be73b"
+    },
+    {
+      "path": "antiword-source/fontinfo.h",
+      "bytes": 126349,
+      "sha256": "4e7bff965c890190b4d31feca5247142674420860b11fd321d96138d1afc6145"
+    },
+    {
+      "path": "antiword-source/fontlist.c",
+      "bytes": 4339,
+      "sha256": "274e1b688d42cb35c20b7d83cf1223bcb88a57f129d0dce07657c0759b6aeb9c"
+    },
+    {
+      "path": "antiword-source/fonts.c",
+      "bytes": 27501,
+      "sha256": "614f85908cc16aeb8383b111beba21a35b582d3bba389a6b73ae525ac0aea1b0"
+    },
+    {
+      "path": "antiword-source/fonts_r.c",
+      "bytes": 5843,
+      "sha256": "9965ff963d7ea1eaddea7922c78ac041bd776c0d6a66e448ac2244571fcbef09"
+    },
+    {
+      "path": "antiword-source/fonts_u.c",
+      "bytes": 7542,
+      "sha256": "866ae025a4d14350b616500a86c92d768c676e30d4ce897daa1d0d650ca09f13"
+    },
+    {
+      "path": "antiword-source/hdrftrlist.c",
+      "bytes": 9314,
+      "sha256": "5ebd14d48fb997f6b1b90ad0fd2b9e548ceba815bf6b92bbf6ecd77b73ea2cd6"
+    },
+    {
+      "path": "antiword-source/icons.c",
+      "bytes": 2504,
+      "sha256": "9d2bb9d7a462f1310b3c19a9d71d078be993733eb508142e50bfea4e4962670e"
+    },
+    {
+      "path": "antiword-source/imgexam.c",
+      "bytes": 26488,
+      "sha256": "6968b37bf1b7ca5b7b423b94f6d149a54cbba8ceb9c1d876fef318226912d3c5"
+    },
+    {
+      "path": "antiword-source/imgtrans.c",
+      "bytes": 1703,
+      "sha256": "eceec7ca670d9eb4293f420544901dd25fbadd05aa1f8cbbb0847ba43b8725e0"
+    },
+    {
+      "path": "antiword-source/jpeg2eps.c",
+      "bytes": 1533,
+      "sha256": "387e9ac34669e99571f260bbb06815f3a9ef855411756d0eb22e4301e1579527"
+    },
+    {
+      "path": "antiword-source/jpeg2sprt.c",
+      "bytes": 2159,
+      "sha256": "9926d9d877d55cb2ce8c9edd747eff234ff4e7086be9dd22725b07067ec42503"
+    },
+    {
+      "path": "antiword-source/kantiword",
+      "bytes": 1403,
+      "sha256": "cabbb69b87408b51897b0a19200f978085d6eafedd9d594afb12a71fd9f9d243"
+    },
+    {
+      "path": "antiword-source/listlist.c",
+      "bytes": 7855,
+      "sha256": "6a87394ede33f228b8c740b6c84a61f503642659d3138dfcf4a13e1ab3ec3ebf"
+    },
+    {
+      "path": "antiword-source/main_ros.c",
+      "bytes": 13140,
+      "sha256": "998890d09205871e3db74a10097123088bb53a56c75ad88df59ae803f3ba757d"
+    },
+    {
+      "path": "antiword-source/main_u.c",
+      "bytes": 8212,
+      "sha256": "86a3b7cbb8c8975d44f98c1e3e142232a356f44f94671b31fae44ae5f7010e69"
+    },
+    {
+      "path": "antiword-source/misc.c",
+      "bytes": 21663,
+      "sha256": "a5ff69b64e8248d72a6d3f13810ac243250b67148011a407f5fcebb8044ddb39"
+    },
+    {
+      "path": "antiword-source/mkfile",
+      "bytes": 984,
+      "sha256": "befeb0586bcfd76b4ae6823dcf1ccf3de325c1780abba91371568344cb70d706"
+    },
+    {
+      "path": "antiword-source/notes.c",
+      "bytes": 24813,
+      "sha256": "dfcca2e494586fab3d8383719cfa2f0594888011ec3e7c8bb134041934574015"
+    },
+    {
+      "path": "antiword-source/options.c",
+      "bytes": 24707,
+      "sha256": "78775b5ac7916d338615ffb43dee6c5b51208880f4d3bacc7c87b1c5f38ca5ad"
+    },
+    {
+      "path": "antiword-source/out2window.c",
+      "bytes": 19601,
+      "sha256": "757683d557e7eb7facaa1d3a3057a3cd3067bee79112a86b9f23eb73afd2a265"
+    },
+    {
+      "path": "antiword-source/output.c",
+      "bytes": 10773,
+      "sha256": "74df81bf2e88efbb01fdda53942a97e82fc6f0f1780b7fc51dfd0db977f305cf"
+    },
+    {
+      "path": "antiword-source/pdf.c",
+      "bytes": 31661,
+      "sha256": "4363c78bd0ee207cc025541df33e016ba9670630b941895ea4cfa85c76e92535"
+    },
+    {
+      "path": "antiword-source/pictlist.c",
+      "bytes": 2512,
+      "sha256": "4e0a6ff5cf495a9361a7fbc25e91cbba2113e477de1b3d324f74de09b0644f1e"
+    },
+    {
+      "path": "antiword-source/png2eps.c",
+      "bytes": 4083,
+      "sha256": "8973c3ae6a5f6fe1b62c04f3517553b7ee59f1254ff0255fbae3e28ba03595c8"
+    },
+    {
+      "path": "antiword-source/png2sprt.c",
+      "bytes": 572,
+      "sha256": "1b26283d4c3c9dc9bd1b22e3d0d72a1d431af2325291eb5229f36a883766e269"
+    },
+    {
+      "path": "antiword-source/postscript.c",
+      "bytes": 33883,
+      "sha256": "7b104225ddb243186c29b5df8d392ae6f1766eb6afe030f54136d99de5c4aa3e"
+    },
+    {
+      "path": "antiword-source/prop0.c",
+      "bytes": 12600,
+      "sha256": "947247cbca52eea6d4f733af974bc383f96a5516c6b2902556007448ee67a8ba"
+    },
+    {
+      "path": "antiword-source/prop2.c",
+      "bytes": 28409,
+      "sha256": "e4a77d9f958cc36544b36afd8be19744560c883fc1aa28518a1babca040bab8b"
+    },
+    {
+      "path": "antiword-source/prop6.c",
+      "bytes": 30660,
+      "sha256": "8f156252cf898d9e39614d657f80c9d83dc6295c006f8345c9738e197069ff2e"
+    },
+    {
+      "path": "antiword-source/prop8.c",
+      "bytes": 40247,
+      "sha256": "f018d2ff343ada0ec288fff29221c94a9ab99308427abbf34d95d1033fb18018"
+    },
+    {
+      "path": "antiword-source/properties.c",
+      "bytes": 5989,
+      "sha256": "ffd72560b69aacb21e3c49112a64f8f229a4dc8a1b56fe37a4469f5d7d005bb8"
+    },
+    {
+      "path": "antiword-source/propmod.c",
+      "bytes": 2427,
+      "sha256": "c5e973e1a093ece243ee9f28f47e1c922ce2fefcbbd9e5af74a455ab4a8c9541"
+    },
+    {
+      "path": "antiword-source/riscos.c",
+      "bytes": 5517,
+      "sha256": "05286627b0b6106dfa2ff4eace6de2b963e56201daf11892d7cce2d971735702"
+    },
+    {
+      "path": "antiword-source/rowlist.c",
+      "bytes": 2801,
+      "sha256": "2b8e6ab469b68a9da1cd6fe24998ef0decafb32a9f098f3bff03c0c683bb5ddf"
+    },
+    {
+      "path": "antiword-source/saveas.c",
+      "bytes": 9851,
+      "sha256": "39bb6267bd00f30a8c791dbf6e4bb0457310035e66f64f9d4cc890f8ad8de3b6"
+    },
+    {
+      "path": "antiword-source/sectlist.c",
+      "bytes": 3785,
+      "sha256": "ebb6e861e36a2ab7eeab1f21ca5ed0b8b0ab55c28ea0371a88b1af12c1b71fd7"
+    },
+    {
+      "path": "antiword-source/startup.c",
+      "bytes": 3416,
+      "sha256": "ec4742ac485f2f61b10f520aefbf27c6ea5ca06b45b6ce9be91e482d42a2ebbd"
+    },
+    {
+      "path": "antiword-source/stylelist.c",
+      "bytes": 12060,
+      "sha256": "3d1e4d4024674ed4c136ba7dde515f9fa64c6a150b6a2e24b203c4152c9ca9bd"
+    },
+    {
+      "path": "antiword-source/stylesheet.c",
+      "bytes": 22114,
+      "sha256": "bf9257986ccfb591581739aae178c11cbaf2fdb34ee146c78ccd3515c0d6ff6c"
+    },
+    {
+      "path": "antiword-source/summary.c",
+      "bytes": 23077,
+      "sha256": "300ed091e2a0e187873e20a675b4780da257f3e54bd13c86846b11eb2a2d8a52"
+    },
+    {
+      "path": "antiword-source/tabstop.c",
+      "bytes": 5122,
+      "sha256": "b06f41941e695db43d0a8f8ce7b980a26846ebd79e561660a27af179186c8b99"
+    },
+    {
+      "path": "antiword-source/text.c",
+      "bytes": 3878,
+      "sha256": "8425fc7c7d8f0aed127fe097461febfe783aaae402410fd6fc0aa879d902f362"
+    },
+    {
+      "path": "antiword-source/unix.c",
+      "bytes": 818,
+      "sha256": "1a855e0be4009a512286519da2b491fc766506b4f3cdb2342f3691e0352e2f5e"
+    },
+    {
+      "path": "antiword-source/utf8.c",
+      "bytes": 7564,
+      "sha256": "290d44c6f2569b1f6c8a78848cbdddc9ae7a5da0cbd4c00f40ec41ed1629cad4"
+    },
+    {
+      "path": "antiword-source/version.h",
+      "bytes": 800,
+      "sha256": "9b2bccb1fb82c50de653b632ef5111b6b801acd43dd8e8bf8475fe8a90e8ea25"
+    },
+    {
+      "path": "antiword-source/word2text.c",
+      "bytes": 39070,
+      "sha256": "afe2f717eb0e5d1c7cbf1c19f648b609ec8e10a2a382f8c99c23d76f4098914b"
+    },
+    {
+      "path": "antiword-source/wordconst.h",
+      "bytes": 11743,
+      "sha256": "b11c6984816f5be289b69684fe218caed1e43f0cec8236e23fa10d03b74ef52a"
+    },
+    {
+      "path": "antiword-source/worddos.c",
+      "bytes": 2790,
+      "sha256": "d3ffaac6f23d46875fca7746653fb233ca7e16ac6e67fecf6bcf272772696445"
+    },
+    {
+      "path": "antiword-source/wordlib.c",
+      "bytes": 7910,
+      "sha256": "6097ae515645486aa5cc6b4eca34875a6623515a697ef501dab85fb625626445"
+    },
+    {
+      "path": "antiword-source/wordmac.c",
+      "bytes": 2658,
+      "sha256": "169cf4acc2381993bac36561da66c00418a9368c24f07df7233aadf17cf03f58"
+    },
+    {
+      "path": "antiword-source/wordole.c",
+      "bytes": 22402,
+      "sha256": "75a7135561d00fc0f2fefd770829ce599ca4aadff4d88f8166179f29ebc4e838"
+    },
+    {
+      "path": "antiword-source/wordtypes.h",
+      "bytes": 8285,
+      "sha256": "a60e0bbc176868d68eed44189dc6d3995b9e64f79517b1d67576338019454f34"
+    },
+    {
+      "path": "antiword-source/wordwin.c",
+      "bytes": 5584,
+      "sha256": "1de4beb4819fd90341ef721e09c98b6f3b99d2f87895cbaf6a3a140bedb52d3e"
+    },
+    {
+      "path": "antiword-source/xmalloc.c",
+      "bytes": 2501,
+      "sha256": "04a2d05dd0e275443f21f69e6c1d954bce985cde35087b85cb853719f847b595"
+    },
+    {
+      "path": "antiword-source/xml.c",
+      "bytes": 34115,
+      "sha256": "1abaa1e586c0f93e7d6e7fc1c70652cbc048811be8025eed0058bc1143c29561"
+    },
+    {
+      "path": "hyperlink-source.json",
+      "bytes": 4109,
+      "sha256": "47627883c4cd719c13f1a67a5f9a0a5d8b13aa376d20e65bccb27da3a4c0fb9c"
+    },
+    {
+      "path": "initial-toolchain.json",
+      "bytes": 4605,
+      "sha256": "2851d0bb4fb1c66b29aedafa5cc7e9042463471cee253d7225185780c25daa22"
+    },
+    {
+      "path": "inputs/bookmarks/authored.docx",
+      "bytes": 4446,
+      "sha256": "acc4bc7ef24543b75d2295dbbd37a58b9a4ac5a2105cef13ef186e8178ec05b6"
+    },
+    {
+      "path": "inputs/bookmarks/libreoffice.docx",
+      "bytes": 9354,
+      "sha256": "4ed95ecc06268994f52cbc340d33bdb18334a9271b3b901cf43a9e4ac3c75d03"
+    },
+    {
+      "path": "inputs/bookmarks/parser.docx",
+      "bytes": 12673,
+      "sha256": "9ead3dd42a3be3b64cc98d7f2b2ef99900d0b9ba7be400f24419f168034ba701"
+    },
+    {
+      "path": "inputs/bookmarks/source.doc",
+      "bytes": 11776,
+      "sha256": "75c0f4aa9bf85d142c88d40eb23fb21720f2e9cd76ff5181ab41913345dfdb59"
+    },
+    {
+      "path": "inputs/header-textbox-alias/libreoffice.docx",
+      "bytes": 6377,
+      "sha256": "b8e45fdd7051e9b2826dc2dd27e7b21ffe0aff4767c5c26a9395594ea057aeb0"
+    },
+    {
+      "path": "inputs/header-textbox-alias/parser.docx",
+      "bytes": 9067,
+      "sha256": "c107ae8a863099bf57edefb881c8f2b616496a7d58045144a4d19fca4fbc4028"
+    },
+    {
+      "path": "inputs/header-textbox-alias/source.doc",
+      "bytes": 10240,
+      "sha256": "4e8a4388d0a509836760d84c8ef28158ee90018518928a93f4c01980e5387624"
+    },
+    {
+      "path": "inputs/note-markers/authored.docx",
+      "bytes": 2428,
+      "sha256": "6f4e979c69c4a942796ea512490b791f8b3ea99a966c75593c1b2613880e7536"
+    },
+    {
+      "path": "inputs/note-markers/libreoffice.docx",
+      "bytes": 7595,
+      "sha256": "d6bbb4ec29eafcc00ecad603236c8474397d7a003e9ac08437e1e3d9b4699537"
+    },
+    {
+      "path": "inputs/note-markers/parser.docx",
+      "bytes": 7476,
+      "sha256": "1f4b24f67db82a22deaf76fc0b3b3355c0268d9b099639fbaefe43121417f9d9"
+    },
+    {
+      "path": "inputs/note-markers/source.doc",
+      "bytes": 11264,
+      "sha256": "80c3e144945e40e90fc8dac11e9e039e2fc2eef47bac1b7ac7d6ec1ef338cd72"
+    },
+    {
+      "path": "inputs/poi-simple-table2/libreoffice.docx",
+      "bytes": 5469,
+      "sha256": "e133c4b0636d6fe4c9b997cb818f6b6d0aa23380a2dfa58862615bd7248f6014"
+    },
+    {
+      "path": "inputs/poi-simple-table2/parser.docx",
+      "bytes": 5924,
+      "sha256": "792f797da69c3737c2ad8da4f202893784d678179ff90b68127c1c049d88e23c"
+    },
+    {
+      "path": "inputs/poi-simple-table2/source.doc",
+      "bytes": 27136,
+      "sha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc"
+    },
+    {
+      "path": "inputs/table-borders/authored.docx",
+      "bytes": 2358,
+      "sha256": "066f9d736e114c01436b328c2bc74ec76e3be676d6cddb3e8eb81956f2598e83"
+    },
+    {
+      "path": "inputs/table-borders/libreoffice.docx",
+      "bytes": 6144,
+      "sha256": "7cd6fd0490a5b5f5c9ec09f261761d1b2fdb624bdd097fa481668ace523ffb4c"
+    },
+    {
+      "path": "inputs/table-borders/parser.docx",
+      "bytes": 6519,
+      "sha256": "e7d03ff2fba3c98ca4ce8b775c6f9b5230722a826567c916db222ee98fc8d4e7"
+    },
+    {
+      "path": "inputs/table-borders/source.doc",
+      "bytes": 10752,
+      "sha256": "1ee6343bf51ce1dda4d9ef14eb106ac5826386f7530601d0f4d2c2a2b9b96115"
+    },
+    {
+      "path": "inputs/word/authored.docx",
+      "bytes": 4782,
+      "sha256": "501bdd2f897b9a0d417988903b3a378bac958cacbcba5f842736802a5d47af1b"
+    },
+    {
+      "path": "inputs/word/libreoffice.docx",
+      "bytes": 10397,
+      "sha256": "d1e54013f80b2ac3dd43a0928b9c31425a091fa322db2a41cdc2b6c3a218998d"
+    },
+    {
+      "path": "inputs/word/parser.docx",
+      "bytes": 15047,
+      "sha256": "41239a8887f1d81a994e6acbeee746e892215753d1fd10dd079eb7bb722b3b60"
+    },
+    {
+      "path": "inputs/word/source.doc",
+      "bytes": 13824,
+      "sha256": "2d2943d799d3a48430a90bff0bee68d7ab30fc2e5c26666d793160439e1f483d"
+    },
+    {
+      "path": "inspect_hyperlinks.dart",
+      "bytes": 1343,
+      "sha256": "f91bafe81639464521954ea789d613377867f070f5d3b2fcd9c1aea4cde75b5f"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/authored.json",
+      "bytes": 1085,
+      "sha256": "37e56048e095e0cb62b6212c67751b8d0809146675fad713fdae2c271eead977"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/authored.json.command.json",
+      "bytes": 1103,
+      "sha256": "9caff9a8356a5ddb68408fa4b7331a587dcb575520990ababc7d2ee59b5b966c"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/authored.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/authored.md",
+      "bytes": 330,
+      "sha256": "f5ddd475e599ef9aa9ad6dfd75f81db35208a6bfbd5df10f7604a623769289a4"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/authored.md.command.json",
+      "bytes": 1104,
+      "sha256": "73007bd383a52fdb49b65879089d2d2b0e2598f093d63e27c38da71a26007d00"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/authored.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/libreoffice.json",
+      "bytes": 1123,
+      "sha256": "23e8c6ad161730d6bf24cbb7e3a8aedc25dac61fd958d01fec6a0ec74e3fa9e5"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/libreoffice.json.command.json",
+      "bytes": 1112,
+      "sha256": "71f355ccd9c9b1f81fa1a4d99969d1176409765af807fdfd662f971759854f39"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/libreoffice.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/libreoffice.md",
+      "bytes": 330,
+      "sha256": "f5ddd475e599ef9aa9ad6dfd75f81db35208a6bfbd5df10f7604a623769289a4"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/libreoffice.md.command.json",
+      "bytes": 1113,
+      "sha256": "310b450332d03a5746ce7b2c9ec3e0b357430e6c6d355af26662134c93b93d7f"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/libreoffice.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/parser.json",
+      "bytes": 1085,
+      "sha256": "37e56048e095e0cb62b6212c67751b8d0809146675fad713fdae2c271eead977"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/parser.json.command.json",
+      "bytes": 1097,
+      "sha256": "e8d6a1856494e733d25c86035e9d4779b51beba5fbcb837dd705fd1cbba511b3"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/parser.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/parser.md",
+      "bytes": 330,
+      "sha256": "f5ddd475e599ef9aa9ad6dfd75f81db35208a6bfbd5df10f7604a623769289a4"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/parser.md.command.json",
+      "bytes": 1098,
+      "sha256": "4fad40ec416e98a0b6e6659c4165a0ad010e4ab5292d2f1c7e7f2697870bc7da"
+    },
+    {
+      "path": "outputs-pandoc/bookmarks/parser.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/libreoffice.json",
+      "bytes": 95,
+      "sha256": "06fc531d9a2a1852627e7491c656b161d9e41fae0c65aaa534271fba86546485"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/libreoffice.json.command.json",
+      "bytes": 1143,
+      "sha256": "1f64bd59b37ba86bf60ad2ab80299a665aac0394c7cbe8bf92d7bac0a737fb72"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/libreoffice.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/libreoffice.md",
+      "bytes": 5,
+      "sha256": "421dc617d921c24f41441973d8476605718a14a5c2228b8344cc1d6d816e8d39"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/libreoffice.md.command.json",
+      "bytes": 1144,
+      "sha256": "7664646675bc6493e71066390ea1b88101bc875077909cdf2fd3d9ca6e26275f"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/libreoffice.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/parser.json",
+      "bytes": 95,
+      "sha256": "06fc531d9a2a1852627e7491c656b161d9e41fae0c65aaa534271fba86546485"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/parser.json.command.json",
+      "bytes": 1128,
+      "sha256": "9c83e998d8d5b660777f0a00aab79928aed1ac887566cce5c7e503e049a761ba"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/parser.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/parser.md",
+      "bytes": 5,
+      "sha256": "421dc617d921c24f41441973d8476605718a14a5c2228b8344cc1d6d816e8d39"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/parser.md.command.json",
+      "bytes": 1129,
+      "sha256": "61a583ac554804d505b9c39f800574874394c3da721180c4c31ed7ac38984d01"
+    },
+    {
+      "path": "outputs-pandoc/header-textbox-alias/parser.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.json",
+      "bytes": 1817,
+      "sha256": "6ada617ea8b39cd6dce5826461d180e63d8627cabc9a5569d27100ffbcd55ded"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.json.command.json",
+      "bytes": 1112,
+      "sha256": "58ff342ee54d39f6316d4ec6533faa865981add5293ea858ddcd15e091ec135d"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.md",
+      "bytes": 525,
+      "sha256": "5527c501253a5d2c3792f48f6bb818e36bf953bb5ae3d9c86fd6b01de1bbb893"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.md.command.json",
+      "bytes": 1113,
+      "sha256": "520f75e92541fd56d4a62f2ccd12f99d448cb0d65689d689c239b8373e3884cf"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.roundtrip.docx",
+      "bytes": 10219,
+      "sha256": "8b8b2c5d60383e59ded7d2b9dc34d6c73d960dc4b4fdaabaaed3bb7d242d9a23"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.roundtrip.docx.command.json",
+      "bytes": 1123,
+      "sha256": "77d306f80c4b9ea902679c766ded8bae3a720b6f541ffacc4eb0e0b6c7ef84e0"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.roundtrip.docx.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.roundtrip.json",
+      "bytes": 1817,
+      "sha256": "6ada617ea8b39cd6dce5826461d180e63d8627cabc9a5569d27100ffbcd55ded"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.roundtrip.json.command.json",
+      "bytes": 1158,
+      "sha256": "4e87845366cb3ac4d0ecec7b91c2fd6fd0341f43fc10d159760920aa1a3dda01"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/authored.roundtrip.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/libreoffice.json",
+      "bytes": 1617,
+      "sha256": "77a25b323a61de11bce1e8524ab83311b52abcf80e92848a8ab9ce7742e16d97"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/libreoffice.json.command.json",
+      "bytes": 1121,
+      "sha256": "77b458248d25595c0f89c03d7512b2f3c67c71ec81ae64d079775ffe10bd9aac"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/libreoffice.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/libreoffice.md",
+      "bytes": 363,
+      "sha256": "1e1bbecad39eef25967b452accfbe997fa9fd1fed3b322dba040ddd04c5db6fa"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/libreoffice.md.command.json",
+      "bytes": 1122,
+      "sha256": "5404f4a788f264bb0fb0194ea27be5115d11e56c0dcc699b308cfabef24d9683"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/libreoffice.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/parser.json",
+      "bytes": 1817,
+      "sha256": "6ada617ea8b39cd6dce5826461d180e63d8627cabc9a5569d27100ffbcd55ded"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/parser.json.command.json",
+      "bytes": 1106,
+      "sha256": "bf1e407f34fd59e46eb3af3aa2cd13c1a7051ddfcdd3fd0dcfcfa6d938900333"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/parser.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/parser.md",
+      "bytes": 525,
+      "sha256": "5527c501253a5d2c3792f48f6bb818e36bf953bb5ae3d9c86fd6b01de1bbb893"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/parser.md.command.json",
+      "bytes": 1107,
+      "sha256": "09b419eeea8f115b95cfc8ea8c81b9def72fdfb017feeeed4c68149748ae565c"
+    },
+    {
+      "path": "outputs-pandoc/note-markers/parser.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/libreoffice.json",
+      "bytes": 1779,
+      "sha256": "d5ef6a7f816a6fd0944ceb9c0d624bfaf7a86067d4cd7f33193f4b5b681cc47b"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/libreoffice.json.command.json",
+      "bytes": 1136,
+      "sha256": "283a04a3e9f628c9efb099ac8eeddadbfc2831b707fd0607cba8dabb441af57b"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/libreoffice.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/libreoffice.md",
+      "bytes": 339,
+      "sha256": "10b6b75a913b340ad34033d7dcac9c2b263676fec9b1dd53f5665a228187a119"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/libreoffice.md.command.json",
+      "bytes": 1137,
+      "sha256": "c9be7aed315f1476c24dbfa396f307d12d18bf9900cf9eebc161ba0fb3cbb89f"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/libreoffice.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/parser.json",
+      "bytes": 1778,
+      "sha256": "68dad341ed4e98095b22c194e0e346848fa70b1bba631310a2088b0c71c5fb2c"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/parser.json.command.json",
+      "bytes": 1121,
+      "sha256": "e7fbe2c62e84a3d191600145c327ae4623c23ca1c0d5c5cb16d27cd7f8773cf7"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/parser.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/parser.md",
+      "bytes": 412,
+      "sha256": "a79f421e84c8fa28a5781f4971c135b84be52ed44f07e3ced0f09744eed9c1ba"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/parser.md.command.json",
+      "bytes": 1122,
+      "sha256": "fc6f082a6a6b3bffb741bb2cc1aaa6f2fe7cfd24c54d04b155abc837e66ecec4"
+    },
+    {
+      "path": "outputs-pandoc/poi-simple-table2/parser.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/authored.json",
+      "bytes": 1805,
+      "sha256": "cc8db4c965fb2ad81c2a5f71192878c5c7e7b6f5357eb8a09ce8587081b4320d"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/authored.json.command.json",
+      "bytes": 1115,
+      "sha256": "47a31fadc52527315e3ad5bda9330c79fda2a90c7fb767339917d1774f04fe64"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/authored.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/authored.md",
+      "bytes": 794,
+      "sha256": "67d790f675963d67464ede1f97802517be9262a15386fd1d6a40f3d4e844db69"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/authored.md.command.json",
+      "bytes": 1116,
+      "sha256": "e04718260da8057a5c9a9b983271361744313b98270f977ce06cf19357cb6750"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/authored.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/libreoffice.json",
+      "bytes": 1164,
+      "sha256": "edca3a67b585bfd2367e9b32ee5f65819624843435308c363fd2a0b36fafe56f"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/libreoffice.json.command.json",
+      "bytes": 1124,
+      "sha256": "c04eed85bcb661499a690a13bbc320bb60a4b5f8dff8d0db22b6e469436515ff"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/libreoffice.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/libreoffice.md",
+      "bytes": 314,
+      "sha256": "c6d753fbc62dab1799eb04abf36eeae3f2f58324957fd8b87b85f99cb25f7833"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/libreoffice.md.command.json",
+      "bytes": 1125,
+      "sha256": "cf425fd8f1088aa2671ce575b3a18dfa1b5c45ba5ba5c43c6a6a8a0c75807189"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/libreoffice.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/parser.json",
+      "bytes": 1365,
+      "sha256": "a8c11e8ec89d55ab5cf3628f270c1ba791a73cbfbc8e617b413af95d586fd034"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/parser.json.command.json",
+      "bytes": 1109,
+      "sha256": "e9fd79331e12bed9dff1eb821f9d904aff6a8f4c376123722a7715e4921f14a3"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/parser.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/parser.md",
+      "bytes": 473,
+      "sha256": "4addb1bb49ad5ca1e5304779642017a8bf448efe4a2fc8147e13ca97b83c65e1"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/parser.md.command.json",
+      "bytes": 1110,
+      "sha256": "3b7819113875150424a9ca2f1fe2ee146faae440dbabd5e5167457baa0abe4ee"
+    },
+    {
+      "path": "outputs-pandoc/table-borders/parser.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.json",
+      "bytes": 1378,
+      "sha256": "2a41faeaebd4fcca08c543af31fe2a6aa61d86201d80ab9076c8a1237ab5562d"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.json.command.json",
+      "bytes": 1088,
+      "sha256": "a333290e7b660e617a3fc466f9bbd4f13f2bc01adefd1f3cb303ce9f4bc2d980"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.md",
+      "bytes": 413,
+      "sha256": "aac6b179aef4573cd6e0e1ea11615b3170ddd20b52b350fadf0e820438d06e1d"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.md.command.json",
+      "bytes": 1089,
+      "sha256": "4c0296904b8ce0ae61259dca0719fd77f6525acc481cf67869e373fb24eeedd4"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.roundtrip.docx",
+      "bytes": 11043,
+      "sha256": "eaf64f12560e59848f7d73e0e4b5adba49ac40ebbdccea649855fce352036e8a"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.roundtrip.docx.command.json",
+      "bytes": 1099,
+      "sha256": "305f08e8f78655fe02046b361303fa50eebab25b0205eeb5aa6090dec7fa2f35"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.roundtrip.docx.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.roundtrip.json",
+      "bytes": 1377,
+      "sha256": "0213e9c59c62ec7dcbc77d2733cba03e809ad2fcdd123b43ff60b795632686ec"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.roundtrip.json.command.json",
+      "bytes": 1134,
+      "sha256": "269500b6e2737226dd1964fe74c920ed73d6109813c0521ccc8a423889dd44a3"
+    },
+    {
+      "path": "outputs-pandoc/word/authored.roundtrip.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/libreoffice.json",
+      "bytes": 1315,
+      "sha256": "11c9599334714b5aec140a3c3e43370a95b32fa38175b6aeac1b108c70c43be6"
+    },
+    {
+      "path": "outputs-pandoc/word/libreoffice.json.command.json",
+      "bytes": 1097,
+      "sha256": "db96fbc62052542f7fe91efabfcd6132e2de6c5ddc9022fa3b56e066ea2fc967"
+    },
+    {
+      "path": "outputs-pandoc/word/libreoffice.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/libreoffice.md",
+      "bytes": 400,
+      "sha256": "13c3a400f82b6895db82dcf996b3b79bb2dd342a01b1c4bd5a0740176a928e8a"
+    },
+    {
+      "path": "outputs-pandoc/word/libreoffice.md.command.json",
+      "bytes": 1098,
+      "sha256": "f7be7e3f75f3e5f508fdf96ad2761515e0a89bc9d6f5f9f1367b52246ffcba1f"
+    },
+    {
+      "path": "outputs-pandoc/word/libreoffice.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/parser.json",
+      "bytes": 1232,
+      "sha256": "77752459df48f39631de119a31eb9780388d2ed0f4d97618a34ad26b039e455c"
+    },
+    {
+      "path": "outputs-pandoc/word/parser.json.command.json",
+      "bytes": 1082,
+      "sha256": "419c7273da0706da690f31ac8d268afb7866a0d2987fcd6eb4f0bc75c2f0f5ea"
+    },
+    {
+      "path": "outputs-pandoc/word/parser.json.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs-pandoc/word/parser.md",
+      "bytes": 362,
+      "sha256": "e5858afcf4f56305a9d9325cd97855ecb0a5347bc56a8f333cbd117842c5f3e5"
+    },
+    {
+      "path": "outputs-pandoc/word/parser.md.command.json",
+      "bytes": 1083,
+      "sha256": "b14591c315167ae482bd6fcbeb166c864ef44a09bee4a4ce5a7b779362420977"
+    },
+    {
+      "path": "outputs-pandoc/word/parser.md.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/antiword-docbook.command.json",
+      "bytes": 1384,
+      "sha256": "e8d6ae50830a4437e121ca128db0d1677ee8a102aec3b2d82a08887e894593d5"
+    },
+    {
+      "path": "outputs/bookmarks/antiword-docbook.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/antiword-text.command.json",
+      "bytes": 1390,
+      "sha256": "553f1ec262056455dd135a74fbe4cc52f976e30764cd3424cf32952f706319b1"
+    },
+    {
+      "path": "outputs/bookmarks/antiword-text.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/antiword.txt",
+      "bytes": 165,
+      "sha256": "4c655369e3d37a1a8e7f9abf741e493534bb638d1b110c294d5a4bbfd9f1b080"
+    },
+    {
+      "path": "outputs/bookmarks/antiword.xml",
+      "bytes": 863,
+      "sha256": "aacbd55b4d08b9056ee2b823772258c34fc1630eb56320163be4631b2ca88a7c"
+    },
+    {
+      "path": "outputs/bookmarks/authored-pandoc-json.command.json",
+      "bytes": 1323,
+      "sha256": "4f2e433a288a3fe2c4db41f579a048cf1e292b4c1dafe1113c340d861a730ef2"
+    },
+    {
+      "path": "outputs/bookmarks/authored-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/bookmarks/authored-pandoc-markdown.command.json",
+      "bytes": 1348,
+      "sha256": "3a74fea588a5d97a1dd3f364d3a4a21e261d7450f138b426b26c4111f976a7b5"
+    },
+    {
+      "path": "outputs/bookmarks/authored-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/bookmarks/authored.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/authored.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/libreoffice-pandoc-json.command.json",
+      "bytes": 1338,
+      "sha256": "0eb292771f058588f2d30cba8ebb426a97ce590f559fce1079d011845490a3d1"
+    },
+    {
+      "path": "outputs/bookmarks/libreoffice-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/bookmarks/libreoffice-pandoc-markdown.command.json",
+      "bytes": 1363,
+      "sha256": "9382a9f76b0c5fc014f47994dda4c6cc78ecdc4756e516f1d0b92bfa05fc5235"
+    },
+    {
+      "path": "outputs/bookmarks/libreoffice-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/bookmarks/libreoffice.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/libreoffice.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/parser-pandoc-json.command.json",
+      "bytes": 1313,
+      "sha256": "4d83278e3fbe7c1a7525c93a9fd5ac5402604fd3af0148f420f5985b420af588"
+    },
+    {
+      "path": "outputs/bookmarks/parser-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/bookmarks/parser-pandoc-markdown.command.json",
+      "bytes": 1338,
+      "sha256": "f32e6ab6ff99d21988aefcef2ef40b62d8849c2c8b1fa663a6cdf9f3d2229a91"
+    },
+    {
+      "path": "outputs/bookmarks/parser-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/bookmarks/parser.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/bookmarks/parser.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/header-textbox-alias/antiword-docbook.command.json",
+      "bytes": 1441,
+      "sha256": "5d493fa4157f63b6e845b043c6506fd8a58ccb23b36349492ccde839401307d2"
+    },
+    {
+      "path": "outputs/header-textbox-alias/antiword-docbook.stderr.log",
+      "bytes": 103,
+      "sha256": "b0988701c5bfdd0d95cbbdb2a06574fcaaefc99a5edada0c2b6fcec8cc12bc97"
+    },
+    {
+      "path": "outputs/header-textbox-alias/antiword-text.command.json",
+      "bytes": 1444,
+      "sha256": "9e31b9931d044384029499f332c8714ac03cdb2d1b01dee9fa5bc6a6f04e0c66"
+    },
+    {
+      "path": "outputs/header-textbox-alias/antiword-text.stderr.log",
+      "bytes": 64,
+      "sha256": "6423885ad5df801356849bf831784721f94c3f1ea3867958181771893f20b3c2"
+    },
+    {
+      "path": "outputs/header-textbox-alias/antiword.txt",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "outputs/header-textbox-alias/antiword.xml",
+      "bytes": 161,
+      "sha256": "592208bb3398cdc24130d3906c829c5bc8f83387bfa5527d6cc337adfbabdb21"
+    },
+    {
+      "path": "outputs/header-textbox-alias/libreoffice-pandoc-json.command.json",
+      "bytes": 1393,
+      "sha256": "b1ed545532faa8e8351affcd4bddd1b89b3dd08c71d39b63ff79093080740b5b"
+    },
+    {
+      "path": "outputs/header-textbox-alias/libreoffice-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/header-textbox-alias/libreoffice-pandoc-markdown.command.json",
+      "bytes": 1418,
+      "sha256": "406e32b06a5f080f04618fa6843ddb4dd18425a080628196711a0da6255f8de5"
+    },
+    {
+      "path": "outputs/header-textbox-alias/libreoffice-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/header-textbox-alias/libreoffice.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/header-textbox-alias/libreoffice.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/header-textbox-alias/parser-pandoc-json.command.json",
+      "bytes": 1368,
+      "sha256": "ace5e227c42a5428502d69d6a304ae5ca057822d792be9d085c722b7871f5122"
+    },
+    {
+      "path": "outputs/header-textbox-alias/parser-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/header-textbox-alias/parser-pandoc-markdown.command.json",
+      "bytes": 1393,
+      "sha256": "20d657b8c443c09cd2972b0335036a0583825ef4c755695ad18c0e9f63aa94f2"
+    },
+    {
+      "path": "outputs/header-textbox-alias/parser-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/header-textbox-alias/parser.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/header-textbox-alias/parser.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/antiword-docbook.command.json",
+      "bytes": 1399,
+      "sha256": "fa448707483138ddb28f82e39a29ac081ed64e7de13ee4fdbe19464337efcf96"
+    },
+    {
+      "path": "outputs/note-markers/antiword-docbook.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/antiword-text.command.json",
+      "bytes": 1405,
+      "sha256": "b470952d1a1d096b94bfa03059ed640ad63cd2cebb18852fa257e88961ba3099"
+    },
+    {
+      "path": "outputs/note-markers/antiword-text.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/antiword.txt",
+      "bytes": 329,
+      "sha256": "8101d1ef1fecc8e73a5c356b4ecfebd13ec6e8acb1951699966fe7d5a4a6b26e"
+    },
+    {
+      "path": "outputs/note-markers/antiword.xml",
+      "bytes": 568,
+      "sha256": "36e30f1b2837bc33b04259837a3ed8c3a0871dac7e236885a72f3ce9661aea4d"
+    },
+    {
+      "path": "outputs/note-markers/authored-pandoc-json.command.json",
+      "bytes": 1338,
+      "sha256": "e455ac8e340da75b7b631162502ac294f499ce39a662a308bab39d18c958fd59"
+    },
+    {
+      "path": "outputs/note-markers/authored-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/note-markers/authored-pandoc-markdown.command.json",
+      "bytes": 1363,
+      "sha256": "c7f862b1bef52a55402d63f10323aa96091a5e236c72dd8ed30e2b2806f9a663"
+    },
+    {
+      "path": "outputs/note-markers/authored-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/note-markers/authored.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/authored.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/libreoffice-pandoc-json.command.json",
+      "bytes": 1353,
+      "sha256": "3bdd724aa30f5b2006dd29236cb0208a538aa91c5e4b89f34327723a95745109"
+    },
+    {
+      "path": "outputs/note-markers/libreoffice-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/note-markers/libreoffice-pandoc-markdown.command.json",
+      "bytes": 1378,
+      "sha256": "f49b6c9aa1605d3c1786b5c33b4d1a9252543d04c593932beed93abb8a73f728"
+    },
+    {
+      "path": "outputs/note-markers/libreoffice-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/note-markers/libreoffice.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/libreoffice.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/parser-pandoc-json.command.json",
+      "bytes": 1328,
+      "sha256": "447f58ea955b5bd90a0d6c10aee573d55ec87b90d47746ac287f054b41d3e737"
+    },
+    {
+      "path": "outputs/note-markers/parser-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/note-markers/parser-pandoc-markdown.command.json",
+      "bytes": 1353,
+      "sha256": "c55295915b91bc351cbbf83b47531fd3f428251f7ceac4b9506d66e8847e6713"
+    },
+    {
+      "path": "outputs/note-markers/parser-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/note-markers/parser.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/note-markers/parser.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/poi-simple-table2/antiword-docbook.command.json",
+      "bytes": 1425,
+      "sha256": "e7b62f9f79a753dca781f482ee607d13a9fdb273911332de6380cc2430900b4b"
+    },
+    {
+      "path": "outputs/poi-simple-table2/antiword-docbook.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/poi-simple-table2/antiword-text.command.json",
+      "bytes": 1430,
+      "sha256": "9e02721464362a5813b7bbb9be78a1745b7de57d6010b15ae24fd4288904fa91"
+    },
+    {
+      "path": "outputs/poi-simple-table2/antiword-text.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/poi-simple-table2/antiword.txt",
+      "bytes": 441,
+      "sha256": "661e5409ba22b212643050282e75c20924c8eb565fdc9fea2eadb64f9508e327"
+    },
+    {
+      "path": "outputs/poi-simple-table2/antiword.xml",
+      "bytes": 1090,
+      "sha256": "325c86a4278488caa9bb9249af788cacc9340b2a88c9b1a5d994acab7e17deb6"
+    },
+    {
+      "path": "outputs/poi-simple-table2/libreoffice-pandoc-json.command.json",
+      "bytes": 1378,
+      "sha256": "a5c96043a738b87cf4c31f6923df95b36e62db9027c8ffb837878eca963fad78"
+    },
+    {
+      "path": "outputs/poi-simple-table2/libreoffice-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/poi-simple-table2/libreoffice-pandoc-markdown.command.json",
+      "bytes": 1403,
+      "sha256": "1d7fc9678eecf218152027f328aa5c8ad7312300e5582c6bf870db0706d19559"
+    },
+    {
+      "path": "outputs/poi-simple-table2/libreoffice-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/poi-simple-table2/libreoffice.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/poi-simple-table2/libreoffice.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/poi-simple-table2/parser-pandoc-json.command.json",
+      "bytes": 1353,
+      "sha256": "37412c4d1eeccd0e39faffeafb6e7a79da6b5cee4af494195df6d5e00b102d40"
+    },
+    {
+      "path": "outputs/poi-simple-table2/parser-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/poi-simple-table2/parser-pandoc-markdown.command.json",
+      "bytes": 1378,
+      "sha256": "6a50e8cdb029da0684867c7d9a160b1fd4601ef0cc6f08db23d33bc4390954b7"
+    },
+    {
+      "path": "outputs/poi-simple-table2/parser-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/poi-simple-table2/parser.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/poi-simple-table2/parser.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/antiword-docbook.command.json",
+      "bytes": 1404,
+      "sha256": "896e4b8317ef61785a9284ea07765b9bba67ffecb7b9d435d11b738f627745f9"
+    },
+    {
+      "path": "outputs/table-borders/antiword-docbook.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/antiword-text.command.json",
+      "bytes": 1410,
+      "sha256": "e333a4db421a6fe9a05d207a53fb43d72678b52a7b4e596b3dc276dbeade444d"
+    },
+    {
+      "path": "outputs/table-borders/antiword-text.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/antiword.txt",
+      "bytes": 281,
+      "sha256": "712e5087dd530459c5098e0c7fd0df3778c27c4eb0d64917f5b01734ce326fe9"
+    },
+    {
+      "path": "outputs/table-borders/antiword.xml",
+      "bytes": 818,
+      "sha256": "8c670b9e3ed9df47956446eda8948c34ce4665229ddba7b9a6e89710a553a18a"
+    },
+    {
+      "path": "outputs/table-borders/authored-pandoc-json.command.json",
+      "bytes": 1343,
+      "sha256": "d5c863195d57b9ef85dcef14ac8aaa1243bb7c1dd7ec7e955213eed42e274dd1"
+    },
+    {
+      "path": "outputs/table-borders/authored-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/table-borders/authored-pandoc-markdown.command.json",
+      "bytes": 1368,
+      "sha256": "1f93f1f747750cf6e8cdc9959d5b633ea5c6d8561ab0517f386c1066f0f9db56"
+    },
+    {
+      "path": "outputs/table-borders/authored-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/table-borders/authored.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/authored.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/libreoffice-pandoc-json.command.json",
+      "bytes": 1358,
+      "sha256": "3c10da35093307b52bd2fea29ba168e4074416c55645fe33d7878506926f905c"
+    },
+    {
+      "path": "outputs/table-borders/libreoffice-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/table-borders/libreoffice-pandoc-markdown.command.json",
+      "bytes": 1383,
+      "sha256": "bc00bad7297f61e39c158df61e7e681ec9a2cb358d4b6637ecf1bbc41683d15e"
+    },
+    {
+      "path": "outputs/table-borders/libreoffice-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/table-borders/libreoffice.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/libreoffice.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/parser-pandoc-json.command.json",
+      "bytes": 1333,
+      "sha256": "33196549f8be908912cf8fb8a8f8aa181b2f291bf69ba169f347cc11879eb9a9"
+    },
+    {
+      "path": "outputs/table-borders/parser-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/table-borders/parser-pandoc-markdown.command.json",
+      "bytes": 1358,
+      "sha256": "e6a903d964945a5834c5e6ba809ccee9027151393086607b95c457d95794794e"
+    },
+    {
+      "path": "outputs/table-borders/parser-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/table-borders/parser.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/table-borders/parser.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/antiword-docbook.command.json",
+      "bytes": 1359,
+      "sha256": "507a94afeba2721a36a1e05d194250c2630615ba4a62d7b92468557747415fff"
+    },
+    {
+      "path": "outputs/word/antiword-docbook.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/antiword-text.command.json",
+      "bytes": 1365,
+      "sha256": "007ecd846c3b2e5f3e995bb7faa874d48a8ae49a7dfe7e7ca70bf8cd87c95663"
+    },
+    {
+      "path": "outputs/word/antiword-text.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/antiword.txt",
+      "bytes": 144,
+      "sha256": "983301f9ec12fcdd50aa2aea306c901067c43f5b86aaa2b2a5f7edad00772038"
+    },
+    {
+      "path": "outputs/word/antiword.xml",
+      "bytes": 930,
+      "sha256": "24ec8c8e358dcacd9acf48ec045a3f49c097a05293183a847624839572a02cc4"
+    },
+    {
+      "path": "outputs/word/authored-pandoc-json.command.json",
+      "bytes": 1298,
+      "sha256": "5b2aa2bd7872a0278f3ac4015e290e963fa5430899a20a19d7150f4615eb719a"
+    },
+    {
+      "path": "outputs/word/authored-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/word/authored-pandoc-markdown.command.json",
+      "bytes": 1323,
+      "sha256": "4eeb5f94247332f6060b864858e920db9fbd65939c93c3b8fb483e960cfb274a"
+    },
+    {
+      "path": "outputs/word/authored-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/word/authored.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/authored.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/libreoffice-pandoc-json.command.json",
+      "bytes": 1313,
+      "sha256": "f1e147b0cf5e4c7d6c37575a51b08b37403e0bf02f9799cde75584d1ebfefe47"
+    },
+    {
+      "path": "outputs/word/libreoffice-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/word/libreoffice-pandoc-markdown.command.json",
+      "bytes": 1338,
+      "sha256": "2f39ef811a80cdccfadae0a6dcf49b8d73a348b7e0a4239df7a35fc70dd99581"
+    },
+    {
+      "path": "outputs/word/libreoffice-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/word/libreoffice.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/libreoffice.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/parser-pandoc-json.command.json",
+      "bytes": 1288,
+      "sha256": "5fd3c9dc015f31744b4516b13832725dd0b8c9016193d6f1a06ef5be1ff3ddac"
+    },
+    {
+      "path": "outputs/word/parser-pandoc-json.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/word/parser-pandoc-markdown.command.json",
+      "bytes": 1313,
+      "sha256": "dadff3bddb214c33a94e0307899ca647b80ac4b941e0320f14b829ae46b0a916"
+    },
+    {
+      "path": "outputs/word/parser-pandoc-markdown.stderr.log",
+      "bytes": 59,
+      "sha256": "3596b2a23c750ec8eb67eb12de6bb5c25971e1651c0466a1f4cdc537d3304743"
+    },
+    {
+      "path": "outputs/word/parser.pandoc.json",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/word/parser.pandoc.md",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pandoc-input-formats.json",
+      "bytes": 363,
+      "sha256": "3e39c3fc47ca8cd16245b7c41abc231063e6ffb739e7153f45e7c97bf5eeebd6"
+    },
+    {
+      "path": "pandoc-input-formats.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pandoc-input-formats.stdout.log",
+      "bytes": 318,
+      "sha256": "5658aad6996800a33a382960ee30e1fc38a4baf590d7e7842b1a5bd209e3dc0b"
+    },
+    {
+      "path": "pandoc-output-formats.json",
+      "bytes": 364,
+      "sha256": "6a3eea91c8883ffa80b7c67265be72dce47501f53c371615426a66ba3725d13d"
+    },
+    {
+      "path": "pandoc-output-formats.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pandoc-output-formats.stdout.log",
+      "bytes": 520,
+      "sha256": "f900aaf51726305a52494ef331db0ef11470167ea22b06e2eec0ad689ebc57b5"
+    },
+    {
+      "path": "pandoc-recovery-check/command.json",
+      "bytes": 580,
+      "sha256": "c65d8bfe359db8ae1ff03c33bbdc92f66783869057a6b0a619cbe5be4e9ce45d"
+    },
+    {
+      "path": "pandoc-recovery-check/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pandoc-recovery-check/stdout.json",
+      "bytes": 1378,
+      "sha256": "2a41faeaebd4fcca08c543af31fe2a6aa61d86201d80ab9076c8a1237ab5562d"
+    },
+    {
+      "path": "pandoc-results.json",
+      "bytes": 25029,
+      "sha256": "fdd93993866f612a40ae77143a2e01f3343f3596eb8e68b9b7c870fb035c0b17"
+    },
+    {
+      "path": "pandoc-roundtrips.json",
+      "bytes": 7186,
+      "sha256": "ca8800a3332860d3af2f3f71ddafc97d36ed3b89ac70221cd10ee90a89785b72"
+    },
+    {
+      "path": "probe-inputs.json",
+      "bytes": 5320,
+      "sha256": "e6e340728d17fe3c456aceb719972b8020ce4d9ed0a7b857907ab9d2be850bd4"
+    },
+    {
+      "path": "probe-results.json",
+      "bytes": 14592,
+      "sha256": "35d74b3792975313bfed2eb1bb3a1100f80980402a250f3ab725b4947319624b"
+    },
+    {
+      "path": "references/abiword/configure.ac",
+      "bytes": 35391,
+      "sha256": "9cffbddbe57a0ec2410bf405944794c9ac37704278b24953f9d4922c064b4ca5"
+    },
+    {
+      "path": "references/abiword/ie_exp_MsWord_97.cpp",
+      "bytes": 27916,
+      "sha256": "603eca89f12af92d069df7a881d88c695efc37869ae799bd47e6a41abef9e11a"
+    },
+    {
+      "path": "references/abiword/src/wp/ap/xp/ap_Args.cpp",
+      "bytes": 7952,
+      "sha256": "82c5c3cac86f26907bd3e1b381750e329723b0d29dea34dd7c5c7d762b6ac33f"
+    },
+    {
+      "path": "references/abiword/src/wp/impexp/xp/Makefile.am",
+      "bytes": 2041,
+      "sha256": "9efa605d4dd317fb33f995925d3a89679f0a299dacd5b789ac2ad844f3b7a660"
+    },
+    {
+      "path": "references/abiword/src/wp/impexp/xp/ie_exp_RTF.cpp",
+      "bytes": 93673,
+      "sha256": "411c8860232743eb8301366ef78246f8af2658b357f083a4852a915717d8ffdd"
+    },
+    {
+      "path": "references/abiword/src/wp/impexp/xp/ie_imp_MsWord_97.cpp",
+      "bytes": 186205,
+      "sha256": "2313e98746773b920a8cee97643edd0945d0c5e60445d058099817f31904fb3d"
+    },
+    {
+      "path": "references/abiword/src/wp/impexp/xp/ie_impexp_Register.cpp",
+      "bytes": 3041,
+      "sha256": "32cf4f42149cacca7c5c82a8d5abad183d312dbd23c94b0909199a6884625cf9"
+    },
+    {
+      "path": "references/wv/COPYING",
+      "bytes": 17985,
+      "sha256": "3c6f6f8e9eda89b42eda68cf893681db1eeb03e951af8677782501ac95c9b556"
+    },
+    {
+      "path": "references/wv/README",
+      "bytes": 2423,
+      "sha256": "ef2562da5c7afa162abd78bf44167a28c0ce24547373a4130ea68d49a98ec6ed"
+    },
+    {
+      "path": "references/wv/configure.ac",
+      "bytes": 10253,
+      "sha256": "ef6de99f789a64370440193b5c0ad271bd75c4f191de551d0a984f3275fe2699"
+    },
+    {
+      "path": "run_independent_readers.py",
+      "bytes": 8149,
+      "sha256": "11a8071668daa3c5dbd8c57d15554f60f8a85500996e43e5f24548d24811efc8"
+    },
+    {
+      "path": "run_pandoc_probe.py",
+      "bytes": 4700,
+      "sha256": "e8eb84224b337682c838613d17aa9fa9f3e0c57d3a90bcd59de16d5c72df78e2"
+    },
+    {
+      "path": "soffice-version.json",
+      "bytes": 412,
+      "sha256": "fa4cc2c28059fb4c3754cf91c2509ca9b1bbf43545c854ce7feb80e4c5eaada3"
+    },
+    {
+      "path": "soffice-version.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "soffice-version.stdout.log",
+      "bytes": 73,
+      "sha256": "6d49d29516f9fb3b3f02bf33238f0beae9980c1743128ce831deddcfb69bce89"
+    },
+    {
+      "path": "source-references.json",
+      "bytes": 4198,
+      "sha256": "0a17253e77a94c58911b77139ea44628d40916038fec9363988f3700078818b5"
+    }
+  ]
+}

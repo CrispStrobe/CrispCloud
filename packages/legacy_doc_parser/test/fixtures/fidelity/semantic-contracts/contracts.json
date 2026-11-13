@@ -1,0 +1,99 @@
+{
+  "schema": "legacy-doc-parser/independent-semantic-inputs",
+  "version": 1,
+  "authoring": "Literal OOXML plus independently written contracts; no parser result is used to derive expected values.",
+  "cases": [
+    {
+      "id": "character-controls",
+      "path": "character-controls.docx",
+      "sha256": "cb39d584c1c8fb11f934ea0e6d776592897c47934509904088c8d46c1dd5d455",
+      "contract": {
+        "mainParagraphs": [
+          "NB:A‑B",
+          "SH:A­B",
+          "TAB:A\tB",
+          "UNICODE:é é Ω 漢 🙂 ‏אבג",
+          "SPACES:  before  after  "
+        ],
+        "runControlCounts": {
+          "noBreakHyphen": 1,
+          "softHyphen": 1,
+          "tab": 1
+        },
+        "reason": "Literal nonbreaking/optional hyphen controls, actual tab versus tab-stop property, Unicode scalar/combining characters and preserved edge spaces."
+      }
+    },
+    {
+      "id": "symbol-glyphs",
+      "path": "symbol-glyphs.docx",
+      "sha256": "5fe4356b6c89cddd0d57c50497dd52d331b97cdc70f52a62e72384f8ab82a6d5",
+      "contract": {
+        "symbolGlyphs": [
+          {
+            "font": "Symbol",
+            "char": "F061"
+          },
+          {
+            "font": "Symbol",
+            "char": "F057"
+          },
+          {
+            "font": "Wingdings",
+            "char": "F0FC"
+          }
+        ],
+        "literalControl": "CONTROL:( α Ω ✓",
+        "reason": "Each source glyph is identified by its font and symbol operand; no font-dependent Unicode equivalence is assumed."
+      }
+    },
+    {
+      "id": "locked-fields",
+      "path": "locked-fields.docx",
+      "sha256": "e55d0ec116f75215d80069b8297d4d84347034aafbb90ca3f46e51e8efa78b4a",
+      "contract": {
+        "mainParagraphs": [
+          "ANCHOR-α",
+          "REF:[CACHED-REF]",
+          "LINK:[CACHED-LINK]",
+          "QUOTE:[CACHED-QUOTE]"
+        ],
+        "fields": [
+          {
+            "instruction": "REF Target_A \\h",
+            "result": "CACHED-REF"
+          },
+          {
+            "instruction": "HYPERLINK \\l \"Target_A\"",
+            "result": "CACHED-LINK"
+          },
+          {
+            "instruction": "QUOTE \"LITERAL-β\"",
+            "result": "CACHED-QUOTE"
+          }
+        ],
+        "bookmarks": [
+          {
+            "name": "Target_A",
+            "text": "ANCHOR-α"
+          }
+        ],
+        "reason": "Distinct locked cached results separate literal source fields, bridge evaluation and parser field serialization."
+      }
+    },
+    {
+      "id": "note-joins",
+      "path": "note-joins.docx",
+      "sha256": "add41f4c94e0329302c63b4f6839640a93b14651895995a784551452c2288914",
+      "contract": {
+        "mainParagraphs": [
+          "MAIN-A[] MAIN-B[]"
+        ],
+        "footnoteReferenceTexts": [
+          "NOTE-A:α",
+          "NOTE-B:β"
+        ],
+        "reason": "Source part order and numeric IDs disagree with reference order; preserve reference-to-note identity rather than a text multiset."
+      }
+    }
+  ]
+}
