@@ -1,5 +1,8 @@
 @Tags(['golden', 'store-assets'])
 
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +23,11 @@ void main() {
       ..addFont(rootBundle.load('assets/fonts/Roboto-Medium.ttf'))
       ..addFont(rootBundle.load('assets/fonts/Roboto-Bold.ttf'));
     final materialIcons = FontLoader('MaterialIcons')
-      ..addFont(rootBundle.load('assets/fonts/MaterialIcons-Regular.otf'));
+      ..addFont(
+        File('test/store_assets/fixtures/MaterialIcons-Regular.otf')
+            .readAsBytes()
+            .then(ByteData.sublistView),
+      );
     await Future.wait([roboto.load(), materialIcons.load()]);
   });
 

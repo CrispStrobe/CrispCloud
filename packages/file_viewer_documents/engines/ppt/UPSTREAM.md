@@ -12,7 +12,7 @@ Alias `@file-viewer/ppt` to `apps/viewer-demo/public/vendor/ppt/dist/index.js`; 
 
 ## Distribution licenses and source boundary
 
-Retain the wrapper's original `LICENSE`, its `THIRD_PARTY_NOTICES.md`, and the distributed PPT runtime's original **`LICENSE`**, **`NOTICE.md`**, and package metadata. The notice discloses reused binary/vector foundations and excluded private QA material; do not omit it or relabel earlier native/WASM package versions with this version's grant. The root build includes these exact license/notice texts in `assets/licenses/` and records final bundled dependencies and source hashes in `RUNTIME_MANIFEST.json`.
+Retain the wrapper's original `LICENSE`, its `THIRD_PARTY_NOTICES.md`, and the distributed PPT runtime's original **`LICENSE`**, **`NOTICE.md`**, and package metadata. The notice discloses reused binary/vector foundations and excluded private QA material; do not omit it or relabel earlier native/WASM package versions with this version's grant. The root build includes every complete license/notice text in `assets/licenses/THIRD_PARTY.txt`, retains exact copies in source-only `notices/`, and maps all original sources and final bundled dependencies/hashes in `RUNTIME_MANIFEST.json`.
 
 The runtime's TypeScript development repository remains private. The public archive supplies compiled JavaScript and declarations under the stated Apache grant; this integration does not claim access to private implementation sources, private documents, QA fonts or a rebuild from that private repository. The tests execute the exact published JavaScript. Public binary fixtures are referenced by hash only for testing and are not shipped in the runtime.
 

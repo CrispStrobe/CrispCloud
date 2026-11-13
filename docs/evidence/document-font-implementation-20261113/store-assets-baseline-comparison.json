@@ -1,0 +1,37 @@
+{
+  "baseline_commit": "db5b6126fdfb7f31598c80e5adc96ea548139505",
+  "baseline": "Unmodified screenshot test source, full original font bytes loaded through rootBundle in isolated minimal Flutter project on same genuine SDK.",
+  "outcome": "All five generated images are byte-identical to current test fixture loading. Both baseline and current differ from existing reference goldens. Reference golden files were not changed.",
+  "images": [
+    {
+      "image": "01-every-cloud_testImage.png",
+      "baseline_sha256": "482f772cdf687f51eacc71c4b23b579fc640e8547ec29c4407fa6d1b333fd3cd",
+      "new_sha256": "482f772cdf687f51eacc71c4b23b579fc640e8547ec29c4407fa6d1b333fd3cd",
+      "byte_identical": true
+    },
+    {
+      "image": "02-file-browser_testImage.png",
+      "baseline_sha256": "5714aaeab47d47ebbfede5cd83df0eeaa3e3db782696b85721e157787376ae40",
+      "new_sha256": "5714aaeab47d47ebbfede5cd83df0eeaa3e3db782696b85721e157787376ae40",
+      "byte_identical": true
+    },
+    {
+      "image": "03-secure-transfers_testImage.png",
+      "baseline_sha256": "634206c25ce07839cf2de39eead6649568099e795c553140637b064004738fb3",
+      "new_sha256": "634206c25ce07839cf2de39eead6649568099e795c553140637b064004738fb3",
+      "byte_identical": true
+    },
+    {
+      "image": "04-private-by-design_testImage.png",
+      "baseline_sha256": "13ce939231547b62c2b650a772467877f239eff41ffb7d3e47718e9a72fd1bfe",
+      "new_sha256": "13ce939231547b62c2b650a772467877f239eff41ffb7d3e47718e9a72fd1bfe",
+      "byte_identical": true
+    },
+    {
+      "image": "feature-graphic-1024x500_testImage.png",
+      "baseline_sha256": "86ace2d5df738494896b9839c3adb884f5ca30b32a8784cc28072e925308a5c9",
+      "new_sha256": "86ace2d5df738494896b9839c3adb884f5ca30b32a8784cc28072e925308a5c9",
+      "byte_identical": true
+    }
+  ]
+}

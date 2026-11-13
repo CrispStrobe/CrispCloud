@@ -273,7 +273,6 @@ flutter:
   assets:
     - assets/images/app_icon.png # Add your new icon path
     - assets/images/app_icon_master.png
-    - assets/fonts/MaterialIcons-Regular.otf
     - assets/fonts/MaterialIcons_LICENSE.txt
     - assets/fonts/Roboto_LICENSE.txt
     - assets/fonts/RobotoMono_LICENSE.txt

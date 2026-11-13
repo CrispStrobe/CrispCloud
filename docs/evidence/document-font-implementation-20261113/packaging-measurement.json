@@ -1,0 +1,35 @@
+{
+  "baseline_commit": "db5b6126fdfb7f31598c80e5adc96ea548139505",
+  "scope": "Selected viewer assets, unchanged raw byte summation from tracked baseline to files on disk. Excludes shared app fonts and compression.",
+  "before": {
+    "selected_assets": 24914367,
+    "runtime": 21532980,
+    "distributed_notices": 3379595,
+    "extra_full_icon_asset": 1645184
+  },
+  "after": {
+    "selected_assets": 21107574,
+    "runtime": 19883690,
+    "distributed_notices": 1222092,
+    "extra_full_icon_asset": 0
+  },
+  "preservation": {
+    "original_notice_sources": 86,
+    "new_unique_notice_texts": 63,
+    "original_source_mappings_retained": true,
+    "only_authored_description_changes": [
+      "crispcloud-spreadsheet-UPSTREAM.md",
+      "crispcloud-ppt-UPSTREAM.md"
+    ],
+    "corresponding_source_unchanged": true,
+    "wasm_unchanged": true,
+    "full_icon_sha256": "d9865b671a09d683d13a863089d8825e0f61a37696ce5d7d448bc8023aa62453"
+  },
+  "savings": {
+    "selected_assets": 3806793,
+    "runtime": 1649290,
+    "distributed_notices": 2157503,
+    "extra_full_icon_asset": 1645184,
+    "selected_assets_and_extra_full_icon": 5451977
+  }
+}
