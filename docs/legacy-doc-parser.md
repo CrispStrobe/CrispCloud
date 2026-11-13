@@ -63,9 +63,11 @@ The index check rejects omitted files, unstaged byte or executable-mode changes,
 and source-pin declarations that would differ in the commit. It caught six
 upstream diagnostic logs omitted by the app's general `*.log` ignore rule. The
 app now explicitly includes immutable parser evidence logs. Generated logs
-outside that evidence directory remain ignored. The Office CI entry point
-requires this check, and a published checkpoint must also be verified from its
-committed Git tree; correct working files alone do not establish remote retention.
+outside that evidence directory remain ignored. Office CI requires this check
+before the SQLite test helper temporarily adds its hook to the app manifest.
+The wrapped tests still verify the working mirror. A published checkpoint must
+also be verified from its committed Git tree; correct working files alone do not
+establish remote retention.
 
 The source-mode check uses the committed `100644`/`100755` distinction, including
 new executable tools and changes that only add or remove executable permission.
