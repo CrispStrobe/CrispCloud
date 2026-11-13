@@ -100,6 +100,9 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     label: 'RAR',
     suffixes: ['.rar', '.cbr'],
     mimeType: 'application/vnd.rar',
+    canCreate: true,
+    canModify: true,
+    notes: 'Create and rewrite inspected RAR5 Store archives and CBR containers with UTF-8 names, timestamps and regular-file permissions. Native streaming supports up to 8 GiB. Compressed, encrypted, solid, split and recovery profiles remain read-only.',
   ),
   ArchiveFormatCapability(
     id: 'tar',
@@ -264,7 +267,7 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     mimeType: 'application/x-iso9660-image',
     canCreate: true,
     canModify: true,
-    notes: 'Create data ISO images with Rock Ridge and Joliet. Rewrite inspected data-only profiles; boot, hybrid and UDF images remain read-only.',
+    notes: 'Create and rewrite inspected data ISO images with Rock Ridge and Joliet. Native images support up to 8 GiB; an individual single-extent file is limited to 4 GiB minus one byte. Boot, hybrid and UDF images remain read-only.',
   ),
   ArchiveFormatCapability(
     id: 'dmg',
@@ -272,9 +275,10 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     suffixes: ['.dmg'],
     mimeType: 'application/x-apple-diskimage',
     canCreate: true,
+    canModify: true,
     notes:
         'Unencrypted UDIF images with raw, zero, zlib or bzip2 blocks. '
-        'Create new HFSX data-volume DMGs. Existing images remain read-only; APFS files are unavailable.',
+        'Create HFSX data-volume DMGs up to 8 GiB on native local storage. Rewrite fully inspected CrispCloud single-volume data profiles; other filesystem layouts remain read-only. APFS files are unavailable.',
   ),
   ArchiveFormatCapability(
     id: 'hfs',

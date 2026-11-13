@@ -1,0 +1,401 @@
+{
+  "schema": "legacy-doc-parser/native-sealed-corpus-verification",
+  "version": 1,
+  "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+  "sourceTree": "a952a0b5930baf97728120e6f34062586df89d11",
+  "indexSha256": "d2143b2b1d1414709b904c361824a125551984749ab1046336a8331ae8046e12",
+  "verifierSha256": "0c886d6038e3ce28bfbba2e1b93a6687711b099f353ee11cdb5e017cd8195338",
+  "verified": true,
+  "cases": [
+    {
+      "case": "formatting",
+      "directory": "sealed/01-formatting",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 12959819, \"verifiedGzipPages\": 9, \"archiveSha256\": \"b5a5c6986b40f8bc9186d932503c888f127a3e09a6b2d91ae34d078ff407c2c9\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 12959819,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "b5a5c6986b40f8bc9186d932503c888f127a3e09a6b2d91ae34d078ff407c2c9",
+        "extracted": null
+      }
+    },
+    {
+      "case": "word",
+      "directory": "sealed/02-word",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 12010728, \"verifiedGzipPages\": 10, \"archiveSha256\": \"7d34ad994033c0809d3ef47026c96a7407cb5b4899447118109e2cce78569b99\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 12010728,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "7d34ad994033c0809d3ef47026c96a7407cb5b4899447118109e2cce78569b99",
+        "extracted": null
+      }
+    },
+    {
+      "case": "word-compatibility",
+      "directory": "sealed/03-word-compatibility",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 124, \"bytes\": 11579251, \"verifiedGzipPages\": 20, \"archiveSha256\": \"7a84c80355b096a0fa64670a790ad4d488546c840df7d293718fd4aec539dd8d\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 124,
+        "bytes": 11579251,
+        "verifiedGzipPages": 20,
+        "archiveSha256": "7a84c80355b096a0fa64670a790ad4d488546c840df7d293718fd4aec539dd8d",
+        "extracted": null
+      }
+    },
+    {
+      "case": "table-borders",
+      "directory": "sealed/04-table-borders",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 8659160, \"verifiedGzipPages\": 10, \"archiveSha256\": \"6e874c55ce1f053814b7880b2e521314b6d677bd18cb7d2e2aa38b59fd3b0344\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 8659160,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "6e874c55ce1f053814b7880b2e521314b6d677bd18cb7d2e2aa38b59fd3b0344",
+        "extracted": null
+      }
+    },
+    {
+      "case": "story-media",
+      "directory": "sealed/05-story-media",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 4929929, \"verifiedGzipPages\": 10, \"archiveSha256\": \"18bd6eced08dafe0020aa80dafe68c8302f528b5d347f9e1b0f16eb546d53a6f\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 4929929,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "18bd6eced08dafe0020aa80dafe68c8302f528b5d347f9e1b0f16eb546d53a6f",
+        "extracted": null
+      }
+    },
+    {
+      "case": "comment-threads",
+      "directory": "sealed/06-comment-threads",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 3035598, \"verifiedGzipPages\": 10, \"archiveSha256\": \"f5245f37a9ab38f42ff33d6073fe9fcbaae2e52677e0f260750c3b53fa168957\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 3035598,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "f5245f37a9ab38f42ff33d6073fe9fcbaae2e52677e0f260750c3b53fa168957",
+        "extracted": null
+      }
+    },
+    {
+      "case": "note-markers",
+      "directory": "sealed/07-note-markers",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 9228726, \"verifiedGzipPages\": 10, \"archiveSha256\": \"6a686a0ac3e8b932cfb933c71fb535e68ee627f29a3435ba05014a8dd746f2fc\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 9228726,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "6a686a0ac3e8b932cfb933c71fb535e68ee627f29a3435ba05014a8dd746f2fc",
+        "extracted": null
+      }
+    },
+    {
+      "case": "bookmarks",
+      "directory": "sealed/08-bookmarks",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 9654820, \"verifiedGzipPages\": 10, \"archiveSha256\": \"bde9d15ef93cfdfe28297044378ca53595ce1802d2f648c2366cba93c08b03dd\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 9654820,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "bde9d15ef93cfdfe28297044378ca53595ce1802d2f648c2366cba93c08b03dd",
+        "extracted": null
+      }
+    },
+    {
+      "case": "content-controls",
+      "directory": "sealed/09-content-controls",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 7517434, \"verifiedGzipPages\": 10, \"archiveSha256\": \"6d35b3893d01070ddd98af2ede4e7be71b28be1df51d39a6e9bfaef3b55700fb\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 7517434,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "6d35b3893d01070ddd98af2ede4e7be71b28be1df51d39a6e9bfaef3b55700fb",
+        "extracted": null
+      }
+    },
+    {
+      "case": "content-controls-legacy",
+      "directory": "sealed/10-content-controls-legacy",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 7517883, \"verifiedGzipPages\": 10, \"archiveSha256\": \"311ce0d0d8f66b07d102ff810b308ec3241a6404eb784b84f3585a8d38916417\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 7517883,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "311ce0d0d8f66b07d102ff810b308ec3241a6404eb784b84f3585a8d38916417",
+        "extracted": null
+      }
+    },
+    {
+      "case": "word-altchunk",
+      "directory": "sealed/11-word-altchunk",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 9493548, \"verifiedGzipPages\": 10, \"archiveSha256\": \"0ad25f37becdaf15aaec314cfc9c53d3314779e8b2e6a23a8d18e441ff6f5dfe\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 9493548,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "0ad25f37becdaf15aaec314cfc9c53d3314779e8b2e6a23a8d18e441ff6f5dfe",
+        "extracted": null
+      }
+    },
+    {
+      "case": "linked-textboxes",
+      "directory": "sealed/12-linked-textboxes",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 2757950, \"verifiedGzipPages\": 10, \"archiveSha256\": \"f3a8e4d6a2da6f2d0ff61df62dde169a9f8652f817c1ac2a7244abbf2eb57920\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 2757950,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "f3a8e4d6a2da6f2d0ff61df62dde169a9f8652f817c1ac2a7244abbf2eb57920",
+        "extracted": null
+      }
+    },
+    {
+      "case": "officeart-shapes",
+      "directory": "sealed/13-officeart-shapes",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 1632269, \"verifiedGzipPages\": 10, \"archiveSha256\": \"1ccd48cd101c4a2a8ac8e18cd21644b6b6ffd7d21bfa5eb609ac534616dc9208\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 1632269,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "1ccd48cd101c4a2a8ac8e18cd21644b6b6ffd7d21bfa5eb609ac534616dc9208",
+        "extracted": null
+      }
+    },
+    {
+      "case": "linked-textboxes-native",
+      "directory": "sealed/14-linked-textboxes-native",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 2650784, \"verifiedGzipPages\": 9, \"archiveSha256\": \"c9583ecd6df30772acbd9b0b126f5134b3f82d7a6868ed89d210d7d713cc03b2\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 2650784,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "c9583ecd6df30772acbd9b0b126f5134b3f82d7a6868ed89d210d7d713cc03b2",
+        "extracted": null
+      }
+    },
+    {
+      "case": "emf-vectors",
+      "directory": "sealed/15-emf-vectors",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 2277978, \"verifiedGzipPages\": 10, \"archiveSha256\": \"e2a40da7b092bbf79e21810b3539d46d82d3a5aa747a00563626a7971bcb66b2\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 2277978,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "e2a40da7b092bbf79e21810b3539d46d82d3a5aa747a00563626a7971bcb66b2",
+        "extracted": null
+      }
+    },
+    {
+      "case": "wmf-vectors",
+      "directory": "sealed/16-wmf-vectors",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 114, \"bytes\": 2271268, \"verifiedGzipPages\": 10, \"archiveSha256\": \"af2b625cc605de799c9c57b8d1218e04cdf9a7986ab8f958c8e3579f27419829\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 114,
+        "bytes": 2271268,
+        "verifiedGzipPages": 10,
+        "archiveSha256": "af2b625cc605de799c9c57b8d1218e04cdf9a7986ab8f958c8e3579f27419829",
+        "extracted": null
+      }
+    },
+    {
+      "case": "linked-textboxes-compact",
+      "directory": "sealed/17-linked-textboxes-compact",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 4442819, \"verifiedGzipPages\": 9, \"archiveSha256\": \"a01dcd61d033d3f3bb8bdd56e1c9bd26680e6938ea4691144dad6b33e0aec0ed\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 4442819,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "a01dcd61d033d3f3bb8bdd56e1c9bd26680e6938ea4691144dad6b33e0aec0ed",
+        "extracted": null
+      }
+    },
+    {
+      "case": "list-continue",
+      "directory": "sealed/18-list-continue",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 13061600, \"verifiedGzipPages\": 9, \"archiveSha256\": \"fdf4679a4e4ae738321fe06a8619aa621db9ec8f71d01ccb72b751982a730b15\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 13061600,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "fdf4679a4e4ae738321fe06a8619aa621db9ec8f71d01ccb72b751982a730b15",
+        "extracted": null
+      }
+    },
+    {
+      "case": "list-restart",
+      "directory": "sealed/19-list-restart",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 15502208, \"verifiedGzipPages\": 9, \"archiveSha256\": \"d9af4710f735be7dead39ac1c0ee1ee267e5609740dc5d4753430a118821d6af\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 15502208,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "d9af4710f735be7dead39ac1c0ee1ee267e5609740dc5d4753430a118821d6af",
+        "extracted": null
+      }
+    },
+    {
+      "case": "word14-margin-origin",
+      "directory": "sealed/20-word14-margin-origin",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 8158470, \"verifiedGzipPages\": 9, \"archiveSha256\": \"33d7f0f83cc9f4010900f9d86ad358e457ae7c03af1a20f8ce1c712bb4ac9446\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 8158470,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "33d7f0f83cc9f4010900f9d86ad358e457ae7c03af1a20f8ce1c712bb4ac9446",
+        "extracted": null
+      }
+    },
+    {
+      "case": "word16-page-origin",
+      "directory": "sealed/21-word16-page-origin",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 22253487, \"verifiedGzipPages\": 9, \"archiveSha256\": \"5d0547022aff7499813e7707f27132039dd6bb33b669b2f8cd4459dc776daa55\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 22253487,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "5d0547022aff7499813e7707f27132039dd6bb33b669b2f8cd4459dc776daa55",
+        "extracted": null
+      }
+    },
+    {
+      "case": "poi-simple-table2",
+      "directory": "sealed/22-poi-simple-table2",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 14049213, \"verifiedGzipPages\": 9, \"archiveSha256\": \"b61a1413a5cb070f7082357b72c0a1a32bb172475938c1b438bb12a93c096981\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 14049213,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "b61a1413a5cb070f7082357b72c0a1a32bb172475938c1b438bb12a93c096981",
+        "extracted": null
+      }
+    },
+    {
+      "case": "header-textbox-alias",
+      "directory": "sealed/23-header-textbox-alias",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 3317949, \"verifiedGzipPages\": 9, \"archiveSha256\": \"522d15b93e325d02348369131c479227adf51a3650e3bb0c388270572bea47a1\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 3317949,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "522d15b93e325d02348369131c479227adf51a3650e3bb0c388270572bea47a1",
+        "extracted": null
+      }
+    },
+    {
+      "case": "header-textbox-first-enabled",
+      "directory": "sealed/24-header-textbox-first-enabled",
+      "returnCode": 0,
+      "stdout": "{\"verified\": true, \"sourceCommit\": \"48bf3a84e822b960e369f0134d597e025c775a41\", \"files\": 104, \"bytes\": 3769222, \"verifiedGzipPages\": 9, \"archiveSha256\": \"e060d9b6d306c8fd2e12d38baf6d33e6a1dcf0b8e0956c44217836e09b7e161b\", \"extracted\": null}\n",
+      "stderr": "",
+      "result": {
+        "verified": true,
+        "sourceCommit": "48bf3a84e822b960e369f0134d597e025c775a41",
+        "files": 104,
+        "bytes": 3769222,
+        "verifiedGzipPages": 9,
+        "archiveSha256": "e060d9b6d306c8fd2e12d38baf6d33e6a1dcf0b8e0956c44217836e09b7e161b",
+        "extracted": null
+      }
+    }
+  ],
+  "totals": {
+    "caseArchives": 24,
+    "files": 2646,
+    "verifiedGzipPages": 240,
+    "artifactBytes": 192732113
+  }
+}

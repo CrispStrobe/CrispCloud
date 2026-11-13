@@ -142,7 +142,7 @@ void main() {
   );
 
   testWidgets(
-    'custom keychain failures do not render private platform details',
+    'custom keychain failures identify the store without rendering credential payloads',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
       final messenger =
@@ -184,8 +184,10 @@ void main() {
       expect(result, isNull);
       expect(find.textContaining('PRIVATE_PLATFORM_TOKEN'), findsNothing);
       expect(
-        find.textContaining('The selected credential store is unavailable'),
-        findsOneWidget,
+        find.textContaining(
+          'Validate the selected credential store before saving',
+        ),
+        findsWidgets,
       );
       debugDefaultTargetPlatformOverride = null;
     },

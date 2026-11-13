@@ -797,7 +797,11 @@ class _ArchiveEndpointDialogState extends State<_ArchiveEndpointDialog> {
                       Text(
                         t(
                           workspace?.supportsLargeFiles == true
-                              ? 'streamedBounds'
+                              ? switch (workspace!.format) {
+                                  'iso' => 'streamedIsoBounds',
+                                  'dmg' => 'streamedDmgBounds',
+                                  _ => 'streamedBounds',
+                                }
                               : 'bounds',
                         ),
                       ),

@@ -1,0 +1,329 @@
+{
+  "runtimeCommit": "17ee78702a4dd06d499b7fd63b0b08e05c10d24d",
+  "worktreeDirty": false,
+  "sourceUnchangedDuringCompilation": true,
+  "renderer": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+  "probePdfLibrary": "1.26.6",
+  "cases": [
+    {
+      "id": "word-compatibility",
+      "status": "measured",
+      "sourceSha256": "8fccf5c41ac4f51136635322933065ecc786e1365709a7a10edb8734024049fe",
+      "binaryDocSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+      "initial": {
+        "referencePages": 2,
+        "actualPages": 2,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "maximumWordDriftPoints": null,
+        "layoutTextExactlyMatches": false,
+        "rasterExactlyMatches": false
+      },
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "binaryDocSha256": "1db098c5dec90d72d119cf55a75b5477b1588dd0dddf8ca6844dfb11b0a359c6",
+          "fromBinary": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          },
+          "fromPrevious": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          },
+          "fromFirst": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          }
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "binaryDocSha256": "87bb5b1462ef30689c5bb8b2151922a60c1e0f24dac2d36c8574874e480011ce",
+          "fromBinary": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          },
+          "fromPrevious": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          },
+          "fromFirst": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          }
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "binaryDocSha256": "d80bc43691d3bda0e2ee198bce20ead8987428700f5a56f11ed2af1631160c94",
+          "fromBinary": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          },
+          "fromPrevious": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          },
+          "fromFirst": {
+            "referencePages": 2,
+            "actualPages": 2,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": false,
+            "maximumWordDriftPoints": null,
+            "layoutTextExactlyMatches": false,
+            "rasterExactlyMatches": false
+          }
+        }
+      ],
+      "comparisonWith0c3e596": [
+        {
+          "stage": "converted",
+          "pageGeometryAndWordsEqual": true,
+          "layoutTextEqual": true,
+          "rgbRasterEqual": true
+        },
+        {
+          "stage": "roundtrip-01-converted",
+          "pageGeometryAndWordsEqual": true,
+          "layoutTextEqual": true,
+          "rgbRasterEqual": true
+        },
+        {
+          "stage": "roundtrip-02-converted",
+          "pageGeometryAndWordsEqual": true,
+          "layoutTextEqual": true,
+          "rgbRasterEqual": true
+        },
+        {
+          "stage": "roundtrip-03-converted",
+          "pageGeometryAndWordsEqual": true,
+          "layoutTextEqual": true,
+          "rgbRasterEqual": true
+        }
+      ]
+    },
+    {
+      "id": "word16-page-origin",
+      "status": "measured",
+      "sourceSha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "binaryDocSha256": "3e105980f47af62c81c1c451b0339e34d3fdfe6972c1fe5c664e7b25d966f84d",
+      "initial": {
+        "referencePages": 1,
+        "actualPages": 1,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "maximumWordDriftPoints": 0.0,
+        "layoutTextExactlyMatches": true,
+        "rasterExactlyMatches": false
+      },
+      "cycles": [
+        {
+          "index": 1,
+          "status": "measured",
+          "binaryDocSha256": "2d6eb62562b4fa53942f543221c784296edaccc7a93d9c8a32492de0bf7184f9",
+          "fromBinary": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          },
+          "fromPrevious": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          },
+          "fromFirst": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          }
+        },
+        {
+          "index": 2,
+          "status": "measured",
+          "binaryDocSha256": "30e3f35a4f776039361265ab00379627683da941e9a34a62459c1b46dbc76d1b",
+          "fromBinary": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          },
+          "fromPrevious": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": true
+          },
+          "fromFirst": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          }
+        },
+        {
+          "index": 3,
+          "status": "measured",
+          "binaryDocSha256": "f895a15106dc79398e350ed15bd0e1a60aebe971df117cf996ab2a4edb08a682",
+          "fromBinary": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          },
+          "fromPrevious": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 0.0,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          },
+          "fromFirst": {
+            "referencePages": 1,
+            "actualPages": 1,
+            "pageDimensionsMatch": true,
+            "pageTextMatches": true,
+            "maximumWordDriftPoints": 1.4460000000000264,
+            "layoutTextExactlyMatches": true,
+            "rasterExactlyMatches": false
+          }
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "name": "ISO29500-1 section17.15.3.3",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.balancesinglebytedoublebytewidth?view=openxml-3.0.1"
+    },
+    {
+      "name": "MS-DOC Copts60",
+      "url": "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-doc/8b8c7ac1-c424-40c2-8645-ba719af38bf9"
+    }
+  ],
+  "dopCopies": [
+    {
+      "stage": "word16-source",
+      "tableDopOffset": 30364,
+      "dopLength": 694,
+      "copies": [
+        {
+          "relativeOffset": 8,
+          "tableOffset": 30372,
+          "bytesHex": "00f0",
+          "fDntBlnSbDbWid": true,
+          "ooxmlBalanceSingleByteDoubleByteWidth": false
+        },
+        {
+          "relativeOffset": 84,
+          "tableOffset": 30448,
+          "bytesHex": "00f01000",
+          "fDntBlnSbDbWid": true,
+          "ooxmlBalanceSingleByteDoubleByteWidth": false
+        },
+        {
+          "relativeOffset": 508,
+          "tableOffset": 30872,
+          "bytesHex": "00f010000800fcfd010000000000000000000000000000000000000000000000",
+          "fDntBlnSbDbWid": true,
+          "ooxmlBalanceSingleByteDoubleByteWidth": false
+        }
+      ]
+    },
+    {
+      "stage": "word16-cycle1",
+      "tableDopOffset": 2318,
+      "dopLength": 610,
+      "copies": [
+        {
+          "relativeOffset": 8,
+          "tableOffset": 2326,
+          "bytesHex": "0000",
+          "fDntBlnSbDbWid": false,
+          "ooxmlBalanceSingleByteDoubleByteWidth": true
+        },
+        {
+          "relativeOffset": 84,
+          "tableOffset": 2402,
+          "bytesHex": "00000000",
+          "fDntBlnSbDbWid": false,
+          "ooxmlBalanceSingleByteDoubleByteWidth": true
+        },
+        {
+          "relativeOffset": 508,
+          "tableOffset": 2826,
+          "bytesHex": "0000000008000010000000000000000000000000000000000000000000000000",
+          "fDntBlnSbDbWid": false,
+          "ooxmlBalanceSingleByteDoubleByteWidth": true
+        }
+      ]
+    }
+  ]
+}

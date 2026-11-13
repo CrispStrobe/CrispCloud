@@ -1,0 +1,277 @@
+{
+  "observedUtc": "2026-11-13T06:20:05.328Z",
+  "sourceUrls": [
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43376296083",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43376296083/jobs?per_page=100",
+    "https://api.github.com/repos/CrispStrobe/CrispCloud/actions/runs/43376296067"
+  ],
+  "scope": "GitHub-hosted statuses and step outcomes for the exact measured runtime. Separate from the retained local acceptance records; no hosted artifact downloads or re-execution are claimed.",
+  "officeRun": {
+    "id": 43376296083,
+    "name": "Office fidelity integration",
+    "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43376296083",
+    "head_sha": "0233ed8e9501538a9e68051b58a048407b2e29d0",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-13T06:05:40Z",
+    "updated_at": "2026-11-13T06:17:49Z",
+    "run_started_at": "2026-11-13T06:05:40Z",
+    "run_attempt": 1
+  },
+  "officeJobs": [
+    {
+      "id": 131723461735,
+      "name": "host-roundtrip",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43376296083/job/131723461735",
+      "head_sha": "0233ed8e9501538a9e68051b58a048407b2e29d0",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-13T06:05:43Z",
+      "completed_at": "2026-11-13T06:11:29Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:05:44Z",
+          "completed_at": "2026-11-13T06:05:45Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:05:45Z",
+          "completed_at": "2026-11-13T06:05:48Z"
+        },
+        {
+          "number": 3,
+          "name": "Verify committed Office sources before test hooks",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:05:48Z",
+          "completed_at": "2026-11-13T06:05:48Z"
+        },
+        {
+          "number": 4,
+          "name": "Set up bundled ebook converter",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:05:48Z",
+          "completed_at": "2026-11-13T06:05:59Z"
+        },
+        {
+          "number": 5,
+          "name": "Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:05:59Z",
+          "completed_at": "2026-11-13T06:06:23Z"
+        },
+        {
+          "number": 6,
+          "name": "Native test dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:06:23Z",
+          "completed_at": "2026-11-13T06:06:33Z"
+        },
+        {
+          "number": 7,
+          "name": "Run flutter pub get",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:06:33Z",
+          "completed_at": "2026-11-13T06:06:35Z"
+        },
+        {
+          "number": 8,
+          "name": "Shared corpus and host save workflow",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:06:35Z",
+          "completed_at": "2026-11-13T06:11:25Z"
+        },
+        {
+          "number": 9,
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:11:25Z",
+          "completed_at": "2026-11-13T06:11:27Z"
+        },
+        {
+          "number": 16,
+          "name": "Post Run subosito/flutter-action@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:11:27Z",
+          "completed_at": "2026-11-13T06:11:27Z"
+        },
+        {
+          "number": 17,
+          "name": "Post Set up bundled ebook converter",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:11:27Z",
+          "completed_at": "2026-11-13T06:11:27Z"
+        },
+        {
+          "number": 18,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:11:27Z",
+          "completed_at": "2026-11-13T06:11:28Z"
+        },
+        {
+          "number": 19,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:11:28Z",
+          "completed_at": "2026-11-13T06:11:28Z"
+        }
+      ]
+    },
+    {
+      "id": 131725620920,
+      "name": "external-schema",
+      "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43376296083/job/131725620920",
+      "head_sha": "0233ed8e9501538a9e68051b58a048407b2e29d0",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-13T06:13:56Z",
+      "completed_at": "2026-11-13T06:17:48Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:13:57Z",
+          "completed_at": "2026-11-13T06:13:58Z"
+        },
+        {
+          "number": 2,
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:13:58Z",
+          "completed_at": "2026-11-13T06:14:02Z"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/setup-dotnet@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:02Z",
+          "completed_at": "2026-11-13T06:14:12Z"
+        },
+        {
+          "number": 4,
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:12Z",
+          "completed_at": "2026-11-13T06:14:14Z"
+        },
+        {
+          "number": 5,
+          "name": "Require every actual host export",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:14Z",
+          "completed_at": "2026-11-13T06:14:25Z"
+        },
+        {
+          "number": 6,
+          "name": "Prove validator detects invalid XML",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:25Z",
+          "completed_at": "2026-11-13T06:14:38Z"
+        },
+        {
+          "number": 7,
+          "name": "Validate host uploads and engine exports",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:38Z",
+          "completed_at": "2026-11-13T06:14:46Z"
+        },
+        {
+          "number": 8,
+          "name": "Stage exact actual-host bytes for native rendering",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:46Z",
+          "completed_at": "2026-11-13T06:14:46Z"
+        },
+        {
+          "number": 9,
+          "name": "Install independent host renderer",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:14:46Z",
+          "completed_at": "2026-11-13T06:15:27Z"
+        },
+        {
+          "number": 10,
+          "name": "Check actual-host rendering and repeated saves",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:15:27Z",
+          "completed_at": "2026-11-13T06:17:43Z"
+        },
+        {
+          "number": 11,
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:17:43Z",
+          "completed_at": "2026-11-13T06:17:45Z"
+        },
+        {
+          "number": 21,
+          "name": "Post Run actions/setup-dotnet@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:17:45Z",
+          "completed_at": "2026-11-13T06:17:45Z"
+        },
+        {
+          "number": 22,
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:17:45Z",
+          "completed_at": "2026-11-13T06:17:46Z"
+        },
+        {
+          "number": 23,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T06:17:46Z",
+          "completed_at": "2026-11-13T06:17:46Z"
+        }
+      ]
+    }
+  ],
+  "providerRun": {
+    "id": 43376296067,
+    "name": "Dart and Rust provider compatibility",
+    "html_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43376296067",
+    "head_sha": "0233ed8e9501538a9e68051b58a048407b2e29d0",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-13T06:05:40Z",
+    "updated_at": "2026-11-13T06:08:29Z",
+    "run_started_at": "2026-11-13T06:05:40Z",
+    "run_attempt": 1
+  }
+}

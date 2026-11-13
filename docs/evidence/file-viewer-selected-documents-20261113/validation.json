@@ -103,13 +103,14 @@
     "nativePolicyChecks": 27,
     "targetedXmlNodeTests": 11,
     "updatedXmlBrowserCases": 10,
-    "updatedBrowserExecution": "pending CI",
-    "nativeCompilerExecution": "pending CI",
+    "updatedBrowserExecution": "passed; run 43387993185, runtime job 131760905460",
+    "nativeCompilerExecution": "passed; run 43387993185, Linux consumer job 131760905157",
     "interactiveGtkDialogQualification": "not claimed",
     "priorNativeAttempt": {
       "run": 43385379835,
       "job": 131756389063,
       "conclusion": "cancelled while queued; zero executed steps"
-    }
+    },
+    "ciReceipt": "ci-ddfd695.json"
   }
 }

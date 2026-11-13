@@ -4,6 +4,55 @@ The integration pins are recorded in `packages/legacy_doc_parser/UPSTREAM.json` 
 
 ## Current continuation checkpoint
 
+The [first layout follow-up receipt](evidence/word-layout-74420eb2-20261113/README.md)
+records clean published app `e3eaaa32` with parser
+`74420eb2e0ec14401a0db5bcbb30ab6d202a2340`. It integrates explicit Line Number
+styles, exact integer picture sizing, supported textbox paint and a visible
+generated placeholder for unavailable OLE previews. All 1,369 managed Office
+files verify: 948 exact parser files and 421 unchanged other files. Version
+`1.2.9+22`, the root lockfile, Quds and other dependency pins remain unchanged.
+
+The exact app runtime passes 107 data tests, 13 actual native assertions,
+four-format JavaScript acceptance and the source/release controls. All 7,257
+tracked file hashes and 1,180 cohort input hashes remain unchanged across
+execution. The receipt retains the source review, guarded sync, complete
+command results and independent remote-checkout verification. It preserves
+each upstream feature's measured scope and the known remaining native bridge
+differences; later textbox fill and ink work will have separate receipts.
+
+## Earlier continuation at 48bf3a
+
+The [13 November continuation receipt](evidence/word-gaps-48bf3a-20261113/README.md)
+records acceptance of clean published app `0233ed8e` with canonical parser
+`48bf3a84e822b960e369f0134d597e025c775a41`. It preserves current main's build 22,
+archive integrations, Quds pin and dependency lock. All 1,226 managed Office
+files verify: 805 exact parser files and 421 unchanged other files.
+
+The continuation restores six upstream evidence logs omitted from main by the
+app's general log ignore rule. The stricter Git-index gate checks source bytes,
+executable modes, pin declarations, new files and deleted files before publication;
+Office CI runs it before temporary SQLite hooks. The parser update also retains
+unsupported disabled-line fallback appearance explicitly and adds independent
+note-source attribution without changing the note story to match native loss.
+
+All 107 data-only Word tests, four-format JavaScript acceptance, 13 actual native
+assertions and 27 synchronization controls pass on the exact app runtime. All
+7,108 tracked app-file hashes and 1,179 captured cohort inputs are unchanged
+across execution. Existing Apple, crypto and ebook controls and actual source
+verification also pass. The receipt retains complete execution records and an
+independent checkout check of the published Git tree. It does not claim Flutter
+widget execution, exact native pagination or a release build.
+
+The separate [hosted Office workflow](https://github.com/CrispStrobe/CrispCloud/actions/runs/43376296083)
+passed both host-roundtrip and external-schema jobs on that same runtime,
+including the committed-source gate, app save workflow, complete host-export
+inventory, invalid XML control, SDK validation and actual-host native repeated
+saves. [Provider compatibility](https://github.com/CrispStrobe/CrispCloud/actions/runs/43376296067)
+also passed. The receipt retains their exact run, head and step metadata separately
+from the local artifacts.
+
+## Earlier continuation at 0c3e596
+
 The [0c3e596 continuation receipt](evidence/word-continuation-0c3e596/README.md)
 records final acceptance on exact clean remote app checkpoint `5348fade`.
 All 653 parser files match upstream; the 421 non-parser Office files and Quds

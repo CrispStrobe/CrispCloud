@@ -1,4 +1,5 @@
 import 'credential_storage_config.dart';
+import 'credential_storage_diagnostics.dart';
 import 'secure_storage_service.dart';
 import 'secure_storage_web.dart';
 
@@ -97,13 +98,16 @@ class CredentialStorageBootstrap {
   }
 }
 
-/// Intentionally does not include platform exceptions, credential contents,
-/// custom paths, or other details from a failed secure-store operation.
+/// Preserves actionable backend identity and the original failure stack.
+/// Diagnostics never contain credential values or native query dictionaries.
 class CredentialStorageUnavailable implements Exception {
-  const CredentialStorageUnavailable();
+  const CredentialStorageUnavailable({this.diagnostics});
+
+  final CredentialStorageDiagnostics? diagnostics;
 
   @override
   String toString() =>
+      diagnostics?.summary ??
       'The selected credential store is unavailable. Restore access or unlock '
-      'it, then retry.';
+          'it, then retry.';
 }

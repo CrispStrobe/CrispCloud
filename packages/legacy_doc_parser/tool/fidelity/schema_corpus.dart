@@ -7,6 +7,7 @@ import 'package:legacy_doc_parser/legacy_doc_parser.dart';
 
 import 'header_textbox_alias_fixture.dart' as header_aliases;
 import 'image_appearance_probe.dart' as image_appearance;
+import 'ink_schema_fixture.dart' as ink_strokes;
 import 'list_sequence_fixture.dart' as list_sequences;
 import 'metafile_probe.dart' as metafiles;
 import 'media_review_fixture.dart' as media_reviews;
@@ -48,6 +49,18 @@ void main(List<String> arguments) {
       'output': output,
       'producer': producer,
     });
+  }
+
+  ink_strokes.main(['${root.path}/ink-strokes']);
+  for (final name in ink_strokes.inkSchemaCases) {
+    for (final mode in ['compressed', 'uncompressed']) {
+      record(
+        'ink-strokes/$name-$mode',
+        'ink-strokes/$name-$mode.doc',
+        'ink-strokes/$name-$mode.docx',
+        'tool/fidelity/ink_schema_fixture.dart',
+      );
+    }
   }
 
   origins.main(['${root.path}/table-origin']);
@@ -419,6 +432,7 @@ void main(List<String> arguments) {
 
   for (final name in [
     'formatting',
+    'word-compatibility',
     'linked-textboxes',
     'word14-margin-origin',
     'word16-page-origin',
@@ -437,6 +451,7 @@ void main(List<String> arguments) {
     'shared-header-textbox-table',
     'header-textbox-page-variants',
     'bookmarks-native-hyperlink',
+    'line-number-style',
   ]) {
     nativeInput(name, 'test/fixtures/word_native/$name.doc');
   }

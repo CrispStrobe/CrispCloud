@@ -1,0 +1,611 @@
+{
+  "version": 1,
+  "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "sourceWorktreeDirty": false,
+  "report": {
+    "path": "native-report.json.xz",
+    "sha256": "a2aa830669f28c7a933af663d39b23f759e058bd97ad407a0b4f8f909e0abcf3",
+    "bytes": 26892,
+    "uncompressedSha256": "c430535f84e1c11c6c0a3a73e0f652b44e8b2e48ad5bacfa84c79690f607ba0e",
+    "uncompressedBytes": 11770606
+  },
+  "archive": {
+    "path": "native-artifacts.tar.xz",
+    "sha256": "b0cedcea778b22fefc6f82e32e440f2b534d2cc23b28b300167771016760f13d",
+    "bytes": 115868,
+    "format": "USTAR/XZ",
+    "compressionPreset": 6
+  },
+  "fileCount": 104,
+  "uncompressedFileBytes": 14062047,
+  "excludedGeneratedFiles": [
+    "Office profile directories",
+    "temporary directory",
+    "compiled parser executable (hash retained in report)"
+  ],
+  "files": [
+    {
+      "path": "inputs/poi-simple-table2.doc",
+      "bytes": 27136,
+      "sha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc"
+    },
+    {
+      "path": "run/compile.log",
+      "bytes": 103,
+      "sha256": "6c497b0de8cd888280358a9f885e3facfdbed47fd36c6ab9afbd728e97f99fcb"
+    },
+    {
+      "path": "run/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    {
+      "path": "run/fonts.txt",
+      "bytes": 51943,
+      "sha256": "cda9e96d268b4149761b3233661bd91d6fcd03573ed3d540cd378714a2c821fc"
+    },
+    {
+      "path": "run/poi-simple-table2/binary-render.json",
+      "bytes": 5255,
+      "sha256": "6e06b3850851f1d33dd9479c50dbe41fde8542cba8195c6ba639eb1ea5654527"
+    },
+    {
+      "path": "run/poi-simple-table2/converted-render.json",
+      "bytes": 5237,
+      "sha256": "58f1e7f5aa772a1c001d85cb43d506f6293499297feb847a3ff1682ff8cfbc03"
+    },
+    {
+      "path": "run/poi-simple-table2/converted-semantic.json",
+      "bytes": 352376,
+      "sha256": "6a6371e46fd2de55d941bcd31735b70002c365e5b955eba3c3c4a81f8399b1e5"
+    },
+    {
+      "path": "run/poi-simple-table2/converted.docx",
+      "bytes": 5955,
+      "sha256": "4ce0f0cf12b15dc819945ce2a856415ab84b41f0820ddea73c3adad2d0bb4efa"
+    },
+    {
+      "path": "run/poi-simple-table2/native-docx/conversion.log",
+      "bytes": 307,
+      "sha256": "9577e7214fe969cae27dc5aff66671dd0bb07a130e2ee66cdec7d1ef214cb31f"
+    },
+    {
+      "path": "run/poi-simple-table2/native-docx/source.docx",
+      "bytes": 5469,
+      "sha256": "a475a98120f4a39a9fc53153a437d1e661f110215034c46b4bb35d2367da00d4"
+    },
+    {
+      "path": "run/poi-simple-table2/native-render.json",
+      "bytes": 5255,
+      "sha256": "39c425a83a63f506335a0af38fad1695b520cfd392a4ec017c3bea69fc650c57"
+    },
+    {
+      "path": "run/poi-simple-table2/native-semantic.json",
+      "bytes": 176684,
+      "sha256": "4dbed7db545786af584216cb75d59a50d282bac79ddd374e78194ff8faeaba35"
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/conversion.log",
+      "bytes": 305,
+      "sha256": "dd57b94b1831ae8ce4beeff9f101d590215cf82d26ea9340e23b04042e1b015c"
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/binary-render.json",
+        "manifest": "run/poi-simple-table2/render-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/pages.xhtml",
+      "bytes": 5189,
+      "sha256": "ff69d004312cbb0c8edb530eb711b6ad000918acedc93d497690bdf64abc9c50"
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/pdfinfo.txt",
+      "bytes": 468,
+      "sha256": "495fc39f6a558743223429951378d65c5919091c013078b18b9f2e7d2e281da6"
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "2b2f7710119dd0dfb7b5e6c82e266fd289b2a4a6ba9d4fb0b74e5a0529d81629"
+    },
+    {
+      "path": "run/poi-simple-table2/render-binary/source.pdf",
+      "bytes": 15392,
+      "sha256": "b0e072ceb95daa93c8f103a15d12c0fa3f2d043d41240b960462170d920c1114"
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/conversion.log",
+      "bytes": 315,
+      "sha256": "dd52c693c229d3c462fde84b4d0ae49182e8d2f0336c965bf0d7b5303724a7c8"
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/converted.pdf",
+      "bytes": 14992,
+      "sha256": "35407d61dbc0ac2f6f37d68088bab758424bf32c478fc36c8ad9ce98115913ae"
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/page-0001.ppm.gz",
+      "bytes": 8913,
+      "sha256": "41cb5886eb7af79915410d2f059c7fcd807e23700206a14f5840ad0942b8cf28",
+      "uncompressedSha256": "e719d2d9a09e06f68f03aa05974ac7aedcf5717015d0395229b58ef38d63b35e",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/converted-render.json",
+        "manifest": "run/poi-simple-table2/render-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "2b6b06e9a5beb3686436ea67bb0019c951b6486dcdde3ef891695c5753c80c6b"
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "6a083cb88731dfb0eac8356babda9191a9039532def36b896d3365feba304968"
+    },
+    {
+      "path": "run/poi-simple-table2/render-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "6fc746b0f5f06a71ca23ee3c458355994bbca89e8019b38ca3f917e06d993292"
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/conversion.log",
+      "bytes": 318,
+      "sha256": "49ab471c82dc4d745970b285801d55e957f6580aadc78c7fe9f1d87a15027545"
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/native-render.json",
+        "manifest": "run/poi-simple-table2/render-native/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/pages.xhtml",
+      "bytes": 5189,
+      "sha256": "cc7cbe1da7c8b9a198340130382b44ea8e43ad6f59457cc2c6835455b292b5a3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/pdfinfo.txt",
+      "bytes": 468,
+      "sha256": "d923892ca6f4d00240600c5fb4474f705901d99d26e6b1bfddae8fd167af34eb"
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "81667a8c0c4167625033ef0b5088b74e0a26a053db634dd6473c67f0241be5b1"
+    },
+    {
+      "path": "run/poi-simple-table2/render-native/source.pdf",
+      "bytes": 15392,
+      "sha256": "ee86aef65a454c530b83445d87146e501afa2e0d8a6da454203eab5a902fb1a0"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/conversion.log",
+      "bytes": 344,
+      "sha256": "24d9b9efe2f8271a140d62ef6f720c219e8563cfde2dfa0ec9e26fe0823737a1"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/converted.pdf",
+      "bytes": 14995,
+      "sha256": "5f4a99ac890a3f82fce99edfb6600a49de83d08f4056bf95d4c15d965e694150"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/roundtrip-01-binary-render.json",
+        "manifest": "run/poi-simple-table2/render-roundtrip-01-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "d926da345b347858af2536f09398ccbe659e7bf767cf1ec97f6c34c0fb8f4e81"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "567d35502d07a3baec563979fe326f944a4b33136dacf9a16a7d10df46463dc7"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "a900f57a50d7300254151bddef15fb965ace5cec28a27b8f7584af956ac7af92"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/conversion.log",
+      "bytes": 335,
+      "sha256": "dda2d699d2dbc6767dd5d33e196f0a5c35c8871afb7b20188572220d21321be9"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/import.pdf",
+      "bytes": 14995,
+      "sha256": "03b178495251e7fff2d46e02fb696c262b319763a4ae7e108ecbf7e3def3f13d"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/roundtrip-01-converted-render.json",
+        "manifest": "run/poi-simple-table2/render-roundtrip-01-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "d926da345b347858af2536f09398ccbe659e7bf767cf1ec97f6c34c0fb8f4e81"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "567d35502d07a3baec563979fe326f944a4b33136dacf9a16a7d10df46463dc7"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-01-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "7026dc51d4e6bb85e0b2117d0a426df34c39c738be682492c51ef75aa15ac512"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/conversion.log",
+      "bytes": 338,
+      "sha256": "f1c462e61a7896a366b5caf6e85db919feb7f1f1a4f568e37bfa31197eeae0e3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/import.pdf",
+      "bytes": 14995,
+      "sha256": "d436623f1b81ff06813b48639056bd47d04a5bc5b95f0fbf47523586c9dd90e3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/roundtrip-02-binary-render.json",
+        "manifest": "run/poi-simple-table2/render-roundtrip-02-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "d530e3b119627b1ffb4f98c8bdb77bf8eaf371368305a43a37658baaf5d74ead"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "5a4e2f6f7069a4c8af12c5f38060c5a838ef4e02d24a4860b821f356b8a101e6"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "6108cd2aa40881326bc94e0431d0ca21f0de4d278fe3da9117666e8136f331a3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/conversion.log",
+      "bytes": 335,
+      "sha256": "36cadb00bb526fb129d90971a90c5077991be3325079c616507275c62ac0f7d6"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/import.pdf",
+      "bytes": 14995,
+      "sha256": "d862a8c10bcd6c455f72107f8c0406f2b82a964e76d5a2f751f7c86915997291"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/roundtrip-02-converted-render.json",
+        "manifest": "run/poi-simple-table2/render-roundtrip-02-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "3e808635a0445387693e54eae5ea56d29dda8c2ef187066ac564f57550008efd"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "25161c09a1a8a7a002653d2f7275e533c877b0e9b879109c884f4ce9bcb7e09f"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-02-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "4249fbe39b8f9eb02c2d15236a283457e72d4baf7595cf02e2eb36692ce74773"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/conversion.log",
+      "bytes": 338,
+      "sha256": "9bd08ab5263ec41d34f354a5961a2f04769b6d54409381e57e531628cd809fb8"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/import.pdf",
+      "bytes": 14995,
+      "sha256": "0a9b41d3a95aaf7b3f6f5ba712c78ec80cbf68b8b7eac9f05e9b43e033be68a1"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/roundtrip-03-binary-render.json",
+        "manifest": "run/poi-simple-table2/render-roundtrip-03-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "1a5644f4d1889d342d40b5fd9475b79ff76102ba1167e4e91d6c0faf4f1cbdd9"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "5838e6dd1fa7550fcf7def095198f798e6a38bcb571e17d04f182929b54c941d"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "6e75216dbf0b34932d0ed36c522070d2ffe1275ed18f1acc961680a48be12a3e"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/conversion.log",
+      "bytes": 335,
+      "sha256": "57e2fad06215d10f6cc4df388a1014f686c26610762081d5cb4f7ca1f0aff752"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/import.pdf",
+      "bytes": 14995,
+      "sha256": "aaebbeb8f4d4a0b1671ae260c173fc1e0a6c0b27b94a2ede1a6b707e1c4914b0"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/page-0001.ppm.gz",
+      "bytes": 8916,
+      "sha256": "d479e09e260d57fc0360742d7c0ae6e0d7896977575f2a382a194cdcbf957e61",
+      "uncompressedSha256": "eb2c4b4beab829d2c64bf60b13202243712432f2b022aa881608c4f32e991d2c",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/poi-simple-table2/roundtrip-03-converted-render.json",
+        "manifest": "run/poi-simple-table2/render-roundtrip-03-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/pages.txt",
+      "bytes": 132,
+      "sha256": "0f41b768a20690c4389e309971b7e4044d5c31119ee5c893ac57b2e35ad4d2b3"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/pages.xhtml",
+      "bytes": 5145,
+      "sha256": "10d562d91089a9b7ae4ea8589be8a9dac9e07b09c8982a8ed9b17b8316703d85"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "2bb50f8fe690592b36aa0916012b91223ef952f3a56806c32e368a4734fba168"
+    },
+    {
+      "path": "run/poi-simple-table2/render-roundtrip-03-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "e352fc93c9d76a3511c2173d41a9eff716b57fcbd73c671fcb18a3d50159d891"
+    },
+    {
+      "path": "run/poi-simple-table2/result.json",
+      "bytes": 10739378,
+      "sha256": "501c05d39fb20f2333821eca3d0512f824763848e58979371ab010e56c50534e"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01-binary-render.json",
+      "bytes": 5255,
+      "sha256": "3b70606d17486a495ddb28e4ca4eba24d1ba36f8b3c4b149e453b822ba7f20e1"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01-converted-render.json",
+      "bytes": 5255,
+      "sha256": "356ffbf98dfaaaaf39d0958a935b24b8f08b690568211eadc2dff243c9016a62"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01-converted-semantic.json",
+      "bytes": 376681,
+      "sha256": "a2f131d34c18068c1f1ccee0796774eea1ff09883b37e2ff7e7698c0b2f2d09e"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01-native-semantic.json",
+      "bytes": 367301,
+      "sha256": "8cb3a7f286008ce1c6a23c03f047aa8a0c69be4d4cee3c0c6b90ebd9dc3f02db"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01/binary/conversion.log",
+      "bytes": 311,
+      "sha256": "d15416a97c358102ea2284be5035d7247e72c508d991a6f29531ceba7f40182a"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01/binary/converted.doc",
+      "bytes": 10240,
+      "sha256": "2d56a08df1c4aad33d33d628a555b7bb0540b7d510fdd1a59a08201aad261c0f"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01/import.docx",
+      "bytes": 5378,
+      "sha256": "ebd6214156e9eb5a68d562e272a97a5a7a186ebdc53b13a88b5cee3c4fa8e508"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01/native-docx/conversion.log",
+      "bytes": 346,
+      "sha256": "66f72deb9a10f45adc127dabf3127c102cf938a28a9862c9bd77669b0d42ef97"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-01/native-docx/converted.docx",
+      "bytes": 5607,
+      "sha256": "b6d95c662fd8dbe78451bc18ee8718852012256724ef80b5363c013405b482ef"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02-binary-render.json",
+      "bytes": 5255,
+      "sha256": "e03fe3acf8fa41d318e420065550f4ea1dcad725cee7116461b320d15a312ad7"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02-converted-render.json",
+      "bytes": 5255,
+      "sha256": "18c262bb53e49a5108c00350d497c2c2a7bf9ecc0d5b59bcedda15c8719cdc11"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02-converted-semantic.json",
+      "bytes": 376681,
+      "sha256": "d12742f372bd7a892f8f8d37c496d5795a4c0511477f01d00dc4363abffbf533"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02-native-semantic.json",
+      "bytes": 356861,
+      "sha256": "b8b69336fa0477d397dec01916e2a827cb8a46e00f29008a856a2dbd85e2f13b"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02/binary/conversion.log",
+      "bytes": 318,
+      "sha256": "4e72e90859489f37b4821936dcb502013ff01b4230b067d402f9b970d8f0a9c1"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02/binary/import.doc",
+      "bytes": 10240,
+      "sha256": "651878a52cdee0cb5f3ebd6cd0c0fcd4afb57c63862c58b899bd57bc39ddfe8d"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02/import.docx",
+      "bytes": 5378,
+      "sha256": "6379932b6467efe6ac48c81791ea85daac0c6d537eff9051fb1a643ec5ab19f0"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02/native-docx/conversion.log",
+      "bytes": 340,
+      "sha256": "32037a1eda5ccd4d7e695350d3749e02a5c54cecc6452f85c2a04124e63b103a"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-02/native-docx/import.docx",
+      "bytes": 5598,
+      "sha256": "c50c3147b184e3ea120802b0439ecd59dda635dc2efc1811573b22622522caa8"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03-binary-render.json",
+      "bytes": 5255,
+      "sha256": "8e3b250426c9c59d4664d17e74053b5a1994008a5cff044d52612c63c4c6dcf4"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03-converted-render.json",
+      "bytes": 5255,
+      "sha256": "70efaaee7ddfcef3778d916843007b4df33a781034a323fa423344628392ec3a"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03-converted-semantic.json",
+      "bytes": 376683,
+      "sha256": "5a1b857809c64da02f7bb3580de950b6a8e1ccdce061d541916077fd66274176"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03-native-semantic.json",
+      "bytes": 356861,
+      "sha256": "9ccbc3a7666d52f5d4e60e69840c917c48c8065986b526b829a433f949cf6404"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03/binary/conversion.log",
+      "bytes": 318,
+      "sha256": "5eb7f545b8aa486f4c3a2cc24b9202744f5ce0af69f5a018a0c1c724b0e5b015"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03/binary/import.doc",
+      "bytes": 10240,
+      "sha256": "4d0e31af6c22d4db8ad94358bdbe0bf6acbd597098783e7276cc52efccf551a3"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03/import.docx",
+      "bytes": 5378,
+      "sha256": "b2aa4e943201107ebbc8fd35a3870d9420e5fd645f18f7796169e57cede038ad"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03/native-docx/conversion.log",
+      "bytes": 340,
+      "sha256": "e88818a8ea36581084051b44cc7f232da35bdf33b9ebc53068456586a081d94a"
+    },
+    {
+      "path": "run/poi-simple-table2/roundtrip-03/native-docx/import.docx",
+      "bytes": 5598,
+      "sha256": "f4e4afd5a4900645b507e6c22bbf1d9a1ecfcd9c2f92f360ce22677dbfc9b6a9"
+    },
+    {
+      "path": "run/poi-simple-table2/source.doc",
+      "bytes": 27136,
+      "sha256": "8aea59b70c19a150d657065f254c5e10db08a51518d1c7fce33fc8f75ab6c6cc"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_types.dart';
 import 'archive_write_model.dart';
@@ -11,6 +12,10 @@ const _metadataLimit = 32 * 1024 * 1024;
 const _continuationLimit = 8 * 1024 * 1024;
 const _chunkSize = 256 * 1024;
 const _nameLimit = 1024;
+
+/// This data-only profile stores each regular member in one ISO extent.
+/// Images may be larger, but multi-extent members remain unsupported.
+const kArchiveIsoSingleExtentLimit = 0xffffffff;
 
 /// Builds a data-only ISO 9660 image with Joliet and Rock Ridge names.
 ///
@@ -111,9 +116,38 @@ Future<void> writeIsoArchive(
 Future<ArchiveRewriteInspection> inspectIsoRewrite(
   Uint8List bytes,
   ViewerArchive archive,
-) async {
+) => inspectIsoRewriteSource(
+  koni.MemoryByteSource(bytes),
+  archive,
+  maxBytes: 2 * 1024 * 1024 * 1024,
+);
+
+/// Inspects a repeatable ISO source without collecting its image or payloads.
+///
+/// Reads bounded volume/directory/continuation metadata and scans every
+/// unclaimed padding range so hidden boot, hybrid, UDF or application data
+/// cannot be silently discarded. Regular payload extents are range-checked
+/// and skipped. [source] must represent the same immutable snapshot as
+/// [archive]. The caller retains ownership of both.
+/// Cancellation throws rather than producing a read-only policy result.
+Future<ArchiveRewriteInspection> inspectIsoRewriteSource(
+  koni.ByteSource source,
+  ViewerArchive archive, {
+  int maxBytes = kArchiveStreamingLimit,
+  bool Function()? isCancelled,
+}) async {
+  if (maxBytes <= 0 || maxBytes > kArchiveStreamingLimit) {
+    throw ArgumentError.value(maxBytes, 'maxBytes');
+  }
   try {
-    return _IsoInspection(bytes, archive).inspect();
+    return await _IsoInspection(
+      source,
+      archive,
+      maxBytes,
+      isCancelled,
+    ).inspect();
+  } on _IsoInspectionCancelled {
+    rethrow;
   } on _IsoRefusal catch (error) {
     return ArchiveRewriteInspection(reason: error.message);
   } on ArchiveViewException catch (error) {
@@ -123,6 +157,147 @@ Future<ArchiveRewriteInspection> inspectIsoRewrite(
   } on RangeError {
     return ArchiveRewriteInspection(reason: 'The ISO metadata is truncated.');
   }
+}
+
+/// Proves that an inspected candidate retained the planned ISO/Rock Ridge
+/// metadata, including fields absent from the generic archive member model.
+///
+/// Replans metadata only; no entry stream is opened. Intentional name, mode and
+/// modification-time changes are applied by the same layout plan, while volume
+/// fields, ownership, extra timestamps, flags and alternate names must match
+/// exactly. Namespace, member lengths and payload digests still need the
+/// caller's ordinary candidate verification.
+void verifyIsoRewritePreservation(
+  List<ArchiveWriteEntry> entries,
+  ArchiveRewriteInspection actual, {
+  ArchiveRewriteInspection? source,
+}) {
+  if (!actual.supported || actual.container['iso.profile'] != 1) {
+    throw ArchiveViewException(
+      actual.reason ?? 'The ISO candidate has no supported inspection.',
+    );
+  }
+  if (source != null &&
+      (!source.supported || source.container['iso.profile'] != 1)) {
+    throw const ArchiveViewException(
+      'The original ISO inspection is unavailable.',
+    );
+  }
+  final image = _IsoImage(entries, source)..plan(kArchiveStreamingLimit);
+
+  Map<String, Object?> metadata(_IsoNode node, {required bool unicode}) {
+    final saved = unicode
+        ? _map(node.attributes['iso.jolietMetadata'])
+        : node.attributes;
+    final date = _directoryDate(node, saved);
+    final result = <String, Object?>{
+      'iso.date': base64.encode(date),
+      'iso.modified': _decodeDate(date)?.millisecondsSinceEpoch,
+      'iso.flags': _uintAttribute(saved, 'iso.flags') & 1,
+      if (!unicode) ...{
+        'iso.mode': node.mode,
+        'iso.links': node.directory
+            ? 2 + node.children.where((child) => child.directory).length
+            : 1,
+        'iso.uid': _uintAttribute(node.attributes, 'iso.uid'),
+        'iso.gid': _uintAttribute(node.attributes, 'iso.gid'),
+        'iso.serial': node.serial,
+        'iso.tf': base64.encode(_timeField(node)),
+      },
+    };
+    if (node.parent == null) {
+      if (!unicode) {
+        result['iso.er'] =
+            node.attributes['iso.er'] ??
+            base64.encode([
+              0x45,
+              0x52,
+              18,
+              1,
+              10,
+              0,
+              0,
+              1,
+              ...ascii.encode('RRIP_1991A'),
+            ]);
+      }
+    } else {
+      final identifier = unicode
+          ? String.fromCharCodes([
+              for (var at = 0; at < node.jolietName.length; at += 2)
+                node.jolietName[at] * 256 + node.jolietName[at + 1],
+            ])
+          : ascii.decode(node.primaryName);
+      var name = identifier;
+      if (!node.directory) {
+        name = name.replaceFirst(RegExp(r';[0-9]+$'), '');
+        if (name.endsWith('.')) name = name.substring(0, name.length - 1);
+      }
+      result[unicode ? 'iso.jolietIdentifier' : 'iso.identifier'] = identifier;
+      result['iso.name'] = unicode ? name : node.name;
+    }
+    return result;
+  }
+
+  Map<String, Object?> paired(_IsoNode node) {
+    final primary = metadata(node, unicode: false);
+    final alternate = metadata(node, unicode: true);
+    if (node.parent != null) {
+      primary['iso.jolietIdentifier'] = alternate['iso.jolietIdentifier'];
+    }
+    primary['iso.jolietMetadata'] = alternate;
+    return primary;
+  }
+
+  final container = <String, Object?>{
+    'iso.profile': 1,
+    'iso.volume': base64.encode(image.descriptor(false)),
+    'iso.jolietVolume': base64.encode(image.descriptor(true)),
+    'iso.root': paired(image.root),
+  };
+  if (!_sameIsoMetadata(container, actual.container)) {
+    throw const ArchiveViewException(
+      'ISO volume or root metadata changed during rewrite.',
+    );
+  }
+  final expected = <String, Map<String, Object?>>{};
+  void visit(_IsoNode node) {
+    for (final child in node.children) {
+      expected[child.path] = paired(child);
+      if (child.directory) visit(child);
+    }
+  }
+
+  visit(image.root);
+  if (expected.length != actual.attributes.length) {
+    throw const ArchiveViewException('ISO candidate metadata names differ.');
+  }
+  for (final item in expected.entries) {
+    if (!_sameIsoMetadata(item.value, actual.attributes[item.key])) {
+      throw ArchiveViewException(
+        'ISO auxiliary metadata changed during rewrite: ${item.key}',
+      );
+    }
+  }
+}
+
+bool _sameIsoMetadata(Object? expected, Object? actual) {
+  if (expected is Map && actual is Map) {
+    return expected.length == actual.length &&
+        expected.keys.every(
+          (key) =>
+              actual.containsKey(key) &&
+              _sameIsoMetadata(expected[key], actual[key]),
+        );
+  }
+  if (expected is List && actual is List) {
+    if (expected.length != actual.length) return false;
+    for (var index = 0; index < expected.length; index++) {
+      if (!_sameIsoMetadata(expected[index], actual[index])) return false;
+    }
+    return true;
+  }
+  return expected == actual;
 }
 
 const _magic = [0x43, 0x44, 0x30, 0x30, 0x31];
@@ -193,7 +368,7 @@ class _IsoImage {
       if (parts.length > (entry.isDirectory ? 7 : 8)) {
         _writeError('ISO writing supports at most eight directory levels.');
       }
-      if (entry.size > 0xffffffff) {
+      if (entry.size > kArchiveIsoSingleExtentLimit) {
         _writeError('Multi-extent ISO files are not supported.');
       }
       var parent = root;
@@ -848,6 +1023,10 @@ class _IsoRefusal implements Exception {
   final String message;
 }
 
+class _IsoInspectionCancelled extends ArchiveViewException {
+  const _IsoInspectionCancelled() : super('ISO inspection was cancelled.');
+}
+
 Never _refuse(String message) =>
     throw _IsoRefusal('ISO remains read-only: $message');
 
@@ -913,9 +1092,11 @@ void _checkTf(Uint8List bytes) {
 // The inspector below is intentionally independent of the browsing reader's
 // selected-hierarchy shortcuts: editing must account for every stored tree.
 class _IsoInspection {
-  _IsoInspection(this.bytes, this.archive);
-  final Uint8List bytes;
+  _IsoInspection(this.source, this.archive, this.maxBytes, this.isCancelled);
+  final koni.ByteSource source;
   final ViewerArchive archive;
+  final int maxBytes;
+  final bool Function()? isCancelled;
   final List<(int, int, String)> regions = [];
   final Map<String, Map<String, Object?>> attributes = {};
   int volumeBytes = 0;
@@ -924,22 +1105,30 @@ class _IsoInspection {
   int entries = 0;
   int descriptorEnd = 0;
 
-  ArchiveRewriteInspection inspect() {
+  void _check() {
+    if (isCancelled?.call() ?? false) {
+      throw const _IsoInspectionCancelled();
+    }
+    if (archive.isClosed) _refuse('the browsing reader was closed.');
+  }
+
+  Future<ArchiveRewriteInspection> inspect() async {
+    _check();
     if (archive.formatName != 'iso' ||
-        bytes.length < 18 * _sector ||
-        bytes.length % _sector != 0) {
+        source.length < 18 * _sector ||
+        source.length % _sector != 0) {
       _refuse('only complete 2048-byte-sector ISO images are supported.');
     }
-    if (bytes.length > 2 * 1024 * 1024 * 1024) {
+    if (source.length > maxBytes) {
       _refuse('the image exceeds the rewrite inspection limit.');
     }
-    if (bytes.sublist(0, 16 * _sector).any((value) => value != 0)) {
+    if ((await _slice(0, 16 * _sector)).any((value) => value != 0)) {
       _refuse('the System Area contains boot, hybrid or other data.');
     }
     Uint8List? primary;
     Uint8List? joliet;
     for (var sector = 16; sector < 144; sector++) {
-      final descriptor = _slice(sector * _sector, _sector);
+      final descriptor = await _slice(sector * _sector, _sector);
       if (_compare(descriptor.sublist(1, 6), _magic) != 0 ||
           descriptor[6] != 1) {
         _refuse('a non-ISO descriptor or UDF bridge is present.');
@@ -970,14 +1159,14 @@ class _IsoInspection {
       _refuse('the primary volume descriptor is incomplete.');
     }
     volumeBytes = _dual32(primary, 80) * _sector;
-    if (volumeBytes < descriptorEnd || volumeBytes > bytes.length) {
+    if (volumeBytes < descriptorEnd || volumeBytes > source.length) {
       _refuse('the declared volume size is invalid.');
     }
     _claim(0, descriptorEnd, 'descriptors');
     _volume(primary, false);
     if (joliet != null) _volume(joliet, true);
-    final main = _tree(primary, false);
-    final alternate = joliet == null ? null : _tree(joliet, true);
+    final main = await _tree(primary, false);
+    final alternate = joliet == null ? null : await _tree(joliet, true);
     _checkDuplicateRecords(main);
     if (alternate != null) _checkDuplicateRecords(alternate);
     final rock = main.rock;
@@ -999,6 +1188,7 @@ class _IsoInspection {
       _refuse('the browsing and stored hierarchies disagree.');
     }
     for (final member in archive.members) {
+      _check();
       final node = listed[member.name];
       if (node == null ||
           member.isSpecial ||
@@ -1017,12 +1207,13 @@ class _IsoInspection {
         _refuse('POSIX metadata differs from the selected hierarchy.');
       }
     }
-    _pathTables(primary, main, false);
-    if (joliet != null) _pathTables(joliet, alternate!, true);
+    await _pathTables(primary, main, false);
+    if (joliet != null) await _pathTables(joliet, alternate!, true);
     regions.sort((a, b) => a.$1.compareTo(b.$1));
     var covered = 0;
     (int, int, String)? previous;
     for (final region in regions) {
+      _check();
       if (region.$1 < covered) {
         if (previous != null &&
             region.$1 == previous.$1 &&
@@ -1033,11 +1224,11 @@ class _IsoInspection {
         }
         _refuse('overlapping data or metadata cannot be safely rebuilt.');
       }
-      _zeroRange(covered, region.$1);
+      await _zeroRange(covered, region.$1);
       covered = region.$2;
       previous = region;
     }
-    _zeroRange(covered, bytes.length);
+    await _zeroRange(covered, source.length);
     final inspection = ArchiveRewriteInspection(
       container: {
         'iso.profile': 1,
@@ -1061,16 +1252,30 @@ class _IsoInspection {
           readChunks: () => const Stream.empty(),
         ),
     ];
-    _IsoImage(projected, inspection).plan(2 * 1024 * 1024 * 1024);
+    _IsoImage(projected, inspection).plan(maxBytes);
+    _check();
     return inspection;
   }
 
-  Uint8List _slice(int offset, int length) {
-    final bound = volumeBytes == 0 ? bytes.length : volumeBytes;
+  void _range(int offset, int length, {bool insideVolume = true}) {
+    final bound = insideVolume && volumeBytes != 0
+        ? volumeBytes
+        : source.length;
     if (offset < 0 || length < 0 || offset > bound || length > bound - offset) {
       _refuse('a metadata extent leaves the source image.');
     }
-    return Uint8List.sublistView(bytes, offset, offset + length);
+  }
+
+  Future<Uint8List> _slice(int offset, int length) async {
+    _range(offset, length);
+    if (length > _metadataLimit) {
+      _refuse('a metadata read exceeds the rewrite profile.');
+    }
+    _check();
+    final bytes = await source.read(offset, length);
+    _check();
+    if (bytes.length != length) _refuse('the source image was truncated.');
+    return bytes;
   }
 
   int _dual16(Uint8List data, int at) {
@@ -1092,18 +1297,28 @@ class _IsoInspection {
   }
 
   void _claim(int start, int count, String kind) {
-    _slice(start, count);
+    _range(start, count);
     if (count != 0) regions.add((start, start + count, kind));
   }
 
-  void _zeroRange(int start, int end) {
-    for (var at = start; at < end; at++) {
-      if (bytes[at] != 0) {
-        _refuse(
-          'unmodeled data, UDF, extra sessions or nonzero padding at byte '
-          '0x${at.toRadixString(16)} would be lost.',
-        );
+  Future<void> _zeroRange(int start, int end) async {
+    _range(start, end - start, insideVolume: false);
+    for (var at = start; at < end;) {
+      _check();
+      final remaining = end - at;
+      final count = remaining < _chunkSize ? remaining : _chunkSize;
+      final bytes = await source.read(at, count);
+      _check();
+      if (bytes.length != count) _refuse('the source image was truncated.');
+      for (var index = 0; index < count; index++) {
+        if (bytes[index] != 0) {
+          _refuse(
+            'unmodeled data, UDF, extra sessions or nonzero padding at byte '
+            '0x${(at + index).toRadixString(16)} would be lost.',
+          );
+        }
       }
+      at += count;
     }
   }
 
@@ -1151,15 +1366,16 @@ class _IsoInspection {
     }
   }
 
-  _InspectedNode _tree(Uint8List descriptor, bool unicode) {
-    final root = _record(descriptor, 156, unicode, false);
+  Future<_InspectedNode> _tree(Uint8List descriptor, bool unicode) async {
+    final root = await _record(descriptor, 156, unicode, false);
     if (!root.directory ||
         root.identifier.length != 1 ||
         root.identifier[0] != 0) {
       _refuse('invalid root directory.');
     }
     final visited = <int>{};
-    void read(_InspectedNode node, int depth, bool rock) {
+    Future<void> read(_InspectedNode node, int depth, bool rock) async {
+      _check();
       if (depth > 7 || !visited.add(node.offset)) {
         _refuse('cyclic, shared or deeply nested directories.');
       }
@@ -1171,7 +1387,7 @@ class _IsoInspection {
         _refuse('directory metadata exceeds the rewrite profile.');
       }
       _claim(node.offset, node.size, 'directory');
-      final data = _slice(node.offset, node.size);
+      final data = await _slice(node.offset, node.size);
       var count = 0;
       final names = <String>{};
       for (var at = 0; at < data.length;) {
@@ -1201,7 +1417,7 @@ class _IsoInspection {
                   0;
           node.rock = rock;
         }
-        final record = _record(data, at, unicode, rock);
+        final record = await _record(data, at, unicode, rock);
         at += data[at];
         count++;
         if (count <= 2) {
@@ -1222,6 +1438,10 @@ class _IsoInspection {
           continue;
         }
         if (++entries > 200000) _refuse('too many stored directory records.');
+        if (entries % 256 == 0) {
+          await Future<void>.delayed(Duration.zero);
+          _check();
+        }
         if (record.identifier.length == 1 && record.identifier[0] < 2) {
           _refuse('repeated self/parent records.');
         }
@@ -1234,15 +1454,21 @@ class _IsoInspection {
       }
       if (count < 2) _refuse('missing self/parent directory records.');
       for (final child in node.children.where((child) => child.directory)) {
-        read(child, depth + 1, rock);
+        await read(child, depth + 1, rock);
       }
     }
 
-    read(root, 0, false);
+    await read(root, 0, false);
     return root;
   }
 
-  _InspectedNode _record(Uint8List data, int at, bool unicode, bool rock) {
+  Future<_InspectedNode> _record(
+    Uint8List data,
+    int at,
+    bool unicode,
+    bool rock,
+  ) async {
+    _check();
     if (at + 34 > data.length) _refuse('truncated directory record.');
     final length = data[at];
     if (length < 34 ||
@@ -1273,7 +1499,7 @@ class _IsoInspection {
     final directory = record[25] & 2 != 0;
     final offset = _dual32(record, 2) * _sector;
     final size = _dual32(record, 10);
-    _slice(offset, size);
+    _range(offset, size);
     if (size != 0 && offset < descriptorEnd) {
       _refuse('a data extent overlaps volume descriptors.');
     }
@@ -1287,7 +1513,7 @@ class _IsoInspection {
     String? rrName;
     final use = Uint8List.sublistView(record, useAt);
     if (rock) {
-      rrName = _susp(use, attributes, special);
+      rrName = await _susp(use, attributes, special);
     } else if (use.any((value) => value != 0)) {
       _refuse('unknown directory system-use metadata.');
     }
@@ -1342,11 +1568,11 @@ class _IsoInspection {
     )..rock = rock;
   }
 
-  String? _susp(
+  Future<String?> _susp(
     Uint8List initial,
     Map<String, Object?> attributes,
     bool special,
-  ) {
+  ) async {
     final areas = <Uint8List>[initial];
     final seen = <String>{};
     final names = BytesBuilder(copy: false);
@@ -1394,7 +1620,7 @@ class _IsoInspection {
             _refuse('too much continuation metadata.');
           }
           _claim(block * _sector + start, size, 'continuation');
-          areas.add(_slice(block * _sector + start, size));
+          areas.add(await _slice(block * _sector + start, size));
         } else if (tag == 'NM') {
           if (length < 5 ||
               field[4] & ~1 != 0 ||
@@ -1546,7 +1772,11 @@ class _IsoInspection {
     check(root);
   }
 
-  void _pathTables(Uint8List descriptor, _InspectedNode root, bool unicode) {
+  Future<void> _pathTables(
+    Uint8List descriptor,
+    _InspectedNode root,
+    bool unicode,
+  ) async {
     final size = _dual32(descriptor, 132);
     if (size == 0 || size > _metadataLimit) _refuse('invalid path table size.');
     final view = ByteData.sublistView(descriptor);
@@ -1569,7 +1799,7 @@ class _IsoInspection {
       if (block == 0 && location.$3) continue;
       if (block == 0) _refuse('a required path table is missing.');
       _claim(block * _sector, size, 'path');
-      final table = _slice(block * _sector, size);
+      final table = await _slice(block * _sector, size);
       final data = ByteData.sublistView(table);
       final seen = <int>{};
       final ordered = <_InspectedNode>[];

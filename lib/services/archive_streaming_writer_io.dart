@@ -7,7 +7,10 @@ import 'package:koni_codecs/koni_codecs.dart' show Lzma2Encoder;
 
 import '../models/archive_endpoint.dart';
 import 'archive_compression_writer.dart' show archiveGzipHeader;
+import 'archive_dmg_writer.dart';
+import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
+import 'archive_rar_stored_writer.dart';
 import 'archive_tar_writer.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
@@ -31,6 +34,9 @@ bool supportsStreamingArchiveWriting(
       ArchiveEndpointFormat.tar,
       ArchiveEndpointFormat.tarGzip,
       ArchiveEndpointFormat.gzip,
+      ArchiveEndpointFormat.iso,
+      ArchiveEndpointFormat.rar,
+      ArchiveEndpointFormat.dmg,
     }.contains(format);
 
 Future<void> writeStreamingArchiveEntries(
@@ -87,6 +93,31 @@ Future<void> writeStreamingArchiveEntries(
   final output = _Output(sink, maxOutputBytes, isCancelled);
   output.check();
   switch (format) {
+    case ArchiveEndpointFormat.iso:
+      await writeIsoArchive(
+        entries,
+        sink: output.add,
+        source: source,
+        maxOutputBytes: maxOutputBytes,
+        isCancelled: isCancelled,
+      );
+    case ArchiveEndpointFormat.rar:
+      await writeStoredRarArchive(
+        entries,
+        sink: output.add,
+        source: source,
+        maxOutputBytes: maxOutputBytes,
+        isCancelled: isCancelled,
+      );
+    case ArchiveEndpointFormat.dmg:
+      await writeDmgArchive(
+        entries,
+        sink: output.add,
+        source: source,
+        maxOutputBytes: maxOutputBytes,
+        compress: level > 0,
+        isCancelled: isCancelled,
+      );
     case ArchiveEndpointFormat.zip:
       await _writeZip(entries, output, level);
     case ArchiveEndpointFormat.sevenZip:

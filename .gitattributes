@@ -18,3 +18,6 @@ packages/dart_smb2/** text eol=lf
 
 # Dart raw strings use LF; keep the distributed runtime notice identical.
 packages/crisp_storage/NOTICE-LIBSMB2.txt text eol=lf
+
+# Pinned document runtimes, grants and MPL source archives are hashed as bytes.
+packages/file_viewer_documents/** -text -whitespace

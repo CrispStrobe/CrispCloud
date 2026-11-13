@@ -11,6 +11,7 @@ import '../utils/async_lock.dart';
 import 'encryption_service.dart';
 import 'log_service.dart';
 import 'secure_storage_service.dart';
+import 'credential_storage_diagnostics.dart';
 import 'web_crypto_provider.dart';
 import 'web_crypto_factory_io.dart'
     if (dart.library.js_interop) 'web_crypto_factory_web.dart';
@@ -30,7 +31,6 @@ const _legacyIterations = 100000;
 const _boundRecordPrefix = 'v2:';
 const _boundRecordMagic = <int>[0xff, 0x43, 0x43, 0x56, 0x02];
 
-
 // A corrupt or hostile vault must not choose unbounded work before password
 // verification. Existing positive counts up to this ceiling stay readable;
 // increasing it is an explicit compatibility/performance review. The public
@@ -46,7 +46,13 @@ const _maxPbkdf2Iterations = 2000000;
 /// New credential values authenticate their storage key in a versioned binary
 /// envelope; existing UTF-8/base64 values remain readable and become bound when
 /// rewritten. Verification metadata keeps the original format.
-class WebEncryptedStorage extends SecureStorage {
+class WebEncryptedStorage extends SecureStorage
+    implements CredentialStorageIdentity {
+  @override
+  String get credentialStoreName => 'Browser encrypted credential vault';
+  @override
+  String get credentialStoreLocation =>
+      'Browser storage at ${Uri.base.hasScheme && (Uri.base.scheme == 'https' || Uri.base.scheme == 'http') ? Uri.base.origin : Uri.base}';
   final WebStorageBackend _backend;
   WebStorageBackend get backend => _backend;
   final WebCryptoProvider _crypto;
@@ -64,9 +70,7 @@ class WebEncryptedStorage extends SecureStorage {
 
   bool get isInitialized => _cryptoKey != null;
 
-  Future<T> _withBackend<T>(
-    Future<T> Function(WebStorageBackend) action,
-  ) {
+  Future<T> _withBackend<T>(Future<T> Function(WebStorageBackend) action) {
     final backend = _backend;
     if (backend is TransactionalWebStorageBackend) {
       return backend.transaction(action);
@@ -79,70 +83,71 @@ class WebEncryptedStorage extends SecureStorage {
   /// create a vault over damaged credentials. Missing iterations are accepted
   /// only for a complete legacy salt/verification pair (100,000 iterations).
   Future<bool> hasVault() => _operations.synchronized(
-    () => _withBackend((backend) async =>
-        await _readMetadata(backend) != null),
+    () => _withBackend((backend) async => await _readMetadata(backend) != null),
   );
 
   /// Unlock an existing vault or atomically initialize a new file vault.
   /// A failed attempt always leaves this handle locked. Neither a wrong
   /// password nor incomplete metadata writes a replacement verification token.
-  Future<void> initialize(String masterPassword, {bool? expectedExisting}) =>
-      _operations.synchronized(() async {
-        _cryptoKey = null;
-        _metadata = null;
-        try {
-          final unlocked = await _withBackend((backend) async {
-            var metadata = await _readMetadata(backend);
-            if (expectedExisting != null &&
-                (metadata != null) != expectedExisting) {
-              throw StateError('Credential vault state changed; inspect it again');
-            }
-            final salt = metadata?.saltBytes ?? EncryptionService.generateSalt();
-            final iterations = metadata?.iterations ?? _newVaultIterations;
-            _validateIterations(iterations);
-            final key = await _crypto.deriveKey(masterPassword, salt, iterations);
-            if (metadata != null) {
-              try {
-                final verified = await _crypto.decrypt(
-                  key,
-                  base64.decode(metadata.verify),
-                );
-                if (utf8.decode(verified) != _verifyPlaintext) {
-                  throw StateError('Master password verification failed');
-                }
-              } catch (_) {
-                throw StateError('Incorrect master password or damaged vault');
-              }
-            } else {
-              // Finish crypto before making any writes. A transactional backend
-              // publishes all three metadata fields together, or none of them.
-              final verified = await _crypto.encrypt(
-                key,
-                Uint8List.fromList(utf8.encode(_verifyPlaintext)),
-              );
-              metadata = _VaultMetadata(
-                base64.encode(salt),
-                base64.encode(verified),
-                iterations.toString(),
-                salt,
-                iterations,
-              );
-              await backend.setItem(_saltKey, metadata.salt);
-              await backend.setItem(_iterationsKey, metadata.storedIterations!);
-              await backend.setItem(_verifyKey, metadata.verify);
-            }
-            return (key: key, metadata: metadata);
-          });
-          // File transaction commit must succeed before the handle is unlocked.
-          _cryptoKey = unlocked.key;
-          _metadata = unlocked.metadata;
-          _log.info('Encrypted credential storage initialized');
-        } catch (_) {
-          _cryptoKey = null;
-          _metadata = null;
-          rethrow;
+  Future<void> initialize(
+    String masterPassword, {
+    bool? expectedExisting,
+  }) => _operations.synchronized(() async {
+    _cryptoKey = null;
+    _metadata = null;
+    try {
+      final unlocked = await _withBackend((backend) async {
+        var metadata = await _readMetadata(backend);
+        if (expectedExisting != null &&
+            (metadata != null) != expectedExisting) {
+          throw StateError('Credential vault state changed; inspect it again');
         }
+        final salt = metadata?.saltBytes ?? EncryptionService.generateSalt();
+        final iterations = metadata?.iterations ?? _newVaultIterations;
+        _validateIterations(iterations);
+        final key = await _crypto.deriveKey(masterPassword, salt, iterations);
+        if (metadata != null) {
+          try {
+            final verified = await _crypto.decrypt(
+              key,
+              base64.decode(metadata.verify),
+            );
+            if (utf8.decode(verified) != _verifyPlaintext) {
+              throw StateError('Master password verification failed');
+            }
+          } catch (_) {
+            throw StateError('Incorrect master password or damaged vault');
+          }
+        } else {
+          // Finish crypto before making any writes. A transactional backend
+          // publishes all three metadata fields together, or none of them.
+          final verified = await _crypto.encrypt(
+            key,
+            Uint8List.fromList(utf8.encode(_verifyPlaintext)),
+          );
+          metadata = _VaultMetadata(
+            base64.encode(salt),
+            base64.encode(verified),
+            iterations.toString(),
+            salt,
+            iterations,
+          );
+          await backend.setItem(_saltKey, metadata.salt);
+          await backend.setItem(_iterationsKey, metadata.storedIterations!);
+          await backend.setItem(_verifyKey, metadata.verify);
+        }
+        return (key: key, metadata: metadata);
       });
+      // File transaction commit must succeed before the handle is unlocked.
+      _cryptoKey = unlocked.key;
+      _metadata = unlocked.metadata;
+      _log.info('Encrypted credential storage initialized');
+    } catch (_) {
+      _cryptoKey = null;
+      _metadata = null;
+      rethrow;
+    }
+  });
 
   static void _validateIterations(int iterations) {
     if (iterations < 1 || iterations > _maxPbkdf2Iterations) {
@@ -173,7 +178,8 @@ class WebEncryptedStorage extends SecureStorage {
       }
       saltBytes = base64.decode(salt);
       final verifyBytes = base64.decode(verify);
-      if (saltBytes.length != 16 || base64.encode(saltBytes) != salt ||
+      if (saltBytes.length != 16 ||
+          base64.encode(saltBytes) != salt ||
           verifyBytes.length != 28 + _verifyPlaintext.length ||
           base64.encode(verifyBytes) != verify) {
         throw const FormatException('Invalid metadata encoding');
@@ -189,7 +195,13 @@ class WebEncryptedStorage extends SecureStorage {
       iterations = int.parse(storedIterations);
       _validateIterations(iterations);
     }
-    return _VaultMetadata(salt, verify, storedIterations, saltBytes, iterations);
+    return _VaultMetadata(
+      salt,
+      verify,
+      storedIterations,
+      saltBytes,
+      iterations,
+    );
   }
 
   Future<Object> _currentKey(WebStorageBackend backend) async {
@@ -200,7 +212,9 @@ class WebEncryptedStorage extends SecureStorage {
     try {
       final current = await _readMetadata(backend);
       if (current == null || !current.sameGeneration(_metadata)) {
-        throw StateError('Credential vault changed; unlock it again before use');
+        throw StateError(
+          'Credential vault changed; unlock it again before use',
+        );
       }
       return key;
     } catch (_) {
@@ -212,7 +226,9 @@ class WebEncryptedStorage extends SecureStorage {
 
   String _storageKey(String key) {
     final stored = '$_keyPrefix$key';
-    if (stored == _saltKey || stored == _verifyKey || stored == _iterationsKey) {
+    if (stored == _saltKey ||
+        stored == _verifyKey ||
+        stored == _iterationsKey) {
       throw ArgumentError.value(key, 'key', 'Reserved credential vault key');
     }
     return stored;
@@ -232,10 +248,16 @@ class WebEncryptedStorage extends SecureStorage {
         throw const FormatException('Invalid bound credential record');
       }
     }
-    final record = jsonDecode(utf8.decode(plaintext.sublist(_boundRecordMagic.length)));
-    if (record is! Map || record.length != 2 ||
-        record['key'] != storedKey || record['value'] is! String) {
-      throw const FormatException('Credential record belongs to a different key');
+    final record = jsonDecode(
+      utf8.decode(plaintext.sublist(_boundRecordMagic.length)),
+    );
+    if (record is! Map ||
+        record.length != 2 ||
+        record['key'] != storedKey ||
+        record['value'] is! String) {
+      throw const FormatException(
+        'Credential record belongs to a different key',
+      );
     }
     return record['value'] as String;
   }
@@ -249,9 +271,16 @@ class WebEncryptedStorage extends SecureStorage {
       if (raw == null) return null;
       try {
         final bound = raw.startsWith(_boundRecordPrefix);
-        final ciphertext = bound ? raw.substring(_boundRecordPrefix.length) : raw;
-        final decrypted = await _crypto.decrypt(cryptoKey, base64.decode(ciphertext));
-        return bound ? _decodeBoundRecord(stored, decrypted) : utf8.decode(decrypted);
+        final ciphertext = bound
+            ? raw.substring(_boundRecordPrefix.length)
+            : raw;
+        final decrypted = await _crypto.decrypt(
+          cryptoKey,
+          base64.decode(ciphertext),
+        );
+        return bound
+            ? _decodeBoundRecord(stored, decrypted)
+            : utf8.decode(decrypted);
       } catch (_) {
         // Absence and authentication failure are different states. Returning
         // null here allowed legacy migration to overwrite damaged credentials.
@@ -269,7 +298,10 @@ class WebEncryptedStorage extends SecureStorage {
         cryptoKey,
         _encodeBoundRecord(stored, value),
       );
-      await backend.setItem(stored, '$_boundRecordPrefix${base64.encode(encrypted)}');
+      await backend.setItem(
+        stored,
+        '$_boundRecordPrefix${base64.encode(encrypted)}',
+      );
     }),
   );
 
@@ -296,8 +328,10 @@ class WebEncryptedStorage extends SecureStorage {
     () => _withBackend((backend) async {
       await _currentKey(backend);
       for (final key in await backend.allKeys()) {
-        if (key.startsWith(_keyPrefix) && key != _saltKey &&
-            key != _verifyKey && key != _iterationsKey) {
+        if (key.startsWith(_keyPrefix) &&
+            key != _saltKey &&
+            key != _verifyKey &&
+            key != _iterationsKey) {
           await backend.removeItem(key);
         }
       }
@@ -307,8 +341,11 @@ class WebEncryptedStorage extends SecureStorage {
 
 class _VaultMetadata {
   const _VaultMetadata(
-    this.salt, this.verify, this.storedIterations,
-    this.saltBytes, this.iterations,
+    this.salt,
+    this.verify,
+    this.storedIterations,
+    this.saltBytes,
+    this.iterations,
   );
   final String salt;
   final String verify;
@@ -316,8 +353,10 @@ class _VaultMetadata {
   final Uint8List saltBytes;
   final int iterations;
 
-  bool sameGeneration(_VaultMetadata? other) => other != null &&
-      salt == other.salt && verify == other.verify &&
+  bool sameGeneration(_VaultMetadata? other) =>
+      other != null &&
+      salt == other.salt &&
+      verify == other.verify &&
       storedIterations == other.storedIterations;
 }
 

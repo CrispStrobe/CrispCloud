@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "sourceWorktreeDirty": false,
+  "report": {
+    "path": "native-report.json.xz",
+    "sha256": "2aa28df218cc88cb25e85807c2dc7c0bd5d644e0c2f47cfd592da1f9c021d3e9",
+    "bytes": 17896,
+    "uncompressedSha256": "4476f3000dbf5adb57eb913f8eab369143d0111ab1c4ae52ebe99efb724cb8d7",
+    "uncompressedBytes": 1681791
+  },
+  "archive": {
+    "path": "native-artifacts.tar.xz",
+    "sha256": "f19bdac53dfe83aadceb720462ac8789a3f9ee5d8a4221081531dc6428addae0",
+    "bytes": 99872,
+    "format": "USTAR/XZ",
+    "compressionPreset": 6
+  },
+  "fileCount": 114,
+  "uncompressedFileBytes": 2348100,
+  "excludedGeneratedFiles": [
+    "Office profile directories",
+    "temporary directory",
+    "compiled parser executable (hash retained in report)"
+  ],
+  "files": [
+    {
+      "path": "inputs/wmf-vectors.docx",
+      "bytes": 2011,
+      "sha256": "fcf94d85aa01ce7f30b0c7551535e264a329af2f8e7ab57adc6c098040c0112f"
+    },
+    {
+      "path": "run/compile.log",
+      "bytes": 97,
+      "sha256": "fbf5c10c05bf8097df421aed328157f926dc3fbdfcfff33f74474dcc0899ac76"
+    },
+    {
+      "path": "run/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    {
+      "path": "run/fonts.txt",
+      "bytes": 51943,
+      "sha256": "cda9e96d268b4149761b3233661bd91d6fcd03573ed3d540cd378714a2c821fc"
+    },
+    {
+      "path": "run/wmf-vectors/binary-render.json",
+      "bytes": 2380,
+      "sha256": "923a20942c15e108b60764f76e73c684d146310e7aec2518ad2f61436af94746"
+    },
+    {
+      "path": "run/wmf-vectors/bridge/conversion.log",
+      "bytes": 267,
+      "sha256": "fa8aade939fd5dbd58a4143e2cce084c0edcf3b1d3326569f7cb1eb42928da11"
+    },
+    {
+      "path": "run/wmf-vectors/bridge/wmf-vectors.doc",
+      "bytes": 9728,
+      "sha256": "da2cc5f74733278364c7d52dc8cf83ac4e6cc4615a3d4a855b3722bd7e2ecc67"
+    },
+    {
+      "path": "run/wmf-vectors/converted-render.json",
+      "bytes": 2380,
+      "sha256": "0115eeebf80ad652c83c60f598b1157a7a9963241e51a6061a3dac2cad909f73"
+    },
+    {
+      "path": "run/wmf-vectors/converted-semantic.json",
+      "bytes": 45710,
+      "sha256": "37460d01543c0db9a1634b07df824c319d00ee232b9971ac22d57813faadf870"
+    },
+    {
+      "path": "run/wmf-vectors/converted.docx",
+      "bytes": 5906,
+      "sha256": "6d4a389a80d4d263a031562b341eabd214a3c0fa8609f81a310b2b3bbfcad787"
+    },
+    {
+      "path": "run/wmf-vectors/native-docx/conversion.log",
+      "bytes": 300,
+      "sha256": "e268a3cffd60299213b878db96564a540f742a43322b4c6a77215eb65df59668"
+    },
+    {
+      "path": "run/wmf-vectors/native-docx/wmf-vectors.docx",
+      "bytes": 5730,
+      "sha256": "7e9453fa99fadaccff1b232003698e849c0fff9c1dadd62b7995dcb849b4f26a"
+    },
+    {
+      "path": "run/wmf-vectors/native-render.json",
+      "bytes": 2380,
+      "sha256": "64d3600595736dc36b1d97e0511bcd7a301514f4eebf568e5d99646d50b58603"
+    },
+    {
+      "path": "run/wmf-vectors/native-semantic.json",
+      "bytes": 23826,
+      "sha256": "c3f084011c14a3a648b38dafcf44d3c3b4b01a4a24e1b3e6b1d15c554530626f"
+    },
+    {
+      "path": "run/wmf-vectors/original-render.json",
+      "bytes": 2380,
+      "sha256": "687c3498a755cf34b76617cd5a6a522f95014d8ab288d5de0ceeb0ff8df40e7f"
+    },
+    {
+      "path": "run/wmf-vectors/original-semantic.json",
+      "bytes": 4191,
+      "sha256": "1c281cb3b7c54cf02dcfa01d784b4a304aaa9c5b12a34fdd312f2225462cc15c"
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/conversion.log",
+      "bytes": 298,
+      "sha256": "803c3dfe8bddac25472e3310996d4030871afaf6cbeb4a48c4d4927e00e970d1"
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/page-0001.ppm.gz",
+      "bytes": 9604,
+      "sha256": "b0a0988ed74ab7fce38efdd0e0fc353eb60c021e6e99cfc7fb51a8f81e3c0fad",
+      "uncompressedSha256": "025ce5872072d064f9f543d15b95af6a1c6553c69763afa6bc1ee05962f3c29d",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/binary-render.json",
+        "manifest": "run/wmf-vectors/render-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "db44eba8f5c9a5bd9c7e68a067993049f6659d8eeb495f4404a7af6166042adc"
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "b01874e1fcfcb48556a6d603dc77b9064ec0e2605fdf2c97b47735e4cecdf03b"
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "8b6c4ffc2de8a031a5b43378ea594262a97b0d78f3ae53bdd6784f61ad30c68e"
+    },
+    {
+      "path": "run/wmf-vectors/render-binary/wmf-vectors.pdf",
+      "bytes": 14032,
+      "sha256": "8588ea04cd229a6964bf422b0f4fe6f0dc4362a8bcc0d7a95de68067c6d42731"
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/conversion.log",
+      "bytes": 291,
+      "sha256": "3dfc2c6f96c4c362df5cf0e36b32370c6573e8872c79015d2063891c3495ebde"
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/converted.pdf",
+      "bytes": 13998,
+      "sha256": "12f1d00649810600d141d9ca500a0adb3549107c8ebc47551758c1d84d8eb487"
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/page-0001.ppm.gz",
+      "bytes": 9578,
+      "sha256": "36627a0a4d2235d8bc80a5f425e4decda8b03c5e2b07845b05e12cc9788b094f",
+      "uncompressedSha256": "61d829649c520ba75bf8a9542ffbf78d48b1e19da19d616af775cbbdbcd6b3b2",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/converted-render.json",
+        "manifest": "run/wmf-vectors/render-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "6bc2db2fd830c6aaf193ead628ce7232620d0af56f0c268a2f688d0941598822"
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "f9257bb7a763d154be06e29bed32822f0c124b365b3506de4b1b759bbbf542c0"
+    },
+    {
+      "path": "run/wmf-vectors/render-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "97842cf3d085c68c7184792dfb590a35d5776b96004180d4da02a3431f502228"
+    },
+    {
+      "path": "run/wmf-vectors/render-native/conversion.log",
+      "bytes": 304,
+      "sha256": "c3adcdbbf296383813624a2106a2d78a7370fc5e6adfad4764d9857c23e5ece9"
+    },
+    {
+      "path": "run/wmf-vectors/render-native/page-0001.ppm.gz",
+      "bytes": 9596,
+      "sha256": "5cf3421ddc475dcb08a31a34541cd42600bdd18ea198d5e61dd2c06d70839b03",
+      "uncompressedSha256": "bbbfe6ae1d8bbc0fdd55dab9e231bf5d01e9fa115dc01297685a6da8bc3d1922",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/native-render.json",
+        "manifest": "run/wmf-vectors/render-native/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-native/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-native/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "50df0613fa38262d8af6924aaa73eb21691ca333d7582cd7bf68b6156259b20f"
+    },
+    {
+      "path": "run/wmf-vectors/render-native/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "4a3cd385e38d64a52c097b1229d1888f9160722f90d5a074aec0bff59dffa7f5"
+    },
+    {
+      "path": "run/wmf-vectors/render-native/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "993c05538338103dcaa9e79d25d874950cff9440eb0531f594d87a7a11350726"
+    },
+    {
+      "path": "run/wmf-vectors/render-native/wmf-vectors.pdf",
+      "bytes": 14005,
+      "sha256": "6c6fd77b5290b8ce567c33d11bfbb918be278ded3cc3edc71d9f67a606acbc09"
+    },
+    {
+      "path": "run/wmf-vectors/render-original/conversion.log",
+      "bytes": 283,
+      "sha256": "cdfc205aeaac85e366ccec277af1ddac7873b71a83eca1036eda239fc07339ac"
+    },
+    {
+      "path": "run/wmf-vectors/render-original/page-0001.ppm.gz",
+      "bytes": 9578,
+      "sha256": "36627a0a4d2235d8bc80a5f425e4decda8b03c5e2b07845b05e12cc9788b094f",
+      "uncompressedSha256": "61d829649c520ba75bf8a9542ffbf78d48b1e19da19d616af775cbbdbcd6b3b2",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/original-render.json",
+        "manifest": "run/wmf-vectors/render-original/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-original/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-original/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "14bafa1cd4e594a3123df791d3a560a3e0c646a0bb6d20eee352c895a2e92c3d"
+    },
+    {
+      "path": "run/wmf-vectors/render-original/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "c06932cec1c3aa99a995a552ea1a121fddaf212dd72a78208f857e8f4f0402eb"
+    },
+    {
+      "path": "run/wmf-vectors/render-original/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "08ff2210fd7d4f27e87082c5876d2b0bfe8d38c14fc9efe34eff28c84d1aa80e"
+    },
+    {
+      "path": "run/wmf-vectors/render-original/wmf-vectors.pdf",
+      "bytes": 13998,
+      "sha256": "c398ddee8b7e4207f58be659c7f4be0dc7d07870ab9482390ff53585f4ca9b6a"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/conversion.log",
+      "bytes": 320,
+      "sha256": "2b6bc9b3057b45acccac3fb5dd6f3d270a89a80085a8bb176c8b0870a2fdddd2"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/converted.pdf",
+      "bytes": 14032,
+      "sha256": "d410b7adf3e5971b995404a7a8088c8b6654c68ead84e4d56bb2d9b21ad145d9"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/page-0001.ppm.gz",
+      "bytes": 9604,
+      "sha256": "b0a0988ed74ab7fce38efdd0e0fc353eb60c021e6e99cfc7fb51a8f81e3c0fad",
+      "uncompressedSha256": "025ce5872072d064f9f543d15b95af6a1c6553c69763afa6bc1ee05962f3c29d",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/roundtrip-01-binary-render.json",
+        "manifest": "run/wmf-vectors/render-roundtrip-01-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "b4cd3557b77122184867db924976fc2bc4e5a42f25d21ebb480d4a3136885fa0"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "89c8dafc377be86a9d0126f1d28fb112753bc7a8a566023199b524f514ddc384"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "d9c1826a43194593664b5933fb89f5bc802cdd2c5fa758064fd7205a172742c3"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/conversion.log",
+      "bytes": 311,
+      "sha256": "5d75d22d40af839fc2baefdcd3ef9a06e2e4d84ae0ffe533900f72dcb985c418"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/import.pdf",
+      "bytes": 13998,
+      "sha256": "274fee620fd8abca9a5419dae3c6d847112a4a430efe40a33e68cf379f848c21"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/page-0001.ppm.gz",
+      "bytes": 9578,
+      "sha256": "36627a0a4d2235d8bc80a5f425e4decda8b03c5e2b07845b05e12cc9788b094f",
+      "uncompressedSha256": "61d829649c520ba75bf8a9542ffbf78d48b1e19da19d616af775cbbdbcd6b3b2",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/roundtrip-01-converted-render.json",
+        "manifest": "run/wmf-vectors/render-roundtrip-01-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "aac10ee530804b2afbe6c7c2910793ff67796013a783145b1f57c33bb63343c4"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "abc74023e03ea14975533b9dd95aa6454a6aeb5f28f524b5d286599d876eb4a8"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-01-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "9f59c53429f285626f75f0b3efff8dbd9dcdd03c565f832eaf503762e7d8f7c2"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/conversion.log",
+      "bytes": 314,
+      "sha256": "5d5599ef211f28e5805b479e30141e85e9b3a434d4e0cb70033d887be382eaad"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/import.pdf",
+      "bytes": 14032,
+      "sha256": "9c423c68d1f84f985be781d0883149de382554918fa1189a2214c6815f96d976"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/page-0001.ppm.gz",
+      "bytes": 9604,
+      "sha256": "b0a0988ed74ab7fce38efdd0e0fc353eb60c021e6e99cfc7fb51a8f81e3c0fad",
+      "uncompressedSha256": "025ce5872072d064f9f543d15b95af6a1c6553c69763afa6bc1ee05962f3c29d",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/roundtrip-02-binary-render.json",
+        "manifest": "run/wmf-vectors/render-roundtrip-02-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "97a70d3f4d5479e79eee5718c686c08f7767c31d13228ce27e424944071c9021"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "ec40675d1f10e84f79f5d35cf30786d5e628d46d13393f3b986dfbcf3a7f92d1"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "ca1be6a872be8fd2189cd29ec67fab919f3d69d78fa0110df01add49fd37b6f6"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/conversion.log",
+      "bytes": 311,
+      "sha256": "c68a1dd49cf4daf7f238315961d0a5b69fe794854b8537dfc9f68f884ffbcf89"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/import.pdf",
+      "bytes": 13998,
+      "sha256": "e86f24e744524ae2c7cc8e95383ef0d5330e76147c603d5c763873bf6332b099"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/page-0001.ppm.gz",
+      "bytes": 9578,
+      "sha256": "36627a0a4d2235d8bc80a5f425e4decda8b03c5e2b07845b05e12cc9788b094f",
+      "uncompressedSha256": "61d829649c520ba75bf8a9542ffbf78d48b1e19da19d616af775cbbdbcd6b3b2",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/roundtrip-02-converted-render.json",
+        "manifest": "run/wmf-vectors/render-roundtrip-02-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "e408de1be3c41ac7fcabf0e91058b9b6bb702a8ea5dcd4cccb9c2386871f9693"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "a20673b30a7c2f1b5da1f8d316e1b5400d5ea49b064d87af1f44fa45d1e7f6ea"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-02-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "e112dd0003da1a99f03945b5d1590a536340e6d811428961619c6d3e8546620d"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/conversion.log",
+      "bytes": 314,
+      "sha256": "4ee0c1f68ad0e2fbac32e72d562234d7b6bc817a5955c8d0b6cefb9ffbec1ac5"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/import.pdf",
+      "bytes": 14032,
+      "sha256": "5245913e65ae43e123e1a18c0fb9a2ad78f8d455b2827485bb0d15e22cb601e6"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/page-0001.ppm.gz",
+      "bytes": 9604,
+      "sha256": "b0a0988ed74ab7fce38efdd0e0fc353eb60c021e6e99cfc7fb51a8f81e3c0fad",
+      "uncompressedSha256": "025ce5872072d064f9f543d15b95af6a1c6553c69763afa6bc1ee05962f3c29d",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/roundtrip-03-binary-render.json",
+        "manifest": "run/wmf-vectors/render-roundtrip-03-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "f89125e3ea1e8e6e2ef90a8c6eda0f970924a3f17db35786358e09db2f6bda47"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "21c4e4e9b49e2cf2718bb7818519b06d5a55df78b681ec428b86da8d4db1f891"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-binary/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "e4eae8ad0f6ed832a0248013a52c75cc87e4db57e979daaee46d2e12e22af824"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/conversion.log",
+      "bytes": 311,
+      "sha256": "466300999ec0a9cb88a960e975c980dd973e6ccb19e2bbfb51dc3ff267859bc5"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/import.pdf",
+      "bytes": 13998,
+      "sha256": "adcb6cb85345038e3510f5c728fac9b69e3b5c9e528d725739f74e8a4feed207"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/page-0001.ppm.gz",
+      "bytes": 9578,
+      "sha256": "36627a0a4d2235d8bc80a5f425e4decda8b03c5e2b07845b05e12cc9788b094f",
+      "uncompressedSha256": "61d829649c520ba75bf8a9542ffbf78d48b1e19da19d616af775cbbdbcd6b3b2",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/wmf-vectors/roundtrip-03-converted-render.json",
+        "manifest": "run/wmf-vectors/render-roundtrip-03-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/pages.txt",
+      "bytes": 68,
+      "sha256": "ea2885f00b9f7e3dc7e14eeeebb4451e2eb3ebefa90dc8c82610d9a01081670f"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/pages.xhtml",
+      "bytes": 1817,
+      "sha256": "ac5be5abf20c3a96974e1c018bbe99b3c2321709954321f4394dfca03fadf9a8"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "efaf1993a9bef534133767af403ca5ca1fb7eb18d0696c3ec74595c658ddf83c"
+    },
+    {
+      "path": "run/wmf-vectors/render-roundtrip-03-converted/raster-manifest.json",
+      "bytes": 849,
+      "sha256": "6ffbbe0ba8605194a2cbecb45cadb3a5fca59c0a17c0814d8f84734eee700ae9"
+    },
+    {
+      "path": "run/wmf-vectors/result.json",
+      "bytes": 1486388,
+      "sha256": "f98f3234a2416baa3e65f86bb526e7642321c80af713ad566be127193284aab3"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01-binary-render.json",
+      "bytes": 2380,
+      "sha256": "b74ce53b998ebd252d1d6dd9f7a7c494d811cbac2fa4cd12e9de27a5ca68ad5f"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01-converted-render.json",
+      "bytes": 2380,
+      "sha256": "46bee84a3acca0662a595416f24f9969ace3df84e7210091f2705fa72e2aa57c"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01-converted-semantic.json",
+      "bytes": 46444,
+      "sha256": "1b3177d1f4907b6031736be26ed3cb75bf3f05e05bb991efadcd600d7f373f56"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01-native-semantic.json",
+      "bytes": 46010,
+      "sha256": "9c1cab0993207370def818d072b215eaeaebe58ee3331d98bb3351e7c62c2767"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01/binary/conversion.log",
+      "bytes": 287,
+      "sha256": "71b255139560cf6d99a74f805ea04c49521cb57d98cb66b7d90865bf6cc48109"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01/binary/converted.doc",
+      "bytes": 9728,
+      "sha256": "1df807c6601247f023df5912829ed2abe5104c87df735ae5b2c989fbb5bbe278"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01/import.docx",
+      "bytes": 5913,
+      "sha256": "5468487019e37d9bbe73b36d67422500ba0c0b0f8779342dbd796f5f750324ec"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01/native-docx/conversion.log",
+      "bytes": 322,
+      "sha256": "f1a5d35acde7dc4006b4e14285504e19c110612a20c03a4ffea205983ab4f4ab"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-01/native-docx/converted.docx",
+      "bytes": 5956,
+      "sha256": "2ffb89a78c9089323d8b2e8307fcd0c24de37a6de5ef9445a44e1f06d511e981"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02-binary-render.json",
+      "bytes": 2380,
+      "sha256": "b37359c0d377a20cd48f80c11fdeeab36a1f47704b8de9daf105061fb852aaf4"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02-converted-render.json",
+      "bytes": 2380,
+      "sha256": "c66089ed1a721c6e49e929676a439995aaa8dc0019d120a8186354afe531833d"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02-converted-semantic.json",
+      "bytes": 46446,
+      "sha256": "7d4e509bed3c8ac6c4425e2ca6deb9c37f6a3f62d1879b5af8ee6ccdfef80041"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02-native-semantic.json",
+      "bytes": 46010,
+      "sha256": "598573999886f48acbddb8dd9fd07c677fb3dc6c0e0550a32a50212cb1ad0431"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02/binary/conversion.log",
+      "bytes": 294,
+      "sha256": "bd44fd47f2f93cbffb2c9122e15f8bbc60808106bfbd46b4d7fd972494e0fba3"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "72e7ce251a19cd18e96c28fc41b288828d0976f960f354977391e60300d8fdc0"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02/import.docx",
+      "bytes": 5913,
+      "sha256": "167c51b22a50f2fd3b546c9b23b3d41f39b47cae3d853887c8db6e088e8739b2"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02/native-docx/conversion.log",
+      "bytes": 316,
+      "sha256": "9728d9e67e645486cc5701e5d9321ec467cd8bba273089494ccdfc23691c12ff"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-02/native-docx/import.docx",
+      "bytes": 5956,
+      "sha256": "cdd27fbfbb3cf279249211a226509348aa2e528e657166c3b4d1d86ec12cdf06"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03-binary-render.json",
+      "bytes": 2380,
+      "sha256": "f2f8a754f8cf5be05568776bad8ebd79079af21fe0d4ca728b3b2b27314d45bd"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03-converted-render.json",
+      "bytes": 2380,
+      "sha256": "82a3a58eb8e08d9b187ef6f2b5b2f9fc7604d2f0438c374acc04b44508004f53"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03-converted-semantic.json",
+      "bytes": 46446,
+      "sha256": "3aa21d77a6b147ae1a38dcb4a9a12e354e6725e06d03656999f08d21e679b628"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03-native-semantic.json",
+      "bytes": 46010,
+      "sha256": "19437278749e4d8e23cad0640bf3e4e6e25a9cf2012627107c56a6fd5a9694a5"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03/binary/conversion.log",
+      "bytes": 294,
+      "sha256": "eaa1eba1b1a4f3c267c883a6da0808f5228791b6f890248a690b5e987eee85c9"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03/binary/import.doc",
+      "bytes": 9728,
+      "sha256": "1dbf465f5f8514f3d57ec0a7b617bdd8477e9829dd8191362cf1e50e0bfbca9e"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03/import.docx",
+      "bytes": 5914,
+      "sha256": "200059dc5f72bb0f22ebc37af0b060ca9fb033ba942c4d610880da4fbecdc296"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03/native-docx/conversion.log",
+      "bytes": 316,
+      "sha256": "804e149f10bfa8a21d660b054938e00f40c9a44b57b75d883cb3ffa8acca285a"
+    },
+    {
+      "path": "run/wmf-vectors/roundtrip-03/native-docx/import.docx",
+      "bytes": 5956,
+      "sha256": "3326b39ccb52eabc4c902917e4108c228186e9c3b4e6c14790bf94569d8a47cb"
+    }
+  ]
+}

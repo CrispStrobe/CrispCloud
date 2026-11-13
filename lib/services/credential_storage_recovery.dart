@@ -1,4 +1,5 @@
 import 'credential_storage_config.dart';
+import 'credential_storage_diagnostics.dart';
 
 /// Fixed, non-sensitive reasons safe to show before the profile is unlocked.
 enum CredentialStorageRecoveryFailure {
@@ -8,7 +9,9 @@ enum CredentialStorageRecoveryFailure {
 }
 
 class CredentialStorageRecoveryException implements Exception {
-  const CredentialStorageRecoveryException(this.reason);
+  const CredentialStorageRecoveryException(this.reason, {this.diagnostics});
+
+  final CredentialStorageDiagnostics? diagnostics;
 
   final CredentialStorageRecoveryFailure reason;
 
@@ -75,11 +78,16 @@ class CredentialStorageRecovery {
     final bool restored;
     try {
       restored = await _restoreAccess(failedSelection.customKeychainPath!);
-    } catch (_) {
-      // Platform exceptions can contain paths, account names, and arbitrary
-      // native details. None of those cross the unauthenticated recovery UI.
-      throw const CredentialStorageRecoveryException(
+    } catch (error, stack) {
+      throw CredentialStorageRecoveryException(
         CredentialStorageRecoveryFailure.unavailable,
+        diagnostics: CredentialStorageDiagnostics.capture(
+          error,
+          stack,
+          store: 'Custom macOS keychain',
+          location: failedSelection.customKeychainPath,
+          operation: 'Restore access to the configured keychain file',
+        ),
       );
     }
     // A settings change or another process may race with the native picker.

@@ -84,101 +84,118 @@ LegacyWordDocument _withDrawings(
 );
 
 void main() {
-  test(
-    'exact native first-header roundtrip retains both source occurrences',
-    () {
-      final input = File(
-        'test/fixtures/word_native/header-textbox-first-roundtrip.doc',
-      ).readAsBytesSync();
-      final before = input.toList();
-      final document = parseLegacyWordDocument(input);
-      final reference = document.textboxReferences.single;
-      expect(reference.chainLength, 1);
-      expect(reference.shapeId, 1025);
-      expect(reference.anchorCp, 7);
-      expect(reference.anchors.single.shapeId, 1025);
-      expect(reference.headerAliases.single.shapeId, 1025);
-      expect(reference.headerAliases.single.anchorCp, 10);
-      expect(reference.headerAliases.single.chainIndex, 0);
-      expect(reference.headerAliases.single.nextShapeId, isNull);
-      expect(
-        document.media.drawings.map(
-          (drawing) => (drawing.shapeId, drawing.anchorCp),
-        ),
-        [(1025, 7), (1025, 10)],
-      );
-      expect(
-        identical(
-          document.media.drawings[0].shape,
-          document.media.drawings[1].shape,
-        ),
-        isTrue,
-      );
-      expect(
-        document.warnings,
-        contains(LegacyWordWarning.recoveredHeaderTextboxShapeAlias),
-      );
-      expect(
-        document.warnings,
-        isNot(contains(LegacyWordWarning.recoveredTextboxChainLength)),
-      );
-      final conversion = convertLegacyWordDocument(document);
-      final package = ZipDecoder().decodeBytes(conversion.bytes);
-      final rectangles = _rectangles(package);
-      expect(rectangles.map(_paragraphs), [
-        ['ALPHA'],
-        ['ALPHA'],
-      ]);
-      expect(rectangles.map((shape) => shape.getAttribute('id')), [
-        '_legacyHeaderTextboxShape1025Cp7',
-        '_legacyHeaderTextboxShape1025Cp10',
-      ]);
-      // These independently observed SPA rectangles differ. An ID-only lookup
-      // would silently move the normal occurrence to the first-header rectangle.
-      expect(
-        rectangles[0].getAttribute('style'),
-        contains(
-          'margin-left:72.35pt;margin-top:72.35pt;width:143.2pt;height:21.2pt',
-        ),
-      );
-      expect(
-        rectangles[1].getAttribute('style'),
-        contains(
-          'margin-left:72.7pt;margin-top:72.7pt;width:142.5pt;height:20.5pt',
-        ),
-      );
-      expect(rectangles[0].getAttribute('style'), contains('z-index:1025'));
-      expect(rectangles[1].getAttribute('style'), contains('z-index:-1'));
-      expect(
-        rectangles.any((shape) => shape.outerXml.contains('mso-next-textbox')),
-        isFalse,
-      );
-      final evidence =
-          jsonDecode(
-                utf8.decode(
-                  package.findFile('word/evidence/manifest.json')!.content,
-                ),
-              )
-              as Map;
-      final alias =
-          (evidence['records'] as List).singleWhere(
-                (record) => record['kind'] == 'headerTextboxAlias',
-              )
-              as Map;
-      expect(alias['sharedShape'], isTrue);
-      expect(
-        (alias['occurrences'] as List).map(
-          (record) => [record['shapeId'], record['anchorCp']],
-        ),
-        [
-          [1025, 7],
-          [1025, 10],
+  test('exact native first-header roundtrip retains both source occurrences', () {
+    final input = File(
+      'test/fixtures/word_native/header-textbox-first-roundtrip.doc',
+    ).readAsBytesSync();
+    final before = input.toList();
+    final document = parseLegacyWordDocument(input);
+    final reference = document.textboxReferences.single;
+    expect(reference.chainLength, 1);
+    expect(reference.shapeId, 1025);
+    expect(reference.anchorCp, 7);
+    expect(reference.anchors.single.shapeId, 1025);
+    expect(reference.headerAliases.single.shapeId, 1025);
+    expect(reference.headerAliases.single.anchorCp, 10);
+    expect(reference.headerAliases.single.chainIndex, 0);
+    expect(reference.headerAliases.single.nextShapeId, isNull);
+    expect(
+      document.media.drawings.map(
+        (drawing) => (drawing.shapeId, drawing.anchorCp),
+      ),
+      [(1025, 7), (1025, 10)],
+    );
+    expect(
+      identical(
+        document.media.drawings[0].shape,
+        document.media.drawings[1].shape,
+      ),
+      isTrue,
+    );
+    expect(
+      document.warnings,
+      contains(LegacyWordWarning.recoveredHeaderTextboxShapeAlias),
+    );
+    expect(
+      document.warnings,
+      isNot(contains(LegacyWordWarning.recoveredTextboxChainLength)),
+    );
+    final conversion = convertLegacyWordDocument(document);
+    final package = ZipDecoder().decodeBytes(conversion.bytes);
+    final rectangles = _rectangles(package);
+    expect(rectangles.map(_paragraphs), [
+      ['ALPHA'],
+      ['ALPHA'],
+    ]);
+    expect(rectangles.map((shape) => shape.getAttribute('id')), [
+      '_legacyHeaderTextboxShape1025Cp7',
+      '_legacyHeaderTextboxShape1025Cp10',
+    ]);
+    // Preserve both literal binary anchors independently of the VML outer
+    // frame conversion for their explicit 0.75-point simple borders.
+    expect(
+      document.media.drawings.map(
+        (drawing) => [
+          drawing.leftTwips,
+          drawing.topTwips,
+          drawing.rightTwips,
+          drawing.bottomTwips,
         ],
-      );
-      expect(conversion.preservedCounts['textboxes'], 2);
-      expect(input, before);
-    },
-  );
+      ),
+      [
+        [1447, 1447, 4311, 1871],
+        [1454, 1454, 4304, 1864],
+      ],
+    );
+    expect(
+      document.media.drawings.map((drawing) => drawing.shape!.line!.widthEmu),
+      [9525, 9525],
+    );
+    // Each outer frame retains its distinct source occurrence. An ID-only
+    // lookup would incorrectly collapse these two independently authored boxes.
+    expect(
+      rectangles[0].getAttribute('style'),
+      contains(
+        'margin-left:72.0pt;margin-top:72.0pt;width:143.9pt;height:21.9pt',
+      ),
+    );
+    expect(
+      rectangles[1].getAttribute('style'),
+      contains(
+        'margin-left:72.35pt;margin-top:72.35pt;width:143.2pt;height:21.2pt',
+      ),
+    );
+    expect(rectangles[0].getAttribute('style'), contains('z-index:1025'));
+    expect(rectangles[1].getAttribute('style'), contains('z-index:-1'));
+    expect(
+      rectangles.any((shape) => shape.outerXml.contains('mso-next-textbox')),
+      isFalse,
+    );
+    final evidence =
+        jsonDecode(
+              utf8.decode(
+                package.findFile('word/evidence/manifest.json')!.content,
+              ),
+            )
+            as Map;
+    final alias =
+        (evidence['records'] as List).singleWhere(
+              (record) => record['kind'] == 'headerTextboxAlias',
+            )
+            as Map;
+    expect(alias['sharedShape'], isTrue);
+    expect(
+      (alias['occurrences'] as List).map(
+        (record) => [record['shapeId'], record['anchorCp']],
+      ),
+      [
+        [1025, 7],
+        [1025, 10],
+      ],
+    );
+    expect(conversion.preservedCounts['textboxes'], 2);
+    expect(input, before);
+  });
 
   for (final entry in textboxBoundaryCases.entries) {
     test('shared-shape literal retains ${entry.key} in both headers', () {

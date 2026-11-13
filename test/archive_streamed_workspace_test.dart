@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/archive_endpoint.dart';
 import 'package:crisp_cloud/services/archive_publication_journal.dart';
+import 'package:crisp_cloud/services/archive_iso_writer.dart'
+    show kArchiveIsoSingleExtentLimit;
 import 'package:crisp_cloud/services/archive_streaming_writer.dart';
 import 'package:crisp_cloud/services/archive_viewer_service.dart';
 import 'package:crisp_cloud/services/archive_workspace.dart';
@@ -133,6 +135,10 @@ void main() {
     ('7z', ArchiveEndpointFormat.sevenZip),
     ('tar', ArchiveEndpointFormat.tar),
     ('tgz', ArchiveEndpointFormat.tarGzip),
+    ('iso', ArchiveEndpointFormat.iso),
+    ('rar', ArchiveEndpointFormat.rar),
+    ('cbr', ArchiveEndpointFormat.rar),
+    ('dmg', ArchiveEndpointFormat.dmg),
   ]) {
     test(
       '${profile.$1}: native folder edits publish a streamed review and reopen',
@@ -144,7 +150,12 @@ void main() {
         final original = await file.readAsBytes();
         final workspace = await open(file);
         expect(workspace.supportsLargeFiles, isTrue);
-        expect(workspace.maxMemberBytes, kArchiveStreamingLimit);
+        expect(
+          workspace.maxMemberBytes,
+          profile.$2 == ArchiveEndpointFormat.iso
+              ? kArchiveIsoSingleExtentLimit
+              : kArchiveStreamingLimit,
+        );
         expect(workspace.canUpdate, local.capabilities.noReplaceMove);
         if (!workspace.canUpdate) return;
 

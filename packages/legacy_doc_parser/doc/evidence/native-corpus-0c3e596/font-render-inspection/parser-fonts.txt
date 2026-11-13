@@ -1,0 +1,10 @@
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+BAAAAA+Caladea-Regular               TrueType          WinAnsi          yes yes yes     53  0
+CAAAAA+Carlito-Bold                  TrueType          WinAnsi          yes yes yes     58  0
+DAAAAA+NotoSerifCJKsc-Regular        Type 1            Builtin          yes yes yes     68  0
+EAAAAA+NotoColorEmoji                Type 3            Custom           yes yes yes     71  0
+FAAAAA+Caladea-Bold                  TrueType          WinAnsi          yes yes yes     38  0
+GAAAAA+Caladea-Italic                TrueType          WinAnsi          yes yes yes     43  0
+HAAAAA+Caladea-Regular               TrueType          WinAnsi          yes yes yes     48  0
+IAAAAA+Carlito                       TrueType          WinAnsi          yes yes yes     63  0

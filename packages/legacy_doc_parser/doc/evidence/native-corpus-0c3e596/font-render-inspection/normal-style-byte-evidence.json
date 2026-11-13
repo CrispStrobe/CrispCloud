@@ -1,0 +1,18 @@
+{
+  "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+  "tableStream": "1Table",
+  "normalStyleGrpprlHex": "422a004f4a0400514a0400434a16006d480904734809044b480000504a05006e480904744809045e4a0600614a16005f480104",
+  "exactMatchOffsets": [
+    84,
+    3916
+  ],
+  "rawEmojiWordDocumentOffset": 2156,
+  "rawEmojiWordDocumentBytes": "3dd800de",
+  "fontOperandIndices": {
+    "sprmCRgFtc0": 4,
+    "sprmCRgFtc1": 5,
+    "sprmCRgFtc2": 4,
+    "sprmCFtcBi": 6
+  },
+  "sourceOfNormalStyleAnchor": "doc/evidence/script-font-slots-20261112/summary.json"
+}

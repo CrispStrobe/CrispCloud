@@ -1,123 +1,152 @@
 # Office fidelity continuation — 12 November 2026
 
-The implementation and evidence are saved on
+This is a historical handoff. The [13 November continuation](continuation-20261113.md)
+records the current branches, integration pins, completed validation and
+remaining priorities. The identities and measurements below are retained as
+recorded at this earlier checkpoint.
+
+The current implementation and evidence are saved on
 `feature/office-fidelity-continuation-20261112` in both
 [`CrispStrobe/legacy-doc-parser`](https://github.com/CrispStrobe/legacy-doc-parser/tree/feature/office-fidelity-continuation-20261112)
 and [`CrispStrobe/CrispCloud`](https://github.com/CrispStrobe/CrispCloud/tree/feature/office-fidelity-continuation-20261112).
-These continuation branches incorporate the newer main-branch source and retain
-the earlier evidence without relabeling historical executions.
+Both branches incorporate their newer main-branch work. Runtime fixes and
+validation evidence are separate checkpoints with their original identities.
 
-## Exact integration boundary
+## Exact current integration boundary
 
-| Component | Validated runtime source |
+| Component | Validated source |
 | --- | --- |
-| Standalone parser | `730812534e8dc045d6d97f600218228f05c51b97` |
-| Parser source tree | `c69a9b26fff0d8b6c22519321f34c2781f4943d6` |
-| CrispCloud | `5e1adcdbcdc6763e3eeb86a4632821c2b53a8c37` |
-| Quds source, unchanged | `74960237cea7c560f3db7ee96ca37641c4438567` |
-| App mirror inventory | 823 managed Office files, including 402 exact upstream parser files |
+| Standalone parser | `0c3e59682952cce0e11301afec789e7ae2a1256a` |
+| Parser source tree | `e763288ee642c26854572e1cae212c36bf683918` |
+| CrispCloud | `5348fadec3bdadc40cc1c092da66428716df6225` |
+| App source tree | `837c1d04233553b9067bdcf31f757c012bccaea5` |
+| Quds source, unchanged from app main | `71bb109e81217ed55c534881304a44ae8fa608d5` |
+| Guarded Office inventory | 1,074 files: 653 exact upstream parser files and 421 unchanged non-parser files |
 
-Subsequent branch commits retain documentation and evidence. They do not change
-the validated parser runtime. CrispCloud intentionally pins the exact validated
-source above instead of rolling again for evidence-only additions. Its guarded
-mirror contains no app-local parser patch.
+CrispCloud pins the exact validated parser runtime and has no app-local parser
+patch. Later evidence-only commits do not require another runtime roll. The
+[app acceptance receipt](https://github.com/CrispStrobe/CrispCloud/blob/feature/office-fidelity-continuation-20261112/docs/evidence/word-continuation-0c3e596/README.md)
+records tests run on the exact clean remote app commit above. No merge, release
+or package publication is represented by these development checkpoints.
 
-The [CrispCloud evidence checkpoint](https://github.com/CrispStrobe/CrispCloud/blob/0320c96098f595b8906c22c465ad52220e9e7272/docs/evidence/word-continuation-7308125/README.md)
-retains the complete app receipt and reproduction helpers. No merge or release
-is represented by these development branch checkpoints.
+## Changes and measured effects
 
-## Completed changes
+**Floating tables retain their source origin and padding.** The parser keeps
+row-wide table defaults separate from cell overrides, resolves inherited table
+styles, and emits later-row padding resets as `tblPrEx` exceptions. The writer
+restores Word's plus-one coordinate encoding and accounts for shared row-grid
+origin, the emitted table default and supported single-border outside extent.
+Named positions remain named; out-of-range target coordinates fail explicitly.
+Unsupported border-origin contributions produce partial-formatting evidence.
 
-**Header/footer table import.** The parser now accepts the observed native
-closed-table row marker before the story's existing guard CR only when the
-parsed table ends exactly at the declared story boundary. It records
-`recoveredTableStoryBoundary`, does not extend story ranges and continues to
-reject malformed/unclosed tables and missing guards. Six story variants,
-separation from subsequent stories, five malformed cases and four retained
-native fixtures are covered. Both native paragraph-ended controls produce the
-same DOCX bytes as before. All four story-relative marker comparisons agree;
-the 0.35 pt absolute differences remain documented in the
-[native receipt](evidence/header-table-boundary-20261112/README.md).
+The Word16 source's historical 56.4-point maximum displacement is now 1.446
+points, confined to its middle word. Repeated imports no longer move its table
+origin. All nine existing inline/nested table-origin goldens still agree.
+Seventeen independent signed-position, padding, border and RTL controls retain
+exact 72-dpi page rasters and PDF border vectors; one retains a 0.05-point text
+bounding-box rounding difference. The
+[table evidence](evidence/floating-table-origin-20261112/README.md) preserves the
+source bytes, discriminating controls and the rejected incomplete candidate.
 
-**Accurate app conversion warnings.** CrispCloud now requires a valid content
-anchor for a header, footer, footnote, endnote, comment or embedded object before
-clearing that category's loss warning. Unused package parts, unused definitions,
-ambiguous duplicate IDs and historical property snapshots cannot manufacture
-preservation. A comment reference inside comment content cannot attach a second
-comment and its object. Direct valid anchors, Strict/transitional namespaces,
-relocated parts and supported Office Math content retain their positive
-controls. Presence still does not prove full content/count equivalence or
-rendering fidelity.
+**Explicit drawing wrap clearances survive conversion.** The parser preserves
+OfficeArt's four explicit wrapping distances, including the distinction between
+absence and zero, and emits them for textboxes, supported shapes and pictures.
+Six Word14 textboxes retain their source 3.6-point top/bottom clearances. Their
+initial word sequence and layout text now agree with the source; a 0.75-point
+maximum displacement remains. Three cycles add 0.05 points each through the
+native bridge, while every regenerated binary-to-parser render is exact.
+The [wrap contract](officeart-wrap-distances.md) and
+[native comparison](evidence/textbox-wrap-stroke-20261112/README.md) record that
+scope. An automatic default textbox stroke improved one initial measurement
+but worsened repeats; it was withdrawn, with its complete failure retained.
 
-**Bounded native evidence storage.** The runner's opt-in `--raster-storage gzip`
-renders one RGB page at a time, checks PDF page count independently, verifies
-lossless compressed/raw hashes and records the page before removing raw scratch
-bytes. Default PPM behavior remains available. The wrapper seals and independently
-verifies each complete case before removing only its raw run directory. The
-complete native reports, original inputs, bridge documents, generated documents,
-PDFs, text, geometry and raster pages are retained. Failed/incomplete cases are
-preserved, and resume does not overwrite them automatically.
+**Earlier corrections remain integrated.** Table-ended notes no longer receive
+a synthetic trailing paragraph, and floating positions are retained. In the
+complete final corpus, both `table-borders` and `note-markers` remain exact
+relative to the first parser import through three cycles, removing the former
+13.45-point-per-cycle movement. Initial rendering differences remain separate.
+Shared normal/first-header textbox stories import through all cycles without
+inventing a linked flow chain. Bounded binary HFD hyperlink metadata preserves
+the bookmark target; script-specific fonts retain the source's separate slots.
 
-**Rejected hypothesis preserved.** Resetting table depth for textboxes initially
-passed portable and schema controls, but moved a native table-cell-anchored
-textbox's cell by 12 pt. The native DOC-to-DOCX exporter made the same mistake.
-The reset was fully retracted before app integration; the baseline's source
-geometry and the counterexample are retained. The
-[retraction receipt](evidence/textbox-table-context-20261112/README.md) prevents
-the rejected intermediate checkpoint from being mistaken for the shipped fix.
+The formatting source has one `東京` and one emoji. Both are present in the
+final DOCX and visible render. The native binary reference omits visible
+Japanese text and duplicates the emoji in extraction. The changed word sequence
+therefore must not be described as parser text loss. The final native evidence
+includes exact source font/run records, XML comparisons and visual crops.
+
+**App integration remains guarded.** All managed parser bytes and executable
+modes match the pinned upstream source. The source review covers all 27 changed
+bound paths relative to app main. The reviewed-file inventory adds only the
+new HFD metadata module, and its two technical fingerprints are refreshed after
+review. Classification/distribution decisions, dates, references, source plist
+declarations, the lockfile and Quds/non-parser files remain unchanged.
 
 ## Final validation
 
 | Gate | Result and scope |
 | --- | --- |
-| Parser portable checks | 725 Dart tests; 130 Python controls; formatting and fatal-info analysis clean; original corpus hashes unchanged |
-| Parser JavaScript | 51 media checks and real-DOC browser acceptance passed |
-| Independent Open XML SDK 3.3.0 | 196 required DOCX outputs, zero schema errors; deterministic inventory, input hashes and positive/negative controls passed |
-| Native corpus | 22 documents, 66 repeat imports, zero execution/import errors; all source and cycle inputs unchanged |
-| Native exactness | All initial page counts match; 6/22 initial RGB/text/geometry comparisons exact; both reviewed source goldens reproduce; all strict structural comparisons differ |
-| Repeat rendering stability | 47/66 exact versus preceding parser import; 37/66 exact versus first import; all repeat page counts match |
-| App data-only Word cohort | 107 tests across eight suites, zero failures/skips; 1,170 captured input hashes unchanged |
-| App actual installed Office check | 13 LibreOffice/Poppler checks passed on the authored formatting DOC |
-| App portable browser smoke | DOC, RTF, PPT and MSG passed |
-| Guarded source synchronization | 24 controls passed; 823 managed files verified |
+| Parser portable suite | 918 Dart tests; 162 Python controls; formatting and fatal-info analysis clean |
+| Parser input identity | All 655 captured input hashes unchanged; clean before and after |
+| Parser JavaScript | Actual binary-DOC acceptance and 51 media checks passed |
+| Independent Open XML SDK 3.3.0 | 228 required DOCX outputs, zero errors; complete hashes and positive/negative controls |
+| Schema determinism | All 484 files identical across two complete generations |
+| Extra table schema controls | 21 actual final-runtime DOCX outputs, zero errors; all OPC parts match independently measured candidates |
+| Native corpus | 24 documents and 72 repeats; zero execution/import errors; unchanged inputs and consistent runtime/tools/fonts |
+| Native initial exactness | All page counts match; 6/24 exact RGB/text/geometry renders; both source goldens reproduce |
+| Native repeat exactness | 52/72 exact versus preceding parser import; 42/72 versus first import; all repeat page counts/dimensions match |
+| App data-only Word cohort | 107 tests across eight suites; no failures/skips; 1,176 input hashes unchanged |
+| App actual installed Office checks | 13 LibreOffice/Poppler assertions passed on one authored formatting fixture |
+| App production JavaScript | DOC, RTF, PPT and MSG passed using the genuine production configuration |
+| App source controls | 24 sync, 38 Apple preflight, 40 crypto evidence and 22 ebook controls passed; two expected macOS-only skips |
+| App actual source verification | 1,074 Office files and all 279 pinned CrisperBooks files verified |
 
-The app cohort uses the existing assertions with only `flutter_test` changed to
-`package:test` in copied suites. Its 13 fake-process installed-converter tests
-are separate from the 13 actual native checks. Flutter widgets, the excluded
-preview suite and a full app release build were not run. Release and fingerprint
-policies were not changed.
+The [portable/schema evidence](evidence/continuation-0c3e596/README.md) retains
+1,065 files, including both complete generated corpora and the 21 extra inputs
+and outputs. The [complete native evidence](evidence/native-corpus-0c3e596/README.md)
+retains all 24 reports and 2,646 archived files: 312 DOC/DOCX files, 230 PDFs and
+240 verified compressed RGB pages. Independent verification checks every byte,
+source identity and raster binding. Earlier receipts and rejected candidates
+remain intact; no reviewed source golden was updated.
 
-The native corpus ran as 22 separate ordinary runner invocations against clean
-parser source, with one consistent tool/source/font fingerprint. It used
-LibreOfficeDev 26.8.0.0.alpha0, build
-`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5`, Poppler 26.05.0, 72 DPI and Dart
-3.13.7. It does not establish Microsoft Word behavior. Schema validity, visual
-exactness, structural snapshots and app category presence remain distinct checks.
+The native renderer was LibreOfficeDev 26.8.0.0.alpha0, build
+`2c87e51eeaa2b413ff4ae097b2705eea1995d8e5`, with Poppler 26.05.0 at 72 DPI and
+Dart 3.13.7. Microsoft Word was not executed. Strict structural comparisons
+still differ in all cases; package validity, source preservation, visual
+exactness and app category presence are separate contracts.
 
-The [portable/schema evidence](evidence/continuation-7308125/README.md) and
-[complete native evidence](evidence/native-corpus-7308125/README.md) retain the
-commands, environment/source hashes, raw results, compressed artifacts,
-verification helpers and per-case differences. Earlier failures and the
-pre-retraction schema pass keep their original source identities.
+The app cohort preserves the original assertions in copied data-only suites
+with their test-framework import adapted. Its 13 fake-process converter tests
+are separate from the 13 actual native assertions. Genuine production package
+resolution succeeded offline without a lockfile change. Flutter widgets,
+native ebook hooks and a full release build were not run. Automatic approval
+review rejected an earlier Flutter launcher probe after it unexpectedly
+attempted a cloud metadata endpoint; final checks used the existing direct
+Dart binary without retrying that launcher.
 
 ## Remaining priorities
 
-1. Investigate repeated table/note layout drift using the retained binary bridge,
-   native-exported DOCX and parser output separately. `table-borders` and
-   `note-markers` accumulate 13.45 pt per cycle, reaching 40.35 pt from the first
-   parser import. `table-borders` already differs by 74.427 pt initially.
-2. Resolve native header textbox chains that reference one story from separate
-   frames. The table-ending boundary recovery does not solve this chain problem.
-3. Investigate the two list page-dimension mismatches, note/compatibility word
-   sequence differences and remaining Word 14/16 positioning differences.
-   Preserve the existing independently measured source geometry when considering
-   changes; native-exported XML alone has already produced a counterexample.
-4. Extend the supported contracts for complex GDI/metafile operations, nonempty
-   ink rendering and association, and full move/table/object revision semantics
-   with independently authored source fixtures. Existing bounded support does
-   not imply complete Word fidelity.
+1. Investigate initial table/note and compatibility differences separately from
+   repeat stability. `table-borders` still has 74.427-point initial word
+   displacement, and note/compatibility source word sequences still differ.
+2. Resolve the bounded remaining textbox geometry: Word14's 0.75-point initial
+   difference and 0.05-point native-bridge movement, and header frames' existing
+   0.35-point movement per cycle. The rejected stroke-default and table-depth
+   hypotheses remain counterexamples, not accepted fixes.
+3. Investigate the fixed 1.446-point Word16 middle-word difference and general
+   border-origin combinations outside the supported single-border mapping.
+4. Retain the source/default attribution for A4 versus Letter: the two list
+   fixtures omit source page-size properties; the binary specification chooses
+   Letter while LibreOffice chooses A4. Do not rewrite source defaults merely
+   to force one renderer's dimensions.
+5. Extend complex GDI/metafile behavior, nonempty ink rendering/association and
+   full move/table/object revision semantics with independent source fixtures.
+   Existing bounded support does not imply complete Word fidelity.
 
-For another code change, start from the saved continuation branches, keep the
-app's source mirror guarded, save small remote checkpoints, and attribute every
-new validation receipt to its exact clean runtime source. Do not replace old
-goldens or rewrite earlier failures as successes.
+Start further work from the saved continuation branches, preserve the app's
+exact parser pin and guarded mirror, checkpoint incremental changes remotely,
+and bind each new measurement to its exact clean runtime. The historical
+[7308125 portable/schema](evidence/continuation-7308125/README.md) and
+[native corpus](evidence/native-corpus-7308125/README.md) remain available with
+their original failures and counts. The older 24-case e90f38f receipt supplies
+the two header controls omitted from the 22-case historical continuation.

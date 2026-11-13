@@ -3,11 +3,12 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as ar;
 
+import 'archive_dmg_reader.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_types.dart';
 import 'archive_write_model.dart';
 
-const _imageLimit = 2 * 1024 * 1024 * 1024;
+const _imageLimit = kArchiveStreamingLimit;
 const _chunkBytes = 1024 * 1024;
 
 Future<ArchiveRewriteInspection> inspectDmgRewrite(
@@ -20,9 +21,9 @@ Future<ArchiveRewriteInspection> inspectDmgRewrite(
       'from regular files and folders instead.',
 );
 
-/// Creates an unsigned, unencrypted, single-volume UDIF image containing a
-/// fresh case-sensitive HFSX filesystem. Regular data forks only; existing
-/// filesystem attributes and image partitions cannot be rewritten by this API.
+/// Creates or rewrites an unsigned, unencrypted, single-volume UDIF image
+/// containing a case-sensitive HFSX filesystem. Existing images require the
+/// complete canonical data-profile inspection; other disk images stay read-only.
 ///
 /// One MiB raw blocks are encoded independently as zlib or raw data, whichever
 /// is smaller. Zero blocks use UDIF zero runs. The trailer and checksummed block
@@ -36,20 +37,46 @@ Future<void> writeDmgArchive(
   String volumeName = 'CrispCloud',
   bool compress = true,
 }) async {
-  if (source != null) {
+  final profile = source?.container['dmg.profile'];
+  if (source != null && (!source.supported || profile is! DmgRewriteProfile)) {
     throw const ArchiveViewException(
-      'DMG image rewriting is unavailable; create a new data image instead.',
+      'DMG rewriting requires a verified canonical data-image inspection.',
     );
   }
   final writer = _UdifWriter(sink, maxOutputBytes, isCancelled, compress);
   await writeHfsArchive(
     entries,
     sink: writer.add,
+    source: (profile as DmgRewriteProfile?)?.hfsInspection,
     maxOutputBytes: _imageLimit,
     isCancelled: isCancelled,
     volumeName: volumeName,
   );
   await writer.finish();
+}
+
+/// Confirms preserved filesystem metadata after the candidate DMG is reopened
+/// and its complete canonical profile and checksums have been verified.
+void verifyDmgRewritePreservation(
+  List<ArchiveWriteEntry> entries,
+  ArchiveRewriteInspection actual, {
+  ArchiveRewriteInspection? source,
+}) {
+  final actualProfile = actual.container['dmg.profile'];
+  final sourceProfile = source?.container['dmg.profile'];
+  if (!actual.supported ||
+      actualProfile is! DmgRewriteProfile ||
+      source != null &&
+          (!source.supported || sourceProfile is! DmgRewriteProfile)) {
+    throw const ArchiveViewException(
+      'DMG preservation verification requires verified data-image profiles.',
+    );
+  }
+  verifyHfsRewritePreservation(
+    entries,
+    actualProfile.hfsInspection,
+    source: (sourceProfile as DmgRewriteProfile?)?.hfsInspection,
+  );
 }
 
 class _UdifWriter {
@@ -87,7 +114,7 @@ class _UdifWriter {
   Future<void> add(List<int> bytes) async {
     _check();
     if (bytes.length > _imageLimit - _rawBytes - _pendingBytes) {
-      throw const ArchiveViewException('The DMG volume exceeds two GiB.');
+      throw const ArchiveViewException('The DMG volume exceeds eight GiB.');
     }
     var at = 0;
     while (at < bytes.length) {
@@ -103,7 +130,8 @@ class _UdifWriter {
   Future<void> _flush() async {
     if (_pendingBytes == 0) return;
     _check();
-    if (_pendingBytes % 512 != 0 || _runs.length >= 2048) {
+    if (_pendingBytes % 512 != 0 ||
+        _runs.length >= _imageLimit ~/ _chunkBytes) {
       throw const ArchiveViewException(
         'Invalid or excessive UDIF block layout.',
       );
@@ -158,18 +186,7 @@ class _UdifWriter {
     t.setUint32(end, 0xffffffff);
     _u64(t, end + 8, _rawBytes ~/ 512);
     _u64(t, end + 24, _outputBytes);
-    final xml = utf8.encode(
-      '<?xml version="1.0" encoding="UTF-8"?>\n'
-      '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
-      '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
-      '<plist version="1.0"><dict><key>resource-fork</key><dict>'
-      '<key>blkx</key><array><dict>'
-      '<key>Attributes</key><string>0x0050</string>'
-      '<key>ID</key><string>0</string>'
-      '<key>Name</key><string>Apple_HFSX (CrispCloud data volume)</string>'
-      '<key>Data</key><data>${base64.encode(table)}</data>'
-      '</dict></array></dict></dict></plist>\n',
-    );
+    final xml = encodeDmgDataProfilePlist(table);
     final forkLength = _outputBytes;
     if (xml.length + 512 > limit - _outputBytes) {
       throw const ArchiveViewException(
@@ -190,7 +207,9 @@ class _UdifWriter {
     k.setUint32(64, 0x43724331);
     k.setUint32(68, _rawCrc);
     k.setUint32(72, _packedCrc);
-    k.setUint32(76, _rawBytes);
+    // This is one word of the deterministic identifier, not a length field.
+    // The authoritative 64-bit volume size is the sector count at byte492.
+    k.setUint32(76, _rawBytes & 0xffffffff);
     _checksum(k, 80, _packedCrc);
     _u64(k, 216, forkLength);
     _u64(k, 224, xml.length);

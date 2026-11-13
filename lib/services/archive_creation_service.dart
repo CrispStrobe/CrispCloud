@@ -15,6 +15,7 @@ import 'archive_hfs_writer.dart';
 import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
 import 'archive_package_writers.dart';
+import 'archive_rar_stored_reader.dart';
 import 'archive_tar_writer.dart';
 import 'archive_write_model.dart';
 import 'archive_writer_service.dart';
@@ -28,6 +29,7 @@ import 'file_operation_service.dart';
 enum ArchiveCreationFormat {
   zip,
   sevenZip,
+  rar,
   tar,
   tarGzip,
   tarBzip2,
@@ -54,6 +56,7 @@ enum ArchiveCreationFormat {
   dmg,
   cbz,
   cb7,
+  cbr,
   cbt,
   kmz,
   jar,
@@ -83,6 +86,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
 
   String get label => switch (this) {
     ArchiveCreationFormat.sevenZip => '7z',
+    ArchiveCreationFormat.rar => 'RAR5 Store',
+    ArchiveCreationFormat.cbr => 'CBR (RAR5 Store)',
     ArchiveCreationFormat.tarGzip => 'TAR.GZ',
     ArchiveCreationFormat.tarBzip2 => 'TAR.BZ2',
     ArchiveCreationFormat.tarXz => 'TAR.XZ',
@@ -121,6 +126,8 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.ear => ArchiveEndpointFormat.zip,
     ArchiveCreationFormat.sevenZip ||
     ArchiveCreationFormat.cb7 => ArchiveEndpointFormat.sevenZip,
+    ArchiveCreationFormat.rar ||
+    ArchiveCreationFormat.cbr => ArchiveEndpointFormat.rar,
     ArchiveCreationFormat.tar ||
     ArchiveCreationFormat.cbt => ArchiveEndpointFormat.tar,
     ArchiveCreationFormat.tarGzip => ArchiveEndpointFormat.tarGzip,
@@ -144,6 +151,7 @@ extension ArchiveCreationFormatDetails on ArchiveCreationFormat {
     ArchiveCreationFormat.cpioBinaryBigEndian => ArchiveEndpointFormat.cpio,
     ArchiveCreationFormat.xar => ArchiveEndpointFormat.xar,
     ArchiveCreationFormat.iso => ArchiveEndpointFormat.iso,
+    ArchiveCreationFormat.dmg => ArchiveEndpointFormat.dmg,
     _ => ArchiveEndpointFormat.readOnly,
   };
 
@@ -417,9 +425,28 @@ class ArchiveCreationService {
         ArchiveEndpointFormat.zip,
         ArchiveEndpointFormat.sevenZip,
         ArchiveEndpointFormat.tarGzip,
+        ArchiveEndpointFormat.rar,
       }.contains(format.endpointFormat) &&
       !(format.endpointFormat == ArchiveEndpointFormat.sevenZip &&
           compression == ArchiveCreationCompression.deflate) &&
+      source.storageReference?.isLocal == true &&
+      source.storageReference?.provider != 'browser' &&
+      destination.storageReference?.isLocal == true &&
+      destination.storageReference?.provider != 'browser' &&
+      source.capabilities.boundedDownload &&
+      destination.capabilities.boundedDownload &&
+      destination.capabilities.boundedUpload &&
+      destination.supportsStagedVerification;
+
+  /// Large data images need the same repeatable native storage guarantees as
+  /// streamed archives. Other callers retain the existing disk-image bound.
+  static bool supportsStreamedDiskCreation({
+    required ArchiveCreationFormat format,
+    required FileOperationBackend source,
+    required FileOperationBackend destination,
+  }) =>
+      const bool.fromEnvironment('dart.library.io') &&
+      format.diskImage &&
       source.storageReference?.isLocal == true &&
       source.storageReference?.provider != 'browser' &&
       destination.storageReference?.isLocal == true &&
@@ -451,8 +478,14 @@ class ArchiveCreationService {
       password: options.password,
       compression: options.compression,
     );
-    final streamed = streamedTar || streamedCommon;
-    final streamedLimit = streamedCommon
+    final streamedDisk = supportsStreamedDiskCreation(
+      format: options.format,
+      source: source,
+      destination: destination,
+    );
+    final streamed = streamedTar || streamedCommon || streamedDisk;
+    final nativeLarge = streamedCommon || streamedDisk;
+    final streamedLimit = nativeLarge
         ? kArchiveStreamingLimit
         : maxStreamedTarBytes;
     void check() {
@@ -524,12 +557,14 @@ class ArchiveCreationService {
         ArchiveCreationError.unsupportedEntry,
       );
     }
-    final memberLimit = streamedCommon
-        ? kArchiveStreamingLimit
+    final memberLimit = nativeLarge
+        ? options.format == ArchiveCreationFormat.iso
+              ? kArchiveIsoSingleExtentLimit
+              : kArchiveStreamingLimit
         : options.format.diskImage || streamedTar
         ? 2 * 1024 * 1024 * 1024
         : kArchiveReadLimit;
-    final totalLimit = streamedCommon
+    final totalLimit = nativeLarge
         ? kArchiveStreamingLimit
         : options.format.diskImage || streamedTar
         ? 2 * 1024 * 1024 * 1024
@@ -814,6 +849,8 @@ class ArchiveCreationService {
           mode: entry.mode,
           modified: entry.file.updatedAt == null || options.format.singlePayload
               ? null
+              : options.format.endpointFormat == ArchiveEndpointFormat.rar
+              ? entry.file.updatedAt!.toUtc()
               : DateTime.fromMillisecondsSinceEpoch(
                   options.format.endpointFormat ==
                           ArchiveEndpointFormat.sevenZip
@@ -833,7 +870,7 @@ class ArchiveCreationService {
     final packageIssue = await archiveZipPackageIssue(options.name, captured);
     if (packageIssue != null) throw ArchiveViewException(packageIssue);
     final spool = await ArchiveOutputSpool.create(
-      maxBytes: streamedCommon
+      maxBytes: nativeLarge
           ? kArchiveStreamingLimit
           : options.format.diskImage || streamedTar
           ? 2 * 1024 * 1024 * 1024
@@ -848,7 +885,13 @@ class ArchiveCreationService {
       }
 
       if (streamed) {
-        beginBytePhase(ArchiveCreationPhase.packing, totalBytes, options.name);
+        beginBytePhase(
+          ArchiveCreationPhase.packing,
+          options.format.endpointFormat == ArchiveEndpointFormat.rar
+              ? 2 * totalBytes
+              : totalBytes,
+          options.name,
+        );
       }
       if (streamedCommon) {
         await writeStreamingArchiveEntries(
@@ -864,7 +907,9 @@ class ArchiveCreationService {
           isCancelled: isCancelled,
         );
       } else if (options.format.diskImage) {
-        progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+        if (!streamedDisk) {
+          progress(ArchiveCreationPhase.packing, 0, totalBytes, options.name);
+        }
         switch (options.format) {
           case ArchiveCreationFormat.iso:
             await writeIsoArchive(
@@ -905,6 +950,7 @@ class ArchiveCreationService {
             ArchiveEndpointFormat.tarLz4,
             ArchiveEndpointFormat.tarLzma,
             ArchiveEndpointFormat.tarCompress,
+            ArchiveEndpointFormat.rar,
           }.contains(options.format.endpointFormat) ||
           options.format.singlePayload) {
         await writeArchiveEntries(
@@ -1022,7 +1068,7 @@ class ArchiveCreationService {
       await spool.finish();
       check();
 
-      if (streamed) {
+      if (streamed && !streamedDisk) {
         // Read the created members, revalidate source contents, then hash the
         // complete output. These are three distinct streamed verification
         // passes, all represented in one monotonic byte total.
@@ -1033,24 +1079,41 @@ class ArchiveCreationService {
         );
       }
       if (options.format.diskImage) {
-        progress(
-          ArchiveCreationPhase.verifying,
-          0,
-          entries.length,
-          options.name,
-        );
+        if (!streamedDisk) {
+          progress(
+            ArchiveCreationPhase.verifying,
+            0,
+            entries.length,
+            options.name,
+          );
+        }
         await verifyCreatedDiskArchive(
           spool,
           captured,
           format: options.format.name,
           isCancelled: isCancelled,
+          onVerificationPlan: streamedDisk
+              ? (rawPartitionBytes) {
+                  // Disk verification hashes both source and decoded members.
+                  // The later source validation and packed-output hash are
+                  // additional passes; DMG also drains its complete partition.
+                  beginBytePhase(
+                    ArchiveCreationPhase.verifying,
+                    3 * totalBytes + spool.length + rawPartitionBytes,
+                    options.name,
+                  );
+                }
+              : null,
+          onDecodedBytes: streamedDisk ? reportBytes : null,
         );
-        progress(
-          ArchiveCreationPhase.verifying,
-          entries.length,
-          entries.length,
-          options.name,
-        );
+        if (!streamedDisk) {
+          progress(
+            ArchiveCreationPhase.verifying,
+            entries.length,
+            entries.length,
+            options.name,
+          );
+        }
       } else if (options.format.singlePayload) {
         final source = await spool.openByteSource();
         try {
@@ -1078,6 +1141,12 @@ class ArchiveCreationService {
                 maxBytes: streamedLimit,
                 isCancelled: isCancelled,
               )).archive
+            : options.format.endpointFormat == ArchiveEndpointFormat.rar
+            ? await openStoredRarArchive(
+                verificationSource,
+                maxBytes: ArchiveService.maxArchiveBytes,
+                isCancelled: isCancelled,
+              )
             : await openViewerArchiveSource(
                 streamedTar
                     ? _CreationTarVerificationSource(verificationSource, check)

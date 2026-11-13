@@ -1,0 +1,544 @@
+{
+  "schema": "legacy-doc-parser/formatting-font-attribution",
+  "version": 1,
+  "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "source": {
+    "source": "test/fixtures/word_native/formatting.doc",
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+    "mainEmojiScalarCount": 1,
+    "mainTokyoCount": 1,
+    "selectedTable": "1Table",
+    "stylesheetTableOffset": 0,
+    "stylesheetHeaderLength": 18,
+    "defaultFontSlots": {
+      "ascii": {
+        "index": 0,
+        "name": "Times New Roman",
+        "tableOffset": 14
+      },
+      "eastAsia": {
+        "index": 0,
+        "name": "Times New Roman",
+        "tableOffset": 16
+      },
+      "nonAscii": {
+        "index": 0,
+        "name": "Times New Roman",
+        "tableOffset": 18
+      }
+    },
+    "fontTable": [
+      {
+        "index": 0,
+        "name": "Times New Roman",
+        "tableOffset": 9317,
+        "ffnBytes": 72
+      },
+      {
+        "index": 1,
+        "name": "Symbol",
+        "tableOffset": 9389,
+        "ffnBytes": 54
+      },
+      {
+        "index": 2,
+        "name": "Arial",
+        "tableOffset": 9443,
+        "ffnBytes": 52
+      },
+      {
+        "index": 3,
+        "name": "Liberation Serif",
+        "tableOffset": 9495,
+        "ffnBytes": 106
+      },
+      {
+        "index": 4,
+        "name": "Cambria",
+        "tableOffset": 9601,
+        "ffnBytes": 56
+      },
+      {
+        "index": 5,
+        "name": "ＭＳ 明朝",
+        "tableOffset": 9657,
+        "ffnBytes": 52
+      },
+      {
+        "index": 6,
+        "name": "",
+        "tableOffset": 9709,
+        "ffnBytes": 42
+      },
+      {
+        "index": 7,
+        "name": "Calibri",
+        "tableOffset": 9751,
+        "ffnBytes": 56
+      },
+      {
+        "index": 8,
+        "name": "ＭＳ ゴシック",
+        "tableOffset": 9807,
+        "ffnBytes": 56
+      },
+      {
+        "index": 9,
+        "name": "Courier",
+        "tableOffset": 9863,
+        "ffnBytes": 80
+      },
+      {
+        "index": 10,
+        "name": "Cambria",
+        "tableOffset": 9943,
+        "ffnBytes": 56
+      },
+      {
+        "index": 11,
+        "name": "Liberation Sans",
+        "tableOffset": 9999,
+        "ffnBytes": 84
+      },
+      {
+        "index": 12,
+        "name": "Noto Sans CJK SC",
+        "tableOffset": 10083,
+        "ffnBytes": 74
+      },
+      {
+        "index": 13,
+        "name": "Noto Sans",
+        "tableOffset": 10157,
+        "ffnBytes": 60
+      },
+      {
+        "index": 14,
+        "name": "Noto Sans",
+        "tableOffset": 10217,
+        "ffnBytes": 60
+      },
+      {
+        "index": 15,
+        "name": "Symbol",
+        "tableOffset": 10277,
+        "ffnBytes": 54
+      }
+    ],
+    "unicodeRuns": [
+      {
+        "startCp": 36,
+        "endCp": 58,
+        "text": "Unicode café — 東京 😀. ",
+        "utf16CodeUnits": [
+          "55",
+          "6e",
+          "69",
+          "63",
+          "6f",
+          "64",
+          "65",
+          "20",
+          "63",
+          "61",
+          "66",
+          "e9",
+          "20",
+          "2014",
+          "20",
+          "6771",
+          "4eac",
+          "20",
+          "d83d",
+          "de00",
+          "2e",
+          "20"
+        ],
+        "unicodeScalars": [
+          "55",
+          "6e",
+          "69",
+          "63",
+          "6f",
+          "64",
+          "65",
+          "20",
+          "63",
+          "61",
+          "66",
+          "e9",
+          "20",
+          "2014",
+          "20",
+          "6771",
+          "4eac",
+          "20",
+          "1f600",
+          "2e",
+          "20"
+        ],
+        "ascii": "Cambria",
+        "nonAscii": "Cambria",
+        "eastAsia": "ＭＳ 明朝",
+        "complexScript": ""
+      }
+    ],
+    "rawEmojiUtf16WordDocumentOffsets": [
+      2156
+    ]
+  },
+  "sourceNormalBytes": {
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+    "tableStream": "1Table",
+    "normalStyleGrpprlHex": "422a004f4a0400514a0400434a16006d480904734809044b480000504a05006e480904744809045e4a0600614a16005f480104",
+    "exactMatchOffsets": [
+      84,
+      3916
+    ],
+    "rawEmojiWordDocumentOffset": 2156,
+    "rawEmojiWordDocumentBytes": "3dd800de",
+    "fontOperandIndices": {
+      "sprmCRgFtc0": 4,
+      "sprmCRgFtc1": 5,
+      "sprmCRgFtc2": 4,
+      "sprmCFtcBi": 6
+    },
+    "sourceOfNormalStyleAnchor": "doc/evidence/script-font-slots-20261112/summary.json"
+  },
+  "docx": {
+    "parser": {
+      "archiveMember": "run/formatting/converted.docx",
+      "sha256": "3f340831501e0221bb0e1713b62922a964199b618f3bd1fc2cd66c6387c9e08b",
+      "literalTokyoCount": 1,
+      "literalEmojiCount": 1,
+      "emojiScalar": "U+1F600",
+      "emojiUtf16CodeUnits": [
+        "D83D",
+        "DE00"
+      ],
+      "emojiRunText": "Unicode café — 東京 😀. ",
+      "directRunFonts": {
+        "ascii": "Cambria",
+        "hAnsi": "Cambria",
+        "eastAsia": "ＭＳ 明朝",
+        "cs": ""
+      },
+      "nativeNormalStyleFonts": null
+    },
+    "nativeExport": {
+      "archiveMember": "run/formatting/native-docx/source.docx",
+      "sha256": "8f6f77af5ff749dff7f2562d8624fb32fd2f76551865df0353b10212adddeb9e",
+      "literalTokyoCount": 1,
+      "literalEmojiCount": 1,
+      "emojiScalar": "U+1F600",
+      "emojiUtf16CodeUnits": [
+        "D83D",
+        "DE00"
+      ],
+      "emojiRunText": "東京 😀",
+      "directRunFonts": null,
+      "nativeNormalStyleFonts": {
+        "ascii": "Cambria",
+        "hAnsi": "Cambria",
+        "eastAsia": "ＭＳ 明朝",
+        "cs": ""
+      }
+    }
+  },
+  "renderObservations": {
+    "binary": {
+      "extractedWordCount": 44,
+      "tokyoTokens": 0,
+      "emojiTokens": 2,
+      "matchingWords": [
+        {
+          "text": "Unicode",
+          "box": [
+            90.1,
+            122.3,
+            128.545,
+            135.192
+          ]
+        },
+        {
+          "text": "😀",
+          "box": [
+            165.75,
+            107.35708,
+            179.446289,
+            139.433789
+          ]
+        },
+        {
+          "text": "😀",
+          "box": [
+            185.149,
+            120.991,
+            191.749,
+            135.973
+          ]
+        }
+      ],
+      "visibleTokyo": false,
+      "visibleEmojiCount": 1,
+      "visualInspection": "Direct inspection of the retained PDF at 144 DPI, cropped around the Unicode line."
+    },
+    "converted": {
+      "extractedWordCount": 44,
+      "tokyoTokens": 1,
+      "emojiTokens": 1,
+      "matchingWords": [
+        {
+          "text": "Unicode",
+          "box": [
+            90.1,
+            122.3,
+            128.545,
+            135.192
+          ]
+        },
+        {
+          "text": "東京",
+          "box": [
+            168.8,
+            120.089,
+            190.8,
+            135.896
+          ]
+        },
+        {
+          "text": "😀",
+          "box": [
+            196.3,
+            107.35708,
+            209.996289,
+            139.433789
+          ]
+        }
+      ],
+      "visibleTokyo": true,
+      "visibleEmojiCount": 1,
+      "visualInspection": "Direct inspection of the retained PDF at 144 DPI, cropped around the Unicode line."
+    },
+    "native": {
+      "extractedWordCount": 45,
+      "tokyoTokens": 0,
+      "emojiTokens": 2,
+      "matchingWords": [
+        {
+          "text": "Unicode",
+          "box": [
+            90.1,
+            122.3,
+            128.545,
+            135.192
+          ]
+        },
+        {
+          "text": "😀",
+          "box": [
+            165.75,
+            107.35708,
+            179.446289,
+            139.433789
+          ]
+        },
+        {
+          "text": "😀",
+          "box": [
+            185.149,
+            120.991,
+            191.749,
+            135.973
+          ]
+        }
+      ],
+      "visibleTokyo": false,
+      "visibleEmojiCount": 1,
+      "visualInspection": "Direct inspection of the retained PDF at 144 DPI, cropped around the Unicode line."
+    }
+  },
+  "decision": "No source emoji loss and no mismapped source font slot identified. Explicit source font choices recover visible Tokyo while preserving the single visible source emoji. Baseline extraction duplicates the emoji token; no source emoji was removed.",
+  "caveat": "This targeted evidence does not establish full native rendering equivalence or isolate all consumer font-selection mechanics. The full-page sequence comparison remains different.",
+  "crops": {
+    "binary": "font-render-inspection/binary-line.png",
+    "parser": "font-render-inspection/parser-line.png",
+    "nativeExport": "font-render-inspection/native-line.png"
+  },
+  "cropCommandTemplate": "pdftoppm -f 1 -l 1 -r 144 -x 140 -y 200 -W 950 -H 120 -png -singlefile INPUT.pdf OUTPUT_PREFIX",
+  "primaryMeasurementDpi": 72,
+  "diagnosticCropDpi": 144,
+  "diagnosticFiles": {
+    "font-render-inspection/binary-fonts.txt": {
+      "sha256": "f5c81501b1a5f7b5a985a64678f14ab66c81f4899636a0bf31d70abda4fad68b",
+      "bytes": 846
+    },
+    "font-render-inspection/binary-line.png": {
+      "sha256": "d42e40d7b92c5b5ef48c5556dc8637a4b58d0e5ac04f16d3644a660cce2838da",
+      "bytes": 19920
+    },
+    "font-render-inspection/diagnostic-helper-checks.json": {
+      "sha256": "9fbe8bf61731ad438d33cd1ea56ed32e229fb0f49bbabdd09e200a889bf7a962",
+      "bytes": 3019
+    },
+    "font-render-inspection/docx-font-comparison.json": {
+      "sha256": "62ad89533f1bc14821a1a9880b59f5737a8b9a00640bd477a1c31e396b64cbaa",
+      "bytes": 9661
+    },
+    "font-render-inspection/formatter-apply.log": {
+      "sha256": "9b03402085f31d0ac476bea3bb3a9e10934a63352821ef30769694a95e133d75",
+      "bytes": 148
+    },
+    "font-render-inspection/formatter-check-initial.log": {
+      "sha256": "a39205b877dc1ea3dd6d06ff77ee93806ca656c6b4fedb8cd7cd6e70b95f629c",
+      "bytes": 146
+    },
+    "font-render-inspection/formatter-check.log": {
+      "sha256": "a8665628d3d8dc8a51632550dfb214cf87c098912f4250420d0df700431790e6",
+      "bytes": 47
+    },
+    "font-render-inspection/formatting_font_source.dart": {
+      "sha256": "e6eb19ef81efa0520010dfe98a1320a3baae30519c75aa2bc2efcf83c6f1497d",
+      "bytes": 4298
+    },
+    "font-render-inspection/native-fonts.txt": {
+      "sha256": "f5c81501b1a5f7b5a985a64678f14ab66c81f4899636a0bf31d70abda4fad68b",
+      "bytes": 846
+    },
+    "font-render-inspection/native-line.png": {
+      "sha256": "d42e40d7b92c5b5ef48c5556dc8637a4b58d0e5ac04f16d3644a660cce2838da",
+      "bytes": 19920
+    },
+    "font-render-inspection/normal-style-byte-evidence.json": {
+      "sha256": "ef379b1e896f4bd3825e2926b55ad34eb80210eac31548a079181cf283436c9d",
+      "bytes": 580
+    },
+    "font-render-inspection/parser-fonts.txt": {
+      "sha256": "80327ec26e3688b1d07ad09c4fa3dd0d50936d1a04d6cc370e38572b8a4cb7c0",
+      "bytes": 940
+    },
+    "font-render-inspection/parser-line.png": {
+      "sha256": "bd6ee3023ca6faed2a8e15f81b1f389445355803a5c1534de482c504b2c353b4",
+      "bytes": 21284
+    },
+    "font-render-inspection/render-binary-source.pdf": {
+      "sha256": "034182533567f3629c7a6b0fbc5a25da08439d084db0dadd667c1dd18a5bfd3f",
+      "bytes": 38674
+    },
+    "font-render-inspection/render-converted-converted.pdf": {
+      "sha256": "ab0f6242dd233090a582720c97b3aecabc3b46d9e0b6c55a7050f1bb3d044a07",
+      "bytes": 40647
+    },
+    "font-render-inspection/render-native-source.pdf": {
+      "sha256": "791ac5fd4de538cc1093b17ef847cbe3ba07245675a9c60498e9cfb706ebc88c",
+      "bytes": 38493
+    },
+    "font-render-inspection/render-texts.json": {
+      "sha256": "74113bda47c5d4241ed20913dc6b83502569975dff6d075f54f8247042a948e3",
+      "bytes": 1201
+    },
+    "font-render-inspection/scoped-analyze-initial.log": {
+      "sha256": "436b0e3b1d1b216623abb5fc072c383a4523c6769997b684ce367f5085eff0da",
+      "bytes": 1708
+    },
+    "font-render-inspection/scoped-analyze-intermediate.log": {
+      "sha256": "efe0784b44bada9948802fccdef68536565104d9a46ab1cbe785d2a780347547",
+      "bytes": 219
+    },
+    "font-render-inspection/scoped-analyze.log": {
+      "sha256": "8821c7e8403f27a04a30fcc50cb42969daaffae6f94a6f3a98dd137b0a9af884",
+      "bytes": 53
+    },
+    "font-render-inspection/source-font-slots-reproduced.json": {
+      "sha256": "e9c161123bb516990324703d26ec26244244fde3e8dae5bde8eacfb0ced1e8be",
+      "bytes": 3338
+    },
+    "font-render-inspection/source-font-slots.json": {
+      "sha256": "e9c161123bb516990324703d26ec26244244fde3e8dae5bde8eacfb0ced1e8be",
+      "bytes": 3338
+    },
+    "font-render-inspection/source-normal-font-operands.json": {
+      "sha256": "e9f13e14778a0c4414abab6a365e006cae51080b3648d252777919474bbbaa04",
+      "bytes": 1012
+    },
+    "font-render-inspection/source_normal_font_operands.dart": {
+      "sha256": "feebe731b40db97242d9e86269ba5fc6683a90538ee5040f10d1a9101baeffdd",
+      "bytes": 3253
+    },
+    "font-render-inspection/verify_font_bytes.dart": {
+      "sha256": "ae70174919a4a763b48834e82ac543efe8ae4bfd75c0cd00f1369a42f1b848bf",
+      "bytes": 2065
+    }
+  },
+  "sourceNormalOperands": {
+    "source": "test/fixtures/word_native/formatting.doc",
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026",
+    "table": "1Table",
+    "styleIndex": 0,
+    "styleName": "Normal",
+    "styleKind": 1,
+    "styleRecordTableOffset": 22,
+    "styleRecordBytes": 114,
+    "upx": [
+      {
+        "index": 0,
+        "tableOffset": 50,
+        "bytes": 31
+      },
+      {
+        "index": 1,
+        "tableOffset": 84,
+        "bytes": 51
+      }
+    ],
+    "fontOperands": [
+      {
+        "sprm": "0x4a4f",
+        "tableOffset": 87,
+        "fontIndex": 4,
+        "bytes": "4f4a0400"
+      },
+      {
+        "sprm": "0x4a51",
+        "tableOffset": 91,
+        "fontIndex": 4,
+        "bytes": "514a0400"
+      },
+      {
+        "sprm": "0x4a50",
+        "tableOffset": 111,
+        "fontIndex": 5,
+        "bytes": "504a0500"
+      },
+      {
+        "sprm": "0x4a5e",
+        "tableOffset": 123,
+        "fontIndex": 6,
+        "bytes": "5e4a0600"
+      }
+    ],
+    "reader": "Independent literal FIB/STSH/STD/UPX operand walk; compound storage reader only."
+  },
+  "nativeExportCropMatchesBinaryCrop": true,
+  "measuredPdfBindings": {
+    "render-binary-source.pdf": {
+      "archiveMember": "run/formatting/render-binary/source.pdf",
+      "sha256": "034182533567f3629c7a6b0fbc5a25da08439d084db0dadd667c1dd18a5bfd3f"
+    },
+    "render-converted-converted.pdf": {
+      "archiveMember": "run/formatting/render-converted/converted.pdf",
+      "sha256": "ab0f6242dd233090a582720c97b3aecabc3b46d9e0b6c55a7050f1bb3d044a07"
+    },
+    "render-native-source.pdf": {
+      "archiveMember": "run/formatting/render-native/source.pdf",
+      "sha256": "791ac5fd4de538cc1093b17ef847cbe3ba07245675a9c60498e9cfb706ebc88c"
+    }
+  },
+  "diagnosticHelperChecks": {
+    "receipt": "font-render-inspection/diagnostic-helper-checks.json",
+    "passed": true,
+    "outputBytesUnchanged": true,
+    "sha256": "9fbe8bf61731ad438d33cd1ea56ed32e229fb0f49bbabdd09e200a889bf7a962",
+    "bytes": 3019
+  }
+}

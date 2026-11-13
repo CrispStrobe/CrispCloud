@@ -1,8 +1,10 @@
+import '../services/credential_storage_diagnostics.dart';
+import 'credential_storage_diagnostics.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/settings_strings.dart';
-import '../l10n/startup_failure_strings.dart';
 import '../l10n/app_localizations.dart';
 import '../services/credential_storage_config.dart';
 import '../services/macos_keychain_service.dart';
@@ -138,6 +140,7 @@ class _CredentialStorageSetupPanelState
   bool _obscureConfirmation = true;
   bool _busy = false;
   String? _error;
+  CredentialStorageDiagnostics? _storageFailure;
   List<MacosKeychainInfo> _keychains = const [];
 
   bool get _macKeychain => MacosKeychainService.isSupported;
@@ -227,6 +230,7 @@ class _CredentialStorageSetupPanelState
           _keychainChoice = _KeychainChoice.existing;
           _existingPath.text = path;
           _error = null;
+          _storageFailure = null;
         });
       }
     } catch (_) {
@@ -246,6 +250,7 @@ class _CredentialStorageSetupPanelState
     if (_busy) return;
     setState(() {
       _error = null;
+      _storageFailure = null;
       _busy = true;
     });
     try {
@@ -325,11 +330,7 @@ class _CredentialStorageSetupPanelState
         }
       }
       if (path == null) {
-        if (!await PlatformSecureStorage().isAvailable()) {
-          throw const FormatException(
-            'The system keychain is unavailable. Choose an encrypted file or session-only storage.',
-          );
-        }
+        await PlatformSecureStorage().verifyAvailable();
       } else {
         // Probe only the explicit selected/created keychain. Failure must not
         // silently turn this into a probe of the default OS keychain.
@@ -343,17 +344,30 @@ class _CredentialStorageSetupPanelState
           keychainPath: path,
         ),
       );
-    } catch (error) {
+    } catch (error, stack) {
       if (mounted) {
         setState(() {
           _busy = false;
           // Show only our fixed validation messages. Platform and parse
           // exceptions can include private paths or credential contents.
-          _error =
-              error is FormatException &&
-                  _validationMessages.contains(error.message)
-              ? _text(error.message)
-              : StartupFailureStrings(context).credentialStorageUnavailable;
+          if (error is FormatException &&
+              _validationMessages.contains(error.message)) {
+            _error = _text(error.message);
+            _storageFailure = null;
+          } else {
+            _storageFailure = CredentialStorageDiagnostics.capture(
+              error,
+              stack,
+              store: 'Selected credential store',
+              location: _keychainChoice == _KeychainChoice.newKeychain
+                  ? _newPath.text.trim()
+                  : _existingPath.text.trim().isEmpty
+                  ? 'OS-managed credential storage'
+                  : _existingPath.text.trim(),
+              operation: 'Validate the selected credential store before saving',
+            );
+            _error = _storageFailure!.summary;
+          }
         });
       }
     }
@@ -425,6 +439,10 @@ class _CredentialStorageSetupPanelState
             key: const ValueKey('credential-setup-error'),
             style: TextStyle(color: theme.colorScheme.error),
           ),
+        ],
+        if (_storageFailure != null) ...[
+          const SizedBox(height: 12),
+          CredentialStorageDiagnosticsView(diagnostics: _storageFailure!),
         ],
         const SizedBox(height: 20),
         FilledButton.icon(

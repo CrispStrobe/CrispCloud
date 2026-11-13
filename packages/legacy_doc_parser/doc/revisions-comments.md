@@ -57,25 +57,36 @@ combinations; its SDK result is a separate validity gate. Shared-image and
 private-field controls retain distinct occurrence metadata without exposing
 private payloads.
 
-Embedded OLE payloads with no recovered preview use a generic icon whose VML
-markup includes "Embedded object / Preview unavailable". The original storage bytes
-remain the relationship target and `partialFormatting` remains disclosed.
-This is a converter placeholder, not an inferred rendering of the source
-object. Its self-contained [VML shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.shape)
-has an explicit rectangular path, and the OLE `ShapeID` resolves to that
-`v:shape`. `DrawAspect="Icon"` distinguishes it from a content snapshot;
+Embedded OLE payloads with no recovered preview use a generic PNG icon labelled
+"Embedded object / Preview unavailable". Its 288 by 144 reviewed pixels are
+embedded once per package and displayed in a 72 by 36 point picture-frame
+shape. The original storage bytes remain the OLE relationship target and
+`partialFormatting` remains disclosed. This is a converter placeholder, not
+an inferred rendering of the source object. Its self-contained
+[VML picture shape](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.vml.office.oleobject)
+has a local type-75 definition and an explicit image relationship; the OLE
+`ShapeID` resolves to that `v:shape`. `DrawAspect="Icon"` distinguishes it from a
+content snapshot. Alt/title text independently identifies the missing preview;
+no textbox label or font resolution is required to display the raster.
+Generated images have separate `generatedPlaceholderImages` and
+`embeddedObjectPlaceholders` counts and explicit per-occurrence evidence with
+`sourcePreviewRecovered=false`. They are not counted as preserved source images.
+Each occurrence keeps its own object/shape/revision identities, including when
+several objects share the generic icon pixels.
+
 `ObjectID` uses the underscore-plus-int32 form required by
 [MS-OI29500 2.1.1834](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c9af80fa-3ee4-4a79-ace6-4fd46ff83957).
 `ProgID` is retained only when present in the source; no application identity is
 invented. Schema validity does not establish a native application's ability to
 activate every embedded payload or render its unavailable original preview.
-In the [retained native check](evidence/ole-placeholder-d4a19b9/README.md),
+In the [historical native check](evidence/ole-placeholder-d4a19b9/README.md),
 LibreOfficeDev 26.8 renders the generic grey rectangle but suppresses both
 textbox label lines. The same occurs after a controlled insertion-acceptance
-projection, so accepted insertion alone does not restore the label on that
-renderer. This is an explicit remaining visual limitation; the check does not
-establish Word rendering, embedded-handler activation, or original-preview
-fidelity. A more portable visible placeholder remains followup work.
+projection. That original failure is retained; the current picture-frame icon
+does not rely on that suppressed textbox content. The reviewed generated PNG
+and its bounded reproduction recipe are checked in. Neither the generic icon
+nor its native display establishes original-preview fidelity, Microsoft Word
+rendering, or activation of an embedded application.
 
 These checks do not reconstruct moved objects, formatting histories of objects,
 comment range editing, automatic cleanup of unreferenced stories, or arbitrary
@@ -175,7 +186,8 @@ The original 18-byte extended record is immutable in the public model and copied
 into an inert evidence part with its Table-stream offset. The ink-annotation bit
 is retained. Already supported referenced images/objects in comment stories use
 the normal media paths; the ink bit alone is never turned into invented strokes
-or an active `o:ink` element. ISF pen-stroke data is not decoded. The
+or an active `o:ink` element. Supported ISF pen-stroke data has a separate
+[bounded semantic decoder](ink-decoding.md). The
 record does not encode a resolved/done state, so none is fabricated in the native
 thread part. A hidden/private parent keeps its reply branch inert as well.
 
@@ -188,6 +200,14 @@ occurrence CP, owning story, independently used Ink Boolean flags and header
 inspection result. The `inkPayloads` count measures preserved payload
 occurrences, not rendered or editable ink. Empty, invalid-header and
 unsupported-version ISF payloads remain inert and distinguishable.
+
+The separate `decoding` result validates supported full packet/paint streams
+and exposes immutable ordered strokes, coordinates, pressure and attributes.
+Evidence records its status, reason and complete stroke/point counts. The
+`decodedInkPayloads` and `decodedInkStrokes` counts include only fully decoded
+nonempty streams; unsupported/malformed inputs expose no partial stroke list.
+Original ISF and all occurrence flags remain intact, and `nativeInkEmitted`
+remains false.
 
 `version1Extent` means only that the stream's version and declared byte extent
 match; packets, drawing attributes, compression, transforms and strokes are
@@ -202,9 +222,12 @@ comment. Neither it nor `fInkAnnotation` is used to invent a relationship to
 `ATRDPost10.fInkAtn`. The tests independently assemble the documented empty ISF
 stream and OfficeArt envelope, check byte-exact package evidence and adversarial
 headers, and verify that unrelated comment/shape flags remain independent.
-They do not establish native pen rendering or nonempty stroke round trips.
-The inspected Quds fixtures currently provide threaded comments but no ink
-payload fixture; a native ink sample and an ISF stroke oracle remain required.
+Those envelope tests do not establish native pen rendering. Separate actual
+Windows WPF fixtures now supply six authored nonempty cases, both compression
+modes and two save cycles (24 ISFs), with decoded JSON and independent raster
+outputs. They qualify the bounded decoder without establishing Word shape
+placement or native ink editing. The inspected Quds fixtures still provide no
+original ink-bearing Word document.
 
 Primary format references:
 

@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "sourceWorktreeDirty": false,
+  "report": {
+    "path": "native-report.json.xz",
+    "sha256": "c1fb4e5bf9a81b243c11b268dd2d26bc6827929430f02b219f7c59d175a747ae",
+    "bytes": 28192,
+    "uncompressedSha256": "9d973edc26ad07c2180b03fc8a84b8efacf4327e3c1a6bdffd8e1f237eef9877",
+    "uncompressedBytes": 7640238
+  },
+  "archive": {
+    "path": "native-artifacts.tar.xz",
+    "sha256": "bcc03149dbd3a69353fae809f2fe68f237dec61034bf6b3260c5c7af186bebad",
+    "bytes": 147116,
+    "format": "USTAR/XZ",
+    "compressionPreset": 6
+  },
+  "fileCount": 114,
+  "uncompressedFileBytes": 9570379,
+  "excludedGeneratedFiles": [
+    "Office profile directories",
+    "temporary directory",
+    "compiled parser executable (hash retained in report)"
+  ],
+  "files": [
+    {
+      "path": "inputs/word-altchunk.docx",
+      "bytes": 2635,
+      "sha256": "f623604dfab5865907c70d7e2e933970bca4f1e6e892187025c083f32784b05b"
+    },
+    {
+      "path": "run/compile.log",
+      "bytes": 99,
+      "sha256": "e115d1d2f859a7676dec9bc9f9017e89465cb89fc9ac51156206b88735b4f27c"
+    },
+    {
+      "path": "run/font-files.json",
+      "bytes": 73404,
+      "sha256": "e2c60484a974489eb566adfdc45b7e6d498a2f3159fea1583b8930ee64f67909"
+    },
+    {
+      "path": "run/fonts.txt",
+      "bytes": 51943,
+      "sha256": "cda9e96d268b4149761b3233661bd91d6fcd03573ed3d540cd378714a2c821fc"
+    },
+    {
+      "path": "run/word-altchunk/binary-render.json",
+      "bytes": 6594,
+      "sha256": "32ebd20d27b26cdc79e01e661217532692c58fe48bd8eb8bf9147efbeef3691f"
+    },
+    {
+      "path": "run/word-altchunk/bridge/conversion.log",
+      "bytes": 269,
+      "sha256": "90cba58c91ee280460c883f72790e844cbc79444f7650937c15528a650466057"
+    },
+    {
+      "path": "run/word-altchunk/bridge/word-altchunk.doc",
+      "bytes": 10752,
+      "sha256": "4b5d31bb21b87c311242c6dc17c84515749e37ed8baf9af20541c2504a0ac496"
+    },
+    {
+      "path": "run/word-altchunk/converted-render.json",
+      "bytes": 6594,
+      "sha256": "c6b713d6acd80812e3e547fab587a426771750b84a688879d6b216a0fbc65525"
+    },
+    {
+      "path": "run/word-altchunk/converted-semantic.json",
+      "bytes": 209267,
+      "sha256": "2e1c1e2aae6f7ff4bb57ac15af3450904478652d11d244e34392dc3f1b16998a"
+    },
+    {
+      "path": "run/word-altchunk/converted.docx",
+      "bytes": 6458,
+      "sha256": "bfe21ffe13043649c15263521a5ffd86b96ca4603dccbeef90c4ac662e38acef"
+    },
+    {
+      "path": "run/word-altchunk/native-docx/conversion.log",
+      "bytes": 312,
+      "sha256": "9804538730d489af34644e91c2e9ce3df46e038e19588297fe7b208a7364e2bf"
+    },
+    {
+      "path": "run/word-altchunk/native-docx/word-altchunk.docx",
+      "bytes": 6937,
+      "sha256": "03c84cc09c5ef2dcadd9d3e9a76d49e0b60d192c57a917c6b37de760fa17e924"
+    },
+    {
+      "path": "run/word-altchunk/native-render.json",
+      "bytes": 6747,
+      "sha256": "68ee17fe7b16b89ba462e1f8229f2b33a646f392a29de68708311860815d8969"
+    },
+    {
+      "path": "run/word-altchunk/native-semantic.json",
+      "bytes": 154057,
+      "sha256": "14e65ee379f8f51c1c6edabada463aadbc6bd35fc036ab504266045ee5f54705"
+    },
+    {
+      "path": "run/word-altchunk/original-render.json",
+      "bytes": 6594,
+      "sha256": "7a197a27b0740dae1fdc4a0c3eda57604bd71e97002ba2d681c2525d6f19b554"
+    },
+    {
+      "path": "run/word-altchunk/original-semantic.json",
+      "bytes": 9397,
+      "sha256": "3956b8f913f67bdbd148088266660781be3eb69f3fa765aed3cd029d681deacb"
+    },
+    {
+      "path": "run/word-altchunk/render-binary/conversion.log",
+      "bytes": 310,
+      "sha256": "e620650ee272c7c96bc7d398649456d191ff3921e4369f1672a31d333eb43f8e"
+    },
+    {
+      "path": "run/word-altchunk/render-binary/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/binary-render.json",
+        "manifest": "run/word-altchunk/render-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-binary/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-binary/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "2396b1abb4d4ae24e0b804e5b03bafee622b1fb4c409274cf7f8438084e21d7e"
+    },
+    {
+      "path": "run/word-altchunk/render-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "5e691cbee0b1c151e4a0a2aa0a531ca99fa244c89a1b39ba316e08ef257f059d"
+    },
+    {
+      "path": "run/word-altchunk/render-binary/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "197e53246af74f6fb164e205e056790da7ce309218c99a95fca78b3aba66bc86"
+    },
+    {
+      "path": "run/word-altchunk/render-binary/word-altchunk.pdf",
+      "bytes": 30280,
+      "sha256": "faa6a787c1dc87e180a14ed73e06ce048758648dd2c8a0a313601ffe2c0e0119"
+    },
+    {
+      "path": "run/word-altchunk/render-converted/conversion.log",
+      "bytes": 299,
+      "sha256": "821f215e6bea3c026e19b221781c5b65d31485fa2f38559afae3d503fb255c9c"
+    },
+    {
+      "path": "run/word-altchunk/render-converted/converted.pdf",
+      "bytes": 30280,
+      "sha256": "4a8324b4bc3829fdc92afc96af1f20a34119c1daed108286a22a1a4fc45c6655"
+    },
+    {
+      "path": "run/word-altchunk/render-converted/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/converted-render.json",
+        "manifest": "run/word-altchunk/render-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-converted/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-converted/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "216dd4860f2d638505386537e4e63516cf6fe9a01fcbdf7f5233bf09f4d4cb96"
+    },
+    {
+      "path": "run/word-altchunk/render-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "4e4c22f80bf094f01799e93a3e8e9f5726acf625ac26aaed0a544a37b82c79ec"
+    },
+    {
+      "path": "run/word-altchunk/render-converted/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "d991152f7c320bdadb4c5ac6971459cd2e31635f3f3eafb078a75ca634965240"
+    },
+    {
+      "path": "run/word-altchunk/render-native/conversion.log",
+      "bytes": 316,
+      "sha256": "6f9cdc1e6890d9e38a14be513ca6b0e6a63a3cab248428b5b9a5c9c8f16639a4"
+    },
+    {
+      "path": "run/word-altchunk/render-native/page-0001.ppm.gz",
+      "bytes": 16348,
+      "sha256": "7db5b48ec3f4d63e97530d5338abafc773e5ff48db1ca2ccd2a9ea6b1cde6f83",
+      "uncompressedSha256": "e8781d92cf4b53ebd57835e352a799fa2b403c22dbe8b9d36bd7551b7550545b",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/native-render.json",
+        "manifest": "run/word-altchunk/render-native/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-native/pages.txt",
+      "bytes": 273,
+      "sha256": "1828f61dbef596726f49d3c85712930de99d188399102c547890616230f3592f"
+    },
+    {
+      "path": "run/word-altchunk/render-native/pages.xhtml",
+      "bytes": 6134,
+      "sha256": "6d8cb0decd6b85f658315a77bf19397d12cef8fa1097e6be7faf1157b98439b5"
+    },
+    {
+      "path": "run/word-altchunk/render-native/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "7f853ab8c305ebb391de5a88b6350970bc8327784bd72f732c20c414b56f9292"
+    },
+    {
+      "path": "run/word-altchunk/render-native/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "4553f24a9317ea939487fc8ef1fe9da7332f26a3f21420181d6c4bae709ba6c5"
+    },
+    {
+      "path": "run/word-altchunk/render-native/word-altchunk.pdf",
+      "bytes": 30153,
+      "sha256": "40d9373388a62bd919cefa5c8ba020866e3ac5409d056e531b7061b951acd404"
+    },
+    {
+      "path": "run/word-altchunk/render-original/conversion.log",
+      "bytes": 285,
+      "sha256": "65a3b31415c15a540d4bae38b43144095a72e3d0be6a3700d8253b3ac2f88d37"
+    },
+    {
+      "path": "run/word-altchunk/render-original/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/original-render.json",
+        "manifest": "run/word-altchunk/render-original/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-original/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-original/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "2396b1abb4d4ae24e0b804e5b03bafee622b1fb4c409274cf7f8438084e21d7e"
+    },
+    {
+      "path": "run/word-altchunk/render-original/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "670fc57064fc1bb6c9b02d1e8ad33421d87e11f12b73f21c38aea592ab9ab34e"
+    },
+    {
+      "path": "run/word-altchunk/render-original/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "f6b67225997adcee9956d08381efa84135d0b390fb5a38d92012809601e2bae3"
+    },
+    {
+      "path": "run/word-altchunk/render-original/word-altchunk.pdf",
+      "bytes": 30012,
+      "sha256": "ae82c80bcc53b891fd4670472234195bc3c3c5f9431821fa07b9e08484899a10"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/conversion.log",
+      "bytes": 328,
+      "sha256": "ba8b7c7abf7b839d5474fe4466a172b372636fe62f15620f8da97178a391023b"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/converted.pdf",
+      "bytes": 30280,
+      "sha256": "20c3335da25a8cc455406d4f6801950717288c6df535368ed26a0997dec030bb"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/roundtrip-01-binary-render.json",
+        "manifest": "run/word-altchunk/render-roundtrip-01-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "d8ebf8f51dcb25cde88681d407d57c97bc07ee774a41710a16964d16661a540a"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "9796b613098d27701e2681cd79d503aa1be74e0f53c88f140f0f99218079df97"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-binary/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "37824b1a4d046bc3ac709dc6cf0e2572bd3802e93aa373e9b9c9575da8a8759a"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/conversion.log",
+      "bytes": 319,
+      "sha256": "145f2bb47b0d62fbe2632b65ac6eddc09cedbc1dde8b671469e9960267b5d133"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/import.pdf",
+      "bytes": 30280,
+      "sha256": "1cee3012a72efb588c6b904d0daaaf5efaaabd9b6fc3a0ed286d555fa2de06f8"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/roundtrip-01-converted-render.json",
+        "manifest": "run/word-altchunk/render-roundtrip-01-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "409dfff9254816dab9f4e06178ef0fd6e28916765002360ca4b259b542bf1c2c"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "d9ce7c7a713582862c6a6796470f137bff3a4910a4ab3c8421196a3d7a1d15ea"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-01-converted/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "53244f0deb5ee8532e4a02fe74b8dedac418ea8b50b35b481069784f31ea3c24"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/conversion.log",
+      "bytes": 322,
+      "sha256": "2098391ba65432ccadbde50883a0899a47bc3963cf8c987f8d501877dea63bf7"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/import.pdf",
+      "bytes": 30280,
+      "sha256": "9cb140a01a7b43a0c8b19b21e617f80a4d3ef851e6669a9f426e0f8c9e3b3bb7"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/roundtrip-02-binary-render.json",
+        "manifest": "run/word-altchunk/render-roundtrip-02-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "3fcd9d17d88dbebceaacd13c5cab7d195e25214ead5a91e5c0e838ee1cc55cc7"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "33332ce67f93f036c56a34be7bec981824e3adba76f868492697910d33714501"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-binary/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "8112dd50123d08b35e5035fde98c6fdbc023ec1f9d02811f6449f26ad520d460"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/conversion.log",
+      "bytes": 319,
+      "sha256": "846c18796162f1f64f0c2360543b2acbaf4ba01ca3b2c54570ef9eaf4dced805"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/import.pdf",
+      "bytes": 30280,
+      "sha256": "8fc1f3efcbf2736c7fd47dc4ddb35acfaf08e33426c5941ca690f8bc0d70b52a"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/roundtrip-02-converted-render.json",
+        "manifest": "run/word-altchunk/render-roundtrip-02-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "450d4c6f53b892816806887f9e754981badc8c9d300c22ea3c9d32961b758459"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "96975d42a530c0dfed303ffce979137456d8126624d08149c621ff45531d1661"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-02-converted/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "2a40b817a4691a8f891b56cf2f6ded170012fecf43bc874ed6955b30ccdc8f6e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/conversion.log",
+      "bytes": 322,
+      "sha256": "1aefd282c19463f1bdab8afded9dbd9fbedb508912488068226922f25acf3843"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/import.pdf",
+      "bytes": 30280,
+      "sha256": "4d07a14cbd936fdf440efc1e017ac72c3dcf8b921df13650f8e7832bfbb2a186"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/roundtrip-03-binary-render.json",
+        "manifest": "run/word-altchunk/render-roundtrip-03-binary/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "a2a801a6413c4831893b13577865b836370f8f8e91ae51e4124478df549464db"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "c7c8b77edde061f26a32749f2303d664fe1e163c85db3ebac5ff9370cccbe4f9"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-binary/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "ce428d90a3531cd6bf11874967da01a85f594dfec24698cd20e7cb05ef1d091f"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/conversion.log",
+      "bytes": 319,
+      "sha256": "ae78f64fd5a5d5d434a4173e34df38c787c6d5751079f58bfe72b75d1375fde4"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/import.pdf",
+      "bytes": 30280,
+      "sha256": "6a29d25c7c118bbf91eadac0bac8f36313a6758704555a7228c4a0eabca02e5a"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/page-0001.ppm.gz",
+      "bytes": 16370,
+      "sha256": "ef4f6da39cb37840dc821a909ec0285e013721294f0fee2bd797389b379e5a81",
+      "uncompressedSha256": "8bfe9a0802ce1febadc3ad626390fc0b8efe85d1aa6547afbf94765abd763d32",
+      "uncompressedBytes": 1454127,
+      "rasterContext": {
+        "render": "run/word-altchunk/roundtrip-03-converted-render.json",
+        "manifest": "run/word-altchunk/render-roundtrip-03-converted/raster-manifest.json",
+        "page": 1
+      }
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/pages.txt",
+      "bytes": 271,
+      "sha256": "11298342b1a20ab9fe5adc27aea395e65edeb742381a84909ad64a1511f0918e"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/pages.xhtml",
+      "bytes": 5817,
+      "sha256": "64f88f74757724c01cb54eee3fccd2c81f9190a38181d077dd8a290057398119"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/pdfinfo.txt",
+      "bytes": 439,
+      "sha256": "03d152659e8a4d884362bea7175b18304ca062679ee690459cdcf95c527a5500"
+    },
+    {
+      "path": "run/word-altchunk/render-roundtrip-03-converted/raster-manifest.json",
+      "bytes": 850,
+      "sha256": "c15309a89979b4d994ee5cc536e06054d63fcb4607aa15cea81772a6fd47d345"
+    },
+    {
+      "path": "run/word-altchunk/result.json",
+      "bytes": 6916417,
+      "sha256": "c68b21b2fe4e7433e1528474f44b6af0445ec13b1b6d02edfada83ac514e9eeb"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01-binary-render.json",
+      "bytes": 6594,
+      "sha256": "305d682d88327f6c0ad1da3e5212cd1674faa17debf686d4c4061d8a71a06e00"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01-converted-render.json",
+      "bytes": 6594,
+      "sha256": "c1c826b5f0d65ce14db59445516d930a7a91a03ec7ff6240224c7e0a80bfb20a"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01-converted-semantic.json",
+      "bytes": 219549,
+      "sha256": "ed7284d07aeb35b5122c045fa47b4625fb8d2990ea1e3189ad5b92b0013a3958"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01-native-semantic.json",
+      "bytes": 260882,
+      "sha256": "58ff8a07d4414b2e04a9a2afd8ffcc979f56b5fbf3e9079939b5bfe61387f25c"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01/binary/conversion.log",
+      "bytes": 295,
+      "sha256": "d713e052cf7adea8ebcba66d17b008780d696c7af1a067ae03c04c8928692092"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01/binary/converted.doc",
+      "bytes": 11264,
+      "sha256": "6e6de2b2231ece781febe6ca50acc7606a2a1fe35d5ddbb833006a83847bcf5b"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01/import.docx",
+      "bytes": 6498,
+      "sha256": "05485f0fa0a7e5fedeb981ef90c005cca66528c08c33a62ecb924df7e697a1c6"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01/native-docx/conversion.log",
+      "bytes": 330,
+      "sha256": "5b8ac6e7297ec336a5cd08681cfc87ce340b584e22d2101f6904ac5fd8e41bf2"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-01/native-docx/converted.docx",
+      "bytes": 7522,
+      "sha256": "9bdc0323a23e820ef4803228fcdb679e85b88eed3fae42d89702f398aa1ac534"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02-binary-render.json",
+      "bytes": 6594,
+      "sha256": "a50815a02ba7fc4cac469eb4c68bbb504ab9c18e44e97fc68ce0927c68589202"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02-converted-render.json",
+      "bytes": 6594,
+      "sha256": "da4aee7f1572597aabcbb7a0c4969689535fd773459ec7f49928691e9e99a6fb"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02-converted-semantic.json",
+      "bytes": 219551,
+      "sha256": "eb45754a3946cea79c60c3d8493d28e6050d79f766b4952f1da2cc879d6860ab"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02-native-semantic.json",
+      "bytes": 260882,
+      "sha256": "ad76e026c5d5eee871bb1af4115dddc92a28b0d637d2d9d7301cdd9509da13e7"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02/binary/conversion.log",
+      "bytes": 302,
+      "sha256": "e916e68c1dc09a5a1549aca0276490a593d997f09b1fe54dbb0bf3081a9fe4bf"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "fab44aed2807072012ffd63fd16d66ad69dfb66ef8aa0a282bb166b5c153a32b"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02/import.docx",
+      "bytes": 6498,
+      "sha256": "82c55b78ca692a8ae4b702382794561f73b620755f19588ac9ed6b18c6d2bc08"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02/native-docx/conversion.log",
+      "bytes": 324,
+      "sha256": "0cf689639c287dd330a1d2b5616d8e92d94c6ee19dd7ce7edce0a486b78fe645"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-02/native-docx/import.docx",
+      "bytes": 7522,
+      "sha256": "42068feedf16865b05b3e515abe62fcbc725a148c2ba68020c58c44c03ec775e"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03-binary-render.json",
+      "bytes": 6594,
+      "sha256": "50c9abca9261c6a3ab1bc329d16e0bb892c4922b417b79ea0801ff84a0e146ca"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03-converted-render.json",
+      "bytes": 6594,
+      "sha256": "f38898cbeea6df44b1cab648a9dcf9fab7e36f728790427b1e2ae54c566624db"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03-converted-semantic.json",
+      "bytes": 219551,
+      "sha256": "50fe5850104bdb402d4a2978d20b22c44d683d108209312b21092bf7deea49ae"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03-native-semantic.json",
+      "bytes": 260882,
+      "sha256": "b7594a987fdaa22bd268f31ace15a66bbc6819bdb2258790efb0ed50f66cd57a"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03/binary/conversion.log",
+      "bytes": 302,
+      "sha256": "e938ed4716f8340bcf38dcfa9771dfabce4ef5ab30fa35447d27bde5f3b8efbf"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03/binary/import.doc",
+      "bytes": 11264,
+      "sha256": "5557c49d60267c7c613c6a4f9205474bc5a5aaae5167d46124a2a56367aa00f9"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03/import.docx",
+      "bytes": 6500,
+      "sha256": "6394ae0f656b964dcf9c94e6cf17fd0a5e323dfb7c867f84172dfb2749a388cf"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03/native-docx/conversion.log",
+      "bytes": 324,
+      "sha256": "80cb55946269de65cf361f6cbd7e5c7c926e5d5b1a76cbf1744e17ba804343bf"
+    },
+    {
+      "path": "run/word-altchunk/roundtrip-03/native-docx/import.docx",
+      "bytes": 7522,
+      "sha256": "3635e6b2b7095630faf8edff1a3051d8128e2984f20b0605033b8440dea2920e"
+    }
+  ]
+}

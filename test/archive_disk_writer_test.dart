@@ -254,34 +254,25 @@ void main() {
     },
   );
 
-  test(
-    'existing HFS/DMG images stay create-only even if inspection is fabricated',
-    () async {
-      final archive = ViewerArchive.direct(
-        formatName: 'hfsx',
-        name: 'data',
-        data: Uint8List(0),
-      );
-      addTearDown(archive.close);
-      expect(
-        (await inspectHfsRewrite(Uint8List(0), archive)).supported,
-        isFalse,
-      );
-      expect(
-        (await inspectDmgRewrite(Uint8List(0), archive)).supported,
-        isFalse,
-      );
-      final source = ArchiveRewriteInspection();
-      await expectLater(
-        writeHfsArchive([], source: source, sink: (_) async {}),
-        throwsA(isA<ArchiveViewException>()),
-      );
-      await expectLater(
-        writeDmgArchive([], source: source, sink: (_) async {}),
-        throwsA(isA<ArchiveViewException>()),
-      );
-    },
-  );
+  test('bounded HFS/DMG partition views remain read-only when a caller supplies a fabricated rewrite inspection', () async {
+    final archive = ViewerArchive.direct(
+      formatName: 'hfsx',
+      name: 'data',
+      data: Uint8List(0),
+    );
+    addTearDown(archive.close);
+    expect((await inspectHfsRewrite(Uint8List(0), archive)).supported, isFalse);
+    expect((await inspectDmgRewrite(Uint8List(0), archive)).supported, isFalse);
+    final source = ArchiveRewriteInspection();
+    await expectLater(
+      writeHfsArchive([], source: source, sink: (_) async {}),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    await expectLater(
+      writeDmgArchive([], source: source, sink: (_) async {}),
+      throwsA(isA<ArchiveViewException>()),
+    );
+  });
 
   for (final compressed in [true, false]) {
     test(

@@ -1,8 +1,8 @@
 import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
 
-/// The native viewer can stream these common containers. Other formats keep
-/// their existing bounded readers, including read-only package/disk images.
+/// The native viewer can stream these containers and inspected data images.
+/// Other profiles retain their existing bounded browsing readers.
 bool isStreamedArchiveViewerName(String name) {
   final lower = name.toLowerCase();
   return const [
@@ -14,6 +14,10 @@ bool isStreamedArchiveViewerName(String name) {
     '.cbt',
     '.tgz',
     '.tar.gz',
+    '.iso',
+    '.rar',
+    '.cbr',
+    '.dmg',
   ].any(lower.endsWith);
 }
 
@@ -38,6 +42,12 @@ bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
   if (lower.endsWith('.tgz') || lower.endsWith('.tar.gz')) {
     return startsWith(const [0x1f, 0x8b]);
   }
+  if (lower.endsWith('.rar') || lower.endsWith('.cbr')) {
+    return startsWith(const [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07]);
+  }
+  // ISO descriptors begin at sector 16 and the UDIF signature is a trailer.
+  // Their readers validate the actual signature before accepting the source.
+  if (lower.endsWith('.iso') || lower.endsWith('.dmg')) return true;
   // Historic TARs have several valid header variants. Let the reader decide;
   // an explicit decoded-format mismatch can still use the sniffing fallback.
   return lower.endsWith('.tar') || lower.endsWith('.cbt');

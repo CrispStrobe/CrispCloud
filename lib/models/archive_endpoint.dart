@@ -28,6 +28,8 @@ enum ArchiveEndpointFormat {
   cpio,
   xar,
   iso,
+  rar,
+  dmg,
   readOnly,
 }
 

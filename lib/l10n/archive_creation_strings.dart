@@ -56,6 +56,48 @@ String archiveCreationError(BuildContext context, Object error) {
 }
 
 const _messages = <String, List<String>>{
+  'RAR5 Store': [
+    'RAR5 ohne Kompression',
+    'RAR5 sans compression',
+    'RAR5 sin compresión',
+    'RAR5 sem compressão',
+    'RAR5（不压缩）',
+    'RAR5（無圧縮）',
+    'RAR5 무압축',
+    'RAR5 دون ضغط',
+  ],
+  'CBR (RAR5 Store)': [
+    'CBR (RAR5 ohne Kompression)',
+    'CBR (RAR5 sans compression)',
+    'CBR (RAR5 sin compresión)',
+    'CBR (RAR5 sem compressão)',
+    'CBR（RAR5，不压缩）',
+    'CBR（RAR5、無圧縮）',
+    'CBR (RAR5 무압축)',
+    'CBR ‏(RAR5 دون ضغط)',
+  ],
+  'Create a data image up to 8 GiB from local files and folders. Temporary disk space is required. Existing files are never replaced.':
+      [
+        'Datenabbild bis zu 8 GiB aus lokalen Dateien und Ordnern erstellen. Temporärer Speicherplatz ist erforderlich. Vorhandene Dateien werden nicht ersetzt.',
+        'Crée une image de données jusqu’à 8 Gio à partir de fichiers et dossiers locaux. Espace disque temporaire nécessaire. Les fichiers existants ne sont jamais remplacés.',
+        'Crea una imagen de datos de hasta 8 GiB con archivos y carpetas locales. Requiere espacio temporal en disco. Nunca se reemplazan archivos existentes.',
+        'Crie uma imagem de dados até 8 GiB a partir de ficheiros e pastas locais. Requer espaço temporário em disco. Os ficheiros existentes nunca são substituídos.',
+        '使用本地文件和文件夹创建最多 8 GiB 的数据映像。需要临时磁盘空间。不会覆盖已有文件。',
+        'ローカルのファイルとフォルダーから最大8 GiBのデータイメージを作成します。一時ディスク領域が必要です。既存のファイルは上書きしません。',
+        '로컬 파일과 폴더로 최대 8 GiB의 데이터 이미지를 만듭니다. 임시 디스크 공간이 필요합니다. 기존 파일은 덮어쓰지 않습니다.',
+        'أنشئ صورة بيانات حتى 8 GiB من الملفات والمجلدات المحلية. تتطلب مساحة مؤقتة على القرص. لا تُستبدل الملفات الموجودة.',
+      ],
+  'Create a data image up to 8 GiB. Each ISO file must be smaller than 4 GiB. Temporary disk space is required. Existing files are never replaced.':
+      [
+        'Datenabbild bis zu 8 GiB erstellen. Jede Datei im ISO muss kleiner als 4 GiB sein. Temporärer Speicherplatz ist erforderlich. Vorhandene Dateien werden nicht ersetzt.',
+        'Crée une image de données jusqu’à 8 Gio. Chaque fichier dans l’ISO doit faire moins de 4 Gio. Espace disque temporaire nécessaire. Les fichiers existants ne sont jamais remplacés.',
+        'Crea una imagen de datos de hasta 8 GiB. Cada archivo dentro del ISO debe ser menor de 4 GiB. Requiere espacio temporal en disco. Nunca se reemplazan archivos existentes.',
+        'Crie uma imagem de dados até 8 GiB. Cada ficheiro no ISO deve ter menos de 4 GiB. Requer espaço temporário em disco. Os ficheiros existentes nunca são substituídos.',
+        '创建最多 8 GiB 的数据映像。ISO 内每个文件必须小于 4 GiB。需要临时磁盘空间。不会覆盖已有文件。',
+        '最大8 GiBのデータイメージを作成します。ISO内の各ファイルは4 GiB未満にしてください。一時ディスク領域が必要です。既存のファイルは上書きしません。',
+        '최대 8 GiB의 데이터 이미지를 만듭니다. ISO 안의 각 파일은 4 GiB 미만이어야 합니다. 임시 디스크 공간이 필요합니다. 기존 파일은 덮어쓰지 않습니다.',
+        'أنشئ صورة بيانات حتى 8 GiB. يجب أن يكون كل ملف داخل ISO أصغر من 4 GiB. تتطلب مساحة مؤقتة على القرص. لا تُستبدل الملفات الموجودة.',
+      ],
   "Create an archive up to 8 GiB, including headers, with up to 8 GiB of expanded contents. Temporary disk space is required. Existing files are never replaced.":
       [
         "Erstellt ein Archiv bis zu 8 GiB einschließlich Headern mit bis zu 8 GiB entpacktem Inhalt. Temporärer Speicherplatz ist erforderlich. Vorhandene Dateien werden nicht ersetzt.",

@@ -4,6 +4,12 @@
 
 Local, cloud and network storage. Automated unit, widget and native protocol tests. Block-level delta sync. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
+Credential-storage recovery identifies the selected store, its path where available,
+the failed operation and native status, with copyable original stack traces.
+Startup and unlock failures offer Retry, access restoration where supported, and
+an explicit choice of another store without deleting the original credentials.
+See [credential storage](docs/credential-storage.md).
+
 ## Providers
 
 | Provider | Features |
@@ -57,12 +63,13 @@ We also maintain patched Nextcloud and ownCloud desktop clients with delta sync 
 - **Preview pane:** images (zoom/pan), SVG, PDF (page navigation), syntax-highlighted code (30+ languages), markdown, CSV/TSV tables, DOCX/XLSX/PPTX/ODT text, fonts (TTF/OTF/WOFF2), audio/video
 - **Archive workflows:** browse archives like folders; create and review edits to ZIP/7z/TAR, comic and unsigned Java aliases, compressed TAR/files, AR/CPIO/XAR and eligible data ISOs. Original-source verification and recovery protect publication.
 - **Large native archives:** eligible unencrypted ZIP/ZIP64, 7z and TGZ workflows use bounded streams and private file snapshots with an explicit 8 GiB budget. Standalone codecs have processed members above 2 GiB; the [commander comparison and verification record](docs/archive-parity-large-continuation.md) separates measured codec results and remaining limits. The integration also exercises creation, publication, editing, extraction and F3 in Flutter; final platform acceptance is tracked by release CI.
-- **Extended file formats:** decoded EML/Outlook MSG viewing, including compressed RTF bodies and attachments; formatted RTF previews; current-slide text from legacy PPT/PPS/POT; formatted legacy DOC/DOT previews; protected DOCM/DOTM/DOTX rich editing; and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
+- **Extended file formats:** decoded EML/Outlook MSG viewing, including compressed RTF bodies and attachments; formatted RTF previews; legacy PPT/PPS/POT previews with native text fallback; formatted legacy DOC/DOT previews; protected DOCM/DOTM/DOTX rich editing; and Autodesk KBDX XML viewing/source editing. See [format coverage and limits](docs/file-format-viewers.md).
 - **Legacy Word conversion:** the maintained [legacy_doc_parser](https://github.com/CrispStrobe/legacy-doc-parser) supplies portable formatted previews and separate, reviewed DOCX/DOCM copies. Supported installed Word/LibreOffice conversions and their PDF previews remain available, as does explicit text-only conversion. Originals stay unchanged; macros and embedded objects are never executed by the built-in parser. See [conversion support and limits](docs/legacy-word-conversion.md).
 - **KeePass databases:** F3 views and F4 edits existing KDBX databases with password/key-file unlock, group management, entry moves, protected custom fields, entry history restoration, explicit password reveal/copy, automatic locking and encrypted saves to the original source. See [KeePass support and limits](docs/keepass.md).
 - **Disk images and packages:** create streamed data ISO, HFSX and UDIF DMG images; browse supported disk filesystems and package containers, with guarded prebuilt Debian payload replacement. Format-specific creation/editing limits and read-only boundaries are in [archive format coverage](docs/archive-format-coverage.md).
 - **Built-in editors:** F4 text/code and hex editors with explicit chooser and handoff, bounded edit history, and save/recovery tied to the original file and account. Text editing includes syntax highlighting, line numbers, encoding and newline controls; F3 also previews archive members
 - **Binary header inspection:** F3 → Hex → Inspect structure explains selected PNG, WebAssembly, ELF, DOS/PE, Mach-O, ZIP and Java header fields and highlights their bytes. The bounded Dart adaptation uses only selected Apache-2.0 File Viewer source; see [scope, provenance and limits](docs/file-viewer-apache-integration.md).
+- **Selected offline document engines:** bounded WordPerfect, CHM, legacy Excel, PowerPoint and PostScript previews, plus local XML schema validation and XSLT tools. MBOX indexes separate messages and retains the existing email attachment handling. The selected Apache/MIT/MPL source, runtime grants and platform limits are documented in [document previews](docs/file-viewer-selected-documents.md).
 - **Timed lyrics:** F3 opens `.lrc` files as a selectable timeline with metadata, repeated line times, offsets and optional word timing. Lyrics shows source order; Source and Hex retain the complete text and bytes. The standalone Apache-2.0 parser adds no dependencies; see [LRC preview and limits](docs/file-viewer-lrc-integration.md).
 - **Interactive terminal:** desktop PTY/Windows ConPTY, a built-in shell for sandboxed macOS, and SSH sessions with ANSI colors, full-screen programs, live resizing, raw control keys, scrollback, and mobile extra keys. Browser SSH uses your own secure WebSocket gateway. [Terminal design, licensing, and platform support](docs/terminal.md)
 - **Office editing:** DOCX/XLSX/PPTX editing through the patched Quds engine, with independent Word round-trip verification and archive members kept view-only
@@ -257,3 +264,21 @@ mode, matching the Android CI build. The manual `Rebuild Android release asset`
 workflow can repair an APK for an existing tag only after verifying successful
 application CI for that exact source commit; it retains release signing and
 artifact evidence and does not recreate the release or replace other assets.
+
+
+Development version `1.2.9+22` consumes the qualified canonical parser's
+section/gutter direction, manual-break justification compatibility and bounded
+explicit textbox-border frame conversion. Shared Office sources match Quds
+`6d6e77d` and parser `cd9ab85` exactly across 1,219 managed files. The source
+parser passes 931 Dart tests; the synchronized app Office gate passes 1,165
+mandatory engine tests and 202 host tests, with complete host instrumentation.
+These counts overlap the larger suites.
+
+The integration also adds native streamed editing for eligible data ISO,
+RAR5 Store/CBR and canonical HFSX data-volume DMG profiles, with reviewed
+folder changes and preservation checks. Creation offers 35 choices. These
+formats retain their documented size, metadata and profile limits; bootable,
+hybrid, encrypted and other unsupported disk images remain read-only.
+See [container profiles and verification](docs/archive-iso-rar-dmg.md). Apple's
+`hdiutil` independently verified a generated data-image fixture on this Mac;
+large hosted acceptance uses a fixed source checkpoint before release.

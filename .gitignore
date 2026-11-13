@@ -1,6 +1,8 @@
 # Miscellaneous
 *.class
 *.log
+# The parser mirror includes immutable upstream diagnostic logs as source.
+!packages/legacy_doc_parser/doc/evidence/**/*.log
 *.pyc
 *.swp
 .DS_Store

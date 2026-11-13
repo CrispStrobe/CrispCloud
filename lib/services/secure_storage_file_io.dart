@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import '../utils/async_lock.dart';
 import 'native_system.dart';
 import 'secure_storage_service.dart';
+import 'credential_storage_diagnostics.dart';
 import 'secure_storage_web.dart';
 
 /// A transactional file backend for the shared password vault codec.
@@ -67,7 +68,10 @@ class FileStorageBackend implements TransactionalWebStorageBackend {
 
   static void _privateMode(String path, int mode) {
     if (!Platform.isWindows && !setFileMode(path, mode)) {
-      throw FileSystemException('Could not restrict credential vault permissions', path);
+      throw FileSystemException(
+        'Could not restrict credential vault permissions',
+        path,
+      );
     }
   }
 
@@ -91,7 +95,9 @@ class FileStorageBackend implements TransactionalWebStorageBackend {
       final data = <String, String>{};
       for (final entry in decoded.entries) {
         if (entry.key is! String || entry.value is! String) {
-          throw const FormatException('Credential vault contains a non-string entry');
+          throw const FormatException(
+            'Credential vault contains a non-string entry',
+          );
         }
         data[entry.key as String] = entry.value as String;
       }
@@ -144,7 +150,9 @@ class FileStorageBackend implements TransactionalWebStorageBackend {
   @override
   Future<T> transaction<T>(Future<T> Function(WebStorageBackend) action) async {
     final target = await _resolvedFile();
-    final lockKey = Platform.isWindows ? target.path.toLowerCase() : target.path;
+    final lockKey = Platform.isWindows
+        ? target.path.toLowerCase()
+        : target.path;
     final local = _pathLocks.putIfAbsent(lockKey, AsyncLock.new);
     return local.synchronized(() async {
       final release = await _acquireLock(target);
@@ -189,19 +197,23 @@ class FileStorageBackend implements TransactionalWebStorageBackend {
       };
     } catch (_) {
       await handle.close();
-      throw StateError('Credential vault is in use or could not be locked; retry');
+      throw StateError(
+        'Credential vault is in use or could not be locked; retry',
+      );
     }
   }
 
   @override
-  Future<String?> getItem(String key) => transaction((staged) => staged.getItem(key));
+  Future<String?> getItem(String key) =>
+      transaction((staged) => staged.getItem(key));
 
   @override
   Future<void> setItem(String key, String value) =>
       transaction((staged) => staged.setItem(key, value));
 
   @override
-  Future<void> removeItem(String key) => transaction((staged) => staged.removeItem(key));
+  Future<void> removeItem(String key) =>
+      transaction((staged) => staged.removeItem(key));
 
   @override
   Future<List<String>> allKeys() => transaction((staged) => staged.allKeys());
@@ -260,8 +272,12 @@ class _PosixVaultLock {
   static final _libc = DynamicLibrary.process();
   // open is called without O_CREAT, so its optional mode argument is absent.
   static final _open = _libc.lookupFunction<_OpenNative, _OpenDart>('open');
-  static final _flock = _libc.lookupFunction<_IntPairNative, _IntPairDart>('flock');
-  static final _fchmod = _libc.lookupFunction<_ChmodNative, _ChmodDart>('fchmod');
+  static final _flock = _libc.lookupFunction<_IntPairNative, _IntPairDart>(
+    'flock',
+  );
+  static final _fchmod = _libc.lookupFunction<_ChmodNative, _ChmodDart>(
+    'fchmod',
+  );
   static final _close = _libc.lookupFunction<_FdNative, _FdDart>('close');
   static final _fsync = _libc.lookupFunction<_FdNative, _FdDart>('fsync');
   static bool get _darwin => Platform.isMacOS || Platform.isIOS;
@@ -276,11 +292,14 @@ class _PosixVaultLock {
     } finally {
       malloc.free(nativePath);
     }
-    if (fd < 0) throw FileSystemException('Could not safely open vault lock', path);
+    if (fd < 0)
+      throw FileSystemException('Could not safely open vault lock', path);
     if (_fchmod(fd, 0x180 /* 0600 */) != 0 ||
         _flock(fd, 2 /* LOCK_EX */ | 4 /* LOCK_NB */) != 0) {
       _close(fd);
-      throw StateError('Credential vault is in use or could not be locked; retry');
+      throw StateError(
+        'Credential vault is in use or could not be locked; retry',
+      );
     }
     return _PosixVaultLock(fd);
   }
@@ -294,11 +313,17 @@ class _PosixVaultLock {
       malloc.free(nativePath);
     }
     if (fd < 0) {
-      throw FileSystemException('Vault replaced, but its directory could not be synced', path);
+      throw FileSystemException(
+        'Vault replaced, but its directory could not be synced',
+        path,
+      );
     }
     try {
       if (_fsync(fd) != 0) {
-        throw FileSystemException('Vault replaced, but its directory could not be synced', path);
+        throw FileSystemException(
+          'Vault replaced, but its directory could not be synced',
+          path,
+        );
       }
     } finally {
       _close(fd);
@@ -311,8 +336,15 @@ class _PosixVaultLock {
 }
 
 /// Native password vault using the same AES-256-GCM format as the web vault.
-class EncryptedFileStorage extends WebEncryptedStorage {
-  EncryptedFileStorage(File file) : super(FileStorageBackend(file));
+class EncryptedFileStorage extends WebEncryptedStorage
+    implements CredentialStorageIdentity {
+  EncryptedFileStorage(File file)
+    : credentialStoreLocation = file.absolute.path,
+      super(FileStorageBackend(file));
+  @override
+  String get credentialStoreName => 'Encrypted credential vault';
+  @override
+  final String credentialStoreLocation;
 }
 
 Future<SecureStorage> createEncryptedFileStorage({

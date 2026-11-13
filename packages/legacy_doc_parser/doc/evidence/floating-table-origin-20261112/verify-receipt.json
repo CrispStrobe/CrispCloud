@@ -1,0 +1,66 @@
+{
+  "scriptSha256": "841e775cfbd8732197f5e51961b55752b86df9a5544fa4f79193a544ef2dcf42",
+  "retainedArchive": {
+    "verified": true,
+    "fileCount": 519,
+    "archiveSha256": "67565a41e428cd41d839b2ce62b9297840b2b2ead8f0efd5df103881597068c9"
+  },
+  "standardLibraryOnly": true,
+  "controls": [
+    {
+      "case": "positive",
+      "expectedRejected": false,
+      "rejected": false
+    },
+    {
+      "case": "duplicate-manifest",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "duplicate-member",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "unsafe-manifest",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "unsafe-member",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "link-member",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "member-size",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "member-hash",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "missing-member",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "unexpected-member",
+      "expectedRejected": true,
+      "rejected": true
+    },
+    {
+      "case": "archive-hash",
+      "expectedRejected": true,
+      "rejected": true
+    }
+  ]
+}

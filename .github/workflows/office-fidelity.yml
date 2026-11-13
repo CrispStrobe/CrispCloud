@@ -38,6 +38,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Verify committed Office sources before test hooks
+        run: python3 tool/verify_office_fidelity.py --require-tracked
       - name: Set up bundled ebook converter
         uses: ./.github/actions/setup-ebook-rust
 

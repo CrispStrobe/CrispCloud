@@ -124,6 +124,7 @@ class _StructuredWordParser {
     _validateUnicode(body);
     _readFonts();
     _readStyles();
+    final lineNumberStyle = _lineNumberStyle();
     _readTableStyles();
     _readAuthors();
     characterFormatting = _readFkp(paragraph: false);
@@ -188,6 +189,7 @@ class _StructuredWordParser {
       evenAndOddHeaders: source.evenAndOddHeaders,
       defaultTabStopTwips: source.defaultTabStopTwips,
       compatibility: source.compatibility,
+      lineNumberStyle: lineNumberStyle,
     );
   }
 

@@ -283,6 +283,9 @@ extension _WordMedia on _StructuredWordWriter {
       limitations.add(LegacyWordConversionLimitation.notesComments);
     }
     final bytes = ink.data;
+    final decoded = ink.decoding;
+    final decodedComplete =
+        decoded?.status == LegacyWordInkDecodeStatus.decoded;
     final metadata = <String, Object?>{
       ...occurrence,
       'payloadPropertyId': 0x0700,
@@ -295,17 +298,27 @@ extension _WordMedia on _StructuredWordWriter {
       'hasPayload': bytes != null,
       'format': bytes == null ? null : 'ISF',
       'headerStatus': ink.headerStatus?.name,
-      'strokeSemanticsDecoded': false,
+      'strokeSemanticsDecoded': decodedComplete,
+      'strokeDecodeStatus': decoded?.status.name,
+      'strokeDecodeReason': decoded?.reason,
+      'strokeCount': decodedComplete ? decoded!.strokes.length : null,
+      'pointCount': decodedComplete ? decoded!.pointCount : null,
       'nativeInkEmitted': false,
       'reason': bytes == null
           ? 'ink properties retained without a stored ink payload'
-          : 'inert ISF payload retained; pen-stroke semantics are not reconstructed',
+          : decodedComplete
+          ? 'ISF strokes decoded; native Word placement and editing remain unverified'
+          : 'inert ISF payload retained; stroke decode is ${decoded!.status.name}',
     };
     if (bytes == null) {
       _evidenceRecords.add({'kind': 'officeArtInk', ...metadata});
     } else {
       _preserveEvidence('officeArtInk', bytes, metadata);
       _count('inkPayloads');
+      if (decodedComplete && decoded!.strokes.isNotEmpty) {
+        _count('decodedInkPayloads');
+        _count('decodedInkStrokes', decoded.strokes.length);
+      }
     }
   }
 
@@ -504,22 +517,27 @@ extension _WordMedia on _StructuredWordWriter {
       '$_relationshipNamespace/oleObject',
       path.substring(5),
     );
+    final imageRelation = _olePlaceholderImageRelation();
     final id = ++_drawingId;
     _mediaStart(object.presentation);
-    // The source preview is unavailable. Keep a clearly labelled icon rather
-    // than claiming a Content snapshot, and give ShapeID a real v:shape target.
-    // MS-OI29500 2.1.1834 also limits ObjectID to an underscore plus int32.
+    // This generated icon identifies an unavailable preview; it is never a
+    // recovered rendering of the source storage. A picture-frame shape with
+    // imagedata survives native readers that discard OLE textbox content.
+    // Each occurrence has a local shape type and a real ShapeID target.
+    // MS-OI29500 2.1.1834 limits ObjectID to an underscore plus int32.
     _xml.add(
       '<w:object w:dxaOrig="1440" w:dyaOrig="720">'
-      '<v:shape id="_legacyObject$id" style="width:72pt;height:36pt" '
+      '<v:shapetype id="_legacyObjectType$id" o:spt="75" '
+      'o:preferrelative="t" filled="f" stroked="f" '
       'coordsize="21600,21600" path="m0,0l21600,0,21600,21600,0,21600xe" '
+      '/>'
+      '<v:shape id="_legacyObject$id" type="#_legacyObjectType$id" '
+      'style="width:72pt;height:36pt" '
       'o:ole="t" o:oleicon="t" '
-      'alt="Embedded object; original preview unavailable" '
-      'fillcolor="#EEEEEE" strokecolor="#808080">'
-      '<v:textbox><w:txbxContent><w:p><w:r><w:rPr><w:sz w:val="16"/>'
-      '</w:rPr><w:t>Embedded object</w:t><w:br/>'
-      '<w:t>Preview unavailable</w:t>'
-      '</w:r></w:p></w:txbxContent></v:textbox></v:shape>'
+      'alt="Embedded object; original preview unavailable">'
+      '<v:imagedata r:id="$imageRelation" '
+      'o:title="Embedded object; original preview unavailable"/>'
+      '</v:shape>'
       '<o:OLEObject Type="Embed" DrawAspect="Icon" ShapeID="_legacyObject$id" '
       'ObjectID="_$id" r:id="$relation"',
     );
@@ -530,6 +548,17 @@ extension _WordMedia on _StructuredWordWriter {
     }
     _xml.add('/></w:object>');
     _mediaEnd(object.presentation);
+    _count('embeddedObjectPlaceholders');
+    if (_evidenceRecords.length >= 20000) _tooComplex();
+    _evidenceRecords.add({
+      'kind': 'embeddedObjectPlaceholder',
+      'id': object.id,
+      'cp': object.cp,
+      'story': _storyId,
+      'imagePart': _olePlaceholderPart,
+      'sourcePreviewRecovered': false,
+      'reason': 'converter-generated icon; original object preview unavailable',
+    });
   }
 
   void _prepareTextboxes() {

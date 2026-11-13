@@ -497,7 +497,7 @@ class ArchiveEndpoint {
             inactivity: readInactivity,
             maxBytes: workspace.maxMemberBytes,
           );
-          if (digest != overlay._hashes[entry.destination]) {
+          if (digest != overlay._hashes[overlay._path(entry.destination)]) {
             throw StateError(
               'Import source bytes changed: ${entry.source.path}',
             );
@@ -541,7 +541,7 @@ class ArchiveEndpoint {
         witnesses.add(
           _ImportWitness(
             current,
-            entry.destination,
+            overlay._path(entry.destination),
             digest,
             mode,
             nativeSnapshot,
@@ -1311,7 +1311,9 @@ class _ArchiveImportOverlay extends FileOperationBackend {
 
   String _path(String path) {
     if (path == '/') return path;
-    return '/${ArchiveService.safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''))}';
+    final safe =
+        '/${ArchiveService.safeMemberPath(path.replaceFirst(RegExp(r'^/+'), ''))}';
+    return workspace.backend.pathKey(safe);
   }
 
   @override
@@ -1320,6 +1322,11 @@ class _ArchiveImportOverlay extends FileOperationBackend {
   String get label => workspace.file.name;
   @override
   p.Context get paths => p.posix;
+  @override
+  String pathKey(String path) => workspace.backend.pathKey(path);
+  @override
+  String destinationPathKey(String path) =>
+      workspace.backend.destinationPathKey(path);
   @override
   bool get isCurrent =>
       !_disposed &&

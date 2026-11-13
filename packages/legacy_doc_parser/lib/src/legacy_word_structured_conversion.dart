@@ -56,6 +56,7 @@ class _StructuredWordWriter {
   final _mediaAssets = <String, LegacyWordImageAsset>{};
   final _mediaParts = <String, String>{};
   final _embeddedParts = <String, String>{};
+  var _olePlaceholderWritten = false;
   final _renderedTextboxes = <(String, String?)>{};
   final _unplacedTextboxes = <(LegacyWordTextboxReference, LegacyWordStory)>[];
   final _inertStories = <String, String>{};
@@ -163,7 +164,9 @@ class _StructuredWordWriter {
     _package.relate('', _officeDocumentRelationship, 'word/document.xml');
     _writeAuxiliaryStories();
     _writeNumbering();
-    if (_styles.isNotEmpty || document.tableStyles.isNotEmpty) {
+    if (_styles.isNotEmpty ||
+        document.tableStyles.isNotEmpty ||
+        document.lineNumberStyle != null) {
       final styles = _styleDefinitions();
       if (_xml.byteEstimate + styles.byteEstimate > kLegacyWordDocxXmlLimit) {
         _tooComplex();
@@ -454,6 +457,8 @@ class _StructuredWordWriter {
     if (section.titlePage) {
       _xml.add('<w:titlePg/>');
     }
+    if (section.layout.rightToLeft) _xml.add('<w:bidi/>');
+    if (section.layout.rightToLeftGutter) _xml.add('<w:rtlGutter/>');
     _sectionGrid(section.layout);
   }
 
@@ -493,6 +498,7 @@ class _StructuredWordWriter {
       // shared style that could affect other paragraphs with the same index.
       xml.add('</w:style>');
     }
+    _lineNumberStyleXml(xml);
     _tableStyleXml(xml);
     xml.add('</w:styles>');
     return xml;

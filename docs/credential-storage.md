@@ -275,3 +275,29 @@ signed sandbox environment or live provider login behavior.
 - [Apple: keychain implementations (TN3137)](https://developer.apple.com/documentation/technotes/tn3137-on-mac-keychains).
 - [Apple: macOS App Sandbox file access](https://developer.apple.com/documentation/security/accessing-files-from-the-macos-app-sandbox).
 - [Apple Security source: private-keychain search-list behavior](https://github.com/apple-oss-distributions/Security/blob/main/OSX/libsecurity_keychain/lib/StorageManager.cpp).
+
+## Startup and unlock failure recovery
+
+Startup verifies the selected backend and reads the existing App Lock policy
+before exposing the file browser. The unlock and resume gates use the same
+recovery screen if a later read fails. A failed policy read never disables App
+Lock or creates a replacement vault.
+
+Recovery identifies the active backend and the selected keychain or vault's
+absolute path. OS-managed backends identify their service; a physical pathname
+is shown only when the backend exposes one. Diagnostics retain the failed
+operation, native error code/OSStatus, and original Dart stack trace. The details
+can be selected and copied; credential values and native query payloads are
+excluded. These reports contain local paths, so review them before sharing.
+
+Retry keeps the current store. On macOS, Restore keychain access grants access
+to the same selected file. Choose another credential store is also available
+from policy and vault failures: after an explicit confirmation, choose an OS
+store, an encrypted file vault, or memory for this session. The original store
+and its saved sign-ins and App Lock policy remain intact. A persistent vault
+still requires its own master password; an existing vault is never overwritten
+to recover access. Session mode imports no persistent credentials.
+
+The macOS startup smoke test waits for credential preflight, an authorized vault
+unlock screen, or verified first-run setup. Rendering the application shell by
+itself no longer qualifies as a successful launch.

@@ -12,6 +12,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import subprocess
 
 import sync_office_fidelity as office
 
@@ -28,11 +29,12 @@ def source_snapshot(source, ref):
     if len(records) > 5001:
         raise office.SyncError('Standalone parser source exceeds the file-count limit')
     files, modes, total = {}, {}, 0
+    objects = []
     for record in records:
         if not record:
             continue
         metadata, raw_name = record.split(b'\t', 1)
-        mode, kind, _, size = metadata.decode().split()
+        mode, kind, oid, size = metadata.decode().split()
         name = raw_name.decode('utf-8')
         path = office.safe_path(name)
         if (mode not in ('100644', '100755') or kind != 'blob'
@@ -42,11 +44,27 @@ def source_snapshot(source, ref):
         total += length
         if length > 64 * 1024 * 1024 or total > 128 * 1024 * 1024:
             raise office.SyncError('Standalone parser source exceeds its byte limit')
-        data = office.git(source, 'show', f'{commit}:{name}')
-        if len(data) != length:
+        objects.append((name, oid, length, mode))
+    # One bounded batch retains exact Git blobs without thousands of subprocesses.
+    result = subprocess.run(['git', '-C', str(source), 'cat-file', '--batch'],
+                            input=''.join(oid + '\n' for _, oid, _, _ in objects).encode(),
+                            capture_output=True)
+    if result.returncode:
+        raise office.SyncError(result.stderr.decode(errors='replace').strip())
+    payload, offset = result.stdout, 0
+    for name, oid, length, mode in objects:
+        boundary = payload.find(b'\n', offset)
+        expected = f'{oid} blob {length}'.encode()
+        if boundary < 0 or payload[offset:boundary] != expected:
+            raise office.SyncError('Standalone parser source object changed')
+        start, end = boundary + 1, boundary + 1 + length
+        if len(payload) <= end or payload[end:end + 1] != b'\n':
             raise office.SyncError('Standalone parser source extent changed')
-        files[name] = data
+        files[name] = payload[start:end]
         modes[name] = int(mode[-3:], 8)
+        offset = end + 1
+    if offset != len(payload):
+        raise office.SyncError('Unexpected standalone source object bytes')
     if not re.search(rb'^name:\s*legacy_doc_parser\s*$', files.get('pubspec.yaml', b''), re.MULTILINE):
         raise office.SyncError('Source commit is not the legacy_doc_parser package')
     for required in ('LICENSE', 'lib/legacy_doc_parser.dart'):

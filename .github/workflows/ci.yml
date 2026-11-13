@@ -80,6 +80,8 @@ jobs:
 
       - name: Verify Apache-only File Viewer source boundary
         run: |
+          python3 tool/verify_document_runtime.py --require-tracked
+          python3 -m unittest discover -s tool -p test_verify_document_runtime.py
           python3 tool/verify_file_viewer_binary.py
           python3 tool/verify_file_viewer_lrc.py
           python3 -m unittest discover -s tool -p 'test_verify_file_viewer*.py'

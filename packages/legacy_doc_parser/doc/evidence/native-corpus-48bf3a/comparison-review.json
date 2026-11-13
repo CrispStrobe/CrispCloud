@@ -1,0 +1,1988 @@
+{
+  "allRenderFingerprintsUnchangedCases": 20,
+  "cases": [
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "bookmarks",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 3.0500000000000114,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 3.0500000000000114,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "comment-threads",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "content-controls",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "content-controls-legacy",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "emf-vectors",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.049999999999954525,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.049999999999954525,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "formatting",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": null,
+        "wordDriftComparable": false
+      }
+    },
+    {
+      "changedCycles": [
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromBinaryDoc",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromBinaryDoc",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.7000000000000028
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": -0.7000000000000028,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "layoutTextExactlyMatches": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3499999999999943
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromBinaryDoc",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "layoutTextExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": -0.3499999999999943,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "layoutTextExactlyMatches": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3499999999999943
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "layoutTextExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": -0.3499999999999943,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "layoutTextExactlyMatches": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 1.0499999999999972
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "layoutTextExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": -1.0499999999999972,
+          "wordDriftComparable": true
+        }
+      ],
+      "changedRenderComponents": {
+        "converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-01-binary": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-01-converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-02-binary": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-02-converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-03-binary": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-03-converted": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ]
+      },
+      "id": "header-textbox-alias",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {
+          "exactOnThisRenderer": {
+            "after": true,
+            "before": false
+          },
+          "matchesWithinTolerance": {
+            "after": true,
+            "before": false
+          },
+          "maximumWordDriftPoints": {
+            "after": 0.0,
+            "before": 0.3500000000000085
+          },
+          "rasterExactlyMatches": {
+            "after": true,
+            "before": false
+          }
+        },
+        "flags": [
+          "matchesWithinTolerance: gained",
+          "rasterExactlyMatches: gained",
+          "exactOnThisRenderer: gained",
+          "maximumWordDriftPoints: decreased"
+        ],
+        "wordDriftChangePoints": -0.3500000000000085,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromBinaryDoc",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromBinaryDoc",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3500000000000085
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": -0.3500000000000085,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.7000000000000028
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": -0.7000000000000028,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "layoutTextExactlyMatches": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3499999999999943
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromBinaryDoc",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "layoutTextExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": -0.3499999999999943,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "layoutTextExactlyMatches": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 0.3499999999999943
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "layoutTextExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": -0.3499999999999943,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "exactOnThisRenderer": {
+              "after": true,
+              "before": false
+            },
+            "layoutTextExactlyMatches": {
+              "after": true,
+              "before": false
+            },
+            "matchesWithinTolerance": {
+              "after": true,
+              "before": false
+            },
+            "maximumWordDriftPoints": {
+              "after": 0.0,
+              "before": 1.0499999999999972
+            },
+            "rasterExactlyMatches": {
+              "after": true,
+              "before": false
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: gained",
+            "rasterExactlyMatches: gained",
+            "layoutTextExactlyMatches: gained",
+            "exactOnThisRenderer: gained",
+            "maximumWordDriftPoints: decreased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": -1.0499999999999972,
+          "wordDriftComparable": true
+        }
+      ],
+      "changedRenderComponents": {
+        "converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-01-binary": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-01-converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-02-binary": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-02-converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-03-binary": [
+          "pagesSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-03-converted": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ]
+      },
+      "id": "header-textbox-first-enabled",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 0.3500000000000085,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {
+          "exactOnThisRenderer": {
+            "after": true,
+            "before": false
+          },
+          "matchesWithinTolerance": {
+            "after": true,
+            "before": false
+          },
+          "maximumWordDriftPoints": {
+            "after": 0.0,
+            "before": 0.3500000000000085
+          },
+          "rasterExactlyMatches": {
+            "after": true,
+            "before": false
+          }
+        },
+        "flags": [
+          "matchesWithinTolerance: gained",
+          "rasterExactlyMatches: gained",
+          "exactOnThisRenderer: gained",
+          "maximumWordDriftPoints: decreased"
+        ],
+        "wordDriftChangePoints": -0.3500000000000085,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "linked-textboxes",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "linked-textboxes-compact",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "linked-textboxes-native",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "list-continue",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 24.909236000000007,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 24.909236000000007,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "list-restart",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 26.809235999999984,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 26.809235999999984,
+        "pageDimensionsMatch": false,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "note-markers",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": null,
+        "wordDriftComparable": false
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "officeart-shapes",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "poi-simple-table2",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 0.30000000000001137,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 0.30000000000001137,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "story-media",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "table-borders",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 74.42699999999999,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 74.42699999999999,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "wmf-vectors",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "word",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 18.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 18.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "word-altchunk",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": true,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": true,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {
+        "converted": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-01-binary": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-01-converted": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-02-binary": [
+          "pagesSha256"
+        ],
+        "roundtrip-02-converted": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ],
+        "roundtrip-03-binary": [
+          "pagesSha256"
+        ],
+        "roundtrip-03-converted": [
+          "pagesSha256",
+          "layoutTextSha256",
+          "rasterSha256"
+        ]
+      },
+      "id": "word-compatibility",
+      "initialAfter": {
+        "actualPages": 2,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 2,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 2,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": false,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": null,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": false,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 2,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": null,
+        "wordDriftComparable": false
+      }
+    },
+    {
+      "changedCycles": [],
+      "changedRenderComponents": {},
+      "id": "word14-margin-origin",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 0.75,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 0.75,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {},
+        "flags": [],
+        "wordDriftChangePoints": 0.0,
+        "wordDriftComparable": true
+      }
+    },
+    {
+      "changedCycles": [
+        {
+          "changed": {
+            "matchesWithinTolerance": {
+              "after": false,
+              "before": true
+            },
+            "maximumWordDriftPoints": {
+              "after": 1.4460000000000264,
+              "before": 0.0
+            }
+          },
+          "comparison": "paginationFromPreviousImport",
+          "flags": [
+            "matchesWithinTolerance: lost",
+            "maximumWordDriftPoints: increased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": 1.4460000000000264,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "matchesWithinTolerance": {
+              "after": false,
+              "before": true
+            },
+            "maximumWordDriftPoints": {
+              "after": 1.4460000000000264,
+              "before": 0.0
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: lost",
+            "maximumWordDriftPoints: increased"
+          ],
+          "index": 1,
+          "wordDriftChangePoints": 1.4460000000000264,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "matchesWithinTolerance": {
+              "after": false,
+              "before": true
+            },
+            "maximumWordDriftPoints": {
+              "after": 1.4460000000000264,
+              "before": 0.0
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: lost",
+            "maximumWordDriftPoints: increased"
+          ],
+          "index": 2,
+          "wordDriftChangePoints": 1.4460000000000264,
+          "wordDriftComparable": true
+        },
+        {
+          "changed": {
+            "matchesWithinTolerance": {
+              "after": false,
+              "before": true
+            },
+            "maximumWordDriftPoints": {
+              "after": 1.4460000000000264,
+              "before": 0.0
+            }
+          },
+          "comparison": "paginationFromFirstImport",
+          "flags": [
+            "matchesWithinTolerance: lost",
+            "maximumWordDriftPoints: increased"
+          ],
+          "index": 3,
+          "wordDriftChangePoints": 1.4460000000000264,
+          "wordDriftComparable": true
+        }
+      ],
+      "changedRenderComponents": {
+        "converted": [
+          "pagesSha256",
+          "rasterSha256"
+        ]
+      },
+      "id": "word16-page-origin",
+      "initialAfter": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": true,
+        "maximumWordDriftPoints": 0.0,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialBefore": {
+        "actualPages": 1,
+        "exactOnThisRenderer": false,
+        "layoutTextExactlyMatches": true,
+        "matchesWithinTolerance": false,
+        "maximumWordDriftPoints": 1.4460000000000264,
+        "pageDimensionsMatch": true,
+        "pageTextMatches": true,
+        "rasterExactlyMatches": false,
+        "rasterSettingsMatch": true,
+        "referencePages": 1,
+        "tolerancePoints": 0.25
+      },
+      "initialDelta": {
+        "changed": {
+          "matchesWithinTolerance": {
+            "after": true,
+            "before": false
+          },
+          "maximumWordDriftPoints": {
+            "after": 0.0,
+            "before": 1.4460000000000264
+          }
+        },
+        "flags": [
+          "matchesWithinTolerance: gained",
+          "maximumWordDriftPoints: decreased"
+        ],
+        "wordDriftChangePoints": -1.4460000000000264,
+        "wordDriftComparable": true
+      }
+    }
+  ],
+  "comparisonRawSha256": "e734c24e32d17fea7469e75707c79882c407ebf8a3345df3c9f9b8a0d6911c1d",
+  "context": {
+    "changedSourceFiles": [
+      ".dart_tool/package_config.json",
+      "lib/src/legacy_word_layout_model.dart",
+      "lib/src/legacy_word_layout_parser.dart",
+      "lib/src/legacy_word_media_parser.dart",
+      "lib/src/legacy_word_officeart_model.dart",
+      "lib/src/legacy_word_officeart_parser.dart",
+      "lib/src/legacy_word_structured_conversion.dart",
+      "lib/src/word_compatibility_writer.dart",
+      "lib/src/word_image_appearance_writer.dart",
+      "lib/src/word_shape_writer.dart",
+      "lib/src/word_textbox_writer.dart",
+      "pubspec.lock",
+      "tool/fidelity/schema.py",
+      "tool/fidelity/schema_corpus.dart",
+      "tool/fidelity/section_review_fixture.dart"
+    ],
+    "sameCorpusManifest": true,
+    "sameInstalledFontFiles": true,
+    "sameInstalledFontInventory": true,
+    "sameRenderer": true,
+    "toolIdentityComparison": {
+      "compiler": true,
+      "office": true,
+      "pdfinfo": true,
+      "pdftoppm": true,
+      "pdftotext": true
+    }
+  },
+  "sameNativeBinaryBytes": 24,
+  "sameSourceBytes": 24,
+  "schema": "legacy-doc-parser/native-corpus-comparison-review",
+  "scope": "Read-only derivation from unchanged archives; no native rerun or runtime edit.",
+  "version": 1,
+  "wordCompatibilitySourceAlignment": {
+    "after": {
+      "archiveSha256": "7a84c80355b096a0fa64670a790ad4d488546c840df7d293718fd4aec539dd8d",
+      "convertedDocxSha256": "20598f542415714f4a51599b60519d783d0c65c863f3e17d5760580f1fdb4b39",
+      "documentXmlSha256": "ad78e9f8763347ac388c493fabf772b66a18dacfc30e3fe7a8a443a053367a3d",
+      "renders": {
+        "binary": {
+          "firstPageHeaderWords": [
+            {
+              "box": [
+                602.75,
+                38.45,
+                621.824,
+                49.45
+              ],
+              "text": "First"
+            },
+            {
+              "box": [
+                624.288,
+                38.45,
+                645.892,
+                49.45
+              ],
+              "text": "page"
+            },
+            {
+              "box": [
+                648.356,
+                38.45,
+                679.904,
+                49.45
+              ],
+              "text": "header"
+            },
+            {
+              "box": [
+                682.401,
+                38.45,
+                719.856,
+                49.45
+              ],
+              "text": "retained"
+            }
+          ],
+          "firstUnselectedWord": {
+            "box": [
+              600.65,
+              74.45,
+              658.466,
+              85.45
+            ],
+            "text": "UNSELECTED"
+          },
+          "reference": {
+            "documentSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+            "path": "binary-render.json",
+            "sha256": "419adb6174376098f556d00ecd1d58c3aede9f3e2114f89a3eddc6f39aa1228c"
+          }
+        },
+        "converted": {
+          "firstPageHeaderWords": [
+            {
+              "box": [
+                602.75,
+                38.45,
+                621.824,
+                49.45
+              ],
+              "text": "First"
+            },
+            {
+              "box": [
+                624.288,
+                38.45,
+                645.892,
+                49.45
+              ],
+              "text": "page"
+            },
+            {
+              "box": [
+                648.356,
+                38.45,
+                679.904,
+                49.45
+              ],
+              "text": "header"
+            },
+            {
+              "box": [
+                682.401,
+                38.45,
+                719.856,
+                49.45
+              ],
+              "text": "retained"
+            }
+          ],
+          "firstUnselectedWord": {
+            "box": [
+              600.65,
+              74.45,
+              658.466,
+              85.45
+            ],
+            "text": "UNSELECTED"
+          },
+          "reference": {
+            "documentSha256": "20598f542415714f4a51599b60519d783d0c65c863f3e17d5760580f1fdb4b39",
+            "path": "converted-render.json",
+            "sha256": "3e9dc2b55c290a983a94fa5bf80ea5585e41a1d50dc7a488ec255c34041fca3e"
+          }
+        }
+      },
+      "sectionDirections": [
+        {
+          "bidi": true,
+          "rtlGutter": true
+        },
+        {
+          "bidi": false,
+          "rtlGutter": false
+        }
+      ]
+    },
+    "before": {
+      "archiveSha256": "8c9d08a04ad0b0d76b886b68679b38e7717adc2afa768f36aa887e51383f118b",
+      "convertedDocxSha256": "e9ec15b4bb05b3c88f419010d4eb1d451214964ba9b88f430c0da5d4011aa85c",
+      "documentXmlSha256": "f72890c07e5b91f02608e32dedbcc0fafe6e8e45d236e1e94c4d33bf2fbaed55",
+      "renders": {
+        "binary": {
+          "firstPageHeaderWords": [
+            {
+              "box": [
+                602.75,
+                38.45,
+                621.824,
+                49.45
+              ],
+              "text": "First"
+            },
+            {
+              "box": [
+                624.288,
+                38.45,
+                645.892,
+                49.45
+              ],
+              "text": "page"
+            },
+            {
+              "box": [
+                648.356,
+                38.45,
+                679.904,
+                49.45
+              ],
+              "text": "header"
+            },
+            {
+              "box": [
+                682.401,
+                38.45,
+                719.856,
+                49.45
+              ],
+              "text": "retained"
+            }
+          ],
+          "firstUnselectedWord": {
+            "box": [
+              600.65,
+              74.45,
+              658.466,
+              85.45
+            ],
+            "text": "UNSELECTED"
+          },
+          "reference": {
+            "documentSha256": "6c45dd6233904fab4e3583af53d52ac06d294773c01da14992bf3782bfae17dc",
+            "path": "binary-render.json",
+            "sha256": "6c0f34931fb03c55e8e09232029a7e305009efe1fc8f052c0497237f4f6778bb"
+          }
+        },
+        "converted": {
+          "firstPageHeaderWords": [
+            {
+              "box": [
+                602.75,
+                38.45,
+                621.824,
+                49.45
+              ],
+              "text": "First"
+            },
+            {
+              "box": [
+                624.288,
+                38.45,
+                645.892,
+                49.45
+              ],
+              "text": "page"
+            },
+            {
+              "box": [
+                648.356,
+                38.45,
+                679.904,
+                49.45
+              ],
+              "text": "header"
+            },
+            {
+              "box": [
+                682.401,
+                38.45,
+                719.856,
+                49.45
+              ],
+              "text": "retained"
+            }
+          ],
+          "firstUnselectedWord": {
+            "box": [
+              234.65,
+              74.45,
+              292.466,
+              85.45
+            ],
+            "text": "UNSELECTED"
+          },
+          "reference": {
+            "documentSha256": "e9ec15b4bb05b3c88f419010d4eb1d451214964ba9b88f430c0da5d4011aa85c",
+            "path": "converted-render.json",
+            "sha256": "c8ab2938bfe726f3cd301ec346d8e2640f479607b90e29ff04ba516bc175d5df"
+          }
+        }
+      },
+      "sectionDirections": [
+        {
+          "bidi": false,
+          "rtlGutter": false
+        },
+        {
+          "bidi": false,
+          "rtlGutter": false
+        }
+      ]
+    },
+    "interpretation": "Section-one bidi and rtlGutter now survive. The sampled body word moves into the source binary's right-hand column. Header boxes are unchanged. Existing note and line-number differences remain."
+  }
+}

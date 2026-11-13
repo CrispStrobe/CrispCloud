@@ -1,0 +1,26 @@
+{
+  "name": "single-dot",
+  "purpose": "A single stylus sample must remain a visible elliptical dot.",
+  "coordinateUnit": "Himetric (1/100 millimeter)",
+  "dipPerHimetric": 0.03779527559055118,
+  "expectedStrokeCount": 1,
+  "expectedPointCounts": [
+    1
+  ],
+  "strokes": [
+    {
+      "points": [
+        {
+          "xHimetric": 1270,
+          "yHimetric": 1270,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#FF0080FF",
+      "widthHimetric": 212,
+      "heightHimetric": 212,
+      "ignorePressure": true,
+      "tip": 1
+    }
+  ]
+}

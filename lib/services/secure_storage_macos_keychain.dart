@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'secure_storage_service.dart';
+import 'credential_storage_diagnostics.dart';
 
 /// An explicitly selected macOS file-based keychain. Every native operation is
 /// scoped to [path]; failure never retries in the user's default keychain.
-class MacOsCustomKeychainStorage extends SecureStorage {
+class MacOsCustomKeychainStorage extends SecureStorage
+    implements CredentialStorageIdentity {
   MacOsCustomKeychainStorage({required this.path, MethodChannel? channel})
     : _channel = channel ?? _defaultChannel;
 
@@ -13,6 +15,12 @@ class MacOsCustomKeychainStorage extends SecureStorage {
   static const _defaultChannel = MethodChannel(methodChannelName);
 
   final String path;
+
+  @override
+  String get credentialStoreName =>
+      'Custom macOS keychain (service com.crispcloud.credentials.v1)';
+  @override
+  String get credentialStoreLocation => path;
   final MethodChannel _channel;
   bool _initialized = false;
 

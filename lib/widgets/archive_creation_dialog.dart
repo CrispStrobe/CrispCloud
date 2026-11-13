@@ -223,6 +223,11 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
       password: _protect ? _password.text : null,
       compression: _compression,
     );
+    final streamedDisk = ArchiveCreationService.supportsStreamedDiskCreation(
+      format: _format,
+      source: widget.source,
+      destination: widget.destination,
+    );
     final progress = _progress;
     return PopScope(
       canPop: !_busy,
@@ -373,7 +378,11 @@ class _ArchiveCreationDialogState extends State<ArchiveCreationDialog> {
                 Text(
                   tr(
                     _format.diskImage
-                        ? 'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.'
+                        ? streamedDisk
+                              ? _format == ArchiveCreationFormat.iso
+                                    ? 'Create a data image up to 8 GiB. Each ISO file must be smaller than 4 GiB. Temporary disk space is required. Existing files are never replaced.'
+                                    : 'Create a data image up to 8 GiB from local files and folders. Temporary disk space is required. Existing files are never replaced.'
+                              : 'Create a data image from local files and folders. Up to 2 GiB of image output. Existing files are never replaced.'
                         : streamedCommon
                         ? 'Create an archive up to 8 GiB, including headers, with up to 8 GiB of expanded contents. Temporary disk space is required. Existing files are never replaced.'
                         : streamedTar

@@ -1,0 +1,159 @@
+{
+  "schema": "legacy-doc-parser/final-review-files",
+  "version": 1,
+  "sourceCommit": "0c3e59682952cce0e11301afec789e7ae2a1256a",
+  "files": {
+    "compare_native_corpus.py": {
+      "sha256": "9be593d6f96f33cd472e994822abe20ee0f20a3f9c5a970ae88e9694c70a4a15",
+      "bytes": 13704
+    },
+    "final-comparison.json.xz": {
+      "sha256": "e224b45b908987a17ee30b78bfca076b1297d10e47843a58df4c46fcc75e782c",
+      "bytes": 32944
+    },
+    "final-independent-native-audit.json": {
+      "sha256": "9ecc0841ece1f34343719cb9627c5bfd0fdc6e293a38252a5dabc03fd6cf8527",
+      "bytes": 8177
+    },
+    "final-metrics.md": {
+      "sha256": "e8be979aadd24d9264add7f3e79a4110185a1b328470ee040f0710ab55b804d9",
+      "bytes": 7805
+    },
+    "final-native-vs-7308125.json.xz": {
+      "sha256": "6f61c3e46b6d1e6e537e92dc7332f9a8e641e0f8f5f0075b7dc38a3f8b840b4d",
+      "bytes": 28648
+    },
+    "final-native-vs-e90f38f.json.xz": {
+      "sha256": "299d4b38bfc07c6a6f4d5d3c163690ec2a191cffa2a56f9f0455f65705af943a",
+      "bytes": 25160
+    },
+    "font-attribution.json": {
+      "sha256": "a18829aa1bde3b3f3eb3107ca0362f3f1fd7151a3046871c2a15cb67a2d0321a",
+      "bytes": 15136
+    },
+    "font-attribution.md": {
+      "sha256": "b85a94094da3e83b73e8dfbc5ca298fe8e8f349a36728a4ac496572f3410f82c",
+      "bytes": 6595
+    },
+    "font-render-inspection/binary-fonts.txt": {
+      "sha256": "f5c81501b1a5f7b5a985a64678f14ab66c81f4899636a0bf31d70abda4fad68b",
+      "bytes": 846
+    },
+    "font-render-inspection/binary-line.png": {
+      "sha256": "d42e40d7b92c5b5ef48c5556dc8637a4b58d0e5ac04f16d3644a660cce2838da",
+      "bytes": 19920
+    },
+    "font-render-inspection/diagnostic-helper-checks.json": {
+      "sha256": "9fbe8bf61731ad438d33cd1ea56ed32e229fb0f49bbabdd09e200a889bf7a962",
+      "bytes": 3019
+    },
+    "font-render-inspection/docx-font-comparison.json": {
+      "sha256": "62ad89533f1bc14821a1a9880b59f5737a8b9a00640bd477a1c31e396b64cbaa",
+      "bytes": 9661
+    },
+    "font-render-inspection/formatter-apply.log": {
+      "sha256": "9b03402085f31d0ac476bea3bb3a9e10934a63352821ef30769694a95e133d75",
+      "bytes": 148
+    },
+    "font-render-inspection/formatter-check-initial.log": {
+      "sha256": "a39205b877dc1ea3dd6d06ff77ee93806ca656c6b4fedb8cd7cd6e70b95f629c",
+      "bytes": 146
+    },
+    "font-render-inspection/formatter-check.log": {
+      "sha256": "a8665628d3d8dc8a51632550dfb214cf87c098912f4250420d0df700431790e6",
+      "bytes": 47
+    },
+    "font-render-inspection/formatting_font_source.dart": {
+      "sha256": "e6eb19ef81efa0520010dfe98a1320a3baae30519c75aa2bc2efcf83c6f1497d",
+      "bytes": 4298
+    },
+    "font-render-inspection/native-fonts.txt": {
+      "sha256": "f5c81501b1a5f7b5a985a64678f14ab66c81f4899636a0bf31d70abda4fad68b",
+      "bytes": 846
+    },
+    "font-render-inspection/native-line.png": {
+      "sha256": "d42e40d7b92c5b5ef48c5556dc8637a4b58d0e5ac04f16d3644a660cce2838da",
+      "bytes": 19920
+    },
+    "font-render-inspection/normal-style-byte-evidence.json": {
+      "sha256": "ef379b1e896f4bd3825e2926b55ad34eb80210eac31548a079181cf283436c9d",
+      "bytes": 580
+    },
+    "font-render-inspection/parser-fonts.txt": {
+      "sha256": "80327ec26e3688b1d07ad09c4fa3dd0d50936d1a04d6cc370e38572b8a4cb7c0",
+      "bytes": 940
+    },
+    "font-render-inspection/parser-line.png": {
+      "sha256": "bd6ee3023ca6faed2a8e15f81b1f389445355803a5c1534de482c504b2c353b4",
+      "bytes": 21284
+    },
+    "font-render-inspection/render-binary-source.pdf": {
+      "sha256": "034182533567f3629c7a6b0fbc5a25da08439d084db0dadd667c1dd18a5bfd3f",
+      "bytes": 38674
+    },
+    "font-render-inspection/render-converted-converted.pdf": {
+      "sha256": "ab0f6242dd233090a582720c97b3aecabc3b46d9e0b6c55a7050f1bb3d044a07",
+      "bytes": 40647
+    },
+    "font-render-inspection/render-native-source.pdf": {
+      "sha256": "791ac5fd4de538cc1093b17ef847cbe3ba07245675a9c60498e9cfb706ebc88c",
+      "bytes": 38493
+    },
+    "font-render-inspection/render-texts.json": {
+      "sha256": "74113bda47c5d4241ed20913dc6b83502569975dff6d075f54f8247042a948e3",
+      "bytes": 1201
+    },
+    "font-render-inspection/scoped-analyze-initial.log": {
+      "sha256": "436b0e3b1d1b216623abb5fc072c383a4523c6769997b684ce367f5085eff0da",
+      "bytes": 1708
+    },
+    "font-render-inspection/scoped-analyze-intermediate.log": {
+      "sha256": "efe0784b44bada9948802fccdef68536565104d9a46ab1cbe785d2a780347547",
+      "bytes": 219
+    },
+    "font-render-inspection/scoped-analyze.log": {
+      "sha256": "8821c7e8403f27a04a30fcc50cb42969daaffae6f94a6f3a98dd137b0a9af884",
+      "bytes": 53
+    },
+    "font-render-inspection/source-font-slots-reproduced.json": {
+      "sha256": "e9c161123bb516990324703d26ec26244244fde3e8dae5bde8eacfb0ced1e8be",
+      "bytes": 3338
+    },
+    "font-render-inspection/source-font-slots.json": {
+      "sha256": "e9c161123bb516990324703d26ec26244244fde3e8dae5bde8eacfb0ced1e8be",
+      "bytes": 3338
+    },
+    "font-render-inspection/source-normal-font-operands.json": {
+      "sha256": "e9f13e14778a0c4414abab6a365e006cae51080b3648d252777919474bbbaa04",
+      "bytes": 1012
+    },
+    "font-render-inspection/source_normal_font_operands.dart": {
+      "sha256": "feebe731b40db97242d9e86269ba5fc6683a90538ee5040f10d1a9101baeffdd",
+      "bytes": 3253
+    },
+    "font-render-inspection/verify_font_bytes.dart": {
+      "sha256": "ae70174919a4a763b48834e82ac543efe8ae4bfd75c0cd00f1369a42f1b848bf",
+      "bytes": 2065
+    }
+  },
+  "compressedJson": {
+    "final-comparison.json.xz": {
+      "sha256": "e224b45b908987a17ee30b78bfca076b1297d10e47843a58df4c46fcc75e782c",
+      "bytes": 32944,
+      "uncompressedSha256": "46b76573606dcfb784be62d6ffd4395aea70a7a7a2d08b8ca42374ae2514fe36",
+      "uncompressedBytes": 1409459
+    },
+    "final-native-vs-e90f38f.json.xz": {
+      "sha256": "299d4b38bfc07c6a6f4d5d3c163690ec2a191cffa2a56f9f0455f65705af943a",
+      "bytes": 25160,
+      "uncompressedSha256": "bd651560802a63c49e6cfa42a0a1edd2ab5f50863a395c29b4c169650bb5b1cf",
+      "uncompressedBytes": 580266
+    },
+    "final-native-vs-7308125.json.xz": {
+      "sha256": "6f61c3e46b6d1e6e537e92dc7332f9a8e641e0f8f5f0075b7dc38a3f8b840b4d",
+      "bytes": 28648,
+      "uncompressedSha256": "f603b4d5fc475638977b45e6759586b8df47d8a4ab66a5ddbc0d92694fd2f10d",
+      "uncompressedBytes": 693161
+    }
+  }
+}

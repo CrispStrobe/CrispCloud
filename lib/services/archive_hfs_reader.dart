@@ -4,6 +4,39 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_types.dart';
 
+/// Catalog and volume fields understood by the data-image writer. Reading
+/// these fields does not establish that the other filesystem bytes are safe
+/// to replace; the canonical rewrite inspector performs that separate check.
+class HfsArchiveMetadata {
+  HfsArchiveMetadata({
+    required this.volumeName,
+    required this.volumeCreated,
+    required this.volumeModified,
+    required this.volumeBackup,
+    required this.volumeChecked,
+    required this.rootModified,
+    required this.rootMode,
+    required Map<String, Object?> rootAttributes,
+    required Map<String, Map<String, Object?>> attributes,
+  }) : rootAttributes = Map.unmodifiable(rootAttributes),
+       attributes = Map.unmodifiable({
+         for (final item in attributes.entries)
+           item.key: Map<String, Object?>.unmodifiable(item.value),
+       });
+
+  final String volumeName;
+  final int volumeCreated, volumeModified, volumeBackup, volumeChecked;
+  final int rootModified, rootMode;
+  final Map<String, Object?> rootAttributes;
+  final Map<String, Map<String, Object?>> attributes;
+}
+
+class HfsArchiveOpen {
+  const HfsArchiveOpen({required this.archive, required this.metadata});
+  final ViewerArchive archive;
+  final HfsArchiveMetadata metadata;
+}
+
 /// Reads an HFS+ or HFSX volume without mounting it or following links.
 ///
 /// Catalog leaf nodes are read lazily from their inline extents; ordinary file
@@ -19,6 +52,26 @@ Future<ViewerArchive> openHfsArchive(
   int maxEntries = 100000,
   int maxCatalogBytes = 32 * 1024 * 1024,
   int maxDepth = 64,
+  bool Function()? isCancelled,
+}) async => (await openHfsArchiveWithMetadata(
+  source,
+  maxMemberBytes: maxMemberBytes,
+  maxEntries: maxEntries,
+  maxCatalogBytes: maxCatalogBytes,
+  maxDepth: maxDepth,
+  isCancelled: isCancelled,
+)).archive;
+
+/// Opens the same read-only file view while retaining the supported catalog
+/// timestamps and root label for an independent preservation inspection.
+/// Ownership of [source] transfers on call, including failed opens.
+Future<HfsArchiveOpen> openHfsArchiveWithMetadata(
+  koni.ByteSource source, {
+  required int maxMemberBytes,
+  int maxEntries = 100000,
+  int maxCatalogBytes = 32 * 1024 * 1024,
+  int maxDepth = 64,
+  bool Function()? isCancelled,
 }) async {
   try {
     if (maxMemberBytes <= 0 ||
@@ -27,13 +80,16 @@ Future<ViewerArchive> openHfsArchive(
         maxDepth <= 0) {
       throw ArgumentError('HFS reader limits must be positive.');
     }
-    return await _HfsReader(
+    final reader = _HfsReader(
       source,
       maxMemberBytes,
       maxEntries,
       maxCatalogBytes,
       maxDepth,
-    ).open();
+      isCancelled,
+    );
+    final archive = await reader.open();
+    return HfsArchiveOpen(archive: archive, metadata: reader.metadata);
   } catch (error) {
     await source.close();
     if (error is ArchiveViewException || error is ArgumentError) rethrow;
@@ -48,6 +104,7 @@ class _HfsReader {
     this.maxEntries,
     this.maxCatalogBytes,
     this.maxDepth,
+    this.isCancelled,
   );
 
   final koni.ByteSource source;
@@ -55,6 +112,8 @@ class _HfsReader {
   final int maxEntries;
   final int maxCatalogBytes;
   final int maxDepth;
+  final bool Function()? isCancelled;
+  late final HfsArchiveMetadata metadata;
   int _blockSize = 0;
   int _totalBlocks = 0;
   int _volumeBytes = 0;
@@ -67,13 +126,21 @@ class _HfsReader {
       throw ArchiveViewException('Unsupported HFS volume: $message');
 
   Future<Uint8List> _read(int offset, int length) async {
+    _check();
     final bound = _volumeBytes == 0 ? source.length : _volumeBytes;
     if (offset < 0 || length < 0 || offset > bound || length > bound - offset) {
       _bad('An extent leaves the volume.');
     }
     final result = await source.read(offset, length);
+    _check();
     if (result.length != length) _bad('The volume is truncated.');
     return result;
+  }
+
+  void _check() {
+    if (isCancelled?.call() ?? false) {
+      throw const ArchiveViewException('HFS reading was cancelled.');
+    }
   }
 
   int _u64(ByteData bytes, int at) {
@@ -265,8 +332,24 @@ class _HfsReader {
         ),
       );
     }
+    metadata = HfsArchiveMetadata(
+      volumeName: root.name,
+      volumeCreated: header.getUint32(16),
+      volumeModified: header.getUint32(20),
+      volumeBackup: header.getUint32(24),
+      volumeChecked: header.getUint32(28),
+      rootModified: root.modified,
+      rootMode: root.mode,
+      rootAttributes: root.attributes,
+      attributes: {
+        for (var i = 0; i < members.length; i++)
+          members[i].name: ordered[i].attributes,
+      },
+    );
+    _check();
     return ViewerArchive.reader(
       formatName: hfsx ? 'hfsx' : 'hfs+',
+      maxStreamingMemberBytes: maxMemberBytes,
       members: members,
       read: (member, requestedCap) async {
         final record = ordered[member.index];
@@ -502,6 +585,12 @@ class _HfsReader {
       modified: record.getUint32(at + 16),
       mode: mode,
       fork: fork,
+      attributes: {
+        'hfs.created': record.getUint32(at + 12),
+        'hfs.attributesModified': record.getUint32(at + 20),
+        'hfs.accessed': record.getUint32(at + 24),
+        'hfs.backedUp': record.getUint32(at + 28),
+      },
     );
   }
 }
@@ -529,6 +618,7 @@ class _CatalogRecord {
     required this.modified,
     required this.mode,
     required this.fork,
+    required this.attributes,
   });
   final int id;
   final int parentId;
@@ -538,4 +628,5 @@ class _CatalogRecord {
   final int modified;
   final int mode;
   final _Fork? fork;
+  final Map<String, Object?> attributes;
 }

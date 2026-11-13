@@ -753,7 +753,14 @@ class _ArchiveWorkspaceDialogState
                                 horizontal: 16,
                               ),
                               child: Text(
-                                archiveEndpointText(context, 'streamedBounds'),
+                                archiveEndpointText(
+                                  context,
+                                  switch (workspace!.format) {
+                                    'iso' => 'streamedIsoBounds',
+                                    'dmg' => 'streamedDmgBounds',
+                                    _ => 'streamedBounds',
+                                  },
+                                ),
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),

@@ -1,0 +1,574 @@
+{
+  "branch": "feature/office-fidelity-gaps-20261113",
+  "cohortCommand": {
+    "argv": [
+      "python3",
+      "docs/evidence/word-continuation-7308125/run_word_cohort.py",
+      "--app",
+      "/workspace/scratch/b8f8221a5e6e/CrispCloud",
+      "--workspace",
+      "/workspace/scratch/b8f8221a5e6e/app-word-cohort-baseline-20261113",
+      "--dart",
+      "/workspace/scratch/b8f8221a5e6e/toolchains/dart-3.13.7/dart-sdk/bin/dart",
+      "--pub-cache",
+      "/workspace/scratch/b8f8221a5e6e/toolchains/pub-cache"
+    ],
+    "finishedUtc": "2026-11-13T04:20:55.162977+00:00",
+    "scope": "Retained import-only data test adapter with its own captured dependency configuration.",
+    "startedUtc": "2026-11-13T04:20:40.586181+00:00"
+  },
+  "cohortInputCount": 1176,
+  "cohortSuites": {
+    "installed_office_converter_test.dart": {
+      "failed": 0,
+      "passed": 13,
+      "skipped": 0
+    },
+    "legacy_word_document_test.dart": {
+      "failed": 0,
+      "passed": 9,
+      "skipped": 0
+    },
+    "legacy_word_sprm_regression_test.dart": {
+      "failed": 0,
+      "passed": 6,
+      "skipped": 0
+    },
+    "legacy_word_structured_bounds_test.dart": {
+      "failed": 0,
+      "passed": 4,
+      "skipped": 0
+    },
+    "legacy_word_structured_conversion_test.dart": {
+      "failed": 0,
+      "passed": 9,
+      "skipped": 0
+    },
+    "legacy_word_structured_document_test.dart": {
+      "failed": 0,
+      "passed": 16,
+      "skipped": 0
+    },
+    "legacy_word_structured_render_test.dart": {
+      "failed": 0,
+      "passed": 7,
+      "skipped": 0
+    },
+    "word_conversion_inspection_test.dart": {
+      "failed": 0,
+      "passed": 43,
+      "skipped": 0
+    }
+  },
+  "cohortTestCount": 107,
+  "controlCommands": [
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_sync_*.py",
+      "-v"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_apple_export_preflight.py",
+      "-v"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_crypto_release_evidence.py",
+      "-v"
+    ],
+    [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_verify_ebook_sources.py",
+      "-v"
+    ]
+  ],
+  "controls": {
+    "apple-preflight-controls.log": {
+      "passed": 38,
+      "skipped": 0
+    },
+    "crypto-evidence-controls.log": {
+      "passed": 40,
+      "skipped": 2
+    },
+    "ebook-source-controls.log": {
+      "passed": 22,
+      "skipped": 0
+    },
+    "sync-controls.log": {
+      "passed": 24,
+      "skipped": 0
+    }
+  },
+  "ebookSource": {
+    "commit": "32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52",
+    "fileCount": 279
+  },
+  "excludedSuites": {
+    "test/legacy_word_previous_regressions_test.dart": "Imports preview_media.dart, Flutter material/services and video_player; cannot run unchanged using a data-only test import adapter."
+  },
+  "limitations": [
+    "This is the current-main baseline; no new parser runtime has been adopted by this checkpoint.",
+    "The 107 tests use the retained import-only data adapter; Flutter widgets, native ebook hooks and full application builds were not executed.",
+    "Native acceptance checks 13 existing assertions on one authored fixture, retains partialFormatting and deletes its temporary PDF by existing tool design; no pixel, glyph or arbitrary pagination claim.",
+    "The 13 fake-process converter tests in the cohort are separate from the 13 actual native assertions.",
+    "The first release input check correctly failed before package_config existed; it passed after genuine production resolution. The initial log is retained.",
+    "Two Flutter setup requests used an extra URL path segment and returned HTTP 404; corrected official release URLs succeeded and the published checksum matched.",
+    "The Flutter launcher and cloud metadata endpoint were not used; version metadata and sky_engine bytes came unchanged from the official release archive.",
+    "All current main archive/release work, version, policy decisions, fingerprint values, lockfile and source plists remain unchanged."
+  ],
+  "measuredAppCommit": "794bde82693e07a6e04ed1490bfa228f154e6e5c",
+  "measuredAppTree": "7a3465b8d6128acea60fd905143b01b657be68d9",
+  "measuredWorktreeStatus": "",
+  "native": {
+    "checks": {
+      "bold": true,
+      "fontColor": true,
+      "fontSize": true,
+      "headersAndFootersPreserved": true,
+      "imagesPreserved": true,
+      "independentPdfImage": true,
+      "independentPdfInfo": true,
+      "independentPdfText": true,
+      "notesPreserved": true,
+      "pageDimensions": true,
+      "preparedPackageUnchanged": true,
+      "sourceUnchanged": true,
+      "tableAndCells": true
+    },
+    "counts": {
+      "cells": 4,
+      "comments": 0,
+      "endnotes": 0,
+      "footers": 3,
+      "footnotes": 1,
+      "headers": 3,
+      "images": 1,
+      "objects": 0,
+      "paragraphs": 18,
+      "revisions": 0,
+      "sections": 1,
+      "signatures": 0,
+      "tables": 1,
+      "vba": 0
+    },
+    "docxSha256": "3f340831501e0221bb0e1713b62922a964199b618f3bd1fc2cd66c6387c9e08b",
+    "engine": "LibreOffice",
+    "limitations": [
+      "partialFormatting"
+    ],
+    "sourceSha256": "0ad636c6e3597152313055fd5428fb4b70ab483b3853b2666cac52498c953026"
+  },
+  "officeFileCount": 1074,
+  "parserCommit": "fee9b84bdca8ae25a1839f7ef29690150115abe7",
+  "parserFileCount": 653,
+  "productionHostedPackagesVerified": 238,
+  "productionLockedPackageCount": 272,
+  "productionPackageCount": 273,
+  "qudsCommit": "5b3256522e0b504766c70dea42e27f666abc2d5d",
+  "recordedAcceptanceCommands": [
+    "ebook-source-verification.command.json",
+    "native.command.json",
+    "portable-web.command.json",
+    "production-offline-pub-get.command.json",
+    "release-input-check.command.json"
+  ],
+  "recordedUtc": "2026-11-13T04:33:15.039255+00:00",
+  "records": {
+    "acceptance-runner.py.gz": {
+      "bytes": 1640,
+      "compressedBytes": 750,
+      "compressedSha256": "cba53c62906a671d34da9c7ad76b1a2111bf7278548a5d3101e9938f8495ddb4",
+      "originalName": "acceptance-runner.py",
+      "sha256": "5fd6f62f8bb3c663ec157fd350f68bc03cbcd1fb1adfb2374cd4737e63b63aa0"
+    },
+    "apple-preflight-controls.log.gz": {
+      "bytes": 6856,
+      "compressedBytes": 1355,
+      "compressedSha256": "164ece62cb2088a22ade827b636548003648ff972c8b839200de3af2d00a3dc1",
+      "originalName": "apple-preflight-controls.log",
+      "sha256": "386dde415c2168e11a3a170da77b1c40f0e51dad0a2a1098d3a336e698ba146b"
+    },
+    "baseline-source-after.json.gz": {
+      "bytes": 1600,
+      "compressedBytes": 796,
+      "compressedSha256": "1abbb5a547d6a5dd25a682e342a4dc732f85afefcca39e4d7f3edf77d7148a88",
+      "originalName": "baseline-source-after.json",
+      "sha256": "14d11072ba38240a8af5c488b05cb4a68057c957645df07696f431fad4f40f06"
+    },
+    "baseline-source-before.json.gz": {
+      "bytes": 1600,
+      "compressedBytes": 796,
+      "compressedSha256": "1abbb5a547d6a5dd25a682e342a4dc732f85afefcca39e4d7f3edf77d7148a88",
+      "originalName": "baseline-source-before.json",
+      "sha256": "14d11072ba38240a8af5c488b05cb4a68057c957645df07696f431fad4f40f06"
+    },
+    "cohort-adapters.json.gz": {
+      "bytes": 3021,
+      "compressedBytes": 1147,
+      "compressedSha256": "e5c40371da8fc597128a9fc281ec8669f0748b80340a4b50eef4558831b4ff4c",
+      "originalName": "cohort-adapters.json",
+      "sha256": "4152c36f79c5457e2ec641ddf5755e61c2d29632c26690e30c123db154204d27"
+    },
+    "cohort-console.log.gz": {
+      "bytes": 998,
+      "compressedBytes": 259,
+      "compressedSha256": "6e1f64583152598f738b235379aa1300cab01abe270311d67a9b2b509a66d9a2",
+      "originalName": "cohort-console.log",
+      "sha256": "921d1dc314bd16675228d7ce92fc56a73a5d4319c5276ebd7704f9e26e81387d"
+    },
+    "cohort-events.jsonl.gz": {
+      "bytes": 54552,
+      "compressedBytes": 6468,
+      "compressedSha256": "9c2167a4d1c873f4c39b8d92c8d56b1dbbaebc8d8a4786596443dbe717da6625",
+      "originalName": "cohort-events.jsonl",
+      "sha256": "326c2db949062a4ddb41abd25be9639832447147b474ddfb771b8aa9b229624a"
+    },
+    "cohort-inputs-after.json.gz": {
+      "bytes": 224418,
+      "compressedBytes": 62410,
+      "compressedSha256": "303dd6023ae178fa440aa86cc55ebdc6888ecec140d9421c8df60231b5fe9906",
+      "originalName": "cohort-inputs-after.json",
+      "sha256": "dafb65931f9beb6a22113721ebdcae9a81cbd9975b8bed2d35bdd6008cb154ce"
+    },
+    "cohort-inputs-before.json.gz": {
+      "bytes": 224418,
+      "compressedBytes": 62410,
+      "compressedSha256": "303dd6023ae178fa440aa86cc55ebdc6888ecec140d9421c8df60231b5fe9906",
+      "originalName": "cohort-inputs-before.json",
+      "sha256": "dafb65931f9beb6a22113721ebdcae9a81cbd9975b8bed2d35bdd6008cb154ce"
+    },
+    "cohort-package_config.json.gz": {
+      "bytes": 14267,
+      "compressedBytes": 1228,
+      "compressedSha256": "2004f4cb8013ac5ab556dfbaf9b14129ae3bfa4f1d33bdc730d2e23c3fb2af98",
+      "originalName": "cohort-package_config.json",
+      "sha256": "cb4a2932ff3c9cdc273e7a6c7d141b5b11d7c1dd1fc3b4e49046c9de1b70aecd"
+    },
+    "cohort-pub-get.log.gz": {
+      "bytes": 427,
+      "compressedBytes": 204,
+      "compressedSha256": "794c7f6862fd59cd8f45d611d23a68e1822aeafd1dcab252c8462640580b1d43",
+      "originalName": "cohort-pub-get.log",
+      "sha256": "ba8c1b08158901cc059f2fe7f7ef1632dda1d57aeb84ce8dde8fdf094066bf11"
+    },
+    "cohort-pubspec.lock.gz": {
+      "bytes": 15276,
+      "compressedBytes": 3945,
+      "compressedSha256": "b7785d9733b3126801e2f6c80fe7a5f252bbc77293252123a462aed818b28a68",
+      "originalName": "cohort-pubspec.lock",
+      "sha256": "495d8f2a497ef1e80570128b5aaa09d01377fa9596d63222decc87264757c530"
+    },
+    "cohort-pubspec.yaml.gz": {
+      "bytes": 432,
+      "compressedBytes": 258,
+      "compressedSha256": "598de53c95890adcaafcae17934338347c9e44cb88482dfbf8188d9f42fb5c23",
+      "originalName": "cohort-pubspec.yaml",
+      "sha256": "53ef3b95045a58b627abf6b506d712c4db75984a1b0b1ea61ef7dc037de8eb00"
+    },
+    "cohort-summary.json.gz": {
+      "bytes": 3126,
+      "compressedBytes": 1039,
+      "compressedSha256": "130ae245973e5ea3098bb46b97f59e56b6aa5d195724b9e73be1873a29d658f9",
+      "originalName": "cohort-summary.json",
+      "sha256": "6805c5a3bb62d9f65f6b343ce3cac58922feed0014eb66523d8c5ebd3fc28c1f"
+    },
+    "cohort-tests.log.gz": {
+      "bytes": 13537,
+      "compressedBytes": 2681,
+      "compressedSha256": "921155096afbdac387a49a5d2fc8eac0ef3adb6a422a072f8543877222a0d7a3",
+      "originalName": "cohort-tests.log",
+      "sha256": "6e2af82ed393a4c95f34b08f757db011f6c0190fbe2f0bc0230f445562fb3d2d"
+    },
+    "cohort-word_cohort.py.gz": {
+      "bytes": 11816,
+      "compressedBytes": 3913,
+      "compressedSha256": "960418f804882bc8b72daadc1a6139585a71c198f7d6bdfac27a6088643d4a14",
+      "originalName": "cohort-word_cohort.py",
+      "sha256": "0991a5fb2ea48d40aa58fe63c70240a030da4cb5208a91f607d67b55c5dab01b"
+    },
+    "crypto-evidence-controls.log.gz": {
+      "bytes": 7493,
+      "compressedBytes": 1248,
+      "compressedSha256": "0575e0323a4cf94983a696a8c2ff33a9fc1cd72f8bedce7914d681df9ab8f36e",
+      "originalName": "crypto-evidence-controls.log",
+      "sha256": "6e8bf6500208195e64a2302741b063c6020709a0d47d54089cc129bccce0d732"
+    },
+    "dart-recovery.json.gz": {
+      "bytes": 297,
+      "compressedBytes": 225,
+      "compressedSha256": "a77f618ac0ef1e017795f83869cc2b18fda0f1be392f7e9df36ed885e049ebf7",
+      "originalName": "dart-recovery.json",
+      "sha256": "a80d4efe6f12b8d30bbf66e8224568cb008835c2f874ddd63e662c8bb14fc689"
+    },
+    "ebook-source-controls.log.gz": {
+      "bytes": 3709,
+      "compressedBytes": 674,
+      "compressedSha256": "523f913c11e7e5bbcff88a0e0aff6d0251de3f327f3373adbb2cb6fa6d04754e",
+      "originalName": "ebook-source-controls.log",
+      "sha256": "a213e8747385b09d05ab2f03d1c802387d73475d7946d6c29e667c558b9547b3"
+    },
+    "ebook-source-verification.command.json.gz": {
+      "bytes": 348,
+      "compressedBytes": 253,
+      "compressedSha256": "435c7e7d45b89c94e5f0e1fe1fface01febd7d28f070da52b4b74e27c17f6d8f",
+      "originalName": "ebook-source-verification.command.json",
+      "sha256": "c990053440719af3c6508593df9ad0f8a8d9aab8206a41527f96d571c446d484"
+    },
+    "ebook-source-verification.log.gz": {
+      "bytes": 335,
+      "compressedBytes": 254,
+      "compressedSha256": "33155d14ae2c1c33b4f9f6f6ed4b798605181c8bc7a8efa7a98eda9c4cebeca6",
+      "originalName": "ebook-source-verification.log",
+      "sha256": "f1126ef699240e600d3560209943a5c74a2beb621a6958cbe922a18b0718a6fe"
+    },
+    "environment.json.gz": {
+      "bytes": 2352,
+      "compressedBytes": 874,
+      "compressedSha256": "cf79edd91dccab2f2d9b76dca56dac766228f2ceaeda2adbf91d62f32cfb0bb5",
+      "originalName": "environment.json",
+      "sha256": "e71aed40ad4b178d2196dd09c58d9a0270195c841c469ad79dc057b6dc309fcc"
+    },
+    "flutter-release-index.json.gz": {
+      "bytes": 272878,
+      "compressedBytes": 65436,
+      "compressedSha256": "cf3537cd6cbd18acdbdbba9c10244582989710fbc5b0af3b28bfe54db57769ed",
+      "originalName": "flutter-release-index.json",
+      "sha256": "20b6dacd9851bfb82b8f33b065cab4edeed2b80458c076d851edcafd30128848"
+    },
+    "flutter-source-recovery.json.gz": {
+      "bytes": 52499,
+      "compressedBytes": 16239,
+      "compressedSha256": "cb6b7e7f485a735756b0c82ed4042978ed711128e839a633e423f5219a8a9add",
+      "originalName": "flutter-source-recovery.json",
+      "sha256": "f661c0b5b3226bd4916fa1fc566b07984ac664c4b4fa4689825a6d39b1919e0c"
+    },
+    "inventory-before.json.gz": {
+      "bytes": 57508,
+      "compressedBytes": 13161,
+      "compressedSha256": "b83341529feefefcf7f4d12370d4771af78cdce6963340c2af75ac12c1c1ff0e",
+      "originalName": "inventory-before.json",
+      "sha256": "fb619b3a0087c0dabd4b89edd26b47c96897109584f7ef261f48eb6b66705f65"
+    },
+    "native.command.json.gz": {
+      "bytes": 580,
+      "compressedBytes": 349,
+      "compressedSha256": "d1624a577f7c406c8556322194565cab60e5787456adf12f9238471dffce67f6",
+      "originalName": "native.command.json",
+      "sha256": "79d33bd05d2c3fd73850c4a6b7b4a9973e0c2f42a1507542a745d37ffcf2d7fc"
+    },
+    "native.json.gz": {
+      "bytes": 921,
+      "compressedBytes": 434,
+      "compressedSha256": "199d57e5368f07a107ac83ba2b83901b0c47803d1c7d951483610a94396c938e",
+      "originalName": "native.json",
+      "sha256": "33103e14222eba1a82353ce181005686bac46c4978c5acd643e2a29726254de1"
+    },
+    "native.stderr.log.gz": {
+      "bytes": 0,
+      "compressedBytes": 20,
+      "compressedSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "originalName": "native.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "policy-before.json.gz": {
+      "bytes": 1710,
+      "compressedBytes": 985,
+      "compressedSha256": "34cc4dda6abbc26315c1cd4171aef2945b0729b04e141bfd5385fcb65849ba61",
+      "originalName": "policy-before.json",
+      "sha256": "51ce29cf4a97f34d7c8d1f6a8292384532e9606f882588ad22a9bca64a177678"
+    },
+    "portable-web.command.json.gz": {
+      "bytes": 435,
+      "compressedBytes": 283,
+      "compressedSha256": "762041ecf8db2ce05e651edc1b1e7ca8a7db96accad567c4211d7b481d4b514a",
+      "originalName": "portable-web.command.json",
+      "sha256": "e8a3f55e20315ad2b4dc27f4d21df2834618bf99282cf69d2d8f8df11047d186"
+    },
+    "portable-web.log.gz": {
+      "bytes": 262,
+      "compressedBytes": 213,
+      "compressedSha256": "54beff29f7ad4f0c7ad7b34396b18da2619cf6a3db89fe626979636a9eca2c47",
+      "originalName": "portable-web.log",
+      "sha256": "1454edb90718b599998df2fa441b2ebaad392a2f0c1f85d3e098075ffbcc5d25"
+    },
+    "production-dependencies-verified.json.gz": {
+      "bytes": 35507,
+      "compressedBytes": 12452,
+      "compressedSha256": "b792131dbc7ba1d2e3a75e3d37b24f9523b3c41e593f7d1b6a24e9134ca48e79",
+      "originalName": "production-dependencies-verified.json",
+      "sha256": "7112cea5436000fc05435f99e99f50231afc827b281048dca0fea629151acd43"
+    },
+    "production-offline-pub-get.command.json.gz": {
+      "bytes": 443,
+      "compressedBytes": 285,
+      "compressedSha256": "41e0d577e9ccd7d96f44f6d35b752de86f5d128bfd28f99b7bab31104427445c",
+      "originalName": "production-offline-pub-get.command.json",
+      "sha256": "c124682f8f6d816e0a97340ef6d02ce9a76b862336a968358a732fa65a11bd44"
+    },
+    "production-offline-pub-get.log.gz": {
+      "bytes": 2144,
+      "compressedBytes": 762,
+      "compressedSha256": "6384c15711f278a528659de27604039e14cebba44e80e0907830a96311d5bfd3",
+      "originalName": "production-offline-pub-get.log",
+      "sha256": "af384e5c1139229e03780a783f8a1fc5b60f0930e23273f9687da11e9adcf50d"
+    },
+    "production-package_config.json.gz": {
+      "bytes": 59152,
+      "compressedBytes": 4213,
+      "compressedSha256": "a9b60e62dcb4a7c5ecd7a4223e16c3aebc41ae7bedafce0e0f901a409ec0afb9",
+      "originalName": "production-package_config.json",
+      "sha256": "5c566409397125639caa09056d038c5e6211d8887f4ef7ab811455ed5944c6fa"
+    },
+    "production-pub-get.json.gz": {
+      "bytes": 950,
+      "compressedBytes": 446,
+      "compressedSha256": "e34da35523aeeb885ee6f4fe8ee7ec30bd1d3c789bb22d6983a722bb29c1e13d",
+      "originalName": "production-pub-get.json",
+      "sha256": "a876a69ffa428e7de91b10a6ff3c8bf7e23e8ff8d6e4be4bf805cb6196b2ac47"
+    },
+    "production-pub-get.log.gz": {
+      "bytes": 6443,
+      "compressedBytes": 2006,
+      "compressedSha256": "e9d1eb11ecb5046c4df6a2cd2e7fbf27ef1ff53aba6ce6989792339e742ddf07",
+      "originalName": "production-pub-get.log",
+      "sha256": "d1ccf57b6eeef6b771d31b9278d0f19fb2781555c1cc57dbd7da56100e2c14d0"
+    },
+    "production-pubspec.lock.gz": {
+      "bytes": 62941,
+      "compressedBytes": 14341,
+      "compressedSha256": "42cb423dbb80ab07be205e7257032ce8363a15e0c6ea6a419f4c979521e10328",
+      "originalName": "production-pubspec.lock",
+      "sha256": "135a9ccb44a38b2b9c7dcb541540b52bf151e8f5af14bf6e13b95d9240ae18a5"
+    },
+    "production-pubspec.yaml.gz": {
+      "bytes": 10756,
+      "compressedBytes": 4327,
+      "compressedSha256": "27e67ad2d63531c36c71f82b2ed47930b9e1bdb7c64f5b62e1f68cf43acc64c5",
+      "originalName": "production-pubspec.yaml",
+      "sha256": "273c6e2fb1bd7df8379b005ddbe36b47a7287dcbd2911d6ee947195a4ac4d88e"
+    },
+    "receipt-builder.py.gz": {
+      "bytes": 7673,
+      "compressedBytes": 2743,
+      "compressedSha256": "c82b65c11eb8ba9d84c888b1dc95a89913521184e5bdbd3680a49b218bf07dd8",
+      "originalName": "receipt-builder.py",
+      "sha256": "c657c9befc33d427e4528f273670589b1a10fbb6e2482ee2fcf74679f4dae902"
+    },
+    "release-input-check-preresolution.log.gz": {
+      "bytes": 98,
+      "compressedBytes": 103,
+      "compressedSha256": "cc77b2f6a4a96e880e7457a239d6ec55e199ec112643ac918dc4ac314d4b0ddc",
+      "originalName": "release-input-check-preresolution.log",
+      "sha256": "ef20dfa7702d4b7e3f1511e82d63cdee6e356a2564dec2435c97556e5a750e7a"
+    },
+    "release-input-check.command.json.gz": {
+      "bytes": 360,
+      "compressedBytes": 258,
+      "compressedSha256": "e2eb57209583a8b5352bf98ed77ed45f772a6a4057d401ce89dcd60a290da266",
+      "originalName": "release-input-check.command.json",
+      "sha256": "2264518eb6ad949057048361d1cc57e834df00aef5e2d6e814885b7985201116"
+    },
+    "release-input-check.log.gz": {
+      "bytes": 72,
+      "compressedBytes": 85,
+      "compressedSha256": "cf0e80b24019084c429ecef83bf415ed576ccc0dd678a1356e526d44c26080f3",
+      "originalName": "release-input-check.log",
+      "sha256": "ff9d3a1199b6818eaa426e241d6c1a2ec2ec4ba6009f011e8201cfcbfac32177"
+    },
+    "reviewed-source-before.json.gz": {
+      "bytes": 49690,
+      "compressedBytes": 20507,
+      "compressedSha256": "37fd4c9ec86a620d5bf7abae658c1b2ad53e78fc84d5872f72488d4923870f3e",
+      "originalName": "reviewed-source-before.json",
+      "sha256": "9fb40bc05cab4d86a069423f6596b1af45c55d9eb86c9db7c9d49c9bdc9bc3fb"
+    },
+    "setup-flutter-release-metadata-corrected.json.gz": {
+      "bytes": 1334,
+      "compressedBytes": 584,
+      "compressedSha256": "cca66bc7594bf9fa145541d294222bd778a2cad5ee1cbc32b279d4df71147d62",
+      "originalName": "setup-flutter-release-metadata-corrected.json",
+      "sha256": "0cbf1fbb4ecb7ba455b54a74411e15880abdcd4256dcc157545a3e092aeea0f0"
+    },
+    "setup-flutter-release-metadata.json.gz": {
+      "bytes": 1864,
+      "compressedBytes": 580,
+      "compressedSha256": "2d2446738dcaec1105c9c4773d34289b557a57ada1c4d9ec17a67fc1cb4fc5a7",
+      "originalName": "setup-flutter-release-metadata.json",
+      "sha256": "becf23caeaa4f6450ebeeab49f061229d65775d035f532a8f4bf5ad526e80c37"
+    },
+    "setup-flutter-sdk-archive-corrected.json.gz": {
+      "bytes": 1430,
+      "compressedBytes": 598,
+      "compressedSha256": "7991208a95457152f30d8d950afcdcd70b90cc113a607dce4fdfc0896eeea08c",
+      "originalName": "setup-flutter-sdk-archive-corrected.json",
+      "sha256": "8ab22339f0769075aec38a2d5434d6e40cee88c642d390ce3eab17c9a40ef4f5"
+    },
+    "setup-flutter-sdk-archive.json.gz": {
+      "bytes": 1838,
+      "compressedBytes": 587,
+      "compressedSha256": "92bb9b27be294369e29b44e3aff978d46892e7191ff0b939b36f39191992dea7",
+      "originalName": "setup-flutter-sdk-archive.json",
+      "sha256": "dd11ace2b8dc101630ae85880f32b5896351902b75b262d20d19b0f4bd6abcbc"
+    },
+    "setup-flutter-source-clone.log.gz": {
+      "bytes": 1573,
+      "compressedBytes": 614,
+      "compressedSha256": "551aeced0fbf4c6a3defe465e001eedc9c5ec0ffe02d4384827cfce34c41a565",
+      "originalName": "setup-flutter-source-clone.log",
+      "sha256": "160a1fa80a0f7cc825bf816a5908bfa643599fad2d60d8033bc824ebe3f91666"
+    },
+    "source-verification.log.gz": {
+      "bytes": 203,
+      "compressedBytes": 177,
+      "compressedSha256": "bef0dd1127f1ece040af93e6c3be4af6bfd56fefe389aa7ed3619b785c05e95f",
+      "originalName": "source-verification.log",
+      "sha256": "e4b02a16fe47e0215d04eebfe6c330ad1dad3abec8f5fa5f157eacc7c052fb7b"
+    },
+    "sync-controls.log.gz": {
+      "bytes": 4273,
+      "compressedBytes": 868,
+      "compressedSha256": "35dc1a1b6d37ca226974c8c22be3ac7e33670bb8b65c9d16a321f74bb50a9afe",
+      "originalName": "sync-controls.log",
+      "sha256": "d7e2a2ab43f912573745da0e02f8097ec693e3e395f2c2cea9e82efd9ba8f343"
+    }
+  },
+  "reviewedSourceBinding": {
+    "fileCount": 413,
+    "scope": "Reproduces current main's existing reviewed binding; no new source audit or fingerprint refresh.",
+    "sha256": "2c25d18d534310297a9caa5f7075feca21b2e1ec7464f4996af9e7d2bb394104"
+  },
+  "sourceVerificationCommand": [
+    "python3",
+    "tool/verify_office_fidelity.py",
+    "--legacy-source",
+    "../legacy-doc-parser"
+  ],
+  "verifierSha256": "39710bb18c5903e2d8a37007d20e5bae752aa86b70fb5cbd680d749f2fad870c",
+  "version": 1
+}

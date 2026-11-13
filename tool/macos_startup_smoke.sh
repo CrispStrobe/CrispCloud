@@ -54,15 +54,15 @@ for ((second = 0; second < WATCH_SECONDS; second++)); do
 done
 
 if grep -Eqi \
-  'loading libcrypto in an unsafe way|unrecognized selector|SIGABRT|Abort trap|Critical error creating config service' \
+  'loading libcrypto in an unsafe way|unrecognized selector|SIGABRT|Abort trap|Critical error creating config service|Credential storage startup failed|Credential policy check failed|Credential vault inspection failed' \
   "$LOG_FILE"; then
   echo "error: fatal startup signature found in app log" >&2
   print_failure_diagnostics
   exit 1
 fi
 
-if ! grep -Eq '\[Main\] (Startup UI rendered|Credential setup UI rendered)' "$LOG_FILE"; then
-  echo "error: CrispCloud did not render its startup UI within ${WATCH_SECONDS}s" >&2
+if ! grep -Eq '\[Main\] (Credential policy ready|Credential vault unlock UI ready|Credential setup UI rendered)' "$LOG_FILE"; then
+  echo "error: CrispCloud did not complete credential preflight or render an authorized unlock/setup UI within ${WATCH_SECONDS}s" >&2
   print_failure_diagnostics
   exit 1
 fi
