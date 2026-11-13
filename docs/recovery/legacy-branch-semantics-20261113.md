@@ -31,6 +31,28 @@ The recovered pending-source cases are in `test/commander_file_list_test.dart`:
 - A new path tab captures the original pending cloud source before its first
   listing completes.
 
+### Executed app verification
+
+At implementation checkpoint `d3e139fbd31aae3c62008bf368bdcb78a687dbba`, all
+**134 tests pass** across `commander_file_list_test.dart`,
+`panel_source_restore_test.dart`, `panel_refresh_lifecycle_test.dart`,
+`workspace_tabs_test.dart`, and `file_collection_panel_paging_test.dart`, with no
+failures or skips. The three new tests were first run against the original
+`223fb771` panel source and all failed at the expected source/storage assertions.
+
+Scoped analysis of the changed source and test exits successfully with no
+errors or warnings. The panel file retains thirteen existing style infos,
+also present in the baseline analysis; it does not pass fatal-info mode.
+Formatter and whitespace checks pass.
+
+Qualification used Flutter 3.47.8 / Dart 3.13.7 with the local native profile:
+the unrelated optional ebook build hook was temporarily disabled, verified
+SQLite/libsmb2 were supplied, and the real PTY hook compiled with verified
+Clang 19.1.7. Both dependency manifests were restored byte-for-byte. This is a
+focused application regression result, not native ebook or device acceptance.
+The [machine-readable receipt](../evidence/legacy-semantic-recovery-20261113.json)
+retains exact source and command attribution.
+
 Relevant existing coverage is in `test/panel_source_restore_test.dart`,
 `test/panel_refresh_lifecycle_test.dart`, `test/file_collection_test.dart`,
 `test/file_collection_panel_paging_test.dart`, `test/workspace_tabs_test.dart`,

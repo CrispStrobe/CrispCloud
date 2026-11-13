@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-13",
+  "source_commit": "d3e139fbd31aae3c62008bf368bdcb78a687dbba",
+  "source_tree": "587bc70d7c5a33d145dc155b7b83f7e8a67b6841",
+  "base_commit": "223fb771d2f8980f7425e7e2ecbe5d7953670592",
+  "tests": {
+    "command": "flutter test --no-pub --concurrency=1 test/commander_file_list_test.dart test/panel_source_restore_test.dart test/panel_refresh_lifecycle_test.dart test/workspace_tabs_test.dart test/file_collection_panel_paging_test.dart",
+    "files": [
+      "test/commander_file_list_test.dart",
+      "test/panel_source_restore_test.dart",
+      "test/panel_refresh_lifecycle_test.dart",
+      "test/workspace_tabs_test.dart",
+      "test/file_collection_panel_paging_test.dart"
+    ],
+    "passed": 134,
+    "failed": 0,
+    "skipped": 0
+  },
+  "regression_control": {
+    "source": "223fb771:lib/providers/panel_provider.dart",
+    "command": "flutter test --no-pub --concurrency=1 test/commander_file_list_test.dart --name 'right-pane refresh keeps|a new tab captures'",
+    "expected_failures": 3,
+    "observed_failures": 3
+  },
+  "analysis": {
+    "command": "dart analyze lib/providers/panel_provider.dart test/commander_file_list_test.dart",
+    "exit_code": 0,
+    "errors": 0,
+    "warnings": 0,
+    "existing_info_diagnostics": 13,
+    "fatal_info_mode_passed": false
+  },
+  "toolchain": {
+    "flutter": "3.47.8",
+    "dart": "3.13.7",
+    "clang": "19.1.7"
+  },
+  "local_native_profile": {
+    "optional_ebook_build_hook": false,
+    "pty_hook": "compiled with real verified Clang",
+    "sqlite": "verified local SQLite 3.46.1",
+    "libsmb2": "verified pinned shared library",
+    "manifest_restoration": "byte-for-byte"
+  },
+  "manifest_sha256": {
+    "pubspec.yaml": "e1468a1c9cf4c666ca543db100f53905f86de8547e112f5050933d96184f247b",
+    "pubspec.lock": "5616a4756db70db79eed38774db9e0ef247185fd7a004eedce82f86ec72b0057"
+  },
+  "limits": [
+    "Scoped application regression result; does not qualify the final combined root integration.",
+    "Canonical reader Chromium launch stopped before assertions because process-singleton socket creation is not permitted.",
+    "No new native ebook or device acceptance claim."
+  ]
+}
