@@ -81,24 +81,51 @@ class ArchiveJobRecoveryService {
           'The output already exists and cannot be confirmed as this job’s archive. It will not be replaced.',
         );
       }
-      final actual = await transferDigest(destination, output, gate);
-      check();
-      if (actual != expectedHash) {
-        throw StateError(
-          'The output differs from the saved archive receipt. It will not be replaced.',
-        );
+      var pauseEpoch = 0;
+      final pauseChanges = gate.changes.listen((_) {
+        if (gate.isPaused) pauseEpoch++;
+      });
+      try {
+        while (true) {
+          await gate.checkpoint();
+          check();
+          final proofEpoch = pauseEpoch;
+          final current = await destination.stat(definition.outputPath);
+          if (current == null ||
+              current.isFolder ||
+              current.isSymlink == true ||
+              current.size != expectedBytes) {
+            throw StateError(
+              'The output already exists and cannot be confirmed as this job’s archive. It will not be replaced.',
+            );
+          }
+          final actual = await transferDigest(destination, current, gate);
+          await gate.checkpoint();
+          check();
+          // A pause can outlive a change to an already-read prefix without a
+          // size or timestamp change. Require one complete uninterrupted proof,
+          // including pauses that were resumed before the next checkpoint.
+          if (proofEpoch != pauseEpoch) continue;
+          if (actual != expectedHash) {
+            throw StateError(
+              'The output differs from the saved archive receipt. It will not be replaced.',
+            );
+          }
+          return ArchiveCreationRecoveryReview._(
+            jobId: job.id,
+            definition: definition,
+            source: source,
+            destination: destination,
+            result: ArchiveCreationResult(
+              definition.outputPath,
+              entryCount,
+              expectedBytes,
+            ),
+          );
+        }
+      } finally {
+        await pauseChanges.cancel();
       }
-      return ArchiveCreationRecoveryReview._(
-        jobId: job.id,
-        definition: definition,
-        source: source,
-        destination: destination,
-        result: ArchiveCreationResult(
-          definition.outputPath,
-          entryCount,
-          expectedBytes,
-        ),
-      );
     }
     final directory = await destination.stat(definition.destinationDirectory);
     await gate.checkpoint();

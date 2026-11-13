@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:crisp_cloud/models/archive_job.dart';
+import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/models/transfer_job.dart';
 import 'package:crisp_cloud/services/archive_creation_service.dart';
 import 'package:crisp_cloud/services/archive_job_recovery_service.dart';
@@ -12,6 +15,31 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/archive_queue_fixture.dart';
+
+class _PausingOutputBackend extends QueueArchiveBackend {
+  _PausingOutputBackend(this.control) : super('original-destination');
+
+  final FileOperationControl control;
+  final prefixRead = Completer<void>();
+  int outputReads = 0;
+
+  @override
+  Stream<List<int>> readFile(FileItem file) async* {
+    if (file.path != '/output/saved.zip') {
+      yield* super.readFile(file);
+      return;
+    }
+    final bytes = contents[file.path]!;
+    outputReads++;
+    final split = bytes.length ~/ 2;
+    yield Uint8List.sublistView(bytes, 0, split);
+    if (outputReads == 1) {
+      control.pause();
+      prefixRead.complete();
+    }
+    yield Uint8List.sublistView(bytes, split);
+  }
+}
 
 void main() {
   late QueueArchiveBackend source;
@@ -152,6 +180,39 @@ void main() {
     );
     expect(destination.contents['/output/saved.zip'], [4, 5, 6]);
   });
+
+  test(
+    'a pause invalidates an existing-output proof when its read prefix changes',
+    () async {
+      final control = FileOperationControl();
+      final pausing = _PausingOutputBackend(control);
+      destination = pausing;
+      final job = await recipe();
+      final bytes = Uint8List.fromList(List.generate(65536, (i) => i % 251));
+      await receipt(job, bytes);
+      destination.put('/output/saved.zip', bytes);
+      final before = (await destination.stat('/output/saved.zip'))!;
+      final verification = service.prepareCreation(
+        journal.job(job.id)!,
+        source: source,
+        destination: destination,
+        control: control,
+      );
+      final rejected = expectLater(verification, throwsStateError);
+      await pausing.prefixRead.future;
+      expect(control.isPaused, isTrue);
+      final changed = Uint8List.fromList(bytes)..[0] ^= 0xff;
+      destination.put('/output/saved.zip', changed);
+      final after = (await destination.stat('/output/saved.zip'))!;
+      expect(after.size, before.size);
+      expect(after.updatedAt, before.updatedAt);
+      control.resume();
+      await rejected;
+      expect(pausing.outputReads, 2);
+      expect(destination.contents['/output/saved.zip'], changed);
+      expect(destination.writes, isEmpty);
+    },
+  );
 
   test('changed sources or revoked original account block restart', () async {
     final job = await recipe();

@@ -1238,7 +1238,9 @@ class TransferNotifier extends ChangeNotifier {
                             error,
                           );
                         }
-                        if (!_disposed) unawaited(_refreshAfterTransfer());
+                        if (!_disposed) {
+                          unawaited(_refreshAfterTransfer(onlyExisting: true));
+                        }
                       }
                       if (published || _disposed) {
                         try {
@@ -2077,10 +2079,13 @@ class TransferNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> _refreshAfterTransfer() async {
+  Future<void> _refreshAfterTransfer({bool onlyExisting = false}) async {
     try {
-      await _ref.read(panelProvider(PanelSide.local)).refresh();
-      await _ref.read(panelProvider(PanelSide.remote)).refresh();
+      for (final side in PanelSide.values) {
+        if (!onlyExisting || _ref.exists(panelProvider(side))) {
+          await _ref.read(panelProvider(side)).refresh();
+        }
+      }
     } catch (error) {
       _log.warn('Refreshing panels after transfer failed', error);
     }
