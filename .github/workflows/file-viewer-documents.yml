@@ -98,3 +98,38 @@ jobs:
           # Refuse to overwrite concurrent user work. A later source push reruns
           # this workflow, so a rejected fast-forward requires no force push.
           git push origin HEAD:refs/heads/feature/apache-file-viewer-20261113
+
+  linux-consumer:
+    name: Compile standalone Linux document host
+    needs: runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    env:
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Download the verified document runtime
+        uses: actions/download-artifact@v4
+        with:
+          name: selected-document-runtime
+          path: packages/file_viewer_documents
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: Install Linux document host build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang cmake ninja-build pkg-config python3 \
+            libgtk-3-dev libglib2.0-dev libepoxy-dev libwebkit2gtk-4.1-dev
+      - name: Compile the real WebKit-enabled consumer and verify its bundle
+        shell: bash
+        run: bash packages/file_viewer_documents/tooling/build-linux-consumer.sh

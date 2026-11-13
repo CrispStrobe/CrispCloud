@@ -1,18 +1,26 @@
-# Saved email, Word variants and KeePass databases
+# Document, saved email and KeePass viewers
 
-F3 and the preview pane recognize the formats below. The table describes the
-full F3 viewer; the compact pane shows an email view, formatted RTF, extracted Office text, or
-keyboard-profile XML source. KeePass previews stay locked until explicitly
-opened. F4 uses the existing captured-source editor/save
-coordinator; opening a file never sends a message, executes a macro, or changes
-its original bytes.
+The table describes the full F3 viewer. The compact preview pane retains its
+existing email, formatted RTF, extracted Office text and keyboard-profile XML
+views; the new browser document routes described here are F3 integrations.
+KeePass previews stay locked until explicitly opened. F4 uses the existing
+captured-source editor/save coordinator; opening a file never sends a message,
+executes a macro, or changes its original bytes. The selected document package
+is implemented in source and has passed selected Chromium checks; native
+platform acceptance remains pending as described under [Verification](#verification).
 
 | Extensions | Viewer | Editor |
 | --- | --- | --- |
 | `.eml` | Decoded subject, sender, recipients, date, plain text or safe HTML, attachments | MIME source in the text/code editor |
 | `.msg` | Outlook compound-message headers, plain text, safe HTML or decoded compressed RTF, ordinary attachments | Existing explicit hex editor; no structured Outlook writer |
+| `.mbox` | Indexed mailbox with message chooser, previous/next navigation and decoded selected-message search/copy | Source/Hex inspection; no mailbox writer added |
 | `.rtf` | Basic formatted runs, paragraph alignment, explicit list markers and flat tables | Existing RTF source editor; no rich RTF writer |
-| `.ppt`, `.pps`, `.pot` | Text from the current slide list and referenced current drawings, in slide order | Existing explicit hex editor; no binary PowerPoint writer |
+| `.ppt`, `.pps`, `.pot` | Positioned slide rendering through the selected browser engine; explicit **Text fallback** uses the native current-slide reader | Existing explicit hex editor; no binary PowerPoint writer |
+| `.wpd`, `.wp`, `.wp5`, `.wp6` | Structured WordPerfect paragraphs, styles, lists, ordered tables, running sections and notes through libwpd | Source/Hex inspection; no WordPerfect writer added |
+| `.chm` | Compiled Help topics, contents/index/search and archive-local resources | Source/Hex inspection; no Help authoring added |
+| `.xls`, `.xlt`, `.xlsb` | Worksheet tabs and a virtual grid with supported formatting and saved formula values | Source/Hex inspection; no legacy Excel writer added |
+| `.ps`, `.eps` | Local PostScript page rasterization through the Stet worker/WASM engine | Source/Hex inspection; no PostScript writer added |
+| `.xml`, `.xsd`, `.xsl`, `.xslt` | Existing tree/source view plus explicit **XSD / XSLT** validation and transformation tools | Existing XML source editor; tool output does not overwrite the input |
 | `.doc`, `.dot` | Supported main-story formatting, list labels, tables and revision markup from unencrypted Word 97–2007 binary files | Separate reviewed structured DOCX/DOCM, installed Word/LibreOffice DOCX/DOCM, or an explicitly selected text-only DOCX |
 | `.docm`, `.dotm`, `.dotx` | Existing formatted Word view, text and page rendering | Rich Word editor with macro/template preservation checks before saving |
 | `.kdbx` | Password/key-file unlock, groups, standard/custom fields, entry history and search | Group management, entry moves, protected custom fields, history restoration and encrypted saves preserving other database data |
@@ -23,6 +31,43 @@ its original bytes.
 KeePass password databases use a different extension, `.kdbx`; they open in the
 dedicated database viewer/editor, never as XML source. See
 [KeePass support and limits](keepass.md).
+
+## Selected browser document previews
+
+The [selected document package](../packages/file_viewer_documents/README.md)
+integrates six isolated engines from File Viewer 3.3.3 at
+`d264009ca6efb3daed79a39d1ae63133e0f25558`. It supplies WordPerfect, CHM,
+legacy Excel, binary PowerPoint, PostScript and XML tools without loading the
+upstream preset. Existing native DOC/DOT, modern Office, PDF and other viewers
+retain their routes. The [format and license matrix](file-viewer-format-license-matrix.md)
+distinguishes this implemented subset from the remaining upstream candidates.
+
+F3 passes a complete bounded snapshot from its current source to the selected
+engine. The cap is 64 MiB for WordPerfect/CHM, 32 MiB for XLS/PPT/PS, and 4 MiB
+for XML tools; decoded resources have additional engine-specific limits.
+Oversized, unsupported or failed previews leave Source/Hex available. Binary
+PowerPoint additionally offers its explicitly selected native **Text fallback**.
+Closing the view or changing source cancels its renderer and workers. Single-file
+compressed inputs use the expanded filename and bytes, so `.ppt.gz` selects the
+same presentation route as `.ppt`.
+
+These are readable previews with format-specific limits. WordPerfect preserves
+paragraph/table order and displays its layout warning, but does not reproduce
+original pagination, embedded images/fonts, equations or drawings. The Excel
+grid primarily uses stored formula results; it is not a full recalculation or
+macro engine. Binary PowerPoint renders supported slide geometry and pictures,
+without promising Office-identical layout or animation. PostScript uses Stet,
+an experimental interpreter, and does not claim complete Level 3 conformance.
+
+The host receives document bytes and display settings, not provider credentials,
+native paths or remote document URLs. CHM topic HTML is sanitized and placed in
+a sandbox without script permission; document-driven network requests and active
+embeds are blocked. XML opens in the native tree/source view first. Selecting
+**XSD / XSLT** enables local validation or transformation with an explicitly
+supplied schema/stylesheet; external DTDs, entities, imports, includes and
+document loads are disabled. Transformation output stays in the preview.
+The package README records the browser/platform hosts, dependency grants,
+matching source, reproducible build and exact limitations.
 
 ## Email
 
@@ -59,13 +104,23 @@ boundaries also produce warnings. Invalid Base64 and unsupported transfer
 encodings fail the preview. Unicode, UTF-8, Latin-1, Windows-1252 and common ASCII
 aliases are handled directly. This is a saved-message viewer, not an email client.
 
+MBOX uses CrispCloud's own bounded Dart indexer and the existing email renderer.
+It indexes up to 1,000 messages in a 64 MiB mailbox, then decodes only the selected
+message, subject to the 32 MiB single-message cap. The chooser and previous/next
+controls remain visible during search. Search and decoded copy apply to the
+selected message; switching messages reruns the retained query in that scope.
+A malformed selected message does not prevent navigation to other indexed
+messages. Source/Hex retain the original mailbox bytes, including when the
+viewer has expanded a single-file compressed source. Ambiguous boundaries or
+exceeded indexing limits produce a failure rather than a partial mailbox.
+
 F4 on an EML opens its **MIME source**. Existing text-editor encoding and newline
 metadata preserve untouched encoded attachment text and CRLF line endings.
 Changing source does not automatically rewrite MIME boundaries, re-encode a
 body, or update message signatures. The normal dirty-state, save-conflict and
 recovery behavior applies.
 
-Resource limits include 32 MiB input in F3 (the compact preview pane retains its
+Single-message EML/MSG resource limits include 32 MiB input in F3 (the compact preview pane retains its
 20 MiB input limit), 8 MiB per body, 16 MiB per attachment,
 128 attachments, 512 MIME parts, 20 nested MIME levels and 512 MSG recipients.
 Compound-file allocation tables and directory graphs are validated before use;
@@ -86,14 +141,16 @@ editor. Bounds include 8 MiB input, 4 Mi UTF-16 text units, 128 group levels and
 250,000 group/control tokens; unsupported code pages and malformed structures produce
 typed, localized failures.
 
-The binary PowerPoint reader follows `Current User`, the current edit/persist
+The native binary PowerPoint **Text fallback** follows `Current User`, the current edit/persist
 directory, the document's current slide references and their drawing text. It
 does not scan arbitrary compound-file bytes: older saves, removed slides,
-masters, notes and embedded documents are excluded. This is a searchable text
-preview, without slide layout, images, animation, notes or a binary-format
-editor. Encrypted, unsupported and malformed inputs are rejected. Both new
-readers use the existing bounded compound/archive infrastructure where needed
-and add no package dependency. Details and authored compatibility fixtures are
+masters, notes and embedded documents are excluded. This fallback is a searchable
+text preview, without slide layout, images, animation, notes or a binary-format
+editor. The default F3 presentation preview uses the separately integrated visual
+engine described above. Encrypted, unsupported and malformed native-text inputs
+are rejected. The authored RTF and native PPT text readers use the existing
+bounded compound/archive infrastructure where needed and add no package
+dependency. Details and authored compatibility fixtures are
 recorded in [portable Office previews](portable-office-previews.md).
 
 ## Word documents and templates
@@ -114,6 +171,12 @@ preview. Exact pagination, arbitrary drawing geometry and full revision
 semantics remain incomplete and are disclosed. Encrypted files,
 older pre-Word-97 variants and malformed structures produce a clear failure.
 The main story is capped at 4 × 1024 × 1024 UTF-16 code units.
+
+The [File Viewer DOC/DOT comparison](file-viewer-doc-dot-comparison.md) records
+the exact resolved native source, the pinned upstream engine, a 19-fixture
+differential probe and specific gaps on both sides. Model support and faithful
+rendered layout are separate findings. This integration keeps the native
+`legacy_doc_parser` route; it does not replace it with File Viewer's DOC engine.
 
 F4 on DOC/DOT, or **Convert to DOCX** in F3, offers detected Microsoft Word on
 Windows or LibreOffice 7+ on Windows/Linux/macOS. Availability depends on the
@@ -172,7 +235,8 @@ KeePass uses a pinned, MIT-licensed vendored
 tree and use the existing PointyCastle Argon2 implementation on native and
 JavaScript targets. No native cryptography binaries are bundled.
 
-The email, RTF and binary PowerPoint additions require no new package.
+The authored email/MBOX, RTF and native binary PowerPoint text readers require
+no new parser package.
 Their compound-file parsing reuses
 `CfbfFile` from the existing MIT-licensed
 [`quds_office_engine`](../packages/quds_office_engine/LICENSE). MIME parsing,
@@ -192,12 +256,32 @@ installed Word/LibreOffice remains subject to its own license; see the
 Selected structured DOC formatting readers in that package adapt
 0BSD-licensed JSDoc code in Dart; the [license and provenance](licenses/jsdoc-0bsd.txt) and
 [pinned source evaluation](legacy-word-parser-research-2026-11-12.md) record the
-scope. No Python or JavaScript document engine is bundled.
+scope. The legacy DOC/DOT package bundles no Python or JavaScript document engine.
+
+The selected browser document package adds the explicitly inventoried JavaScript
+and WASM engines above. Its effective grants include Apache-2.0, MIT, BSD-family,
+Zlib and other retained permissive grants; WordPerfect elects MPL-2.0 for libwpd
+and librevenge. PostScript's bundled fonts and color profile have separate OFL-1.1
+and CC0 terms. The [package README](../packages/file_viewer_documents/README.md)
+links the shipped notices, source/hash manifest and matching WordPerfect source.
+An Apache wrapper does not replace its dependencies' grants. See the
+[effective-license matrix](file-viewer-format-license-matrix.md) for the broader
+survey and formats excluded from this selected build.
 
 ## Verification
 
 Focused regression suites include:
 
+- `test/document_preview_source_test.dart`,
+  `test/document_preview_routing_test.dart`,
+  `test/widget/document_preview_integration_test.dart` and
+  `test/widget/document_preview_review_test.dart`: bounded snapshots, selected
+  format routes, compressed-source dispatch, XML tools/source retention, explicit
+  PPT text fallback and selected-message MBOX navigation/search/copy.
+- `test/mbox_message_service_test.dart` and
+  `test/widget/mbox_message_view_test.dart`: mailbox boundaries, resource limits,
+  lazy message parsing and navigation. The document package has separate real
+  engine Node suites and browser smoke scripts.
 - `test/email_message_service_test.dart`: MIME/MSG decoding, mixed body sections,
   attachment naming, code pages, sanitization, and adversarial CFB graphs.
 - `test/outlook_rtf_compression_test.dart`: Microsoft's published overlap/CRC
@@ -238,9 +322,10 @@ Before the installed-engine addition, the combined development validation run
 passed 360 tests across 28 focused parser, archive, favorites, viewer, preview,
 conversion and editor suites. A separate JavaScript
 compilation and execution smoke check passed Unicode EML, MSG/CFB and legacy DOC
-parsing. A full Flutter web release build was not run locally because the cached
-SDK lacks the Flutter web target artifacts; the JavaScript parser check does not
-replace that application build or platform acceptance testing. KeePass also
+parsing. At that earlier checkpoint, a full Flutter web release build was not
+run locally because the cached SDK lacked the Flutter web target artifacts;
+the JavaScript parser check did not replace that application build or platform
+acceptance testing. KeePass also
 passes a separate JavaScript open/edit/save/reopen smoke run against public
 KeePass-generated KDBX3/AES, KDBX4/Argon2id/AES and KDBX4/Argon2d/ChaCha20 fixtures.
 The installed-conversion follow-up passed 72 unique tests across nine suites in
@@ -263,3 +348,15 @@ header/footer parts and a footnote in addition to formatting and table cells;
 independent PDF tools found their rendered content. See
 [package integration](legacy-doc-parser.md) for the exact dependency boundary,
 MPL/third-party notices, VBA evidence behavior and remaining acceptance limits.
+
+The selected document integration is saved at source checkpoint
+[`5404834`](https://github.com/CrispStrobe/CrispCloud/commit/540483491f4a02aad3672abe438ad4aad3696e21).
+Its Flutter JavaScript web release build passed, the focused analyzer was clean
+across 12 paths, and 61 engine Node tests passed. A combined run of the six app
+source/routing/widget integration suites passed all 69 tests. The
+[browser CI run](https://github.com/CrispStrobe/CrispCloud/actions/runs/43383695021)
+also passed genuine Chromium checks for all six engines and the shipped host,
+including six PostScript cases and nine XML cases. Browser fixture checks do not
+establish complete format fidelity or individual platform acceptance. Native
+WebKit/WebView and OS/device acceptance remain pending; no local browser or
+native platform rendering pass is claimed here.
