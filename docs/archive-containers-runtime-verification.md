@@ -7,9 +7,11 @@ The integrated candidate is
 on `feature/archive-iso-rar-dmg-20261113`. Its
 [Archive containers run 43369528217](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217)
 has a completed normal regression result: **1,856 passed, zero failed, ten
-explicitly skipped large cases**. The nine dedicated large-case jobs are being
-assessed separately; the completed common-format baseline below remains
-independent evidence at its own earlier commit.
+explicitly skipped large cases**. Its dedicated **DMG creation, editing and
+publication case above 2 GiB has also passed**, with one passed test, zero
+failures and zero skips. Eight other dedicated large-case receipts remain
+pending. The completed common-format baseline below remains independent
+evidence at its own earlier commit.
 
 ## Retained source and completed hosted gate
 
@@ -246,6 +248,33 @@ Only unsuccessful jobs were requested again on the unchanged candidate;
 attempt 2 was queued at `2026-11-13T05:17:04Z`. The normal result above remains
 the completed attempt-1 result, rather than a newly executed normal suite.
 
+### Completed integrated large results
+
+The DMG case completed successfully in attempt 2 on the same candidate. At the
+`2026-11-13T05:44:12Z` snapshot, the other eight dedicated large cases remained
+running or queued; they are not included in the completed result below.
+
+| Acceptance case | Hosted job | Passed | Failed | Skipped | Receipt timestamp (UTC, 2026-11-13) | Artifact |
+| --- | --- | ---: | ---: | ---: | --- | --- |
+| DMG creation, editing and publication above 2 GiB | [131706499666](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/job/131706499666) | 1 | 0 | 0 | `05:42:48.5728523Z` | [14013223215](https://github.com/CrispStrobe/CrispCloud/actions/runs/43369528217/artifacts/14013223215) |
+
+The DMG job logged `19:19 +1: All tests passed!` at
+`2026-11-13T05:42:48.3316452Z` and completed at `05:42:54Z`. Its downloaded
+artifact receipt identifies the exact selected test,
+`DMG (HFSX data volume) creates, edits and publishes beyond 2 GiB`, with
+`verified: true`, `completed: true`, `skipped: false`, successful test outcome
+and dependency restoration, and no malformed event lines. The downloaded ZIP's
+SHA-256 matches GitHub's recorded digest:
+`57ac98544f99bae0468af7796fcaf0543fc09982883734e81a851e5dca084498`.
+The artifact is named
+`archive-dmg-workflow-2g-f1a03e807b1261361a17f66a37fa94858481e1e7-2`
+and is retained through `2026-11-27T05:42:48Z`.
+
+This completed application test establishes the full DMG fixture described
+below, including initial, reviewed and installed outer images above 2 GiB,
+cancellation without replacing the original, complete reopened member hashing,
+source retention and staging cleanup.
+
 ### Exact normal skips and large-case coverage
 
 The
@@ -314,6 +343,18 @@ workspace stream instead of repeating extraction to another large file. The
 implemented 8 GiB bounds are guards, not a measurement of every size through
 8 GiB or a claim of unlimited size. This gate does not benchmark remote
 providers or establish large-file behavior on every desktop platform.
+
+A separate direct Dart probe on the same frozen production revision completed
+DMG creation and rewriting through the production file spools in 187,275 ms.
+Its 2,147,487,745-byte member produced an original outer image of
+2,148,753,423 bytes and an edited image of 2,147,601,376 bytes. Both passed the
+canonical HFSX profile and UDIF CRC inspections, and complete generated,
+original-on-rewrite and reopened-candidate payload hashes matched. The
+[DMG streaming verification](archive-dmg-streaming-verification.md) retains the
+exact reproducer, structured receipt, bounded-I/O measurements, metadata,
+source-lifetime and cleanup checks. This is direct codec and spool evidence;
+the separate completed hosted DMG receipt above establishes the application
+creation, editing and publication path.
 
 ### Workflow and evidence contract
 
@@ -385,5 +426,6 @@ cleanup evidence; they are not additional archive assertion failures.
 suite and all five explicit hosted cases above 2 GiB at
 `80fbf6f2978accc3521b06ee6449d4c52c814b90`. The integrated candidate at
 `f1a03e807b1261361a17f66a37fa94858481e1e7` passed its complete normal archive
-suite. The nine dedicated large cases on that candidate remain pending
-completed receipts; the earlier baseline does not prove subsequent changes.
+suite and its explicit DMG creation/editing/publication case above 2 GiB.
+Eight dedicated large cases on that candidate remain pending completed
+receipts; the earlier baseline does not prove subsequent changes.

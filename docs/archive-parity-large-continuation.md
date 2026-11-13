@@ -3,6 +3,16 @@
 Date: 13 November 2026. Branch: `feature/archive-parity-large-20261113`.
 Baseline: current `main` plus the preserved archive sync / native TAR continuation.
 
+> Historical implementation checkpoint: the runtime limitations below describe
+> the original local session. Subsequent hosted verification completed all six
+> common-format jobs, including the five explicit cases above 2 GiB. The newer
+> ISO/RAR/DMG candidate also passed 1,856 normal archive tests and its hosted DMG
+> workflow above 2 GiB; its other large-case receipts are recorded as they finish
+> in [current runtime verification](archive-containers-runtime-verification.md).
+> See [writable ISO, RAR and DMG](archive-iso-rar-dmg.md) for the newer data-image
+> creation and editing profiles. The earlier local Flutter restriction remains
+> historical evidence, not the current hosted runtime result.
+
 ## Requested outcome
 
 Treat ZIP, 7z and TGZ as writable folders, including large members and containers
