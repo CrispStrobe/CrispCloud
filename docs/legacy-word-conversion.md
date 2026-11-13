@@ -1,6 +1,6 @@
 # Legacy Word viewing and conversion
 
-Research and implementation review: 2026-11-12.
+Research and implementation review: 2026-11-13.
 
 ## Convert and review a separate copy
 
@@ -75,9 +75,11 @@ and [VML object references](https://learn.microsoft.com/en-us/dotnet/api/documen
 [`legacy_doc_parser`](https://github.com/CrispStrobe/legacy-doc-parser) package
 to read supported binary Word structure in Dart and create a separate,
 editable DOCX or explicitly selected DOCM without an installed office application.
-The app pins an immutable Git revision in `pubspec.yaml` and `pubspec.lock`;
-the app's DOC/DOT paths select this package instead of the shared engine's
-older legacy reader, and the temporary in-app package mirror is removed.
+The app records the immutable Git revision in `pubspec.yaml` and the package's
+`UPSTREAM.json`, and uses a verified local path override containing the exact
+tracked upstream source. The root lockfile retains that path dependency; the
+source inventory separately checks its Git identity, bytes and modes. The
+app's DOC/DOT paths select this standalone package.
 It uses the same captured source and create-only save target as the existing
 conversion flow. The original DOC/DOT is not rewritten.
 
@@ -114,6 +116,47 @@ Supported document structure is emitted as editable Word elements:
   dimensions and crop, validated textboxes and linked textbox chains, and
   positively identified embedded OLE storages with their stream bytes retained.
 
+The current parser roll also preserves explicit Line Number character styles,
+integer picture dimensions, and qualified textbox line, shadow and fill
+properties. Supported fills include scaled gradients and embedded pictures,
+textures and the bounded monochrome pattern subset. Resolved textbox borders
+use the corresponding source-to-target frame conversion; a default line width
+is materialized only when the enabled source line and frame are qualified
+together. Unsupported shape/group properties still limit conversion. When an
+embedded object lacks a usable preview, a visible generated placeholder says
+that the preview is unavailable; it does not claim to recover the object's
+artwork or behavior.
+
+Supported nonempty ink streams can now be decoded for inspection, including
+stroke points, color, pen dimensions, pressure, transforms and pressure metrics.
+Original ink bytes and decode status remain in conversion evidence. This does
+not make ink editable or visible as native Word ink: placement, pressure-outline
+rendering and full ink-comment association remain unverified. Unsupported or
+malformed streams expose no partial stroke collection and remain inert evidence.
+The [ink/textbox integration receipt](evidence/word-final-c5ff75e7-20261113/README.md)
+records that feature checkpoint's exact source pin, executed app checks and
+separate native limits.
+
+The reconciled parser also preserves qualified binary hyperlink targets for
+external `HYPERLINK` and reference fields, explicit font-specific symbol glyphs,
+and supported source font-charset declarations. Hyperlinks remain locked fields
+with their cached result; conversion does not visit a target or recalculate a
+field. Symbols keep their exact font/code pair without inventing a Unicode
+equivalent. Ambiguous font charsets retain source evidence instead of a guessed
+mapping. The corresponding [field](../packages/legacy_doc_parser/doc/binary-hyperlink-fields.md),
+[symbol](../packages/legacy_doc_parser/doc/symbol-glyphs.md) and
+[font-charset](../packages/legacy_doc_parser/doc/font-charsets.md) contracts record
+the precise supported forms and remaining qualifications.
+
+Caller-provided field types and complete nesting ranges are validated before
+serialization. Cached field results preserve source whitespace and valid
+controls, while private descendants stay suppressed. Compound-file stream
+sizes, allocation ownership and directory names are bounded; supported metafile
+bytes are revalidated before native image embedding. These corrections retain
+the existing source budgets and do not add field execution or general document
+repair. The [parser reconciliation receipt](evidence/parser-lineage-integration-20261113/README.md)
+records the exact mirror and newly executed portable checks.
+
 The parser follows logical CLX character positions through the selected text
 pieces, then resolves paragraph/character formatting pages, stylesheet
 inheritance and piece properties. It does not assume that physical text order
@@ -135,8 +178,8 @@ their sector allocation and directory layout change. Generated evidence paths
 and internal relationships cannot activate a source signature or external link.
 
 This remains partial preservation. Exact pagination, arbitrary OfficeArt shape
-geometry/effects, metafile rendering, complex/nested tables, linked-textbox
-reflow, threaded/ink comments, some list-continuation rules, script-specific
+geometry/effects, complete metafile rendering, complex/nested tables, linked-textbox
+reflow, threaded comments and native ink placement/editing, some list-continuation rules, script-specific
 formatting and full revision semantics are incomplete. Those cases retain
 typed metadata or opaque evidence where supported and receive limitations.
 The review lists relevant detected categories, and the app's independent
@@ -151,7 +194,7 @@ package payload and final ZIP (64 MiB each). It also limits paragraphs, table
 structure, media, field nesting, tabs and breaks before unbounded allocation.
 Malformed supported structures fail explicitly; there is no automatic retry
 through text-only conversion or raw-byte recovery. The package's
-[conversion contract](https://github.com/CrispStrobe/legacy-doc-parser/blob/feature/structured-doc-preservation-20261112/doc/conversion.md)
+[conversion contract](../packages/legacy_doc_parser/doc/conversion.md)
 distinguishes editable output, typed metadata, opaque evidence and remaining
 limitations for every supported feature family.
 

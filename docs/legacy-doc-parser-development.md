@@ -4,6 +4,50 @@ The integration pins are recorded in `packages/legacy_doc_parser/UPSTREAM.json` 
 
 ## Current continuation checkpoint
 
+The branch reconciliation consumes canonical parser
+`840f8af1f645cd6ed85277ba6e619dc120d99277`. That commit contains both the
+`402b66d` compatibility source used by the document/font PR and the `1b8cc9e`
+field, symbol and font-charset source carried by the Office oracle branch.
+It also retains the canonical compound-file, public-field, Unicode-story and
+metafile bounds corrections. The guarded mirror has no app-local patches;
+Quds remains at `e82c997b6df8746fe86fb83b9f416a89bb3e3b80` and the root dependency
+lockfile is unchanged by this parser reconciliation.
+
+The [reconciliation receipt](evidence/parser-lineage-integration-20261113/README.md)
+records 1,361 passing parser tests with the app's locked `archive` 4.6.0,
+successful compiled-JavaScript acceptance, clean full-package analysis,
+184 Python oracle controls, 24 verified retained corpus inputs and 27 app
+source-sync controls. All 1,883 managed Office files match their source
+inventory. These checks qualify the exact parser mirror and its standalone
+integration; combined app and native renderer acceptance remain separately
+attributed. Earlier receipts below retain their original source identities.
+
+## Earlier qualified ink/textbox checkpoint at c5ff75e7
+
+The [qualified ink/textbox receipt](evidence/word-final-c5ff75e7-20261113/README.md)
+records clean published app `86d5a218` with parser
+`c5ff75e76163d9abbdd44a9f2a7c5ad210929289`. All 1,679 managed Office files verify:
+1,258 exact parser files and 421 unchanged other files. Version `1.2.9+22`,
+the root lockfile, Quds and all other dependency pins remain unchanged.
+
+The runtime adds bounded nonempty ink inspection, qualified gradient and
+embedded bitmap fills, and coupled default-line/frame handling for resolved
+textboxes. Original ink remains preserved; no native Word ink or guessed
+placement is emitted. Unresolved Word14 textbox properties and native bridge
+paint/layout differences remain explicitly outside exactness claims.
+
+All 107 data-only Word tests, 13 actual native assertions, four-format JavaScript
+checks and source/release controls pass on that exact runtime. All 7,573 tracked
+file hashes, 1,182 cohort input hashes and production package configuration
+remain unchanged. The hosted provider run also passes on `86d5a218`; the
+retained hosted Office success belongs to the earlier `6f2e3245` app checkpoint.
+The receipt keeps the command/event logs, exact source review, independent
+projection check and fetched remote-checkout verification. Its verifier binds
+the inner cohort command, exact eight suites and per-suite event associations
+and rejects 22 resealed semantic corruptions.
+
+## Earlier first layout follow-up at 74420eb2
+
 The [first layout follow-up receipt](evidence/word-layout-74420eb2-20261113/README.md)
 records clean published app `e3eaaa32` with parser
 `74420eb2e0ec14401a0db5bcbb30ab6d202a2340`. It integrates explicit Line Number
@@ -18,7 +62,7 @@ tracked file hashes and 1,180 cohort input hashes remain unchanged across
 execution. The receipt retains the source review, guarded sync, complete
 command results and independent remote-checkout verification. It preserves
 each upstream feature's measured scope and the known remaining native bridge
-differences; later textbox fill and ink work will have separate receipts.
+differences. The later textbox fill and ink roll is recorded separately above.
 
 ## Earlier continuation at 48bf3a
 
@@ -82,7 +126,7 @@ historical counts do not automatically qualify a later parser revision.
 
 The [d14f03f integration receipt](evidence/legacy-doc-parser-20261112/parser-d14f03f/README.md)
 records the completed continuation after the historical development checks
-below. The current app runtime passes 142 Word conversion/UI tests across
+below. That measured app runtime passes 142 Word conversion/UI tests across
 17 suites, 101 Python harness tests, portable DOC/RTF/PPT/MSG JavaScript checks
 and installed-Office acceptance with independent PDF checks. Source files and
 prepared output remain unchanged by inspection/preview.
@@ -100,11 +144,11 @@ attribution are recorded in the package's `doc/fidelity-status.md`; equal page
 counts, valid schema and successful app checks do not establish full editing
 semantics or exact pagination. Microsoft Word was not executed.
 
-The current development continuation consumes canonical standalone parser
+That earlier development continuation consumes canonical standalone parser
 `ba5f5b0cdd540bd0c03f62aabc88faadd8660e0b` through Quds integration
 `a9f7c1a3ee8e9ffea7d65f781fb5584540ebb41d`. The exact upstream parser passes
 666 Dart tests, 110 Python oracle controls and the independent 153-output Open
-XML SDK gate. The [current app integration receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
+XML SDK gate. The [corresponding app integration receipt](evidence/legacy-doc-parser-continuation-20261112/README.md)
 records source verification, 32 inspection tests, 19 sync controls, JavaScript
 acceptance and 13 actual installed-Office checks. Earlier results below retain
 their original source identity; this development update does not requalify a
