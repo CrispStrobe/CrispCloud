@@ -42,6 +42,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:video_player/video_player.dart';
 
 import '../l10n/commander_strings.dart';
+import '../l10n/binary_structure_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
@@ -49,6 +50,8 @@ import '../services/archive_streamed_reader.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/archive_viewer_source.dart';
 import '../services/archive_viewer_streaming.dart';
+import '../services/binary_structure_service.dart';
+import '../services/binary_structure_source.dart';
 import '../services/file_bytes_loader.dart';
 import '../services/ebook_file_store.dart' show isEbookFileName;
 import 'ebook_editor_dialog.dart';
@@ -73,6 +76,7 @@ import 'code_highlighting.dart';
 import 'syntax_line_view.dart';
 import '../services/syntax_line_highlighting.dart';
 import 'hex_viewer.dart';
+import 'binary_structure_dialog.dart';
 import 'internal_viewer_views.dart';
 import 'office_html_widget_factory.dart';
 import 'pptx_slide_viewer.dart';
@@ -381,6 +385,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   int? _streamScrollTo;
   int _streamScrollRequest = 0;
   int? _selectedByte;
+  int? _structureHighlightStart;
+  int? _structureHighlightEnd;
+  bool _inspectingStructure = false;
 
   // Cache for the safe-view char offset of the active match.
   int? _cachedSafeMatchIndex;
@@ -1570,6 +1577,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _searchNote = null;
     _matchHighlightStart = null;
     _matchHighlightEnd = null;
+    _structureHighlightStart = null;
+    _structureHighlightEnd = null;
     _isByteSearch = false;
     _searchBytes = null;
     _cachedSafeMatchIndex = null;
@@ -1946,6 +1955,59 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // ---------------------------------------------------------------------------
   // Misc actions
   // ---------------------------------------------------------------------------
+
+  Future<void> _showBinaryStructure() async {
+    final source = _source;
+    if (source == null || _mode != ViewerMode.hex || _inspectingStructure) {
+      return;
+    }
+    final loadToken = _loadToken;
+    final prepareToken = _prepareToken;
+    bool current() =>
+        mounted &&
+        identical(_source, source) &&
+        loadToken == _loadToken &&
+        prepareToken == _prepareToken &&
+        _mode == ViewerMode.hex;
+
+    setState(() => _inspectingStructure = true);
+    try {
+      final analysis = await inspectBinaryStructureSource(source);
+      if (!current()) return;
+      final field = await showDialog<BinaryStructureField>(
+        context: context,
+        builder: (_) => BinaryStructureDialog(
+          analysis: analysis,
+          filename: _expansionName ?? _viewName,
+        ),
+      );
+      if (!current() || field == null) return;
+      await source.validateUnchanged();
+      if (!current()) return;
+      setState(() {
+        _resetSearchResults();
+        _searchOpen = false;
+        _searchController.clear();
+        _selectedByte = field.start;
+        _structureHighlightStart = field.start;
+        _structureHighlightEnd = field.end;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (current()) _scrollToRow(field.start ~/ _bytesPerLine);
+      });
+    } catch (error, stack) {
+      _log.warn('Binary header inspection failed', error, stack);
+      if (current()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(BinaryStructureStrings(context).text('readError')),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _inspectingStructure = false);
+    }
+  }
 
   void _reload({ViewerMode? preferredMode}) {
     _resetSearchResults();
@@ -2683,6 +2745,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                     ViewerMode.binary,
                   ),
                   _modeChip('Hex', ViewerMode.hex),
+                  if (_mode == ViewerMode.hex)
+                    IconButton(
+                      key: const ValueKey('viewer-binary-structure'),
+                      tooltip: BinaryStructureStrings(context).text('inspect'),
+                      icon: const Icon(Icons.account_tree_outlined, size: 20),
+                      onPressed: _inspectingStructure
+                          ? null
+                          : () => unawaited(_showBinaryStructure()),
+                    ),
                   _modeChip(
                     InternalViewerStrings(context).text('image'),
                     ViewerMode.image,
@@ -2984,9 +3055,15 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           fontScale: _zoom,
           controller: _vScroll,
           selectedByte: _selectedByte,
-          highlightRangeStart: _isByteSearch ? _matchHighlightStart : null,
-          highlightRangeEnd: _isByteSearch ? _matchHighlightEnd : null,
-          onByteTapped: (offset) => setState(() => _selectedByte = offset),
+          highlightRangeStart: _structureHighlightStart ??
+              (_isByteSearch ? _matchHighlightStart : null),
+          highlightRangeEnd: _structureHighlightEnd ??
+              (_isByteSearch ? _matchHighlightEnd : null),
+          onByteTapped: (offset) => setState(() {
+            _selectedByte = offset;
+            _structureHighlightStart = null;
+            _structureHighlightEnd = null;
+          }),
         );
       case ViewerMode.image:
         return _buildImageBody();

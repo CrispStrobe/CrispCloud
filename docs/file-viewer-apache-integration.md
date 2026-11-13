@@ -25,6 +25,16 @@ copy the demo's public assets. A fork of the full repository would preserve the
 same mixed-license contents; it would not by itself establish a clean boundary.
 The selected files can be tracked directly in CrispCloud without a full fork.
 
+There is also an independent **File Viewer Flutter** SDK, so a browser bridge is
+not the only upstream integration path. Its reviewed
+[development-preview README](https://github.com/flyfish-dev/file-viewer-flutter/blob/cdbe778cccbd9e1c6b3538624b46bde25f0bdaa8/README.md)
+describes `0.1.0-dev.2`, system WebViews on Android/iOS/macOS, WebView2 on Windows,
+and CEF on Linux. The adapter is Apache-2.0, but its base, CAD, drawing and Typst
+asset packages are installed together, totaling about 225 MiB before application
+compression, with separate asset/engine licenses. That bundled SDK is **not an
+approved Apache-only import**. The selected Dart extraction avoids bringing its
+CAD assets, native web engines and overlapping rendering stack into CrispCloud.
+
 ## Existing capabilities and useful additions
 
 CrispCloud already has a native Dart/Flutter preview architecture. The inspected

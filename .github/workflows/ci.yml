@@ -78,6 +78,11 @@ jobs:
       - name: Verify offline help topics and translation revisions
         run: python3 tool/check_help_guides.py
 
+      - name: Verify Apache-only File Viewer source boundary
+        run: |
+          python3 tool/verify_file_viewer_binary.py
+          python3 -m unittest discover -s tool -p test_verify_file_viewer_binary.py
+
       # Cache Flutter SDK
       - name: Cache Flutter SDK
         uses: actions/cache@v5
