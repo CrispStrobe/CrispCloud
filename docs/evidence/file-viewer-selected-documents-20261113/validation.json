@@ -1,0 +1,96 @@
+{
+  "sourceCommit": "540483491f4a02aad3672abe438ad4aad3696e21",
+  "upstreamCommit": "d264009ca6efb3daed79a39d1ae63133e0f25558",
+  "browser": {
+    "run": 43383695021,
+    "job": 131747097222,
+    "conclusion": "success",
+    "node": "24.22.2",
+    "chromium": "149.0.7827.55",
+    "playwrightBuild": 1228,
+    "nodeTests": 61,
+    "postscriptBrowserTests": 6,
+    "xmlBrowserTests": 9,
+    "otherBrowserSmokes": [
+      "spreadsheet-ppt",
+      "wordperfect-chm",
+      "shipped-host-all-six-engines"
+    ],
+    "artifactId": 14017368714,
+    "artifactZipBytes": 19135400,
+    "artifactZipSha256": "8271f5fc4a34627ad063ff7f933a8a729a29d646491d1f0877faeb068d221313"
+  },
+  "flutter": {
+    "version": "3.47.8",
+    "dart": "3.13.7",
+    "appCases": 69,
+    "hostCases": 15,
+    "separateEarlierMboxEmailCases": 69,
+    "overlappingSuitesAreNotSummed": true,
+    "focusedAnalyzer": "clean",
+    "webRelease": "passed JavaScript target",
+    "flutterWasmDryRun": "warning exit247; not claimed successful"
+  },
+  "linuxConsumerCompile": "pending dedicated CI run",
+  "receipts": [
+    {
+      "path": "analyze.log",
+      "bytes": 97,
+      "sha256": "dc4a194cb0d4b8d359d165067d27ce606bfe16a992111fb8de37051d1d5005d1"
+    },
+    {
+      "path": "app-tests.log",
+      "bytes": 11099,
+      "sha256": "4ff52023078b908cdaf56af268435ebf2d049f276eab984416743784077acd5c"
+    },
+    {
+      "path": "browser-ci.log",
+      "bytes": 31312,
+      "sha256": "8d0b6d694980133b2f72a7866802351e8a800bbe6de33f80eac8c57574853ee2"
+    },
+    {
+      "path": "host-analyze.log",
+      "bytes": 164,
+      "sha256": "9820c5ba63b4297e0c1b91e1ba4b0ede7d9ce5a035bdde3d3d538fe048a79b32"
+    },
+    {
+      "path": "host-tests.log",
+      "bytes": 3001,
+      "sha256": "b6d1b051c9df09a7f0916c6ae5b5d2e0ab12865cef8d2db5e9d649b1e565b2f6"
+    },
+    {
+      "path": "mbox-analyze.log",
+      "bytes": 195,
+      "sha256": "91c51702db723dbbc3838a3aa0784defda938fc9e2f9b4a8650dd8af964b6e0c"
+    },
+    {
+      "path": "mbox-email-tests.log",
+      "bytes": 10843,
+      "sha256": "3f803c9e66e64e3fce343f3cfdc2b114cc569b5ce883edbd5c56e15c84e54b8c"
+    },
+    {
+      "path": "web-release-build.log",
+      "bytes": 867,
+      "sha256": "6290b36bc7691aca67369096b6bf8710b85a9d2d91916582aede2a5c7bb21f9e"
+    },
+    {
+      "path": "runtime-checkpoint.json",
+      "bytes": 36560,
+      "sha256": "876643368776b56234511a666e222c4bf955a1f8bd8074fd6b18e26fe57fb898"
+    }
+  ],
+  "runtimeCheckpoint": {
+    "commit": "05f02c9ad71ac14b5a041021c2f7eef01b050a2a",
+    "job": 131747631208,
+    "conclusion": "success",
+    "filesVerified": 149,
+    "differentFiles": 0,
+    "evidence": "runtime-checkpoint.json"
+  },
+  "documentationCorrection": {
+    "scope": "XLS/XLT/XLSB legacy chart extraction is unavailable; XML/MBOX/PPS boundaries clarified",
+    "unchangedRuntimeAssetRecords": 42,
+    "dependencyInventoryUnchanged": true,
+    "productionCodeChanged": false
+  }
+}

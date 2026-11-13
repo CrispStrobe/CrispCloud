@@ -1,0 +1,82 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart
+00:00 +0: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: indexes every message lazily with decoded summary fields
+00:00 +1: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: header summaries do not decode a malformed MIME body
+00:00 +2: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: mboxrd removes exactly one quote only at body line beginnings
+00:00 +3: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: quoted complete envelope is body content rather than another record
+00:00 +4: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: byte offsets preserve BOM, CRLF, UTF-8 and a nonzero input subview
+00:00 +5: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: Content-Length counts bytes and protects literal envelope-like body
+00:00 +6: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: Content-Length permits zero body and excludes final newline padding
+00:00 +7: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length: -1
+
+00:00 +8: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length: 1.5
+
+00:00 +9: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length: 999999999999999999999
+
+00:00 +10: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length: 100
+
+00:00 +11: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length: 2
+Content-Length: 2
+
+00:00 +12: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length: 2
+ 0
+
+00:00 +13: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects ambiguous length header Content-Length : nope
+
+00:00 +14: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: does not guess a split when a length ends in a message body
+00:00 +15: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: rejects length-counted adjacent envelopes without a line boundary
+00:00 +16: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: does not reinterpret an ordinary From line or invalid time as delimiter
+00:00 +17: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: accepts common envelope senders, spacing and timezone positions
+00:00 +18: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: empty mailbox is valid but standalone EML and junk are rejected
+00:00 +19: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: malformed or oversized headers do not hide later valid messages
+00:00 +20: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: header-only final message remains selectable
+00:00 +21: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: MIME attachments use the existing decoder and exact decoded bytes
+00:00 +22: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: per-message MIME attachment-count bounds do not block other entries
+00:00 +23: /workspace/scratch/2b82b742a9df/CrispCloud/test/mbox_message_service_test.dart: oversized decoded attachment cannot bypass the existing EML limit
+00:00 +24: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:00 +25: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:00 +26: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:01 +27: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:01 +28: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:01 +29: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +30: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +31: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +32: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +33: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +34: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +35: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +36: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +37: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +38: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +39: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +40: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +41: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +42: /workspace/scratch/2b82b742a9df/CrispCloud/test/email_message_service_test.dart: EML malformed base64 rejects the structured preview without losing source
+00:01 +43: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +44: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +45: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +46: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +47: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +48: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +49: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +50: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +51: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +52: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +53: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +54: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +55: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +56: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +57: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +58: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +59: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +60: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +61: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: malformed selected message leaves later entries and source usable
+00:02 +62: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: attachment callbacks preserve bytes and do not load remote HTML
+00:02 +63: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: empty mailbox offers source without enabled message navigation
+00:02 +64: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: length-delimited quoting policy is disclosed
+00:02 +65: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: narrow high-text-scale layout remains scrollable without overflow
+00:02 +66: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: all supported locales provide mailbox labels and typed errors
+00:02 +67: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/email_message_view_test.dart: shows message and opens original attachment bytes through host
+00:03 +68: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/email_message_view_test.dart: German labels and formatting-only HTML work without images
+00:03 +69: All tests passed!

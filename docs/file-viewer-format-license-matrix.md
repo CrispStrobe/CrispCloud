@@ -6,6 +6,10 @@ The reviewed upstream version is 3.3.3 at
 also confirmed as upstream main during this review. CrispCloud's implemented
 binary and LRC extraction checkpoint is
 [`98b39f2`](https://github.com/CrispStrobe/CrispCloud/commit/98b39f21a528375165822e38c4ff4fcfa75575e2).
+The priority document/mailbox integration is saved at source checkpoint
+[`5404834`](https://github.com/CrispStrobe/CrispCloud/commit/540483491f4a02aad3672abe438ad4aad3696e21).
+Its exact selected build and retained grants are documented in the
+[document package README](../packages/file_viewer_documents/README.md).
 
 ## User-approved policy
 
@@ -30,13 +34,16 @@ listed separately from software licenses.
 
 ## What this adds to CrispCloud
 
-The best genuinely new candidates are **WordPerfect, Hancom Hangul, Apple
-iWork, legacy Excel/XLSB, DBF/FODS, CHM, OFD, XMind, Parquet/Avro, geospatial
-overlays, IDML and optional IFC geometry**. PostScript/EPS, Photoshop/Illustrator
-and selected 3D formats offer additional previews, with format-specific limits.
-The legacy PPT engine can improve CrispCloud's current slide-text preview to
-positioned slide rendering. Binary DOC is already substantially supported by
-CrispCloud's native MPL parser; replacing it wholesale is not justified.
+CrispCloud now implements F3 routes for **WordPerfect, CHM, legacy Excel/XLSB,
+positioned binary PowerPoint slides, PostScript/EPS and optional XML XSD/XSLT
+tools**, plus a native **MBOX** viewer. The table below identifies that selected
+subset. The remaining genuinely new candidates include **Hancom Hangul, Apple
+iWork, DBF/FODS, OFD, XMind, Parquet/Avro, geospatial overlays, IDML and optional
+IFC geometry**. Photoshop/Illustrator and selected 3D formats offer additional
+previews, with format-specific limits. Binary DOC is already substantially
+supported by CrispCloud's native MPL parser; replacing it wholesale is not
+justified. The [DOC/DOT comparison](file-viewer-doc-dot-comparison.md) records
+the exact source boundaries, differential fixtures and concrete gaps on each side.
 
 The comparison uses CrispCloud's actual [viewer routes](../lib/services/internal_viewer_service.dart),
 [Office dispatch](../lib/services/office_document_service.dart), and
@@ -47,10 +54,30 @@ EPUB, email, image, font, media, archive and source-code viewers overlap heavily
 The separately integrated CrisperBooks subsystem must also be considered before
 calling an ebook format new.
 
-This is a source and license survey, not a cross-platform rendering acceptance
-run. No additional runtime, code, font or asset is imported by these documentation
-commits. The current implementation still consists of the independently reviewed
-Apache binary and LRC extractions.
+### Implemented priority subset
+
+| F3 inputs | CrispCloud implementation | Remaining limits |
+|---|---|---|
+| `.wpd/.wp/.wp5/.wp6` | libwpd/librevenge worker/WASM; ordered structured text, tables, running sections and notes | Persistent layout warning; no original pagination, embedded images/fonts, drawings or equations. No implicit approximate-text fallback. |
+| `.chm` | ITSF/LZX worker/WASM; contents/index/search and archive-local topic resources | Sanitized script-disabled topic frames; no merged-collection constituent discovery. |
+| `.xls/.xlt/.xlsb` | Bounded spreadsheet worker and virtual worksheet grid | Saved formula values dominate; no full Excel recalculation, macro execution or legacy/binary chart extraction. Other spreadsheet candidates below are not automatically enabled. |
+| `.ppt/.pot/.pps` | Local pure-JavaScript worker and virtual slide canvases | Supported geometry/pictures; Office-identical layout and animation are not promised. Existing native **Text fallback** is an explicit choice. |
+| `.ps/.eps` | Stet worker/WASM rasterized pages and local font/color assets | Experimental PostScript, without complete Level 3 conformance. |
+| `.xml/.xsd/.xsl/.xslt` | Existing tree/source view plus explicit **XSD / XSLT** tools | Schemas/stylesheets must be supplied; external resource resolution is disabled. Output does not overwrite source. |
+| `.mbox` | CrispCloud-authored Dart indexing and existing email renderer; message chooser, navigation and selected-message search/copy | Bounded complete-mailbox indexing and lazy selected-message decoding. No upstream email runtime imported. |
+
+The [package README](../packages/file_viewer_documents/README.md) records local
+runtime assets, exact notices and matching source; the
+[viewer guide](file-format-viewers.md) records app behavior and bounds. Its six
+browser engines and the shipped host passed genuine Chromium smoke tests in
+[CI run 43383695021](https://github.com/CrispStrobe/CrispCloud/actions/runs/43383695021)
+against source `5404834`, alongside 61 engine Node tests. The Flutter JavaScript
+web release build also passed, focused analysis was clean across 12 paths, and
+the combined six-suite app integration run passed all 69 tests.
+These are selected fixture/build checks, not complete format fidelity or
+cross-platform acceptance. Native WebKit/WebView and individual OS/device
+acceptance remain pending. The rest of this document retains the broader pinned
+upstream survey; a candidate row does not mean its runtime ships in CrispCloud.
 
 ## Reading the effective licenses
 
@@ -77,13 +104,13 @@ the [office audit](evidence/file-viewer-expanded-license-20261113/office-audit.m
 
 | Formats | Engine / real output | Effective software licenses | Value and limits |
 |---|---|---|---|
-| **WordPerfect `.wpd/.wp/.wp5/.wp6`** | libwpd 0.10.3 + librevenge 0.0.6 in a Worker/WASM; structured text and tables | **Apache-2.0 + MPL-2.0** elected for both native libraries + MIT bridge + Boost BSL-1.0 + permissive LLVM/Emscripten/musl/Zlib/CC0 materials | **New candidate.** Graphics, original pagination and table ordering are incomplete. `.wpt` is not routed. Details below. |
+| **WordPerfect `.wpd/.wp/.wp5/.wp6`** | libwpd 0.10.3 + librevenge 0.0.6 in a Worker/WASM; structured text and tables | **Apache-2.0 + MPL-2.0** elected for both native libraries + MIT bridge + Boost BSL-1.0 + permissive LLVM/Emscripten/musl/Zlib/CC0 materials | **Implemented F3 route.** CrispCloud fixes paragraph/table order and exposes layout limits; graphics and original pagination remain incomplete. `.wpt` is not routed. Details below. |
 | **Word `.doc/.dot`** | `@file-viewer/doc` 3.3.3, public msdoc-viewer 0.2.0 lineage; OLE/CFB → Word model → HTML/CSS | **Apache-2.0 + MIT**, with DOMPurify Apache election | Existing native DOC is already substantial. Compare isolated missing behaviors; do not replace on format-count grounds. Word 97–2003 binary, not a universal historical Word reader. |
 | **DOCX/DOCM/DOTX/DOTM; Word 2003 XML** | `@file-viewer/docx` 0.3.39; ZIP/XML → browser pages. WordML first converts to OOXML | **Apache-2.0 + MIT + Zlib/helper notices** | DOCX family already supported; **Word 2003 XML detection/adaptation is new** for Word-suffixed files, not a general XML association. No VBA execution or wrapper password path. Exact DOCX tarball license verified against lock integrity. |
 | **RTF** | Optional `rtf.js` 3.0.9 loader → DOM, including supported WMF/EMF pictures | **Apache-2.0 + MIT**; codepage 1.15.0 Apache | Existing basic native RTF could gain pictures/formatting. Loader must be registered explicitly. |
-| **Legacy PPT/POT** | `@file-viewer/ppt` 1.0.2 compiled JS; CFB → slide model → SVG → Canvas | **Apache-2.0** runtime and adapter, no production dependencies | Positioned slide preview can improve current slide text. Already eligible under Apache-only. Public compiled JS exists; upstream TS development source is private. Current wrapper does not expose engine password support. `.pps` is not in upstream's pinned catalog. |
+| **Legacy PPT/POT** | `@file-viewer/ppt` 1.0.2 compiled JS; CFB → slide model → SVG → Canvas | **Apache-2.0** runtime and adapter, no production dependencies | **Implemented F3 visual route for PPT/POT/PPS**, with explicit native Text fallback. Already eligible under Apache-only. Public compiled JS exists; upstream TS development source is private. Current wrapper does not expose engine password support. `.pps` is a CrispCloud alias, absent from upstream's pinned catalog. |
 | **PPTX/PPTM/POTX/POTM/PPSX/PPSM** | Workspace PPTX 3.3.3; ZIP/XML → HTML/SVG slides | **Apache-2.0 + MIT + Zlib/helper notices** | Existing PPTX family, extra suffixes and fidelity candidates. Static preview; host fonts affect appearance. |
-| **XLS/XLSB, XLT/XLA/XLAM/XLTM; XLSX/XLSM/XLTX/CSV/TSV/ODS/FODS** | styled-exceljs 0.21.6 + e-virt-table 1.4.17; workbook → virtual grid | **Apache-2.0 + MIT + Zlib/helper notices** | **XLS, XLSB, FODS and extra template/add-in suffixes are new routes.** Saved formula caches dominate; not full Excel recalculation. No macro/add-in execution. Exact e-virt-table 1.4.17 MIT payload verified. |
+| **XLS/XLSB, XLT/XLA/XLAM/XLTM; XLSX/XLSM/XLTX/CSV/TSV/ODS/FODS** | styled-exceljs 0.21.6 + e-virt-table 1.4.17; workbook → virtual grid | **Apache-2.0 + MIT + Zlib/helper notices** | **XLS/XLT/XLSB are implemented F3 routes.** FODS and other extra template/add-in suffixes remain candidates; existing modern spreadsheet routes are retained. Saved formula caches dominate; not full Excel recalculation. No macro/add-in execution. Exact e-virt-table 1.4.17 MIT payload verified. |
 | **DBF** | Same spreadsheet path; dBASE III/IV and Visual FoxPro tables | **Apache-2.0 + MIT + Zlib/helper notices** | **New candidate.** Missing DBT/FPT memo sidecars yield incomplete cells. |
 | **Pages/Numbers/Keynote `.pages/.numbers/.key`** | Own XML/IWA parsers, keynote-archives 2.0.1; static scenes/workbooks | **Apache-2.0 + MIT + BSD-3-Clause + 0BSD + Zlib** | **New candidates.** iWork '09 and modern IWA containers; Quick Look images are fallback only. No encrypted iwpv2, transitions, media playback or full recalculation. |
 | **Hangul `.hwp/.hwpx`** | HWPv5 binary/CFB and HWPX XML; own parsers + hwpxjs 0.4.0 | **Apache-2.0 + MIT + Zlib** | **New candidates.** Static structured pages; no HWP3 promise. Encryption/distribution protection rejected. Charts/OLE/difficult drawing and pagination limited. |
@@ -113,6 +140,9 @@ nested tables, supported OfficeArt, revisions, images and conversion semantics.
 Its MPL-2.0 package-authored code and retained MIT/0BSD sources are allowed under
 the updated policy. Borrowing a proven improvement is more compelling than
 replacing the native pipeline with another partial Word layout engine.
+The [detailed DOC/DOT comparison](file-viewer-doc-dot-comparison.md) separates
+parser-model capability from the current F3 adapters and reports the 19-fixture
+differential probe. The selected browser package does not import the DOC engine.
 
 ### How WordPerfect actually renders
 
@@ -124,7 +154,7 @@ intermediate**. Selecting the MPL-2.0 option for libwpd/librevenge fits the user
 expanded policy without electing their LGPL alternative.
 
 The model carries paragraphs, styles, lists, links, tables, headers/footers and
-notes. The current implementation has concrete losses:
+notes. The **pinned upstream implementation** has concrete losses:
 
 - The bridge discards page spans, embedded fonts, frames, binary objects,
   equations and vector drawing callbacks.
@@ -138,11 +168,17 @@ notes. The current implementation has concrete losses:
   before that fallback check. CrispCloud must apply its own bounded read and
   resource ceilings before invoking the engine.
 
-Therefore this is useful **structured WordPerfect reading**, with a small
-integration repair list before adoption: preserve block order, display fallback
-and unsupported-content notices, and bound input before WASM. Test real WP4.2,
-5.x and 6+ fixtures before making version-wide fidelity claims. `.wp5` and `.wp6`
-are routing aliases for matching content; `.wpt` is absent from the catalog.
+The [CrispCloud overlay](../packages/file_viewer_documents/engines/wordperfect/UPSTREAM.md)
+implements **structured WordPerfect reading** with those integration repairs:
+it preserves paragraph/table callback order, displays a persistent fidelity
+notice, rejects input above 64 MiB before WASM allocation, adds decoded-output
+bounds and requires the real structured engine. Worker/parser failure is
+reported instead of silently returning approximate text. Graphics, embedded
+fonts, equations, drawings and original pagination remain outside this preview.
+The exact WASM has been exercised against WP4.2, 5.0, 5.1 and 6.x fixtures, with
+ordered DOM and warning behavior checked in Chromium; this is not a version-wide
+fidelity guarantee. `.wp5` and `.wp6` are routing aliases for matching content;
+`.wpt` is absent from the catalog.
 
 The retained native provenance is relatively strong: pinned corresponding
 libwpd/librevenge sources, shim source, toolchain grants and linked library list.
@@ -156,11 +192,11 @@ for exact versions, retained notices and source links.
 
 | Formats | Real output | Effective software / asset licenses | Assessment |
 |---|---|---|---|
-| **CHM** | Local Rust/WASM ITSF v2/v3 and LZX; topic HTML, contents/index/search and archive-local resources | **Apache-2.0 + MIT**, with permissive BSD/Unicode/Rust runtime notices | **Strong new candidate.** Not a CHMLib/libmspack runtime. Scripts/ActiveX/network blocked; merged help collections require separate constituent files. |
+| **CHM** | Local Rust/WASM ITSF v2/v3 and LZX; topic HTML, contents/index/search and archive-local resources | **Apache-2.0 + MIT**, with permissive BSD/Unicode/Rust runtime notices | **Implemented F3 route.** Not a CHMLib/libmspack runtime. Scripts/ActiveX/network blocked; merged help collections require separate constituent files. |
 | **UMD** | Structured book metadata and chapters | **Apache-2.0 + MIT + Zlib** (pako 2.2.0) | **Small new reading candidate.** Preserve encoding/inflation bounds. |
 | **EPUB/FB2** | EPUB.js chapters/navigation/search; own FB2 semantic book parser | EPUB: **Apache-2.0 + BSD-2-Clause + MIT + Zlib**; FB2: **Apache-2.0** and shared sanitizer | Already covered through CrispCloud/CrisperBooks. EPUB.js 0.3.93 is BSD-2, not Apache. No upstream Kindle renderer. |
 | **CBZ/CBR** | Sequential images, natural ordering, page count, keyboard/swipe | **Apache-2.0 controller**, plus the selected archive/image engines | Prefer porting controller behavior onto existing CrispCloud archive/image services. Upstream libarchive WASM has unresolved provenance below. |
-| **EML/MSG/MBOX** | Decoded mail and attachments; **MBOX only its first message plus count** | **Apache-2.0 + MIT-0** postal-mime 4.1.4; MSG adds Apache msgreader 1.29.0, **BSD-2-Clause** decompressrtf 0.1.4 and MIT helpers | Existing EML/MSG. MBOX is an additional limited preview; full mailbox navigation requires work. No PST/OST. |
+| **EML/MSG/MBOX** | Upstream: decoded mail and attachments; **MBOX only its first message plus count** | Upstream: **Apache-2.0 + MIT-0** postal-mime 4.1.4; MSG adds Apache msgreader 1.29.0, **BSD-2-Clause** decompressrtf 0.1.4 and MIT helpers | Existing EML/MSG retained. **MBOX now implemented independently in CrispCloud Dart**, with indexed message navigation and selected-message search/copy; the upstream dependencies in this row are not imported. No PST/OST. |
 | **PDF** | PDF.js 5.4.624 pages, outline/search/print; optional font repair | **Apache-2.0 + MIT + BSD-2/BSD-3**, plus **OFL-1.1** fonts | Existing viewer; targeted improvements. Adobe CMaps/Foxit fonts, OpenJPEG/JBIG2 and qcms have distinct notices. Noto patch-version attribution needs correction. |
 | **TIFF/TIF** | UTIF 3.1.0; bounded multipage pixel decode, page navigation/rotation | **Apache-2.0 + MIT + Zlib** | Candidate enhancement over current image path; compare actual existing TIFF behavior. |
 | **PNG/JPEG/GIF/BMP/WebP/ICO/SVG; AVIF/JXL** | Browser image decoding with viewer controls | **Apache-2.0 adapter**, shared sanitizer where applicable | Existing common images. **AVIF/JXL decoding depends on the browser**; no standalone bundled decoder in this path. HEIC is separate below. |
@@ -170,7 +206,7 @@ for exact versions, retained notices and source links.
 | **HLS `.m3u8`** | Optional hls.js 1.7.3 streaming | **Apache-2.0** | Optional web playback enhancement. |
 | **MIDI `.mid/.midi`** | Track/note/tempo inspection through tonejs/midi 2.0.28 | **Apache-2.0 + MIT** | Useful inspector; no synthesized audio output. |
 | **Text/code/Markdown; patch/Git bundle tools** | Highlighting, formatting, sanitized Markdown; optional diff/bundle inspection | **Apache-2.0 + MIT + BSD-3-Clause + Zlib**, with selected transitive notices | Existing viewing overlap. IPYNB/TeX are source display, not notebook execution/typesetting. |
-| **XML with optional XSD/XSLT tools** | xmllint-wasm 5.3.0 and xslt-polyfill 1.0.33; real bounded validation/transformation | **Apache-2.0 + BSD-3-Clause + MIT-style libxml2/libxslt + Zlib** | New tooling candidate. Exact linked zlib version is not identified in upstream metadata. |
+| **XML with optional XSD/XSLT tools** | xmllint-wasm 5.3.0 and xslt-polyfill 1.0.33; real bounded validation/transformation | **Apache-2.0 + BSD-3-Clause + MIT-style libxml2/libxslt + Zlib** | **Implemented optional F3 tools for XML/XSD/XSL/XSLT**, alongside native tree/source. External resources disabled. Exact linked zlib version is not identified in upstream metadata. |
 
 Archive catalog extensions include `.zip/.zipx/.7z/.rar/.tar`, gzip/bzip2/xz/
 lzma/zstd aliases, `.cab/.ar/.cpio/.iso/.xar/.lha/.lzh`, Java/Android ZIP packages,
@@ -217,7 +253,7 @@ Full source links, asset terms and exact route boundaries are in the
 |---|---|---|---|
 | **PSD/PDD/PSDT; PSB** | Saved composites, layer inventory, limited PSD recomposition | **Apache-2.0 + MIT**: ag-psd 31.0.3, webtoon/psd 0.4.0 and helpers | Candidate enhancement. 8-bit RGB/grayscale saved composites can retain effects; masks/effects/complex layers limit interactive recomposition. Unsupported color/depth variants and ZIP-compressed PSB channels are rejected. ag-psd notice label is stale. |
 | **AI/AIT** | Prefer verified saved PDF surface; native PGF artboards/paths/layers with limited fidelity | **Apache-2.0 + MIT** illustrator-pgf 0.1.0/fzstd, plus PDF asset stack when used | New candidate, experimental. Complex text, gradients, embedded images, effects and print color fidelity incomplete. |
-| **EPS/PS** | Stet 0.8.7 / stet-wasm 0.2.0 local Worker/WASM page rasterization | **Apache-2.0 or MIT** engine + permissive dependencies; **OFL-1.1 URW fonts + CC0 ICC profile** | Candidate with asset notices. Experimental PostScript engine, not Ghostscript; not complete Level 3 conformance. |
+| **EPS/PS** | Stet 0.8.7 / stet-wasm 0.2.0 local Worker/WASM page rasterization | **Apache-2.0 or MIT** engine + permissive dependencies; **OFL-1.1 URW fonts + CC0 ICC profile** | **Implemented F3 route with retained asset notices.** Experimental PostScript engine, not Ghostscript; not complete Level 3 conformance. |
 | **IDML** | Introspect WASM 0.73.4 page rendering | **Apache-2.0 + MPL-2.0** elected for Introspect, plus MIT/BSD/Zlib/Unicode; Adobe CMap and Foxit-named asset grants are **BSD-3-Clause** | New candidate with covered-source obligations. Bounded ZIP/Worker path; not native INDD parsing. Native-material review and source retained; no final release approval or bit-for-bit WASM rebuild asserted. |
 | **ICML/IDMS/INX** | Styled story, bounded layout fragment or partial legacy layout/structure | **Apache-2.0 + ISC + MIT** (`saxes`, `xmlchars`) | Candidates with explicitly limited layout. Linked assets are not fetched. |
 | **INDD/INDT; XD** | Embedded verified thumbnail/rendition plus structure inventory | **Apache-2.0 + permissive support bundle** | Candidate **preview/metadata only**. No native InDesign layout database or XD vector reconstruction. |
@@ -285,29 +321,34 @@ The following issues remain at the integration checkpoint:
 - **Distribution boundaries:** selected 3D and drawing entries must prove
   exclusion of unwanted OCCT, ELK and custom asset bundles. Inspect generated
   chunks and copied assets, not just package import syntax.
-- **Fidelity and resource bounds:** fix WordPerfect block order/fallback reporting;
-  benchmark DOC improvements against our native corpus; test real documents for
-  newer iWork/Hangul/design parsers. Carry bounded file/ZIP/XML/image/worker limits
-  into CrispCloud's adapters.
+- **Fidelity and resource bounds:** the selected WordPerfect overlay repairs
+  block order and failure reporting, and the six selected adapters carry bounded
+  file/ZIP/XML/image/worker checks. Continue platform acceptance and benchmark
+  any DOC changes against the native corpus; test real documents for newer
+  iWork/Hangul/design candidates before importing them.
 
 Most upstream renderers produce browser DOM/Canvas/SVG from TypeScript and some
-use WASM. CrispCloud is Flutter. A license-compatible format still needs an
-implementation decision: a small parser port and native widget, a narrow native
-FFI/WASM boundary, or an isolated web rendering surface. Reusing complete Vue/
-browser UI packages is more invasive than extracting a parser/model.
+use WASM. CrispCloud is Flutter. The six selected engines now use the isolated
+local browser surface in `file_viewer_documents`; MBOX uses a native Dart
+indexer. Remaining license-compatible formats still need an implementation
+decision: a small parser port and native widget, a narrow native FFI/WASM
+boundary, or an isolated web rendering surface. Reusing complete Vue/browser UI
+packages is more invasive than extracting a parser/model.
 
-Suggested next increments, based on new coverage and identified gaps:
+Priority status and remaining increments, based on new coverage and identified gaps:
 
-1. **WordPerfect:** strongest legacy-document addition under MPL; fix the three
-   concrete integration issues and preserve matching source/notices.
-2. **CHM and older spreadsheets:** useful help archives and BIFF/XLSB/DBF/FODS
-   support, with precise unsupported/encrypted/memo behavior.
+1. **WordPerfect:** implemented with the integration repairs and matching MPL
+   source/notices. Broader document fidelity and native platform acceptance remain.
+2. **CHM and older spreadsheets:** CHM and XLS/XLT/XLSB are implemented;
+   **DBF/FODS** remain useful candidates with precise unsupported/encrypted/memo
+   behavior to validate.
 3. **Hangul and iWork:** meaningful new document families; validate a producer and
    version corpus before broad fidelity claims.
-4. **PPT visual rendering:** improve an existing text-only preview; assess the
-   maintainability cost of compiled-only upstream source.
-5. **Data/GIS/XMind/OFD**, then **IDML/PostScript/IFC** according to actual user
-   demand and the larger runtime/asset costs.
+4. **PPT visual rendering:** implemented beside the explicit native text fallback;
+   the maintainability cost of compiled-only upstream source remains.
+5. **Data/GIS/XMind/OFD**, then **IDML/IFC** according to actual user demand and
+   the larger runtime/asset costs. **PostScript/EPS** is already in the selected
+   implementation, with experimental-engine and asset limits retained.
 
 MPL redistribution needs access to the corresponding covered source and changes,
 license notices and a clear way for recipients to obtain that source. Newly

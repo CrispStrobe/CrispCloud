@@ -1,0 +1,73 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart
+00:00 +0: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart: copies complete windows and owns the snapshot
+00:00 +1: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart: rejects size before source validation or allocation
+00:00 +2: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart: never returns a short source as a complete document
+00:00 +3: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart: cancels stale viewer generation between bounded windows
+00:00 +4: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart: rejects a source changed after the complete read
+00:00 +5: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_source_test.dart: accepts an empty complete snapshot without I/O
+00:00 +6: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: wpd selects its bounded document engine
+00:00 +7: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: wp selects its bounded document engine
+00:00 +8: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: wp5 selects its bounded document engine
+00:00 +9: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: wp6 selects its bounded document engine
+00:00 +10: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: chm selects its bounded document engine
+00:00 +11: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: xls selects its bounded document engine
+00:00 +12: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: xlt selects its bounded document engine
+00:00 +13: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: xlsb selects its bounded document engine
+00:00 +14: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: ppt selects its bounded document engine
+00:00 +15: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: pot selects its bounded document engine
+00:00 +16: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: pps selects its bounded document engine
+00:00 +17: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: ps selects its bounded document engine
+00:00 +18: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: eps selects its bounded document engine
+00:00 +19: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: MBOX and XML keep their mode when a UTF-8 BOM is present
+00:00 +20: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: existing Office routes stay on their native readers
+00:00 +21: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: strong image/PDF signatures still override a misleading suffix
+00:00 +22: /workspace/scratch/2b82b742a9df/CrispCloud/test/document_preview_routing_test.dart: content MIME identifies the selected legacy format
+00:02 +23: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_integration_test.dart: F3 indexes MBOX and selects separate messages
+00:03 +24: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode literal whitespace and 0x text, case toggle and edited-query reset agree
+00:04 +25: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode literal whitespace and 0x text, case toggle and edited-query reset agree
+00:04 +26: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode every match remains reachable past the bounded result page in both directions
+00:05 +27: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:06 +28: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +29: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +30: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +31: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +32: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +33: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +34: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:07 +35: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:08 +36: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:09 +37: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode renders decoded lines for a text file
+00:09 +38: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text mode search finds and counts text matches
+00:09 +39: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: byte modes ASCII mode keeps control bytes visible as dots
+00:10 +40: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:10 +41: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:10 +42: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:10 +43: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:11 +44: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:11 +45: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:11 +46: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX Copy all follows decoded selected message only
+00:12 +47: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes 7z lists members and opens them
+00:12 +48: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX navigation retains query and searches the newly selected message
+00:12 +49: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: MBOX navigation retains query and searches the newly selected message
+00:12 +50: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes encrypted 7z asks for a password and opens members
+00:13 +51: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: one malformed MBOX message leaves later messages reachable
+00:13 +52: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes single-file .gz opens decompressed content
+00:13 +53: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: compressed BOM mailbox uses inner format and preserves expanded Source/Hex bytes
+00:13 +54: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: compressed BOM mailbox uses inner format and preserves expanded Source/Hex bytes
+00:13 +55: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes office documents render formatted text and plain text
+00:13 +56: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: compressed binary PPT keeps inner name, copies native text, and protects visual Copy all
+00:13 +57: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: compressed binary PPT keeps inner name, copies native text, and protects visual Copy all
+00:14 +58: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: rich modes XML renders as a tree and can switch to source
+00:14 +59: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: XML tools receive original UTF-16 bytes and Source/Hex remain exact
+00:14 +60: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: XML tools receive original UTF-16 bytes and Source/Hex remain exact
+00:14 +61: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: XML tools receive original UTF-16 bytes and Source/Hex remain exact
+00:14 +62: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/document_preview_review_test.dart: XML tools receive original UTF-16 bytes and Source/Hex remain exact
+00:14 +63: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streaming view UTF-8 page boundaries preserve the whole character and paging survives a parent rebuild
+00:16 +64: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streaming view long rows keep UTF-16 surrogate pairs and UTF-8 chunk-edge scalars together
+00:16 +65: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streaming view indexes lines and shows byte offsets
+00:16 +66: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: text goto reaches a match beyond 64 MiB without indexing the prefix
+00:16 +67: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: streamed UTF-16 text retains encoding and newline alignment
+00:16 +68: /workspace/scratch/2b82b742a9df/CrispCloud/test/widget/internal_viewer_widget_test.dart: mode bar offers the core viewer modes
+00:16 +69: All tests passed!
