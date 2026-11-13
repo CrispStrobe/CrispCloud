@@ -48,3 +48,27 @@ different. The shared dependency was merged through
 The exact parser qualification remains in the separate
 [parser receipt](../parser-lineage-integration-20261113/README.md). Historical
 and focused test counts overlap and must not be summed as a single run.
+
+## Passing follow-up before concurrent main advanced
+
+`pre-main-receipt.json` records `09cb60be` with **60 passing tests and no
+failures/skips** across the archive viewer, spool lifetime, transfer recovery
+and operations-localization suites. It includes the corrected narrow-window
+interaction and all three new split-password regressions. Strict analysis,
+dependency resolution and Office/document/ebook/technical-inventory checks
+passed. Manifests were restored exactly and the worktree was clean.
+
+The standard JavaScript release build passed using the original production
+manifest, `APP_VERSION=1.2.9+22` and `GIT_HASH=09cb60be`. Those values were verified
+in the resulting JavaScript. The optional Wasm dry run was disabled; no Wasm
+qualification is claimed. `pre-main-logs.tar.gz` and its JSON hash manifest retain
+the original logs and test events.
+
+During this build, app main advanced to `e13fb727`, already incorporating the
+earlier `5d0814fd` archive checkpoint and adding newer canonical parser/Quds
+sources and viewer/pane improvements. Genuine merge `a065ee6e` preserves both
+histories. Its affected UI and document paths require a separately attributed
+gate and build; the passing `09cb60be` result is not relabeled as that result.
+
+`historical-ci-triage.json` records the earlier localization-assertion failure
+and unrelated iOS source-download failure, with exact job links and revision.
