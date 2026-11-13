@@ -1,0 +1,22 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/installed_office_preview_strings_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/test/installed_office_preview_strings_test.dart: preview controls and errors have all nine translations
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud/test/installed_office_preview_strings_test.dart: region and unsupported locale behavior is predictable
+00:00 +2: /workspace/scratch/60b40e52ccd6/crispcloud/test/installed_office_preview_strings_test.dart: only formats inspected by the installed PDF service are advertised
+00:00 +3: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart
+00:01 +3: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: requires an explicit selected app and preserves source bytes (variant: TargetPlatform.linux)
+00:02 +4: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: no installed app keeps the built-in view available (variant: TargetPlatform.linux)
+00:02 +5: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: rejects unsupported suffix before discovering applications (variant: TargetPlatform.linux)
+00:02 +6: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: rejects empty document before discovering applications (variant: TargetPlatform.linux)
+00:02 +7: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: rejects over-limit input before discovering applications (variant: TargetPlatform.linux)
+00:03 +8: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: does not probe installed applications on mobile (variant: TargetPlatform.android)
+00:03 +9: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: conversion cannot be duplicated or dismissed while running (variant: TargetPlatform.linux)
+00:03 +10: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: rejects wrong output format before showing preview (variant: TargetPlatform.linux)
+00:03 +11: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: rejects wrong engine before showing preview (variant: TargetPlatform.linux)
+00:03 +12: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: rejects invalid PDF before showing preview (variant: TargetPlatform.linux)
+00:03 +13: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: reports timeout and allows an explicit retry (variant: TargetPlatform.linux)
+00:03 +14: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: drops results after parent disposal (variant: TargetPlatform.linux)
+00:03 +15: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: discovery and viewer errors do not leak exception details (variant: TargetPlatform.linux)
+00:04 +16: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/installed_office_preview_dialog_test.dart: localized controls fit a narrow enlarged-text dialog (variant: TargetPlatform.linux)
+00:04 +17: All tests passed!

@@ -42,10 +42,24 @@ Schemas and stylesheets are explicitly supplied files or pasted text. Their
 external imports, includes, DTD/entity resources and document loads are disabled.
 Transformation output stays in the preview; it does not overwrite the input.
 
-The host receives only a bounded byte snapshot, filename, language and appearance
-settings. It receives no provider client, credentials, native path or remote file
+The host receives a bounded byte snapshot, filename, language, appearance
+settings and an optional exact catalog of existing local font assets. It receives no provider client, credentials, native path or remote file
 URL. It transfers bytes in 192 KiB chunks with a per-view random session identifier.
 Changing source or closing the view revokes the renderer's lifetime and workers.
+
+WordPerfect, XLS and PPT reuse the app's shared font catalog without copying
+another font pack into this package. The host accepts at most 64 configured
+faces and validates every URL against the exact native session route or Flutter
+app asset route. It does not fetch URLs or font names from a document. Faces are
+selected lazily by family, weight and italic style, with a 4 MiB per-font and
+16 MiB per-preview byte cap and five-second fetch/decode deadlines. Required
+faces finish loading before content measurement. Missing or unknown fonts show
+a diagnostic and use browser fallback. Original names remain available to the
+browser; configured compatibility aliases reuse the bundled face. WordPerfect's
+structured model uses Liberation Serif because its native wire omits original
+family names. PPT embeds only each rendered slide's selected fonts into its
+standalone SVG image before rasterization. PS/EPS retains its existing Base35
+resources; CHM embedded fonts and XML presentation are unchanged.
 
 The general source cap is 64 MiB; XLS/PPT/PS are limited to 32 MiB and XML to 4 MiB.
 Each parser adds bounds for decoded resources, records, cells, pages and output.

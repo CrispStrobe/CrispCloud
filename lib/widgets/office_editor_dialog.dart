@@ -18,7 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:quds_office_editor/quds_office_editor.dart' hide WordPackagePreservation;
+import 'package:quds_office_editor/quds_office_editor.dart'
+    hide WordPackagePreservation;
 import 'package:quds_office_engine/quds_office_engine.dart'
     show WordPackagePreservation;
 
@@ -33,6 +34,7 @@ import '../l10n/office_editor_strings.dart';
 import '../l10n/office_surface_strings.dart';
 import '../l10n/word_format_strings.dart';
 import '../services/office_editor_menu.dart';
+import '../services/document_fonts.dart';
 import 'office_editor_find_bar.dart';
 import 'office_editor_ribbon.dart';
 
@@ -207,7 +209,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       _error = null;
     });
     try {
-      await OfficeHostFonts.ensureRegistered();
+      await DocumentFonts.ensureRegistered();
       final Uint8List bytes;
       if (widget.bytesOverride case final supplied?) {
         bytes = supplied;

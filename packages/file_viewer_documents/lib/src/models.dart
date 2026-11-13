@@ -1,6 +1,36 @@
 typedef DocumentJson = Map<String, dynamic>;
 
+/// A trusted, already bundled font offered by the embedding application.
+///
+/// [asset] is an exact Flutter asset key, never a file path or a remote URL.
+/// Font programs are loaded only when a renderer needs their family/style;
+/// this descriptor does not add another copy of the font to the package.
+class DocumentPreviewFont {
+  const DocumentPreviewFont({
+    required this.asset,
+    required this.family,
+    this.aliases = const [],
+    this.weight = 400,
+    this.italic = false,
+  });
+
+  final String asset;
+  final String family;
+  final List<String> aliases;
+  final int weight;
+  final bool italic;
+}
+
 enum DocumentPreviewKind { wordperfect, chm, spreadsheet, ppt, postscript, xml }
+
+/// PS owns its interpreter fonts, CHM retains archive fonts, and XML is source
+/// tooling. Only these three document renderers use the app's shared catalog.
+bool documentPreviewUsesSharedFonts(DocumentPreviewKind kind) => switch (kind) {
+  DocumentPreviewKind.wordperfect ||
+  DocumentPreviewKind.spreadsheet ||
+  DocumentPreviewKind.ppt => true,
+  _ => false,
+};
 
 DocumentPreviewKind? documentPreviewKind(String filename) {
   final ext = filename.toLowerCase().split('.').last;

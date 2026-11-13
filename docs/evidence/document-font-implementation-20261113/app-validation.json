@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "date": "2026-11-13",
+  "app_before_implementation": "db5b6126fdfb7f31598c80e5adc96ea548139505",
+  "canonical_quds_commit": "e82c997b6df8746fe86fb83b9f416a89bb3e3b80",
+  "legacy_parser_commit": "e4427725cc720eaefad97c2cb921a6fe1e36749d",
+  "flutter": "3.47.8",
+  "dart": "3.13.7",
+  "validation_graph": "Normal app dependency graph, offline pub resolution with unchanged versions and normal native hooks. csslib1.0.2 changes from transitive to explicit direct dependency.",
+  "tests": {
+    "app_font_pdf_and_preservation": {
+      "passed": 45,
+      "log": "app-font-tests.txt"
+    },
+    "viewer_notice_and_entry": {
+      "passed": 37,
+      "log": "viewer-ui-tests.txt",
+      "includes": {
+        "unchanged_F3": 29,
+        "notice_localization": 7,
+        "entry": 1
+      }
+    },
+    "installed_preview_dialog": {
+      "passed": 17,
+      "log": "installed-preview-tests.txt"
+    },
+    "dart_font_hosts": {
+      "distinct_passed": 23,
+      "logs": [
+        "host-font-tests.txt",
+        "host-font-wiring-tests.txt"
+      ]
+    }
+  },
+  "limits": [
+    "UI installed-converter tests use injected services; they do not execute installed Word/LibreOffice or an interactive PDF renderer.",
+    "Local Chromium startup is blocked; actual browser font smoke tests are committed for CI."
+  ],
+  "source_fingerprints": {
+    "pubspec.yaml": "8816a9c0031151aec43c49e1a647fd3871a52ae2f5d24ea8c874b386eb49350d",
+    "pubspec.lock": "fa128435bbb2ef6ce418c028742307c74623561593bdbbe6cb0a8d1baca9598d",
+    "tool/office_fidelity_manifest.json": "c69a49c66e29d6b9c90a46855048770446ba5799d22bcee662fce5d61fda52a6",
+    "lib/services/document_font_catalog.dart": "3a074aba5dab7667d695498783684dd63029d85e6c3bf3e02238228edc481a9c",
+    "lib/services/document_fonts.dart": "d5645ef5d6b3fdc6a10ae6606bfa78ecc3365a66d66819f004b5d48b1015413b",
+    "lib/services/office_pdf_service.dart": "bc7922fb4a173471c85e8abb9690cd3119e62bdc492294edd815251a657fbf3d",
+    "lib/widgets/internal_viewer_dialog.dart": "3cb72922dfe34fe017dfb251a19c2953bba5cc649c92ffe50faa975d2e06d750",
+    "packages/file_viewer_documents/RUNTIME_MANIFEST.json": "9003865814d3b192490f68837848538abbd33d4aca589eac9ec72a7a83a59639"
+  }
+}

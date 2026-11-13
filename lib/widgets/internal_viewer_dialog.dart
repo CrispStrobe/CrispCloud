@@ -48,6 +48,7 @@ import '../l10n/lrc_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
+import '../providers/office_conversion_provider.dart';
 import '../services/archive_streamed_reader.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/archive_viewer_source.dart';
@@ -68,6 +69,9 @@ import '../services/lrc_source.dart';
 import '../services/local_file_service.dart';
 import '../services/log_service.dart';
 import '../services/office_document_service.dart';
+import '../services/document_fonts.dart';
+import '../services/document_font_catalog.dart';
+import '../services/document_preview_fonts.dart';
 import '../services/email_message_service.dart';
 import '../services/mbox_message_service.dart';
 import '../services/document_preview_source.dart';
@@ -103,6 +107,10 @@ import '../l10n/archive_integrity_strings.dart';
 import 'archive_integrity_dialog.dart';
 import '../l10n/native_preview_error_strings.dart';
 import '../l10n/office_pdf_error_strings.dart';
+import '../l10n/installed_office_preview_strings.dart';
+import '../l10n/office_pdf_font_notice_strings.dart';
+import 'installed_office_preview_dialog.dart';
+import 'office_pdf_font_notice.dart';
 
 const _log = Log('InternalViewer');
 
@@ -366,6 +374,9 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   PdfDocument? _officePdfDoc;
   bool _officePdfLoading = false;
   String? _officePdfError;
+  OfficePdfFontReport? _officePdfFonts;
+  bool _officeFontFallback = false;
+  bool _installedOfficePreviewOpening = false;
 
   // PDF text layer
   bool _pdfShowText = false;
@@ -729,14 +740,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _fullData = bytes.takeBytes();
       return _fullData!;
     }
+    final loadToken = _loadToken;
+    final source = _source;
+    final origin = _origin;
     final data = await loadFileBytes(
       ref,
       widget.file,
       widget.side,
       capBytes: kViewerFullDataCap,
-      origin: _origin,
+      origin: origin,
     );
-    _fullData = data;
+    // A caller may reject a stale result, but this shared cache must also be
+    // protected if F5 or a source replacement occurred during the read.
+    if (mounted &&
+        loadToken == _loadToken &&
+        identical(source, _source) &&
+        identical(origin, _origin) &&
+        (origin?.isCurrent ?? true)) {
+      _fullData = data;
+    }
     return data;
   }
 
@@ -812,6 +834,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       _officeView = _OfficeView.formatted;
       _officePdfLoading = false;
       _officePdfError = null;
+      _officePdfFonts = null;
+      _officeFontFallback = false;
       _pdfShowText = false;
       _htmlRendered = true;
       _xmlTree = true;
@@ -952,7 +976,20 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             data,
             _expansionName ?? _viewName,
           );
+          var fontFallback = false;
+          if (document.safeHtml != null) {
+            try {
+              await DocumentFonts.ensureRegistered();
+            } catch (error) {
+              _log.warn(
+                'Document fonts could not load; using available fonts',
+                error,
+              );
+              fontFallback = true;
+            }
+          }
           if (!mounted || token != _prepareToken) return;
+          _officeFontFallback = fontFallback;
           _officeDoc = document;
           _richText = document.plainText;
           _officeView = document.deck != null
@@ -1178,6 +1215,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
       bytes: bytes,
       filename: _expansionName ?? _viewName,
       kind: kind,
+      fonts: documentPreviewFonts,
       locale: Localizations.localeOf(context).toLanguageTag(),
       dark: theme.brightness == Brightness.dark,
       fontScale: _zoom,
@@ -1232,6 +1270,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
     _officePdfController = null;
     final officePdfDoc = _officePdfDoc;
     _officePdfDoc = null;
+    _officePdfFonts = null;
 
     // The outgoing widget tree still references these controllers during the
     // frame in which the mode changes; dispose them after it is replaced, and
@@ -3056,6 +3095,25 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
                   if (_mode == ViewerMode.xml) _xmlViewToggle(),
                   if (_mode == ViewerMode.office) _officeViewToggle(),
                   if (_mode == ViewerMode.office &&
+                      supportsInstalledOfficePreview &&
+                      isInstalledOfficePreviewFileName(
+                        _expansionName ?? _viewName,
+                      ))
+                    IconButton(
+                      key: const ValueKey('viewer-installed-office-preview'),
+                      tooltip: InstalledOfficePreviewStrings(
+                        Localizations.localeOf(context),
+                      ).text('title'),
+                      icon: const Icon(
+                        Icons.desktop_windows_outlined,
+                        size: 18,
+                      ),
+                      onPressed: _installedOfficePreviewOpening
+                          ? null
+                          : () => unawaited(_openInstalledOfficePreview()),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  if (_mode == ViewerMode.office &&
                       _systemPreviewService.isSupported)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -3715,6 +3773,43 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   // Office documents (formatted Markdown / table / text / raw XML)
   // -------------------------------------------------------------------------
 
+  Future<void> _openInstalledOfficePreview() async {
+    if (_installedOfficePreviewOpening) return;
+    final token = _prepareToken;
+    final loadToken = _loadToken;
+    bool current() =>
+        mounted && token == _prepareToken && loadToken == _loadToken;
+    final sourceName = _expansionName ?? _viewName;
+    setState(() => _installedOfficePreviewOpening = true);
+    try {
+      final bytes = await _ensureFullData();
+      if (!mounted || !current()) return;
+      await showInstalledOfficePreviewDialog(
+        context,
+        sourceName: sourceName,
+        bytes: bytes,
+        discover: ref.read(installedOfficeDiscoveryProvider),
+        convert: ref.read(installedOfficeConversionProvider),
+        onPreviewPdf: (pdf, name) async {
+          if (!current()) return;
+          await showInternalViewer(
+            context,
+            file: FileItem(name: name, isFolder: false, size: pdf.length),
+            side: widget.side,
+            bytesOverride: pdf,
+            displayName: name,
+          );
+        },
+      );
+    } catch (error) {
+      if (mounted && current()) {
+        _showSnack(localizedFileBytesError(context, error));
+      }
+    } finally {
+      if (mounted) setState(() => _installedOfficePreviewOpening = false);
+    }
+  }
+
   Future<void> _openSystemPreview() async {
     final data = _fullData;
     if (data == null) {
@@ -3735,28 +3830,34 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Future<void> _loadOfficePdf() async {
     if (_officePdfLoading || _officePdfController != null) return;
+    final token = _prepareToken;
+    final loadToken = _loadToken;
+    bool current() =>
+        mounted && token == _prepareToken && loadToken == _loadToken;
     setState(() {
       _officePdfLoading = true;
       _officePdfError = null;
     });
     try {
       final data = await _ensureFullData();
-      final pdf = await convertOfficeToPdf(data);
-      if (!mounted) return;
-      final document = await PdfDocument.openData(pdf);
-      if (!mounted) {
+      if (!current()) return;
+      final result = await convertOfficeToPdfResult(data);
+      if (!current()) return;
+      final document = await PdfDocument.openData(result.bytes);
+      if (!current()) {
         unawaited(document.close());
         return;
       }
       final previousController = _officePdfController;
       final previousDoc = _officePdfDoc;
       _officePdfDoc = document;
+      _officePdfFonts = result.fonts;
       _officePdfController = PdfController(document: Future.value(document));
       previousController?.dispose();
       if (previousDoc != null) unawaited(previousDoc.close());
       setState(() => _officePdfLoading = false);
     } catch (e) {
-      if (!mounted) return;
+      if (!current()) return;
       setState(() {
         _officePdfLoading = false;
         _officePdfError = localizedOfficePdfError(context, e);
@@ -3785,7 +3886,22 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
         ),
       );
     }
-    return _buildOfficeContent(document, theme);
+    final content = _buildOfficeContent(document, theme);
+    if (!_officeFontFallback || _officeView != _OfficeView.formatted) {
+      return content;
+    }
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            OfficePdfFontNoticeStrings(Localizations.localeOf(context))
+                .text('previewFallback'),
+          ),
+        ),
+        Expanded(child: content),
+      ],
+    );
   }
 
   String _officeViewLabel(_OfficeView view) => switch (view) {
@@ -3856,7 +3972,13 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             ),
           );
         }
-        return PdfPagePanel(controller: controller);
+        return Column(
+          children: [
+            if (_officePdfFonts case final report? when report.hasFontNotice)
+              OfficePdfFontNotice(report: report),
+            Expanded(child: PdfPagePanel(controller: controller)),
+          ],
+        );
       case _OfficeView.table:
         final csv = document.csv;
         if (csv != null && csv.isNotEmpty) {
@@ -3877,7 +3999,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
               child: HtmlWidget(
                 safeHtml,
                 factoryBuilder: OfficeHtmlWidgetFactory.new,
-                textStyle: TextStyle(fontSize: 13 * _zoom, height: 1.45),
+                textStyle: TextStyle(
+                  fontFamily: 'Liberation Sans',
+                  fontFamilyFallback: documentFontFallbacks,
+                  fontSize: 13 * _zoom,
+                  height: 1.45,
+                ),
                 onTapUrl: (_) => true,
               ),
             ),

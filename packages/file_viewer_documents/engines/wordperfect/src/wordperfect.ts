@@ -2,6 +2,7 @@
 // Adapted from flyfish-dev/file-viewer d264009ca6efb3daed79a39d1ae63133e0f25558.
 // Modified for CrispCloud: bounded local engine integration; see ../UPSTREAM.md.
 import type { FileRenderContext, FileViewerRenderedInstance } from '@file-viewer/core';
+import type { DocumentFontContext } from '../../host/fonts.js';
 import { assertWordPerfectInput, type WordPerfectBlock, type WordPerfectDocument, type WordPerfectParagraph, type WordPerfectTable } from './parser.js';
 import { parseWordPerfectWithWorker } from './workerClient.js';
 
@@ -80,6 +81,8 @@ export function renderWordPerfectModel(
   }
   const page = document.createElement('article');
   page.className = 'wpd-page';
+  const fonts = (context as (FileRenderContext & DocumentFontContext) | undefined)?.crispFonts;
+  if (fonts) page.style.fontFamily = fonts.familyCss('Liberation Serif', 'Liberation Serif');
   page.dataset.viewerAnchorId = 'wordperfect-body';
   if (model.headerBlocks.length) {
     const header = document.createElement('header');
@@ -120,5 +123,8 @@ export default async function renderWordPerfect(
 ): Promise<FileViewerRenderedInstance> {
   assertWordPerfectInput(buffer);
   const model = await parseWordPerfectWithWorker(buffer, context?.options?.wordPerfect, context?.signal);
+  // The libwpd bridge retains emphasis, but not original family names. Load only
+  // the bundled serif faces used by this structured-reading model.
+  await (context as (FileRenderContext & DocumentFontContext) | undefined)?.crispFonts?.prepareModel(model, 'Liberation Serif');
   return renderWordPerfectModel(model, target, context);
 }

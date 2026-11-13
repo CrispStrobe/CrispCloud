@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../models.dart';
 import 'asset_server.dart';
+import 'font_assets.dart';
 import 'host.dart' show DocumentHostSender;
 import 'linux_host_probe.dart';
 import 'host_policy.dart';
@@ -17,11 +18,13 @@ import 'host_policy.dart';
 /// offscreen; Flutter continues to own dialogs, layout, focus and hit testing.
 Widget buildLinuxDocumentHost({
   required String session,
+  List<DocumentPreviewFont> fonts = const [],
   required void Function(DocumentHostSender sender) onConnected,
   required void Function(DocumentJson message) onMessage,
   required void Function(String message) onError,
 }) => _LinuxHost(
   session: session,
+  fonts: fonts,
   onConnected: onConnected,
   onMessage: onMessage,
   onError: onError,
@@ -30,12 +33,14 @@ Widget buildLinuxDocumentHost({
 class _LinuxHost extends StatefulWidget {
   const _LinuxHost({
     required this.session,
+    required this.fonts,
     required this.onConnected,
     required this.onMessage,
     required this.onError,
   });
 
   final String session;
+  final List<DocumentPreviewFont> fonts;
   final void Function(DocumentHostSender) onConnected;
   final void Function(DocumentJson) onMessage;
   final void Function(String) onError;
@@ -48,7 +53,10 @@ class _LinuxHostState extends State<_LinuxHost> {
   static final _receivers = <int, void Function(Map<dynamic, dynamic>)>{};
   static bool _eventsInstalled = false;
 
-  late final DocumentAssetServer _server = DocumentAssetServer(widget.session);
+  late final DocumentAssetServer _server = DocumentAssetServer(
+    widget.session,
+    fonts: widget.fonts,
+  );
   final _focus = FocusNode(debugLabel: 'document-linux-content');
   final _pointerButtons = <int, int>{};
   final _pressedCharacters = <PhysicalKeyboardKey, int>{};
@@ -113,10 +121,13 @@ class _LinuxHostState extends State<_LinuxHost> {
         if (!mounted || _id != createdId) {
           throw StateError('The Linux document browser has closed.');
         }
+        final outgoing = message['type'] == 'begin'
+            ? documentHostMessageWithFonts(message, _server.fontDescriptors)
+            : message;
         await documentLinuxHostChannel
             .invokeMethod<void>('send', {
               'id': createdId,
-              'message': encodeDocumentHostMessage(message, widget.session),
+              'message': encodeDocumentHostMessage(outgoing, widget.session),
             })
             .timeout(const Duration(seconds: 10));
       });

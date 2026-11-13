@@ -80,6 +80,13 @@ typedef GlyphWidthFn = double Function(int codePoint);
 /// Typedef GlyphIdFn.
 typedef GlyphIdFn = int Function(int codePoint);
 
+/// Per-run width provider. [logicalIndex] is the source UTF-16 offset, retained
+/// through Arabic joining and bidi mirroring.
+typedef GlyphWidthAtFn = double Function(int codePoint, int logicalIndex);
+
+/// Per-run glyph lookup in the same face used by [GlyphWidthAtFn].
+typedef GlyphIdAtFn = int Function(int codePoint, int logicalIndex);
+
 /// UAX #14 opportunities + Knuth–Plass least-demerits wrapping.
 abstract final class LineBreaker {
   /// Shape once, then choose each line's width as its layout position changes.
@@ -90,6 +97,8 @@ abstract final class LineBreaker {
     required String text,
     required GlyphWidthFn widthOf,
     GlyphIdFn glyphIdOf = _identityGlyph,
+    GlyphWidthAtFn? widthAt,
+    GlyphIdAtFn? glyphIdAt,
     int? baseLevel,
     double spaceStretch = 3,
     double spaceShrink = 1,
@@ -98,7 +107,12 @@ abstract final class LineBreaker {
     List<ShapedGlyph> Function(List<ShapedGlyph> glyphs)? ligate,
   }) {
     final bidi = Uax9Bidi.reorder(text, baseLevel: baseLevel);
-    final logical = _logicalGlyphs(text, bidi, widthOf, glyphIdOf);
+    final logical = _logicalGlyphs(
+      text,
+      bidi,
+      widthAt ?? (cp, _) => widthOf(cp),
+      glyphIdAt ?? (cp, _) => glyphIdOf(cp),
+    );
     return PreparedLineBreaker._(
       text,
       ligate == null ? logical : ligate(logical),
@@ -115,6 +129,8 @@ abstract final class LineBreaker {
     required double maxWidth,
     required GlyphWidthFn widthOf,
     GlyphIdFn glyphIdOf = _identityGlyph,
+    GlyphWidthAtFn? widthAt,
+    GlyphIdAtFn? glyphIdAt,
     int? baseLevel,
     double spaceStretch = 3,
     double spaceShrink = 1,
@@ -144,9 +160,13 @@ abstract final class LineBreaker {
     final BidiParagraph bidi = Uax9Bidi.reorder(text, baseLevel: baseLevel);
     // Wrap in logical order, then apply UAX #9 L2 per line. Reordering the
     // whole paragraph first inverts RTL wraps (logical start on a later line).
-    final List<ShapedGlyph> logical = ligate == null
-        ? _logicalGlyphs(text, bidi, widthOf, glyphIdOf)
-        : ligate(_logicalGlyphs(text, bidi, widthOf, glyphIdOf));
+    final shaped = _logicalGlyphs(
+      text,
+      bidi,
+      widthAt ?? (cp, _) => widthOf(cp),
+      glyphIdAt ?? (cp, _) => glyphIdOf(cp),
+    );
+    final List<ShapedGlyph> logical = ligate == null ? shaped : ligate(shaped);
     if (logical.isEmpty) {
       return <BrokenLine>[];
     }
@@ -438,8 +458,8 @@ abstract final class LineBreaker {
   static List<ShapedGlyph> _logicalGlyphs(
     String text,
     BidiParagraph bidi,
-    GlyphWidthFn widthOf,
-    GlyphIdFn glyphIdOf,
+    GlyphWidthAtFn widthOf,
+    GlyphIdAtFn glyphIdOf,
   ) {
     final List<int> cps = text.runes.toList();
     final List<int> offsets = <int>[0];
@@ -463,7 +483,7 @@ abstract final class LineBreaker {
         logical.add(
           ShapedGlyph(
             codePoint: cp,
-            glyphId: glyphIdOf(cp),
+            glyphId: glyphIdOf(cp, logicalIndex),
             advance: 0,
             logicalIndex: logicalIndex,
             level: bidi.levels[logicalCpIndex],
@@ -474,8 +494,8 @@ abstract final class LineBreaker {
       logical.add(
         ShapedGlyph(
           codePoint: cp,
-          glyphId: glyphIdOf(cp),
-          advance: widthOf(cp),
+          glyphId: glyphIdOf(cp, logicalIndex),
+          advance: widthOf(cp, logicalIndex),
           logicalIndex: logicalIndex,
           level: bidi.levels[logicalCpIndex],
           isSpace: _isBreakSpace(cp),
@@ -505,16 +525,16 @@ abstract final class LineBreaker {
           level: g.level,
         );
       }
-      if (glyphIdOf(cp) == 0) {
+      if (glyphIdOf(cp, g.logicalIndex) == 0) {
         final int? nominal = ArabicShaper.nominalOf(cp);
-        if (nominal != null && glyphIdOf(nominal) != 0) {
+        if (nominal != null && glyphIdOf(nominal, g.logicalIndex) != 0) {
           cp = nominal;
         }
       }
-      final int gid = glyphIdOf(cp);
-      var advance = s.advanceFactor == 0 ? 0.0 : widthOf(cp);
+      final int gid = glyphIdOf(cp, g.logicalIndex);
+      var advance = s.advanceFactor == 0 ? 0.0 : widthOf(cp, g.logicalIndex);
       if (s.advanceFactor != 0 && advance <= 0 && gid != 0) {
-        final double space = widthOf(0x0020);
+        final double space = widthOf(0x0020, g.logicalIndex);
         advance = space > 0 ? space : 1;
       }
       return _l4Mirror(
@@ -535,8 +555,8 @@ abstract final class LineBreaker {
   /// UAX #9 L4 after shaping: flip mirrored pairs on odd embedding levels.
   static ShapedGlyph _l4Mirror(
     ShapedGlyph g,
-    GlyphWidthFn widthOf,
-    GlyphIdFn glyphIdOf,
+    GlyphWidthAtFn widthOf,
+    GlyphIdAtFn glyphIdOf,
   ) {
     if (!g.level.isOdd || g.codePoint == 0) {
       return g;
@@ -547,8 +567,8 @@ abstract final class LineBreaker {
     }
     return ShapedGlyph(
       codePoint: mirrored,
-      glyphId: glyphIdOf(mirrored),
-      advance: widthOf(mirrored),
+      glyphId: glyphIdOf(mirrored, g.logicalIndex),
+      advance: widthOf(mirrored, g.logicalIndex),
       logicalIndex: g.logicalIndex,
       level: g.level,
       isSpace: g.isSpace,

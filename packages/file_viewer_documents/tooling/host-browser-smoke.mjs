@@ -10,11 +10,28 @@ const here = dirname(fileURLToPath(import.meta.url));
 const assets = resolve(here, '../assets');
 const upstream = process.env.FILE_VIEWER_UPSTREAM_DIR || resolve(here, '.source');
 const session = '12345678901234567890123456789012';
-const mime = {'.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.wasm':'application/wasm', '.json':'application/json'};
+// Reuse fonts already in the checkout. The application supplies the full
+// catalog; this deliberately partial catalog also exercises graceful fallback.
+const fontFiles = [
+  ...['Sans', 'Serif'].flatMap(family => ['Regular', 'Bold', 'Italic', 'BoldItalic'].map(style => ({
+    path: resolve(here, '../../quds_office_editor/fonts', `Liberation${family}-${style}.ttf`),
+    family: `Liberation ${family}`, aliases: style === 'Regular' ? (family === 'Sans' ? ['Arial', 'Helvetica'] : ['Times New Roman', 'Times']) : [],
+    weight: style.includes('Bold') ? 700 : 400, italic: style.includes('Italic'),
+  }))),
+  {path: resolve(here, '../../../assets/fonts/Roboto-Regular.ttf'), family: 'Unused Font Control', aliases: [], weight: 400, italic: false},
+  // A test-only alias exercises XLS's Calibri requests without fetching the
+  // production Carlito pub package in this Node job. The app catalog uses
+  // Carlito; these controls use existing real Roboto regular/bold font bytes.
+  {path: resolve(here, '../../../assets/fonts/Roboto-Regular.ttf'), family: 'Host Calibri Test Face', aliases: ['Calibri'], weight: 400, italic: false},
+  {path: resolve(here, '../../../assets/fonts/Roboto-Bold.ttf'), family: 'Host Calibri Test Face', aliases: [], weight: 700, italic: false},
+];
+const mime = {'.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.wasm':'application/wasm', '.json':'application/json', '.ttf':'font/ttf'};
 const server = createServer(async (request, response) => {
   try {
-    const path = resolve(assets, `.${new URL(request.url, 'http://localhost').pathname}`);
-    if (!path.startsWith(assets + sep)) throw Error('Outside asset root');
+    const pathname = new URL(request.url, 'http://localhost').pathname;
+    const font = pathname.match(new RegExp(`^/${session}/fonts/(\\d+)\\.ttf$`));
+    const path = font ? fontFiles[Number(font[1])]?.path : resolve(assets, `.${pathname.slice(session.length + 1)}`);
+    if (!path || (!font && (!pathname.startsWith(`/${session}/`) || !path.startsWith(assets + sep)))) throw Error('Outside asset root');
     const data = await readFile(path);
     response.writeHead(200, {'Content-Type':mime[extname(path)] || 'application/octet-stream', 'X-Content-Type-Options':'nosniff'});
     response.end(data);
@@ -24,6 +41,7 @@ const server = createServer(async (request, response) => {
 });
 await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
 const origin = `http://127.0.0.1:${server.address().port}`;
+const fonts = fontFiles.map(({path, ...descriptor}, index) => ({...descriptor, url: `${origin}/${session}/fonts/${index}.ttf`}));
 let browser;
 try {
   browser = await chromium.launch({headless:true, executablePath:process.env.CHROME_EXECUTABLE || undefined});
@@ -37,7 +55,8 @@ try {
   ];
   for (const [kind, filename, fixture, selector] of cases) {
     const page = await browser.newPage({viewport:{width:1100,height:800}});
-    const errors = [], external = [], failedAssets = [];
+    const errors = [], external = [], failedAssets = [], fontRequests = [];
+    page.on('request', request => { if (request.url().includes(`/${session}/fonts/`)) fontRequests.push(request.url()); });
     page.on('pageerror', error => errors.push(error.message));
     page.on('response', response => { if (response.status() >= 400 && !response.url().endsWith('/favicon.ico')) failedAssets.push(`${response.status()} ${response.url()}`); });
     await page.route('**/*', async route => {
@@ -47,6 +66,12 @@ try {
     });
     await page.addInitScript(() => {
       window.testMessages = [];
+      window.testSvgImages = [];
+      const createObjectURL = URL.createObjectURL.bind(URL);
+      URL.createObjectURL = blob => {
+        if (blob.type === 'image/svg+xml') window.testSvgImages.push(blob.text());
+        return createObjectURL(blob);
+      };
       window.CrispDocumentMessage = {postMessage: value => window.testMessages.push(JSON.parse(value))};
       const NativeWorker = window.Worker;
       window.testWorkers = new Set();
@@ -55,7 +80,7 @@ try {
         terminate() { window.testWorkers.delete(this); return super.terminate(); }
       };
     });
-    await page.goto(`${origin}/index.html#${session}`);
+    await page.goto(`${origin}/${session}/index.html#${session}`);
     await page.waitForFunction(() => window.testMessages.some(message => message.type === 'ready'));
     const bytes = fixture ? await readFile(resolve(upstream, fixture)) : Buffer.from(kind === 'xml'
       ? '<order><quantity>2</quantity><price>12.5</price></order>'
@@ -64,11 +89,30 @@ try {
       {channel:'crisp-document-v1',session,...value});
     // Messages for another session must not consume the current session.
     await send({type:'begin',session:'wrong-session',filename:'wrong',kind:'xml',length:0});
-    await send({type:'begin',filename,kind,length:bytes.length,locale:'en',dark:false,fontScale:1});
+    await send({type:'begin',filename,kind,length:bytes.length,locale:'en',dark:false,fontScale:1,
+      ...(['wordperfect','spreadsheet','ppt'].includes(kind) ? {fonts} : {})});
     for (let offset=0;offset<bytes.length;offset+=192*1024) {
       await send({type:'chunk',offset,data:bytes.subarray(offset,offset+192*1024).toString('base64')});
     }
+    const heldFonts = [];
+    let releaseFonts = false;
+    if (['wordperfect','spreadsheet'].includes(kind)) {
+      await page.route(`**/${session}/fonts/*`, route => {
+        if (releaseFonts) return route.continue();
+        heldFonts.push(route);
+      });
+    }
+    const firstFont = ['wordperfect','spreadsheet'].includes(kind)
+      ? page.waitForRequest(request => request.url().includes(`/${session}/fonts/`)) : null;
     await send({type:'open'});
+    if (firstFont) {
+      await firstFont;
+      const content = kind === 'wordperfect' ? '.wpd-page' : '.excel-wrapper canvas';
+      assert.equal(await page.locator(content).count(), 0, `${kind}: await selected faces before layout`);
+      assert.equal(await page.evaluate(() => window.testMessages.some(message => message.type === 'loaded')), false);
+      releaseFonts = true;
+      await Promise.all(heldFonts.map(route => route.continue()));
+    }
     await page.waitForFunction(() => window.testMessages.some(message => ['loaded','error'].includes(message.type)), undefined, {timeout:90000});
     const result = await page.evaluate(() => window.testMessages.find(message => ['loaded','error'].includes(message.type)));
     assert.equal(result.type, 'loaded', `${kind}: ${result.message || 'failed'}`);
@@ -78,12 +122,24 @@ try {
       await page.frameLocator(selector).locator('h1').waitFor();
       assert.equal(await page.frameLocator(selector).locator('h1').innerText(), 'Welcome');
     }
-    if (kind === 'ppt') await page.locator('canvas[data-render-state="rendered"]').first().waitFor();
+    if (kind === 'ppt') {
+      await page.locator('canvas[data-render-state="rendered"]').first().waitFor();
+      const images = await page.evaluate(() => Promise.all(window.testSvgImages));
+      assert.ok(images.some(svg => svg.includes('@font-face') && svg.includes('data:font/ttf;base64,')), 'PPT SVG images need their own selected font bytes');
+      assert.equal(images.some(svg => svg.includes('Unused Font Control')), false);
+    }
     if (kind === 'wordperfect') assert.equal(await page.locator('.wpd-page > table').count(), 3);
+    if (['wordperfect','spreadsheet','ppt'].includes(kind)) {
+      assert.ok(fontRequests.length > 0, `${kind}: selected local font requests`);
+      assert.ok(await page.evaluate(() => [...document.fonts].some(font => font.status === 'loaded')), `${kind}: real loaded FontFace`);
+    }
+    assert.equal(fontRequests.some(url => url.endsWith('/8.ttf')), false, 'unused catalog faces stay unloaded');
+    if (['chm','postscript','xml'].includes(kind)) assert.equal(fontRequests.length, 0);
     await send({type:'appearance',dark:true,fontScale:1.25,locale:'de'});
     assert.equal(await page.locator('body').getAttribute('data-dark'), 'true');
     await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
     await page.waitForFunction(() => window.testWorkers.size === 0);
+    assert.equal(await page.evaluate(() => document.fonts.size), 0, 'preview fonts are released on disposal');
     assert.deepEqual(external, [], `${kind}: external requests`);
     assert.deepEqual(failedAssets, [], `${kind}: missing shipped assets`);
     assert.deepEqual(errors, [], `${kind}: browser exceptions`);
@@ -92,7 +148,7 @@ try {
   }
   const page = await browser.newPage();
   await page.addInitScript(() => { window.messages=[]; window.CrispDocumentMessage={postMessage:value=>window.messages.push(JSON.parse(value))}; });
-  await page.goto(`${origin}/index.html#${session}`);
+  await page.goto(`${origin}/${session}/index.html#${session}`);
   await page.waitForFunction(() => window.crispDocumentHost);
   await page.evaluate(session => window.crispDocumentHost.receive({channel:'crisp-document-v1',session,type:'begin',kind:'xml',filename:'too-large.xml',length:4*1024*1024+1}), session);
   assert.match(await page.locator('.document-error').innerText(), /limit/);

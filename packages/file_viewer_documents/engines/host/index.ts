@@ -1,4 +1,5 @@
 import type { FileRenderContext } from '@file-viewer/core';
+import {createDocumentFonts, validateDocumentFonts, type DocumentFonts, type DocumentFontContext} from './fonts.js';
 
 const channel = 'crisp-document-v1';
 const session = location.hash.slice(1);
@@ -8,6 +9,7 @@ let bytes: Uint8Array | undefined;
 let received = 0;
 let metadata: Record<string, unknown> | undefined;
 let instance: any;
+let fonts: DocumentFonts | undefined;
 let controller: AbortController | undefined;
 let opening = false;
 let closed = false;
@@ -17,6 +19,24 @@ function disposeInstance() {
   instance = undefined;
   if (typeof old?.unmount === 'function') old.unmount();
   else old?.destroy?.();
+  fonts?.dispose();
+  fonts = undefined;
+}
+
+function fontDiagnostic(message: string) {
+  if (closed) return;
+  let notice = document.querySelector<HTMLElement>('.document-font-warning');
+  if (!notice) {
+    notice = document.createElement('aside');
+    notice.className = 'document-font-warning';
+    notice.setAttribute('role', 'status');
+    Object.assign(notice.style, {padding: '10px 16px', background: '#fff8dc', color: '#422e00', font: '14px/1.5 system-ui,sans-serif', maxHeight: '96px', overflow: 'auto', flex: 'none'});
+    target.before(notice);
+    Object.assign(document.body.style, {display: 'flex', flexDirection: 'column'});
+    Object.assign(target.style, {flex: '1', height: 'auto', minHeight: '0'});
+  }
+  notice.textContent = [notice.textContent, message].filter(Boolean).join(' ').slice(0, 2048);
+  emit('diagnostic', {code: 'font-fallback', message});
 }
 
 function appearance(value: Record<string, unknown>) {
@@ -53,8 +73,12 @@ async function open() {
   opening = true;
   controller = new AbortController();
   appearance(metadata);
+  if (['wordperfect', 'spreadsheet', 'ppt'].includes(String(metadata.kind)) && Array.isArray(metadata.fonts) && metadata.fonts.length) {
+    fonts = createDocumentFonts(validateDocumentFonts(metadata.fonts, location.href), document, controller.signal, fontDiagnostic);
+  }
   const context = {
     filename: String(metadata.filename), signal: controller.signal,
+    crispFonts: fonts,
     options: {
       locale: metadata.locale, theme: metadata.dark === true ? 'dark' : 'light',
       wordPerfect: {
@@ -68,7 +92,7 @@ async function open() {
         wasmUrl: new URL('./chm_wasm_bg.wasm', import.meta.url).href,
       },
     },
-  } as FileRenderContext;
+  } as FileRenderContext & DocumentFontContext;
   const input = bytes.buffer;
   bytes = undefined;
   switch (metadata.kind) {
@@ -95,6 +119,7 @@ function receive(value: unknown) {
       const limit = (message.kind === 'xml' ? 4 :
         ['ppt', 'spreadsheet', 'postscript'].includes(String(message.kind)) ? 32 : 64) * 1024 * 1024;
       if (!Number.isSafeInteger(message.length) || Number(message.length) < 0 || Number(message.length) > limit) throw new Error('Document exceeds the preview input limit.');
+      validateDocumentFonts(message.fonts, location.href);
       metadata = message;
       bytes = new Uint8Array(Number(message.length));
       received = 0;

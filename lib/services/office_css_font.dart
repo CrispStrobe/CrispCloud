@@ -17,8 +17,9 @@ String? decodeOfficeCssFont(String value) {
         index++;
         if (code == 0x0d &&
             index < value.length &&
-            value.codeUnitAt(index) == 0x0a)
+            value.codeUnitAt(index) == 0x0a) {
           index++;
+        }
         continue;
       }
       var scalar = 0;
@@ -40,8 +41,9 @@ String? decodeOfficeCssFont(String value) {
       if (digits > 0) {
         if (scalar == 0 ||
             scalar > 0x10ffff ||
-            (scalar >= 0xd800 && scalar <= 0xdfff))
+            (scalar >= 0xd800 && scalar <= 0xdfff)) {
           return null;
+        }
         code = scalar;
         if (index < value.length) {
           final next = value.codeUnitAt(index);
@@ -53,8 +55,9 @@ String? decodeOfficeCssFont(String value) {
             index++;
             if (next == 13 &&
                 index < value.length &&
-                value.codeUnitAt(index) == 10)
+                value.codeUnitAt(index) == 10) {
               index++;
+            }
           }
         }
       } else {

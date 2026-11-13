@@ -3,6 +3,7 @@
 // Modified for CrispCloud: bounded local workers, resource budgets and cancellation.
 // Upstream d264009ca6efb3daed79a39d1ae63133e0f25558; original source remains immutable.
 import { boundPptRuntime, PPT_LIMITS } from './limits.js';
+import type { DocumentFonts, DocumentFontContext } from '../../host/fonts.js';
 import {
   DEFAULT_RENDERER_DEFINITIONS,
   createFileViewerTranslator,
@@ -100,12 +101,13 @@ const loadPptModule = async (moduleUrl?: string): Promise<PptModule> => {
 
 const loadPptRuntime = async (
   moduleUrl: string | undefined,
-  options: LoadPptViewerOptions
+  options: LoadPptViewerOptions,
+  fonts?: DocumentFonts,
 ): Promise<PptViewerRuntime> => {
   const module = await loadPptModule(moduleUrl);
   // A fresh runtime per File Viewer instance prevents concurrent viewers from sharing
   // (and closing) each other's Worker/document lifecycle.
-  return boundPptRuntime(await module.createPptViewer(options));
+  return boundPptRuntime(await module.createPptViewer(options), fonts);
 };
 
 const canvasToBlob = (canvas: HTMLCanvasElement) => new Promise<Blob | null>(resolve => {
@@ -153,6 +155,7 @@ export default async function renderPpt(
   context?: FileRenderContext
 ): Promise<FileViewerRenderedInstance> {
   const t = createFileViewerTranslator(context?.options);
+  const fonts = (context as (FileRenderContext & DocumentFontContext) | undefined)?.crispFonts;
   const documentRef = target.ownerDocument || document;
   const targetWindow = documentRef.defaultView || (typeof window !== 'undefined' ? window : null);
   const zoomEmitter = createFileViewerZoomChangeEmitter();
@@ -447,7 +450,7 @@ export default async function renderPpt(
       ...runtimeOptions,
       worker: false,
       cache: false,
-    });
+    }, fonts);
     let document: PptDocument | null = null;
     try {
       document = await runtime.open(buffer.slice(0));
@@ -504,7 +507,7 @@ export default async function renderPpt(
     };
     snapshotModuleUrl = moduleUrl;
     snapshotRuntimeOptions = runtimeOptions;
-    const runtime = await loadPptRuntime(moduleUrl, runtimeOptions);
+    const runtime = await loadPptRuntime(moduleUrl, runtimeOptions, fonts);
     pptRuntime = runtime;
     shell.dataset.pptRuntimeMode = runtime.mode;
     throwIfAborted();

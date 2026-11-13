@@ -29,8 +29,9 @@ void main() {
       void walk(InlineSpan span, TextStyle inherited) {
         if (span is! TextSpan) return;
         final effective = inherited.merge(span.style);
-        if (span.text?.endsWith('_PROBE') == true)
+        if (span.text?.endsWith('_PROBE') == true) {
           styles[span.text!] = effective;
+        }
         for (final child in span.children ?? <InlineSpan>[]) {
           walk(child, effective);
         }

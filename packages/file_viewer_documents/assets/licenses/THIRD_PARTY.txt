@@ -219,6 +219,11 @@ slice does not add a native libwpd FFI build or claim native platform validation
   note. Header, footer and note content remain separately displayed.
 - Display a persistent fidelity notice: page layout, embedded images/fonts,
   equations and drawings are not reproduced; table cells use plain text.
+- When the app supplies its shared font catalog, await only the bundled
+  Liberation Serif emphasis faces used by the parsed content before layout;
+  Arabic text also requests existing Noto Naskh Arabic. The native bridge does
+  not expose original font names. This makes structured reading consistent and
+  does not claim restoration of original document typography or embedded fonts.
 - Reject source above 64 MiB before copying, importing or allocating in WASM.
   Limit the decoded wire to 32 MiB, 200,000 events, 1,000 metadata pairs,
   8 MiB aggregate string bytes, 20,000 rendered blocks, 50,000 table cells,
@@ -394,11 +399,19 @@ Added limits cover source bytes, actual streamed ZIP inflation, aggregate expand
 
 Bundle the staged `entry.ts` as the entry and staged `spreadsheet/worker/sheetjs/sheet.worker.ts` as **`sheet.worker.js`** in the same flat runtime directory. The fixed URL resolves from `import.meta.url`; caller-supplied worker URL/mode options do not override it. Native browser hosts must enforce their separate networking, navigation and lifecycle rules.
 
+When the app supplies its shared font catalog, the grid loads only the default
+header/body faces and faces required by the current row window before measuring
+or drawing that window. Named bold/italic faces and Arabic fallback are selected
+from existing application assets. Requested names remain first in the transient
+display model's CSS fallback list; input workbook bytes are unchanged. A window
+whose sheet/session was replaced while fonts loaded is discarded. Missing fonts
+produce a host diagnostic and browser fallback rather than hiding the document.
+
 ## Distribution licenses
 
 Retain the original renderer `LICENSE` and `THIRD_PARTY_NOTICES.md`, the core/root Apache-2.0 grant, and the actual npm package license/notice payloads selected by the root build. The selected direct closure includes styled-exceljs 0.21.6 (Apache-2.0), e-virt-table 1.4.17 (MIT), JSZip 3.10.2 (MIT election), pako 1.0.11 (MIT/Zlib), xmldom 0.9.12 (MIT), tinycolor2 1.6.0 (MIT), UTIF 3.1.0 (MIT), plus their realized bundled transitive dependencies. The root lockfile and `RUNTIME_MANIFEST.json` identify exact versions and every notice's source/hash; `assets/licenses/THIRD_PARTY.txt` retains all complete grants with exact originals in source-only `notices/`. Those component grants are not replaced by the root Apache license.
 
-The selected source has no full File Viewer preset, unrelated renderer, embedded sample document, external conversion service or font asset. Browser/layout fidelity is separate from parser success. Node tests and browser bundle checks passed locally; an actual browser pass requires the CI smoke script, as local Chromium startup was blocked by the workspace socket policy.
+The selected source has no full File Viewer preset, unrelated renderer, embedded sample document, external conversion service or additional font asset. The host may reuse the application's existing font assets through its exact allowlisted routes. Browser/layout fidelity is separate from parser success. Node tests and browser bundle checks passed locally; an actual browser pass requires the CI smoke script, as local Chromium startup was blocked by the workspace socket policy.
 
 
 ===== crispcloud-ppt-UPSTREAM.md =====
@@ -407,13 +420,31 @@ Source: crispcloud-ppt-UPSTREAM.md (engines/ppt/UPSTREAM.md)
 
 Source: [flyfish-dev/file-viewer](https://github.com/flyfish-dev/file-viewer/tree/d264009ca6efb3daed79a39d1ae63133e0f25558/packages/renderers/presentation-ppt), immutable commit **d264009ca6efb3daed79a39d1ae63133e0f25558**. The surrounding `@file-viewer/renderer-ppt` wrapper is version **3.3.3**, **Apache-2.0**, Copyright 2026 Flyfish Viewer. Its exact runtime is the distributed **`@file-viewer/ppt` 1.0.2** JavaScript under [the pinned public vendor directory](https://github.com/flyfish-dev/file-viewer/tree/d264009ca6efb3daed79a39d1ae63133e0f25558/apps/viewer-demo/public/vendor/ppt), **Apache-2.0**, Copyright 2026 Flyfish. It declares no production npm dependencies. The selected wrapper also imports the Apache-2.0 File Viewer core and any actual retained dependency grants recorded by the root bundle.
 
-`UPSTREAM.json` records exact original wrapper/distributed-runtime/license/notice and test-material identities. The original checkout and PPT runtime payload are unchanged. `src/index.ts` is the explicitly modified wrapper overlay; `entry.ts` and `limits.ts` are new integration files. All source modification notices must remain.
+`UPSTREAM.json` records exact original wrapper/distributed-runtime/license/notice and test-material identities. The original checkout remains unchanged. `src/index.ts` is the explicitly modified wrapper overlay; `entry.ts` and `limits.ts` are new integration files. The staged runtime has the three small font changes described below. All source modification notices must remain.
 
 ## Modifications and execution boundary
 
 The entry forces local module-worker parsing, same-directory `pptjs.worker.js`, virtual slide rendering and bounded parser options. It rejects missing worker/virtualization support instead of falling back to direct parsing. Fixed input/stream, record, depth, slide, shape, asset and text limits are passed to the real parser. Slide dimensions/pixels are checked before canvas allocation. Startup has a 30-second deadline; cancellation immediately closes the active runtime and pending worker, and later mount cleanup remains owned. The original browser SVG/canvas renderer, zoom behavior and supported drawings remain. There is no text substitute on render failure.
 
-Alias `@file-viewer/ppt` to `apps/viewer-demo/public/vendor/ppt/dist/index.js`; bundle/copy `dist/pptjs.worker.js` to the flat runtime directory. The distributed worker is already self-contained. No WASM, LibreOffice, server conversion or font binary is loaded by this runtime. Full resource ceilings and layout limitations are documented in [README.md](README.md).
+Alias `@file-viewer/ppt` to `apps/viewer-demo/public/vendor/ppt/dist/index.js`; bundle/copy `dist/pptjs.worker.js` to the flat runtime directory. The distributed worker is already self-contained. No WASM, LibreOffice or server conversion is loaded by this runtime. Full resource ceilings and layout limitations are documented in [README.md](README.md).
+
+The optional shared host font capability reuses existing application fonts. It
+loads the requested slide's named regular/bold/italic faces and master chain
+before text measurement. Unused catalog faces stay unloaded. Unknown families
+keep their requested names, with an explicit fallback diagnostic. Arabic text
+also requests the existing Noto Naskh Arabic face. A released slide cannot paint
+after a pending font request completes.
+
+`tooling/ppt-font-patches.mjs` applies exactly one matched edit to each of the
+pinned `runtime.js`, `layout/measure.js`, and `render/safe.js` files. It adds an
+optional SVG transform before image decoding and keeps bundled fallback names
+consistent between Canvas measurement and SVG text. A standalone SVG image
+does not inherit the host's FontFace set, so the adapter embeds only the current
+slide's selected loaded fonts into that transient SVG. Font data URLs are cached
+per preview. This adds no duplicated font files to the app. The build fails if
+any exact source marker drifts; a contract test executes the real patched runtime
+and proves the hook runs before decoding. The build/patch scripts and immutable
+input hashes are included in `RUNTIME_MANIFEST.json`.
 
 ## Distribution licenses and source boundary
 

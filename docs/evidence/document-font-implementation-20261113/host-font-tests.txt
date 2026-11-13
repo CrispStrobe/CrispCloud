@@ -1,0 +1,29 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart: snapshots bounded family/style descriptors without copying font data
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart: rejects URLs, traversal, escaped paths and non-font asset programs
+00:00 +2: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart: caps metadata and rejects duplicate styles or invalid weights
+00:00 +3: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart: web font URLs retain app base and never escape to another origin
+00:00 +4: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart: host overrides font URLs only on the begin envelope
+00:00 +5: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/font_assets_test.dart: PS, XML and CHM retain their own font environments
+00:00 +6: loading /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart
+00:00 +6: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart: serves only bundled assets with worker/WASM MIME and restrictive headers
+00:00 +7: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart: rejects other sessions, origins, hosts, methods and unlisted paths
+00:00 +8: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart: shares one startup and cannot restart a disposed server
+00:00 +9: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart: font routes expose only exact configured manifest keys and correct MIME
+00:00 +10: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart: closing during asset loading prevents a later listener from opening
+00:00 +11: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/asset_server_test.dart: fails immediately when runtime assets or session identity are absent
+00:00 +12: loading /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart
+00:01 +12: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart: accepts only correctly scoped engine status messages
+00:01 +13: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart: caps JSON bytes and user-visible errors
+00:01 +14: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart: preserves a real maximum transfer chunk within the outbound limit
+00:01 +15: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart: rejects invalid session tokens before a bridge is created
+00:01 +16: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart: top-level navigation stays on its exact session document
+00:01 +17: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/host_policy_test.dart: child frames accept only this host origin’s generated blob URLs
+00:01 +18: loading /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart
+00:02 +18: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: missing native plugin produces an immediate bounded error (variant: TargetPlatform.linux)
+00:03 +19: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: unavailable or malformed runtime probes never create a view (variant: TargetPlatform.linux)
+00:03 +20: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: Linux document host routes typing, trusted messages and disposal (variant: TargetPlatform.linux)
+00:03 +21: /workspace/scratch/60b40e52ccd6/crispcloud/packages/file_viewer_documents/test/linux_host_test.dart: a view created after widget disposal is released without starting (variant: TargetPlatform.linux)
+00:03 +22: All tests passed!

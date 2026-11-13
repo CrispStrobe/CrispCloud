@@ -1378,6 +1378,8 @@ abstract final class OfficePdfExport {
                 maxWidth: spanW - 6,
                 align: align,
                 bold: stored.fontBold,
+                family: book.styles?.familyAt(stored.styleIndex),
+                italic: book.styles?.italicAt(stored.styleIndex) ?? false,
               );
               sink.canvas.restore();
             }
@@ -1889,126 +1891,112 @@ abstract final class OfficePdfExport {
 enum _TextAlign { auto, left, center, right }
 
 class _FontPack {
-  _FontPack(this.set, this.faces, this.metrics);
+  _FontPack(this.set, this.codePoints, this.layoutFont);
 
-  /// Resolved font set.
   final OfficeFontSet set;
+  final Set<int> codePoints;
+  final SfntFont? layoutFont;
+  final List<PdfEmbeddedFace> faces = <PdfEmbeddedFace>[];
+  final Map<(SfntFont, double), FontMetrics> _metrics = {};
 
-  /// Embedded CID faces (`F1`, `F3`, …).
-  final List<PdfEmbeddedFace> faces;
-
-  /// Metrics for the primary (or first) face.
-  final FontMetrics? metrics;
-
-  /// Primary / first face used for line-breaking heuristics.
-  SfntFont? get layoutFont =>
-      faces.isNotEmpty ? faces.first.source : set.primary;
-
-  /// Face that actually covers [codePoint], else the layout face.
-  SfntFont? fontFor(int codePoint) => set.faceFor(codePoint) ?? layoutFont;
-
-  /// Glyph id in the covering face, falling back from a missing presentation
-  /// form to the nominal Arabic letter.
-  int glyphIdOf(int codePoint) {
-    final SfntFont? face = fontFor(codePoint);
-    if (face == null) {
-      return 0;
-    }
-    final int gid = face.glyphIdFor(codePoint);
-    if (gid != 0) {
-      return gid;
-    }
-    final int? nominal = ArabicShaper.nominalOf(codePoint);
-    if (nominal == null) {
-      return 0;
-    }
-    return face.glyphIdFor(nominal);
-  }
-
-  /// Advance in points. Never returns 0 for a letter the covering face has,
-  /// so joining glyphs cannot stack on the previous letter.
-  double widthOf(int codePoint, double size) {
-    final SfntFont? face = fontFor(codePoint);
-    if (face == null || size <= 0) {
-      return size * 0.5;
-    }
-    var cp = codePoint;
-    if (face.glyphIdFor(cp) == 0) {
-      final int? nominal = ArabicShaper.nominalOf(cp);
-      if (nominal != null && face.glyphIdFor(nominal) != 0) {
-        cp = nominal;
-      }
-    }
-    final int gid = face.glyphIdFor(cp);
-    if (gid == 0) {
-      return size * 0.5;
-    }
-    final double width = FontMetrics(
-      font: face,
-      fontSizePoints: size,
-    ).advanceWidth(gid);
-    return width > 0 ? width : size * 0.5;
-  }
-
-  /// build API.
-  static _FontPack build(OfficeFontSet set, Set<int> cps) {
-    final List<SfntFont> candidates = set.embeddable;
-    final SfntFont? metricsFont = candidates.isNotEmpty
-        ? candidates.first
-        : set.primary;
-    final FontMetrics? metrics = metricsFont == null
+  SfntFont? fontFor(
+    int cp, {
+    String? family,
+    int weight = 400,
+    bool italic = false,
+  }) {
+    final face = set.faceFor(
+      cp,
+      family: family,
+      weight: weight,
+      italic: italic,
+    );
+    if (face != null) return face;
+    final nominal = ArabicShaper.nominalOf(cp);
+    return nominal == null
         ? null
-        : FontMetrics(font: metricsFont, fontSizePoints: 11);
-    if (candidates.isEmpty || cps.isEmpty) {
-      return _FontPack(set, const <PdfEmbeddedFace>[], metrics);
-    }
-
-    final Map<SfntFont, Set<int>> byFace = <SfntFont, Set<int>>{};
-    for (final int cp in cps) {
-      final SfntFont? face = set.faceFor(cp);
-      if (face == null) {
-        continue;
-      }
-      byFace.putIfAbsent(face, () => <int>{}).add(cp);
-    }
-
-    final List<PdfEmbeddedFace> faces = <PdfEmbeddedFace>[];
-    var faceOrdinal = 0;
-    for (final SfntFont font in candidates) {
-      final Set<int>? used = byFace[font];
-      if (used == null || used.isEmpty) {
-        continue;
-      }
-      faceOrdinal++;
-      // F2 is reserved for Helvetica; first face is F1, then F3, F4, …
-      final String name = faceOrdinal == 1 ? 'F1' : 'F${faceOrdinal + 1}';
-      faces.add(
-        PdfEmbeddedFace(
-          subset: FontSubsetter(font).subset(used),
-          source: font,
-          resourceName: name,
-        ),
-      );
-    }
-    return _FontPack(set, faces, metrics);
+        : set.faceFor(nominal, family: family, weight: weight, italic: italic);
   }
 
-  PdfEmbeddedFace? faceForCodePoint(int codePoint) {
-    for (final PdfEmbeddedFace face in faces) {
-      if (face.subset.unicodeToNewGlyph.containsKey(codePoint)) {
-        return face;
+  int glyphIdOf(
+    int cp, {
+    String? family,
+    int weight = 400,
+    bool italic = false,
+  }) {
+    final face = fontFor(cp, family: family, weight: weight, italic: italic);
+    if (face == null) return 0;
+    final gid = face.glyphIdFor(cp);
+    return gid != 0 ? gid : face.glyphIdFor(ArabicShaper.nominalOf(cp) ?? cp);
+  }
+
+  double widthOf(
+    int cp,
+    double size, {
+    String? family,
+    int weight = 400,
+    bool italic = false,
+  }) {
+    final face = fontFor(cp, family: family, weight: weight, italic: italic);
+    if (face == null || size <= 0) {
+      final byte = PdfStd14.winAnsiByte(cp);
+      return byte == null
+          ? size * 0.5
+          : PdfStd14.width('Helvetica', byte) / 1000 * size;
+    }
+    final gid = glyphIdOf(cp, family: family, weight: weight, italic: italic);
+    return _metrics
+        .putIfAbsent((
+          face,
+          size,
+        ), () => FontMetrics(font: face, fontSizePoints: size))
+        .advanceWidth(gid);
+  }
+
+  static _FontPack build(OfficeFontSet set, Set<int> cps) =>
+      _FontPack(set, <int>{
+        ...cps,
+        for (final cp in cps)
+          if (ArabicShaper.nominalOf(cp) case final int nominal) nominal,
+      }, set.faceFor(0x20) ?? set.embeddable.firstOrNull);
+
+  /// Embed only faces actually painted, always choosing the same source face
+  /// that supplied layout metrics. Looking up a character in any existing
+  /// subset first would erase family and style differences for shared glyphs.
+  ({PdfEmbeddedFace embedded, OfficeFontFace face})? faceForCodePoint(
+    int cp, {
+    String? family,
+    int weight = 400,
+    bool italic = false,
+  }) {
+    final choice = set.resolve(
+      cp,
+      family: family,
+      weight: weight,
+      italic: italic,
+    );
+    if (choice == null) return null;
+    for (final embedded in faces) {
+      if (identical(embedded.source, choice.font) &&
+          embedded.subset.unicodeToNewGlyph.containsKey(cp)) {
+        return (embedded: embedded, face: choice);
       }
     }
-    final SfntFont? source = set.faceFor(codePoint);
-    if (source == null) {
-      return null;
-    }
-    for (final PdfEmbeddedFace face in faces) {
-      if (identical(face.source, source)) {
-        return face;
-      }
-    }
-    return null;
+    final used = <int>{
+      cp,
+      for (final point in codePoints)
+        if (choice.font.glyphIdFor(point) != 0) point,
+    };
+    // A late generated label gets a new immutable subset if its character was
+    // not collected initially. Never renumber glyphs already emitted to PDF.
+    final embedded = PdfEmbeddedFace(
+      subset: FontSubsetter(choice.font).subset(used),
+      source: choice.font,
+      // F2 is reserved for the Standard 14 Helvetica fallback.
+      resourceName: faces.isEmpty ? 'F1' : 'F${faces.length + 2}',
+    );
+    faces.add(embedded);
+    return (embedded: embedded, face: choice);
   }
 }
 
@@ -2109,6 +2097,8 @@ class _PageSink {
       color: g.color,
       italic: g.italic,
       bold: g.bold,
+      family: g.fontFamily,
+      advance: g.advance,
     );
   }
 
@@ -2122,21 +2112,39 @@ class _PageSink {
     double? maxWidth,
     _TextAlign align = _TextAlign.auto,
     bool bold = false,
+    bool italic = false,
+    String? family,
   }) {
     if (text.isEmpty) {
       return;
     }
     final SfntFont? layoutFont = pack.layoutFont;
-    if (layoutFont != null && pack.faces.isNotEmpty) {
+    if (layoutFont != null) {
       final List<BrokenLine> lines = LineBreaker.breakLines(
         text: text,
         maxWidth: maxWidth ?? 1e9,
-        widthOf: (int cp) => pack.widthOf(cp, size),
-        glyphIdOf: pack.glyphIdOf,
+        widthOf: (int cp) => pack.widthOf(
+          cp,
+          size,
+          family: family,
+          weight: bold ? 700 : 400,
+          italic: italic,
+        ),
+        glyphIdOf: (int cp) => pack.glyphIdOf(
+          cp,
+          family: family,
+          weight: bold ? 700 : 400,
+          italic: italic,
+        ),
         markAttachOf: GposMarkToBase.fnFor(
           layoutFont,
           size,
-          faceFor: pack.fontFor,
+          faceFor: (int cp) => pack.fontFor(
+            cp,
+            family: family,
+            weight: bold ? 700 : 400,
+            italic: italic,
+          ),
         ),
       );
       var cy = y;
@@ -2169,6 +2177,9 @@ class _PageSink {
             size: size,
             color: color,
             bold: bold,
+            italic: italic,
+            family: family,
+            advance: g.advance,
           );
           cx += g.advance;
         }
@@ -2182,16 +2193,27 @@ class _PageSink {
     }
     var cx = x;
     for (final int cp in text.runes) {
-      if (_isWinAnsi(cp)) {
-        canvas.showLatin(
-          x: cx,
-          y: y,
-          fontSize: size,
-          text: String.fromCharCode(cp),
-          color: color,
-        );
-        cx += size * 0.5;
-      }
+      if (cp < 32) continue;
+      final advance = pack.widthOf(
+        cp,
+        size,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      );
+      _emit(
+        oldGid: 0,
+        codePoint: cp,
+        x: cx,
+        y: y,
+        size: size,
+        color: color,
+        family: family,
+        bold: bold,
+        italic: italic,
+        advance: advance,
+      );
+      cx += advance;
     }
   }
 
@@ -2204,37 +2226,56 @@ class _PageSink {
     required String color,
     bool italic = false,
     bool bold = false,
+    String? family,
+    double? advance,
   }) {
+    // Controls and lam-alef's zero-width shaping placeholder are not missing
+    // printable characters.
+    if (codePoint < 32) return;
     final int? nominal = ArabicShaper.nominalOf(codePoint);
-    PdfEmbeddedFace? face = pack.faceForCodePoint(codePoint);
+    var selected = pack.faceForCodePoint(
+      codePoint,
+      family: family,
+      weight: bold ? 700 : 400,
+      italic: italic,
+    );
     var drawable = codePoint;
-    if (face == null && nominal != null) {
-      face = pack.faceForCodePoint(nominal);
-      if (face != null) {
-        drawable = nominal;
-      }
+    if (selected == null && nominal != null) {
+      selected = pack.faceForCodePoint(
+        nominal,
+        family: family,
+        weight: bold ? 700 : 400,
+        italic: italic,
+      );
+      if (selected != null) drawable = nominal;
     }
-    if (face != null) {
-      final int gid =
-          face.subset.unicodeToNewGlyph[drawable] ??
-          face.subset.unicodeToNewGlyph[codePoint] ??
-          face.subset.oldToNewGlyph[oldGid] ??
-          0;
+    if (selected != null) {
+      final face = selected.embedded;
+      final gid = face.subset.unicodeToNewGlyph[drawable] ?? 0;
       if (gid != 0) {
+        if (pack.set.faces.isNotEmpty) {
+          pack.set.diagnostics?.reportSubstitution(
+            family,
+            selected.face.family,
+          );
+        }
         canvas.showGlyph(
           x: x,
           y: y,
           fontSize: size,
           glyphId: gid,
           color: color,
-          italic: italic,
-          bold: bold,
+          // Real bold/italic cuts already carry their own outlines. Simulate
+          // only an unavailable style, retaining legacy single-face behavior.
+          italic: italic && !selected.face.italic,
+          bold: bold && selected.face.weight < 600,
           fontName: face.resourceName,
         );
         return;
       }
     }
     if (_isWinAnsi(codePoint)) {
+      pack.set.diagnostics?.reportSubstitution(family, 'Helvetica');
       canvas.showLatin(
         x: x,
         y: y,
@@ -2242,7 +2283,17 @@ class _PageSink {
         text: String.fromCharCode(codePoint),
         color: color,
       );
+      return;
     }
+    pack.set.diagnostics?.reportMissing(nominal ?? codePoint);
+    // Keep the layout advance and make missing coverage visible even when no
+    // fallback font can draw U+FFFD. The host can localize a coverage warning
+    // from the bounded diagnostics without parsing a PDF.
+    final boxWidth = math.max(size * 0.25, (advance ?? size * 0.5) * 0.8);
+    canvas.save();
+    canvas.setLineWidth(math.max(0.35, size * 0.04));
+    canvas.strokeRect(x, y - size * 0.75, boxWidth, size * 0.75, color);
+    canvas.restore();
   }
 
   static bool _isWinAnsi(int cp) => PdfStd14.winAnsiByte(cp) != null;
@@ -2261,11 +2312,14 @@ class _PageSink {
 
   /// measure API.
   double measure(String text, double size) {
-    final SfntFont? font = pack.layoutFont;
-    if (font != null) {
-      return FontMetrics(font: font, fontSizePoints: size).measureText(text);
-    }
-    return text.length * size * 0.5;
+    final lines = LineBreaker.breakLines(
+      text: text,
+      maxWidth: 1e9,
+      widthOf: (cp) => pack.widthOf(cp, size),
+      glyphIdOf: pack.glyphIdOf,
+      justify: false,
+    );
+    return lines.fold<double>(0, (width, line) => math.max(width, line.width));
   }
 
   /// finish API.

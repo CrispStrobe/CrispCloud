@@ -147,6 +147,13 @@ String documentFontFamily(String requested) {
   return name;
 }
 
+/// All compatibility names apply to every real style in a family.
+List<String> documentFontAliases(String family) => documentFontAssets
+    .where((face) => face.family == family)
+    .expand((face) => face.aliases)
+    .toSet()
+    .toList(growable: false);
+
 const documentFontFallbacks = [
   'Liberation Sans',
   'Liberation Serif',

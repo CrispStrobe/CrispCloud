@@ -169,6 +169,18 @@ void main() {
       await sender!({
         'channel': documentPreviewChannel,
         'session': _session,
+        'type': 'begin',
+        'fonts': [
+          {'url': 'https://untrusted.invalid/font.ttf'},
+        ],
+      });
+      final begun =
+          jsonDecode((calls.last.arguments as Map)['message'] as String) as Map;
+      // The host controls the catalog; caller messages cannot add font URLs.
+      expect(begun['fonts'], isEmpty);
+      await sender!({
+        'channel': documentPreviewChannel,
+        'session': _session,
         'type': 'open',
       });
       expect(

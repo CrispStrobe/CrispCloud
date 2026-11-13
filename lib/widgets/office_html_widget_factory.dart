@@ -24,13 +24,13 @@ class OfficeHtmlWidgetFactory extends WidgetFactory {
     tree.inherit<void>((properties, _) {
       final text = properties.get<TextStyle>();
       if (text == null) return properties;
-      final families = <String>[
+      final families = <String>{
         for (final value in [text.fontFamily, ...?text.fontFamilyFallback])
           if (value != null)
             if (decodeOfficeCssFont(value) case final decoded?)
               documentFontFamily(decoded),
         ...documentFontFallbacks,
-      ].toSet().toList(growable: false);
+      }.toList(growable: false);
       return properties.copyWith(
         style: TextStyle(
           fontFamily: families.first,

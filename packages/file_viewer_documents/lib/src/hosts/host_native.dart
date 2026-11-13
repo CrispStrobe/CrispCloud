@@ -9,24 +9,28 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../models.dart';
 import 'asset_server.dart';
+import 'font_assets.dart';
 import 'host.dart' show DocumentHostSender;
 import 'host_linux.dart';
 import 'host_policy.dart';
 
 Widget buildDocumentHost({
   required String session,
+  List<DocumentPreviewFont> fonts = const [],
   required void Function(DocumentHostSender sender) onConnected,
   required void Function(DocumentJson message) onMessage,
   required void Function(String message) onError,
 }) => Platform.isLinux
     ? buildLinuxDocumentHost(
         session: session,
+        fonts: fonts,
         onConnected: onConnected,
         onMessage: onMessage,
         onError: onError,
       )
     : _NativeHost(
         session: session,
+        fonts: fonts,
         onConnected: onConnected,
         onMessage: onMessage,
         onError: onError,
@@ -35,11 +39,13 @@ Widget buildDocumentHost({
 class _NativeHost extends StatefulWidget {
   const _NativeHost({
     required this.session,
+    required this.fonts,
     required this.onConnected,
     required this.onMessage,
     required this.onError,
   });
   final String session;
+  final List<DocumentPreviewFont> fonts;
   final void Function(DocumentHostSender) onConnected;
   final void Function(DocumentJson) onMessage;
   final void Function(String) onError;
@@ -54,7 +60,7 @@ class _NativeHostState extends State<_NativeHost> {
   @override
   void initState() {
     super.initState();
-    _server = DocumentAssetServer(widget.session);
+    _server = DocumentAssetServer(widget.session, fonts: widget.fonts);
     unawaited(_start());
   }
 
@@ -146,7 +152,10 @@ class _NativeHostState extends State<_NativeHost> {
           if (!mounted || _error != null) {
             throw StateError('The document browser has closed.');
           }
-          final encoded = encodeDocumentHostMessage(message, widget.session);
+          final outgoing = message['type'] == 'begin'
+              ? documentHostMessageWithFonts(message, _server.fontDescriptors)
+              : message;
+          final encoded = encodeDocumentHostMessage(outgoing, widget.session);
           await controller
               .evaluateJavascript(
                 source: 'void window.crispDocumentHost?.receive($encoded)',

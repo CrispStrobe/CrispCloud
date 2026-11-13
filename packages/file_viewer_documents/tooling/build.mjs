@@ -6,6 +6,7 @@ import {dirname, join, resolve, relative, basename} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import * as esbuild from 'esbuild';
+import {pptFontPatches, patchPptFontSource} from './ppt-font-patches.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
@@ -59,6 +60,10 @@ for (const [engine,name] of Object.entries(renderers)) {
   await cp(overlay,join(stage,'packages/renderers',name,'src'),{recursive:true});
 }
 await cp(join(root,'engines/host'),join(stage,'crisp-host'),{recursive:true});
+for (const patch of pptFontPatches) {
+  const path = join(stage, 'apps/viewer-demo/public/vendor/ppt/dist', patch.path);
+  await writeFile(path, patchPptFontSource(await readFile(path, 'utf8'), patch));
+}
 const aliases = Object.fromEntries(Object.entries(renderers).map(([engine,name])=>[`@crisp/${engine}`,join(stage,'packages/renderers',name,'src/entry.ts')]));
 for (const part of ['index','assets','browser','headless','export','print-mask']) aliases[part==='index'?'@file-viewer/core':`@file-viewer/core/${part}`]=join(stage,'packages/core/src',`${part}.ts`);
 aliases['@file-viewer/ppt']=join(stage,'apps/viewer-demo/public/vendor/ppt/dist/index.js');
@@ -196,6 +201,9 @@ const overlays=[];
 for(const file of await files(join(root,'engines'))) {
   if(!file.includes('/src/') && !file.includes('/host/'))continue;
   overlays.push({path:relative(root,file),sha256:hash(await readFile(file))});
+}
+for (const path of ['tooling/build.mjs', 'tooling/ppt-font-patches.mjs']) {
+  overlays.push({path, sha256: hash(await readFile(join(root, path)))});
 }
 const noticeText=['CrispCloud selected File Viewer document engines',`Upstream: ${repo} @ ${pin}`,'WordPerfect selects MPL-2.0 for libwpd and librevenge. Matching source and build provenance are retained below.','Only the listed selected paths are included; the full upstream preset is not distributed.'];
 noticeText.push('Matching WordPerfect library source archives, MIT shim and build materials are included in the CrispCloud source distribution under packages/file_viewer_documents/corresponding-source/wordperfect. The unchanged originals are also available at https://github.com/flyfish-dev/file-viewer/tree/'+pin+'/packages/renderers/wordperfect/vendor/libwpd-src . Their exact hashes appear in RUNTIME_MANIFEST.json.');

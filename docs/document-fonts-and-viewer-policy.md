@@ -1,5 +1,10 @@
 # Document fonts, size, and alternative viewers
 
+**Implementation follow-up:** the approved changes are now recorded in
+[Shared document fonts and viewer alternatives](document-font-implementation.md).
+The audit and probes below describe their original baseline. The Material Icons
+license grouping is corrected below to match the retained CC-BY-4.0 notice.
+
 Audit date: 2026-11-13. Runtime/code baseline:
 `087b73a14b64c445c5eb717f187925b5472ed9b3`, on
 `feature/apache-file-viewer-20261113`. The first audit checkpoint is
@@ -111,7 +116,8 @@ verifies 37 manifest resources, all 35 font hashes and the alias table against
 
 | Shipped font group | Retained font license |
 | --- | --- |
-| App Roboto / Roboto Mono / Material Icons | Apache-2.0 for the pinned files |
+| App Roboto / Roboto Mono | Apache-2.0 for the pinned files |
+| Material Icons | CC-BY-4.0 in the retained pinned asset notice; the full font is now a screenshot-test fixture. |
 | Liberation and Noto Naskh Arabic | SIL OFL-1.1 |
 | Carlito, Fira Sans, Spectral, Lobster | SIL OFL-1.1 |
 | TeX Gyre families | GUST Font License / retained LPPL terms |

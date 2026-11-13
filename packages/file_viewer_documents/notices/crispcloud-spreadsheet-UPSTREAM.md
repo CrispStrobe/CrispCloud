@@ -12,8 +12,16 @@ Added limits cover source bytes, actual streamed ZIP inflation, aggregate expand
 
 Bundle the staged `entry.ts` as the entry and staged `spreadsheet/worker/sheetjs/sheet.worker.ts` as **`sheet.worker.js`** in the same flat runtime directory. The fixed URL resolves from `import.meta.url`; caller-supplied worker URL/mode options do not override it. Native browser hosts must enforce their separate networking, navigation and lifecycle rules.
 
+When the app supplies its shared font catalog, the grid loads only the default
+header/body faces and faces required by the current row window before measuring
+or drawing that window. Named bold/italic faces and Arabic fallback are selected
+from existing application assets. Requested names remain first in the transient
+display model's CSS fallback list; input workbook bytes are unchanged. A window
+whose sheet/session was replaced while fonts loaded is discarded. Missing fonts
+produce a host diagnostic and browser fallback rather than hiding the document.
+
 ## Distribution licenses
 
 Retain the original renderer `LICENSE` and `THIRD_PARTY_NOTICES.md`, the core/root Apache-2.0 grant, and the actual npm package license/notice payloads selected by the root build. The selected direct closure includes styled-exceljs 0.21.6 (Apache-2.0), e-virt-table 1.4.17 (MIT), JSZip 3.10.2 (MIT election), pako 1.0.11 (MIT/Zlib), xmldom 0.9.12 (MIT), tinycolor2 1.6.0 (MIT), UTIF 3.1.0 (MIT), plus their realized bundled transitive dependencies. The root lockfile and `RUNTIME_MANIFEST.json` identify exact versions and every notice's source/hash; `assets/licenses/THIRD_PARTY.txt` retains all complete grants with exact originals in source-only `notices/`. Those component grants are not replaced by the root Apache license.
 
-The selected source has no full File Viewer preset, unrelated renderer, embedded sample document, external conversion service or font asset. Browser/layout fidelity is separate from parser success. Node tests and browser bundle checks passed locally; an actual browser pass requires the CI smoke script, as local Chromium startup was blocked by the workspace socket policy.
+The selected source has no full File Viewer preset, unrelated renderer, embedded sample document, external conversion service or additional font asset. The host may reuse the application's existing font assets through its exact allowlisted routes. Browser/layout fidelity is separate from parser success. Node tests and browser bundle checks passed locally; an actual browser pass requires the CI smoke script, as local Chromium startup was blocked by the workspace socket policy.
