@@ -1,0 +1,1482 @@
+{
+  "schema": "legacy-doc-parser/wpf-isf-header-oracle",
+  "version": 1,
+  "sourceCommit": "bb23b6c7a3de66d1402ae7286e563b3951aa88ca",
+  "baseCommit": "db1e2755a2a4ac98bf2df1e84e86d3c6f1716415",
+  "inspectedWpfSourceCommit": "e7acf467c05e51901b17684b1f2c330e7dc5fc4d",
+  "scope": "Actual WPF decoding/rendering of minimally changed retained ISFs; no Word or production parser claim.",
+  "actualArguments": [
+    "../../build/ink-metrics-input",
+    "../../build/ink-metrics",
+    "bb23b6c7a3de66d1402ae7286e563b3951aa88ca"
+  ],
+  "framework": ".NET 8.0.34",
+  "operatingSystem": "Microsoft Windows 10.0.26100",
+  "architecture": "X64",
+  "wpfAssembly": "PresentationCore, Version=8.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+  "wpfInformationalVersion": "8.0.34-servicing.26522.17\u002Bc45b7b239ce0d0b210c0c7b48862804f4a038c78",
+  "wpfFileVersion": "8.0.3426.52217",
+  "wpfAssemblySha256": "cc1664768c1852d209f7c1121285c5bcc94262f9e60e38860d0143f8e28c0d11",
+  "gitHub": {
+    "repository": "CrispStrobe/legacy-doc-parser",
+    "runId": "43384946189",
+    "runAttempt": "1",
+    "workflow": "Independent WPF ink transforms and metrics",
+    "sha": "bb23b6c7a3de66d1402ae7286e563b3951aa88ca"
+  },
+  "render": {
+    "pixelWidth": 512,
+    "pixelHeight": 256,
+    "dpi": 96,
+    "translationDip": [
+      32,
+      32
+    ],
+    "backgroundArgb": "#FFFFFFFF",
+    "modePreference": "SoftwareOnly",
+    "pixelFormat": "Pbgra32"
+  },
+  "cases": [
+    {
+      "name": "polyline-solid-baseline",
+      "sourceName": "polyline-solid",
+      "inputBytes": 48,
+      "inputSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "roundtripBytes": 48,
+      "roundtripSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "bytesStableAfterReload": true,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 0,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "09499c21fb0a3bb86a72e23537eef4a7be353da6a027a60cb85155febf81e667",
+        "pixelSha256": "99dcd58b1386c6c60e5b0d98c0934459bb3e79b634db43b981f1424c0e20f264",
+        "nonWhitePixelCount": 364,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          153,
+          81
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "09499c21fb0a3bb86a72e23537eef4a7be353da6a027a60cb85155febf81e667",
+        "pixelSha256": "99dcd58b1386c6c60e5b0d98c0934459bb3e79b634db43b981f1424c0e20f264",
+        "nonWhitePixelCount": 364,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          153,
+          81
+        ]
+      }
+    },
+    {
+      "name": "pressure-ramp-baseline",
+      "sourceName": "pressure-ramp",
+      "inputBytes": 66,
+      "inputSha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "roundtripBytes": 66,
+      "roundtripSha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "bytesStableAfterReload": true,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 8.157038378087123E-10,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          0,
+          127,
+          511,
+          895,
+          1023
+        ],
+        "observedPressureFactors": [
+          0,
+          0.12414467,
+          0.49951124,
+          0.8748778,
+          1
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 0,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "54b28747f49b7fa8c22f3192aab65f81b9f9991496ae6f2722f04a03e9877df8",
+        "pixelSha256": "3c3e7511073fbae12ab94dc7f4487ed753618a4ffaaf23059112be5dfcd8b200",
+        "nonWhitePixelCount": 1320,
+        "nonWhiteBoundsPixels": [
+          31,
+          49,
+          135,
+          87
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "54b28747f49b7fa8c22f3192aab65f81b9f9991496ae6f2722f04a03e9877df8",
+        "pixelSha256": "3c3e7511073fbae12ab94dc7f4487ed753618a4ffaaf23059112be5dfcd8b200",
+        "nonWhitePixelCount": 1320,
+        "nonWhiteBoundsPixels": [
+          31,
+          49,
+          135,
+          87
+        ]
+      }
+    },
+    {
+      "name": "isotropic-2-float-only",
+      "sourceName": "polyline-solid",
+      "inputBytes": 37,
+      "inputSha256": "2350bb3e8d28d4ec32a26b17eee3c8c58029b8692a86f6de813543d2c3efdbb1",
+      "roundtripBytes": 49,
+      "roundtripSha256": "3381bf592e410933ab1639af1c9f1b98fe05b07e0e16dc63e5c48c09a1cf6a1b",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 120,
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 871,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "0cc718f40b38a0ce7cdddb9176e8616e070d537d1c11a04c293c097a2479bea7",
+        "pixelSha256": "5f5cea236ee6c36ea2203ce3768ddb79747cee8573f372f1b4e1f900b9fb277d",
+        "nonWhitePixelCount": 724,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          129
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "0cc718f40b38a0ce7cdddb9176e8616e070d537d1c11a04c293c097a2479bea7",
+        "pixelSha256": "5f5cea236ee6c36ea2203ce3768ddb79747cee8573f372f1b4e1f900b9fb277d",
+        "nonWhitePixelCount": 724,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          129
+        ]
+      }
+    },
+    {
+      "name": "isotropic-2-float-and-double",
+      "sourceName": "polyline-solid",
+      "inputBytes": 48,
+      "inputSha256": "7469b25ea31239aa40d50521a17c1467a8114bdfefa8ff96e724eef41e7e1019",
+      "roundtripBytes": 49,
+      "roundtripSha256": "3381bf592e410933ab1639af1c9f1b98fe05b07e0e16dc63e5c48c09a1cf6a1b",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 120,
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 871,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "0cc718f40b38a0ce7cdddb9176e8616e070d537d1c11a04c293c097a2479bea7",
+        "pixelSha256": "5f5cea236ee6c36ea2203ce3768ddb79747cee8573f372f1b4e1f900b9fb277d",
+        "nonWhitePixelCount": 724,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          129
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "0cc718f40b38a0ce7cdddb9176e8616e070d537d1c11a04c293c097a2479bea7",
+        "pixelSha256": "5f5cea236ee6c36ea2203ce3768ddb79747cee8573f372f1b4e1f900b9fb277d",
+        "nonWhitePixelCount": 724,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          129
+        ]
+      }
+    },
+    {
+      "name": "anisotropic-2-half-float-only",
+      "sourceName": "polyline-solid",
+      "inputBytes": 41,
+      "inputSha256": "c2dccf7e42b44916a655aca5b34efd5f486d3748feb4fc9aab94135428d04279",
+      "roundtripBytes": 47,
+      "roundtripSha256": "a0665fd650557eace4c77da949781b9cf9bb90b4148b82c186a14043e145e179",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 120,
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 733,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0.0188976377952752,
+        "maximumCoordinateDeltaHimetric": 0.49999999999998973,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 25,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "504992ca4e565a00e1f298d9b77f884f34d0ade04ba279c51ac6abb1e1d509e5",
+        "pixelSha256": "43b70cba3a6225e1b03a71d876582e6df0f4c1d4ce13e7d425bbbb06cc063316",
+        "nonWhitePixelCount": 568,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          57
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "95d7d1e1f2068507792410d28f494bc92f597684d9fdc7c01b4fc6024da2ec18",
+        "pixelSha256": "6593dd05d6daa0f48039e60c76130abeeb511927c87f534de91bfc41c0bffc24",
+        "nonWhitePixelCount": 568,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          57
+        ]
+      }
+    },
+    {
+      "name": "anisotropic-2-half-float-and-double",
+      "sourceName": "polyline-solid",
+      "inputBytes": 60,
+      "inputSha256": "03e45f87fea4e44b983b09a60d7cd597989322dd03972258e9b6cf172d996209",
+      "roundtripBytes": 47,
+      "roundtripSha256": "a0665fd650557eace4c77da949781b9cf9bb90b4148b82c186a14043e145e179",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 120,
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 733,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0.0188976377952752,
+        "maximumCoordinateDeltaHimetric": 0.49999999999998973,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 25,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "504992ca4e565a00e1f298d9b77f884f34d0ade04ba279c51ac6abb1e1d509e5",
+        "pixelSha256": "43b70cba3a6225e1b03a71d876582e6df0f4c1d4ce13e7d425bbbb06cc063316",
+        "nonWhitePixelCount": 568,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          57
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "95d7d1e1f2068507792410d28f494bc92f597684d9fdc7c01b4fc6024da2ec18",
+        "pixelSha256": "6593dd05d6daa0f48039e60c76130abeeb511927c87f534de91bfc41c0bffc24",
+        "nonWhitePixelCount": 568,
+        "nonWhiteBoundsPixels": [
+          31,
+          31,
+          273,
+          57
+        ]
+      }
+    },
+    {
+      "name": "translate-100-minus50-float-only",
+      "sourceName": "polyline-solid",
+      "inputBytes": 41,
+      "inputSha256": "5da6b524680b6eb5d8a321a9f10d511709a15729b927e2e55c88016527c51927",
+      "roundtripBytes": 41,
+      "roundtripSha256": "acf935f95357cb06bc605742f79d980bfc07d6b140dd07ae88e435d39b5934e9",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": false,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 116.22047244094489,
+        "maximumCoordinateDeltaHimetric": 3075,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 370,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "a0319ab9583f0c5e4340ebb1b9f13431b36de47faaf34fb994ffd6ea106ec33b",
+        "pixelSha256": "f44be0426d14f670091d69dc712e9cb802a4cf352b98d919010db3abc77b2018",
+        "nonWhitePixelCount": 8,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          37,
+          32
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "a0319ab9583f0c5e4340ebb1b9f13431b36de47faaf34fb994ffd6ea106ec33b",
+        "pixelSha256": "f44be0426d14f670091d69dc712e9cb802a4cf352b98d919010db3abc77b2018",
+        "nonWhitePixelCount": 8,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          37,
+          32
+        ]
+      }
+    },
+    {
+      "name": "translate-100-minus50-float-and-double",
+      "sourceName": "polyline-solid",
+      "inputBytes": 60,
+      "inputSha256": "730653bee513e74099f129fd587d24df952c2b8552046e52ab1e393652ee5101",
+      "roundtripBytes": 41,
+      "roundtripSha256": "acf935f95357cb06bc605742f79d980bfc07d6b140dd07ae88e435d39b5934e9",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": false,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 116.22047244094489,
+        "maximumCoordinateDeltaHimetric": 3075,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 370,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "a0319ab9583f0c5e4340ebb1b9f13431b36de47faaf34fb994ffd6ea106ec33b",
+        "pixelSha256": "f44be0426d14f670091d69dc712e9cb802a4cf352b98d919010db3abc77b2018",
+        "nonWhitePixelCount": 8,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          37,
+          32
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "a0319ab9583f0c5e4340ebb1b9f13431b36de47faaf34fb994ffd6ea106ec33b",
+        "pixelSha256": "f44be0426d14f670091d69dc712e9cb802a4cf352b98d919010db3abc77b2018",
+        "nonWhitePixelCount": 8,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          37,
+          32
+        ]
+      }
+    },
+    {
+      "name": "affine-translate-100-minus50-float-only",
+      "sourceName": "polyline-solid",
+      "inputBytes": 57,
+      "inputSha256": "597929bb601c3365058ede994cd3089368fcf4dca5807828ad7a8851747a699e",
+      "roundtripBytes": 48,
+      "roundtripSha256": "58f63c79ac9a2c5da4f828328f1bfd4641acdb5496f8b25cb98eb8e3b4727e8e",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 3.7795275590551185,
+        "maximumCoordinateDeltaHimetric": 100.00000000000001,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 734,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 7.105427357601002E-15,
+        "maximumCoordinateDeltaHimetric": 1.8799776550319317E-13,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "19979c6043eb3d937efc5169bb88ce0089f1cf476304508abb5842688e5d34d1",
+        "pixelSha256": "a221fbf6bf50805e862d2559f7bd65524046d7cfb3d644ab9149c4c662fc39e6",
+        "nonWhitePixelCount": 463,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          157,
+          80
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "19979c6043eb3d937efc5169bb88ce0089f1cf476304508abb5842688e5d34d1",
+        "pixelSha256": "a221fbf6bf50805e862d2559f7bd65524046d7cfb3d644ab9149c4c662fc39e6",
+        "nonWhitePixelCount": 463,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          157,
+          80
+        ]
+      }
+    },
+    {
+      "name": "affine-translate-100-minus50-float-and-double",
+      "sourceName": "polyline-solid",
+      "inputBytes": 108,
+      "inputSha256": "2983ceb070ecc877dc365e64ed5a326b75740b399f6df9177754d82d1c57a4df",
+      "roundtripBytes": 48,
+      "roundtripSha256": "58f63c79ac9a2c5da4f828328f1bfd4641acdb5496f8b25cb98eb8e3b4727e8e",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 3.7795275590551185,
+        "maximumCoordinateDeltaHimetric": 100.00000000000001,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 734,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 7.105427357601002E-15,
+        "maximumCoordinateDeltaHimetric": 1.8799776550319317E-13,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "19979c6043eb3d937efc5169bb88ce0089f1cf476304508abb5842688e5d34d1",
+        "pixelSha256": "a221fbf6bf50805e862d2559f7bd65524046d7cfb3d644ab9149c4c662fc39e6",
+        "nonWhitePixelCount": 463,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          157,
+          80
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "19979c6043eb3d937efc5169bb88ce0089f1cf476304508abb5842688e5d34d1",
+        "pixelSha256": "a221fbf6bf50805e862d2559f7bd65524046d7cfb3d644ab9149c4c662fc39e6",
+        "nonWhitePixelCount": 463,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          157,
+          80
+        ]
+      }
+    },
+    {
+      "name": "scale-translate-2-half-100-minus50-float-only",
+      "sourceName": "polyline-solid",
+      "inputBytes": 49,
+      "inputSha256": "4260991f181afcebcc16b283de3df9e60c24d730fab1f762ebe20846f29acdc8",
+      "roundtripBytes": 47,
+      "roundtripSha256": "79199eecfc3cd8969ed0b32234c2738fe43d5c8158dc1773442d86474590e62d",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 123.77952755905511,
+        "maximumCoordinateDeltaHimetric": 3275,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 1080,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0.0188976377952752,
+        "maximumCoordinateDeltaHimetric": 0.49999999999998973,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 35,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "d0c5b759b045a707d7cd3c025d4449c765834b1e515284fa5e0f40787f665aa7",
+        "pixelSha256": "83f85b7c8e00d9ad1a2cfd15f00b35bff8d1fcdc72d153e70e8af1ec1d79bf6a",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "e1ebabfa19842030a8193ed67261d32e3cce6e34dc288246ed8b892b9b0544ea",
+        "pixelSha256": "a8cf7cacbf45138a222b78d453a8369c00d9ada357b10b3bac0a2a785212e2bb",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      }
+    },
+    {
+      "name": "scale-translate-2-half-100-minus50-float-and-double",
+      "sourceName": "polyline-solid",
+      "inputBytes": 84,
+      "inputSha256": "92fb88b2138b76871b99f6520bedb6edfdd604e62f3f5e77978ad2aa3bdd6a4b",
+      "roundtripBytes": 47,
+      "roundtripSha256": "79199eecfc3cd8969ed0b32234c2738fe43d5c8158dc1773442d86474590e62d",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 123.77952755905511,
+        "maximumCoordinateDeltaHimetric": 3275,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 1080,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0.0188976377952752,
+        "maximumCoordinateDeltaHimetric": 0.49999999999998973,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 35,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "d0c5b759b045a707d7cd3c025d4449c765834b1e515284fa5e0f40787f665aa7",
+        "pixelSha256": "83f85b7c8e00d9ad1a2cfd15f00b35bff8d1fcdc72d153e70e8af1ec1d79bf6a",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "e1ebabfa19842030a8193ed67261d32e3cce6e34dc288246ed8b892b9b0544ea",
+        "pixelSha256": "a8cf7cacbf45138a222b78d453a8369c00d9ada357b10b3bac0a2a785212e2bb",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      }
+    },
+    {
+      "name": "affine-scale-translate-2-half-100-minus50-float-only",
+      "sourceName": "polyline-solid",
+      "inputBytes": 57,
+      "inputSha256": "30295078e160b42bb383be61cfb45d84f54874fdeba6b4e33454f3db91a4ce24",
+      "roundtripBytes": 47,
+      "roundtripSha256": "79199eecfc3cd8969ed0b32234c2738fe43d5c8158dc1773442d86474590e62d",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 123.77952755905511,
+        "maximumCoordinateDeltaHimetric": 3275,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 1080,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0.0188976377952752,
+        "maximumCoordinateDeltaHimetric": 0.49999999999998973,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 35,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "d0c5b759b045a707d7cd3c025d4449c765834b1e515284fa5e0f40787f665aa7",
+        "pixelSha256": "83f85b7c8e00d9ad1a2cfd15f00b35bff8d1fcdc72d153e70e8af1ec1d79bf6a",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "e1ebabfa19842030a8193ed67261d32e3cce6e34dc288246ed8b892b9b0544ea",
+        "pixelSha256": "a8cf7cacbf45138a222b78d453a8369c00d9ada357b10b3bac0a2a785212e2bb",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      }
+    },
+    {
+      "name": "affine-scale-translate-2-half-100-minus50-float-and-double",
+      "sourceName": "polyline-solid",
+      "inputBytes": 108,
+      "inputSha256": "2a070f9e56372ae7863027e02963aa2660f6ea6f429f573eea72c07f3a038d66",
+      "roundtripBytes": 47,
+      "roundtripSha256": "79199eecfc3cd8969ed0b32234c2738fe43d5c8158dc1773442d86474590e62d",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 0,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          511,
+          511,
+          511,
+          511,
+          511
+        ],
+        "observedPressureFactors": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 123.77952755905511,
+        "maximumCoordinateDeltaHimetric": 3275,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 1080,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0.0188976377952752,
+        "maximumCoordinateDeltaHimetric": 0.49999999999998973,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 35,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "d0c5b759b045a707d7cd3c025d4449c765834b1e515284fa5e0f40787f665aa7",
+        "pixelSha256": "83f85b7c8e00d9ad1a2cfd15f00b35bff8d1fcdc72d153e70e8af1ec1d79bf6a",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "e1ebabfa19842030a8193ed67261d32e3cce6e34dc288246ed8b892b9b0544ea",
+        "pixelSha256": "a8cf7cacbf45138a222b78d453a8369c00d9ada357b10b3bac0a2a785212e2bb",
+        "nonWhitePixelCount": 762,
+        "nonWhiteBoundsPixels": [
+          34,
+          29,
+          277,
+          56
+        ]
+      }
+    },
+    {
+      "name": "pressure-explicit-0-1023",
+      "sourceName": "pressure-ramp",
+      "inputBytes": 78,
+      "inputSha256": "a697bef20fd564bd54de1f01220f2d9784f2fa770425399d5bab9d760f8b850d",
+      "roundtripBytes": 66,
+      "roundtripSha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 8.157038378087123E-10,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          0,
+          127,
+          511,
+          895,
+          1023
+        ],
+        "observedPressureFactors": [
+          0,
+          0.12414467,
+          0.49951124,
+          0.8748778,
+          1
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 1023,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 0,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 0,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "54b28747f49b7fa8c22f3192aab65f81b9f9991496ae6f2722f04a03e9877df8",
+        "pixelSha256": "3c3e7511073fbae12ab94dc7f4487ed753618a4ffaaf23059112be5dfcd8b200",
+        "nonWhitePixelCount": 1320,
+        "nonWhiteBoundsPixels": [
+          31,
+          49,
+          135,
+          87
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "54b28747f49b7fa8c22f3192aab65f81b9f9991496ae6f2722f04a03e9877df8",
+        "pixelSha256": "3c3e7511073fbae12ab94dc7f4487ed753618a4ffaaf23059112be5dfcd8b200",
+        "nonWhitePixelCount": 1320,
+        "nonWhiteBoundsPixels": [
+          31,
+          49,
+          135,
+          87
+        ]
+      }
+    },
+    {
+      "name": "pressure-explicit-0-2047",
+      "sourceName": "pressure-ramp",
+      "inputBytes": 78,
+      "inputSha256": "cbc943f489ef016a745d744830944481da05aeda301c98c0d31da27e06a8c6b9",
+      "roundtripBytes": 73,
+      "roundtripSha256": "40cec457c64a4acff002685b2645b1b0e7921cfedaac6d9994b7ccb21bd8649b",
+      "bytesStableAfterReload": false,
+      "originalDecodedObjectsUnchanged": true,
+      "sourceFormulaObservation": {
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureFactorDelta": 1.4835645600896896E-08,
+        "pressureMetricMatchesDeclaration": true,
+        "coordinatesMatchSourceFormulaWithinTolerance": true,
+        "pressureMatchesSourceFormulaWithinFloatTolerance": true,
+        "observedPressurePropertyValues": [
+          0,
+          127,
+          511,
+          895,
+          1023
+        ],
+        "observedPressureFactors": [
+          0,
+          0.062042013,
+          0.24963361,
+          0.4372252,
+          0.49975574
+        ],
+        "observedPressureMetric": {
+          "minimum": 0,
+          "maximum": 2047,
+          "unit": "None",
+          "resolution": 1
+        },
+        "policy": "Recorded WPF result. A source-formula mismatch is retained, not corrected or declared unsupported input."
+      },
+      "baselineToReloaded": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0.5002442598342896,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "baselineToReloadedChangedPixels": 799,
+      "reloadedToSecond": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0.5002442598342896,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "reloadedToSecondChangedPixels": 799,
+      "reloadedRender": {
+        "path": "reloaded.png",
+        "pngSha256": "ab59e7f9017a1483f4f2099521c7a573877a3195821d2f06cb798f4656cf6e2c",
+        "pixelSha256": "b128304fcbe767b99bf6dba4381738813c00250aa98b58b6b86ffbf1acc552b4",
+        "nonWhitePixelCount": 878,
+        "nonWhiteBoundsPixels": [
+          31,
+          52,
+          132,
+          84
+        ]
+      },
+      "secondReloadedRender": {
+        "path": "second-reloaded.png",
+        "pngSha256": "54b28747f49b7fa8c22f3192aab65f81b9f9991496ae6f2722f04a03e9877df8",
+        "pixelSha256": "3c3e7511073fbae12ab94dc7f4487ed753618a4ffaaf23059112be5dfcd8b200",
+        "nonWhitePixelCount": 1320,
+        "nonWhiteBoundsPixels": [
+          31,
+          49,
+          135,
+          87
+        ]
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "left": "isotropic-2-float-only",
+      "right": "isotropic-2-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "anisotropic-2-half-float-only",
+      "right": "anisotropic-2-half-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "translate-100-minus50-float-only",
+      "right": "translate-100-minus50-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "affine-translate-100-minus50-float-only",
+      "right": "affine-translate-100-minus50-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "scale-translate-2-half-100-minus50-float-only",
+      "right": "scale-translate-2-half-100-minus50-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "affine-scale-translate-2-half-100-minus50-float-only",
+      "right": "affine-scale-translate-2-half-100-minus50-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "translate-100-minus50-float-only",
+      "right": "affine-translate-100-minus50-float-only",
+      "difference": {
+        "maximumCoordinateDeltaDip": 120,
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 459
+    },
+    {
+      "left": "scale-translate-2-half-100-minus50-float-only",
+      "right": "affine-scale-translate-2-half-100-minus50-float-only",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "translate-100-minus50-float-and-double",
+      "right": "affine-translate-100-minus50-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 120,
+        "maximumCoordinateDeltaHimetric": 3175,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 459
+    },
+    {
+      "left": "scale-translate-2-half-100-minus50-float-and-double",
+      "right": "affine-scale-translate-2-half-100-minus50-float-and-double",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "pressure-ramp-baseline",
+      "right": "pressure-explicit-0-1023",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 0
+    },
+    {
+      "left": "pressure-ramp-baseline",
+      "right": "pressure-explicit-0-2047",
+      "difference": {
+        "maximumCoordinateDeltaDip": 0,
+        "maximumCoordinateDeltaHimetric": 0,
+        "maximumPressureDelta": 0.5002442598342896,
+        "maximumWidthDeltaDip": 0,
+        "maximumHeightDeltaDip": 0,
+        "drawingAttributesExactlyEqual": true
+      },
+      "changedPixels": 799
+    }
+  ],
+  "caseCount": 16,
+  "status": "complete",
+  "observationPolicy": "Formula differences are observations, not success criteria or replacement expectations."
+}

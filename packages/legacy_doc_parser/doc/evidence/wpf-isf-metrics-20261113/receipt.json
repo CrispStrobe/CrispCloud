@@ -1,0 +1,92 @@
+{
+  "files": [
+    {
+      "bytes": 9494,
+      "path": "README.md",
+      "sha256": "73d69eac3b79f0f87d730525dad2ebd5851843d29285ab5366223e13e178aefb"
+    },
+    {
+      "bytes": 3962,
+      "path": "checkout-source-binding.json",
+      "sha256": "54fba6bc2859adeb0612c1cc2b3a61361798d441629dc836e85bb2aa56e88498"
+    },
+    {
+      "bytes": 18661,
+      "path": "provenance.json",
+      "sha256": "2277c89bea57bd5197e3e67d81c5d5662ea21588613d5ad59c6a4d5782991648"
+    },
+    {
+      "bytes": 2834,
+      "path": "source/.github/workflows/ink-metrics-oracle.yml",
+      "sha256": "24ef6a8530bdafce5922a3e0a2b2913d8b18d764fef137babf1907ce228beeb2"
+    },
+    {
+      "bytes": 20656,
+      "path": "source/doc/evidence/wpf-isf-oracle-20261113/verify.py",
+      "sha256": "922e9745816b60a102423a2d82e021237b86b908e06cdf15d026ffab8114fad1"
+    },
+    {
+      "bytes": 48,
+      "path": "source/test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f"
+    },
+    {
+      "bytes": 66,
+      "path": "source/test/fixtures/ink_wpf/pressure-ramp/uncompressed.isf",
+      "sha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d"
+    },
+    {
+      "bytes": 560,
+      "path": "source/tool/ink_metrics_oracle/InkMetricsOracle.csproj",
+      "sha256": "07aa4aa6ce3f6ce1e599ab768578066c9e7471cd4fd56e9ed9a06c5e41fb597e"
+    },
+    {
+      "bytes": 15346,
+      "path": "source/tool/ink_metrics_oracle/Program.cs",
+      "sha256": "3b07535aa8acc92009a84842425f1b4cac9b3e3ef9381b72b6dbd18734e608f0"
+    },
+    {
+      "bytes": 5796,
+      "path": "source/tool/ink_metrics_oracle/README.md",
+      "sha256": "2f45c3082f5a39e7fd5cb00a8e7219b10ac7460f2cc29c55c451c71ace2a719b"
+    },
+    {
+      "bytes": 10371,
+      "path": "source/tool/ink_metrics_oracle/author_controls.py",
+      "sha256": "73c4815d10d81da99ffd1e25c3dbe6fbbc4eea2fb1c95c97cafdb1eb6722b0a2"
+    },
+    {
+      "bytes": 80,
+      "path": "source/tool/ink_metrics_oracle/global.json",
+      "sha256": "b40be3c555caad025b924e308657b115934ae2b358e80610e3b33021af30d016"
+    },
+    {
+      "bytes": 18886,
+      "path": "source/tool/ink_oracle/Program.cs",
+      "sha256": "964172cc882fb75c2bce4690079c6fe8a37de7aca2808f016ae628dc2e1e5f51"
+    },
+    {
+      "bytes": 26333,
+      "path": "successful-job.log",
+      "sha256": "73fef74deb0bba4da1808f273cd929e045e310e52cb615ae627ee0f5e46a9ae6"
+    },
+    {
+      "bytes": 105562,
+      "path": "successful-run.zip",
+      "sha256": "79561a6936904aa3268d4220852707c30d999ebee86fc2b57fd51e27434d381a"
+    },
+    {
+      "bytes": 4747,
+      "path": "test_verifier.py",
+      "sha256": "7c8129a6e510c39b507524540b0e4e85ddfa2b0dc694457abb32b9885319768f"
+    },
+    {
+      "bytes": 23008,
+      "path": "verify.py",
+      "sha256": "1b739a87a05f733fa6e72115b5dccbd7a78019cf4a5a486b164fcb9f17d6d6f4"
+    }
+  ],
+  "schema": "legacy-doc-parser/wpf-isf-header-evidence",
+  "sourceCommit": "bb23b6c7a3de66d1402ae7286e563b3951aa88ca",
+  "version": 1
+}

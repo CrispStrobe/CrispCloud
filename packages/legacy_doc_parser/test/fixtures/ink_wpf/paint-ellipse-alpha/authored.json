@@ -1,0 +1,36 @@
+{
+  "name": "paint-ellipse-alpha",
+  "purpose": "Independent alpha color and unequal tip width/height.",
+  "coordinateUnit": "Himetric (1/100 millimeter)",
+  "dipPerHimetric": 0.03779527559055118,
+  "expectedStrokeCount": 1,
+  "expectedPointCounts": [
+    3
+  ],
+  "strokes": [
+    {
+      "points": [
+        {
+          "xHimetric": 0,
+          "yHimetric": 635,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 1270,
+          "yHimetric": 1270,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 2540,
+          "yHimetric": 635,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#804080D0",
+      "widthHimetric": 212,
+      "heightHimetric": 106,
+      "ignorePressure": true,
+      "tip": 1
+    }
+  ]
+}

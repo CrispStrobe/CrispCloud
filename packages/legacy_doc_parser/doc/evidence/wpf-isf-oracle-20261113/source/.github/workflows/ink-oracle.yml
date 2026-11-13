@@ -1,0 +1,49 @@
+name: Independent WPF ink oracle
+
+on:
+  push:
+    branches:
+      - checkpoint/ink-oracle-20261113
+    paths:
+      - .github/workflows/ink-oracle.yml
+      - tool/ink_oracle/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wpf-isf:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: tool/ink_oracle
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.428'
+      - name: Record installed runtime
+        run: |
+          New-Item -ItemType Directory -Force ../../build/ink-oracle-logs | Out-Null
+          dotnet --info | Out-File -Encoding utf8 ../../build/ink-oracle-logs/dotnet-info.txt
+          git status --porcelain | Out-File -Encoding utf8 ../../build/ink-oracle-logs/git-status.txt
+      - name: Build independent Windows WPF author
+        run: |
+          dotnet build InkOracle.csproj --configuration Release --output ../../build/ink-oracle-bin 2>&1 | Tee-Object ../../build/ink-oracle-logs/build.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Author and round trip nonempty ISF controls
+        run: |
+          & ../../build/ink-oracle-bin/InkOracle.exe ../../build/ink-oracle $env:GITHUB_SHA 2>&1 | Tee-Object ../../build/ink-oracle-logs/run.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-wpf-isf-${{ github.sha }}
+          path: |
+            build/ink-oracle/
+            build/ink-oracle-logs/
+          if-no-files-found: error
+          retention-days: 30

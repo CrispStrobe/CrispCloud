@@ -1,0 +1,51 @@
+{
+  "coordinateUnit": "DIP (1/96 inch)",
+  "dipPerHimetric": 0.03779527559055118,
+  "strokeCount": 1,
+  "strokes": [
+    {
+      "index": 0,
+      "boundsDip": [
+        43.99370078740157,
+        43.99370078740157,
+        8.01259842519685,
+        8.01259842519685
+      ],
+      "attributes": {
+        "colorArgb": "#FF0080FF",
+        "width": 8.01259842519685,
+        "height": 8.01259842519685,
+        "widthHimetric": 212,
+        "heightHimetric": 212,
+        "fitToCurve": false,
+        "ignorePressure": true,
+        "isHighlighter": false,
+        "stylusTip": "Ellipse",
+        "stylusTipTransform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "pressureMetric": {
+        "minimum": 0,
+        "maximum": 1023,
+        "unit": "None",
+        "resolution": 1
+      },
+      "points": [
+        {
+          "x": 48,
+          "y": 48,
+          "pressureFactor": 0.5,
+          "himetricX": 1270,
+          "himetricY": 1270,
+          "pressurePropertyValue": 511
+        }
+      ]
+    }
+  ]
+}

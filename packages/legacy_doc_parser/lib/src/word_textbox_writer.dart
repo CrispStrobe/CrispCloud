@@ -18,6 +18,7 @@ extension _WordTextboxes on _StructuredWordWriter {
     if (first && !_renderedTextboxes.add(occurrence)) return;
     final shape = drawing.shape, text = shape?.text;
     final outside = _textboxOutsideBorderTwips(drawing);
+    final strokeWidth = shape?.line?.widthEmu ?? (outside > 0 ? 9525 : null);
     final left = drawing.leftTwips - outside;
     final top = drawing.topTwips - outside;
     final width = (drawing.rightTwips - drawing.leftTwips + 2 * outside) / 20;
@@ -72,7 +73,7 @@ extension _WordTextboxes on _StructuredWordWriter {
       _xml.add(';mso-wrap-style:none');
     }
     _xml.add('"');
-    _textboxPaint(shape);
+    _textboxPaint(shape, strokeWidth: strokeWidth);
     if (shape?.layoutInCell case final layout?) {
       _xml.add(' o:allowincell="${layout ? 't' : 'f'}"');
     }
@@ -161,6 +162,8 @@ extension _WordTextboxes on _StructuredWordWriter {
       'story': story.id,
       'insetsEmu': insets,
       'outsideBorderTwips': outside,
+      'sourceLineWidthEmu': shape?.line?.widthEmu,
+      'emittedLineWidthEmu': strokeWidth,
       'wrapDistancesEmu': _drawingMetadata(
         drawing,
       )['officeArtWrapDistancesEmu'],
@@ -180,7 +183,10 @@ extension _WordTextboxes on _StructuredWordWriter {
 
   int _textboxOutsideBorderTwips(LegacyWordDrawing drawing) {
     final shape = drawing.shape, line = shape?.line;
-    final width = line?.widthEmu;
+    // A used, enabled line permits the documented 0x2535 EMU source default.
+    // Apply it only together with this qualified frame conversion. The raw
+    // model operand remains null; absent/disabled/unresolved lines are distinct.
+    final width = line?.widthEmu ?? (line?.enabled == true ? 9525 : null);
     // OfficeArt textbox rectangles orient from inside the outer half of a
     // simple border. VML text frames orient from the outer frame boundary.
     // Convert the frame only when the source border and transform are known;
@@ -218,7 +224,7 @@ extension _WordTextboxes on _StructuredWordWriter {
     return (width ~/ 635) ~/ 2;
   }
 
-  void _textboxPaint(LegacyWordOfficeArtShape? shape) {
+  void _textboxPaint(LegacyWordOfficeArtShape? shape, {int? strokeWidth}) {
     bool color(String? value) =>
         value != null && RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(value);
     final fill = shape?.fill, line = shape?.line;
@@ -226,10 +232,9 @@ extension _WordTextboxes on _StructuredWordWriter {
     if (color(fill?.color)) _xml.add(' fillcolor="#${fill!.color}"');
     if (shape == null || line?.enabled == false) _xml.add(' stroked="f"');
     if (color(line?.color)) _xml.add(' strokecolor="#${line!.color}"');
-    // Preserve explicit widths. Materializing the source 0.75-point default
-    // independently of the source/target frame-border convention caused an
-    // accumulating native placement regression; see doc/textbox-stroke-defaults.md.
-    final width = line?.widthEmu;
+    // A default is emitted only with the qualified frame conversion above.
+    // Emitting it independently previously caused accumulating native drift.
+    final width = strokeWidth;
     if (width != null) {
       if (width < 0 || width > 0x0132f540) _tooComplex();
       _xml.add(' strokeweight="${width / 12700}pt"');
@@ -247,7 +252,7 @@ extension _WordTextboxes on _StructuredWordWriter {
       shape,
       includeFill:
           shape.fill != null &&
-          (shape.fill?.type ?? 0) == 0 &&
+          const {0, 1, 2, 3, 7}.contains(shape.fill?.type ?? 0) &&
           resolved(0x0180, 0x01bf),
       includeStroke:
           shape.line != null &&

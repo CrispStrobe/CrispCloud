@@ -1,0 +1,41 @@
+{
+  "name": "signed-quantization",
+  "purpose": "Signed half-Himetric boundaries disclose coordinate quantization.",
+  "coordinateUnit": "Himetric (1/100 millimeter)",
+  "dipPerHimetric": 0.03779527559055118,
+  "expectedStrokeCount": 1,
+  "expectedPointCounts": [
+    4
+  ],
+  "strokes": [
+    {
+      "points": [
+        {
+          "xHimetric": -635.49,
+          "yHimetric": -317.5,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": -0.5,
+          "yHimetric": 0.5,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 635.49,
+          "yHimetric": 317.5,
+          "pressure": 0.5
+        },
+        {
+          "xHimetric": 1270.5,
+          "yHimetric": 635.5,
+          "pressure": 0.5
+        }
+      ],
+      "colorArgb": "#FFB05010",
+      "widthHimetric": 79.5,
+      "heightHimetric": 79.5,
+      "ignorePressure": true,
+      "tip": 1
+    }
+  ]
+}

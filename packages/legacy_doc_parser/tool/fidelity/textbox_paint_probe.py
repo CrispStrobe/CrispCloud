@@ -27,6 +27,7 @@ CASES = {
     "shadow-translucent": '<v:shadow on="t" type="single" color="#445566" opacity="32768f" offset="4pt,6pt"/>',
     "shadow-disabled": '<v:shadow on="f" type="single" color="#445566" opacity="32768f" offset="4pt,6pt"/>',
 }
+PREPARE_BINARY = None
 
 
 def write(path, value):
@@ -42,6 +43,20 @@ def authored(paint):
 
 def compile_converter(root, destination, dart):
     before = source_receipt(root)
+    # Retain exact inputs at measurement time, including uncommitted versions.
+    # Later evidence packing must not depend on a still-unchanged worktree.
+    snapshots = destination.parent / "build-sources"
+    snapshots.mkdir(exist_ok=True)
+    for name, expected in before["files"].items():
+        raw = (root / name).read_bytes()
+        if hashlib.sha256(raw).hexdigest() != expected:
+            raise RuntimeError("Build input changed while retaining source: " + name)
+        target = snapshots / expected
+        if target.exists():
+            if target.read_bytes() != raw:
+                raise RuntimeError("Retained source hash collision")
+        else:
+            target.write_bytes(raw)
     identity = {
         "commit": command(["git", "rev-parse", "HEAD"], cwd=root).strip(),
         "tree": command(["git", "rev-parse", "HEAD^{tree}"], cwd=root).strip(),
@@ -109,6 +124,10 @@ def main():
                 return result
             original = measure("original", source)
             binary = office_convert(args.office, source, directory / "binary", "doc")
+            if PREPARE_BINARY is not None:
+                row["nativeExportSha256"] = digest(binary)
+                binary, row["sourceControl"] = PREPARE_BINARY(args, name, binary, directory)
+            row["binaryPath"] = binary.relative_to(directory).as_posix()
             row["binarySha256"] = digest(binary)
             binary_render = measure("binary-render", binary)
             row["authoredToBinary"] = compare_render(original, binary_render)

@@ -1,0 +1,83 @@
+{
+  "coordinateUnit": "DIP (1/96 inch)",
+  "dipPerHimetric": 0.03779527559055118,
+  "strokeCount": 1,
+  "strokes": [
+    {
+      "index": 0,
+      "boundsDip": [
+        2.7779527559055115,
+        -2.8913385826771654,
+        2.0031496062992122,
+        2.0031496062992127
+      ],
+      "attributes": {
+        "colorArgb": "#FF000000",
+        "width": 2.0031496062992127,
+        "height": 2.0031496062992127,
+        "widthHimetric": 53,
+        "heightHimetric": 53,
+        "fitToCurve": false,
+        "ignorePressure": true,
+        "isHighlighter": false,
+        "stylusTip": "Ellipse",
+        "stylusTipTransform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "pressureMetric": {
+        "minimum": 0,
+        "maximum": 1023,
+        "unit": "None",
+        "resolution": 1
+      },
+      "points": [
+        {
+          "x": 3.779527559055118,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 100,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 3.779527559055118,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 100,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 3.779527559055118,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 100,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 3.779527559055118,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 100,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        },
+        {
+          "x": 3.779527559055118,
+          "y": -1.889763779527559,
+          "pressureFactor": 0.5,
+          "himetricX": 100,
+          "himetricY": -50,
+          "pressurePropertyValue": 511
+        }
+      ]
+    }
+  ]
+}

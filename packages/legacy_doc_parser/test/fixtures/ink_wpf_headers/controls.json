@@ -1,0 +1,3146 @@
+{
+  "baseCommit": "db1e2755a2a4ac98bf2df1e84e86d3c6f1716415",
+  "caseCount": 16,
+  "cases": [
+    {
+      "afterHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 48,
+      "inputPath": "polyline-solid-baseline/input.isf",
+      "name": "polyline-solid-baseline",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            1270,
+            0
+          ],
+          [
+            1270,
+            635
+          ],
+          [
+            2540,
+            635
+          ],
+          [
+            3175,
+            1270
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": null,
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 26,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "0040030d481044f0c0800545d40146d401050138110000803f1f0911000000000000f03f0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0040",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "b8811852747cfa3620c3dd2af5d59498c240f208e689b4052bac934c29faf094",
+          "tag": 0
+        },
+        {
+          "end": 17,
+          "hex": "030d481044f0c0800545d40146d401",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "end": 20,
+          "hex": "050138",
+          "kind": "record",
+          "offset": 17,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "end": 25,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 20,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 36,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 25,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 66,
+          "hex": "0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+          "kind": "record",
+          "offset": 36,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "0040030d481044f0c0800545d40146d401050138110000803f1f0911000000000000f03f0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "0040",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "b8811852747cfa3620c3dd2af5d59498c240f208e689b4052bac934c29faf094",
+          "tag": 0
+        },
+        {
+          "end": 17,
+          "hex": "030d481044f0c0800545d40146d401",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "end": 20,
+          "hex": "050138",
+          "kind": "record",
+          "offset": 17,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "end": 25,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 20,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 36,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 25,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 66,
+          "hex": "0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+          "kind": "record",
+          "offset": 36,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ],
+      "bytes": 66,
+      "inputPath": "pressure-ramp-baseline/input.isf",
+      "name": "pressure-ramp-baseline",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": [
+        0,
+        127,
+        511,
+        895,
+        1023
+      ],
+      "sha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "sourceBytes": 66,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            1270
+          ],
+          [
+            635,
+            635
+          ],
+          [
+            1270,
+            1270
+          ],
+          [
+            1905,
+            635
+          ],
+          [
+            2540,
+            1270
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": [
+          0.0,
+          0.1241446725317693,
+          0.4995112414467253,
+          0.8748778103616813,
+          1.0
+        ]
+      },
+      "sourceName": "pressure-ramp",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          1270
+        ],
+        [
+          635,
+          635
+        ],
+        [
+          1270,
+          1270
+        ],
+        [
+          1905,
+          635
+        ],
+        [
+          2540,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/pressure-ramp/uncompressed.isf",
+      "sourceSha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "transform": null,
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 15,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "afterOffset": 17,
+          "beforeOffset": 17,
+          "bytes": 3,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "afterOffset": 36,
+          "beforeOffset": 36,
+          "bytes": 30,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "0023030648144535463511000000400a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0023",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "43799a4d50e0cb19f37f6ce22b5cbcbf6954f13e9bb4604dca4104ae844374a4",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "1100000040",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "5766c4b65c625c37325874d85087c4de78e1bcf6d1e9cbc8e3341d9abb0e75d7",
+          "tag": 17
+        },
+        {
+          "end": 37,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 37,
+      "inputPath": "isotropic-2-float-only/input.isf",
+      "name": "isotropic-2-float-only",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "2350bb3e8d28d4ec32a26b17eee3c8c58029b8692a86f6de813543d2c3efdbb1",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            2540,
+            0
+          ],
+          [
+            2540,
+            1270
+          ],
+          [
+            5080,
+            1270
+          ],
+          [
+            6350,
+            2540
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2
+        ],
+        "mode": "float-only",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "tag": 17
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 15,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "002e030648144535463511000000401f091100000000000000400a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "1100000040",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "5766c4b65c625c37325874d85087c4de78e1bcf6d1e9cbc8e3341d9abb0e75d7",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f09110000000000000040",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "733af889dab7eeb73bcb711898780fa21333ca12bb705424d0c583832ec0de0e",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 48,
+      "inputPath": "isotropic-2-float-and-double/input.isf",
+      "name": "isotropic-2-float-and-double",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "7469b25ea31239aa40d50521a17c1467a8114bdfefa8ff96e724eef41e7e1019",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            2540,
+            0
+          ],
+          [
+            2540,
+            1270
+          ],
+          [
+            5080,
+            1270
+          ],
+          [
+            6350,
+            2540
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2
+        ],
+        "mode": "float-and-double",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "tag": 17
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 26,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "0027030648144535463512000000400000003f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0027",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "60174fe3e73cb039dcb0064623d657456d411aa411410b1a6eb2202d63815f1a",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 19,
+          "hex": "12000000400000003f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "48ad8c96bd129f0f84ac0208096c374848fc664fd225016e4cbd9184a3c70319",
+          "tag": 18
+        },
+        {
+          "end": 41,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 19,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 41,
+      "inputPath": "anisotropic-2-half-float-only/input.isf",
+      "name": "anisotropic-2-half-float-only",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "c2dccf7e42b44916a655aca5b34efd5f486d3748feb4fc9aab94135428d04279",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          0.5,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            0.0
+          ],
+          [
+            2540,
+            0.0
+          ],
+          [
+            2540,
+            317.5
+          ],
+          [
+            5080,
+            317.5
+          ],
+          [
+            6350,
+            635.0
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2,
+          0.5
+        ],
+        "mode": "float-only",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          0.5,
+          0,
+          0
+        ],
+        "tag": 18
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 19,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "003a030648144535463512000000400000003f1f11120000000000000040000000000000e03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "003a",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "1e3ecb32659377fbd1dfcf173c903f8bd855ad4af0de82a2942b047a50beb9c2",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 19,
+          "hex": "12000000400000003f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "48ad8c96bd129f0f84ac0208096c374848fc664fd225016e4cbd9184a3c70319",
+          "tag": 18
+        },
+        {
+          "end": 38,
+          "hex": "1f11120000000000000040000000000000e03f",
+          "kind": "record",
+          "offset": 19,
+          "sha256": "5c5cb858239e8ae6e6126365b4ad1177cb2c3ad026019cca3f1f67f624876478",
+          "tag": 31
+        },
+        {
+          "end": 60,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 38,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 60,
+      "inputPath": "anisotropic-2-half-float-and-double/input.isf",
+      "name": "anisotropic-2-half-float-and-double",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "03e45f87fea4e44b983b09a60d7cd597989322dd03972258e9b6cf172d996209",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          0.5,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            0.0
+          ],
+          [
+            2540,
+            0.0
+          ],
+          [
+            2540,
+            317.5
+          ],
+          [
+            5080,
+            317.5
+          ],
+          [
+            6350,
+            635.0
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2,
+          0.5
+        ],
+        "mode": "float-and-double",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          0.5,
+          0,
+          0
+        ],
+        "tag": 18
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 38,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "00270306481445354635140000c842000048c20a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0027",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "60174fe3e73cb039dcb0064623d657456d411aa411410b1a6eb2202d63815f1a",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 19,
+          "hex": "140000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "e2ba032eb66f79db9bfaf68e6081ee63af32bef0cc6386e95ca0e0a3b4396445",
+          "tag": 20
+        },
+        {
+          "end": 41,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 19,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 41,
+      "inputPath": "translate-100-minus50-float-only/input.isf",
+      "name": "translate-100-minus50-float-only",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "5da6b524680b6eb5d8a321a9f10d511709a15729b927e2e55c88016527c51927",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50
+          ],
+          [
+            1370,
+            -50
+          ],
+          [
+            1370,
+            585
+          ],
+          [
+            2640,
+            585
+          ],
+          [
+            3275,
+            1220
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          100,
+          -50
+        ],
+        "mode": "float-only",
+        "sourceMatrixHimetric": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "tag": 20
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 19,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "003a0306481445354635140000c842000048c21f1114000000000000594000000000000049c00a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "003a",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "1e3ecb32659377fbd1dfcf173c903f8bd855ad4af0de82a2942b047a50beb9c2",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 19,
+          "hex": "140000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "e2ba032eb66f79db9bfaf68e6081ee63af32bef0cc6386e95ca0e0a3b4396445",
+          "tag": 20
+        },
+        {
+          "end": 38,
+          "hex": "1f1114000000000000594000000000000049c0",
+          "kind": "record",
+          "offset": 19,
+          "sha256": "4ee6320b897638d1da4cbf20147d57350d55fa16278664e5b601c99dde00764a",
+          "tag": 31
+        },
+        {
+          "end": 60,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 38,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 60,
+      "inputPath": "translate-100-minus50-float-and-double/input.isf",
+      "name": "translate-100-minus50-float-and-double",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "730653bee513e74099f129fd587d24df952c2b8552046e52ab1e393652ee5101",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50
+          ],
+          [
+            1370,
+            -50
+          ],
+          [
+            1370,
+            585
+          ],
+          [
+            2640,
+            585
+          ],
+          [
+            3275,
+            1220
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          100,
+          -50
+        ],
+        "mode": "float-and-double",
+        "sourceMatrixHimetric": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "tag": 20
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 38,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "00370306481445354635100000803f00000000000000000000803f0000c842000048c20a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0037",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "797427cf8368051fe7b8e3e9d5ade9c5bc9d0cf96f4f3fad2a1e1d7848368188",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 35,
+          "hex": "100000803f00000000000000000000803f0000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "f5854d869dccdb7d1294af85ff603603085b336b54517cda4572f20ec105d956",
+          "tag": 16
+        },
+        {
+          "end": 57,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 35,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 57,
+      "inputPath": "affine-translate-100-minus50-float-only/input.isf",
+      "name": "affine-translate-100-minus50-float-only",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "597929bb601c3365058ede994cd3089368fcf4dca5807828ad7a8851747a699e",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50
+          ],
+          [
+            1370,
+            -50
+          ],
+          [
+            1370,
+            585
+          ],
+          [
+            2640,
+            585
+          ],
+          [
+            3275,
+            1220
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "mode": "float-only",
+        "sourceMatrixHimetric": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "tag": 16
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 35,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "006a0306481445354635100000803f00000000000000000000803f0000c842000048c21f3110000000000000f03f00000000000000000000000000000000000000000000f03f000000000000594000000000000049c00a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "006a",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "4daeb7b535a01efb089d2750ed30174df27667c2f3b38dbcd01d91b273f977c4",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 35,
+          "hex": "100000803f00000000000000000000803f0000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "f5854d869dccdb7d1294af85ff603603085b336b54517cda4572f20ec105d956",
+          "tag": 16
+        },
+        {
+          "end": 86,
+          "hex": "1f3110000000000000f03f00000000000000000000000000000000000000000000f03f000000000000594000000000000049c0",
+          "kind": "record",
+          "offset": 35,
+          "sha256": "d3db7d67b3a9b58065b097de65c30d69c75d7abfa347c876f1d1014deaec87d0",
+          "tag": 31
+        },
+        {
+          "end": 108,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 86,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 108,
+      "inputPath": "affine-translate-100-minus50-float-and-double/input.isf",
+      "name": "affine-translate-100-minus50-float-and-double",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "2983ceb070ecc877dc365e64ed5a326b75740b399f6df9177754d82d1c57a4df",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50
+          ],
+          [
+            1370,
+            -50
+          ],
+          [
+            1370,
+            585
+          ],
+          [
+            2640,
+            585
+          ],
+          [
+            3275,
+            1220
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "mode": "float-and-double",
+        "sourceMatrixHimetric": [
+          1,
+          0,
+          0,
+          1,
+          100,
+          -50
+        ],
+        "tag": 16
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 86,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "002f030648144535463515000000400000003f0000c842000048c20a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "002f",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "319d204b93d0584bd3aa878e2e07d51b06fe3e1d4396fc3293e318677d335524",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 27,
+          "hex": "15000000400000003f0000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "28bf28f3249c37c827b72e497509a5c73d84bb8c2cf413b9ddcfd321da6f8742",
+          "tag": 21
+        },
+        {
+          "end": 49,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 27,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 49,
+      "inputPath": "scale-translate-2-half-100-minus50-float-only/input.isf",
+      "name": "scale-translate-2-half-100-minus50-float-only",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "4260991f181afcebcc16b283de3df9e60c24d730fab1f762ebe20846f29acdc8",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50.0
+          ],
+          [
+            2640,
+            -50.0
+          ],
+          [
+            2640,
+            267.5
+          ],
+          [
+            5180,
+            267.5
+          ],
+          [
+            6450,
+            585.0
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2,
+          0.5,
+          100,
+          -50
+        ],
+        "mode": "float-only",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "tag": 21
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 27,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "0052030648144535463515000000400000003f0000c842000048c21f21150000000000000040000000000000e03f000000000000594000000000000049c00a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0052",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "20d8479229ae2132eded30fff7493c8e438ab05dd2ff722c59fdf7ea2a00ec3b",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 27,
+          "hex": "15000000400000003f0000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "28bf28f3249c37c827b72e497509a5c73d84bb8c2cf413b9ddcfd321da6f8742",
+          "tag": 21
+        },
+        {
+          "end": 62,
+          "hex": "1f21150000000000000040000000000000e03f000000000000594000000000000049c0",
+          "kind": "record",
+          "offset": 27,
+          "sha256": "cb1ac950d76a143e57e2f77c430cc151f8a4e86ca2b17149aa32b0b17e4af4de",
+          "tag": 31
+        },
+        {
+          "end": 84,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 62,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 84,
+      "inputPath": "scale-translate-2-half-100-minus50-float-and-double/input.isf",
+      "name": "scale-translate-2-half-100-minus50-float-and-double",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "92fb88b2138b76871b99f6520bedb6edfdd604e62f3f5e77978ad2aa3bdd6a4b",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50.0
+          ],
+          [
+            2640,
+            -50.0
+          ],
+          [
+            2640,
+            267.5
+          ],
+          [
+            5180,
+            267.5
+          ],
+          [
+            6450,
+            585.0
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2,
+          0.5,
+          100,
+          -50
+        ],
+        "mode": "float-and-double",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "tag": 21
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 62,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "00370306481445354635100000004000000000000000000000003f0000c842000048c20a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "0037",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "797427cf8368051fe7b8e3e9d5ade9c5bc9d0cf96f4f3fad2a1e1d7848368188",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 35,
+          "hex": "100000004000000000000000000000003f0000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "068de77ab3787590abab95690d2c667e9b6061b4af807e1e60619d383edaf6f6",
+          "tag": 16
+        },
+        {
+          "end": 57,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 35,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 57,
+      "inputPath": "affine-scale-translate-2-half-100-minus50-float-only/input.isf",
+      "name": "affine-scale-translate-2-half-100-minus50-float-only",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "30295078e160b42bb383be61cfb45d84f54874fdeba6b4e33454f3db91a4ce24",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50.0
+          ],
+          [
+            2640,
+            -50.0
+          ],
+          [
+            2640,
+            267.5
+          ],
+          [
+            5180,
+            267.5
+          ],
+          [
+            6450,
+            585.0
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "mode": "float-only",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "tag": 16
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 35,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "006a0306481445354635100000004000000000000000000000003f0000c842000048c21f3110000000000000004000000000000000000000000000000000000000000000e03f000000000000594000000000000049c00a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "006a",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "4daeb7b535a01efb089d2750ed30174df27667c2f3b38dbcd01d91b273f977c4",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 35,
+          "hex": "100000004000000000000000000000003f0000c842000048c2",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "068de77ab3787590abab95690d2c667e9b6061b4af807e1e60619d383edaf6f6",
+          "tag": 16
+        },
+        {
+          "end": 86,
+          "hex": "1f3110000000000000004000000000000000000000000000000000000000000000e03f000000000000594000000000000049c0",
+          "kind": "record",
+          "offset": 35,
+          "sha256": "37b903f25f8a21b850a3d390cd51f6b68e64a808b7f4a94442899610ed1ef3b7",
+          "tag": 31
+        },
+        {
+          "end": 108,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 86,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "002e0306481445354635110000803f1f0911000000000000f03f0a14050d00013d89ec9ec633800c00000027b27b4f60",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "002e",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "3639618e90314d0feb7ce289d97468263ca4af996ffc621399d092e1f12aa1dd",
+          "tag": 0
+        },
+        {
+          "end": 10,
+          "hex": "0306481445354635",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "end": 15,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 10,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 26,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 15,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "0a14050d00013d89ec9ec633800c00000027b27b4f60",
+          "kind": "record",
+          "offset": 26,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ],
+      "bytes": 108,
+      "inputPath": "affine-scale-translate-2-half-100-minus50-float-and-double/input.isf",
+      "name": "affine-scale-translate-2-half-100-minus50-float-and-double",
+      "pressureMetric": {
+        "explicit": false,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": null,
+      "sha256": "2a070f9e56372ae7863027e02963aa2660f6ea6f429f573eea72c07f3a038d66",
+      "sourceBytes": 48,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "points": [
+          [
+            100,
+            -50.0
+          ],
+          [
+            2640,
+            -50.0
+          ],
+          [
+            2640,
+            267.5
+          ],
+          [
+            5180,
+            267.5
+          ],
+          [
+            6450,
+            585.0
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": null
+      },
+      "sourceName": "polyline-solid",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          0
+        ],
+        [
+          1270,
+          0
+        ],
+        [
+          1270,
+          635
+        ],
+        [
+          2540,
+          635
+        ],
+        [
+          3175,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/polyline-solid/uncompressed.isf",
+      "sourceSha256": "39e578f56447df936949a31d4c250ae63bf74379d0ed361c5a800fcea0cd0e2f",
+      "transform": {
+        "coefficients": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "mode": "float-and-double",
+        "sourceMatrixHimetric": [
+          2,
+          0,
+          0,
+          0.5,
+          100,
+          -50
+        ],
+        "tag": 16
+      },
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 8,
+          "sha256": "638059583cba37436552f9cd662fb097e4c9284cfbb5b58f5d058d55b2e2f781",
+          "tag": 3
+        },
+        {
+          "afterOffset": 86,
+          "beforeOffset": 26,
+          "bytes": 22,
+          "sha256": "d84166c55f8a52fe38062c6ec34ad4c6eb7c21688a817f247017591dbd7d32d6",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "004c030d481044f0c0800545d40146d401050138110000803f1f0911000000000000f03f190a380800fe0f000000803f0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "004c",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "5e4cd10be9483fe8aa215c7ee1804f7f88c02e22fe5fb0336d297bec998471f8",
+          "tag": 0
+        },
+        {
+          "end": 17,
+          "hex": "030d481044f0c0800545d40146d401",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "end": 20,
+          "hex": "050138",
+          "kind": "record",
+          "offset": 17,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "end": 25,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 20,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 36,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 25,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "190a380800fe0f000000803f",
+          "kind": "record",
+          "offset": 36,
+          "sha256": "cbc64a7e180daca249b6b5f3780f063e647a446b7d927b65083a7796a537923f",
+          "tag": 25
+        },
+        {
+          "end": 78,
+          "hex": "0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+          "kind": "record",
+          "offset": 48,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "0040030d481044f0c0800545d40146d401050138110000803f1f0911000000000000f03f0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "0040",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "b8811852747cfa3620c3dd2af5d59498c240f208e689b4052bac934c29faf094",
+          "tag": 0
+        },
+        {
+          "end": 17,
+          "hex": "030d481044f0c0800545d40146d401",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "end": 20,
+          "hex": "050138",
+          "kind": "record",
+          "offset": 17,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "end": 25,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 20,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 36,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 25,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 66,
+          "hex": "0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+          "kind": "record",
+          "offset": 36,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ],
+      "bytes": 78,
+      "inputPath": "pressure-explicit-0-1023/input.isf",
+      "name": "pressure-explicit-0-1023",
+      "pressureMetric": {
+        "explicit": true,
+        "maximum": 1023,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": [
+        0,
+        127,
+        511,
+        895,
+        1023
+      ],
+      "sha256": "a697bef20fd564bd54de1f01220f2d9784f2fa770425399d5bab9d760f8b850d",
+      "sourceBytes": 66,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            1270
+          ],
+          [
+            635,
+            635
+          ],
+          [
+            1270,
+            1270
+          ],
+          [
+            1905,
+            635
+          ],
+          [
+            2540,
+            1270
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": [
+          0.0,
+          0.1241446725317693,
+          0.4995112414467253,
+          0.8748778103616813,
+          1.0
+        ]
+      },
+      "sourceName": "pressure-ramp",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          1270
+        ],
+        [
+          635,
+          635
+        ],
+        [
+          1270,
+          1270
+        ],
+        [
+          1905,
+          635
+        ],
+        [
+          2540,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/pressure-ramp/uncompressed.isf",
+      "sourceSha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "transform": null,
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 15,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "afterOffset": 17,
+          "beforeOffset": 17,
+          "bytes": 3,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "afterOffset": 48,
+          "beforeOffset": 36,
+          "bytes": 30,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ]
+    },
+    {
+      "afterHex": "004c030d481044f0c0800545d40146d401050138110000803f1f0911000000000000f03f190a380800fe1f000000803f0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+      "afterRecords": [
+        {
+          "end": 2,
+          "hex": "004c",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "5e4cd10be9483fe8aa215c7ee1804f7f88c02e22fe5fb0336d297bec998471f8",
+          "tag": 0
+        },
+        {
+          "end": 17,
+          "hex": "030d481044f0c0800545d40146d401",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "end": 20,
+          "hex": "050138",
+          "kind": "record",
+          "offset": 17,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "end": 25,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 20,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 36,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 25,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 48,
+          "hex": "190a380800fe1f000000803f",
+          "kind": "record",
+          "offset": 36,
+          "sha256": "8cee796758a7a6a83f646d373a4181ae8dc2e3a1802d1d27745ceac139ec2206",
+          "tag": 25
+        },
+        {
+          "end": 78,
+          "hex": "0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+          "kind": "record",
+          "offset": 48,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ],
+      "beforeHex": "0040030d481044f0c0800545d40146d401050138110000803f1f0911000000000000f03f0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+      "beforeRecords": [
+        {
+          "end": 2,
+          "hex": "0040",
+          "kind": "header",
+          "offset": 0,
+          "sha256": "b8811852747cfa3620c3dd2af5d59498c240f208e689b4052bac934c29faf094",
+          "tag": 0
+        },
+        {
+          "end": 17,
+          "hex": "030d481044f0c0800545d40146d401",
+          "kind": "record",
+          "offset": 2,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "end": 20,
+          "hex": "050138",
+          "kind": "record",
+          "offset": 17,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "end": 25,
+          "hex": "110000803f",
+          "kind": "record",
+          "offset": 20,
+          "sha256": "c3cc249255e98123f7477a2e3f49fecbe0dcbafc88d26898420c44ddbaf5fdaf",
+          "tag": 17
+        },
+        {
+          "end": 36,
+          "hex": "1f0911000000000000f03f",
+          "kind": "record",
+          "offset": 25,
+          "sha256": "8fdb7aa56f130691b299d63094c7f8bc71ec5cee9b8d666aea42fdad562cf9a4",
+          "tag": 31
+        },
+        {
+          "end": 66,
+          "hex": "0a1c050d00009ec9ec7714f6000c4f627b4f627b4f600b0001fcffb7f7fe",
+          "kind": "record",
+          "offset": 36,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ],
+      "bytes": 78,
+      "inputPath": "pressure-explicit-0-2047/input.isf",
+      "name": "pressure-explicit-0-2047",
+      "pressureMetric": {
+        "explicit": true,
+        "maximum": 2047,
+        "minimum": 0,
+        "resolution": 1,
+        "unit": "None"
+      },
+      "rawPressurePackets": [
+        0,
+        127,
+        511,
+        895,
+        1023
+      ],
+      "sha256": "cbc943f489ef016a745d744830944481da05aeda301c98c0d31da27e06a8c6b9",
+      "sourceBytes": 66,
+      "sourceFormula": {
+        "coordinateUnit": "Himetric (1/100 millimeter)",
+        "formula": "x'=x*m11+y*m21+dx; y'=x*m12+y*m22+dy",
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "points": [
+          [
+            0,
+            1270
+          ],
+          [
+            635,
+            635
+          ],
+          [
+            1270,
+            1270
+          ],
+          [
+            1905,
+            635
+          ],
+          [
+            2540,
+            1270
+          ]
+        ],
+        "policy": "Prediction authored before Windows execution; disagreement is recorded, never rewritten.",
+        "pressureFactors": [
+          0.0,
+          0.06204201270151441,
+          0.24963361016121152,
+          0.43722520762090866,
+          0.49975574010747437
+        ]
+      },
+      "sourceName": "pressure-ramp",
+      "sourcePacketCoordinatesHimetric": [
+        [
+          0,
+          1270
+        ],
+        [
+          635,
+          635
+        ],
+        [
+          1270,
+          1270
+        ],
+        [
+          1905,
+          635
+        ],
+        [
+          2540,
+          1270
+        ]
+      ],
+      "sourcePath": "test/fixtures/ink_wpf/pressure-ramp/uncompressed.isf",
+      "sourceSha256": "98b16493ed4399dce44157426d9358d6656cc17a07562afde106144c3acc7e7d",
+      "transform": null,
+      "unchangedRecords": [
+        {
+          "afterOffset": 2,
+          "beforeOffset": 2,
+          "bytes": 15,
+          "sha256": "250b1f28cd5ac316b87582e60468770a94926412dfdf1b41fe7824d5adfb9cb1",
+          "tag": 3
+        },
+        {
+          "afterOffset": 17,
+          "beforeOffset": 17,
+          "bytes": 3,
+          "sha256": "345a123d67add98f41504720db9e8d4632d71f7fb9ea97b38d948abc7e977c4a",
+          "tag": 5
+        },
+        {
+          "afterOffset": 48,
+          "beforeOffset": 36,
+          "bytes": 30,
+          "sha256": "b339e949e624d9825182800bd60a10a61606d312009eabe2a577b8d70f987b5e",
+          "tag": 10
+        }
+      ]
+    }
+  ],
+  "inspectedWpfSourceCommit": "e7acf467c05e51901b17684b1f2c330e7dc5fc4d",
+  "schema": "legacy-doc-parser/wpf-isf-header-controls",
+  "scope": "Only explicit ISF headers/metrics and outer lengths change; packet bodies stay byte-identical.",
+  "sourceCommit": "bb23b6c7a3de66d1402ae7286e563b3951aa88ca",
+  "version": 1
+}

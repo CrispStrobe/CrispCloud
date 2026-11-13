@@ -1,0 +1,76 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "b13c418fff48802b1fd9c4d8db5fd4a6fd461677755ac6e79dd1ec93c91b8a98",
+      "size": 6103
+    },
+    {
+      "path": "artifact-verification.json",
+      "sha256": "577af9d86e07634c0bf6c8e1e80fb272b00ad197d9acd29a90bdb4e10f1e2b00",
+      "size": 244
+    },
+    {
+      "path": "compare_native_corpus.py",
+      "sha256": "2ef291393b3dc5dba2cecdd98282be6132fdfe97f7612ddea6d52d9569c0ee93",
+      "size": 15310
+    },
+    {
+      "path": "comparison-vs-48bf3a.json.xz",
+      "sha256": "12d22ce48250d21bcf901fd996a22d8d11e3bc47c8c5b4a0b9e86704988f6205",
+      "size": 24172
+    },
+    {
+      "path": "native-source.tar.xz",
+      "sha256": "7a42a6cfe38db65fe3b24fc16c57983c66790d1d71136b83f8741950c2c5b805",
+      "size": 266380
+    },
+    {
+      "path": "review-verification.json",
+      "sha256": "9543f026615b339c8ac3e1b1a8f17059acfe98e1cd57afd9b701c3ff92ce6d86",
+      "size": 565
+    },
+    {
+      "path": "review_native_evidence.py",
+      "sha256": "a99baf42bec020a8f3aff8df8f2150632f1d68f7434193596da7e41691d513f8",
+      "size": 15968
+    },
+    {
+      "path": "seal_native_evidence.py",
+      "sha256": "7cc399cd68dc1fd3653548373c305616a577e63c8f71c2a27b622bd405c98c71",
+      "size": 6752
+    },
+    {
+      "path": "sealed/native-artifacts.manifest.json",
+      "sha256": "c0287d3ae024468c59a05bfebba6f43ba9f66065014ac2f7ac0b34afb265af7a",
+      "size": 570038
+    },
+    {
+      "path": "sealed/native-artifacts.tar.xz",
+      "sha256": "1ef1924ca705c287386aaecb33767ca46986e94ffa8f9db096004611c83e228e",
+      "size": 2508524
+    },
+    {
+      "path": "sealed/native-report.json.xz",
+      "sha256": "cce2448cdbc53c6e1fdacafc1788ca35f740d627e2b64b361f601def45c1d8bd",
+      "size": 261896
+    },
+    {
+      "path": "source.manifest.json",
+      "sha256": "29ae1735223395b6cfbd9a842a6631537dd5bfb565b7cfaa9afc9d6a1ba0be52",
+      "size": 24682
+    },
+    {
+      "path": "summary.json",
+      "sha256": "3e1232d419d7eee6298126e9c9dd567ddf3eb6705328dcc0d7cdd4b29824c53e",
+      "size": 57558
+    },
+    {
+      "path": "verify_native_artifacts.py",
+      "sha256": "0c886d6038e3ce28bfbba2e1b93a6687711b099f353ee11cdb5e017cd8195338",
+      "size": 7715
+    }
+  ],
+  "sourceCommit": "74420eb2e0ec14401a0db5bcbb30ab6d202a2340",
+  "sourceTree": "ac78b144d90bca0f44993d94ae0fd1c8115ce072"
+}

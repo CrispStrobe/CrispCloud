@@ -33,6 +33,24 @@ def main():
     encoded = base64.b64encode(fixture.read_bytes()).decode("ascii")
     helper = (repository / "tool/web_acceptance.dart").as_uri()
     media_helper = (repository / "tool/media_web_acceptance.dart").as_uri()
+    ink_helper = (repository / "tool/ink_web_acceptance.dart").as_uri()
+    ink_cases = []
+    for source in sorted((repository / "test/fixtures/ink_wpf").glob("*/*.isf")):
+        snapshot = source.with_name(source.name.replace(".roundtrip.isf", ".second-reloaded.json")
+                                    if source.name.endswith(".roundtrip.isf")
+                                    else source.name.replace(".isf", ".reloaded.json"))
+        ink_cases.append({"path": source.relative_to(repository).as_posix(),
+                          "base64": base64.b64encode(source.read_bytes()).decode("ascii"),
+                          "expected": json.loads(snapshot.read_bytes())})
+    encoded_ink = base64.b64encode(json.dumps(ink_cases).encode()).decode("ascii")
+    ink_header_cases = []
+    for source in sorted((repository / "test/fixtures/ink_wpf_headers").glob("*/*.isf")):
+        snapshot = source.with_name("second-reloaded.json" if source.name == "roundtrip.isf"
+                                    else "reloaded.json")
+        ink_header_cases.append({"path": source.relative_to(repository).as_posix(),
+                                 "base64": base64.b64encode(source.read_bytes()).decode("ascii"),
+                                 "expected": json.loads(snapshot.read_bytes())})
+    encoded_ink_headers = base64.b64encode(json.dumps(ink_header_cases).encode()).decode("ascii")
     environment = dict(os.environ, CI="true")
 
     with tempfile.TemporaryDirectory(prefix="legacy-doc-web-", dir=packages.parent) as directory:
@@ -43,10 +61,15 @@ def main():
             "import 'dart:convert';\n"
             f"import {json.dumps(helper)};\n"
             f"import {json.dumps(media_helper)};\n"
+            f"import {json.dumps(ink_helper)};\n"
             "void main() {\n"
             f"  final result = verifyWebConversion(base64Decode('{encoded}'));\n"
             "  print('Legacy DOC JavaScript acceptance passed: ${jsonEncode(result)}');\n"
             "  print('Media JavaScript acceptance passed: ${jsonEncode(verifyMediaWebAcceptance())}');\n"
+            f"  final ink = verifyInkWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_ink}'))) as List);\n"
+            "  print('Ink JavaScript acceptance passed: ${jsonEncode(ink)}');\n"
+            f"  final inkHeaders = verifyInkWebAcceptance(jsonDecode(utf8.decode(base64Decode('{encoded_ink_headers}'))) as List, headerCases: true);\n"
+            "  print('Ink header JavaScript acceptance passed: ${jsonEncode(inkHeaders)}');\n"
             "}\n",
             encoding="utf-8",
         )

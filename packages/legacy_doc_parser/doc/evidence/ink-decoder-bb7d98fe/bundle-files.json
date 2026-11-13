@@ -1,0 +1,41 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "c1b65d661025659d3acb8769883718efde35dd2723e41cc101e35e63539149f9",
+      "size": 6056
+    },
+    {
+      "path": "hosted-ci.json",
+      "sha256": "26665eb139907e90e74cff0f5755cb1dcb22851aa8b9d6b8a12257096e6ce147",
+      "size": 20459
+    },
+    {
+      "path": "seal_validation_evidence.py",
+      "sha256": "c9f1e7098a2e634fde1239cd48014a095d3fe00eea2e1ce43ae9bc47e732e635",
+      "size": 40041
+    },
+    {
+      "path": "validation-artifacts.manifest.json",
+      "sha256": "cb21855d1c17a39ce36bb93496d8716d0adf5dedd18dc6c31b98d5b016a64eda",
+      "size": 259704
+    },
+    {
+      "path": "validation-artifacts.tar.xz",
+      "sha256": "239c1714f720e9653cc6f490ecb65ca883cdad42910b8192c03339732d04b6b1",
+      "size": 1379788
+    },
+    {
+      "path": "verification.json",
+      "sha256": "41520d1128e053f12da4d71c3d68ea2855b593e5c364c97da889dd2ea79e1c3b",
+      "size": 589
+    },
+    {
+      "path": "verify_bundle.py",
+      "sha256": "d341b9ad041f63ccfa303b84886d18ee5aa5fece3fa7e39ea4f0206aa2dd8c5b",
+      "size": 2150
+    }
+  ],
+  "sourceCommit": "bb7d98fe25cc6e3e69fdad3a2483a6fe08e83dfc",
+  "sourceTree": "cd8a4dae3208c45f3465be9f71d7cd3c789d1db0"
+}

@@ -135,12 +135,12 @@ void main() {
   });
 
   test(
-    'does not turn system colors, gradients or unknown effects into RGB',
+    'does not turn system colors or unresolved gradient effects into RGB',
     () {
       final document = parseLegacyWordDocument(
         officeArtShapeWordFixture(
           values: {
-            0x0180: 7,
+            0x0180: 8,
             0x0181: 0x08000001,
             0x0182: 65537,
             0x01c0: 0x010000fe,
@@ -164,6 +164,88 @@ void main() {
       expect(document.media.artifacts, isNotEmpty);
     },
   );
+
+  test('resolves scaled-gradient operands and preserves explicit defaults', () {
+    final shape = _shape(
+      officeArtShapeWordFixture(
+        type: 202,
+        values: {
+          0x0180: 7,
+          0x0181: 0x00332211,
+          0x0182: 0,
+          0x0183: 0x00665544,
+          0x0184: 32768,
+          0x018b: -45 * 65536,
+          0x018c: -50,
+          0x01bf: 0x00200000,
+        },
+        complex: {0x0186: Uint8List(0), 0x01c5: Uint8List(0)},
+      ),
+    );
+    final fill = shape.fill!;
+    expect(fill.type, 7);
+    expect([fill.color, fill.backColor], ['112233', '445566']);
+    expect([fill.opacityFixed16, fill.backOpacityFixed16], [0, 32768]);
+    expect(fill.angleFixed16, -45 * 65536);
+    expect(fill.focusPercent, -50);
+    expect(fill.rotateWithShape, isFalse);
+    expect(shape.unsupportedProperties, isEmpty);
+    final absent = _shape(officeArtShapeWordFixture(values: {0x0180: 7}));
+    expect(absent.fill!.backColor, isNull);
+    expect(absent.fill!.backOpacityFixed16, isNull);
+    expect(absent.fill!.angleFixed16, isNull);
+    expect(absent.fill!.focusPercent, isNull);
+    expect(absent.fill!.rotateWithShape, isNull);
+  });
+
+  test('keeps unknown gradient operands and active image fills unresolved', () {
+    for (final entry in {
+      0x0183: 0x08000001,
+      0x0184: 65537,
+      0x018b: 361 * 65536,
+      0x018c: -101,
+      0x0197: 1,
+      0x01bf: 0x00040000,
+    }.entries) {
+      final shape = _shape(
+        officeArtShapeWordFixture(values: {0x0180: 7, entry.key: entry.value}),
+      );
+      expect(shape.unsupportedProperties, contains(entry.key));
+    }
+    for (final id in [
+      0x0180,
+      0x0181,
+      0x0182,
+      0x0183,
+      0x0184,
+      0x018b,
+      0x018c,
+      0x01bf,
+    ]) {
+      final shape = _shape(
+        officeArtShapeWordFixture(
+          values: id == 0x0180 ? const {} : {0x0180: 7},
+          complex: {id: Uint8List(0)},
+        ),
+      );
+      expect(shape.unsupportedProperties, contains(id));
+    }
+    for (final type in [1, 2, 3, 4, 5, 6, 8, 9]) {
+      final shape = _shape(
+        officeArtShapeWordFixture(
+          values: {0x0180: type},
+          complex: {0x0186: Uint8List(0)},
+        ),
+      );
+      expect(shape.unsupportedProperties, containsAll([0x0180, 0x0186]));
+    }
+    final unresolvedLine = _shape(
+      officeArtShapeWordFixture(
+        complex: {0x01c4: Uint8List(0), 0x01c5: Uint8List(0)},
+      ),
+    );
+    expect(unresolvedLine.unsupportedProperties, contains(0x01c5));
+  });
 
   test(
     'parses custom line/Bezier segments and lets them override shapePath',

@@ -1,0 +1,343 @@
+{
+  "sourceCommit": "5da4906ac8ccc76583329af23467e135dd3698a9",
+  "sourceTree": "4ccb56b1de7e0b49e391afb8a038d89edbdadc37",
+  "run": {
+    "id": 43382035366,
+    "name": "Independent WPF ink oracle",
+    "node_id": "WFR_kwLOVr6ISM8AAAAKGcVTpg",
+    "head_branch": "checkpoint/ink-oracle-20261113",
+    "head_sha": "5da4906ac8ccc76583329af23467e135dd3698a9",
+    "path": ".github/workflows/ink-oracle.yml",
+    "display_title": "Import explicit IO APIs for the WPF oracle build",
+    "run_number": 2,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "workflow_id": 416967003,
+    "check_suite_id": 117471591888,
+    "check_suite_node_id": "CS_kwDOVr6ISM8AAAAbWdo90A",
+    "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43382035366",
+    "html_url": "https://github.com/CrispStrobe/legacy-doc-parser/actions/runs/43382035366",
+    "pull_requests": [],
+    "created_at": "2026-11-13T06:55:13Z",
+    "updated_at": "2026-11-13T06:56:04Z",
+    "actor": {
+      "login": "CrispStrobe",
+      "id": 154636388,
+      "node_id": "U_kgDOCTeQZA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/CrispStrobe",
+      "html_url": "https://github.com/CrispStrobe",
+      "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+      "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+      "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+      "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+      "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+      "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "run_attempt": 1,
+    "referenced_workflows": [],
+    "run_started_at": "2026-11-13T06:55:13Z",
+    "triggering_actor": {
+      "login": "CrispStrobe",
+      "id": 154636388,
+      "node_id": "U_kgDOCTeQZA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/CrispStrobe",
+      "html_url": "https://github.com/CrispStrobe",
+      "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+      "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+      "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+      "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+      "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+      "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "jobs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43382035366/jobs",
+    "logs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43382035366/logs",
+    "check_suite_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/check-suites/117471591888",
+    "artifacts_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43382035366/artifacts",
+    "cancel_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43382035366/cancel",
+    "rerun_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/runs/43382035366/rerun",
+    "previous_attempt_url": null,
+    "workflow_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/workflows/416967003",
+    "head_commit": {
+      "id": "5da4906ac8ccc76583329af23467e135dd3698a9",
+      "tree_id": "4ccb56b1de7e0b49e391afb8a038d89edbdadc37",
+      "message": "Import explicit IO APIs for the WPF oracle build",
+      "timestamp": "2026-11-13T06:55:10Z",
+      "author": {
+        "name": "CrispStrobe",
+        "email": "154636388+CrispStrobe@users.noreply.github.com"
+      },
+      "committer": {
+        "name": "CrispStrobe",
+        "email": "154636388+CrispStrobe@users.noreply.github.com"
+      }
+    },
+    "repository": {
+      "id": 1455327304,
+      "node_id": "R_kgDOVr6ISA",
+      "name": "legacy-doc-parser",
+      "full_name": "CrispStrobe/legacy-doc-parser",
+      "private": false,
+      "owner": {
+        "login": "CrispStrobe",
+        "id": 154636388,
+        "node_id": "U_kgDOCTeQZA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/CrispStrobe",
+        "html_url": "https://github.com/CrispStrobe",
+        "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+        "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+        "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+        "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+        "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+        "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/CrispStrobe/legacy-doc-parser",
+      "description": "Dart parsing of Word 97\u20132003 .doc/.dot files, with a typed document model, safe formatted previews and conversion to a separate Word Open XML copy",
+      "fork": false,
+      "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser",
+      "forks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/forks",
+      "keys_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/keys{/key_id}",
+      "collaborators_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/collaborators{/collaborator}",
+      "teams_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/teams",
+      "hooks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/hooks",
+      "issue_events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/events{/number}",
+      "events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/events",
+      "assignees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/assignees{/user}",
+      "branches_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/branches{/branch}",
+      "tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/tags",
+      "blobs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/blobs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/tags{/sha}",
+      "git_refs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/refs{/sha}",
+      "trees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/trees{/sha}",
+      "statuses_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/statuses/{sha}",
+      "languages_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/languages",
+      "stargazers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/stargazers",
+      "contributors_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contributors",
+      "subscribers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscribers",
+      "subscription_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscription",
+      "commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/commits{/sha}",
+      "git_commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/commits{/sha}",
+      "comments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/comments{/number}",
+      "issue_comment_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/comments{/number}",
+      "contents_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contents/{+path}",
+      "compare_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/compare/{base}...{head}",
+      "merges_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/merges",
+      "archive_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/{archive_format}{/ref}",
+      "downloads_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/downloads",
+      "issues_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues{/number}",
+      "pulls_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/pulls{/number}",
+      "milestones_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/milestones{/number}",
+      "notifications_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/notifications{?since,all,participating}",
+      "labels_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/labels{/name}",
+      "releases_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/releases{/id}",
+      "deployments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/deployments"
+    },
+    "head_repository": {
+      "id": 1455327304,
+      "node_id": "R_kgDOVr6ISA",
+      "name": "legacy-doc-parser",
+      "full_name": "CrispStrobe/legacy-doc-parser",
+      "private": false,
+      "owner": {
+        "login": "CrispStrobe",
+        "id": 154636388,
+        "node_id": "U_kgDOCTeQZA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/CrispStrobe",
+        "html_url": "https://github.com/CrispStrobe",
+        "followers_url": "https://api.github.com/users/CrispStrobe/followers",
+        "following_url": "https://api.github.com/users/CrispStrobe/following{/other_user}",
+        "gists_url": "https://api.github.com/users/CrispStrobe/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/CrispStrobe/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/CrispStrobe/subscriptions",
+        "organizations_url": "https://api.github.com/users/CrispStrobe/orgs",
+        "repos_url": "https://api.github.com/users/CrispStrobe/repos",
+        "events_url": "https://api.github.com/users/CrispStrobe/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/CrispStrobe/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/CrispStrobe/legacy-doc-parser",
+      "description": "Dart parsing of Word 97\u20132003 .doc/.dot files, with a typed document model, safe formatted previews and conversion to a separate Word Open XML copy",
+      "fork": false,
+      "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser",
+      "forks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/forks",
+      "keys_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/keys{/key_id}",
+      "collaborators_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/collaborators{/collaborator}",
+      "teams_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/teams",
+      "hooks_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/hooks",
+      "issue_events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/events{/number}",
+      "events_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/events",
+      "assignees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/assignees{/user}",
+      "branches_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/branches{/branch}",
+      "tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/tags",
+      "blobs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/blobs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/tags{/sha}",
+      "git_refs_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/refs{/sha}",
+      "trees_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/trees{/sha}",
+      "statuses_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/statuses/{sha}",
+      "languages_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/languages",
+      "stargazers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/stargazers",
+      "contributors_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contributors",
+      "subscribers_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscribers",
+      "subscription_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/subscription",
+      "commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/commits{/sha}",
+      "git_commits_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/git/commits{/sha}",
+      "comments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/comments{/number}",
+      "issue_comment_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues/comments{/number}",
+      "contents_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/contents/{+path}",
+      "compare_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/compare/{base}...{head}",
+      "merges_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/merges",
+      "archive_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/{archive_format}{/ref}",
+      "downloads_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/downloads",
+      "issues_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/issues{/number}",
+      "pulls_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/pulls{/number}",
+      "milestones_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/milestones{/number}",
+      "notifications_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/notifications{?since,all,participating}",
+      "labels_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/labels{/name}",
+      "releases_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/releases{/id}",
+      "deployments_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/deployments"
+    }
+  },
+  "jobs": {
+    "jobs": [
+      {
+        "id": 131741781381,
+        "name": "wpf-isf",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43382035366,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Run actions/setup-dotnet@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Record installed runtime",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Build independent Windows WPF author",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Author and round trip nonempty ISF controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Post Run actions/setup-dotnet@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15
+          }
+        ]
+      }
+    ]
+  },
+  "artifact": {
+    "id": 14016459874,
+    "name": "independent-wpf-isf-5da4906ac8ccc76583329af23467e135dd3698a9",
+    "size_in_bytes": 70184,
+    "url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/artifacts/14016459874",
+    "archive_download_url": "https://api.github.com/repos/CrispStrobe/legacy-doc-parser/actions/artifacts/14016459874/zip",
+    "expired": false,
+    "created_at": "2026-11-13T06:56:00Z",
+    "expires_at": "2026-12-13T06:55:59Z",
+    "updated_at": "2026-11-13T06:56:00Z",
+    "digest": "sha256:098ea413a50f21a686eb6ad75150658ea93cc6138d66d612e8972abfe8c54539",
+    "workflow_run": {
+      "id": 43382035366,
+      "repository_id": 1455327304,
+      "head_repository_id": 1455327304,
+      "head_branch": "checkpoint/ink-oracle-20261113",
+      "head_sha": "5da4906ac8ccc76583329af23467e135dd3698a9"
+    }
+  },
+  "sourceFiles": {
+    ".github/workflows/ink-oracle.yml": {
+      "bytes": 1690,
+      "sha256": "e73d091dcb132558152c96bc41bbaf7a3ec2c9a82f6aacd663f4e5f388edec48"
+    },
+    "tool/ink_oracle/InkOracle.csproj": {
+      "bytes": 385,
+      "sha256": "8d3f0b9f0e1b3f7be9618b3de82b38c74efd28bac1e099e508819197dc64e8ba"
+    },
+    "tool/ink_oracle/Program.cs": {
+      "bytes": 18549,
+      "sha256": "41d2bfcbc50421d8eab9b6bd9909c37e12083592865727fc6063bfbca2d2ea38"
+    },
+    "tool/ink_oracle/README.md": {
+      "bytes": 3606,
+      "sha256": "148b4495ea22661e7831fdd0d6ddc1ea39ec8ca05a40d08d3f7f9e69e698ca63"
+    },
+    "tool/ink_oracle/global.json": {
+      "bytes": 74,
+      "sha256": "fb21e5c3c690bb880374ed4ec8517639d8e73fd887022142ae60897fa73e1893"
+    }
+  }
+}

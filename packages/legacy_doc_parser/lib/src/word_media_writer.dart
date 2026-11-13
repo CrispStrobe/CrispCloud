@@ -283,6 +283,9 @@ extension _WordMedia on _StructuredWordWriter {
       limitations.add(LegacyWordConversionLimitation.notesComments);
     }
     final bytes = ink.data;
+    final decoded = ink.decoding;
+    final decodedComplete =
+        decoded?.status == LegacyWordInkDecodeStatus.decoded;
     final metadata = <String, Object?>{
       ...occurrence,
       'payloadPropertyId': 0x0700,
@@ -295,17 +298,27 @@ extension _WordMedia on _StructuredWordWriter {
       'hasPayload': bytes != null,
       'format': bytes == null ? null : 'ISF',
       'headerStatus': ink.headerStatus?.name,
-      'strokeSemanticsDecoded': false,
+      'strokeSemanticsDecoded': decodedComplete,
+      'strokeDecodeStatus': decoded?.status.name,
+      'strokeDecodeReason': decoded?.reason,
+      'strokeCount': decodedComplete ? decoded!.strokes.length : null,
+      'pointCount': decodedComplete ? decoded!.pointCount : null,
       'nativeInkEmitted': false,
       'reason': bytes == null
           ? 'ink properties retained without a stored ink payload'
-          : 'inert ISF payload retained; pen-stroke semantics are not reconstructed',
+          : decodedComplete
+          ? 'ISF strokes decoded; native Word placement and editing remain unverified'
+          : 'inert ISF payload retained; stroke decode is ${decoded!.status.name}',
     };
     if (bytes == null) {
       _evidenceRecords.add({'kind': 'officeArtInk', ...metadata});
     } else {
       _preserveEvidence('officeArtInk', bytes, metadata);
       _count('inkPayloads');
+      if (decodedComplete && decoded!.strokes.isNotEmpty) {
+        _count('decodedInkPayloads');
+        _count('decodedInkStrokes', decoded.strokes.length);
+      }
     }
   }
 
@@ -314,7 +327,7 @@ extension _WordMedia on _StructuredWordWriter {
     if (path == null) {
       path = 'word/media/image${_mediaParts.length + 1}.${asset.extension}';
       _mediaParts[asset.id] = path;
-      _package.addBytes(path, asset.contentType, asset.bytes);
+      _package.addBytes(path, asset.contentType, asset.embeddingBytes);
       _count('images');
     }
     return _package.relate(
