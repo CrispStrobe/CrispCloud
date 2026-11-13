@@ -1,0 +1,27 @@
+{
+  "name": "crispcloud-document-build",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test ../test/*.test.mjs"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "dompurify": "3.4.17",
+    "e-virt-table": "1.4.17",
+    "jszip": "3.10.2",
+    "pako": "1.0.11",
+    "styled-exceljs": "0.21.6",
+    "tinycolor2": "1.6.0",
+    "utif": "3.1.0",
+    "xmllint-wasm": "5.3.0",
+    "xslt-polyfill": "1.0.33"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.61.1",
+    "typescript": "6.0.3"
+  }
+}
