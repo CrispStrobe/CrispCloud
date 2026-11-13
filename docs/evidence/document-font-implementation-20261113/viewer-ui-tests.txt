@@ -1,0 +1,48 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: text mode literal whitespace and 0x text, case toggle and edited-query reset agree
+00:01 +1: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: text mode every match remains reachable past the bounded result page in both directions
+00:02 +2: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: text mode reload cancels an active scan and any pending query debounce
+00:04 +3: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: text mode renders decoded lines for a text file
+00:04 +4: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: text mode search finds and counts text matches
+00:05 +5: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: byte modes ASCII mode keeps control bytes visible as dots
+00:05 +6: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: byte modes Binary mode keeps only printable ASCII
+00:05 +7: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: byte modes Hex mode renders the dump for any file type
+00:05 +8: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: byte modes hex mode is available for binary data
+00:06 +9: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: byte modes hex goto uses decimal numbers and explicit hexadecimal offsets
+00:06 +10: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes CSV renders as a table
+00:06 +11: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes ZIP shows a member list and opens members
+00:06 +12: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes 7z lists members and opens them
+00:07 +13: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes RAR lists real members
+00:07 +14: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes encrypted 7z asks for a password and opens members
+00:08 +15: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes single-file .gz opens decompressed content
+00:08 +16: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes markdown renders as a document
+00:08 +17: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes office documents render formatted text and plain text
+00:08 +18: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes HTML renders and can switch to source
+00:09 +19: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes XML renders as a tree and can switch to source
+00:09 +20: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes PPTX opens the slide viewer by default
+00:09 +21: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes truncated legacy PPT shows its localized extraction reason
+00:09 +22: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: rich modes PNG auto-detects image mode
+00:10 +23: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: streaming view UTF-8 page boundaries preserve the whole character and paging survives a parent rebuild
+00:12 +24: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: streaming view long rows keep UTF-16 surrogate pairs and UTF-8 chunk-edge scalars together
+00:12 +25: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: streaming view indexes lines and shows byte offsets
+00:12 +26: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: text goto reaches a match beyond 64 MiB without indexing the prefix
+00:12 +27: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: streamed UTF-16 text retains encoding and newline alignment
+00:12 +28: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/internal_viewer_widget_test.dart: mode bar offers the core viewer modes
+00:13 +29: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_font_notice_strings_test.dart
+00:13 +29: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_font_notice_strings_test.dart: font notice has all nine translations and safe locale fallback
+00:14 +30: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart
+00:15 +30: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart: clean PDF result does not reserve notice space
+00:16 +31: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart: substitutions are visible and actual font families are selectable
+00:16 +32: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart: missing characters show code points and complementary views
+00:16 +33: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart: caps displayed diagnostics and sanitizes font-name controls
+00:16 +34: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart: exporter truncation remains visible even without retained entries
+00:16 +35: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_pdf_font_notice_test.dart: all nine localized notices fit beside the existing PDF pane
+00:17 +36: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/viewer_installed_office_preview_test.dart
+00:18 +36: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/viewer_installed_office_preview_test.dart: F3 exposes installed preview without converting or saving during discovery (variant: TargetPlatform.linux)
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:20 +37: All tests passed!

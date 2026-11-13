@@ -1,0 +1,42 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/document_fonts_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/document_fonts_test.dart: every shared face resolves to a real packaged embeddable font
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/document_fonts_test.dart: first preview registration selects the actual family and style aliases
+00:00 +2: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_service_test.dart: Pages embeds requested existing families and reports uncovered text
+00:00 +3: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_service_test.dart: PPTX is laid out as a PDF
+00:00 +4: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_service_test.dart: DOCM with a relocated main part is laid out as a PDF
+00:00 +5: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_service_test.dart: DOTM with a relocated main part is laid out as a PDF
+00:00 +6: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_service_test.dart: invalid Office input is rejected with a typed error
+00:00 +7: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_service_test.dart: oversized input is rejected before layout
+00:13 +8: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/office_pdf_error_localization_test.dart: Office PDF failures are localized in all supported locales
+00:25 +9: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+⚠️ [InternalViewer] Document fonts could not load; using available fonts
+  Error: Unable to load asset: "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf".
+The asset does not exist or has empty data.
+00:26 +10: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_pdf_font_notice_test.dart: clean PDF result does not reserve notice space
+00:26 +11: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_pdf_font_notice_test.dart: substitutions are visible and actual font families are selectable
+00:27 +12: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_pdf_font_notice_test.dart: missing characters show code points and complementary views
+00:28 +13: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_pdf_font_notice_test.dart: caps displayed diagnostics and sanitizes font-name controls
+00:28 +14: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_pdf_font_notice_test.dart: exporter truncation remains visible even without retained entries
+00:28 +15: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/office_pdf_font_notice_test.dart: all nine localized notices fit beside the existing PDF pane
+00:28 +16: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/viewer_installed_office_preview_test.dart: F3 exposes installed preview without converting or saving during discovery (variant: TargetPlatform.linux)
+🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false
+🐛 [PanelNotifier] _loadLocalFiles: / (web=false)
+🐛 [PanelNotifier] listDirectory("/") returned 0 entities
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:31 +17: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: requires an explicit selected app and preserves source bytes (variant: TargetPlatform.linux)
+00:32 +18: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: no installed app keeps the built-in view available (variant: TargetPlatform.linux)
+00:32 +19: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: rejects unsupported suffix before discovering applications (variant: TargetPlatform.linux)
+00:32 +20: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: rejects empty document before discovering applications (variant: TargetPlatform.linux)
+00:32 +21: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: rejects over-limit input before discovering applications (variant: TargetPlatform.linux)
+00:32 +22: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: does not probe installed applications on mobile (variant: TargetPlatform.android)
+00:32 +23: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: conversion cannot be duplicated or dismissed while running (variant: TargetPlatform.linux)
+00:32 +24: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: rejects wrong output format before showing preview (variant: TargetPlatform.linux)
+00:32 +25: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: rejects wrong engine before showing preview (variant: TargetPlatform.linux)
+00:32 +26: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: rejects invalid PDF before showing preview (variant: TargetPlatform.linux)
+00:33 +27: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: reports timeout and allows an explicit retry (variant: TargetPlatform.linux)
+00:33 +28: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: drops results after parent disposal (variant: TargetPlatform.linux)
+00:33 +29: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: discovery and viewer errors do not leak exception details (variant: TargetPlatform.linux)
+00:33 +30: /workspace/scratch/60b40e52ccd6/crispcloud-merge-investigation/test/widget/installed_office_preview_dialog_test.dart: localized controls fit a narrow enlarged-text dialog (variant: TargetPlatform.linux)
+00:34 +31: All tests passed!

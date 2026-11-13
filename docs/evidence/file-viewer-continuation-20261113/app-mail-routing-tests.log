@@ -1,0 +1,44 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: navigates all messages and resets the selected message view
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: searchable chooser reaches the last of 1000 messages
+00:01 +2: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: a chooser from a replaced mailbox cannot select a stale index
+00:01 +3: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: malformed selected message leaves later entries and source usable
+00:01 +4: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: attachment callbacks preserve bytes and do not load remote HTML
+00:01 +5: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: empty mailbox offers source without enabled message navigation
+00:01 +6: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: length-delimited quoting policy is disclosed
+00:01 +7: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: narrow high-text-scale layout remains scrollable without overflow
+00:01 +8: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/mbox_message_view_test.dart: all supported locales provide mailbox labels and typed errors
+00:02 +9: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/email_message_view_test.dart
+00:03 +9: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/email_message_view_test.dart: shows message and opens original attachment bytes through host
+00:03 +10: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/email_message_view_test.dart: German labels and formatting-only HTML work without images
+00:04 +11: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_integration_test.dart
+00:05 +11: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_integration_test.dart: F3 indexes MBOX and selects separate messages
+00:06 +12: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/document_preview_integration_test.dart: XML tools use complete bytes beside existing tree and source
+00:06 +13: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart
+00:07 +13: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: wpd selects its bounded document engine
+00:07 +14: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: wp selects its bounded document engine
+00:07 +15: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: wp5 selects its bounded document engine
+00:07 +16: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: wp6 selects its bounded document engine
+00:07 +17: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: chm selects its bounded document engine
+00:07 +18: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: xls selects its bounded document engine
+00:07 +19: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: xlt selects its bounded document engine
+00:07 +20: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: xlsb selects its bounded document engine
+00:07 +21: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: ppt selects its bounded document engine
+00:07 +22: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: pot selects its bounded document engine
+00:07 +23: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: pps selects its bounded document engine
+00:07 +24: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: ps selects its bounded document engine
+00:07 +25: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: eps selects its bounded document engine
+00:07 +26: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: MBOX and XML keep their mode when a UTF-8 BOM is present
+00:07 +27: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: existing Office routes stay on their native readers
+00:07 +28: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: strong image/PDF signatures still override a misleading suffix
+00:07 +29: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_routing_test.dart: content MIME identifies the selected legacy format
+00:07 +30: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart
+00:08 +30: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart: copies complete windows and owns the snapshot
+00:09 +31: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart: rejects size before source validation or allocation
+00:09 +32: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart: never returns a short source as a complete document
+00:09 +33: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart: cancels stale viewer generation between bounded windows
+00:09 +34: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart: rejects a source changed after the complete read
+00:09 +35: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_preview_source_test.dart: accepts an empty complete snapshot without I/O
+00:09 +36: All tests passed!

@@ -1,0 +1,128 @@
+✔ accepts topic link elements from another realm and ignores non-elements (2.87148ms)
+✔ clamps caller limits and preserves stricter requested ceilings (0.415053ms)
+✔ preserves parser warnings and merged-help requirements without accepting arbitrary objects (1.714945ms)
+✔ rejects over-limit or empty source before creating DOM or workers (2.795537ms)
+✔ keeps archive paths inside the CHM and classifies active/external URLs (1.344408ms)
+✔ retains upstream CSS and SVG resource protections (2.866803ms)
+✔ requires local worker/module/WASM assets (1.789606ms)
+✔ checks source bounds before transfer and passes the bounded limits to the worker (11.111401ms)
+✔ terminates the archive worker on cancellation or transfer failure (1.37203ms)
+✔ reads real LZX-compressed topics, navigation and resources using the pinned CHM WASM (32.645667ms)
+✔ font descriptors accept only the exact native session and Flutter web asset routes (4.901658ms)
+✔ font catalog bounds reject excess faces, alias expansions and malformed descriptors (0.775394ms)
+✔ model inspection finds named emphasis faces and Arabic without scanning binary payloads (1.247723ms)
+✔ loads only requested named styles, reuses bytes and embeds only the selected SVG faces (12.408297ms)
+✔ missing families preserve their name and fetch only a configured fallback (1.981515ms)
+✔ Arabic fallback never hides an unknown primary family or its Latin default (1.402966ms)
+✔ an explicitly requested Arabic face with Latin text also loads its Latin default (1.754654ms)
+✔ font asset failure is a visible diagnostic and oversized bodies cannot allocate a face (14.876613ms)
+✔ abort settles a pending font decode and cannot register a late face (9.260783ms)
+✔ quoted family names remain CSS and XML text in the standalone SVG (1.199291ms)
+✔ selected build excludes unrelated design, CAD and copyleft engines (442.148812ms)
+✔ hard execution limits cannot be raised through worker options (0.474723ms)
+stet: creating context...
+stet: wiring exec_sync...
+stet: building system dict...
+stet: registering embedded resources...
+stet: loading embedded CMYK ICC profile...
+stet: running init scripts...
+stet: init exec_ok=true, d_stack.len=3
+stet: init sync complete
+stet: interpreter ready
+stet: render() called — 168 bytes, dpi=72, file=multipage.ps
+✔ real PS worker accepts exactly two pages and returns red/blue RGBA pixels (583.156914ms)
+stet: creating context...
+stet: wiring exec_sync...
+stet: building system dict...
+stet: registering embedded resources...
+stet: loading embedded CMYK ICC profile...
+stet: running init scripts...
+stet: init exec_ok=true, d_stack.len=3
+stet: init sync complete
+stet: interpreter ready
+stet: render() called — 274 bytes, dpi=72, file=shape.eps
+stet: EPS bbox=(0,0,144,144) size=144x144 dpi=72
+✔ real EPS raster contains the authored shape and embedded-font text (380.627377ms)
+stet: creating context...
+✔ first page beyond a lower cap rejects rather than returning a prefix (223.380335ms)
+✔ bad PostScript signatures reject before requesting the native asset (74.247051ms)
+✔ an altered native asset fails exact provenance before WASM execution (142.522215ms)
+stet: creating context...
+stet: wiring exec_sync...
+stet: building system dict...
+stet: registering embedded resources...
+stet: loading embedded CMYK ICC profile...
+stet: running init scripts...
+stet: init exec_ok=true, d_stack.len=3
+stet: init sync complete
+stet: interpreter ready
+stet: render() called — 62 bytes, dpi=72, file=huge.ps
+✔ hostile source dimensions reject before allocating a huge raster (478.303668ms)
+stet: creating context...
+✔ unbounded genuine PS execution is terminated by the production deadline (1003.059842ms)
+stet: creating context...
+✔ explicit cancellation terminates the genuine interpreter worker (201.641831ms)
+stet: creating context...
+✔ source, page index and DPI bounds reject through the real client (189.319263ms)
+stet: wiring exec_sync...
+stet: building system dict...
+stet: registering embedded resources...
+stet: loading embedded CMYK ICC profile...
+stet: running init scripts...
+stet: init exec_ok=true, d_stack.len=3
+stet: init sync complete
+stet: interpreter ready
+stet: render() called — 274 bytes, dpi=72, file=shape.eps
+stet: EPS bbox=(0,0,144,144) size=144x144 dpi=72
+✔ every pinned PPT font patch requires one exact source match (6.755502ms)
+✔ the real patched runtime invokes the SVG font hook before image decoding (92.138619ms)
+✔ PPT font selection waits per requested slide and includes only its master chain (1.701033ms)
+✔ releasing a slide while its fonts load prevents a late canvas paint (2.687024ms)
+✔ PPT entry rejects empty, oversized, cancelled and workerless inputs before DOM work (5.963393ms)
+✔ PPT model canvas limits reject huge, nonfinite and over-count slides before mounting (5.147868ms)
+✔ runtime boundary closes rejected documents and preserves valid owned models (0.702124ms)
+✔ pinned Apache PPT runtime parses real binary presentation and template fixtures under our limits (179.812796ms)
+✔ actual PPT parser enforces record and file limits rather than returning a text substitute (2.430819ms)
+✔ actual PPT runtime sends fixed parser limits to its worker and closing cancels a pending parse (1.288264ms)
+✔ rejects empty, oversized, cancelled and workerless entry requests before DOM work (2.532832ms)
+✔ accepts actual BIFF8 and XLSB generated containers without losing Unicode or literal markup (57.636323ms)
+✔ opens the genuine upstream binary XLS embedded-image regression fixture (11.293104ms)
+✔ ZIP preflight accepts stored and deflated data and rejects malformed/truncated directories (11.517931ms)
+✔ ZIP preflight checks actual inflated bytes even when central-directory lengths lie (13.810833ms)
+✔ ZIP preflight rejects declared expansion, encryption and ZIP64 before inflation (1.264037ms)
+✔ workbook ranges and row-limited reads cannot silently become a complete preview (0.964177ms)
+✔ workbook budgets cover sheets, populated cells, text, merges and decoration depth (63.677132ms)
+✔ hostile row-window parameters fail before SheetJsModel allocation (0.445999ms)
+✔ failed parse clears an earlier workbook instead of retaining stale content (8.756696ms)
+✔ worker timeout terminates a hung parser and reports a visible failure (5.904584ms)
+✔ worker cancellation, parse failure, malformed reply and transfer failure terminate ownership (1.093682ms)
+✔ an answered worker request clears its deadline and late replies after termination are ignored (10.921035ms)
+✔ keeps paragraphs and tables interleaved in their source order (2.821626ms)
+✔ keeps a body paragraph, link and style across an embedded note (0.714182ms)
+✔ preserves table placement inside headers and separates footer/notes (5.020016ms)
+✔ honors Uint8Array subview offsets and stores metadata without a prototype (0.441643ms)
+✔ rejects truncated, unknown and unbalanced event streams (1.051949ms)
+✔ rejects excessive event, string, metadata, table and rendered-block expansion (116.458964ms)
+✔ applies the source cap before copying, importing modules or starting a worker (12.839895ms)
+✔ requires the real engine when workers are disabled or parsing fails (3.33735ms)
+✔ terminates failed or aborted workers and rejects remote runtime URLs (1.049846ms)
+✔ parses licensed real WP 4.2, 5.0, 5.1 and 6.x files with the pinned WASM engine (190.390901ms)
+✔ selected XML build has no unrelated renderer or copyleft runtime (403.172125ms)
+✔ pinned Playwright CommonJS entry exposes its genuine Chromium launcher (324.158674ms)
+✔ allows self-contained schema and stylesheets, including XML/text output (10.776508ms)
+✔ rejects entities, schema dependencies, XInclude and escaped document() (2.309417ms)
+✔ runtime URL policy rejects other origins, schemes, credentials and fragments (0.483816ms)
+✔ asset fetch bounds streamed bytes and cancels an oversized response (4.816911ms)
+✔ already aborted resource reads do not start a request (0.33302ms)
+✔ real xmllint WASM accepts valid XML and rejects invalid schema values (170.821659ms)
+✔ real libxslt computes HTML and its compiled memory cannot exceed 64 MiB (41.408201ms)
+✔ real libxslt returns XML and text serializations without executing markup (28.169119ms)
+✔ WASM guard rejects malformed, imported-only and excessive memory declarations (0.451088ms)
+ℹ tests 75
+ℹ suites 0
+ℹ pass 75
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3939.447081

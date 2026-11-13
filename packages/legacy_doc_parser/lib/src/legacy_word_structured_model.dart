@@ -62,6 +62,14 @@ enum LegacyWordWarning {
   /// One native singleton textbox story was reused by separate header/footer
   /// variants, each with its own index-zero shape and no continuation link.
   recoveredSharedHeaderTextbox,
+
+  /// An invalid old nil diagonal border was immediately superseded by the
+  /// exact matching valid modern operation; all cell extents stayed bounded.
+  recoveredLegacyDiagonalBorder,
+
+  /// A validated singleton textbox story has no matching main-story anchor.
+  /// Its source shape identity and text are retained without inventing layout.
+  recoveredUnpositionedTextbox,
 }
 
 enum LegacyWordAlignment { left, center, right, justify, distribute }
@@ -263,6 +271,7 @@ class LegacyWordTextboxReference {
     this.anchors = const [],
     this.headerAliases = const [],
     this.replicaAnchors = const [],
+    this.placementUnresolved = false,
   });
   final int id;
   final String storyId;
@@ -271,6 +280,10 @@ class LegacyWordTextboxReference {
   final int? shapeId;
   final int? nextTextboxId;
   final int chainLength;
+
+  /// Independently valid text was recovered without a matching FSPA anchor.
+  /// Consumers must not infer a placement from another shape's textbox ID.
+  final bool placementUnresolved;
 
   /// Original FTXBXS count when a nonconforming declared-one chain was
   /// recovered from agreeing OfficeArt indices and next-shape references.

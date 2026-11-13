@@ -1,0 +1,58 @@
+{
+  "setupLocation": "/workspace/scratch/60b40e52ccd6/runtime",
+  "rustupInstaller": {
+    "url": "https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init",
+    "sha256": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55",
+    "verifiedAgainst": "https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init.sha256"
+  },
+  "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5",
+  "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)\nrelease: 1.100.0\ncommit-hash: 3acc79c0c841844675bc53a605922dbfc441e750\ncommit-date: 2026-11-05\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Debian 13.0.0 (trixie) [64-bit]",
+  "rustupManifestSha256": "8265ca1d3ad5912461c870284754eed75541b0d52afbe2c06331d5066d4896a3",
+  "rustComponents": {
+    "rustc": {
+      "xz_url": "https://static.rust-lang.org/dist/2026-11-12/rustc-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "xz_hash": "f1d0b1dec81dab6f523cd098507763487b0d4bd7fd2c87582f154128719be03b",
+      "url": "https://static.rust-lang.org/dist/2026-11-12/rustc-1.100.0-x86_64-unknown-linux-gnu.tar.gz",
+      "hash": "67b0e85ff4b3eee83c48b8ae1da10dd0bcd60b43d02cd0e7df78c59d19f6b960"
+    },
+    "cargo": {
+      "xz_url": "https://static.rust-lang.org/dist/2026-11-12/cargo-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "xz_hash": "7e29ce07d7c6e92d1826870575ba27d57fff6cb3e754aa57d99099cb88fab35d",
+      "url": "https://static.rust-lang.org/dist/2026-11-12/cargo-1.100.0-x86_64-unknown-linux-gnu.tar.gz",
+      "hash": "4e7fc3cbe98e23c88a3c6ce37f834e3ffbc91536789782c4c4a9670df6b16a49"
+    },
+    "rust-std": {
+      "xz_url": "https://static.rust-lang.org/dist/2026-11-12/rust-std-1.100.0-x86_64-unknown-linux-gnu.tar.xz",
+      "xz_hash": "4591b6486594ded52ecd6135db95bf9355bbd3ca7a380888b141528bbcf9a5d4",
+      "url": "https://static.rust-lang.org/dist/2026-11-12/rust-std-1.100.0-x86_64-unknown-linux-gnu.tar.gz",
+      "hash": "61eb09d68b338e230d698716927bd4623049c9910ef4a4972e66d763d66ed9e1"
+    }
+  },
+  "clang": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/60b40e52ccd6/runtime/clang/usr/lib/llvm-19/bin",
+  "debianPackageMetadata": "clang-packages.json",
+  "debianPackageIndexUrl": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz",
+  "debianPackageIndexSha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498",
+  "installedDebianPackages": [
+    "clang-19",
+    "libclang-common-19-dev",
+    "libclang-cpp19",
+    "libclang1-19",
+    "libllvm19",
+    "llvm-19-linker-tools"
+  ],
+  "checks": [
+    "C compile/link/run passed",
+    "Rust compile/link/run passed",
+    "env -i with PATH only: genuine Cargo/Rust versions and C/Rust compile/link/run passed"
+  ],
+  "applicationSourcesChanged": false,
+  "buildHooksDisabled": false,
+  "filteredEnvironmentLaunchers": {
+    "cargo": "e29a6d9349916ef2b87c0ba58629dea410abf31b0b5d14694520d67ab4ee5dff",
+    "clang": "325003f999a700d40a070cfbec22f7b93dcba297df040d459420de6af45992fa",
+    "clang++": "25a4492d65a7b0476697e49d8d696e57ad6fa994216eeda801fd0e40c235cb1e",
+    "clang-19": "325003f999a700d40a070cfbec22f7b93dcba297df040d459420de6af45992fa",
+    "rustc": "78eb2d218a2bd138fe642cd1555989a03ba285de1abfb9cfa6fc122c48935992",
+    "rustdoc": "5eb39c548f9b70f87196795f495ce982b3256a59d7b30b02051e5b7c404cf12c"
+  }
+}

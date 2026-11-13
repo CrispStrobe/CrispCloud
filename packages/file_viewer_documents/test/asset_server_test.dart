@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_viewer_documents/src/hosts/asset_server.dart';
+import 'package:file_viewer_documents/src/models.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -159,6 +160,101 @@ void main() {
     await server.close();
     await expectLater(server.start(), throwsStateError);
   });
+
+  test(
+    'font routes expose only exact configured manifest keys and correct MIME',
+    () async {
+      final assets = _MemoryBundle({
+        '${_prefix}index.html': [1],
+        'packages/office/fonts/Regular.ttf': [0, 1, 2, 3],
+        'assets/fonts/Bold.otf': [4, 5, 6],
+        'assets/fonts/Web.woff2': [7, 8],
+        'assets/fonts/Unlisted.ttf': [90, 91],
+        'assets/private.txt': [92],
+      });
+      final server = DocumentAssetServer(
+        _session,
+        bundle: assets,
+        fonts: const [
+          DocumentPreviewFont(
+            asset: 'packages/office/fonts/Regular.ttf',
+            family: 'Regular',
+            aliases: ['Arial'],
+          ),
+          DocumentPreviewFont(
+            asset: 'assets/fonts/Bold.otf',
+            family: 'Bold',
+            weight: 700,
+          ),
+          DocumentPreviewFont(asset: 'assets/fonts/Web.woff2', family: 'Web'),
+          DocumentPreviewFont(
+            asset: 'assets/fonts/Missing.ttf',
+            family: 'Missing',
+          ),
+        ],
+      );
+      addTearDown(server.close);
+      expect(() => server.fontDescriptors, throwsStateError);
+      final location = await server.start();
+      final descriptors = server.fontDescriptors;
+      expect(descriptors, hasLength(3));
+      expect(descriptors.first['aliases'], ['Arial']);
+      expect(descriptors[1]['weight'], 700);
+      expect(assets.loads, ['AssetManifest.bin']);
+      for (final (index, extension, mime, bytes) in [
+        (0, 'ttf', 'font/ttf', [0, 1, 2, 3]),
+        (1, 'otf', 'font/otf', [4, 5, 6]),
+        (2, 'woff2', 'font/woff2', [7, 8]),
+      ]) {
+        final uri = Uri.parse(descriptors[index]['url'] as String);
+        expect(uri, location.resolve('fonts/$index.$extension'));
+        final head = await _request(uri, method: 'HEAD');
+        expect(head.status, HttpStatus.ok);
+        expect(head.bytes, isEmpty);
+        final response = await _request(uri);
+        expect(response.status, HttpStatus.ok);
+        expect(response.bytes, bytes);
+        expect(response.headers.contentType!.mimeType, mime);
+        expect(response.headers.value('x-content-type-options'), 'nosniff');
+        expect(response.headers.value('access-control-allow-origin'), isNull);
+      }
+      for (final candidate in [
+        location.resolve('fonts/3.ttf'),
+        location.resolve('fonts/0.otf'),
+        location.resolve('fonts/Regular.ttf'),
+        location.resolve('assets/fonts/Unlisted.ttf'),
+        location.resolve('packages/office/fonts/Regular.ttf'),
+        location.resolve('fonts/../assets/private.txt'),
+        location.replace(path: '/$_session/fonts%2f0.ttf'),
+        location.replace(path: '/$_session/fonts/%2e%2e/0.ttf'),
+        location.resolve('fonts/0.ttf?query=1'),
+        location.replace(path: '/another-session/fonts/0.ttf'),
+      ]) {
+        expect(
+          (await _request(candidate)).status,
+          HttpStatus.notFound,
+          reason: candidate.toString(),
+        );
+      }
+      for (final headers in [
+        {'Origin': 'https://remote.invalid'},
+        {'Host': 'remote.invalid'},
+        {'Sec-Fetch-Site': 'cross-site'},
+      ]) {
+        expect(
+          (await _request(
+            location.resolve('fonts/0.ttf'),
+            headers: headers,
+          )).status,
+          HttpStatus.notFound,
+        );
+      }
+      expect(assets.loads, isNot(contains('assets/fonts/Unlisted.ttf')));
+      expect(assets.loads, isNot(contains('assets/private.txt')));
+      await server.close();
+      expect(() => server.fontDescriptors, throwsStateError);
+    },
+  );
 
   test(
     'closing during asset loading prevents a later listener from opening',

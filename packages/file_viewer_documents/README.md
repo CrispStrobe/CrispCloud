@@ -16,8 +16,12 @@ It does not load the upstream preset or download a renderer at runtime.
 | XML tools | XML, XSD, XSL, XSLT | Apache-2.0 integration; MIT xmllint-wasm/libxml2/libxslt, BSD-3-Clause xslt-polyfill, Zlib terms, Apache-2.0 DOMPurify selection. |
 
 The complete shipped grants are in `assets/licenses/THIRD_PARTY.txt`, including
-the original native notices and matching-source/build references. The generated
-`RUNTIME_MANIFEST.json` records input, overlay, dependency and asset hashes.
+the original native notices and matching-source/build references. Each unique
+complete text is included once with every original source attribution. Exact
+original notice copies are retained under source-only `notices/`, outside the
+Flutter asset bundle. The schema-2 `RUNTIME_MANIFEST.json` maps every original
+notice to its copy and records its hash, as well as the shipped aggregate/host
+grants, input, overlay, dependency and runtime asset hashes.
 The exact WordPerfect source archives, shim and original build materials are
 also retained under `corresponding-source/wordperfect` in this source repository.
 They are not added to the application's rendering payload.
@@ -38,10 +42,24 @@ Schemas and stylesheets are explicitly supplied files or pasted text. Their
 external imports, includes, DTD/entity resources and document loads are disabled.
 Transformation output stays in the preview; it does not overwrite the input.
 
-The host receives only a bounded byte snapshot, filename, language and appearance
-settings. It receives no provider client, credentials, native path or remote file
+The host receives a bounded byte snapshot, filename, language, appearance
+settings and an optional exact catalog of existing local font assets. It receives no provider client, credentials, native path or remote file
 URL. It transfers bytes in 192 KiB chunks with a per-view random session identifier.
 Changing source or closing the view revokes the renderer's lifetime and workers.
+
+WordPerfect, XLS and PPT reuse the app's shared font catalog without copying
+another font pack into this package. The host accepts at most 64 configured
+faces and validates every URL against the exact native session route or Flutter
+app asset route. It does not fetch URLs or font names from a document. Faces are
+selected lazily by family, weight and italic style, with a 4 MiB per-font and
+16 MiB per-preview byte cap and five-second fetch/decode deadlines. Required
+faces finish loading before content measurement. Missing or unknown fonts show
+a diagnostic and use browser fallback. Original names remain available to the
+browser; configured compatibility aliases reuse the bundled face. WordPerfect's
+structured model uses Liberation Serif because its native wire omits original
+family names. PPT embeds only each rendered slide's selected fonts into its
+standalone SVG image before rasterization. PS/EPS retains its existing Base35
+resources; CHM embedded fonts and XML presentation are unchanged.
 
 The general source cap is 64 MiB; XLS/PPT/PS are limited to 32 MiB and XML to 4 MiB.
 Each parser adds bounds for decoded resources, records, cells, pages and output.
@@ -85,7 +103,8 @@ Use Node 24 and the checked-in exact npm lockfile:
 ```sh
 cd packages/file_viewer_documents/tooling
 npm ci --ignore-scripts --no-audit --no-fund
-node build.mjs
+npm run build
+npm test
 ```
 
 By default, the build fetches the pinned upstream into ignored `tooling/.source`.
@@ -93,10 +112,16 @@ Set `FILE_VIEWER_UPSTREAM_DIR` to reuse a clean checkout at that exact commit.
 The build rejects a different commit or tracked source changes. It stages only
 the relevant source directories and overlays, then verifies the selected module
 graph excludes the CAD/OCCT, Mermaid/ELK, HEIC, archive and Draw.io bundles.
-Generated `assets/runtime` and license records are included in the app bundle.
+Generated, minified `assets/runtime` and the complete aggregate/host grants are
+included in the app bundle. Source-only original notice copies and matching MPL
+source archives are not additional application assets. The build preserves
+linked JavaScript legal comments and rejects conflicting notice filenames or
+notice texts that cannot be represented losslessly in UTF-8.
+The contract tests reuse the same `tooling/.source` checkout by default; an
+explicit `FILE_VIEWER_UPSTREAM_DIR` also applies to them.
 
 ```sh
-node --test packages/file_viewer_documents/engines/*/test/*.test.mjs
+# From the repository root:
 cd packages/file_viewer_documents/tooling
 npx --no-install playwright install --with-deps chromium
 cd ../../..

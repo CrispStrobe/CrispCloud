@@ -20,7 +20,7 @@ package = Path(sys.argv[1])
 def verify_runtime_assets(package):
     manifest_bytes = (package / 'RUNTIME_MANIFEST.json').read_bytes()
     manifest = json.loads(manifest_bytes)
-    if manifest.get('schema') != 1 or manifest.get('upstream', {}).get('repository') != 'https://github.com/flyfish-dev/file-viewer.git' or manifest.get('upstream', {}).get('commit') != 'd264009ca6efb3daed79a39d1ae63133e0f25558':
+    if manifest.get('schema') != 2 or manifest.get('upstream', {}).get('repository') != 'https://github.com/flyfish-dev/file-viewer.git' or manifest.get('upstream', {}).get('commit') != 'd264009ca6efb3daed79a39d1ae63133e0f25558':
         raise SystemExit('The committed document runtime has an unexpected source pin or schema.')
     runtime = package / 'assets/runtime'
     if (runtime / 'manifest.json').read_bytes() != manifest_bytes:

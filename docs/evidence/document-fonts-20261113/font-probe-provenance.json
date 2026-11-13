@@ -1,0 +1,19 @@
+{
+  "app_head": "b3b03807bcbde5f77fd842e8eb9918807be64376",
+  "flutter": "3.47.8",
+  "dart": "3.13.7",
+  "flutter_widget_from_html_core": "0.17.4",
+  "csslib": "1.0.2",
+  "source_hashes": {
+    "lib/services/office_pdf_service.dart": "a406c87e95508e934a16be55a6b9028a5c2f73287d8025e656597b86725c2ad2",
+    "lib/widgets/office_editor_dialog.dart": "a0cf4acb895010d5ff0b7d1b1e1ec6ce9dea1f96c3720ed39bcdb55f62c30ca0",
+    "lib/widgets/internal_viewer_dialog.dart": "0cb0caa0b55baa7d6e0451fdbd3b1c15b7eab93dcaa5ca8153c8a962441228ee",
+    "packages/legacy_doc_parser/lib/src/legacy_word_structured_render.dart": "45a039b1872d2ae6e37fc5dd2fafe38f926f8855475d1c004c627ff1ae89e503",
+    "packages/quds_office_editor/lib/src/embed/office_host_fonts.dart": "10459262dff64d0baca525d1e73bbec36bd9b1534dac6f569987380e73e1dbf8",
+    "packages/quds_office_engine/lib/src/fonts/office_font_set.dart": "862bc27e97276ed9c0bdf9e1e13741b7fa23ee1f3a06778cf8819e8b17226656",
+    "packages/quds_office_engine/lib/src/pdf/office_pdf_export.dart": "64ee098215afdc0398cac1ca8e488aa44f33a93f365844f94da5e9951cd539ee",
+    "assets/fonts/Roboto-Regular.ttf": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95",
+    "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf": "075e71be4c58beda172ecb574a799308f04c3d054c6a5b7434954d3b0f1b28d8",
+    "packages/quds_office_editor/fonts/NotoNaskhArabic-Regular.ttf": "8c67eaa2f0086872628fc3f7f760386f83c8be5c5e9a1ba3a38891237b2ac7cb"
+  }
+}

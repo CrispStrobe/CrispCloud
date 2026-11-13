@@ -880,6 +880,8 @@ extension _WordStories on _StructuredWordWriter {
         case LegacyWordWarning.recoveredGlobalTextboxSentinel:
         case LegacyWordWarning.recoveredHeaderTextboxAlias:
         case LegacyWordWarning.recoveredHeaderTextboxShapeAlias:
+        case LegacyWordWarning.recoveredLegacyDiagonalBorder:
+        case LegacyWordWarning.recoveredUnpositionedTextbox:
           limitations.add(LegacyWordConversionLimitation.partialFormatting);
         case LegacyWordWarning.numberingNotReconstructed:
           limitations.add(LegacyWordConversionLimitation.fieldsLists);

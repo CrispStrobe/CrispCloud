@@ -1,0 +1,1021 @@
+00:00 +0: loading test/legacy_word_fkp_recovery_test.dart
+00:00 +0: test/legacy_word_fkp_recovery_test.dart: reports the isolated nonconforming cb0 PAPX orphan-byte recovery
+00:00 +1: test/legacy_word_sprm_regression_test.dart: CPlain resets a selected character style to paragraph formatting
+00:00 +2: test/legacy_word_sprm_regression_test.dart: CPlain resets a selected character style to paragraph formatting
+00:00 +3: test/legacy_word_sprm_regression_test.dart: CPlain resets a selected character style to paragraph formatting
+00:00 +4: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +5: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +6: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +7: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +8: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +9: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +10: test/legacy_word_table_width_test.dart: tc80-nil retains preferred width apart from grid and raw no-wrap
+00:00 +11: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +12: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +13: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +14: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +15: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +16: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +17: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +18: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +19: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +20: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +21: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +22: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +23: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +24: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +25: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +26: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +27: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +28: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +29: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +30: test/legacy_word_binary_hyperlink_test.dart: retains a referenced internal hyperlink to Target, quoted=true
+00:00 +31: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +32: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +33: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +34: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +35: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +36: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +37: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +38: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +39: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +40: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +41: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +42: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +43: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +44: test/legacy_word_numbering_revisions_test.dart: NumRM preserves historical multilevel values independent of current list
+00:00 +45: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +46: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +47: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +48: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +49: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +50: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +51: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +52: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +53: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +54: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +55: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +56: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +57: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +58: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +59: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +60: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +61: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +62: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +63: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +64: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +65: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +66: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +67: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +68: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:00 +69: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:01 +70: test/legacy_word_structured_conversion_test.dart: bounds structural expansion and never silently uses the text converter
+00:01 +71: test/legacy_word_binary_hyperlink_test.dart: native bookmark field keeps its HFD-backed target and source bytes
+00:01 +72: test/legacy_word_lists_test.dart: reads appended LVLs outside lcbPlfLst and applies marker-only CHPX
+00:01 +73: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +74: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +75: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +76: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +77: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +78: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +79: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +80: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +81: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +82: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +83: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +84: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +85: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +86: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +87: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +88: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +89: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +90: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +91: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +92: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +93: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +94: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +95: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +96: test/legacy_word_terminal_mark_test.dart: one omitted terminal CR has unknown mark (compressed=false)
+00:01 +97: test/legacy_word_note_boundary_test.dart: footnote plain retains its exact content blocks
+00:01 +98: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +99: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +100: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +101: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +102: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +103: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +104: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +105: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +106: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +107: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +108: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +109: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +110: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +111: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +112: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +113: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +114: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +115: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +116: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +117: test/legacy_word_vertex_extent_test.dart: complete pVertices lengths retain ordinary validation without recovery
+00:01 +118: test/legacy_word_note_boundary_test.dart: footnote table retains its exact content blocks
+00:01 +119: test/legacy_word_note_boundary_test.dart: footnote table retains its exact content blocks
+00:01 +120: test/legacy_word_note_boundary_test.dart: footnote table retains its exact content blocks
+00:01 +121: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +122: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +123: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +124: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +125: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +126: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +127: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +128: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +129: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +130: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +131: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +132: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +133: test/legacy_word_vertex_extent_test.dart: exact header-excluded vertex length records bounded source evidence
+00:01 +134: test/legacy_word_shared_header_textbox_test.dart: distinct header variants retain every shared singleton instance
+00:01 +135: test/legacy_word_shared_header_textbox_test.dart: distinct header variants retain every shared singleton instance
+00:01 +136: test/legacy_word_shared_header_textbox_test.dart: distinct header variants retain every shared singleton instance
+00:01 +137: test/legacy_word_shared_header_textbox_test.dart: distinct header variants retain every shared singleton instance
+00:01 +138: test/legacy_word_shared_header_textbox_test.dart: distinct header variants retain every shared singleton instance
+00:01 +139: test/legacy_word_shared_header_textbox_test.dart: distinct header variants retain every shared singleton instance
+00:01 +140: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:01 +141: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:01 +142: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +143: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +144: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +145: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +146: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +147: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +148: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +149: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +150: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +151: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +152: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +153: test/legacy_word_table_revisions_test.dart: TWall retains independently rejectable row properties and provenance
+00:02 +154: test/legacy_word_native_textbox_test.dart: native two-shape chain recovers only its stale declared count
+00:02 +155: test/legacy_word_native_textbox_test.dart: native two-shape chain recovers only its stale declared count
+00:02 +156: test/legacy_word_native_textbox_test.dart: native two-shape chain recovers only its stale declared count
+00:02 +157: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +158: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +159: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +160: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +161: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +162: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +163: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +164: test/legacy_word_officeart_position_test.dart: Word FOPT origins override per axis without rewriting SPA offsets
+00:02 +165: test/legacy_word_table_revisions_test.dart: dormant second header request survives rejection of the first header edit
+00:02 +166: test/legacy_word_native_textbox_test.dart: rejects duplicate, gapped or excessive chain index 2
+00:02 +167: test/legacy_word_officeart_position_test.dart: an absent explicit axis retains its distinct SPA origin
+00:02 +168: test/legacy_word_officeart_position_test.dart: an absent explicit axis retains its distinct SPA origin
+00:02 +169: test/legacy_word_table_revisions_test.dart: false wall clears history without accepting or inventing a change
+00:02 +170: test/legacy_word_native_textbox_test.dart: count recovery rejects missing, cyclic or unresolved next shape 0
+00:02 +171: test/legacy_word_officeart_position_test.dart: DrawingML retains signed offsets and maps each documented origin
+00:02 +172: test/legacy_word_officeart_position_test.dart: DrawingML retains signed offsets and maps each documented origin
+00:02 +173: test/legacy_word_officeart_position_test.dart: DrawingML retains signed offsets and maps each documented origin
+00:02 +174: test/legacy_word_officeart_position_test.dart: DrawingML retains signed offsets and maps each documented origin
+00:02 +175: test/legacy_word_officeart_position_test.dart: DrawingML retains signed offsets and maps each documented origin
+00:02 +176: test/legacy_word_table_revisions_test.dart: post-wall column width cannot masquerade as complete native row history
+00:02 +177: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +178: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +179: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +180: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +181: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +182: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +183: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +184: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +185: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +186: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +187: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +188: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +189: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +190: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +191: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +192: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +193: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +194: test/legacy_word_comment_threads_test.dart: ATRDExtra links author/time/reply and keeps byte-exact immutable records
+00:02 +195: test/legacy_word_officeart_position_test.dart: independent Word16 binary retains its explicit page-relative images
+00:02 +196: test/legacy_word_metafile_test.dart: OfficeArt physical bounds never replace EMF device-coordinate bounds
+00:02 +197: test/legacy_word_metafile_test.dart: OfficeArt physical bounds never replace EMF device-coordinate bounds
+00:02 +198: test/legacy_word_metafile_test.dart: OfficeArt physical bounds never replace EMF device-coordinate bounds
+00:02 +199: test/legacy_word_comment_threads_test.dart: public-model writer accepts a reply listed before its parent
+00:02 +200: test/legacy_word_comment_threads_test.dart: public-model writer accepts a reply listed before its parent
+00:02 +201: test/legacy_word_metafile_test.dart: ambiguous nonplaceable WMF remains native without an invented SVG canvas
+00:02 +202: test/legacy_word_comment_threads_test.dart: table-ending comments join the generated final paragraph
+00:02 +203: test/legacy_word_comment_threads_test.dart: table-ending comments join the generated final paragraph
+00:02 +204: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +205: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +206: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +207: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +208: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +209: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +210: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +211: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +212: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +213: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +214: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +215: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +216: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +217: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +218: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +219: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +220: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +221: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +222: test/legacy_word_shape_context_test.dart: inactive solid background colors do not suppress resolved shapes
+00:02 +223: test/legacy_word_table_origin_test.dart: retains the signed first table edge instead of shifting content
+00:02 +224: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +225: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +226: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +227: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +228: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +229: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +230: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +231: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +232: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +233: test/legacy_word_compatibility_test.dart: absent settings differ from explicitly disabled source options
+00:03 +234: test/legacy_word_packed_vertices_test.dart: packed POINTs retain signed values and exact control-point order
+00:03 +235: test/legacy_word_packed_vertices_test.dart: packed POINTs retain signed values and exact control-point order
+00:03 +236: test/legacy_word_compatibility_test.dart: Copts60 fixture bit positions and opposite meanings are exact
+00:03 +237: test/legacy_word_compatibility_test.dart: Copts60 fixture bit positions and opposite meanings are exact
+00:03 +238: test/legacy_word_compatibility_test.dart: Copts60 fixture bit positions and opposite meanings are exact
+00:03 +239: test/legacy_word_shape_context_test.dart: every other used group bit and complex group word stays unsupported
+00:03 +240: test/legacy_word_packed_vertices_test.dart: packed explicit segments emit the identical editable path as 32-bit points
+00:03 +241: test/legacy_word_packed_vertices_test.dart: packed explicit segments emit the identical editable path as 32-bit points
+00:03 +242: test/legacy_word_packed_vertices_test.dart: packed explicit segments emit the identical editable path as 32-bit points
+00:03 +243: test/legacy_word_packed_vertices_test.dart: packed explicit segments emit the identical editable path as 32-bit points
+00:03 +244: test/legacy_word_packed_vertices_test.dart: packed explicit segments emit the identical editable path as 32-bit points
+00:03 +245: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +246: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +247: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +248: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +249: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +250: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +251: test/legacy_word_list_continuation_test.dart: shared lsid continues across alternating ilfo without losing source ids
+00:03 +252: test/legacy_word_compatibility_test.dart: Copts maps wrapping, table spacing, and later line-layout choices
+00:03 +253: test/legacy_word_compatibility_test.dart: Copts maps wrapping, table spacing, and later line-layout choices
+00:03 +254: test/legacy_word_compatibility_test.dart: Copts maps wrapping, table spacing, and later line-layout choices
+00:03 +255: test/legacy_word_compatibility_test.dart: Copts maps wrapping, table spacing, and later line-layout choices
+00:03 +256: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +257: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +258: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +259: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +260: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +261: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +262: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +263: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +264: test/legacy_word_picture_sizing_test.dart: PICMID ratios truncate fractional twips across native boundaries
+00:03 +265: test/legacy_word_list_sequences_test.dart: distinct unmodified LFOs continue a shared LSID and remain editable
+00:03 +266: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +267: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +268: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +269: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +270: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +271: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +272: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +273: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +274: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +275: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +276: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:03 +277: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +278: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +279: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +280: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +281: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +282: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +283: test/legacy_word_structured_bounds_test.dart: coalesces 32768 same-style pieces without repeated prefix copies
+00:04 +284: test/legacy_word_table_text_test.dart: nonconforming style highlight remains on runs without invalid style XML
+00:04 +285: test/legacy_word_table_text_test.dart: nonconforming style highlight remains on runs without invalid style XML
+00:04 +286: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +287: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +288: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +289: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +290: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +291: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +292: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +293: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +294: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +295: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +296: test/legacy_word_line_number_style_test.dart: native authored Line Number style keeps its source glyph formatting
+00:04 +297: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +298: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +299: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +300: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +301: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +302: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +303: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +304: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +305: test/legacy_word_table_position_test.dart: floating table anchors retain each physical origin and ignore padding bits
+00:04 +306: test/legacy_word_revisions_test.dart: CWall captures previous character properties before current changes
+00:04 +307: test/legacy_word_list_precedence_test.dart: an absent LVL marker font inherits the authored paragraph mark font
+00:04 +308: test/legacy_word_list_precedence_test.dart: an absent LVL marker font inherits the authored paragraph mark font
+00:04 +309: test/legacy_word_list_precedence_test.dart: an absent LVL marker font inherits the authored paragraph mark font
+00:04 +310: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +311: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +312: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +313: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +314: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +315: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +316: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +317: test/legacy_word_table_position_test.dart: alignment sentinels remain distinct from signed absolute offsets
+00:04 +318: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +319: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +320: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +321: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +322: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +323: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +324: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +325: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +326: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +327: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +328: test/legacy_word_textbox_spare_test.dart: Word14 global spare sentinel imports all six independently bounded boxes
+00:04 +329: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +330: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +331: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +332: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +333: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +334: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +335: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +336: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +337: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +338: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +339: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +340: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +341: test/legacy_word_table_position_test.dart: absolute table origin maps padding and bounded single-border edges
+00:04 +342: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +343: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +344: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +345: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +346: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +347: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +348: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +349: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +350: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +351: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +352: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +353: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +354: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +355: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +356: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:04 +357: test/paragraph_decoration_conversion_test.dart: binary underline variants retain exact WordprocessingML values
+00:05 +358: test/legacy_word_ole_placeholder_test.dart: unavailable preview uses reviewed pixels and retains exact OLE bytes
+00:05 +359: test/legacy_word_ole_placeholder_test.dart: unavailable preview uses reviewed pixels and retains exact OLE bytes
+00:05 +360: test/legacy_word_ole_placeholder_test.dart: unavailable preview uses reviewed pixels and retains exact OLE bytes
+00:05 +361: test/legacy_word_ole_placeholder_test.dart: unavailable preview uses reviewed pixels and retains exact OLE bytes
+00:05 +362: test/legacy_word_ole_placeholder_test.dart: unavailable preview uses reviewed pixels and retains exact OLE bytes
+00:05 +363: test/legacy_word_shape_conversion_test.dart: resolved binary rectangles, ellipses and lines become editable shapes
+00:05 +364: test/legacy_word_shape_conversion_test.dart: resolved binary rectangles, ellipses and lines become editable shapes
+00:05 +365: test/legacy_word_shape_conversion_test.dart: resolved binary rectangles, ellipses and lines become editable shapes
+00:05 +366: test/legacy_word_shape_conversion_test.dart: resolved binary rectangles, ellipses and lines become editable shapes
+00:05 +367: test/legacy_word_shape_conversion_test.dart: resolved binary rectangles, ellipses and lines become editable shapes
+00:05 +368: test/legacy_word_shape_conversion_test.dart: resolved binary rectangles, ellipses and lines become editable shapes
+00:05 +369: test/legacy_word_ink_evidence_test.dart: unwraps the exact bounded IMsoInkData bytes without changing source
+00:05 +370: test/legacy_word_ink_evidence_test.dart: unwraps the exact bounded IMsoInkData bytes without changing source
+00:05 +371: test/legacy_word_ink_evidence_test.dart: unwraps the exact bounded IMsoInkData bytes without changing source
+00:05 +372: test/legacy_word_ink_evidence_test.dart: unwraps the exact bounded IMsoInkData bytes without changing source
+00:05 +373: test/legacy_word_ink_evidence_test.dart: unwraps the exact bounded IMsoInkData bytes without changing source
+00:05 +374: test/legacy_word_structured_render_test.dart: horizontal merges retain continuation paragraphs without a fake header
+00:05 +375: test/legacy_word_shape_conversion_test.dart: horizontal and vertical lines keep zero extent and independent flips
+00:05 +376: test/legacy_word_shape_conversion_test.dart: horizontal and vertical lines keep zero extent and independent flips
+00:05 +377: test/legacy_word_shape_conversion_test.dart: horizontal and vertical lines keep zero extent and independent flips
+00:05 +378: test/legacy_word_shape_conversion_test.dart: horizontal and vertical lines keep zero extent and independent flips
+00:05 +379: test/legacy_word_shape_conversion_test.dart: horizontal and vertical lines keep zero extent and independent flips
+00:05 +380: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +381: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +382: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +383: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +384: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +385: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +386: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +387: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +388: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +389: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +390: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +391: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +392: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +393: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +394: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +395: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +396: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +397: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +398: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +399: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +400: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +401: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +402: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +403: test/legacy_word_structured_render_test.dart: counts escaped UTF-8 output against the preview size budget
+00:05 +404: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +405: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +406: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +407: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +408: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +409: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +410: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +411: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +412: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +413: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +414: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +415: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +416: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +417: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +418: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +419: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +420: test/legacy_word_image_appearance_test.dart: retained native image controls keep their verified occurrence and transform
+00:05 +421: test/legacy_word_table_properties_test.dart: PTableProps stops the legacy tail for 1 referenced rows
+00:05 +422: test/legacy_word_table_properties_test.dart: PTableProps stops the legacy tail for 1 referenced rows
+00:05 +423: test/legacy_word_table_properties_test.dart: PTableProps stops the legacy tail for 1 referenced rows
+00:05 +424: test/legacy_word_table_properties_test.dart: PTableProps stops the legacy tail for 1 referenced rows
+00:05 +425: test/legacy_word_table_properties_test.dart: PTableProps stops the legacy tail for 1 referenced rows
+00:05 +426: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:05 +427: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:05 +428: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:05 +429: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:05 +430: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:05 +431: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:05 +432: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +433: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +434: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +435: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +436: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +437: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +438: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +439: test/legacy_word_underlines_test.dart: maps every defined Kul value to its exact underline name
+00:06 +440: test/legacy_word_image_appearance_test.dart: absolute quarter turns preserve the FSPA center and pre-rotation axes
+00:06 +441: test/legacy_word_underlines_test.dart: invalid Kul gaps are rejected rather than treated as single underline
+00:06 +442: test/legacy_word_image_appearance_test.dart: rotation mapping does not infer inline, arbitrary-angle or aligned extents
+00:06 +443: test/legacy_word_image_appearance_test.dart: rotation mapping does not infer inline, arbitrary-angle or aligned extents
+00:06 +444: test/legacy_word_image_appearance_test.dart: rotation mapping does not infer inline, arbitrary-angle or aligned extents
+00:06 +445: test/legacy_word_image_appearance_test.dart: group, master, unresolved transform and 3D contexts keep original evidence
+00:06 +446: test/legacy_word_native_section_direction_test.dart: native section directions, columns and source-defined numbering survive together
+00:06 +447: test/legacy_word_native_section_direction_test.dart: native section directions, columns and source-defined numbering survive together
+00:06 +448: test/legacy_word_native_section_direction_test.dart: native section directions, columns and source-defined numbering survive together
+00:06 +449: test/legacy_word_native_section_direction_test.dart: native section directions, columns and source-defined numbering survive together
+00:06 +450: test/legacy_word_native_section_direction_test.dart: native section directions, columns and source-defined numbering survive together
+00:06 +451: test/legacy_word_native_section_direction_test.dart: native section directions, columns and source-defined numbering survive together
+00:06 +452: test/extended_conversion_test.dart: stored first and even headers remain inactive unless source settings enable them
+00:06 +453: test/legacy_word_script_fonts_test.dart: independent binary font slots remain separate in runs and marks
+00:06 +454: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +455: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +456: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +457: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +458: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +459: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +460: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +461: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +462: test/legacy_word_preview_compatibility_test.dart: legacy linked-file PICF retains inert name and exact source bytes
+00:06 +463: test/legacy_word_script_fonts_test.dart: an explicit marker East Asian font leaves other marker faces inherited
+00:06 +464: test/legacy_word_script_fonts_test.dart: an explicit marker East Asian font leaves other marker faces inherited
+00:06 +465: test/extended_conversion_test.dart: validated textbox chain writes linked shapes and keeps the story exactly once
+00:06 +466: test/extended_conversion_test.dart: validated textbox chain writes linked shapes and keeps the story exactly once
+00:06 +467: test/extended_conversion_test.dart: validated textbox chain writes linked shapes and keeps the story exactly once
+00:06 +468: test/extended_conversion_test.dart: validated textbox chain writes linked shapes and keeps the story exactly once
+00:06 +469: test/extended_conversion_test.dart: validated textbox chain writes linked shapes and keeps the story exactly once
+00:06 +470: test/legacy_word_ink_decoder_test.dart: independent WPF nonempty source inventory is complete
+00:06 +471: test/legacy_word_ink_decoder_test.dart: independent WPF nonempty source inventory is complete
+00:06 +472: test/legacy_word_ink_decoder_test.dart: independent WPF nonempty source inventory is complete
+00:06 +473: test/legacy_word_script_fonts_test.dart: table font masks emit only explicitly authored script slots
+00:06 +474: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +475: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +476: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +477: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +478: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +479: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +480: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +481: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +482: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +483: test/extended_conversion_test.dart: saved picture names do not suppress valid stored image bytes
+00:06 +484: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +485: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +486: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +487: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +488: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +489: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +490: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +491: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +492: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +493: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +494: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +495: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +496: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +497: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +498: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +499: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +500: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +501: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +502: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +503: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +504: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +505: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +506: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +507: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +508: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +509: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +510: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +511: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +512: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +513: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +514: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +515: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +516: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +517: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +518: test/legacy_word_script_fonts_test.dart: retained formatting source declares Cambria and a separate CJK face
+00:06 +519: test/legacy_word_ink_decoder_test.dart: every truncated original fails before exposing partial strokes
+00:06 +520: test/legacy_word_ink_decoder_test.dart: every truncated original fails before exposing partial strokes
+00:06 +521: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +522: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +523: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +524: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +525: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +526: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +527: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +528: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +529: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +530: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +531: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +532: test/extended_conversion_test.dart: numbering from the binary parser keeps localized formats and marker-only formatting
+00:06 +533: test/legacy_word_ink_decoder_test.dart: single-byte damage always yields a bounded result
+00:06 +534: test/extended_conversion_test.dart: referenced PNG is byte-exact, cropped, and linked from its owning part
+00:06 +535: test/extended_conversion_test.dart: floating image preserves FSPA position, anchoring, and wrap selection
+00:06 +536: test/extended_conversion_test.dart: hidden deleted pictures, drawings and OLE retain source presentation
+00:06 +537: test/extended_conversion_test.dart: headers, footers, notes and comments have actual typed parts and references
+00:06 +538: test/extended_conversion_test.dart: typed note references preserve separate authored stories without duplicating markers
+00:06 +539: test/legacy_word_metafile_arcs_test.dart: EMF and WMF project radials onto the eccentric ellipse
+00:06 +540: test/legacy_word_metafile_arcs_test.dart: EMF and WMF project radials onto the eccentric ellipse
+00:06 +541: test/legacy_word_metafile_arcs_test.dart: EMF and WMF project radials onto the eccentric ellipse
+00:06 +542: test/legacy_word_metafile_arcs_test.dart: EMF and WMF project radials onto the eccentric ellipse
+00:06 +543: test/legacy_word_metafile_arcs_test.dart: EMF and WMF project radials onto the eccentric ellipse
+00:06 +544: test/legacy_word_metafile_arcs_test.dart: EMF and WMF project radials onto the eccentric ellipse
+00:06 +545: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +546: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +547: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +548: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +549: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +550: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +551: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +552: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +553: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +554: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +555: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +556: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +557: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +558: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +559: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +560: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:06 +561: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:07 +562: test/legacy_word_table_format_test.dart: native noWrap uses OnOffOnly values for true and explicit false
+00:07 +563: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +564: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +565: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +566: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +567: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +568: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +569: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +570: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +571: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +572: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +573: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +574: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +575: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +576: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +577: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +578: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +579: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +580: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +581: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +582: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +583: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +584: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +585: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +586: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +587: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +588: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +589: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +590: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +591: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +592: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +593: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +594: test/legacy_word_textbox_boundary_test.dart: main textbox preserves content
+00:07 +595: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +596: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +597: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +598: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +599: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +600: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +601: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +602: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +603: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +604: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +605: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +606: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +607: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +608: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +609: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +610: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +611: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +612: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +613: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +614: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +615: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +616: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +617: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +618: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +619: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +620: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +621: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +622: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +623: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +624: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +625: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +626: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +627: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +628: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +629: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +630: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +631: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +632: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +633: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +634: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +635: test/legacy_word_media_revisions_test.dart: inline-picture retains separate insertion=true deletion=false history
+00:07 +636: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +637: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +638: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +639: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +640: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +641: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +642: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +643: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +644: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +645: test/legacy_word_metafile_render_test.dart: compound points share the global preview budget
+00:07 +646: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +647: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +648: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +649: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +650: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +651: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +652: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +653: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +654: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +655: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +656: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +657: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +658: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +659: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +660: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +661: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +662: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +663: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +664: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +665: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +666: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +667: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +668: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +669: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +670: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +671: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +672: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +673: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +674: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +675: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +676: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +677: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +678: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +679: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +680: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +681: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +682: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +683: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +684: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +685: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +686: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +687: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +688: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +689: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +690: test/legacy_word_conditional_table_test.dart: all twelve native conditions retain identity and cascade into cells
+00:07 +691: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +692: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +693: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +694: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +695: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +696: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +697: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +698: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +699: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +700: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +701: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +702: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +703: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +704: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +705: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +706: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +707: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +708: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +709: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +710: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +711: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:07 +712: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +713: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +714: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +715: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +716: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +717: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +718: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +719: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +720: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +721: test/legacy_word_section_revisions_test.dart: section change retains independently rejectable dimensions, columns and margins
+00:08 +722: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +723: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +724: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +725: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +726: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +727: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +728: test/legacy_word_wrap_distances_test.dart: literal wrap distances retain side, unit and explicit zero
+00:08 +729: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +730: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +731: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +732: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +733: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +734: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +735: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +736: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +737: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +738: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +739: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +740: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +741: test/legacy_word_native_recovery_test.dart: body references and note markers keep separate source character styles
+00:08 +742: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +743: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +744: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +745: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +746: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +747: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +748: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +749: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +750: test/legacy_word_header_table_test.dart: header/footer slot 0 recovers only the bounded closed table
+00:08 +751: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +752: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +753: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +754: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +755: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +756: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +757: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +758: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +759: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +760: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +761: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +762: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +763: test/legacy_word_html_media_test.dart: DOC EMF reference becomes an actual safe SVG image
+00:08 +764: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +765: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +766: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +767: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +768: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +769: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +770: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +771: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +772: test/legacy_word_table_operations_test.dart: TIstd replaces row defaults while preserving cell state and exemptions
+00:08 +773: test/legacy_word_structured_document_test.dart: maps mixed disordered pieces to physical character properties
+00:08 +774: test/legacy_word_structured_document_test.dart: maps mixed disordered pieces to physical character properties
+00:08 +775: test/legacy_word_structured_document_test.dart: maps mixed disordered pieces to physical character properties
+00:08 +776: test/legacy_word_structured_document_test.dart: maps mixed disordered pieces to physical character properties
+00:08 +777: test/legacy_word_structured_document_test.dart: maps mixed disordered pieces to physical character properties
+00:08 +778: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +779: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +780: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +781: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +782: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +783: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +784: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +785: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +786: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +787: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +788: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +789: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +790: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +791: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +792: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +793: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +794: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +795: test/legacy_word_table_operations_test.dart: TMerge and TSplit retain distinct editable cell merge state
+00:08 +796: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +797: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +798: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +799: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +800: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +801: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +802: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +803: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +804: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +805: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +806: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +807: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +808: test/legacy_word_html_media_test.dart: SVG preview budget never prevents retaining or converting a complete metafile
+00:08 +809: test/legacy_word_table_operations_test.dart: native Word table styles retain the optional istd prefix in PAPX
+00:08 +810: test/legacy_word_table_operations_test.dart: native Word table styles retain the optional istd prefix in PAPX
+00:08 +811: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +812: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +813: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +814: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +815: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +816: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +817: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +818: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +819: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +820: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +821: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:08 +822: test/legacy_word_page_size_source_test.dart: list-continue contains no source page-size or margin declaration
+00:09 +823: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +824: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +825: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +826: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +827: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +828: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +829: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +830: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +831: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +832: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +833: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +834: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +835: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +836: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +837: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +838: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +839: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +840: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +841: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +842: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +843: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +844: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +845: test/legacy_word_html_media_test.dart: oversized rasters remain native assets with bounded preview omission
+00:09 +846: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +847: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +848: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +849: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +850: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +851: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +852: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +853: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +854: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +855: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +856: test/legacy_word_textbox_table_test.dart: producer metadata matches each generated textbox table package
+00:09 +857: test/legacy_word_blip_store_count_test.dart: constant-one delayed store resolves all bounded entries with evidence
+00:09 +858: test/legacy_word_blip_store_count_test.dart: constant-one delayed store resolves all bounded entries with evidence
+00:09 +859: test/legacy_word_blip_store_count_test.dart: constant-one delayed store resolves all bounded entries with evidence
+00:09 +860: test/legacy_word_blip_store_count_test.dart: constant-one delayed store resolves all bounded entries with evidence
+00:09 +861: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +862: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +863: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +864: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +865: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +866: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +867: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +868: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +869: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +870: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +871: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +872: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +873: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +874: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +875: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:09 +876: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +877: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +878: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +879: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +880: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +881: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +882: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +883: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +884: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +885: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +886: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +887: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +888: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +889: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +890: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +891: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +892: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +893: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +894: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +895: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +896: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +897: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +898: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +899: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +900: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +901: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +902: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +903: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +904: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +905: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +906: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +907: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +908: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +909: test/legacy_word_html_media_test.dart: 26 referenced notes share one bounded emitted-image allowance
+00:10 +910: test/legacy_word_textbox_layout_test.dart: textbox paint retains independently resolved opacity, line and shadow
+00:10 +911: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +912: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +913: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +914: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +915: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +916: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +917: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +918: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +919: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +920: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +921: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +922: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +923: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +924: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +925: test/legacy_word_note_formats_test.dart: SEPX retains all fixed note formats and explicit none
+00:10 +926: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +927: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +928: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +929: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +930: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +931: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +932: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +933: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:10 +934: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +935: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +936: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +937: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +938: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +939: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +940: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +941: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +942: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +943: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +944: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +945: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +946: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +947: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +948: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +949: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +950: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +951: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +952: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +953: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +954: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +955: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +956: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +957: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +958: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +959: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +960: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +961: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +962: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +963: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +964: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +965: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +966: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +967: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +968: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +969: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +970: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +971: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +972: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +973: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +974: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +975: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +976: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +977: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +978: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +979: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +980: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +981: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +982: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +983: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +984: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +985: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +986: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +987: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +988: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +989: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +990: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +991: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +992: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +993: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +994: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +995: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +996: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +997: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +998: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +999: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1000: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1001: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1002: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1003: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1004: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1005: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1006: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1007: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1008: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1009: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1010: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1011: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1012: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1013: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:11 +1014: test/legacy_word_html_media_test.dart: all story text is reserved before images can consume the document limit
+00:12 +1015: test/legacy_word_html_media_test.dart: malformed, huge-pixel, animated and nonbrowser rasters stay inactive
+00:12 +1016: test/legacy_word_html_media_test.dart: public hidden runs suppress inconsistent visible media metadata
+00:12 +1017: test/legacy_word_html_media_test.dart: CP joins sort media and split visible runs without changing text
+00:12 +1018: test/legacy_word_html_media_test.dart: ambiguous or excessive public reference graphs fail within bounds
+00:12 +1019: All tests passed!

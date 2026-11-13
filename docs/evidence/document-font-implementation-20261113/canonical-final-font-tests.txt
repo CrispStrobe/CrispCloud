@@ -1,0 +1,10 @@
+00:00 +0: loading test/office_named_fonts_test.dart
+00:00 +0: family aliases resolve real regular, bold and italic cuts
+00:00 +1: Hebrew and Arabic use covering faces; absent Unicode is explicit
+00:00 +2: Word measures each run before wrapping with real face and size
+00:00 +3: PDF embeds requested outlines without double bold or slant
+00:00 +4: only painted substitutions are diagnosed and missing text draws boxes
+00:00 +5: diagnostics bound hostile names and code point collections
+00:00 +6: spreadsheet PDF reads retained native family and italic without edits
+00:00 +7: mixed Hebrew and Arabic PDF uses covering embedded glyphs
+00:00 +8: All tests passed!

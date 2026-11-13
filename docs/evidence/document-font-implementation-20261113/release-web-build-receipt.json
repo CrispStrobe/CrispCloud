@@ -1,0 +1,34 @@
+{
+  "command": "flutter build web --no-pub --release --no-wasm-dry-run",
+  "start_time_utc": "2026-11-13T11:25:04Z",
+  "starting_head": "3e70a4f4f5bfe149774eb29b81ab30380f3c055e",
+  "source_file_hashes": {
+    "lib/services/document_fonts.dart": "d5645ef5d6b3fdc6a10ae6606bfa78ecc3365a66d66819f004b5d48b1015413b",
+    "lib/services/document_font_catalog.dart": "3a074aba5dab7667d695498783684dd63029d85e6c3bf3e02238228edc481a9c",
+    "lib/services/office_css_font.dart": "5ff978474143452c1150671a225f3310cf94ecaae20e08dfc684161e41096926",
+    "lib/widgets/office_html_widget_factory.dart": "106626f16dd32a2a652061790cb70a1d3c071c39d69ad6923d3d4278cb5073ce",
+    "lib/widgets/internal_viewer_dialog.dart": "3cb72922dfe34fe017dfb251a19c2953bba5cc649c92ffe50faa975d2e06d750",
+    "pubspec.yaml": "8816a9c0031151aec43c49e1a647fd3871a52ae2f5d24ea8c874b386eb49350d",
+    "pubspec.lock": "fa128435bbb2ef6ce418c028742307c74623561593bdbbe6cb0a8d1baca9598d",
+    "packages/file_viewer_documents/RUNTIME_MANIFEST.json": "9003865814d3b192490f68837848538abbd33d4aca589eac9ec72a7a83a59639"
+  },
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8"
+  },
+  "relevant_source_unchanged_during_build": true,
+  "finished_head": "ab3af2f813a97e57be351366ebe9573798177e4c",
+  "verification_time_utc": "2026-11-13T11:29:12Z",
+  "exit_code": 0,
+  "elapsed_seconds_from_flutter": 231.3
+}

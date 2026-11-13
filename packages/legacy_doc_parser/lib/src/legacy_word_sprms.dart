@@ -425,7 +425,12 @@ void _applyParagraph(
   Set<LegacyWordWarning> warnings, {
   _Props Function(int)? resolveParagraphStyle,
 }) {
-  for (final operation in operations) {
+  for (
+    var operationIndex = 0;
+    operationIndex < operations.length;
+    operationIndex++
+  ) {
+    final operation = operations[operationIndex];
     if (operation.group != 1 && operation.group != 5) continue;
     budget.apply();
     _trackTableRevisionOperation(operation, output);
@@ -660,9 +665,31 @@ void _applyParagraph(
         final first = value.u8(0), limit = value.u8(1), sides = value.u8(2);
         if (first >= definition.flags.length ||
             limit < first ||
-            limit > definition.flags.length ||
-            sides > (old ? 15 : 63)) {
+            limit > definition.flags.length) {
           throw const FormatException('Invalid Word cell border range.');
+        }
+        if (sides > (old ? 15 : 63)) {
+          // WPS writes a redundant old nil diagonal border immediately before
+          // the equivalent modern operation. The old operand cannot express
+          // diagonal sides. Ignore only this exact corroborated pair, retaining
+          // the normal cell bounds and the next operation's validated value.
+          final next = operationIndex + 1 < operations.length
+              ? operations[operationIndex + 1]
+              : null;
+          if (!old ||
+              (sides != 0x10 && sides != 0x20) ||
+              value.u32(3) != 0xffffffff ||
+              next?.code != 0xd62f ||
+              next!.data.length != 11 ||
+              next.data.u8(0) != first ||
+              next.data.u8(1) != limit ||
+              next.data.u8(2) != sides ||
+              next.data.u32(3) != 0xffffffff ||
+              next.data.u32(7) != 0xffffffff) {
+            throw const FormatException('Invalid Word cell border range.');
+          }
+          warnings.add(LegacyWordWarning.recoveredLegacyDiagonalBorder);
+          continue;
         }
         final border = _readTableBorder(
           _Bytes(value.slice(3, width)),

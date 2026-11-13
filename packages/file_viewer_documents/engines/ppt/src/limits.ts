@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // CrispCloud resource policy for the Apache-2.0 Flyfish PPT 1.0.2 runtime.
 import type { PptViewerRuntime } from '@file-viewer/ppt';
+import type { DocumentFonts } from '../../host/fonts.js';
 
 export const PPT_LIMITS = Object.freeze({
   maxFileBytes: 32 * 1024 * 1024,
@@ -41,12 +42,54 @@ export function assertPptSlideBounds(model: { slides: readonly { size: { width: 
 }
 
 /** Validate the parsed model before runtime.mount creates any page canvases. */
-export function boundPptRuntime(runtime: PptViewerRuntime): PptViewerRuntime {
+export function boundPptRuntime(runtime: PptViewerRuntime, fonts?: DocumentFonts): PptViewerRuntime {
   const open = runtime.open.bind(runtime);
   runtime.open = async input => {
     const document = await open(input);
     try {
       assertPptSlideBounds(document.model);
+      if (fonts) {
+        const render = document.renderSlide.bind(document);
+        const release = document.releaseSlide.bind(document);
+        const generation = new Map<number, number>();
+        const pending = new Map<HTMLCanvasElement | OffscreenCanvas, number>();
+        document.renderSlide = async (index, canvas, options = {}) => {
+          const token = generation.get(index) || 0;
+          const slide = document.model.slides[index];
+          if (!slide) return render(index, canvas, options);
+          const models = [slide];
+          const masterIds = new Set<number>();
+          let masterId = slide.showMasterShapes === false ? undefined : slide.masterId;
+          while (masterId !== undefined && !masterIds.has(masterId)) {
+            masterIds.add(masterId);
+            const master = document.model.masters.find(item => item.id === masterId);
+            if (!master) break;
+            models.push(master); masterId = master.masterId;
+          }
+          pending.set(canvas, index);
+          try {
+            // Only visible/requested slides and their master chain need fonts.
+            // Await faces before the runtime creates its Canvas text measurer.
+            const prepared = await fonts.prepareModel(models, 'Arial');
+            if (document.closed || (generation.get(index) || 0) !== token) {
+              throw new DOMException('PowerPoint font rendering was aborted.', 'AbortError');
+            }
+            const withFonts = {...options, transformSvg: (svg: string) => prepared.embedSvg(svg)};
+            return await render(index, canvas, withFonts);
+          } finally { pending.delete(canvas); }
+        };
+        document.releaseSlide = async index => {
+          generation.set(index, (generation.get(index) || 0) + 1);
+          let released = false;
+          for (const [canvas, slideIndex] of pending) {
+            if (slideIndex !== index) continue;
+            canvas.width = 1; canvas.height = 1;
+            if ('dataset' in canvas) canvas.dataset.renderState = 'released';
+            released = true;
+          }
+          return await release(index) || released;
+        };
+      }
       return document;
     } catch (error) {
       await document.close();

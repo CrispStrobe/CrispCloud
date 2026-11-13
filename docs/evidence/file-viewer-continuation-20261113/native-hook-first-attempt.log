@@ -1,0 +1,35 @@
+Unhandled exception:
+Bad state: Pinned Kindling native build failed for x86_64-unknown-linux-gnu. Install Rust 1.88+ and that rustup target; Android also needs its NDK. Use the documented prebuilt library setting for distribution builds.
+
+error: rustup could not choose a version of cargo to run, because one wasn't specified explicitly, and no default is configured.
+help: run 'rustup default stable' to download the latest stable release of Rust and set it as your default toolchain.
+
+#0      main.<anonymous closure> (file:///workspace/scratch/60b40e52ccd6/runtime/pub-cache/git/crisperbooks-32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52/packages/crisp_ebook_conversion/hook/build.dart:92:9)
+<asynchronous suspension>
+#1      build (package:hooks/src/api/build_and_link.dart:250:5)
+<asynchronous suspension>
+#2      main (file:///workspace/scratch/60b40e52ccd6/runtime/pub-cache/git/crisperbooks-32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52/packages/crisp_ebook_conversion/hook/build.dart:8:3)
+<asynchronous suspension>
+
+  Building assets for package:crisp_ebook_conversion failed.
+  build.dart returned with exit code: 255.
+  To reproduce run:
+  (cd /workspace/scratch/60b40e52ccd6/runtime/pub-cache/git/crisperbooks-32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52/packages/crisp_ebook_conversion/; /workspace/scratch/60b40e52ccd6/runtime/flutter/bin/cache/dart-sdk/bin/dart --packages=/workspace/scratch/60b40e52ccd6/crispcloud/.dart_tool/package_config.json /workspace/scratch/60b40e52ccd6/crispcloud/.dart_tool/hooks_runner/crisp_ebook_conversion/6b4ebf10e7/hook.dill --config=/workspace/scratch/60b40e52ccd6/crispcloud/.dart_tool/hooks_runner/crisp_ebook_conversion/6b4ebf10e7/input.json )
+  stderr:
+  Unhandled exception:
+Bad state: Pinned Kindling native build failed for x86_64-unknown-linux-gnu. Install Rust 1.88+ and that rustup target; Android also needs its NDK. Use the documented prebuilt library setting for distribution builds.
+
+error: rustup could not choose a version of cargo to run, because one wasn't specified explicitly, and no default is configured.
+help: run 'rustup default stable' to download the latest stable release of Rust and set it as your default toolchain.
+
+#0      main.<anonymous closure> (file:///workspace/scratch/60b40e52ccd6/runtime/pub-cache/git/crisperbooks-32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52/packages/crisp_ebook_conversion/hook/build.dart:92:9)
+<asynchronous suspension>
+#1      build (package:hooks/src/api/build_and_link.dart:250:5)
+<asynchronous suspension>
+#2      main (file:///workspace/scratch/60b40e52ccd6/runtime/pub-cache/git/crisperbooks-32b00f43b6e5112f0b4168a09ff2dcba4c4e0a52/packages/crisp_ebook_conversion/hook/build.dart:8:3)
+<asynchronous suspension>
+
+  stdout:
+
+
+Building native assets failed. See the logs for more details.

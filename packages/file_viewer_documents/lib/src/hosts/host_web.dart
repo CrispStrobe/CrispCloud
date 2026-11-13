@@ -7,16 +7,19 @@ import 'package:flutter/widgets.dart';
 import 'package:web/web.dart' as web;
 
 import '../models.dart';
+import 'font_assets.dart';
 import 'host.dart' show DocumentHostSender;
 import 'host_policy.dart';
 
 Widget buildDocumentHost({
   required String session,
+  List<DocumentPreviewFont> fonts = const [],
   required void Function(DocumentHostSender sender) onConnected,
   required void Function(DocumentJson message) onMessage,
   required void Function(String message) onError,
 }) => _WebHost(
   session: session,
+  fonts: fonts,
   onConnected: onConnected,
   onMessage: onMessage,
   onError: onError,
@@ -25,11 +28,13 @@ Widget buildDocumentHost({
 class _WebHost extends StatefulWidget {
   const _WebHost({
     required this.session,
+    required this.fonts,
     required this.onConnected,
     required this.onMessage,
     required this.onError,
   });
   final String session;
+  final List<DocumentPreviewFont> fonts;
   final void Function(DocumentHostSender) onConnected;
   final void Function(DocumentJson) onMessage;
   final void Function(String) onError;
@@ -42,11 +47,15 @@ class _WebHostState extends State<_WebHost> {
   late final JSFunction _listener;
   late final Uri _uri;
   late final String _origin;
+  late final List<DocumentJson> _fonts;
   @override
   void initState() {
     super.initState();
-    _uri = Uri.parse(web.document.baseURI)
-        .resolve('assets/packages/file_viewer_documents/assets/index.html');
+    final appBase = Uri.parse(web.document.baseURI);
+    _uri = appBase.resolve(
+      'assets/packages/file_viewer_documents/assets/index.html',
+    );
+    _fonts = documentWebFontDescriptors(appBase, widget.fonts);
     _origin = _uri.origin;
     _listener = ((web.MessageEvent event) {
       final frame = _frame;
@@ -88,7 +97,10 @@ class _WebHostState extends State<_WebHost> {
       if (!mounted || _frame != frame) {
         throw StateError('The document browser has closed.');
       }
-      final encoded = encodeDocumentHostMessage(message, widget.session);
+      final encoded = encodeDocumentHostMessage(
+        documentHostMessageWithFonts(message, _fonts),
+        widget.session,
+      );
       frame.contentWindow?.postMessage(encoded.toJS, _origin.toJS);
     });
     frame.src = _uri.replace(fragment: widget.session).toString();

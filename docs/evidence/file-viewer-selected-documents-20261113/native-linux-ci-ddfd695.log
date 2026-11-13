@@ -1,0 +1,65 @@
+# Retrieved excerpt: native job 131760905157, run 43387993185
+# Source: https://github.com/CrispStrobe/CrispCloud/actions/runs/43387993185/job/131760905157
+# Source commit: ddfd6951997b16b3e7b1b72ec43a9f2e0077e9c8
+# Native release compilation and executable probe installation only; no desktop rendering was launched.
+
+2026-11-13T07:50:59.3546757Z Setting up libwebkit2gtk-4.1-dev (2.52.6-0ubuntu0.24.04.1) ...
+
+2026-11-13T07:51:01.0689847Z ##[group]Run bash packages/file_viewer_documents/tooling/build-linux-consumer.sh
+2026-11-13T07:51:01.0690897Z bash packages/file_viewer_documents/tooling/build-linux-consumer.sh
+2026-11-13T07:51:01.0711355Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T07:51:01.0711733Z env:
+2026-11-13T07:51:01.0711949Z   FLUTTER_SUPPRESS_ANALYTICS: true
+2026-11-13T07:51:01.0712231Z   DART_SUPPRESS_ANALYTICS: true
+2026-11-13T07:51:01.0712504Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-11-13T07:51:01.0712897Z   FLUTTER_ROOT: /opt/hostedtoolcache/flutter/stable-3.47.8-x64/flutter
+2026-11-13T07:51:01.0713303Z   PUB_CACHE: /home/runner/.pub-cache
+2026-11-13T07:51:01.0713825Z ##[endgroup]
+2026-11-13T07:51:01.4376776Z Flutter 3.47.8 (737ba8f885dc774b53b442759999a312c9461e4e); cmake version 3.31.6
+2026-11-13T07:51:01.4377677Z Verified 42 committed runtime assets against the pinned manifest.
+2026-11-13T07:51:02.2106834Z XML resource chooser policy: 27 checks passed
+2026-11-13T07:51:02.3255075Z Setting "enable-linux-desktop" value to "true".
+2026-11-13T07:51:02.3255697Z 
+2026-11-13T07:51:02.3256180Z You may need to restart any open editors for them to read new settings.
+2026-11-13T07:51:02.4933721Z Creating project ../../_temp/document-linux-consumer.RMl4xu/app...
+2026-11-13T07:51:02.6083161Z Wrote 19 files.
+2026-11-13T07:51:02.6083699Z 
+2026-11-13T07:51:02.6083837Z All done!
+2026-11-13T07:51:02.6097960Z You can find general documentation for Flutter at: https://docs.flutter.dev/
+2026-11-13T07:51:02.6099180Z Detailed API documentation is available at: https://api.flutter.dev/
+2026-11-13T07:51:02.6100106Z If you prefer video documentation, consider: https://www.youtube.com/c/flutterdev
+2026-11-13T07:51:02.6100610Z 
+2026-11-13T07:51:02.6100846Z In order to run your application, type:
+2026-11-13T07:51:02.6101151Z 
+2026-11-13T07:51:02.6101410Z   $ cd ../../_temp/document-linux-consumer.RMl4xu/app
+2026-11-13T07:51:02.6101841Z   $ flutter run
+2026-11-13T07:51:02.6102089Z 
+2026-11-13T07:51:02.6102491Z Your application code is in ../../_temp/document-linux-consumer.RMl4xu/app/lib/main.dart.
+2026-11-13T07:51:02.6102970Z 
+2026-11-13T07:51:02.8014751Z Resolving dependencies...
+2026-11-13T07:51:02.9450224Z Downloading packages...
+2026-11-13T07:51:03.0580290Z   characters 1.4.1 (from direct dependency to transitive dependency)
+2026-11-13T07:51:03.0581823Z   collection 1.19.1 (from direct dependency to transitive dependency)
+2026-11-13T07:51:03.0583235Z + file_viewer_documents 0.1.0 from path /home/runner/work/CrispCloud/CrispCloud/packages/file_viewer_documents
+2026-11-13T07:51:03.0584744Z + flutter 0.0.0 from sdk flutter
+2026-11-13T07:51:03.0585404Z + flutter_inappwebview 6.1.5
+2026-11-13T07:51:03.0585771Z + flutter_inappwebview_android 1.1.3
+2026-11-13T07:51:03.0586169Z + flutter_inappwebview_internal_annotations 1.3.0
+2026-11-13T07:51:03.0586559Z + flutter_inappwebview_ios 1.1.2
+2026-11-13T07:51:03.0586883Z + flutter_inappwebview_macos 1.1.2
+2026-11-13T07:51:03.0587279Z + flutter_inappwebview_platform_interface 1.3.0+1
+2026-11-13T07:51:03.0587657Z + flutter_inappwebview_web 1.1.2
+2026-11-13T07:51:03.0588098Z + flutter_inappwebview_windows 0.6.0
+2026-11-13T07:51:03.0588459Z + flutter_web_plugins 0.0.0 from sdk flutter
+2026-11-13T07:51:03.0589078Z   material_color_utilities 0.13.0 (from direct dependency to transitive dependency) (0.13.1 available)
+2026-11-13T07:51:03.0589815Z   meta 1.18.3 (from direct dependency to transitive dependency) (1.19.0 available)
+2026-11-13T07:51:03.0590321Z + plugin_platform_interface 2.1.8
+2026-11-13T07:51:03.0590683Z + sky_engine 0.0.0 from sdk flutter
+2026-11-13T07:51:03.0591204Z   vector_math 2.4.0 (from direct dependency to transitive dependency) (2.4.4 available)
+2026-11-13T07:51:03.0591736Z + web 1.1.2
+2026-11-13T07:51:03.0592026Z Changed 19 dependencies!
+2026-11-13T07:51:03.0592484Z 3 packages have newer versions incompatible with dependency constraints.
+2026-11-13T07:51:03.0593037Z Try `flutter pub outdated` for more information.
+2026-11-13T07:51:30.9937470Z Building Linux application...                                   
+2026-11-13T07:51:30.9962995Z ✓ Built build/linux/x64/release/bundle/document_host_consumer
+2026-11-13T07:51:31.0045655Z Compiled a Linux release consumer and verified the enabled document plugin and executable WebKit probe. Desktop rendering was not launched.

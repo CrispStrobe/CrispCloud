@@ -1,0 +1,27 @@
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/host_fonts_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/host_fonts_test.dart: bundled names resolve only verified metric-compatible aliases
+00:00 +1: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/host_fonts_test.dart: host bytes and aliases register once and remain available after ensure
+00:00 +2: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/host_fonts_test.dart: host extensions cannot replace an existing alias
+00:00 +3: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/host_fonts_test.dart: empty or unbounded host requests fail before font loading
+00:00 +4: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_metrics_test.dart: (setUpAll)
+00:00 +4: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_metrics_test.dart: isolate open and three host saves use the same resolved metric
+00:00 +5: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +6: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +7: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +8: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +9: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +10: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +11: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (setUpAll)
+00:00 +11: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_metrics_test.dart: newly selected sheets use the resolved workbook metric
+00:00 +12: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +13: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +14: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +15: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +16: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +17: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +18: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +19: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +20: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:00 +21: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: opening uses the actual loaded Normal face instead of fixed width seven
+00:01 +22: /workspace/scratch/60b40e52ccd6/quds-office-fonts/packages/quds_office_editor/test/sheet_normal_font_auto_test.dart: (tearDownAll)
+00:01 +22: All tests passed!

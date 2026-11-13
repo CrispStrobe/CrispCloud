@@ -2,11 +2,45 @@
 
 Audit and differential probe: 13 November 2026. This compares executable source and a selected fixture corpus, not screenshots or a claim of universal Word fidelity.
 
+## Implemented follow-up
+
+The historical comparison below is retained at its original source checkpoint.
+The continuation now closes its two immediate gaps while keeping the native
+parser. Standalone parser
+[`e442772`](https://github.com/CrispStrobe/legacy-doc-parser/commit/e4427725cc720eaefad97c2cb921a6fe1e36749d)
+combines the compatibility fixes with canonical source `419864b`, and CrispCloud
+consumes that exact unpatched source through the verified mirror sync in
+[`e8e46b5`](https://github.com/CrispStrobe/CrispCloud/commit/e8e46b5ef04dcea3b4a65f5b4f1c797559528f5b).
+The newer canonical picture scaling, textbox geometry, ink decoding, source
+evidence and notices remain intact.
+
+| Follow-up | Implemented result and boundary |
+| --- | --- |
+| Auxiliary story display | F3 and the preview pane append the native model's visible headers, footers, footnotes, endnotes, comments and textboxes with generated role labels. Source IDs, CP ranges, section and header variants remain available in projection metadata. Hidden/private references and hidden-parent comment replies remain excluded. These reading labels do not reconstruct original page positions or note numbering. |
+| Search and copy | F3 searches/copies the localized extracted Office content, including displayed stories; original Source/Hex bytes remain available. Search has independent line/encoded-byte bounds. Generated labels are localized without replacing matching user-authored text. |
+| Legacy linked picture | A valid, exact mode-94 filename record no longer rejects all document text. Its bytes remain inert evidence with an unavailable-image notice; no external picture is fetched. |
+| WPS border sequence | A redundant old nil diagonal instruction is ignored only when the immediately following valid modern instruction corroborates the same bounded range, mask and value. Other invalid border ranges still reject. |
+| Unresolved textbox placement | Independently valid singleton textboxes retain their text and declared shape identity with `placementUnresolved=true`. The app identifies unavailable placement; DOCX conversion retains explicit evidence instead of inventing an anchor. Ambiguous chains/header placements and malformed ranges still reject. |
+
+A fresh execution of the same immutable corpus now yields **19/19 native and
+19/19 upstream accepted inputs**, with nine equal normalized main-preview text
+results. The real DOT fixture retains equal text (11,135 normalized characters),
+235 paragraphs, one table and 15 cells. The original 16/19 result below describes
+the earlier source; it has not been overwritten or relabeled.
+
+The combined parser passes **1,019 Dart tests**, including 27 new positive and
+negative compatibility controls, and its full analyzer reports no issues.
+The [follow-up evidence](../packages/legacy_doc_parser/doc/evidence/file-viewer-compat-20261113/README.md)
+retains the actual logs, source/input hashes, new results and reproducible probes.
+These measurements establish selected parsing/text behavior. They do not claim
+Word pagination, universal fidelity, or a new native round-trip acceptance run.
+App/widget validation is recorded with the [continuation checkpoint](recovery/file-viewer-continuation-20261113.md).
+
 ## Recommendation
 
 Keep `legacy_doc_parser` as CrispCloud's primary binary Word engine. Its validated document model, auxiliary stories, list reconstruction, revision provenance, bounded input/output, and editable DOCX conversion are substantial capabilities that File Viewer's binary DOC renderer does not replace. There are nevertheless concrete improvements to take from File Viewer: broader container detection, useful textbox recovery, explicit final/original revision views, and selected font/metafile handling. The two parsers also make different compatibility choices: three existing File Viewer fixtures open with its parser but fail our current strict parser. Those are actionable regression cases, not grounds for calling either engine uniformly better.
 
-The most immediate issue is in **CrispCloud's adapter**, rather than its parser. `LegacyWordDocument.plainText` and `safeHtml` deliberately contain the main story only. The parser separately exposes headers, footers, notes, comments, and textboxes through `stories`, but `parseOfficeDocument()` forwards only the main-story values. File Viewer linearizes textbox stories after the body, so some textbox-heavy documents show more text there even when our parser has already recovered that text. Exposing our existing stories with clear labels would close that gap without replacing the parser. [Native model][native-model] · [CrispCloud adapter][app-adapter] · [File Viewer parser][fv-parser]
+The original audit's immediate issue was in **CrispCloud's adapter**, rather than its parser. `LegacyWordDocument.plainText` and `safeHtml` deliberately contain the main story only. The parser separately exposes headers, footers, notes, comments, and textboxes through `stories`, but the audited `parseOfficeDocument()` forwarded only the main-story values. File Viewer linearizes textbox stories after the body, so some textbox-heavy documents showed more text there even when our parser had already recovered that text. The follow-up above exposes those stories with clear labels without replacing the parser. [Native model][native-model] · [Audited CrispCloud adapter][app-adapter] · [File Viewer parser][fv-parser]
 
 ## Exact sources and scope
 
@@ -26,9 +60,9 @@ The binary DOC engine is MIT-licensed, with its own copyright/license, despite F
 
 **CrispCloud:** the `.doc`/`.dot` adapter directly calls the pure-Dart `parseLegacyWordDocument()`. A bounded CFB reader and validated binary source feed the structured parser. The result includes main blocks, independently identified auxiliary stories, section and numbering information, fields/bookmarks, review information, media/source evidence, main HTML/text, and per-story HTML/text. The F3 adapter currently passes only main HTML/text and a partial-preview notice. A separate parser capability can produce editable DOCX (and a supported macro-preserving DOCM path); that richer conversion behavior should not be confused with what the current F3 HTML preview paints. [Parser entry][native-entry] · [Structured parser][native-parser] · [Native HTML renderer][native-render] · [CrispCloud adapter][app-adapter]
 
-## Capability comparison
+## Capability comparison at the original checkpoint
 
-| Area | File Viewer at the pinned commit | Our parser and current CrispCloud behavior | Practical conclusion |
+| Area | File Viewer at the pinned commit | Native parser and app at the original checkpoint | Practical conclusion |
 | --- | --- | --- | --- |
 | Binary DOC and DOT | Both extensions share binary Word parsing. Template flags are read, but the preview is document content, not template instantiation. | Same parser for DOC/DOT; validates the Word identifier and a set of Word 97-and-later FIB versions. No template instantiation. | A real upstream `template.dot` opened in both engines with equal normalized preview text in this probe. This does not establish every template feature or old Word version. |
 | Misnamed and alternative containers | Signature dispatch recognizes ZIP Open XML, OLE binary, Word 2003 WordML, HTML, and plausible plain text. A bounded 64 KiB sample checks the WordML namespace; unrelated XML and RTF are not treated as plain text. WordML is converted to Open XML and rendered through `@file-viewer/docx`. | `.doc`/`.dot` presently go straight to binary parsing. DOCX-family files and RTF have separate extension routes; WordML-in-DOC is not implemented by this path. | A bounded container router would add real compatibility. It should keep explicit format labels and existing safe HTML/RTF boundaries. WordML support is a separate conversion-engine addition, not a binary-parser feature. |
@@ -78,7 +112,10 @@ Our parser already retains a substantially broader fidelity program than this qu
 
 That distinction matters. Rich section, textbox, shape or revision data in the model can improve editable DOCX conversion without appearing in F3. Matching a native page count does not imply identical placement. An exact result on six fixtures does not imply universal rendering fidelity. Conversely, File Viewer's ability to recover readable text from our three rejection cases is useful even when its page layout or numbering is incomplete.
 
-## Proposed changes, in order
+## Original proposed changes and remaining work
+
+Items 1 and 2 are implemented in the follow-up above. Items 3 through 6 remain
+separate future work; this continuation does not import another DOC engine.
 
 1. **Expose existing auxiliary stories in CrispCloud.** Add clearly identified notes, comments, headers/footers and textboxes to the legacy Word preview, preserving source order/identity and distinguishing content display from positioned layout. Add the two successful textbox fixtures as integration checks so that body-only output cannot regress unnoticed.
 2. **Investigate the three native rejection cases independently.** Preserve malformed-input and allocation guards. For an unsupported picture mapping mode, retain text and show an unavailable-image notice if the surrounding record is valid. For an unresolved textbox shape, consider a labeled unpositioned story only when its text range is independently valid. Treat the WPS border case as a narrow producer-compatibility rule backed by positive and negative controls.
@@ -87,7 +124,8 @@ That distinction matters. Rich section, textbox, shape or revision data in the m
 5. **Port selected font/metafile improvements only against measured gaps.** Script-aware font fallback and additional GDI records are candidates. Preserve unsupported-record reporting, inert resources, output budgets and exact source/license attribution. Test visible rendering independently of model counts.
 6. **Keep native conversion and preview validation distinct.** Maintain DOCX/schema/native round-trip gates for conversion and add F3/browser rendering checks for visible preview behavior. A fallback engine, if later added, should identify that a recovered preview is approximate and report unavailable content.
 
-No parser/runtime code was changed as part of this comparison.
+The original comparison made no parser/runtime changes. Its subsequent
+implementation and measurements are explicitly separated in the follow-up above.
 
 [fv-license]: https://github.com/flyfish-dev/file-viewer/blob/d264009ca6efb3daed79a39d1ae63133e0f25558/packages/renderers/doc/LICENSE
 [fv-package]: https://github.com/flyfish-dev/file-viewer/blob/d264009ca6efb3daed79a39d1ae63133e0f25558/packages/renderers/doc/package.json

@@ -45,6 +45,10 @@ jobs:
           git -C "$FILE_VIEWER_UPSTREAM_DIR" checkout --detach d264009ca6efb3daed79a39d1ae63133e0f25558
       - name: Build only the six selected engines and collect their grants
         run: node packages/file_viewer_documents/tooling/build.mjs
+      - name: Verify runtime and complete license retention
+        run: |
+          python3 tool/verify_document_runtime.py
+          python3 -m unittest discover -s tool -p test_verify_document_runtime.py
       - name: Native and WASM engine contracts
         shell: bash
         run: |
@@ -67,6 +71,7 @@ jobs:
           path: |
             packages/file_viewer_documents/assets
             packages/file_viewer_documents/RUNTIME_MANIFEST.json
+            packages/file_viewer_documents/notices
             packages/file_viewer_documents/corresponding-source
           retention-days: 30
   checkpoint:
@@ -92,7 +97,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add packages/file_viewer_documents/assets packages/file_viewer_documents/RUNTIME_MANIFEST.json packages/file_viewer_documents/corresponding-source
+          git add packages/file_viewer_documents/assets packages/file_viewer_documents/RUNTIME_MANIFEST.json packages/file_viewer_documents/notices packages/file_viewer_documents/corresponding-source
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'build(viewer): checkpoint verified selected document runtime'
           # Refuse to overwrite concurrent user work. A later source push reruns
@@ -101,6 +106,7 @@ jobs:
 
   linux-consumer:
     name: Compile standalone Linux document host
+    needs: runtime
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -114,6 +120,11 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+      - name: Download the verified document runtime
+        uses: actions/download-artifact@v4
+        with:
+          name: selected-document-runtime
+          path: packages/file_viewer_documents
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.8'

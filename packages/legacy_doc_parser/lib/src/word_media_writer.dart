@@ -593,6 +593,20 @@ extension _WordMedia on _StructuredWordWriter {
               story.kind != LegacyWordStoryKind.headerTextbox)) {
         throw const FormatException('Invalid Word textbox story.');
       }
+      if (reference.placementUnresolved) {
+        if (reference.inHeaderFooter ||
+            reference.anchorCp != null ||
+            reference.chainLength != 1 ||
+            (reference.shapeId ?? 0) <= 0 ||
+            reference.anchors.isNotEmpty ||
+            reference.headerAliases.isNotEmpty ||
+            reference.replicaAnchors.isNotEmpty) {
+          throw const FormatException('Invalid unpositioned Word textbox.');
+        }
+        limitations.add(LegacyWordConversionLimitation.embeddedObjects);
+        _unplacedTextboxes.add((reference, story));
+        continue;
+      }
       WordHeaderTextboxAliasPair? aliasPair;
       if (reference.headerAliases.isNotEmpty) {
         if (reference.anchors.length != 1 ||
@@ -879,6 +893,8 @@ extension _WordMedia on _StructuredWordWriter {
         'part': path,
         'story': story.id,
         'nextTextboxId': reference.nextTextboxId,
+        'shapeId': reference.shapeId,
+        'placementUnresolved': reference.placementUnresolved,
         'reason': 'source placement not established',
       });
     }

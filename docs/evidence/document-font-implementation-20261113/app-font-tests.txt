@@ -1,0 +1,52 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/60b40e52ccd6/crispcloud/test/document_fonts_test.dart
+00:00 +0: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_fonts_test.dart: every shared face resolves to a real packaged embeddable font
+00:00 +1: /workspace/scratch/60b40e52ccd6/crispcloud/test/document_fonts_test.dart: first preview registration selects the actual family and style aliases
+00:00 +2: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_service_test.dart: Pages embeds requested existing families and reports uncovered text
+00:00 +3: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_service_test.dart: Pages embeds requested existing families and reports uncovered text
+00:00 +4: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_service_test.dart: Pages embeds requested existing families and reports uncovered text
+00:00 +5: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_service_test.dart: Pages embeds requested existing families and reports uncovered text
+00:00 +6: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_service_test.dart: PPTX is laid out as a PDF
+00:01 +7: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_html_widget_factory_test.dart: Office CSS escapes resolve to named fonts without changing other styles
+00:01 +8: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_html_widget_factory_test.dart: Office CSS escapes resolve to named fonts without changing other styles
+00:01 +9: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_html_widget_factory_test.dart: Office CSS escapes resolve to named fonts without changing other styles
+00:01 +10: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_html_widget_factory_test.dart: Office CSS escapes resolve to named fonts without changing other styles
+00:01 +11: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_html_widget_factory_test.dart: Office CSS escapes resolve to named fonts without changing other styles
+00:02 +12: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_html_widget_factory_test.dart: Office SVG data images paint with dimensions and semantics
+00:02 +13: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_error_localization_test.dart: Office PDF failures are localized in all supported locales
+00:02 +14: /workspace/scratch/60b40e52ccd6/crispcloud/test/office_pdf_error_localization_test.dart: Office PDF failures are localized in all supported locales
+00:04 +15: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+⚠️ [InternalViewer] Document fonts could not load; using available fonts
+  Error: Unable to load asset: "packages/quds_office_editor/fonts/LiberationSans-Regular.ttf".
+The asset does not exist or has empty data.
+00:06 +16: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +17: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +18: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +19: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +20: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +21: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +22: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +23: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +24: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +25: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +26: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:06 +27: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fallback_preview_test.dart: missing font assets leave formatted Office reading available
+00:07 +28: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font Apply preserves imported 21 half-points
+00:08 +29: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font Apply preserves imported 14 half-points
+00:08 +30: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font Apply preserves imported 288 half-points
+00:09 +31: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font italic edit preserves mixed run properties and undo
+00:09 +32: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: untouched font Apply preserves a mixed selection
+00:10 +33: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: explicit current font family normalizes a mixed selection
+00:10 +34: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: explicit current half-point size normalizes a mixed selection
+00:11 +35: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: explicit current underline normalizes only that property
+00:11 +36: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font size edit changes only size across selected runs
+00:12 +37: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font family edit preserves all unrelated run properties
+00:12 +38: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font dialog edits only the active header story
+00:13 +39: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font result cannot move from an open header dialog to the body
+00:14 +40: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font result cannot follow a changed selection in one document
+00:14 +41: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font result cannot overwrite a newer revision at the same caret
+00:14 +42: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font result survives paint-only refreshes at its original target
+00:15 +43: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: font cancel and controller replacement leave documents clean
+00:16 +44: /workspace/scratch/60b40e52ccd6/crispcloud/test/widget/office_font_fidelity_test.dart: viewing mode does not open the native-menu font editor
+00:16 +45: All tests passed!

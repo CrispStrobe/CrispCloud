@@ -45,6 +45,7 @@ typedef SmlColumnMetricsResolver =
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
   XmlDocument? _source;
+  List<XmlElement>? _sourceFonts;
   final Map<int, int> _fontBases = {};
   final Map<int, int> _xfBases = {};
 
@@ -426,6 +427,49 @@ class SmlStyleSheet {
 
   /// xfForAlign API.
   int xfForAlign(SmlHAlign align) => xfFor(align: align);
+
+  /// Family retained in the native cell font, with major/minor theme faces
+  /// resolved. Null means the model has no declared family; it is not a claim
+  /// that the host's platform default has the source font's metrics.
+  String? familyAt(int styleIndex) {
+    final font = _nativeFontAt(styleIndex);
+    if (font == null) return null;
+    final scheme = font
+        .firstChild('scheme', namespaceUri: font.namespaceUri)
+        ?.getAttribute('val', namespaceUri: '');
+    return themeFontFamilies[scheme] ??
+        font
+            .firstChild('name', namespaceUri: font.namespaceUri)
+            ?.getAttribute('val', namespaceUri: '');
+  }
+
+  /// Italic from the retained native font. Scalar cell edits keep these source
+  /// attributes, so a derived style follows its font base without rewriting it.
+  bool italicAt(int styleIndex) {
+    final font = _nativeFontAt(styleIndex);
+    final value = font?.firstChild('i', namespaceUri: font.namespaceUri);
+    if (value == null) return false;
+    final enabled = value.getAttribute('val', namespaceUri: '');
+    return enabled == null || enabled == '1' || enabled.toLowerCase() == 'true';
+  }
+
+  XmlElement? _nativeFontAt(int styleIndex) {
+    if (styleIndex < 0 || styleIndex >= cellXfsFontId.length) return null;
+    var id = cellXfsFontId[styleIndex];
+    final visited = <int>{};
+    while (_fontBases.containsKey(id)) {
+      if (!visited.add(id)) return null;
+      id = _fontBases[id]!;
+    }
+    final root = _source?.root;
+    final fonts = _sourceFonts ??=
+        root
+            ?.firstChild('fonts', namespaceUri: root.namespaceUri)
+            ?.childrenNamed('font', namespaceUri: root.namespaceUri)
+            .toList() ??
+        [];
+    return id >= 0 && id < fonts.length ? fonts[id] : null;
+  }
 
   /// xfFor API.
   int xfFor({

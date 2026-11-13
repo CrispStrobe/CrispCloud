@@ -1,8 +1,12 @@
 import 'dart:convert';
 
+import 'package:csslib/visitor.dart' as css;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+
+import '../services/document_font_catalog.dart';
+import '../services/office_css_font.dart';
 
 /// Images in parser-generated Office markup are self-contained data URIs.
 ///
@@ -12,6 +16,29 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 class OfficeHtmlWidgetFactory extends WidgetFactory {
   static const _svgPrefix = 'data:image/svg+xml;base64,';
   static const _maxDataUriLength = 4 * 1024 * 1024;
+
+  @override
+  void parseStyle(BuildTree tree, css.Declaration style) {
+    super.parseStyle(tree, style);
+    if (style.property != 'font-family') return;
+    tree.inherit<void>((properties, _) {
+      final text = properties.get<TextStyle>();
+      if (text == null) return properties;
+      final families = <String>{
+        for (final value in [text.fontFamily, ...?text.fontFamilyFallback])
+          if (value != null)
+            if (decodeOfficeCssFont(value) case final decoded?)
+              documentFontFamily(decoded),
+        ...documentFontFallbacks,
+      }.toList(growable: false);
+      return properties.copyWith(
+        style: TextStyle(
+          fontFamily: families.first,
+          fontFamilyFallback: families.skip(1).toList(growable: false),
+        ),
+      );
+    });
+  }
 
   @override
   Widget? buildImageWidget(BuildTree tree, ImageSource src) {
