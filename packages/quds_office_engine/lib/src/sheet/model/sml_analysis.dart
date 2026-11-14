@@ -321,6 +321,7 @@ abstract final class SmlAnalysis {
           ..styleIndex = src.styleIndex
           ..hasExplicitStyleIndex = src.hasExplicitStyleIndex
           ..fillRgb = src.fillRgb
+          ..hasExplicitFillColorEdit = src.hasExplicitFillColorEdit
           ..fontRgb = src.fontRgb
           ..hasExplicitFontColorEdit = src.hasExplicitFontColorEdit
           ..fontBold = src.fontBold
@@ -379,6 +380,7 @@ abstract final class SmlAnalysis {
       hasExplicitStyleIndex: src.hasExplicitStyleIndex,
       horizontalAlign: src.horizontalAlign,
       fillRgb: src.fillRgb,
+      hasExplicitFillColorEdit: src.hasExplicitFillColorEdit,
       fontRgb: src.fontRgb,
       hasExplicitFontColorEdit: src.hasExplicitFontColorEdit,
       fontBold: src.fontBold,

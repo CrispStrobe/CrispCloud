@@ -454,6 +454,7 @@ class SheetDeserializer {
         current.hasExplicitStyleIndex = nativeStyle != null;
         current.horizontalAlign = styles?.alignAt(s) ?? SmlHAlign.general;
         current.fillRgb = styles?.fillAt(s) ?? '';
+        current.hasExplicitFillColorEdit = false;
         current.fontRgb = styles?.fontAt(s) ?? '';
         current.hasExplicitFontColorEdit = false;
         current.fontBold = styles?.boldAt(s) ?? false;
@@ -902,6 +903,7 @@ class SheetSerializer {
           baseStyleIndex: cell.styleIndex,
           align: cell.horizontalAlign,
           fillRgb: cell.fillRgb,
+          fillColorExplicit: cell.hasExplicitFillColorEdit,
           fontRgb: cell.fontRgb,
           fontColorExplicit: cell.hasExplicitFontColorEdit,
           bold: cell.fontBold,
