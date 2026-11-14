@@ -1,0 +1,42 @@
+[
+  {
+    "file": "saved-1.xlsx",
+    "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/saved-1.xlsx",
+    "role": "host_output",
+    "sha256": "ea5e97d9ae84f3154dd3c988cdc22e698e2c2943dab21794920032a246735b34",
+    "bytes": 21674,
+    "evidence_copy": "artifacts/saved-1.xlsx",
+    "schema_errors": 0,
+    "exception": null
+  },
+  {
+    "file": "saved-2.xlsx",
+    "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/saved-2.xlsx",
+    "role": "host_output",
+    "sha256": "75e07a5251268202c476185af42afd743267860881ce63373c1b9c506fd661c6",
+    "bytes": 21674,
+    "evidence_copy": "artifacts/saved-2.xlsx",
+    "schema_errors": 0,
+    "exception": null
+  },
+  {
+    "file": "saved-3.xlsx",
+    "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/saved-3.xlsx",
+    "role": "host_output",
+    "sha256": "6faa91997796ad163b35324aeaebd66d2a2ddd3099aac7b9aa44694fb3e831bc",
+    "bytes": 21673,
+    "evidence_copy": "artifacts/saved-3.xlsx",
+    "schema_errors": 0,
+    "exception": null
+  },
+  {
+    "file": "source.xlsx",
+    "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/native-fill-positive-1/artifacts/source.xlsx",
+    "role": "authored_input",
+    "sha256": "46e2283f807e8776e8d6a6413f43ab06d87c61ce52ec0aa4a171e4aae4eceacb",
+    "bytes": 4839,
+    "evidence_copy": "artifacts/source.xlsx",
+    "schema_errors": 0,
+    "exception": null
+  }
+]

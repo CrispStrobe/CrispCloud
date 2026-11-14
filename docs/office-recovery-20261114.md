@@ -4,6 +4,14 @@ Starting app commit: `15a389f57e3a8fe9837f786407ce787fe198386f`.
 Starting canonical suite pin: `b0335829428d50968258219c4fdced15d546f7c9`.
 Checkpoint branch in both repositories: `codex/office-recovery-20261114`.
 
+The completed [worksheet and ribbon-history continuation](office-worksheet-state-20261114.md)
+adds reliable view-setting saves, owner-bound grid/formatting history and native
+style restoration. Its final source is app `ccba883b`, pinning Quds `0f935a6f`:
+100 canonical tests, eight host cases, 23 artifact controls and 27 independent
+zero-error SDK checks are recorded with exact source/input receipts. Hosted
+fidelity jobs are queued at the recorded observation. The historical recovery
+records below retain their original checkpoint scope.
+
 The original recovery started because an interrupted session's newer fixes and
 test receipts were absent from the remote app tree. Subsequent checkpoints
 preserved the implementation, and macOS integration added separate acceptance

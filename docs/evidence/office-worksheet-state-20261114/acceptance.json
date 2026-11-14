@@ -1,0 +1,42 @@
+{
+  "status": "Completed implementation and scoped local acceptance; hosted fidelity runs queued at the recorded observation.",
+  "branch": "codex/office-recovery-20261114",
+  "canonical_source_commit": "0f935a6f24ae11aa9851a5cc3498808554194446",
+  "app_source_commit": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "managed_source_files": 2177,
+  "canonical_tests_passed": 100,
+  "canonical_input_files": 409,
+  "canonical_analysis_issues": 0,
+  "host_tests_passed": 8,
+  "host_input_files": 4743,
+  "host_analysis_issues": 0,
+  "host_original_input_tree_sha256": "ec91296bf7ff165802b85f559151a98ffeed366ad7345bd7d6d6195fb11bbbe5",
+  "artifact_inventory_tests_passed": 23,
+  "synthetic_inventory_files": 176,
+  "existing_required_rendered_artifacts": 149,
+  "fresh_schema_scoped_artifacts": 27,
+  "sdk_validated_xlsx_files": 27,
+  "sdk_errors": 0,
+  "authored_xlsx_inputs": 3,
+  "captured_xlsx_uploads": 24,
+  "bundles": {
+    "host-acceptance": {
+      "payload_files": 89,
+      "manifest": "manifest.json",
+      "manifest_sha256": "04d416b762e8246be5b9de1d828d68e89096f06f465c78557cbdd386735da873"
+    },
+    "ci-style-integration": {
+      "payload_files": 26,
+      "manifest": "evidence-manifest.json",
+      "manifest_sha256": "ebcbb54280adbfd5bc2e10d6d765a13b02e3706fe65df0567094e76bae3be99e"
+    },
+    "external-final": {
+      "payload_files": 64,
+      "manifest": "evidence-manifest.json",
+      "manifest_sha256": "223cab269a45e2378652b491ba311f82a116a58687f0351a9b89d85e70ec3bc5"
+    }
+  },
+  "hosted_ci_observation": "hosted-ci/execution-sources.json",
+  "coverage_scope": "Three separately recorded host cohorts; overlapping line coverage is not additive and is not a full-application coverage claim.",
+  "rendering_scope": "No new browser, device, or renderer acceptance is claimed for this increment."
+}

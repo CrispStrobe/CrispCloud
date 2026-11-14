@@ -1,0 +1,17 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart
+00:00 +0: ribbon style history (setUpAll)
+00:00 +0: ribbon style history targets its owning worksheet after navigation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:08 +1: ribbon style history preserves native fill font and style provenance on undo
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+00:11 +2: ribbon style history (tearDownAll)
+00:17 +2: All tests passed!
+Sealed host LCOV against 4743 inputs: build/office-style-history-coverage-style-positive-1/collection-receipt.json

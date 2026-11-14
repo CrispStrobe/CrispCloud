@@ -1,0 +1,64 @@
+{
+  "captured_at": "2026-11-14T20:08:27.793773+00:00",
+  "final_source_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "roots": {
+    "office-sheet-state-acceptance": {
+      "freeze-upload-before.xlsx": {
+        "sha256": "9e0bc668cfd3ad9b941cd560d667c4f11c0d2ef703a1a419acf6576b6801adf2",
+        "bytes": 23082
+      },
+      "grid-delete.xlsx": {
+        "sha256": "865ca979c4cb1dd91e1b85f1f4b2f8d23b6454251dd7e838fc9529b99dfc9248",
+        "bytes": 23094
+      },
+      "grid-undo-other-sheet.xlsx": {
+        "sha256": "55cf5a66432c84077992fd777e44e766e3d4bd84a31657a12ba09c58ea1a0d1f",
+        "bytes": 39416
+      },
+      "rtl-upload-before.xlsx": {
+        "sha256": "a0efbcf7ed814e5e9ca874fd0cad77315fad00a975e0a9d7ebfee619998df8c2",
+        "bytes": 23081
+      },
+      "source.xlsx": {
+        "sha256": "d34eea0d7347fe74c8cba77fbeddc6b9fad29dfb4f31a099d7ce953f7fbae2ad",
+        "bytes": 5602
+      }
+    },
+    "office-style-history-acceptance": {
+      "cross-sheet-applied.xlsx": {
+        "sha256": "a9d0e38c6e7f3844d36436bb3a7f2e056a329a84967cd8b7bcd6f9b3e6827cb6",
+        "bytes": 22049
+      },
+      "cross-sheet-undo.xlsx": {
+        "sha256": "c6ad8597f50d7e1bf66b23bf81df6ffe126aab4b49e48b57234b58dd62c6597f",
+        "bytes": 37609
+      },
+      "native-undo.xlsx": {
+        "sha256": "11f7bbe6576be75f7dc39f266fbecdef50ef081c75fe2392812e40e49e149b19",
+        "bytes": 22046
+      },
+      "source.xlsx": {
+        "sha256": "ce064557d720146d4184e441e1c0d1aaa73ef05eb41964493cad660eb25ed466",
+        "bytes": 5333
+      }
+    },
+    "office-fill-host-acceptance": {
+      "saved-1.xlsx": {
+        "sha256": "6c5d72466efcf72823e605ffb8c80fc8a61e73e466294bfeb19037bb40ce48c8",
+        "bytes": 21674
+      },
+      "saved-2.xlsx": {
+        "sha256": "f0082d65160634491318cbc462cebcc727060182689bb7ee26b6c1f1d824fe95",
+        "bytes": 21674
+      },
+      "saved-3.xlsx": {
+        "sha256": "4256287299bafb51fc7271ffb2fa77b2fcd165ca3f36975e29b6d4b0bb220ac9",
+        "bytes": 21674
+      },
+      "source.xlsx": {
+        "sha256": "f5ce92914660d846682688046f843d6fad26e8206201e10ac305ad05cfb16f97",
+        "bytes": 4839
+      }
+    }
+  }
+}
