@@ -538,20 +538,41 @@ records qualification and remote checkpoints. Browser uploads, other provider
 methods, direct protocols and separate background runtimes remain outside this
 profile; this does not close the wider global-bandwidth gap.
 
-The source review also found incomplete delta-transfer entry points worth
-hardening before wider exposure. The S3 cached block map lacks the version
-comparison described by its comment; direct delta application lacks staging,
-strict per-block result checks and final-length handling; shrink-only updates
-can evade a changed-block test. pCloud delta upload modifies an existing remote
-file directly. Ordinary queue caller wiring was not established by the search.
+The [bounded native delta continuation](storage-delta-profile.md) now implements
+runtime-validated maps and plans, exact final-size handling, SHA-256 checks for
+downloaded and reused blocks, and complete private-candidate verification
+through the existing native staged backend. Its limits are 64 KiB–64 MiB blocks,
+8 GiB files, 131,072 signatures and 32 MiB cache files. The native backend's
+final check/rename boundary does not establish an atomic compare-and-swap
+against external writers, and these APIs add no durable resume record or path
+reservation.
 
-These are source-level observations and hypotheses, not reproduced production
-failures or a finding that ordinary journaled copy is broken. The
+The explicit S3 profile first reads a complete remote revision with
+`seedDeltaBlockMap`. A subsequent `deltaDownload` requires a matching account,
+object, length and opaque strong ETag, plus a private receipt from that adapter's
+own seed. Receipts are bounded to 128 and cleared at authentication lifecycle
+changes; persisted JSON alone cannot authorize reuse after restart or adapter
+recreation. Object-path aliases are rejected. Each range requires `206`, exact
+`Content-Range` and body length, and matching block hashes. The existing G29
+HTTP helpers are reused when a transfer bandwidth context is present. Browser
+and SSE-C delta profiles remain outside this increment.
+
+Automatic delta queue execution is unavailable. Settings displays a disabled,
+localized status and retains saved preferences. Upload execution and the older
+pCloud/Nextcloud delta orchestration decline until their remote staging and
+publication contracts are separately admitted; ordinary transfers continue.
+Small files can use the explicit S3 API when its requirements hold, without the
+historical 10 MiB heuristic becoming automatic admission.
+
+The [new evidence](evidence/storage-delta-20261114/PROGRESS.md) records incremental
+remote checkpoints and scoped static analysis; runtime qualification is
+pending. The original
 [pinned investigation note](evidence/storage-capabilities-20261114/delta-source-review.txt)
-records locations, source hashes, reachability uncertainty and the required
-reproductions. A future fix should use identity-bound block maps, strict range
-and digest checks, explicit final size, private staging and the existing
-publication/recovery contracts.
+retains its source hashes, reachability uncertainty and historical observations
+about missing version checks, in-place writes and size-only changes. Those
+observations are not reclassified as reproduced production failures or as a
+finding that ordinary journaled copy is broken. Earlier receipts remain tied to
+their own tested revisions.
 
 ## Source admission and evidence
 

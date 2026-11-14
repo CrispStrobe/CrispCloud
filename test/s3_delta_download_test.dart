@@ -6,6 +6,7 @@ import 'package:crisp_cloud/services/s3_client_adapter.dart';
 import 'package:crisp_cloud/services/s3_config_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 import 'package:crisp_cloud/services/storage_identity.dart';
+import 'package:crisp_storage/crisp_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -14,7 +15,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _block = 64 * 1024;
 
-Future<S3ClientAdapter> _adapter({String account = 'test-access'}) async {
+Future<S3ClientAdapter> _adapter({
+  String account = 'test-access',
+  String endpoint = 'https://s3.amazonaws.com',
+}) async {
   final config = S3ConfigService(
     configPath: '',
     secureStorage: InMemorySecureStorage(),
@@ -22,7 +26,7 @@ Future<S3ClientAdapter> _adapter({String account = 'test-access'}) async {
   await config.saveCredentials({
     'accessKey': account,
     'secretKey': 'fixture-secret',
-    'endpoint': 'https://s3.amazonaws.com',
+    'endpoint': endpoint,
     'bucket': 'bucket',
     'region': 'us-east-1',
   });
@@ -157,6 +161,22 @@ void main() {
   );
 
   test(
+    'seed charges actual response bytes to the captured bandwidth pool',
+    () => inServer(() async {
+      final allocator = TransferBandwidthAllocator();
+      final context = allocator.openContext('s3-delta-seed');
+      try {
+        await context.run(seed);
+        expect(allocator.snapshot.downloadBytes, server.bytes.length);
+        expect(allocator.snapshot.uploadBytes, 0);
+      } finally {
+        context.close();
+        allocator.dispose();
+      }
+    }),
+  );
+
+  test(
     'download replaces only after complete exact reconstruction',
     () => inServer(() async {
       await seed();
@@ -215,6 +235,102 @@ void main() {
       await expectOriginal(before);
     }),
   );
+
+  test(
+    'a new adapter cannot authenticate a persisted cache without reseeding',
+    () => inServer(() async {
+      await seed();
+      final before = _source()..[0] ^= 255;
+      await local.writeAsBytes(before);
+      final newAdapter = await _adapter();
+      server.ranges.clear();
+      expect(
+        await newAdapter.deltaDownload(
+          '/image.bin',
+          local.path,
+          cacheDir: directory.path,
+        ),
+        isNull,
+      );
+      expect(server.ranges, isEmpty);
+      await expectOriginal(before);
+    }),
+  );
+
+  test(
+    'restoring credentials invalidates earlier seed authority',
+    () => inServer(() async {
+      await seed();
+      final before = _source()..[0] ^= 255;
+      await local.writeAsBytes(before);
+      expect(await adapter.restoreCredentials(), isTrue);
+      server.ranges.clear();
+      expect(
+        await adapter.deltaDownload(
+          '/image.bin',
+          local.path,
+          cacheDir: directory.path,
+        ),
+        isNull,
+      );
+      expect(server.ranges, isEmpty);
+      await expectOriginal(before);
+    }),
+  );
+
+  test(
+    'a well-formed forged identity and local hashes cannot authorize skips',
+    () => inServer(() async {
+      final seeded = await seed();
+      final before = _source()..[0] ^= 255;
+      await local.writeAsBytes(before);
+      final service = DeltaSyncService();
+      final forged = (await service.computeBlockMap(
+        local.path,
+        blockSize: _block,
+      )).withIdentity(seeded.identity!);
+      await service.saveBlockMap(
+        forged,
+        service.blockMapCachePath(
+          directory.path,
+          'image.bin',
+          's3',
+          storageId: storageReferenceForClient(adapter).id,
+        ),
+      );
+      server.ranges.clear();
+      expect(
+        await adapter.deltaDownload(
+          '/image.bin',
+          local.path,
+          cacheDir: directory.path,
+        ),
+        isNull,
+      );
+      expect(server.ranges, isEmpty);
+      await expectOriginal(before);
+    }),
+  );
+
+  for (final path in [
+    '//image.bin',
+    '/a/../image.bin',
+    '/a/./image.bin',
+    '/a//image.bin',
+    '/a\\image.bin',
+  ]) {
+    test(
+      'ambiguous object path $path is refused before remote I/O',
+      () => inServer(() async {
+        await expectLater(
+          adapter.seedDeltaBlockMap(path, cacheDir: directory.path),
+          throwsArgumentError,
+        );
+        expect(server.heads, 0);
+        expect(server.ranges, isEmpty);
+      }),
+    );
+  }
 
   for (final size in [_block, 0]) {
     test(
@@ -380,6 +496,81 @@ void main() {
       expect(server.heads, 0);
       expect(server.ranges, isEmpty);
     }),
+  );
+
+  test(
+    'real HTTP ranges reconstruct the exact local file through staging',
+    () async {
+      final previousOverrides = HttpOverrides.current;
+      HttpOverrides.global = null;
+      addTearDown(() => HttpOverrides.global = previousOverrides);
+      final listener = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final payload = _source();
+      var exactRangeReads = 0;
+      Object? handlerError;
+      final subscription = listener.listen((request) async {
+        try {
+          if (request.uri.path != '/bucket/image.bin' ||
+              !(request.headers.value(HttpHeaders.authorizationHeader) ?? '')
+                  .startsWith('AWS4-HMAC-SHA256 ')) {
+            throw StateError('Unexpected signed loopback request.');
+          }
+          request.response.headers.set(HttpHeaders.etagHeader, '"loopback-v1"');
+          if (request.method == 'HEAD') {
+            request.response.contentLength = payload.length;
+          } else if (request.method == 'GET') {
+            if (request.headers.value(HttpHeaders.ifMatchHeader) !=
+                '"loopback-v1"') {
+              throw StateError('Range did not bind the captured revision.');
+            }
+            final match = RegExp(
+              r'^bytes=(\d+)-(\d+)$',
+            ).firstMatch(request.headers.value(HttpHeaders.rangeHeader) ?? '')!;
+            final start = int.parse(match.group(1)!);
+            final end = int.parse(match.group(2)!);
+            request.response.statusCode = HttpStatus.partialContent;
+            request.response.headers.set(
+              HttpHeaders.contentRangeHeader,
+              'bytes $start-$end/${payload.length}',
+            );
+            request.response.contentLength = end - start + 1;
+            request.response.add(payload.sublist(start, end + 1));
+            exactRangeReads++;
+          } else {
+            throw StateError('Unexpected loopback method.');
+          }
+          await request.response.close();
+        } catch (error) {
+          handlerError = error;
+          request.response.statusCode = HttpStatus.internalServerError;
+          await request.response.close();
+        }
+      });
+      try {
+        final actual = await _adapter(
+          endpoint: 'http://127.0.0.1:${listener.port}',
+        );
+        await actual.seedDeltaBlockMap(
+          '/image.bin',
+          cacheDir: directory.path,
+          blockSize: _block,
+        );
+        final before = Uint8List.fromList(payload)..[0] ^= 255;
+        await local.writeAsBytes(before);
+        final result = await actual.deltaDownload(
+          '/image.bin',
+          local.path,
+          cacheDir: directory.path,
+        );
+        expect(handlerError, isNull);
+        expect(result!.changedBlocks, [0]);
+        expect(exactRangeReads, 3);
+        await expectOriginal(payload);
+      } finally {
+        await listener.close(force: true);
+        await subscription.cancel();
+      }
+    },
   );
 
   test(

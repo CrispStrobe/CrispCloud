@@ -59,3 +59,26 @@ Core and S3 scoped static analysis passed; runtime qualification remains pending
 at this checkpoint. The corrected canonical Office test pin above has separately
 passed 115 native cases; its evidence-only companion head is
 `1c7b0c121ed476090def463d9bc59f5c8a3462b7`.
+
+## Review and pilot follow-up checkpoint
+
+The first implementation is preserved at
+`9342937d7c894a4dd6c9b58038532afb228750f1`. Review added private local-source
+provenance and private, bounded S3 seed receipts so serialized paths and
+well-formed but forged cache hashes cannot authorize execution. S3 now refuses
+ambiguous object keys and checks cancellation/access during local hashing.
+The settings control truthfully reports that automatic delta transfers are
+unavailable, with localized coverage for all nine supported languages.
+
+The pilot ran the core, safety, S3, provider-admission, existing adapter and
+settings suites. It exposed six legacy-test failures that expected the removed
+raw upload or unbound-plan contracts. Those fixtures are corrected in this
+checkpoint. The pilot source changed during execution and is not a qualification
+receipt; its raw output is retained for the later evidence checkpoint. A real
+loopback HTTP range reconstruction case complements the mock transport cases.
+Runtime qualification of this fixed tree remains pending.
+
+A fresh remote audit found that main and the Office recovery branch advanced
+during this work, and PR #106 was merged. Their new commits will be reconciled
+before qualification; the original ref receipt remains an accurate record of
+the initial fetch.

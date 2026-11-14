@@ -35,8 +35,9 @@ class _CredentialGuard extends InMemorySecureStorage {
   @override
   Future<String?> read(String key) async {
     reads++;
-    if (reject)
+    if (reject) {
       throw StateError('Delta admission attempted credential access.');
+    }
     return super.read(key);
   }
 

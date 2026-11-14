@@ -1,7 +1,29 @@
 # ADR-007: Block-Level Delta Sync
 
 ## Status
-Accepted (2026-06-08)
+
+Historical decision accepted on 2026-06-08; execution and admission details
+superseded on 2026-11-14 by the
+[bounded native delta-download profile](../storage-delta-profile.md).
+
+The sections below preserve the original design and historical observations.
+Their in-place pCloud/Nextcloud mutation strategies, automatic opt-in behavior,
+and old live-test, timing and bandwidth-savings claims are not current
+CrispCloud acceptance. Automatic delta queue transfers are unavailable;
+Settings shows that status and retains saved preferences without activating
+execution. Upload execution and legacy provider orchestration decline.
+
+The continuation adds validated maps/plans, private native reconstruction and
+an explicit S3 seed/download API. S3 seeding reads a complete captured remote
+revision; a private receipt on the same adapter instance is also required for
+cache reuse. Restart or adapter recreation requires a fresh seed. The new
+profile does not inherit the old 10 MiB activation description, provide durable
+resume/path reservations, or claim an atomic compare-and-swap against external
+local writers. Runtime qualification remains pending in the
+[continuation receipt](../evidence/storage-delta-20261114/PROGRESS.md).
+
+The separate Nextcloud/ownCloud desktop clients and companion server retain
+their own scope and evidence; they are not certified by this continuation.
 
 ## Context
 

@@ -1,9 +1,10 @@
 // lib/services/delta_sync_service.dart
 //
-// Block-level delta sync for large files (VeraCrypt containers, disk images,
-// database files, etc.).  Instead of re-uploading an entire file when only a
-// few sectors changed, this service identifies which 4 MB blocks differ
-// between a local copy and the remote, then transfers only those blocks.
+// Validated fixed-block plans and bounded native delta download preparation.
+// Changed remote blocks and verified reusable local blocks reconstruct a
+// complete private candidate through the existing native staged publisher.
+// Upload planning remains available for diagnostics; raw remote block-write
+// callbacks cannot establish a safe publication contract and are refused.
 //
 // Algorithm:
 //   1. Split the file into fixed-size blocks (default 4 MB).
@@ -11,9 +12,9 @@
 //      SHA-256 "strong" hash (collision-resistant).
 //   3. Compare the local BlockMap against the previously stored remote
 //      BlockMap to find changed blocks.
-//   4. Produce a BlockTransferPlan that lists only the changed blocks.
-//   5. Execute the plan via caller-supplied read/write callbacks so the
-//      service remains storage-provider-agnostic.
+//   4. Bind every operation and final length to source and baseline maps.
+//   5. Verify all reconstructed bytes, original destination and source version
+//      before the native publisher enters its existing replacement boundary.
 //
 // Adler-32 rolling update allows O(1) advancement of a sliding window, but
 // in practice we recompute per fixed block boundary so rolling is available
@@ -184,6 +185,9 @@ class BlockMap {
   final List<BlockSignature> signatures;
   final DateTime createdAt;
   final BlockMapIdentity? identity;
+  // Transient provenance for a local source explicitly scanned in this
+  // process. JSON paths alone never authorize reopening a host source file.
+  final FileStat? _localSourceStamp;
 
   const BlockMap({
     required this.filePath,
@@ -193,7 +197,18 @@ class BlockMap {
     required this.signatures,
     required this.createdAt,
     this.identity,
-  });
+  }) : _localSourceStamp = null;
+
+  const BlockMap._captured({
+    required this.filePath,
+    required this.totalSize,
+    required this.blockSize,
+    required this.blockCount,
+    required this.signatures,
+    required this.createdAt,
+    this.identity,
+    required FileStat? sourceStamp,
+  }) : _localSourceStamp = sourceStamp;
 
   void validate() {
     _validateText(filePath, 'filePath');
@@ -552,13 +567,14 @@ class DeltaSyncService {
       await raf.close();
     }
 
-    return BlockMap(
+    return BlockMap._captured(
       filePath: filePath,
       totalSize: fileSize,
       blockSize: blockSize,
       blockCount: blockCount,
       signatures: List.unmodifiable(signatures),
       createdAt: DateTime.now(),
+      sourceStamp: before,
     );
   }
 
@@ -693,7 +709,8 @@ class DeltaSyncService {
   /// map. The complete private candidate and the original destination are
   /// verified before replacement. Empty/all-skip plans still apply final size.
   /// A source with a remote identity requires [revalidateSource]; an unbound
-  /// local map is rechecked against its named local source instead.
+  /// local map created by [computeBlockMap] in this process is rechecked against
+  /// its captured local source instead. Deserialized paths cannot authorize it.
   ///
   /// [destinationBackend] must be a current [LocalOperationBackend] with staged
   /// verification. Its existing local check/rename boundary is not an atomic
@@ -737,6 +754,11 @@ class DeltaSyncService {
     }
     final source = execution.sourceMap!;
     final baseline = execution.baselineMap!;
+    if (source.identity == null && source._localSourceStamp == null) {
+      throw const FormatException(
+        'An unbound map cannot authorize opening its recorded source path.',
+      );
+    }
     if (!p.equals(p.absolute(baseline.filePath), p.absolute(localPath))) {
       throw const FormatException(
         'The plan belongs to a different local destination.',
@@ -774,6 +796,12 @@ class DeltaSyncService {
     Future<void> verifySource() async {
       await check();
       if (source.identity == null) {
+        if (!_sameFileStamp(
+          source._localSourceStamp!,
+          _regularFileStamp(source.filePath),
+        )) {
+          throw StateError('The captured local delta source changed.');
+        }
         await _verifyLocalFile(source.filePath, source, check);
       }
       await revalidateSource?.call();
@@ -1124,7 +1152,7 @@ String _jsonString(Map<String, dynamic> json, String name) {
 
 BlockMap _snapshotMap(BlockMap map) {
   map.validate();
-  return BlockMap(
+  return BlockMap._captured(
     filePath: map.filePath,
     totalSize: map.totalSize,
     blockSize: map.blockSize,
@@ -1132,6 +1160,7 @@ BlockMap _snapshotMap(BlockMap map) {
     signatures: List.unmodifiable(map.signatures),
     createdAt: map.createdAt,
     identity: map.identity,
+    sourceStamp: map._localSourceStamp,
   );
 }
 

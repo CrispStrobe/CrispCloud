@@ -1081,6 +1081,7 @@ class S3ClientAdapter extends CloudStorageClient
     String? twoFactorCode,
   }) async {
     _authEpoch++;
+    _deltaSeedReceipts.clear();
     _authenticated = false;
     // Parse login format: accessKey@endpoint/bucket?region=us-east-1
     // Password is the secretKey.
@@ -1240,6 +1241,7 @@ class S3ClientAdapter extends CloudStorageClient
   @override
   Future<void> logout() async {
     _authEpoch++;
+    _deltaSeedReceipts.clear();
     _authenticated = false;
     _accessKey = null;
     _secretKey = null;
@@ -2007,6 +2009,30 @@ class S3ClientAdapter extends CloudStorageClient
 
   final DeltaSyncService _deltaSyncService = DeltaSyncService();
 
+  // A persisted JSON map is untrusted input. Only this live adapter's verified
+  // seed may authorize its hashes; restarting or changing authentication
+  // requires a fresh seed. This is not a durable authentication envelope.
+  final Map<String, String> _deltaSeedReceipts = {};
+
+  String _deltaMapDigest(BlockMap map) =>
+      sha256.convert(utf8.encode(jsonEncode(map.toJson()))).toString();
+
+  String _deltaObjectKey(String remotePath) {
+    final key = _pathToKey(remotePath);
+    if (key.isEmpty ||
+        key.contains('\\') ||
+        RegExp(r'[\x00-\x1f\x7f]').hasMatch(key) ||
+        utf8.decode(utf8.encode(key)) != key ||
+        key
+            .split('/')
+            .any((part) => part.isEmpty || part == '.' || part == '..')) {
+      throw ArgumentError(
+        'This S3 delta profile requires an exact regular object path.',
+      );
+    }
+    return key;
+  }
+
   void _checkDeltaAccess(
     int epoch,
     String storageId,
@@ -2033,10 +2059,7 @@ class S3ClientAdapter extends CloudStorageClient
     _requireDeltaProfile();
     final epoch = _authEpoch;
     final storageId = storageReferenceForClient(this).id;
-    final key = _pathToKey(remotePath);
-    if (key.isEmpty || key.endsWith('/')) {
-      throw ArgumentError('A regular S3 object path is required.');
-    }
+    final key = _deltaObjectKey(remotePath);
     final response = await _signedRequest(
       'HEAD',
       _buildUri(key),
@@ -2097,7 +2120,7 @@ class S3ClientAdapter extends CloudStorageClient
     void check() => _checkDeltaAccess(epoch, storageId, isCancelled);
     check();
     final end = offset + length - 1;
-    final uri = _buildUri(_pathToKey(remotePath));
+    final uri = _buildUri(_deltaObjectKey(remotePath));
     final context = TransferBandwidthContext.current;
     final request = http.Request('GET', uri)
       ..followRedirects = false
@@ -2247,16 +2270,19 @@ class S3ClientAdapter extends CloudStorageClient
       identity: identity,
     );
     map.validate();
-    await _deltaSyncService.saveBlockMap(
-      map,
-      _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        identity.objectPath,
-        's3',
-        storageId: storageId,
-      ),
+    final cachePath = _deltaSyncService.blockMapCachePath(
+      cacheDir,
+      identity.objectPath,
+      's3',
+      storageId: storageId,
     );
+    await _deltaSyncService.saveBlockMap(map, cachePath);
     check();
+    _deltaSeedReceipts.remove(cachePath);
+    while (_deltaSeedReceipts.length >= 128) {
+      _deltaSeedReceipts.remove(_deltaSeedReceipts.keys.first);
+    }
+    _deltaSeedReceipts[cachePath] = _deltaMapDigest(map);
     return map;
   }
 
@@ -2286,7 +2312,11 @@ class S3ClientAdapter extends CloudStorageClient
     );
     final remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
     check();
-    if (remoteMap == null || !remoteMap.matchesIdentity(identity)) return null;
+    if (remoteMap == null ||
+        !remoteMap.matchesIdentity(identity) ||
+        _deltaSeedReceipts[cachePath] != _deltaMapDigest(remoteMap)) {
+      return null;
+    }
     if (await FileSystemEntity.type(localPath, followLinks: false) !=
         FileSystemEntityType.file) {
       return null;
@@ -2295,6 +2325,8 @@ class S3ClientAdapter extends CloudStorageClient
     final localMap = await _deltaSyncService.computeBlockMap(
       localPath,
       blockSize: remoteMap.blockSize,
+      checkpoint: () async => check(),
+      isCancelled: isCancelled,
     );
     check();
     final delta = _deltaSyncService.compareBlockMaps(remoteMap, localMap);
@@ -2362,6 +2394,7 @@ class S3ClientAdapter extends CloudStorageClient
   /// Attempt to restore credentials from secure storage (for auto-login).
   Future<bool> restoreCredentials() async {
     final epoch = ++_authEpoch;
+    _deltaSeedReceipts.clear();
     _authenticated = false;
     final creds = await _config.readCredentials();
     if (epoch != _authEpoch || creds == null) return false;

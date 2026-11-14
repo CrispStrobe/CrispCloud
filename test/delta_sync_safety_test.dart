@@ -401,6 +401,40 @@ void main() {
   });
 
   group('staged download execution', () {
+    test(
+      'a deserialized local path cannot authorize source file access',
+      () async {
+        final original = bytes(1, 0x12);
+        final destination = await file(original);
+        final source = await file(bytes(1, 0x34));
+        final parsedSource = BlockMap.fromJson((await map(source)).toJson());
+        final plan = service.createTransferPlan(
+          service.compareBlockMaps(parsedSource, await map(destination)),
+          TransferDirection.download,
+          parsedSource,
+        );
+        var callbacks = 0;
+        await expectLater(
+          service.applyDelta(
+            plan,
+            destination.path,
+            destinationBackend: backend,
+            checkpoint: () async {
+              callbacks++;
+            },
+            remoteReadBlock: (_, _, _) async {
+              callbacks++;
+              return [];
+            },
+          ),
+          throwsFormatException,
+        );
+        expect(callbacks, 0);
+        expect(await destination.readAsBytes(), original);
+        await noStages();
+      },
+    );
+
     for (final targetLength in [0, _blockSize, _blockSize + 17]) {
       test(
         'shrink to $targetLength bytes has exact final contents and length',

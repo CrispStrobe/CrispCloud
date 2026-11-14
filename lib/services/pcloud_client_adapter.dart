@@ -775,9 +775,10 @@ class PCloudClientAdapter extends CloudStorageClient
   // --- Internal helpers ---
 
   void _ensureToken() {
-    if (_accessToken == null)
+    if (_accessToken == null) {
       throw PCloudOperationFailure(
           PCloudOperationCode.notAuthenticated, 'Not authenticated', {});
+    }
   }
 
   /// Get the numeric file ID for a given path by listing the parent folder.
