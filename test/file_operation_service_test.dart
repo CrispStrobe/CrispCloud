@@ -174,7 +174,11 @@ void main() {
   });
 
   group('copy method contracts', () {
-    for (final method in FileCopyMethod.values) {
+    for (final method in [
+      FileCopyMethod.automatic,
+      FileCopyMethod.stream,
+      FileCopyMethod.copyOnWrite,
+    ]) {
       test('${method.name} honors a filesystem that refuses cloning', () async {
         final native = _DecliningCloneBackend()
           ..file('/source/a.txt', 'copy contents')
@@ -200,6 +204,28 @@ void main() {
         expect(native.text('/source/a.txt'), 'copy contents');
       });
     }
+
+    test('verifiedDelta rejects an unsupported local source before cloning', () async {
+      final native = _DecliningCloneBackend()
+        ..file('/source/a.txt', 'copy contents')
+        ..directory('/target');
+      final plan = await service.prepare(
+        files: [native.item('/source/a.txt')],
+        source: native,
+        destination: native,
+        targetDirectory: '/target',
+        options: const FileOperationOptions(
+          copyMethod: FileCopyMethod.verifiedDelta,
+        ),
+      );
+      expect(plan.canExecute, isFalse);
+      expect(plan.errors.join(), contains('supported S3 source'));
+      await expectLater(execute(plan), throwsStateError);
+      expect(native.cloneAttempts, 0);
+      expect(native.writeAttempts, isEmpty);
+      expect(native.contains('/target/a.txt'), isFalse);
+      expect(native.text('/source/a.txt'), 'copy contents');
+    });
 
     test(
       'incompatible allocation and required clone settings fail in preview',
