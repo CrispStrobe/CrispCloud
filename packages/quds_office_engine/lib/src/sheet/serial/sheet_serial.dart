@@ -554,13 +554,24 @@ class SheetDeserializer {
     );
     if (comments != null) {
       final XmlPullReader reader = XmlPullReader(comments.readText());
+      final List<String> authors = <String>[];
       String? ref;
       String author = '';
       while (reader.next()) {
         if (reader.eventType == XmlEventType.startElement &&
+            reader.localName == 'author') {
+          authors.add(_readText(reader));
+        } else if (reader.eventType == XmlEventType.startElement &&
             reader.localName == 'comment') {
           ref = reader.getAttribute('ref');
-          author = reader.getAttribute('author') ?? '';
+          // OOXML stores an index into <authors>; older generators wrote the
+          // name directly, so accept both shapes on import.
+          final String? authorId = reader.getAttribute('authorId');
+          final int? index = int.tryParse(authorId ?? '');
+          final String? name = reader.getAttribute('author');
+          author = index != null && index >= 0 && index < authors.length
+              ? authors[index]
+              : (name ?? '');
         } else if (reader.eventType == XmlEventType.startElement &&
             reader.localName == 'text' &&
             ref != null) {
@@ -794,26 +805,53 @@ class SheetSerializer {
       final XmlWriter w = XmlWriter();
       w.writeStartDocument();
       w.writeStartElement('comments');
+      // CT_Comments requires <authors> before <commentList>, and each comment's
+      // author is an index into that table (not a name attribute).
+      final List<String> authors = <String>[];
+      for (final SmlComment comment in sheet.comments) {
+        if (!authors.contains(comment.author)) {
+          authors.add(comment.author);
+        }
+      }
+      w.writeStartElement('authors');
+      for (final String author in authors) {
+        w.writeStartElement('author');
+        w.writeText(author);
+        w.writeEndElement();
+      }
+      w.writeEndElement();
+      w.writeStartElement('commentList');
       for (final SmlComment comment in sheet.comments) {
         w.writeStartElement('comment');
         w.writeAttribute('ref', comment.ref.a1);
-        w.writeAttribute('author', comment.author);
+        w.writeAttribute('authorId', '${authors.indexOf(comment.author)}');
         w.writeStartElement('text');
         w.writeText(comment.text);
         w.writeEndElement();
         w.writeEndElement();
       }
       w.writeEndElement();
+      w.writeEndElement();
       final String uri = '/xl/comments${sheet.sheetId}.xml';
       final PackagePart? existing = package.getPart(uri);
       if (existing == null) {
         package.createPart(
           uri,
-          OfficeContentTypes.sheetSharedStrings,
+          OfficeContentTypes.sheetComments,
           utf8.encode(w.toXml()),
         );
       } else {
-        existing.writeText(w.toXml());
+        existing
+          ..contentType = OfficeContentTypes.sheetComments
+          ..writeText(w.toXml());
+      }
+      if (sheet.sourcePartUri != null) {
+        final RelationshipCollection rels = package.relationshipsFor(
+          sheet.sourcePartUri!,
+        );
+        if (rels.firstByType(RelationshipTypes.comments) == null) {
+          rels.add(type: RelationshipTypes.comments, target: '../comments${sheet.sheetId}.xml');
+        }
       }
     }
     if (sheet.tables.isNotEmpty) {
