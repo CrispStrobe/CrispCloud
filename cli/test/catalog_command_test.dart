@@ -78,6 +78,47 @@ void main() {
     },
   );
   test(
+    'imported CAF ranks offline without claiming known source coverage',
+    () async {
+      expect(await run(['catalog', 'scan', root.path, '-o', db.path]), 0);
+      final caf = '${tmp.path}/portable.caf';
+      expect(await run(['catalog', 'export', db.path, '-o', caf]), 0);
+      final imported = '${tmp.path}/offline.crispindex';
+      expect(await run(['catalog', 'import', caf, '-o', imported]), 0);
+      root.deleteSync(recursive: true);
+      output.buffer.clear();
+      errors.buffer.clear();
+      expect(
+        await run([
+          'du',
+          '--index',
+          imported,
+          '--files-only',
+          '--top',
+          '1',
+          '--json',
+        ]),
+        1,
+        reason:
+            'CAF cannot certify the original scan coverage, even when ranking succeeds.',
+      );
+      final report = jsonDecode(output.buffer.toString());
+      expect(report['historical'], true);
+      expect(report['complete'], false);
+      expect(report['origin'], 'caf_import');
+      expect(report['root']['bytes'], 12);
+      expect(report['entries'].single['bytes'], 9);
+      expect(report['entries'].single['complete'], true);
+      expect(
+        (report['issues'] as List).map((issue) => issue['code']),
+        contains('caf_coverage_unknown'),
+      );
+      expect(report.containsKey('error'), false);
+      expect(errors.buffer.toString(), isEmpty);
+    },
+  );
+
+  test(
     'explicit budgets retain diagnostics and do not imply completeness',
     () async {
       expect(

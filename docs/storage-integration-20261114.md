@@ -21,7 +21,7 @@ The ready ext and NTFS branches are integrated sequentially on top of the BASIC/
 | NTFS portable acceptance | 18 groups, 2,037 checks on Dart VM and compiled JavaScript/Node; identical output |
 | Native catalogue bridge | 13 passed; separate opt-in million-row case passed |
 | Million-row synthetic SQLite case | 1,000,005 rows; build 33,170 ms, ranking query 3 ms, database 137,625,600 bytes on this Mac |
-| Real CLI/Rust scan, query and CAF interchange | 7 passed |
+| Real CLI/Rust scan, query and CAF interchange | 8 passed, including offline ranking of an imported CAF |
 | Standalone CAF codec | 23 unit tests and one compiled documentation example passed; packaged crate verified |
 | Existing CrispSorter catalogue consumers | 20 unit tests, 2 catalogue integration tests, 11 CLI tests; new cross-crate API compatibility test passed |
 | Existing CrispSorter production WebDAV contracts | 34 PROPFIND parser tests and 56 delta/metadata tests passed |
@@ -39,4 +39,4 @@ The full archive run preceded preference-mock corrections in three test hosts. T
 
 Filesystem readers are bounded and read-only; their [ext](archive-ext-profile.md) and [NTFS](archive-ntfs-profile.md) contracts retain unsupported-layout, metadata and size limits. They do not mount or repair disks. SQLite remains the working catalogue index; CAF is optional portable interchange and does not encode scan completeness.
 
-The next local app version is 1.3.2+25. The existing v1.3.1 GitHub queue is left alone; no new release tag or store submission is created by this increment. Hosted cross-platform binaries, web deployment and TestFlight remain separate from these local results.
+The local app version is 1.3.2+25. The signed universal macOS app was built from runtime checkpoint `436c7926`, installed and launched. The standalone CLI bundle was also built and installed as both `crispcloud` and `crisp`; a real scan → CAF export/import → offline ranking smoke passed. Imported CAF ranking returns valid data and the deliberate incomplete-coverage exit status 1, since CAF cannot certify original scan coverage. The existing v1.3.1 GitHub queue is left alone; no new release tag or store submission is created by this increment. Hosted cross-platform binaries, web deployment and TestFlight remain separate from these local results.
