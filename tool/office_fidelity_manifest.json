@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "main",
-  "source_commit": "f8bacbbe462f34048251e12cd13db7902b5eecda",
+  "source_commit": "f9512763347f1fea56462c29d10e78d69d606419",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1733,7 +1733,7 @@
     "packages/legacy_doc_parser/tool/text_unicode_web_acceptance.dart": "6388ddf7dce972e7fab38d038de680457346fd41a9ba7d76bbc163b8637d9845",
     "packages/legacy_doc_parser/tool/verify_web.py": "4416173bcdc3bd2acccaabf979be4510dc506a38f07c9c9c763c4cb8593eef70",
     "packages/legacy_doc_parser/tool/web_acceptance.dart": "c001f983e22f55eac72d1f5ff07c06267fb6e60d9441e2007d0702899c0aff9b",
-    "packages/quds_office_editor/CHANGELOG.md": "d37899a904a708ec5447d9c8b958e4bcb24d76f6cbd143f85548e6181b62838a",
+    "packages/quds_office_editor/CHANGELOG.md": "a1897669db8671bdf4cba0f235bd5babe3d5cd462cc54ea6ba82a45a2e4174b2",
     "packages/quds_office_editor/lib/quds_office_editor.dart": "aeaf43f56fae1d83eaa2a1044ece9760e5834482b5f8fdfc49d0ddf3bf64c681",
     "packages/quds_office_editor/lib/src/core/command_pipeline.dart": "dfa04bb658dba1b45868feaa598bf351c4ecab5d88321af43d830f54f13ad0ce",
     "packages/quds_office_editor/lib/src/editor_sheet/render_sheet_grid.dart": "dde600201484a04a07e922b12d0098b3334bb3c3289476a7ea4e88a28cd4e9f4",

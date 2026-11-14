@@ -4,6 +4,10 @@ All notable changes to `quds_office_editor` are documented here.
 
 ## Unreleased
 
+- Preserve explicit spreadsheet font-color intent through undo/redo and cell
+  snapshots. Setting the currently resolved theme color creates a direct color;
+  undoing that edit restores the native theme binding.
+
 - Make Word protection changes undoable and revision-tracked. Host configuration
   updates retain native document restrictions, and protection history can undo
   its own read-only transition without allowing ordinary document edits.

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "browser": "Chromium",
+  "browser_version": "157.0.8103.78",
+  "entrypoint": "test/support/office_device_export_web_acceptance.dart",
+  "entrypoint_sha256": "784b99a13019798522af4e100460d8823700ac72bb5da8927bf748a571a7940e",
+  "wrapper_sha256": "bc7a8bebafa7338393619c4bd56d2d11a3cb113ec98b81364977a6bd4a429eec",
+  "adapter_sha256": "810613add90c2dbea892e8a8ee49993d11847a7fa47bddb386854024bc859c1f",
+  "compiled_sha256": "b3d598d4fa789aefa238ec80b5e018c7e23ca1883ffed6ec6a9fc697b293b182",
+  "outcome": "downloadedCopy",
+  "filename": "Recovery_ budget_.xlsx",
+  "download_bytes": 256,
+  "download_sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+  "blob_mime": "application/octet-stream",
+  "anchor_connected_at_click": true,
+  "remaining_download_anchors": 0,
+  "object_url_revoked": true,
+  "revocation_delay_ms": 1002.1,
+  "page_errors": []
+}

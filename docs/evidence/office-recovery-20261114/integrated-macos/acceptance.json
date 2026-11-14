@@ -1,0 +1,43 @@
+{
+  "host_checkpoint": "455f6d5f8f9592cb4ac820a7af185ac6b68d6965",
+  "quds_source_commit": "f9512763347f1fea56462c29d10e78d69d606419",
+  "managed_office_files": 2168,
+  "toolchain": "Flutter 3.47.8 / Dart 3.13.7",
+  "engine": {
+    "passed": 1731,
+    "conditional_skips": 3
+  },
+  "editor": {
+    "passed": 522,
+    "conditional_skips": 1,
+    "baseline_golden_failures": 17,
+    "unchanged_actual_golden_pngs": 27
+  },
+  "independent_host_cohort": {
+    "passed": 55,
+    "platform_skips": 2
+  },
+  "latest_arrival_comparison_ribbon_file_operation_cohort": {
+    "passed": 173
+  },
+  "python_controls": {
+    "coverage": 17,
+    "host_evidence": 16,
+    "native_render": 72
+  },
+  "limits": [
+    "Overlapping cohorts must not be added.",
+    "The editor suite has baseline macOS golden failures.",
+    "Native rendering is limited to the 12 independently referenced workflow packages.",
+    "The render probe did not run a fresh schema validator.",
+    "Hosted CI and physical-platform acceptance are separate gates."
+  ],
+  "reports": {
+    "native-render-report.json": "68e5b1b8114a51d90910fd54574e7dc041193691ec32d6031beb3d626c9246f0",
+    "browser-copy-receipt.json": "131c3a304eb62169f42d6be53ed7232b3bc9e662fdf3b151c42062c8b80c7345"
+  },
+  "latest_browser_comparison_cohort": {
+    "passed": 29,
+    "browser": "installed Chrome"
+  }
+}

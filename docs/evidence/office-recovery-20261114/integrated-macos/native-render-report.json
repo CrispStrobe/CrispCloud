@@ -1,0 +1,583 @@
+{
+  "renderer": "LibreOffice 26.8.2.2 9dea406ab7695df6325b11b0e19fdca8db4b7276",
+  "files": 12,
+  "rendered_files": 12,
+  "soffice_retry_policy": {
+    "maximum_attempts": 3,
+    "retry_returncode": -9,
+    "scope": "SOFFICE conversion only; unchanged input and fresh profile/output per attempt"
+  },
+  "picture_pixel_oracle_files": 0,
+  "visual_input_files": 12,
+  "native_schema_only_files": 0,
+  "native_schema_only": [],
+  "schema_report": null,
+  "pixel_fingerprint": "SHA-256 of big-endian uint32 width/height followed by RGB bytes",
+  "cycle_groups": 3,
+  "cycle_comparisons": [
+    {
+      "case": "fidelity-host/native-sheet.xlsx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "fidelity-host/native-sheet-1.xlsx",
+        "fidelity-host/native-sheet-2.xlsx",
+        "fidelity-host/native-sheet-3.xlsx"
+      ],
+      "baseline": "fidelity-host/reference/native-sheet-expected.xlsx",
+      "baseline_candidate": "fidelity-host/reference/native-sheet-expected.xlsx",
+      "baseline_page_order": null,
+      "passed": true
+    },
+    {
+      "case": "fidelity-host/native-slide.pptx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "fidelity-host/native-slide-1.pptx",
+        "fidelity-host/native-slide-2.pptx",
+        "fidelity-host/native-slide-3.pptx"
+      ],
+      "baseline": "fidelity-host/reference/native-slide-expected.pptx",
+      "baseline_candidate": "fidelity-host/reference/native-slide-expected.pptx",
+      "baseline_page_order": null,
+      "passed": true
+    },
+    {
+      "case": "fidelity-host/native-word.docx",
+      "expected_cycles": [
+        1,
+        2,
+        3
+      ],
+      "actual_cycles": [
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "fidelity-host/native-word-1.docx",
+        "fidelity-host/native-word-2.docx",
+        "fidelity-host/native-word-3.docx"
+      ],
+      "baseline": "fidelity-host/reference/native-word-expected.docx",
+      "baseline_candidate": "fidelity-host/reference/native-word-expected.docx",
+      "baseline_page_order": null,
+      "passed": true
+    }
+  ],
+  "baseline_comparisons": 3,
+  "page_order_comparisons": 0,
+  "render_only_files": [],
+  "failures": [],
+  "reports": [
+    {
+      "file": "fidelity-host/native-sheet-1.xlsx",
+      "pages": 1,
+      "text": "Native budget                 Amount\n\n\n      Approved travel                  135.50\nEquipment                              300.00\nTotal                                  435.50\n\n\n\n\n                Approved for review\n\f",
+      "pixel_sha256": [
+        "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+      ],
+      "pdf": "000/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "000/page-0001.png",
+          "pixel_sha256": "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+        }
+      ],
+      "input_sha256": "dc4bda3b22b1eb8c684556265f7a8d70d35ded588953b58cb03dc01e12190c4c",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-000-attempt-1-nvcnqu6q/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-000-attempt-1-nvcnqu6q",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-sheet-1.xlsx"
+          ],
+          "input_sha256_before": "dc4bda3b22b1eb8c684556265f7a8d70d35ded588953b58cb03dc01e12190c4c",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-sheet-1.xlsx as a Calc document -> /private/tmp/crisp-office-independent-20261114/render/render-000-attempt-1-nvcnqu6q/native-sheet-1.pdf using filter : calc_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "dc4bda3b22b1eb8c684556265f7a8d70d35ded588953b58cb03dc01e12190c4c",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-sheet-2.xlsx",
+      "pages": 1,
+      "text": "Native budget                 Amount\n\n\n      Approved travel                  135.50\nEquipment                              300.00\nTotal                                  435.50\n\n\n\n\n                Approved for review\n\f",
+      "pixel_sha256": [
+        "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+      ],
+      "pdf": "001/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "001/page-0001.png",
+          "pixel_sha256": "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+        }
+      ],
+      "input_sha256": "1c00d06b2351f15949e0f7231c453ecf6bdc8136064ab7c67dcbe0ad7fac57e6",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-001-attempt-1-2r6jz1s3/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-001-attempt-1-2r6jz1s3",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-sheet-2.xlsx"
+          ],
+          "input_sha256_before": "1c00d06b2351f15949e0f7231c453ecf6bdc8136064ab7c67dcbe0ad7fac57e6",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-sheet-2.xlsx as a Calc document -> /private/tmp/crisp-office-independent-20261114/render/render-001-attempt-1-2r6jz1s3/native-sheet-2.pdf using filter : calc_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "1c00d06b2351f15949e0f7231c453ecf6bdc8136064ab7c67dcbe0ad7fac57e6",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-sheet-3.xlsx",
+      "pages": 1,
+      "text": "Native budget                 Amount\n\n\n      Approved travel                  135.50\nEquipment                              300.00\nTotal                                  435.50\n\n\n\n\n                Approved for review\n\f",
+      "pixel_sha256": [
+        "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+      ],
+      "pdf": "002/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "002/page-0001.png",
+          "pixel_sha256": "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+        }
+      ],
+      "input_sha256": "a389652add9b43e610439eab289d9db0c42b030937fe86f408924aab637b9b7b",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-002-attempt-1-4fsmujqk/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-002-attempt-1-4fsmujqk",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-sheet-3.xlsx"
+          ],
+          "input_sha256_before": "a389652add9b43e610439eab289d9db0c42b030937fe86f408924aab637b9b7b",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-sheet-3.xlsx as a Calc document -> /private/tmp/crisp-office-independent-20261114/render/render-002-attempt-1-4fsmujqk/native-sheet-3.pdf using filter : calc_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "a389652add9b43e610439eab289d9db0c42b030937fe86f408924aab637b9b7b",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-slide-1.pptx",
+      "pages": 1,
+      "text": "Reviewed slide title\n\n\nReference body remains unchanged.\n\f",
+      "pixel_sha256": [
+        "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+      ],
+      "pdf": "003/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 406,
+          "png": "003/page-0001.png",
+          "pixel_sha256": "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+        }
+      ],
+      "input_sha256": "eb47636d18f338bf2de574811c4151ca1ee306c4f39143e731f27f828e8d07e1",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-003-attempt-1-trzw267v/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-003-attempt-1-trzw267v",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-slide-1.pptx"
+          ],
+          "input_sha256_before": "eb47636d18f338bf2de574811c4151ca1ee306c4f39143e731f27f828e8d07e1",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-slide-1.pptx as a Impress document -> /private/tmp/crisp-office-independent-20261114/render/render-003-attempt-1-trzw267v/native-slide-1.pdf using filter : impress_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "eb47636d18f338bf2de574811c4151ca1ee306c4f39143e731f27f828e8d07e1",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-slide-2.pptx",
+      "pages": 1,
+      "text": "Reviewed slide title\n\n\nReference body remains unchanged.\n\f",
+      "pixel_sha256": [
+        "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+      ],
+      "pdf": "004/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 406,
+          "png": "004/page-0001.png",
+          "pixel_sha256": "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+        }
+      ],
+      "input_sha256": "a23ff7fb91aa7b7a8430e03704b07f84c44ccc43ab15788532064548f7a9c848",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-004-attempt-1-ud4e2u0j/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-004-attempt-1-ud4e2u0j",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-slide-2.pptx"
+          ],
+          "input_sha256_before": "a23ff7fb91aa7b7a8430e03704b07f84c44ccc43ab15788532064548f7a9c848",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-slide-2.pptx as a Impress document -> /private/tmp/crisp-office-independent-20261114/render/render-004-attempt-1-ud4e2u0j/native-slide-2.pdf using filter : impress_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "a23ff7fb91aa7b7a8430e03704b07f84c44ccc43ab15788532064548f7a9c848",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-slide-3.pptx",
+      "pages": 1,
+      "text": "Reviewed slide title\n\n\nReference body remains unchanged.\n\f",
+      "pixel_sha256": [
+        "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+      ],
+      "pdf": "005/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 406,
+          "png": "005/page-0001.png",
+          "pixel_sha256": "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+        }
+      ],
+      "input_sha256": "c6f8a4fd54397de282cc9da77fed3e199a728a59ff7447b65cb81494d190ffce",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-005-attempt-1-q357x5fw/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-005-attempt-1-q357x5fw",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-slide-3.pptx"
+          ],
+          "input_sha256_before": "c6f8a4fd54397de282cc9da77fed3e199a728a59ff7447b65cb81494d190ffce",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-slide-3.pptx as a Impress document -> /private/tmp/crisp-office-independent-20261114/render/render-005-attempt-1-q357x5fw/native-slide-3.pdf using filter : impress_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "c6f8a4fd54397de282cc9da77fed3e199a728a59ff7447b65cb81494d190ffce",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-word-1.docx",
+      "pages": 1,
+      "text": "    Reviewed: Native workflow report\n\nReference paragraph remains unchanged.\n\f",
+      "pixel_sha256": [
+        "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+      ],
+      "pdf": "006/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "006/page-0001.png",
+          "pixel_sha256": "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+        }
+      ],
+      "input_sha256": "0038e14e1912223d313cb889b374dfa2edfbd3b3ce89083dd9e0e0d0eab34a14",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-006-attempt-1-6iysbo2z/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-006-attempt-1-6iysbo2z",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-word-1.docx"
+          ],
+          "input_sha256_before": "0038e14e1912223d313cb889b374dfa2edfbd3b3ce89083dd9e0e0d0eab34a14",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-word-1.docx as a Writer document -> /private/tmp/crisp-office-independent-20261114/render/render-006-attempt-1-6iysbo2z/native-word-1.pdf using filter : writer_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "0038e14e1912223d313cb889b374dfa2edfbd3b3ce89083dd9e0e0d0eab34a14",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-word-2.docx",
+      "pages": 1,
+      "text": "    Reviewed: Native workflow report\n\nReference paragraph remains unchanged.\n\f",
+      "pixel_sha256": [
+        "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+      ],
+      "pdf": "007/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "007/page-0001.png",
+          "pixel_sha256": "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+        }
+      ],
+      "input_sha256": "c504b98299cbcd118a4f264a67e6c65cab955b41c379f4fe3d5dc9bcc35b4902",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-007-attempt-1-swk1qxy7/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-007-attempt-1-swk1qxy7",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-word-2.docx"
+          ],
+          "input_sha256_before": "c504b98299cbcd118a4f264a67e6c65cab955b41c379f4fe3d5dc9bcc35b4902",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-word-2.docx as a Writer document -> /private/tmp/crisp-office-independent-20261114/render/render-007-attempt-1-swk1qxy7/native-word-2.pdf using filter : writer_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "c504b98299cbcd118a4f264a67e6c65cab955b41c379f4fe3d5dc9bcc35b4902",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/native-word-3.docx",
+      "pages": 1,
+      "text": "    Reviewed: Native workflow report\n\nReference paragraph remains unchanged.\n\f",
+      "pixel_sha256": [
+        "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+      ],
+      "pdf": "008/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "008/page-0001.png",
+          "pixel_sha256": "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+        }
+      ],
+      "input_sha256": "0ecc6a9558c91fb0bee4007268b9abd997c77f6f380069f83b9806a5e93b5496",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-008-attempt-1-nv59h6er/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-008-attempt-1-nv59h6er",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-word-3.docx"
+          ],
+          "input_sha256_before": "0ecc6a9558c91fb0bee4007268b9abd997c77f6f380069f83b9806a5e93b5496",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/native-word-3.docx as a Writer document -> /private/tmp/crisp-office-independent-20261114/render/render-008-attempt-1-nv59h6er/native-word-3.pdf using filter : writer_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "0ecc6a9558c91fb0bee4007268b9abd997c77f6f380069f83b9806a5e93b5496",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/reference/native-sheet-expected.xlsx",
+      "pages": 1,
+      "text": "Native budget                 Amount\n\n\n      Approved travel                  135.50\nEquipment                              300.00\nTotal                                  435.50\n\n\n\n\n                Approved for review\n\f",
+      "pixel_sha256": [
+        "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+      ],
+      "pdf": "009/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 596,
+          "height": 842,
+          "png": "009/page-0001.png",
+          "pixel_sha256": "944511148760f487273969f8d9da9e243097990b4155988b1f819c4852d9885b"
+        }
+      ],
+      "input_sha256": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-009-attempt-1-rpeq2ar5/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-009-attempt-1-rpeq2ar5",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/reference/native-sheet-expected.xlsx"
+          ],
+          "input_sha256_before": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/reference/native-sheet-expected.xlsx as a Calc document -> /private/tmp/crisp-office-independent-20261114/render/render-009-attempt-1-rpeq2ar5/native-sheet-expected.pdf using filter : calc_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/reference/native-slide-expected.pptx",
+      "pages": 1,
+      "text": "Reviewed slide title\n\n\nReference body remains unchanged.\n\f",
+      "pixel_sha256": [
+        "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+      ],
+      "pdf": "010/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 720,
+          "height": 406,
+          "png": "010/page-0001.png",
+          "pixel_sha256": "42428fd0811ca543dbed5ce6cf613ce4ca2b0c8772c9a4ff5a859e6085c8564b"
+        }
+      ],
+      "input_sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-010-attempt-1-y_debej4/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-010-attempt-1-y_debej4",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/reference/native-slide-expected.pptx"
+          ],
+          "input_sha256_before": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/reference/native-slide-expected.pptx as a Impress document -> /private/tmp/crisp-office-independent-20261114/render/render-010-attempt-1-y_debej4/native-slide-expected.pdf using filter : impress_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+          "input_unchanged": true
+        }
+      ]
+    },
+    {
+      "file": "fidelity-host/reference/native-word-expected.docx",
+      "pages": 1,
+      "text": "    Reviewed: Native workflow report\n\nReference paragraph remains unchanged.\n\f",
+      "pixel_sha256": [
+        "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+      ],
+      "pdf": "011/document.pdf",
+      "page_artifacts": [
+        {
+          "page": 1,
+          "width": 612,
+          "height": 792,
+          "png": "011/page-0001.png",
+          "pixel_sha256": "74bb1f4360a8d797b7d874506ee8f6c947a3c276586f9bce7028b1fc3fc0f739"
+        }
+      ],
+      "input_sha256": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+      "conversion_attempts": [
+        {
+          "attempt": 1,
+          "command": [
+            "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+            "-env:UserInstallation=file:///private/tmp/crisp-office-independent-20261114/render/render-011-attempt-1-b5p8w4km/profile",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            "/private/tmp/crisp-office-independent-20261114/render/render-011-attempt-1-b5p8w4km",
+            "/private/tmp/crisp-office-independent-20261114/input/fidelity-host/reference/native-word-expected.docx"
+          ],
+          "input_sha256_before": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+          "status": "converted",
+          "returncode": 0,
+          "stdout": "convert /private/tmp/crisp-office-independent-20261114/input/fidelity-host/reference/native-word-expected.docx as a Writer document -> /private/tmp/crisp-office-independent-20261114/render/render-011-attempt-1-b5p8w4km/native-word-expected.pdf using filter : writer_pdf_Export\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\nFontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/usr/local/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n",
+          "input_sha256_after": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+          "input_unchanged": true
+        }
+      ]
+    }
+  ]
+}
