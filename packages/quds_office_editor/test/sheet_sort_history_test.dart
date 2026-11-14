@@ -109,7 +109,7 @@ void main() {
     controller.sortSelection();
     _select(controller, 'A2', 'A2');
     controller.setSelectionFontBold(true);
-    controller.deleteRows(index: 1);
+    controller.deleteSheetRows(index: 1);
     controller.setActiveSheet(1);
     final neighbor = controller.sheet;
 

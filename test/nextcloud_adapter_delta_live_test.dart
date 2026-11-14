@@ -4,8 +4,8 @@
 // methods (deltaUpload, deltaDownload, fetchServerBlockMap) against the
 // Nextcloud 33 instance running on localhost:8888.
 //
-// These tests exercise the full adapter code path — not the standalone CLI
-// or raw curl commands. This is the code that CrispCloud actually runs.
+// Login, informational maps and admission fallback exercise the adapter.
+// Historical direct mutation cases are explicitly unavailable and skipped.
 //
 // Run:  flutter test test/nextcloud_adapter_delta_live_test.dart --run-skipped
 @Tags(['live'])
@@ -26,6 +26,13 @@ import 'package:crisp_cloud/services/secure_storage_service.dart';
 const _ncUrl = 'http://localhost:8888';
 const _ncUser = 'admin';
 const _ncPass = 'CrispAdmin2026!';
+
+// These historical mutation cases require a provider contract that the adapter
+// deliberately does not expose. Login, map inspection and refusal cases remain
+// executable; no skipped mutation case is counted as current qualification.
+const _deltaMutationUnavailable =
+    'Provider delta mutation is unavailable until version-bound staging, '
+    'final verification and conditional publication are implemented.';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -240,7 +247,7 @@ void main() {
 
       // Cleanup
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
 
     test('returns null when deltaSyncEnabled is false', () async {
       adapter.deltaSyncEnabled = false;
@@ -285,7 +292,7 @@ void main() {
       expect(result.savingsPercent, equals(100.0));
 
       await _webdavDelete(identicalFile);
-    });
+    }, skip: _deltaMutationUnavailable);
   });
 
   // =========================================================================
@@ -343,7 +350,7 @@ void main() {
       }
 
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
 
     test('returns null when deltaSyncEnabled is false', () async {
       adapter.deltaSyncEnabled = false;
@@ -396,7 +403,7 @@ void main() {
       expect(downloaded.every((b) => b == 0xBB), isTrue);
 
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
 
     test('block map cached after deltaUpload can be used for next sync', () async {
       adapter.deltaSyncEnabled = true;
@@ -441,6 +448,6 @@ void main() {
       expect(downloaded[2 * blockSize], equals(0xEE));
 
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
   });
 }

@@ -282,18 +282,11 @@ void main() {
       expect(result, isNull);
     });
 
-    test('deltaUpload throws when enabled but not authenticated', () async {
+    test('deltaUpload declines before authentication even when enabled', () async {
       adapter.deltaSyncEnabled = true;
-      // Auth check runs before file size check
       expect(
-        () => adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('authenticate'),
-          ),
-        ),
+        await adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
+        isNull,
       );
     });
 

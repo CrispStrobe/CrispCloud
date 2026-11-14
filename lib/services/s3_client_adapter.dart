@@ -12,6 +12,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:crisp_storage/crisp_storage.dart'
+    show TransferBandwidthContext, TransferBandwidthDirection;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart' as xml;
@@ -21,6 +23,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'cloud_storage_interface.dart';
 import 's3_operation_failure.dart';
 import 'delta_sync_service.dart';
+import 'file_operation_backend.dart';
+import 'local_file_service.dart';
 import 'log_service.dart';
 import 's3_config_service.dart';
 import 'secure_storage_service.dart';
@@ -1995,188 +1999,356 @@ class S3ClientAdapter extends CloudStorageClient
   }
 
   // ---------------------------------------------------------------------------
-  // Delta Sync — block-level file sync via Range GET + full upload fallback
+  // Bounded, version-bound delta downloads. Queue activation is a separate scope.
   // ---------------------------------------------------------------------------
 
-  /// Whether block-level delta sync is enabled for this connection.
+  /// Opt-in adapter API; ordinary queued transfers do not set this flag.
   bool deltaSyncEnabled = false;
 
   final DeltaSyncService _deltaSyncService = DeltaSyncService();
 
-  /// Download a byte range from a remote S3 object.
+  void _checkDeltaAccess(
+    int epoch,
+    String storageId,
+    bool Function()? isCancelled,
+  ) {
+    if (isCancelled?.call() ?? false) throw const DeltaSyncCancelled();
+    if (!_authenticated ||
+        epoch != _authEpoch ||
+        storageReferenceForClient(this).id != storageId) {
+      throw StateError('The captured S3 account is no longer available.');
+    }
+  }
+
+  void _requireDeltaProfile() {
+    _ensureAuth();
+    if (kIsWeb || encryption == S3Encryption.sseC) {
+      throw UnsupportedError(
+        'Verified S3 delta downloads require native files and a supported encryption profile.',
+      );
+    }
+  }
+
+  Future<BlockMapIdentity> _captureDeltaIdentity(String remotePath) async {
+    _requireDeltaProfile();
+    final epoch = _authEpoch;
+    final storageId = storageReferenceForClient(this).id;
+    final key = _pathToKey(remotePath);
+    if (key.isEmpty || key.endsWith('/')) {
+      throw ArgumentError('A regular S3 object path is required.');
+    }
+    final response = await _signedRequest(
+      'HEAD',
+      _buildUri(key),
+      boundedResponse: true,
+    );
+    _checkDeltaAccess(epoch, storageId, null);
+    if (response.statusCode != 200) {
+      throw StateError(
+        'S3 object metadata is unavailable (${response.statusCode}).',
+      );
+    }
+    // ETags are opaque strong HTTP validators, not presumed content hashes.
+    final version = response.headers['etag'];
+    final lengthText = response.headers['content-length'];
+    final length = int.tryParse(lengthText ?? '');
+    if (version == null ||
+        !RegExp(r'^"[\x21\x23-\x7e\x80-\xff]*"$').hasMatch(version) ||
+        lengthText == null ||
+        !RegExp(r'^[0-9]+$').hasMatch(lengthText) ||
+        length == null) {
+      throw UnsupportedError(
+        'S3 did not supply an exact length and strong ETag.',
+      );
+    }
+    final identity = BlockMapIdentity(
+      storageId: storageId,
+      objectPath: key,
+      version: version,
+      totalSize: length,
+    );
+    identity.validate();
+    return identity;
+  }
+
+  /// Read one exact range with bounded response allocation. An ignored Range,
+  /// altered Content-Range, compressed body, short read or overlong read fails.
+  /// The delta path always supplies both the captured version and total size.
   Future<Uint8List> downloadRange(
     String remotePath,
     int offset,
-    int length,
-  ) async {
+    int length, {
+    String? expectedVersion,
+    int? expectedTotalSize,
+    bool Function()? isCancelled,
+  }) async {
     _ensureAuth();
-    final key = _pathToKey(remotePath);
-    final uri = _buildUri(key);
-
-    final response = await _signedRequest(
-      'GET',
-      uri,
-      extraHeaders: {'Range': 'bytes=$offset-${offset + length - 1}'},
-    );
-
-    if (response.statusCode != 206 && response.statusCode != 200) {
-      throw S3OperationFailure(
-        S3OperationCode.rangeDownload,
-        'S3 range download failed (HTTP ${response.statusCode})',
-        {'status': response.statusCode},
-      );
+    if (offset < 0 ||
+        length <= 0 ||
+        length > 64 * 1024 * 1024 ||
+        offset > deltaMaxFileSize - length ||
+        (expectedTotalSize != null &&
+            (expectedTotalSize > deltaMaxFileSize ||
+                offset + length > expectedTotalSize))) {
+      throw ArgumentError('Invalid or unsupported S3 delta range.');
     }
-    return response.bodyBytes;
+    final epoch = _authEpoch;
+    final storageId = storageReferenceForClient(this).id;
+    void check() => _checkDeltaAccess(epoch, storageId, isCancelled);
+    check();
+    final end = offset + length - 1;
+    final uri = _buildUri(_pathToKey(remotePath));
+    final context = TransferBandwidthContext.current;
+    final request = http.Request('GET', uri)
+      ..followRedirects = false
+      ..headers.addAll(
+        signRequest(
+          method: 'GET',
+          uri: uri,
+          headers: {
+            'range': 'bytes=$offset-$end',
+            'accept-encoding': 'identity',
+            if (expectedVersion != null) 'if-match': expectedVersion,
+          },
+          payloadHash: sha256.convert(const <int>[]).toString(),
+          now: DateTime.now().toUtc(),
+        ),
+      );
+    final client = http.Client();
+    try {
+      final response = await client.send(
+        bindHttpTransferBandwidth(request, context),
+      );
+      check();
+      if (response.statusCode != 206) {
+        throw StateError(
+          'S3 refused the exact version/range (${response.statusCode}).',
+        );
+      }
+      final range = RegExp(r'^bytes ([0-9]+)-([0-9]+)/([0-9]+)$')
+          .firstMatch(response.headers['content-range'] ?? '');
+      final total = range == null ? null : int.tryParse(range.group(3)!);
+      final encoding = response.headers['content-encoding'];
+      final returnedVersion = response.headers['etag'];
+      if (range == null ||
+          int.tryParse(range.group(1)!) != offset ||
+          int.tryParse(range.group(2)!) != end ||
+          total == null ||
+          total <= end ||
+          total > deltaMaxFileSize ||
+          (expectedTotalSize != null && total != expectedTotalSize) ||
+          (response.contentLength != null &&
+              response.contentLength != length) ||
+          (encoding != null && encoding.toLowerCase() != 'identity') ||
+          (expectedVersion != null &&
+              returnedVersion != null &&
+              returnedVersion != expectedVersion)) {
+        throw StateError('S3 returned different range metadata.');
+      }
+      var received = 0;
+      final bounded = response.stream.map((chunk) {
+        check();
+        received += chunk.length;
+        if (received > length) {
+          throw StateError('S3 returned an overlong range.');
+        }
+        // Own bytes before an allocator wait can let the transport reuse them.
+        return Uint8List.fromList(chunk);
+      });
+      final input = context == null
+          ? bounded
+          : context.bind(
+              bounded,
+              direction: TransferBandwidthDirection.download,
+            );
+      final bytes = BytesBuilder();
+      await for (final chunk in input) {
+        check();
+        bytes.add(chunk);
+      }
+      check();
+      if (received != length) throw StateError('S3 returned a short range.');
+      return bytes.takeBytes();
+    } finally {
+      client.close();
+    }
   }
 
-  /// Get the ETag of a remote S3 object via HEAD request.
+  /// Retained metadata helper; delta admission uses the full captured identity.
   Future<String?> getObjectETag(String remotePath) async {
     _ensureAuth();
-    final key = _pathToKey(remotePath);
-    final uri = _buildUri(key);
-
-    final response = await _signedRequest('HEAD', uri);
+    final response = await _signedRequest(
+      'HEAD',
+      _buildUri(_pathToKey(remotePath)),
+      boundedResponse: true,
+    );
     if (response.statusCode != 200) return null;
     return response.headers['etag']?.replaceAll('"', '');
   }
 
-  /// Orchestrate a delta download: compare remote vs local, download only changed blocks.
+  /// Explicitly read and hash a whole captured remote version to seed a cache.
+  /// This costs a full download once; it is not automatic queue cache seeding.
+  /// No caller-supplied local bytes are trusted as proof of remote contents.
+  Future<BlockMap> seedDeltaBlockMap(
+    String remotePath, {
+    required String cacheDir,
+    int blockSize = 4 * 1024 * 1024,
+    bool Function()? isCancelled,
+    void Function(int, int, int)? onProgress,
+  }) async {
+    _requireDeltaProfile();
+    if (blockSize < 64 * 1024 || blockSize > 64 * 1024 * 1024) {
+      throw ArgumentError.value(blockSize, 'blockSize');
+    }
+    final epoch = _authEpoch;
+    final storageId = storageReferenceForClient(this).id;
+    void check() => _checkDeltaAccess(epoch, storageId, isCancelled);
+    check();
+    final identity = await _captureDeltaIdentity(remotePath);
+    check();
+    final count = (identity.totalSize + blockSize - 1) ~/ blockSize;
+    final signatures = <BlockSignature>[];
+    for (var i = 0; i < count; i++) {
+      check();
+      final offset = i * blockSize;
+      final length = (identity.totalSize - offset).clamp(0, blockSize);
+      final bytes = await downloadRange(
+        remotePath,
+        offset,
+        length,
+        expectedVersion: identity.version,
+        expectedTotalSize: identity.totalSize,
+        isCancelled: isCancelled,
+      );
+      check();
+      signatures.add(
+        BlockSignature(
+          blockIndex: i,
+          offset: offset,
+          size: length,
+          weakHash: _deltaSyncService.adler32(bytes),
+          strongHash: _deltaSyncService.sha256Hex(bytes),
+        ),
+      );
+      onProgress?.call(i + 1, count, offset + length);
+    }
+    check();
+    if (!identity.matches(await _captureDeltaIdentity(remotePath))) {
+      throw StateError('S3 object changed while computing its block map.');
+    }
+    check();
+    final map = BlockMap(
+      filePath: identity.objectPath,
+      totalSize: identity.totalSize,
+      blockSize: blockSize,
+      blockCount: count,
+      signatures: List.unmodifiable(signatures),
+      createdAt: DateTime.now().toUtc(),
+      identity: identity,
+    );
+    map.validate();
+    await _deltaSyncService.saveBlockMap(
+      map,
+      _deltaSyncService.blockMapCachePath(
+        cacheDir,
+        identity.objectPath,
+        's3',
+        storageId: storageId,
+      ),
+    );
+    check();
+    return map;
+  }
+
+  /// Reconstruct a local file from an explicitly seeded, still-current remote
+  /// map. Invalid/legacy/stale caches decline before destination work; failures
+  /// after admission propagate and leave the original destination intact.
   Future<DeltaResult?> deltaDownload(
     String remotePath,
     String localPath, {
     String? cacheDir,
     void Function(int, int, int)? onProgress,
+    bool Function()? isCancelled,
   }) async {
-    if (!deltaSyncEnabled) return null;
-    _ensureAuth();
-
-    final file = File(localPath);
-    if (!file.existsSync()) return null;
-    final fileSize = await file.length();
-    if (!_deltaSyncService.shouldUseDeltaSync(fileSize)) return null;
-
-    // Compute local block map
-    final localMap = await _deltaSyncService.computeBlockMap(localPath);
-
-    // Load cached remote block map
-    BlockMap? remoteMap;
-    if (cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        's3',
-      );
-      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
-
-      // Validate against ETag
-      if (remoteMap != null) {
-        final currentEtag = await getObjectETag(remotePath);
-        if (currentEtag == null) remoteMap = null;
-      }
-    }
-    if (remoteMap == null) return null; // Can't diff without remote map
-
-    final delta = _deltaSyncService.compareBlockMaps(remoteMap, localMap);
-    if (delta.changedBlocks.isEmpty) return delta;
-
-    // Download changed blocks via Range GET
-    final plan = _deltaSyncService.createTransferPlan(
-      delta,
-      TransferDirection.download,
-      remoteMap,
+    if (!deltaSyncEnabled || cacheDir == null) return null;
+    _requireDeltaProfile();
+    final epoch = _authEpoch;
+    final storageId = storageReferenceForClient(this).id;
+    void check() => _checkDeltaAccess(epoch, storageId, isCancelled);
+    check();
+    final identity = await _captureDeltaIdentity(remotePath);
+    check();
+    final cachePath = _deltaSyncService.blockMapCachePath(
+      cacheDir,
+      identity.objectPath,
+      's3',
+      storageId: storageId,
     );
-
-    await _deltaSyncService.applyDelta(
-      plan,
+    final remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
+    check();
+    if (remoteMap == null || !remoteMap.matchesIdentity(identity)) return null;
+    if (await FileSystemEntity.type(localPath, followLinks: false) !=
+        FileSystemEntityType.file) {
+      return null;
+    }
+    check();
+    final localMap = await _deltaSyncService.computeBlockMap(
       localPath,
-      remoteReadBlock: (blockIndex, offset, size) async {
-        return await downloadRange(remotePath, offset, size);
-      },
+      blockSize: remoteMap.blockSize,
+    );
+    check();
+    final delta = _deltaSyncService.compareBlockMaps(remoteMap, localMap);
+    Future<void> revalidate() async {
+      check();
+      if (!identity.matches(await _captureDeltaIdentity(remotePath))) {
+        throw StateError('S3 object changed before delta publication.');
+      }
+      check();
+    }
+
+    // Even identical and shrink-only results pass full validation, so an empty
+    // changed-block list never skips the final-length or source checks.
+    await _deltaSyncService.applyDelta(
+      _deltaSyncService.createTransferPlan(
+        delta,
+        TransferDirection.download,
+        remoteMap,
+      ),
+      localPath,
+      destinationBackend: LocalOperationBackend(
+        LocalFileService(),
+        isCurrent: () =>
+            _authenticated &&
+            _authEpoch == epoch &&
+            storageReferenceForClient(this).id == storageId,
+      ),
+      revalidateSource: revalidate,
+      checkpoint: () async => check(),
+      isCancelled: isCancelled,
+      remoteReadBlock: (_, offset, size) => downloadRange(
+        remotePath,
+        offset,
+        size,
+        expectedVersion: identity.version,
+        expectedTotalSize: identity.totalSize,
+        isCancelled: isCancelled,
+      ),
       onProgress: onProgress,
     );
-
-    // Cache updated local map
-    if (cacheDir != null) {
-      final newMap = await _deltaSyncService.computeBlockMap(localPath);
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        's3',
-      );
-      await _deltaSyncService.saveBlockMap(newMap, cachePath);
-    }
-
+    // The map already names the verified remote source. Never replace it with
+    // a local-path-only map, and never turn post-commit cache work into failure.
     return delta;
   }
 
-  /// Orchestrate a delta upload: compare local vs cached remote, upload only if
-  /// the savings justify it. S3 doesn't support partial writes, so we upload
-  /// the full file but skip the upload entirely if nothing changed.
-  ///
-  /// When the cached block map shows changes, we still do a full upload (S3
-  /// limitation) but cache the new block map for future comparisons. The savings
-  /// come from skipping unnecessary uploads when files haven't changed.
+  /// The old "delta upload" overwrote the destination with a full buffered
+  /// upload. Return the established full-transfer fallback signal until a
+  /// staged, conditional remote publication profile is implemented.
   Future<DeltaResult?> deltaUpload(
     String localPath,
     String remotePath, {
     String? cacheDir,
     void Function(int, int, int)? onProgress,
-  }) async {
-    if (!deltaSyncEnabled) return null;
-    _ensureAuth();
-
-    final file = File(localPath);
-    final fileSize = await file.length();
-    if (!_deltaSyncService.shouldUseDeltaSync(fileSize)) return null;
-
-    // Load cached remote block map
-    BlockMap? remoteMap;
-    if (cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        's3',
-      );
-      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
-    }
-    if (remoteMap == null) return null; // No cache = can't compare
-
-    final localMap = await _deltaSyncService.computeBlockMap(
-      localPath,
-      blockSize: remoteMap.blockSize,
-      onProgress: onProgress,
-    );
-    final delta = _deltaSyncService.compareBlockMaps(localMap, remoteMap);
-
-    if (delta.changedBlocks.isEmpty) {
-      _log.info('Delta sync: $remotePath is identical, skipping upload');
-      return delta;
-    }
-
-    _log.info(
-      'Delta sync: $remotePath has ${delta.changedBlocks.length} changed blocks, uploading full file',
-    );
-
-    // S3 doesn't support partial writes — upload the full file
-    final bytes = await file.readAsBytes();
-    await uploadFile(
-      bytes,
-      p.posix.basename(remotePath),
-      p.posix.dirname(remotePath),
-    );
-
-    // Cache new block map
-    if (cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        's3',
-      );
-      await _deltaSyncService.saveBlockMap(localMap, cachePath);
-    }
-
-    return delta;
-  }
+  }) async => null;
 
   void _ensureAuth() {
     if (!_authenticated || _accessKey == null || _secretKey == null) {

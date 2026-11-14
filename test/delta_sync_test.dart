@@ -14,11 +14,12 @@
 // exercised end-to-end.
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:crisp_cloud/services/delta_sync_service.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/local_file_service.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -26,7 +27,7 @@ import 'package:crisp_cloud/services/delta_sync_service.dart';
 
 /// Write [bytes] to a fresh temp file and return its path.
 Future<String> _writeTempFile(List<int> bytes, {String? suffix}) async {
-  final dir  = await Directory.systemTemp.createTemp('delta_sync_test_');
+  final dir = await Directory.systemTemp.createTemp('delta_sync_test_');
   final file = File('${dir.path}/data${suffix ?? '.bin'}');
   await file.writeAsBytes(bytes, flush: true);
   return file.path;
@@ -37,19 +38,37 @@ List<int> _fill(int length, int value) =>
     List<int>.filled(length, value & 0xFF);
 
 /// Build a [List<int>] where byte[i] = i % 256.
-List<int> _ramp(int length) =>
-    List<int>.generate(length, (i) => i & 0xFF);
+List<int> _ramp(int length) => List<int>.generate(length, (i) => i & 0xFF);
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late DeltaSyncService svc;
 
   setUp(() {
     svc = DeltaSyncService();
   });
+
+  Future<void> apply(
+    BlockTransferPlan plan,
+    String path, {
+    Future<List<int>> Function(int, int, int)? remoteReadBlock,
+    Future<void> Function(int, int, List<int>)? remoteWriteBlock,
+    void Function(int, int, int)? onProgress,
+  }) => svc.applyDelta(
+    plan,
+    path,
+    remoteReadBlock: remoteReadBlock,
+    remoteWriteBlock: remoteWriteBlock,
+    onProgress: onProgress,
+    destinationBackend: LocalOperationBackend(
+      LocalFileService(),
+      isCurrent: () => true,
+    ),
+  );
 
   // =========================================================================
   // Adler-32
@@ -88,7 +107,7 @@ void main() {
 
     test('all-zero vs all-0xFF produce different hashes', () {
       final hZero = svc.adler32(_fill(1024, 0));
-      final hFF   = svc.adler32(_fill(1024, 0xFF));
+      final hFF = svc.adler32(_fill(1024, 0xFF));
       expect(hZero, isNot(equals(hFF)));
     });
 
@@ -111,18 +130,21 @@ void main() {
     });
 
     // Rolling update equivalence: sliding one byte should match full recompute
-    test('rollingAdler32Update matches full recompute after sliding one byte', () {
-      // Initial window: bytes 0..3
-      final window1 = [10, 20, 30, 40];
-      final hashBefore = svc.adler32(window1);
+    test(
+      'rollingAdler32Update matches full recompute after sliding one byte',
+      () {
+        // Initial window: bytes 0..3
+        final window1 = [10, 20, 30, 40];
+        final hashBefore = svc.adler32(window1);
 
-      // Slide: remove byte 10, add byte 50  →  window = [20, 30, 40, 50]
-      final window2    = [20, 30, 40, 50];
-      final hashFull   = svc.adler32(window2);
-      final hashRolled = svc.rollingAdler32Update(hashBefore, 10, 50, 4);
+        // Slide: remove byte 10, add byte 50  →  window = [20, 30, 40, 50]
+        final window2 = [20, 30, 40, 50];
+        final hashFull = svc.adler32(window2);
+        final hashRolled = svc.rollingAdler32Update(hashBefore, 10, 50, 4);
 
-      expect(hashRolled, equals(hashFull));
-    });
+        expect(hashRolled, equals(hashFull));
+      },
+    );
 
     test('rollingAdler32Update is self-consistent over multiple slides', () {
       const blockSize = 8;
@@ -139,8 +161,11 @@ void main() {
           blockSize,
         );
         final fullHash = svc.adler32(data.sublist(i + 1, i + 1 + blockSize));
-        expect(rollingHash, equals(fullHash),
-            reason: 'mismatch at window offset ${i + 1}');
+        expect(
+          rollingHash,
+          equals(fullHash),
+          reason: 'mismatch at window offset ${i + 1}',
+        );
       }
     });
   });
@@ -153,8 +178,9 @@ void main() {
       expect(
         svc.sha256Hex([]),
         equals(
-            'e3b0c44298fc1c149afbf4c8996fb924'
-            '27ae41e4649b934ca495991b7852b855'),
+          'e3b0c44298fc1c149afbf4c8996fb924'
+          '27ae41e4649b934ca495991b7852b855',
+        ),
       );
     });
 
@@ -162,8 +188,9 @@ void main() {
       expect(
         svc.sha256Hex('abc'.codeUnits),
         equals(
-            'ba7816bf8f01cfea414140de5dae2223'
-            'b00361a396177a9cb410ff61f20015ad'),
+          'ba7816bf8f01cfea414140de5dae2223'
+          'b00361a396177a9cb410ff61f20015ad',
+        ),
       );
     });
 
@@ -174,7 +201,11 @@ void main() {
     });
 
     test('result is always 64 hex characters', () {
-      for (final data in <List<int>>[[], [0], _fill(4096, 0xAB)]) {
+      for (final data in <List<int>>[
+        [],
+        [0],
+        _fill(4096, 0xAB),
+      ]) {
         expect(svc.sha256Hex(data).length, equals(64));
       }
     });
@@ -193,23 +224,23 @@ void main() {
 
     test('single block file produces blockCount=1', () async {
       final path = await _writeTempFile(_fill(bs ~/ 2, 0xAA));
-      final map  = await svc.computeBlockMap(path, blockSize: bs);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
       expect(map.blockCount, equals(1));
       expect(map.signatures.length, equals(1));
     });
 
     test('exactly N*blockSize bytes → blockCount == N', () async {
-      const n    = 4;
+      const n = 4;
       final path = await _writeTempFile(_fill(n * bs, 0x55), suffix: '.bin');
-      final map  = await svc.computeBlockMap(path, blockSize: bs);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
       expect(map.blockCount, equals(n));
     });
 
     test('N*blockSize + 1 bytes → blockCount == N+1', () async {
-      const n    = 4;
+      const n = 4;
       final data = _fill(n * bs + 1, 0x33);
       final path = await _writeTempFile(data);
-      final map  = await svc.computeBlockMap(path, blockSize: bs);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
       expect(map.blockCount, equals(n + 1));
       // Last block has size 1
       expect(map.signatures.last.size, equals(1));
@@ -217,25 +248,28 @@ void main() {
 
     test('empty file → blockCount=0, no signatures', () async {
       final path = await _writeTempFile([]);
-      final map  = await svc.computeBlockMap(path, blockSize: bs);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
       expect(map.blockCount, equals(0));
       expect(map.signatures, isEmpty);
       expect(map.totalSize, equals(0));
     });
 
-    test('last block is smaller when file is not a multiple of blockSize', () async {
-      final data = _fill(bs + 37, 0x11);
-      final path = await _writeTempFile(data);
-      final map  = await svc.computeBlockMap(path, blockSize: bs);
-      expect(map.blockCount, equals(2));
-      expect(map.signatures.first.size, equals(bs));
-      expect(map.signatures.last.size,  equals(37));
-    });
+    test(
+      'last block is smaller when file is not a multiple of blockSize',
+      () async {
+        final data = _fill(bs + 37, 0x11);
+        final path = await _writeTempFile(data);
+        final map = await svc.computeBlockMap(path, blockSize: bs);
+        expect(map.blockCount, equals(2));
+        expect(map.signatures.first.size, equals(bs));
+        expect(map.signatures.last.size, equals(37));
+      },
+    );
 
     test('block offsets are contiguous and start at 0', () async {
       final data = _fill(3 * bs, 0x77);
       final path = await _writeTempFile(data);
-      final map  = await svc.computeBlockMap(path, blockSize: bs);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
       for (int i = 0; i < map.blockCount; i++) {
         expect(map.signatures[i].offset, equals(i * bs));
         expect(map.signatures[i].blockIndex, equals(i));
@@ -243,14 +277,20 @@ void main() {
     });
 
     test('identical files produce identical block maps', () async {
-      final data  = _ramp(2 * bs);
+      final data = _ramp(2 * bs);
       final path1 = await _writeTempFile(data);
       final path2 = await _writeTempFile(data);
-      final map1  = await svc.computeBlockMap(path1, blockSize: bs);
-      final map2  = await svc.computeBlockMap(path2, blockSize: bs);
+      final map1 = await svc.computeBlockMap(path1, blockSize: bs);
+      final map2 = await svc.computeBlockMap(path2, blockSize: bs);
       for (int i = 0; i < map1.blockCount; i++) {
-        expect(map1.signatures[i].weakHash,   equals(map2.signatures[i].weakHash));
-        expect(map1.signatures[i].strongHash, equals(map2.signatures[i].strongHash));
+        expect(
+          map1.signatures[i].weakHash,
+          equals(map2.signatures[i].weakHash),
+        );
+        expect(
+          map1.signatures[i].strongHash,
+          equals(map2.signatures[i].strongHash),
+        );
       }
     });
 
@@ -259,13 +299,18 @@ void main() {
       final data2 = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB)];
       final path1 = await _writeTempFile(data1);
       final path2 = await _writeTempFile(data2);
-      final map1  = await svc.computeBlockMap(path1, blockSize: bs);
-      final map2  = await svc.computeBlockMap(path2, blockSize: bs);
+      final map1 = await svc.computeBlockMap(path1, blockSize: bs);
+      final map2 = await svc.computeBlockMap(path2, blockSize: bs);
       // Block 0 is identical
-      expect(map1.signatures[0].strongHash, equals(map2.signatures[0].strongHash));
+      expect(
+        map1.signatures[0].strongHash,
+        equals(map2.signatures[0].strongHash),
+      );
       // Block 1 differs
-      expect(map1.signatures[1].strongHash,
-          isNot(equals(map2.signatures[1].strongHash)));
+      expect(
+        map1.signatures[1].strongHash,
+        isNot(equals(map2.signatures[1].strongHash)),
+      );
     });
 
     test('progress callback receives correct totals', () async {
@@ -278,20 +323,20 @@ void main() {
         onProgress: (p, t, b) => progressCalls.add((p, t, b)),
       );
       expect(progressCalls.length, equals(3));
-      expect(progressCalls.last.$1, equals(3));  // processedBlocks
-      expect(progressCalls.last.$2, equals(3));  // totalBlocks
+      expect(progressCalls.last.$1, equals(3)); // processedBlocks
+      expect(progressCalls.last.$2, equals(3)); // totalBlocks
       expect(progressCalls.last.$3, equals(3 * bs)); // processedBytes
     });
 
     test('BlockMap serialization round-trip', () async {
-      final data  = _ramp(2 * bs);
-      final path  = await _writeTempFile(data);
-      final map   = await svc.computeBlockMap(path, blockSize: bs);
-      final json  = map.toJson();
-      final map2  = BlockMap.fromJson(json);
-      expect(map2.filePath,   equals(map.filePath));
-      expect(map2.totalSize,  equals(map.totalSize));
-      expect(map2.blockSize,  equals(map.blockSize));
+      final data = _ramp(2 * bs);
+      final path = await _writeTempFile(data);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
+      final json = map.toJson();
+      final map2 = BlockMap.fromJson(json);
+      expect(map2.filePath, equals(map.filePath));
+      expect(map2.totalSize, equals(map.totalSize));
+      expect(map2.blockSize, equals(map.blockSize));
       expect(map2.blockCount, equals(map.blockCount));
       expect(map2.signatures.length, equals(map.signatures.length));
       for (int i = 0; i < map.signatures.length; i++) {
@@ -306,154 +351,182 @@ void main() {
   group('Delta comparison (compareBlockMaps)', () {
     const bs = 64 * 1024; // 64 KB
 
-    Future<BlockMap> _mapOf(List<int> data) async {
+    Future<BlockMap> mapOf(List<int> data) async {
       final path = await _writeTempFile(data);
       return svc.computeBlockMap(path, blockSize: bs);
     }
 
     test('identical files → 0 changed blocks', () async {
       final data = _ramp(3 * bs);
-      final m1   = await _mapOf(data);
-      final m2   = await _mapOf(data);
-      final d    = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(data);
+      final m2 = await mapOf(data);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.changedBlocks, isEmpty);
       expect(d.unchangedBlocks, equals(3));
       expect(d.changedBytes, equals(0));
     });
 
     test('completely different files → all blocks changed', () async {
-      final m1 = await _mapOf(_fill(3 * bs, 0xAA));
-      final m2 = await _mapOf(_fill(3 * bs, 0xBB));
-      final d  = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(_fill(3 * bs, 0xAA));
+      final m2 = await mapOf(_fill(3 * bs, 0xBB));
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.changedBlocks.length, equals(3));
       expect(d.unchangedBlocks, equals(0));
     });
 
     test('only middle block changed', () async {
-      final base    = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33)];
-      final changed = [..._fill(bs, 0x11), ..._fill(bs, 0xFF), ..._fill(bs, 0x33)];
-      final m1 = await _mapOf(base);
-      final m2 = await _mapOf(changed);
-      final d  = svc.compareBlockMaps(m1, m2);
+      final base = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33)];
+      final changed = [
+        ..._fill(bs, 0x11),
+        ..._fill(bs, 0xFF),
+        ..._fill(bs, 0x33),
+      ];
+      final m1 = await mapOf(base);
+      final m2 = await mapOf(changed);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.changedBlocks, equals([1]));
     });
 
     test('only first block changed', () async {
-      final base    = [..._fill(bs, 0x10), ..._fill(bs, 0x20)];
+      final base = [..._fill(bs, 0x10), ..._fill(bs, 0x20)];
       final changed = [..._fill(bs, 0x11), ..._fill(bs, 0x20)];
-      final m1 = await _mapOf(base);
-      final m2 = await _mapOf(changed);
-      final d  = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(base);
+      final m2 = await mapOf(changed);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.changedBlocks, equals([0]));
     });
 
     test('only last block changed', () async {
-      final base    = [..._fill(bs, 0x10), ..._fill(bs, 0x20), ..._fill(bs, 0x30)];
-      final changed = [..._fill(bs, 0x10), ..._fill(bs, 0x20), ..._fill(bs, 0x31)];
-      final m1 = await _mapOf(base);
-      final m2 = await _mapOf(changed);
-      final d  = svc.compareBlockMaps(m1, m2);
+      final base = [..._fill(bs, 0x10), ..._fill(bs, 0x20), ..._fill(bs, 0x30)];
+      final changed = [
+        ..._fill(bs, 0x10),
+        ..._fill(bs, 0x20),
+        ..._fill(bs, 0x31),
+      ];
+      final m1 = await mapOf(base);
+      final m2 = await mapOf(changed);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.changedBlocks, equals([2]));
     });
 
-    test('file grew (new blocks at end) → new blocks reported as changed', () async {
-      final short = _fill(2 * bs, 0xAA);
-      final long  = [..._fill(2 * bs, 0xAA), ..._fill(bs, 0xBB)];
-      final mShort = await _mapOf(short);
-      final mLong  = await _mapOf(long);
-      // Compare local=long vs remote=short → block 2 is new → changed
-      final d = svc.compareBlockMaps(mLong, mShort);
-      expect(d.changedBlocks, contains(2));
-    });
+    test(
+      'file grew (new blocks at end) → new blocks reported as changed',
+      () async {
+        final short = _fill(2 * bs, 0xAA);
+        final long = [..._fill(2 * bs, 0xAA), ..._fill(bs, 0xBB)];
+        final mShort = await mapOf(short);
+        final mLong = await mapOf(long);
+        // Compare local=long vs remote=short → block 2 is new → changed
+        final d = svc.compareBlockMaps(mLong, mShort);
+        expect(d.changedBlocks, contains(2));
+      },
+    );
 
-    test('file shrank → local has fewer blocks, no crash, no phantom changes', () async {
-      final long  = _fill(3 * bs, 0xCC);
-      final short = _fill(2 * bs, 0xCC);
-      final mLong  = await _mapOf(long);
-      final mShort = await _mapOf(short);
-      // Compare local=short vs remote=long → first 2 blocks match
-      final d = svc.compareBlockMaps(mShort, mLong);
-      expect(d.changedBlocks, isEmpty);
-    });
+    test(
+      'file shrank → local has fewer blocks, no crash, no phantom changes',
+      () async {
+        final long = _fill(3 * bs, 0xCC);
+        final short = _fill(2 * bs, 0xCC);
+        final mLong = await mapOf(long);
+        final mShort = await mapOf(short);
+        // Compare local=short vs remote=long → first 2 blocks match
+        final d = svc.compareBlockMaps(mShort, mLong);
+        expect(d.changedBlocks, isEmpty);
+      },
+    );
 
-    test('empty local file vs non-empty remote → 0 changed local blocks', () async {
-      final mEmpty    = await _mapOf([]);
-      final mNonEmpty = await _mapOf(_fill(bs, 0xDE));
-      final d = svc.compareBlockMaps(mEmpty, mNonEmpty);
-      expect(d.changedBlocks, isEmpty);
-      expect(d.totalBlocks,   equals(0));
-    });
+    test(
+      'empty local file vs non-empty remote → 0 changed local blocks',
+      () async {
+        final mEmpty = await mapOf([]);
+        final mNonEmpty = await mapOf(_fill(bs, 0xDE));
+        final d = svc.compareBlockMaps(mEmpty, mNonEmpty);
+        expect(d.changedBlocks, isEmpty);
+        expect(d.totalBlocks, equals(0));
+      },
+    );
 
-    test('non-empty local vs empty remote → all local blocks changed', () async {
-      final mNonEmpty = await _mapOf(_fill(2 * bs, 0xDE));
-      final mEmpty    = await _mapOf([]);
-      final d = svc.compareBlockMaps(mNonEmpty, mEmpty);
-      expect(d.changedBlocks.length, equals(2));
-    });
+    test(
+      'non-empty local vs empty remote → all local blocks changed',
+      () async {
+        final mNonEmpty = await mapOf(_fill(2 * bs, 0xDE));
+        final mEmpty = await mapOf([]);
+        final d = svc.compareBlockMaps(mNonEmpty, mEmpty);
+        expect(d.changedBlocks.length, equals(2));
+      },
+    );
 
-    test('block size boundary: file == N*blockSize, all blocks identical', () async {
-      const n   = 5;
-      final data = _fill(n * bs, 0x7F);
-      final m1  = await _mapOf(data);
-      final m2  = await _mapOf(data);
-      final d   = svc.compareBlockMaps(m1, m2);
-      expect(d.changedBlocks, isEmpty);
-    });
+    test(
+      'block size boundary: file == N*blockSize, all blocks identical',
+      () async {
+        const n = 5;
+        final data = _fill(n * bs, 0x7F);
+        final m1 = await mapOf(data);
+        final m2 = await mapOf(data);
+        final d = svc.compareBlockMaps(m1, m2);
+        expect(d.changedBlocks, isEmpty);
+      },
+    );
 
-    test('block size boundary: file == N*blockSize + 1 byte, last byte changed', () async {
-      const n    = 2;
-      final base    = [..._fill(n * bs, 0x11), 0x22];
-      final changed = [..._fill(n * bs, 0x11), 0x23]; // last byte differs
-      final m1 = await _mapOf(base);
-      final m2 = await _mapOf(changed);
-      final d  = svc.compareBlockMaps(m1, m2);
-      expect(d.changedBlocks, equals([n])); // the partial last block
-    });
+    test(
+      'block size boundary: file == N*blockSize + 1 byte, last byte changed',
+      () async {
+        const n = 2;
+        final base = [..._fill(n * bs, 0x11), 0x22];
+        final changed = [..._fill(n * bs, 0x11), 0x23]; // last byte differs
+        final m1 = await mapOf(base);
+        final m2 = await mapOf(changed);
+        final d = svc.compareBlockMaps(m1, m2);
+        expect(d.changedBlocks, equals([n])); // the partial last block
+      },
+    );
 
     test('savingsPercent is 100 for identical files', () async {
       final data = _ramp(4 * bs);
-      final m1   = await _mapOf(data);
-      final m2   = await _mapOf(data);
-      final d    = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(data);
+      final m2 = await mapOf(data);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.savingsPercent, equals(100.0));
     });
 
     test('savingsPercent is 0 for completely different files', () async {
-      final m1 = await _mapOf(_fill(2 * bs, 0xAA));
-      final m2 = await _mapOf(_fill(2 * bs, 0xBB));
-      final d  = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(_fill(2 * bs, 0xAA));
+      final m2 = await mapOf(_fill(2 * bs, 0xBB));
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.savingsPercent, equals(0.0));
     });
 
     test('savingsPercent reflects fraction of unchanged bytes', () async {
       // 4 blocks, 1 changed → 75 % savings
       final base = [
-        ..._fill(bs, 0x10), ..._fill(bs, 0x20),
-        ..._fill(bs, 0x30), ..._fill(bs, 0x40),
+        ..._fill(bs, 0x10),
+        ..._fill(bs, 0x20),
+        ..._fill(bs, 0x30),
+        ..._fill(bs, 0x40),
       ];
       final changed = [
         ..._fill(bs, 0x10), ..._fill(bs, 0xFF), // block 1 changed
         ..._fill(bs, 0x30), ..._fill(bs, 0x40),
       ];
-      final m1 = await _mapOf(base);
-      final m2 = await _mapOf(changed);
-      final d  = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(base);
+      final m2 = await mapOf(changed);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.savingsPercent, closeTo(75.0, 0.01));
     });
 
     test('totalBlocks equals blockCount of local map', () async {
-      final m1 = await _mapOf(_fill(5 * bs, 0xCC));
-      final m2 = await _mapOf(_fill(5 * bs, 0xCC));
-      final d  = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(_fill(5 * bs, 0xCC));
+      final m2 = await mapOf(_fill(5 * bs, 0xCC));
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.totalBlocks, equals(5));
     });
 
     test('changedBlocks + unchangedBlocks == totalBlocks', () async {
-      final base    = _fill(4 * bs, 0xAA);
+      final base = _fill(4 * bs, 0xAA);
       final altered = [..._fill(2 * bs, 0xAA), ..._fill(2 * bs, 0xBB)];
-      final m1 = await _mapOf(base);
-      final m2 = await _mapOf(altered);
-      final d  = svc.compareBlockMaps(m1, m2);
+      final m1 = await mapOf(base);
+      final m2 = await mapOf(altered);
+      final d = svc.compareBlockMaps(m1, m2);
       expect(d.changedBlocks.length + d.unchangedBlocks, equals(d.totalBlocks));
     });
   });
@@ -464,56 +537,88 @@ void main() {
   group('createTransferPlan', () {
     const bs = 64 * 1024;
 
-    Future<(BlockMap, BlockMap)> _twoMaps(
-        List<int> local, List<int> remote) async {
+    Future<(BlockMap, BlockMap)> twoMaps(
+      List<int> local,
+      List<int> remote,
+    ) async {
       final lm = await svc.computeBlockMap(
-          await _writeTempFile(local), blockSize: bs);
+        await _writeTempFile(local),
+        blockSize: bs,
+      );
       final rm = await svc.computeBlockMap(
-          await _writeTempFile(remote), blockSize: bs);
+        await _writeTempFile(remote),
+        blockSize: bs,
+      );
       return (lm, rm);
     }
 
-    test('upload plan: changed blocks get upload ops, unchanged get skip', () async {
-      final base    = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB), ..._fill(bs, 0xCC)];
-      final changed = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF), ..._fill(bs, 0xCC)];
-      final (lm, rm) = await _twoMaps(changed, base);
-      final delta    = svc.compareBlockMaps(lm, rm);
-      final plan     = svc.createTransferPlan(delta, TransferDirection.upload, lm);
+    test(
+      'upload plan: changed blocks get upload ops, unchanged get skip',
+      () async {
+        final base = [
+          ..._fill(bs, 0xAA),
+          ..._fill(bs, 0xBB),
+          ..._fill(bs, 0xCC),
+        ];
+        final changed = [
+          ..._fill(bs, 0xAA),
+          ..._fill(bs, 0xFF),
+          ..._fill(bs, 0xCC),
+        ];
+        final (lm, rm) = await twoMaps(changed, base);
+        final delta = svc.compareBlockMaps(lm, rm);
+        final plan = svc.createTransferPlan(
+          delta,
+          TransferDirection.upload,
+          lm,
+        );
 
-      expect(plan.operations[0].type, equals(BlockOperationType.skip));
-      expect(plan.operations[1].type, equals(BlockOperationType.upload));
-      expect(plan.operations[2].type, equals(BlockOperationType.skip));
-    });
+        expect(plan.operations[0].type, equals(BlockOperationType.skip));
+        expect(plan.operations[1].type, equals(BlockOperationType.upload));
+        expect(plan.operations[2].type, equals(BlockOperationType.skip));
+      },
+    );
 
-    test('download plan: changed blocks get download ops, unchanged get skip', () async {
-      final base    = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB)];
-      final changed = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF)];
-      final (lm, rm) = await _twoMaps(changed, base);
-      final delta    = svc.compareBlockMaps(lm, rm);
-      final plan     = svc.createTransferPlan(delta, TransferDirection.download, lm);
+    test(
+      'download plan: changed blocks get download ops, unchanged get skip',
+      () async {
+        final base = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB)];
+        final changed = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF)];
+        final (lm, rm) = await twoMaps(changed, base);
+        final delta = svc.compareBlockMaps(lm, rm);
+        final plan = svc.createTransferPlan(
+          delta,
+          TransferDirection.download,
+          lm,
+        );
 
-      expect(plan.operations[0].type, equals(BlockOperationType.skip));
-      expect(plan.operations[1].type, equals(BlockOperationType.download));
-    });
+        expect(plan.operations[0].type, equals(BlockOperationType.skip));
+        expect(plan.operations[1].type, equals(BlockOperationType.download));
+      },
+    );
 
     test('correct offsets in plan', () async {
-      final data  = _fill(3 * bs, 0x55);
-      final path  = await _writeTempFile(data);
-      final lm    = await svc.computeBlockMap(path, blockSize: bs);
+      final data = _fill(3 * bs, 0x55);
+      final path = await _writeTempFile(data);
+      final lm = await svc.computeBlockMap(path, blockSize: bs);
       // Compare against itself — all skips, but offsets still correct.
       final delta = svc.compareBlockMaps(lm, lm);
-      final plan  = svc.createTransferPlan(delta, TransferDirection.upload, lm);
+      final plan = svc.createTransferPlan(delta, TransferDirection.upload, lm);
       for (int i = 0; i < 3; i++) {
         expect(plan.operations[i].offset, equals(i * bs));
       }
     });
 
     test('transferSize is sum of changed block sizes', () async {
-      final base    = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB), ..._fill(bs, 0xCC)];
-      final changed = [..._fill(bs, 0xFF), ..._fill(bs, 0xBB), ..._fill(bs, 0xFE)];
-      final (lm, rm) = await _twoMaps(changed, base);
-      final delta    = svc.compareBlockMaps(lm, rm);
-      final plan     = svc.createTransferPlan(delta, TransferDirection.upload, lm);
+      final base = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB), ..._fill(bs, 0xCC)];
+      final changed = [
+        ..._fill(bs, 0xFF),
+        ..._fill(bs, 0xBB),
+        ..._fill(bs, 0xFE),
+      ];
+      final (lm, rm) = await twoMaps(changed, base);
+      final delta = svc.compareBlockMaps(lm, rm);
+      final plan = svc.createTransferPlan(delta, TransferDirection.upload, lm);
 
       // Blocks 0 and 2 changed → transferSize = 2 * bs
       expect(plan.transferSize, equals(2 * bs));
@@ -522,8 +627,8 @@ void main() {
     test('all-unchanged plan has transferSize 0', () async {
       final data = _fill(2 * bs, 0x77);
       final path = await _writeTempFile(data);
-      final lm   = await svc.computeBlockMap(path, blockSize: bs);
-      final d    = svc.compareBlockMaps(lm, lm);
+      final lm = await svc.computeBlockMap(path, blockSize: bs);
+      final d = svc.compareBlockMaps(lm, lm);
       final plan = svc.createTransferPlan(d, TransferDirection.upload, lm);
       expect(plan.transferSize, equals(0));
     });
@@ -531,26 +636,29 @@ void main() {
     test('plan savingsPercent == 100 when nothing changed', () async {
       final data = _fill(4 * bs, 0x42);
       final path = await _writeTempFile(data);
-      final lm   = await svc.computeBlockMap(path, blockSize: bs);
-      final d    = svc.compareBlockMaps(lm, lm);
+      final lm = await svc.computeBlockMap(path, blockSize: bs);
+      final d = svc.compareBlockMaps(lm, lm);
       final plan = svc.createTransferPlan(d, TransferDirection.upload, lm);
       expect(plan.savingsPercent, equals(100.0));
     });
 
     test('plan savingsPercent == 0 when everything changed', () async {
-      final (lm, rm) = await _twoMaps(
-        _fill(2 * bs, 0xAA), _fill(2 * bs, 0xBB));
-      final d    = svc.compareBlockMaps(lm, rm);
+      final (lm, rm) = await twoMaps(_fill(2 * bs, 0xAA), _fill(2 * bs, 0xBB));
+      final d = svc.compareBlockMaps(lm, rm);
       final plan = svc.createTransferPlan(d, TransferDirection.upload, lm);
       expect(plan.savingsPercent, equals(0.0));
     });
 
     test('changedBlockIndices matches changed blocks from delta', () async {
-      final base    = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33)];
-      final changed = [..._fill(bs, 0xFF), ..._fill(bs, 0x22), ..._fill(bs, 0xFE)];
-      final (lm, rm) = await _twoMaps(changed, base);
-      final delta    = svc.compareBlockMaps(lm, rm);
-      final plan     = svc.createTransferPlan(delta, TransferDirection.upload, lm);
+      final base = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33)];
+      final changed = [
+        ..._fill(bs, 0xFF),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0xFE),
+      ];
+      final (lm, rm) = await twoMaps(changed, base);
+      final delta = svc.compareBlockMaps(lm, rm);
+      final plan = svc.createTransferPlan(delta, TransferDirection.upload, lm);
       expect(
         plan.changedBlockIndices.toSet(),
         equals(delta.changedBlocks.toSet()),
@@ -560,8 +668,8 @@ void main() {
     test('plan operation count equals blockCount of local map', () async {
       final data = _fill(5 * bs, 0xAB);
       final path = await _writeTempFile(data);
-      final lm   = await svc.computeBlockMap(path, blockSize: bs);
-      final d    = svc.compareBlockMaps(lm, lm);
+      final lm = await svc.computeBlockMap(path, blockSize: bs);
+      final d = svc.compareBlockMaps(lm, lm);
       final plan = svc.createTransferPlan(d, TransferDirection.upload, lm);
       expect(plan.operations.length, equals(lm.blockCount));
     });
@@ -573,48 +681,63 @@ void main() {
   group('applyDelta', () {
     const bs = 64 * 1024;
 
-    test('upload: remoteWriteBlock receives only changed block data', () async {
-      final original = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB)];
-      final updated  = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF)]; // block 1 changed
-
-      final localPath = await _writeTempFile(updated);
-      final origPath  = await _writeTempFile(original);
-
-      final lm    = await svc.computeBlockMap(localPath, blockSize: bs);
-      final rm    = await svc.computeBlockMap(origPath, blockSize: bs);
-      final delta = svc.compareBlockMaps(lm, rm);
-      final plan  = svc.createTransferPlan(delta, TransferDirection.upload, lm);
-
-      final uploaded = <int, List<int>>{};
-      await svc.applyDelta(
-        plan,
-        localPath,
-        remoteWriteBlock: (idx, offset, data) async {
-          uploaded[idx] = data;
-        },
-      );
-
-      expect(uploaded.keys, equals({1}));
-      expect(uploaded[1], equals(_fill(bs, 0xFF)));
-    });
+    test(
+      'upload: raw writes are refused before invoking a remote callback',
+      () async {
+        final original = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB)];
+        final updated = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF)];
+        final localPath = await _writeTempFile(updated);
+        final origPath = await _writeTempFile(original);
+        final lm = await svc.computeBlockMap(localPath, blockSize: bs);
+        final rm = await svc.computeBlockMap(origPath, blockSize: bs);
+        final plan = svc.createTransferPlan(
+          svc.compareBlockMaps(lm, rm),
+          TransferDirection.upload,
+          lm,
+        );
+        var writes = 0;
+        await expectLater(
+          apply(
+            plan,
+            localPath,
+            remoteWriteBlock: (_, _, _) async {
+              writes++;
+            },
+          ),
+          throwsUnsupportedError,
+        );
+        expect(writes, 0);
+        expect(await File(localPath).readAsBytes(), updated);
+      },
+    );
 
     test('download: changed blocks are written to localPath', () async {
       final original = [..._fill(bs, 0x11), ..._fill(bs, 0x22)];
-      final remote   = [..._fill(bs, 0x11), ..._fill(bs, 0x33)]; // block 1 differs
+      final remote = [
+        ..._fill(bs, 0x11),
+        ..._fill(bs, 0x33),
+      ]; // block 1 differs
 
       // local file starts as "original"; we'll patch it with the remote block
-      final localPath   = await _writeTempFile(original);
-      final remotePath  = await _writeTempFile(remote);
+      final localPath = await _writeTempFile(original);
+      final remotePath = await _writeTempFile(remote);
 
-      final lm    = await svc.computeBlockMap(localPath, blockSize: bs);
-      final rm    = await svc.computeBlockMap(remotePath, blockSize: bs);
+      final lm = await svc.computeBlockMap(localPath, blockSize: bs);
+      final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
       // direction: we want to download remote → local
-      final delta = svc.compareBlockMaps(rm, lm); // local=rm, remote=lm for comparison
-      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final delta = svc.compareBlockMaps(
+        rm,
+        lm,
+      ); // local=rm, remote=lm for comparison
+      final plan = svc.createTransferPlan(
+        delta,
+        TransferDirection.download,
+        rm,
+      );
 
       final remoteData = await File(remotePath).readAsBytes();
 
-      await svc.applyDelta(
+      await apply(
         plan,
         localPath,
         remoteReadBlock: (idx, offset, size) async {
@@ -623,26 +746,38 @@ void main() {
       );
 
       final result = await File(localPath).readAsBytes();
-      // Block 1 should now be 0x33
-      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x33)));
+      // The complete result, including exact length, must match.
+      expect(result, equals(remote));
     });
 
     test('download: unchanged blocks are preserved in local file', () async {
       // 3 blocks: only block 1 differs between local and remote
-      final local  = [..._fill(bs, 0xAA), ..._fill(bs, 0xBB), ..._fill(bs, 0xCC)];
-      final remote = [..._fill(bs, 0xAA), ..._fill(bs, 0xFF), ..._fill(bs, 0xCC)];
+      final local = [
+        ..._fill(bs, 0xAA),
+        ..._fill(bs, 0xBB),
+        ..._fill(bs, 0xCC),
+      ];
+      final remote = [
+        ..._fill(bs, 0xAA),
+        ..._fill(bs, 0xFF),
+        ..._fill(bs, 0xCC),
+      ];
 
-      final localPath  = await _writeTempFile(local);
+      final localPath = await _writeTempFile(local);
       final remotePath = await _writeTempFile(remote);
 
-      final lm    = await svc.computeBlockMap(localPath, blockSize: bs);
-      final rm    = await svc.computeBlockMap(remotePath, blockSize: bs);
+      final lm = await svc.computeBlockMap(localPath, blockSize: bs);
+      final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
       final delta = svc.compareBlockMaps(rm, lm);
-      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final plan = svc.createTransferPlan(
+        delta,
+        TransferDirection.download,
+        rm,
+      );
 
       final remoteData = await File(remotePath).readAsBytes();
 
-      await svc.applyDelta(
+      await apply(
         plan,
         localPath,
         remoteReadBlock: (idx, offset, size) async {
@@ -652,97 +787,204 @@ void main() {
 
       final result = await File(localPath).readAsBytes();
       // Block 0 preserved (unchanged)
-      expect(result.sublist(0, bs), equals(_fill(bs, 0xAA)),
-          reason: 'Block 0 should be preserved');
+      expect(
+        result.sublist(0, bs),
+        equals(_fill(bs, 0xAA)),
+        reason: 'Block 0 should be preserved',
+      );
       // Block 1 updated
-      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0xFF)),
-          reason: 'Block 1 should be updated');
+      expect(
+        result.sublist(bs, 2 * bs),
+        equals(_fill(bs, 0xFF)),
+        reason: 'Block 1 should be updated',
+      );
       // Block 2 preserved (unchanged)
-      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0xCC)),
-          reason: 'Block 2 should be preserved');
+      expect(
+        result.sublist(2 * bs, 3 * bs),
+        equals(_fill(bs, 0xCC)),
+        reason: 'Block 2 should be preserved',
+      );
     });
 
     test('download: only first block changed, rest preserved', () async {
-      final local  = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33), ..._fill(bs, 0x44)];
-      final remote = [..._fill(bs, 0xFF), ..._fill(bs, 0x22), ..._fill(bs, 0x33), ..._fill(bs, 0x44)];
+      final local = [
+        ..._fill(bs, 0x11),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0x33),
+        ..._fill(bs, 0x44),
+      ];
+      final remote = [
+        ..._fill(bs, 0xFF),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0x33),
+        ..._fill(bs, 0x44),
+      ];
 
-      final localPath  = await _writeTempFile(local);
+      final localPath = await _writeTempFile(local);
       final remotePath = await _writeTempFile(remote);
       final lm = await svc.computeBlockMap(localPath, blockSize: bs);
       final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
       final delta = svc.compareBlockMaps(rm, lm);
-      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final plan = svc.createTransferPlan(
+        delta,
+        TransferDirection.download,
+        rm,
+      );
       final remoteData = await File(remotePath).readAsBytes();
 
-      await svc.applyDelta(plan, localPath,
-        remoteReadBlock: (idx, offset, size) async => remoteData.sublist(offset, offset + size));
+      await apply(
+        plan,
+        localPath,
+        remoteReadBlock: (idx, offset, size) async =>
+            remoteData.sublist(offset, offset + size),
+      );
 
       final result = await File(localPath).readAsBytes();
-      expect(result.sublist(0, bs), equals(_fill(bs, 0xFF)), reason: 'Block 0 updated');
-      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x22)), reason: 'Block 1 preserved');
-      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0x33)), reason: 'Block 2 preserved');
-      expect(result.sublist(3 * bs, 4 * bs), equals(_fill(bs, 0x44)), reason: 'Block 3 preserved');
+      expect(
+        result.sublist(0, bs),
+        equals(_fill(bs, 0xFF)),
+        reason: 'Block 0 updated',
+      );
+      expect(
+        result.sublist(bs, 2 * bs),
+        equals(_fill(bs, 0x22)),
+        reason: 'Block 1 preserved',
+      );
+      expect(
+        result.sublist(2 * bs, 3 * bs),
+        equals(_fill(bs, 0x33)),
+        reason: 'Block 2 preserved',
+      );
+      expect(
+        result.sublist(3 * bs, 4 * bs),
+        equals(_fill(bs, 0x44)),
+        reason: 'Block 3 preserved',
+      );
     });
 
     test('download: only last block changed, rest preserved', () async {
-      final local  = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33)];
-      final remote = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0xEE)];
+      final local = [
+        ..._fill(bs, 0x11),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0x33),
+      ];
+      final remote = [
+        ..._fill(bs, 0x11),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0xEE),
+      ];
 
-      final localPath  = await _writeTempFile(local);
+      final localPath = await _writeTempFile(local);
       final remotePath = await _writeTempFile(remote);
       final lm = await svc.computeBlockMap(localPath, blockSize: bs);
       final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
       final delta = svc.compareBlockMaps(rm, lm);
-      final plan  = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final plan = svc.createTransferPlan(
+        delta,
+        TransferDirection.download,
+        rm,
+      );
       final remoteData = await File(remotePath).readAsBytes();
 
-      await svc.applyDelta(plan, localPath,
-        remoteReadBlock: (idx, offset, size) async => remoteData.sublist(offset, offset + size));
+      await apply(
+        plan,
+        localPath,
+        remoteReadBlock: (idx, offset, size) async =>
+            remoteData.sublist(offset, offset + size),
+      );
 
       final result = await File(localPath).readAsBytes();
-      expect(result.sublist(0, bs), equals(_fill(bs, 0x11)), reason: 'Block 0 preserved');
-      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x22)), reason: 'Block 1 preserved');
-      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0xEE)), reason: 'Block 2 updated');
+      expect(
+        result.sublist(0, bs),
+        equals(_fill(bs, 0x11)),
+        reason: 'Block 0 preserved',
+      );
+      expect(
+        result.sublist(bs, 2 * bs),
+        equals(_fill(bs, 0x22)),
+        reason: 'Block 1 preserved',
+      );
+      expect(
+        result.sublist(2 * bs, 3 * bs),
+        equals(_fill(bs, 0xEE)),
+        reason: 'Block 2 updated',
+      );
     });
 
     test('download: multiple non-contiguous blocks changed', () async {
-      final local  = [..._fill(bs, 0x11), ..._fill(bs, 0x22), ..._fill(bs, 0x33), ..._fill(bs, 0x44), ..._fill(bs, 0x55)];
-      final remote = [..._fill(bs, 0xAA), ..._fill(bs, 0x22), ..._fill(bs, 0xCC), ..._fill(bs, 0x44), ..._fill(bs, 0xEE)];
+      final local = [
+        ..._fill(bs, 0x11),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0x33),
+        ..._fill(bs, 0x44),
+        ..._fill(bs, 0x55),
+      ];
+      final remote = [
+        ..._fill(bs, 0xAA),
+        ..._fill(bs, 0x22),
+        ..._fill(bs, 0xCC),
+        ..._fill(bs, 0x44),
+        ..._fill(bs, 0xEE),
+      ];
 
-      final localPath  = await _writeTempFile(local);
+      final localPath = await _writeTempFile(local);
       final remotePath = await _writeTempFile(remote);
       final lm = await svc.computeBlockMap(localPath, blockSize: bs);
       final rm = await svc.computeBlockMap(remotePath, blockSize: bs);
       final delta = svc.compareBlockMaps(rm, lm);
       expect(delta.changedBlocks.toSet(), equals({0, 2, 4}));
 
-      final plan = svc.createTransferPlan(delta, TransferDirection.download, rm);
+      final plan = svc.createTransferPlan(
+        delta,
+        TransferDirection.download,
+        rm,
+      );
       final remoteData = await File(remotePath).readAsBytes();
 
-      await svc.applyDelta(plan, localPath,
-        remoteReadBlock: (idx, offset, size) async => remoteData.sublist(offset, offset + size));
+      await apply(
+        plan,
+        localPath,
+        remoteReadBlock: (idx, offset, size) async =>
+            remoteData.sublist(offset, offset + size),
+      );
 
       final result = await File(localPath).readAsBytes();
-      expect(result.sublist(0, bs), equals(_fill(bs, 0xAA)), reason: 'Block 0 updated');
-      expect(result.sublist(bs, 2 * bs), equals(_fill(bs, 0x22)), reason: 'Block 1 preserved');
-      expect(result.sublist(2 * bs, 3 * bs), equals(_fill(bs, 0xCC)), reason: 'Block 2 updated');
-      expect(result.sublist(3 * bs, 4 * bs), equals(_fill(bs, 0x44)), reason: 'Block 3 preserved');
-      expect(result.sublist(4 * bs, 5 * bs), equals(_fill(bs, 0xEE)), reason: 'Block 4 updated');
+      expect(
+        result.sublist(0, bs),
+        equals(_fill(bs, 0xAA)),
+        reason: 'Block 0 updated',
+      );
+      expect(
+        result.sublist(bs, 2 * bs),
+        equals(_fill(bs, 0x22)),
+        reason: 'Block 1 preserved',
+      );
+      expect(
+        result.sublist(2 * bs, 3 * bs),
+        equals(_fill(bs, 0xCC)),
+        reason: 'Block 2 updated',
+      );
+      expect(
+        result.sublist(3 * bs, 4 * bs),
+        equals(_fill(bs, 0x44)),
+        reason: 'Block 3 preserved',
+      );
+      expect(
+        result.sublist(4 * bs, 5 * bs),
+        equals(_fill(bs, 0xEE)),
+        reason: 'Block 4 updated',
+      );
     });
 
     test('all-skip plan calls onProgress for every block', () async {
       final data = _fill(3 * bs, 0x42);
       final path = await _writeTempFile(data);
-      final lm   = await svc.computeBlockMap(path, blockSize: bs);
-      final d    = svc.compareBlockMaps(lm, lm);
-      final plan = svc.createTransferPlan(d, TransferDirection.upload, lm);
+      final lm = await svc.computeBlockMap(path, blockSize: bs);
+      final d = svc.compareBlockMaps(lm, lm);
+      final plan = svc.createTransferPlan(d, TransferDirection.download, lm);
 
       final calls = <int>[];
-      await svc.applyDelta(
-        plan,
-        path,
-        onProgress: (p, t, b) => calls.add(p),
-      );
+      await apply(plan, path, onProgress: (p, t, b) => calls.add(p));
       expect(calls, equals([1, 2, 3]));
     });
   });
@@ -756,46 +998,51 @@ void main() {
     test('identical file → savings == 100 %', () async {
       final data = _ramp(4 * bs);
       final path = await _writeTempFile(data);
-      final rm   = await svc.computeBlockMap(path, blockSize: bs);
-      final pct  = await svc.estimateSavings(path, rm);
+      final rm = await svc.computeBlockMap(path, blockSize: bs);
+      final pct = await svc.estimateSavings(path, rm);
       expect(pct, equals(100.0));
     });
 
     test('completely different file → savings == 0 %', () async {
       final rpath = await _writeTempFile(_fill(2 * bs, 0xBB));
       final lpath = await _writeTempFile(_fill(2 * bs, 0xAA));
-      final rm    = await svc.computeBlockMap(rpath, blockSize: bs);
-      final pct   = await svc.estimateSavings(lpath, rm);
+      final rm = await svc.computeBlockMap(rpath, blockSize: bs);
+      final pct = await svc.estimateSavings(lpath, rm);
       expect(pct, equals(0.0));
     });
 
     test('1 of 20 blocks changed → ~95 % savings', () async {
       final data = _fill(20 * bs, 0x55);
       final rpath = await _writeTempFile(data);
-      final rm    = await svc.computeBlockMap(rpath, blockSize: bs);
+      final rm = await svc.computeBlockMap(rpath, blockSize: bs);
 
       // Change block 10
       final mutated = List<int>.from(data);
-      for (int i = 10 * bs; i < 11 * bs; i++) mutated[i] = 0xAA;
+      for (int i = 10 * bs; i < 11 * bs; i++) {
+        mutated[i] = 0xAA;
+      }
       final lpath = await _writeTempFile(mutated);
 
       final pct = await svc.estimateSavings(lpath, rm);
       expect(pct, closeTo(95.0, 0.1));
     });
 
-    test('empty local file vs non-empty remote → 100 % savings (0 local bytes)', () async {
-      final rpath = await _writeTempFile(_fill(2 * bs, 0xCC));
-      final lpath = await _writeTempFile([]);
-      final rm    = await svc.computeBlockMap(rpath, blockSize: bs);
-      final pct   = await svc.estimateSavings(lpath, rm);
-      // Local is empty → 0 bytes to transfer → 100 % savings from local POV
-      expect(pct, equals(100.0));
-    });
+    test(
+      'empty local file vs non-empty remote → 100 % savings (0 local bytes)',
+      () async {
+        final rpath = await _writeTempFile(_fill(2 * bs, 0xCC));
+        final lpath = await _writeTempFile([]);
+        final rm = await svc.computeBlockMap(rpath, blockSize: bs);
+        final pct = await svc.estimateSavings(lpath, rm);
+        // Local is empty → 0 bytes to transfer → 100 % savings from local POV
+        expect(pct, equals(100.0));
+      },
+    );
 
     test('uses blockSize from remoteBlockMap when scanning local', () async {
-      final data  = _fill(4 * bs, 0xDD);
+      final data = _fill(4 * bs, 0xDD);
       final rpath = await _writeTempFile(data);
-      final rm    = await svc.computeBlockMap(rpath, blockSize: bs);
+      final rm = await svc.computeBlockMap(rpath, blockSize: bs);
       // Slight mutation
       final mutated = List<int>.from(data)..[0] = 0xEE;
       final lpath = await _writeTempFile(mutated);
@@ -831,7 +1078,7 @@ void main() {
     test('custom minSize threshold is respected (1 MB)', () {
       const oneMB = 1024 * 1024;
       expect(svc.shouldUseDeltaSync(oneMB - 1, minSize: oneMB), isFalse);
-      expect(svc.shouldUseDeltaSync(oneMB,     minSize: oneMB), isTrue);
+      expect(svc.shouldUseDeltaSync(oneMB, minSize: oneMB), isTrue);
     });
   });
 
@@ -842,20 +1089,21 @@ void main() {
     const bs = 64 * 1024;
 
     test('save and load round-trip preserves all fields', () async {
-      final data    = _ramp(3 * bs);
-      final path    = await _writeTempFile(data);
-      final map     = await svc.computeBlockMap(path, blockSize: bs);
-      final cacheDir = (await Directory.systemTemp.createTemp('bm_cache_')).path;
+      final data = _ramp(3 * bs);
+      final path = await _writeTempFile(data);
+      final map = await svc.computeBlockMap(path, blockSize: bs);
+      final cacheDir = (await Directory.systemTemp.createTemp('bm_cache_'))
+          .path;
       final cachePath = '$cacheDir/test_blockmap.json';
 
       await svc.saveBlockMap(map, cachePath);
       final loaded = await svc.loadBlockMap(cachePath);
 
       expect(loaded, isNotNull);
-      expect(loaded!.filePath,   equals(map.filePath));
-      expect(loaded.totalSize,   equals(map.totalSize));
-      expect(loaded.blockSize,   equals(map.blockSize));
-      expect(loaded.blockCount,  equals(map.blockCount));
+      expect(loaded!.filePath, equals(map.filePath));
+      expect(loaded.totalSize, equals(map.totalSize));
+      expect(loaded.blockSize, equals(map.blockSize));
+      expect(loaded.blockCount, equals(map.blockCount));
       expect(loaded.signatures.length, equals(map.signatures.length));
       for (int i = 0; i < map.signatures.length; i++) {
         expect(loaded.signatures[i], equals(map.signatures[i]));
@@ -868,7 +1116,7 @@ void main() {
     });
 
     test('loadBlockMap returns null for corrupted JSON', () async {
-      final dir  = await Directory.systemTemp.createTemp('bm_corrupt_');
+      final dir = await Directory.systemTemp.createTemp('bm_corrupt_');
       final path = '${dir.path}/corrupt.json';
       await File(path).writeAsString('not valid json {{{', flush: true);
       final result = await svc.loadBlockMap(path);
@@ -910,23 +1158,48 @@ void main() {
   group('BlockSignature', () {
     test('equality: same values → equal', () {
       const s1 = BlockSignature(
-          blockIndex: 0, offset: 0, size: 4096, weakHash: 1234, strongHash: 'abc');
+        blockIndex: 0,
+        offset: 0,
+        size: 4096,
+        weakHash: 1234,
+        strongHash: 'abc',
+      );
       const s2 = BlockSignature(
-          blockIndex: 0, offset: 0, size: 4096, weakHash: 1234, strongHash: 'abc');
+        blockIndex: 0,
+        offset: 0,
+        size: 4096,
+        weakHash: 1234,
+        strongHash: 'abc',
+      );
       expect(s1, equals(s2));
     });
 
     test('equality: different weakHash → not equal', () {
       const s1 = BlockSignature(
-          blockIndex: 0, offset: 0, size: 4096, weakHash: 1, strongHash: 'abc');
+        blockIndex: 0,
+        offset: 0,
+        size: 4096,
+        weakHash: 1,
+        strongHash: 'abc',
+      );
       const s2 = BlockSignature(
-          blockIndex: 0, offset: 0, size: 4096, weakHash: 2, strongHash: 'abc');
+        blockIndex: 0,
+        offset: 0,
+        size: 4096,
+        weakHash: 2,
+        strongHash: 'abc',
+      );
       expect(s1, isNot(equals(s2)));
     });
 
     test('JSON round-trip', () {
       const original = BlockSignature(
-          blockIndex: 7, offset: 65536, size: 4096, weakHash: 999, strongHash: 'deadbeef');
+        blockIndex: 7,
+        offset: 65536,
+        size: 4096,
+        weakHash: 999,
+        strongHash: 'deadbeef',
+      );
       final decoded = BlockSignature.fromJson(original.toJson());
       expect(decoded, equals(original));
     });

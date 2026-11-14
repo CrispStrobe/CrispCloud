@@ -924,7 +924,8 @@ class NextcloudClientAdapter extends CloudStorageClient
   // Delta Sync — block-level file sync (optional)
   // ---------------------------------------------------------------------------
 
-  /// Whether block-level delta sync is enabled for this connection.
+  /// Retained preference; provider delta execution requires a staged contract.
+  /// Ordinary transfers remain available regardless of this value.
   bool deltaSyncEnabled = false;
 
   /// Block size for delta sync (default 4 MB, matching DeltaSyncService).
@@ -938,8 +939,6 @@ class NextcloudClientAdapter extends CloudStorageClient
   /// e.g. 'https://nextcloud.example.com/index.php/apps/crispcloud_delta'
   /// Note: requires /index.php/ prefix for Nextcloud routing.
   String? deltaSyncServerAppUrl;
-
-  final DeltaSyncService _deltaSyncService = DeltaSyncService();
 
   /// Get the ETag of a single remote file (HEAD request).
   Future<String?> getFileETag(String remotePath) async {
@@ -981,176 +980,25 @@ class NextcloudClientAdapter extends CloudStorageClient
     return resp.bodyBytes;
   }
 
-  /// Upload changed blocks to a remote file using WebDAV chunked upload v2.
+  /// Reject the legacy direct-block writer before authentication or I/O.
   ///
-  /// Nextcloud chunked upload flow:
-  /// 1. MKCOL /remote.php/dav/uploads/{user}/{transferId}
-  /// 2. PUT   /remote.php/dav/uploads/{user}/{transferId}/{offset}  (per chunk)
-  /// 3. MOVE  /remote.php/dav/uploads/{user}/{transferId}/.file → destination
-  ///
-  /// For delta sync, we only upload the changed blocks (not the full file).
-  /// Unchanged blocks are filled from the existing remote file via the server.
-  ///
-  /// Note: Standard chunked upload assembles chunks by concatenation, which
-  /// requires ALL chunks to cover the entire file. For true partial update,
-  /// the server-side CrispCloud app is needed. Without it, we fall back to
-  /// downloading unchanged blocks locally and re-uploading the full file
-  /// via chunked upload.
+  /// Neither the companion app nor the old chunked fallback supplies this
+  /// adapter with version-bound staging and verified conditional publication.
+  /// Callers must use the ordinary upload route until that contract exists.
   Future<void> uploadDeltaBlocks(
     String remotePath,
     String localPath,
     BlockTransferPlan plan,
   ) async {
-    await _ensureAuth();
-
-    // If the server app is available, use block-level PUT
-    if (deltaSyncServerAppUrl != null) {
-      await _uploadDeltaViaServerApp(remotePath, localPath, plan);
-      return;
-    }
-
-    // Fallback: re-upload the full local file via chunked upload.
-    // The savings here are from not computing the diff again on retry,
-    // and from the chunked upload being resumable.
-    await _uploadChunked(remotePath, localPath);
-  }
-
-  /// Upload a full file via Nextcloud chunked upload v2 (resumable).
-  Future<void> _uploadChunked(String remotePath, String localPath) async {
-    final file = dart_io.File(localPath);
-    final fileSize = await file.length();
-    final transferId = 'crisp-delta-${DateTime.now().millisecondsSinceEpoch}';
-    final uploadsBase =
-        '$_serverUrl/remote.php/dav/uploads/${Uri.encodeComponent(_username!)}/$transferId';
-    final authHeader = _basicAuth(_username!, _password!);
-
-    // 1. MKCOL — create transfer directory
-    final mkcolReq = http.Request('MKCOL', Uri.parse(uploadsBase));
-    mkcolReq.headers['Authorization'] = authHeader;
-    final mkcolResp = await http.Response.fromStream(await mkcolReq.send());
-    if (mkcolResp.statusCode != 201 && mkcolResp.statusCode != 405) {
-      throw NextcloudOperationFailure(
-        NextcloudOperationCode.chunkCreate,
-        'Chunked MKCOL failed (${mkcolResp.statusCode})',
-        {'status': mkcolResp.statusCode},
-      );
-    }
-
-    // 2. PUT — upload chunks
-    final chunkSize = deltaSyncBlockSize;
-    final raf = await file.open();
-    try {
-      for (int offset = 0; offset < fileSize; offset += chunkSize) {
-        final end = (offset + chunkSize > fileSize)
-            ? fileSize
-            : offset + chunkSize;
-        final buf = Uint8List(end - offset);
-        await raf.readInto(buf);
-
-        final chunkUri = Uri.parse('$uploadsBase/$offset');
-        final putReq = http.Request('PUT', chunkUri);
-        putReq.headers['Authorization'] = authHeader;
-        putReq.headers['Content-Type'] = 'application/octet-stream';
-        putReq.bodyBytes = buf;
-        final putResp = await http.Response.fromStream(await putReq.send());
-        if (putResp.statusCode != 201 && putResp.statusCode != 204) {
-          throw NextcloudOperationFailure(
-            NextcloudOperationCode.chunkUpload,
-            'Chunked PUT failed at offset $offset (${putResp.statusCode})',
-            {'offset': offset, 'status': putResp.statusCode},
-          );
-        }
-      }
-    } finally {
-      await raf.close();
-    }
-
-    // 3. MOVE — assemble at destination
-    final destPath = _davUri(
-      _serverUrl!,
-      _username!,
-      _normalizePath(remotePath),
-    ).toString();
-    final moveReq = http.Request('MOVE', Uri.parse('$uploadsBase/.file'));
-    moveReq.headers['Authorization'] = authHeader;
-    moveReq.headers['Destination'] = destPath;
-    moveReq.headers['Overwrite'] = 'T';
-    final moveResp = await http.Response.fromStream(await moveReq.send());
-    if (moveResp.statusCode != 201 && moveResp.statusCode != 204) {
-      throw NextcloudOperationFailure(
-        NextcloudOperationCode.chunkFinish,
-        'Chunked MOVE failed (${moveResp.statusCode})',
-        {'status': moveResp.statusCode},
-      );
-    }
-
-    _log.info('Chunked upload complete: $remotePath ($fileSize bytes)');
-  }
-
-  /// Upload only changed blocks via the server-side CrispCloud delta app.
-  Future<void> _uploadDeltaViaServerApp(
-    String remotePath,
-    String localPath,
-    BlockTransferPlan plan,
-  ) async {
-    final appBase = deltaSyncServerAppUrl!;
-    final authHeader = _basicAuth(_username!, _password!);
-    final encodedPath = Uri.encodeComponent(remotePath);
-
-    final file = dart_io.File(localPath);
-    final raf = await file.open();
-
-    try {
-      for (final op in plan.operations) {
-        if (op.type != BlockOperationType.upload) continue;
-
-        await raf.setPosition(op.offset);
-        final buf = Uint8List(op.size);
-        await raf.readInto(buf);
-
-        // POST /api/blocks/{remotePath}?offset={offset}&size={size}
-        final blockUri = Uri.parse(
-          '$appBase/api/blocks/$encodedPath?offset=${op.offset}&size=${op.size}',
-        );
-        final resp = await http.post(
-          blockUri,
-          headers: {
-            'Authorization': authHeader,
-            'Content-Type': 'application/octet-stream',
-          },
-          body: buf,
-        );
-
-        if (resp.statusCode != 200 && resp.statusCode != 204) {
-          throw NextcloudOperationFailure(
-            NextcloudOperationCode.deltaUpload,
-            'Delta block upload failed at offset ${op.offset} (${resp.statusCode})',
-            {'offset': op.offset, 'status': resp.statusCode},
-          );
-        }
-      }
-
-      // Finalize: tell the server we're done so it can update the file's mtime/etag.
-      // Pass ?size=N so the server truncates if the file shrank.
-      final localSize = await dart_io.File(localPath).length();
-      final finalizeUri = Uri.parse(
-        '$appBase/api/finalize/$encodedPath?size=$localSize',
-      );
-      await http.post(finalizeUri, headers: {'Authorization': authHeader});
-    } finally {
-      await raf.close();
-    }
-
-    _log.info(
-      'Delta upload via server app: $remotePath '
-      '(${plan.changedBlockIndices.length}/${plan.operations.length} blocks, '
-      '${plan.transferSize} bytes transferred, '
-      '${plan.savingsPercent.toStringAsFixed(1)}% savings)',
+    throw UnsupportedError(
+      'Nextcloud delta block uploads require version-bound staging and '
+      'verified publication. Use ordinary uploads.',
     );
   }
 
   /// Fetch block map from the server-side CrispCloud delta app.
-  /// Returns null if the app is not installed or the file has no cached map.
+  /// Returns null if the app is not installed or the map is invalid. The
+  /// validated result is informational and does not admit a delta transfer.
   Future<BlockMap?> fetchServerBlockMap(String remotePath) async {
     if (deltaSyncServerAppUrl == null) return null;
     await _ensureAuth();
@@ -1175,16 +1023,11 @@ class NextcloudClientAdapter extends CloudStorageClient
     }
   }
 
-  /// Orchestrate a delta sync for a single file.
+  /// Decline remote delta execution before authentication or file/cache I/O.
   ///
-  /// 1. Check if delta sync is appropriate (file size, enabled flag).
-  /// 2. Get remote block map (from server app, or cached locally).
-  /// 3. Compare with local file's block map.
-  /// 4. Upload only changed blocks.
-  /// 5. Update cached block map.
-  ///
-  /// Returns the [DeltaResult] with savings info, or null if full upload was
-  /// used instead.
+  /// Return null so the caller can use the ordinary upload route. A saved
+  /// enable flag or discovered companion app does not establish the required
+  /// base identity, private staging, final verification and publication proof.
   Future<DeltaResult?> deltaUpload(
     String localPath,
     String remotePath, {
@@ -1192,95 +1035,13 @@ class NextcloudClientAdapter extends CloudStorageClient
     void Function(int processedBlocks, int totalBlocks, int processedBytes)?
     onProgress,
   }) async {
-    if (!deltaSyncEnabled) return null;
-
-    final file = dart_io.File(localPath);
-    final fileSize = await file.length();
-
-    if (!_deltaSyncService.shouldUseDeltaSync(
-      fileSize,
-      minSize: deltaSyncMinSize,
-    )) {
-      return null; // File too small, caller should use normal upload
-    }
-
-    // 1. Get remote block map
-    BlockMap? remoteMap;
-
-    // Try server app first
-    remoteMap = await fetchServerBlockMap(remotePath);
-
-    // Fall back to local cache
-    if (remoteMap == null && cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        'nextcloud',
-      );
-      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
-
-      // Validate cached map against current remote ETag
-      if (remoteMap != null) {
-        final currentEtag = await getFileETag(remotePath);
-        // If we can't get ETag or file doesn't exist yet, cache is stale
-        if (currentEtag == null) {
-          remoteMap = null;
-        }
-      }
-    }
-
-    // No remote map available — first sync, use full upload
-    if (remoteMap == null) {
-      _log.info('Delta sync: no remote block map for $remotePath, full upload');
-      return null;
-    }
-
-    // 2. Compute local block map
-    final localMap = await _deltaSyncService.computeBlockMap(
-      localPath,
-      blockSize: remoteMap.blockSize,
-      onProgress: onProgress,
-    );
-
-    // 3. Compare
-    final delta = _deltaSyncService.compareBlockMaps(localMap, remoteMap);
-
-    if (delta.changedBlocks.isEmpty) {
-      _log.info(
-        'Delta sync: $remotePath is identical (${delta.totalBlocks} blocks)',
-      );
-      return delta;
-    }
-
-    _log.info(
-      'Delta sync: $remotePath — ${delta.changedBlocks.length}/${delta.totalBlocks} blocks changed, '
-      '${delta.savingsPercent.toStringAsFixed(1)}% savings',
-    );
-
-    // 4. Build transfer plan and upload
-    final plan = _deltaSyncService.createTransferPlan(
-      delta,
-      TransferDirection.upload,
-      localMap,
-    );
-    await uploadDeltaBlocks(remotePath, localPath, plan);
-
-    // 5. Cache the new block map for next sync
-    if (cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        'nextcloud',
-      );
-      await _deltaSyncService.saveBlockMap(localMap, cachePath);
-    }
-
-    return delta;
+    return null;
   }
 
-  /// Orchestrate a delta download for a single file.
+  /// Decline remote delta execution without opening or altering the local file.
   ///
-  /// Uses Range GET to download only changed blocks.
+  /// The legacy range reader is not bound to a single remote revision. Return
+  /// null for ordinary download fallback even when the delta preference is set.
   Future<DeltaResult?> deltaDownload(
     String remotePath,
     String localPath, {
@@ -1288,71 +1049,7 @@ class NextcloudClientAdapter extends CloudStorageClient
     void Function(int processedBlocks, int totalBlocks, int processedBytes)?
     onProgress,
   }) async {
-    if (!deltaSyncEnabled) return null;
-
-    final file = dart_io.File(localPath);
-    if (!file.existsSync()) return null; // No local file to diff against
-
-    final fileSize = await file.length();
-    if (!_deltaSyncService.shouldUseDeltaSync(
-      fileSize,
-      minSize: deltaSyncMinSize,
-    )) {
-      return null;
-    }
-
-    // Compute local block map
-    final localMap = await _deltaSyncService.computeBlockMap(
-      localPath,
-      blockSize: deltaSyncBlockSize,
-    );
-
-    // Get remote block map
-    final remoteMap = await fetchServerBlockMap(remotePath);
-
-    // Without server app, we can't get remote block map without downloading
-    // the whole file. Return null to signal caller should use full download.
-    if (remoteMap == null) return null;
-
-    // Compare
-    final delta = _deltaSyncService.compareBlockMaps(remoteMap, localMap);
-
-    if (delta.changedBlocks.isEmpty) {
-      _log.info('Delta download: $remotePath is identical');
-      return delta;
-    }
-
-    // Build download plan and apply using Range GET
-    final plan = _deltaSyncService.createTransferPlan(
-      delta,
-      TransferDirection.download,
-      remoteMap,
-    );
-
-    await _deltaSyncService.applyDelta(
-      plan,
-      localPath,
-      remoteReadBlock: (blockIndex, offset, size) async {
-        return await downloadRange(remotePath, offset, size);
-      },
-      onProgress: onProgress,
-    );
-
-    // Cache updated local block map
-    if (cacheDir != null) {
-      final newLocalMap = await _deltaSyncService.computeBlockMap(
-        localPath,
-        blockSize: deltaSyncBlockSize,
-      );
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        'nextcloud',
-      );
-      await _deltaSyncService.saveBlockMap(newLocalMap, cachePath);
-    }
-
-    return delta;
+    return null;
   }
 
   // ---------------------------------------------------------------------------

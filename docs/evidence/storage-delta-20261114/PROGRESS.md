@@ -18,7 +18,7 @@ See [the complete ref receipt](reconciliation.json).
 
 The two Office branches had divergent canonical sources. Their combined source
 is saved in `CrispStrobe/quds_office_suite` at
-`a38c7659c7485f096e5a3f6bd52d2d9482aa3265`, on
+`cb42ef232e5794ac4c147ef1992133cf8710ab01`, on
 `integration/crispcloud-storage-reconcile-20261114`. It preserves sorting plus
 worksheet view, formatting and grid history. The import used the guarded sync
 and verifies all 2,185 managed Office hashes; the standalone legacy-DOC pin is
@@ -49,3 +49,13 @@ source revisions and are not reclassified as acceptance of this combined tree.
 
 All new work is checkpointed on `integration/storage-delta-20261114`; source
 branches and their history remain intact.
+
+## First implementation checkpoint
+
+The combined baseline was published at `69172e1790143ca74e15050cd855c8110bc51c1f`.
+The first code increment adds validated delta reconstruction, an explicit full-read
+S3 cache seed and conditional-range downloads, and provider admission gates.
+Core and S3 scoped static analysis passed; runtime qualification remains pending
+at this checkpoint. The corrected canonical Office test pin above has separately
+passed 115 native cases; its evidence-only companion head is
+`1c7b0c121ed476090def463d9bc59f5c8a3462b7`.

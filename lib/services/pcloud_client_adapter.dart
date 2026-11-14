@@ -963,10 +963,9 @@ class PCloudClientAdapter extends CloudStorageClient
   // Delta Sync — block-level file sync via pCloud's random-access API
   // ---------------------------------------------------------------------------
 
-  /// Whether block-level delta sync is enabled for this connection.
+  /// Retained preference; provider delta execution requires a staged contract.
+  /// Ordinary transfers remain available regardless of this value.
   bool deltaSyncEnabled = false;
-
-  final DeltaSyncService _deltaSyncService = DeltaSyncService();
 
   /// Open a file descriptor on the pCloud server for random-access I/O.
   /// Returns the file descriptor (fd) number.
@@ -1048,151 +1047,21 @@ class PCloudClientAdapter extends CloudStorageClient
     return data['sha256'] as String?;
   }
 
-  /// Orchestrate a delta upload for a single file.
+  /// Decline the legacy remote delta path before authentication or file access.
   ///
-  /// 1. Resolve remote file ID.
-  /// 2. Compute local block map.
-  /// 3. Compare with cached remote block map (or compute fresh via pread).
-  /// 4. Open file descriptor, pwrite changed blocks, close.
-  /// 5. Update cached block map.
+  /// pCloud random-access writes do not provide this adapter with a captured
+  /// base revision, private staging, verified final length and conditional
+  /// publication. Return null so the caller can use the ordinary upload path;
+  /// a saved enable flag cannot admit an in-place remote mutation.
   Future<DeltaResult?> deltaUpload(
     String localPath,
     String remotePath, {
     String? cacheDir,
     void Function(int, int, int)? onProgress,
   }) async {
-    if (!deltaSyncEnabled) return null;
-    _ensureToken();
-
-    final file = File(localPath);
-    final fileSize = await file.length();
-    if (!_deltaSyncService.shouldUseDeltaSync(fileSize)) return null;
-
-    // Get remote file ID
-    final fileId = await _resolveFileId(remotePath);
-
-    // Try to load cached remote block map
-    BlockMap? remoteMap;
-    if (cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        'pcloud',
-      );
-      remoteMap = await _deltaSyncService.loadBlockMap(cachePath);
-    }
-
-    // If no cache, compute remote block map by reading blocks via pread
-    if (remoteMap == null) {
-      _log.info(
-        'Delta sync: computing remote block map via pread for $remotePath',
-      );
-      remoteMap = await _computeRemoteBlockMap(fileId, remotePath);
-    }
-
-    // Compute local block map
-    final localMap = await _deltaSyncService.computeBlockMap(
-      localPath,
-      blockSize: remoteMap.blockSize,
-      onProgress: onProgress,
-    );
-
-    // Compare
-    final delta = _deltaSyncService.compareBlockMaps(localMap, remoteMap);
-    if (delta.changedBlocks.isEmpty) {
-      _log.info('Delta sync: $remotePath is identical');
-      return delta;
-    }
-
-    _log.info(
-      'Delta sync: $remotePath — ${delta.changedBlocks.length}/${delta.totalBlocks} blocks changed, '
-      '${delta.savingsPercent.toStringAsFixed(1)}% savings',
-    );
-
-    // Open, write changed blocks, close
-    final fd = await fileOpen(fileId, write: true);
-    try {
-      final raf = await file.open();
-      try {
-        for (final blockIdx in delta.changedBlocks) {
-          final sig = localMap.signatures[blockIdx];
-          await raf.setPosition(sig.offset);
-          final buf = Uint8List(sig.size);
-          await raf.readInto(buf);
-          await filePwrite(fd, sig.offset, buf);
-        }
-      } finally {
-        await raf.close();
-      }
-    } finally {
-      await fileClose(fd);
-    }
-
-    // Cache new block map
-    if (cacheDir != null) {
-      final cachePath = _deltaSyncService.blockMapCachePath(
-        cacheDir,
-        remotePath,
-        'pcloud',
-      );
-      await _deltaSyncService.saveBlockMap(localMap, cachePath);
-    }
-
-    return delta;
+    return null;
   }
 
-  /// Compute a block map for a remote file by reading blocks via file_pread.
-  Future<BlockMap> _computeRemoteBlockMap(int fileId, String remotePath) async {
-    // First, get file size via stat
-    final uri = Uri.parse('$_apiBase/stat').replace(
-      queryParameters: {
-        'access_token': _accessToken!,
-        'fileid': fileId.toString(),
-      },
-    );
-    final resp = await http.get(uri);
-    final data = _parseResponse(resp, 'stat');
-    final metadata = data['metadata'] as Map<String, dynamic>;
-    final fileSize = (metadata['size'] as num).toInt();
-
-    const blockSize = 4 * 1024 * 1024;
-    final blockCount = fileSize == 0
-        ? 0
-        : ((fileSize + blockSize - 1) ~/ blockSize);
-
-    final fd = await fileOpen(fileId);
-    try {
-      final signatures = <BlockSignature>[];
-      for (int i = 0; i < blockCount; i++) {
-        final offset = i * blockSize;
-        final size = (offset + blockSize > fileSize)
-            ? fileSize - offset
-            : blockSize;
-        final bytes = await filePread(fd, offset, size);
-
-        signatures.add(
-          BlockSignature(
-            blockIndex: i,
-            offset: offset,
-            size: bytes.length,
-            weakHash: _deltaSyncService.adler32(bytes),
-            strongHash: _deltaSyncService.sha256Hex(bytes),
-          ),
-        );
-      }
-
-      return BlockMap(
-        filePath: remotePath,
-        totalSize: fileSize,
-        blockSize: blockSize,
-        blockCount: blockCount,
-        signatures: signatures,
-        createdAt: DateTime.now(),
-      );
-    } finally {
-      await fileClose(fd);
-    }
-  }
 }
 
 class _PCloudUploadRequest extends http.BaseRequest {
