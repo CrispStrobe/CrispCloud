@@ -1,0 +1,96 @@
+{
+  "flutter": {
+    "frameworkVersion": "3.47.8",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-23 05:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/4f6714f1660a/runtime-setup/flutter"
+  },
+  "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+  "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+  "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+  "clang": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/4f6714f1660a/runtime-setup/llvm19/usr/lib/llvm-19/bin",
+  "gcc": "gcc (Debian 14.2.0-19) 14.2.0",
+  "node": "v24.22.1",
+  "external_packages": [
+    {
+      "name": "clang-19_19.1.7-3+b1_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+      "sha256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4",
+      "target": "llvm19"
+    },
+    {
+      "name": "libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+      "sha256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc",
+      "target": "llvm19"
+    },
+    {
+      "name": "libclang-cpp19_19.1.7-3+b1_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+      "sha256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47",
+      "target": "llvm19"
+    },
+    {
+      "name": "e2fsprogs_1.47.2-3+b12_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/e/e2fsprogs/e2fsprogs_1.47.2-3+b12_amd64.deb",
+      "sha256": "e9e638eb3e22b5f14d01ce0b28aa512a5a22fcc0e70d1c733444579b67ea236b",
+      "target": "e2fsprogs"
+    },
+    {
+      "name": "libext2fs2t64_1.47.2-3+b12_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/e/e2fsprogs/libext2fs2t64_1.47.2-3+b12_amd64.deb",
+      "sha256": "9f5783fa48239e42260d41846fbc6c8b19c233251063524456096195660eaa09",
+      "target": "e2fsprogs"
+    },
+    {
+      "name": "libss2_1.47.2-3+b12_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/e/e2fsprogs/libss2_1.47.2-3+b12_amd64.deb",
+      "sha256": "c5d38d71984c1bf774c1254238636e605fc4e0dc24d853f709921eb740327f4a",
+      "target": "e2fsprogs"
+    },
+    {
+      "name": "libcom-err2_1.47.2-3+b12_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/e/e2fsprogs/libcom-err2_1.47.2-3+b12_amd64.deb",
+      "sha256": "bd43e020b8fed399db3eebf098111f10fba4c436fff99ccad72cc7e27c9764ec",
+      "target": "e2fsprogs"
+    }
+  ],
+  "production_manifest_sha256": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "test_profile": "Original dependency versions and source. Only optional crisp_ebook_conversion hook disabled during native tests in separate copy. Original locked crisp_catalog Cargo bridge built normally.",
+  "scratch_cargo_launcher_sha256": "f8bd05aa79488ddd397dd103a62128a595f9470be66c0b39f613b918e4728e73",
+  "hook_environment_note": "hooks_runner 1.5.0 filters CARGO_HOME/RUSTUP_HOME; scratch cargo launcher reinstates writable toolchain paths before executing real cargo. Production hook code unchanged.",
+  "native_assets": {
+    "crisp_catalog": {
+      "bytes": 3610464,
+      "sha256": "0d9aef8d55606bf9721262ba47edf2878e83f787082838413f33f33925938f7d",
+      "source": "Original pinned Cargo graph and original production build hook, actual Rust 1.100.0 build."
+    },
+    "dart_smb2": {
+      "bytes": 294472,
+      "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577",
+      "source": "Original production build hook and pinned shared library."
+    },
+    "flutter_pty2": {
+      "bytes": 61776,
+      "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8",
+      "source": "Original source compiled by actual Clang 19.1.7."
+    },
+    "sqlite3": {
+      "bytes": 1793240,
+      "sha256": "e184f6ba2b7a3440e272df64c6d038de5c7b1a997b7c2f9341164602f9bdf024",
+      "source": "Original sqlite3 3.3.3 bundled binary; unchanged upstream hash check passed."
+    }
+  }
+}

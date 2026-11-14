@@ -83,7 +83,7 @@ The existing FAT/HFS/UDF/ISO DMG profiles remain separate.
 | Metadata requested during listing | 64 MiB. |
 | Directory bytes | 32 MiB. |
 | Retained complete paths | 16 MiB measured as UTF-16 code units times two; each path is at most 4096 code units. |
-| Allocated blocks traversed | 1,048,576, including allocation-tree blocks and internal reserved allocations. |
+| Allocated blocks traversed | 1,048,576, including allocation-tree blocks, internal-journal allocations and resize-inode external index blocks. Fixed group-descriptor metadata is bounded through the metadata/work limits. |
 | Created allocation spans | 100,000, accounting for intermediate and retained spans. |
 | Traversal checkpoints | 4,194,304; cancellation is checked throughout traversal and streaming. |
 | Individual source reads | At most 64 KiB. |

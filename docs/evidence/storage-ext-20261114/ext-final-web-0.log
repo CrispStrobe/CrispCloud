@@ -1,0 +1,26 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 93.0.0 (95.0.0 available)
+  analyzer 10.0.1 (10.1.0 available)
+! crisp_ebook 0.1.0 from git https://github.com/CrispStrobe/crisperbooks.git at 505d3d in packages/crisp_ebook (overridden)
+! crisp_ebook_conversion 0.1.0 from git https://github.com/CrispStrobe/crisperbooks.git at 505d3d in packages/crisp_ebook_conversion (overridden)
+! crisp_ebook_reader 0.1.0 from git https://github.com/CrispStrobe/crisperbooks.git at 505d3d in packages/crisp_ebook_reader (overridden)
+! dart_pdf_editor 14.0.0 from path packages/dart_pdf_editor (overridden)
+  flutter_markdown 0.7.7+1 (discontinued replaced by flutter_markdown_plus)
+! flutter_pty2 3.0.0 from path packages/flutter_pty2 (overridden)
+  js 0.6.7 (0.7.2 available)
+! legacy_doc_parser 0.1.0-dev.1 from path packages/legacy_doc_parser (overridden)
+! libdbm 0.2.1 from git https://github.com/CrispStrobe/libdbm at 547b5b (overridden)
+! meta 1.19.0 (overridden)
+! pdf_document 14.0.0 from path packages/pdf_document (overridden)
+! pointycastle 4.0.0 (overridden)
+! pro_image_editor 14.24.0 from path packages/pro_image_editor (overridden)
+! pro_video_editor 2.51.0 from path packages/pro_video_editor (overridden)
+! quds_office_editor 1.6.0 from path packages/quds_office_editor (overridden)
+! quds_office_engine 1.5.0 from path packages/quds_office_engine (overridden)
+! re_editor 0.10.0 from path packages/re_editor (overridden)
+! uuid 4.5.1 (overridden) (4.5.3 available)
+Got dependencies!
+1 package is discontinued.
+4 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.

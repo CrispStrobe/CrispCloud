@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "source_revision": "8bbdc25c7eca7598215bdc1053e8558ef3f5d643",
+  "started_at_utc": "2026-11-14T12:25:30.429330+00:00",
+  "failed_at_utc": "2026-11-14T12:25:30.668107+00:00",
+  "error": "AssertionError('org-dartlang-sdk:///lib/_http/crypto.dart')",
+  "traceback": "Traceback (most recent call last):\n  File \"/workspace/scratch/4f6714f1660a/ext-reference-work/run_final_portable.py\", line 117, in <module>\n    predicted_paths = dependency_paths(SEED_DEPS)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/4f6714f1660a/ext-reference-work/run_final_portable.py\", line 80, in dependency_paths\n    assert uri.scheme == 'file' and uri.netloc in ('', 'localhost'), line\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: org-dartlang-sdk:///lib/_http/crypto.dart\n",
+  "commands": []
+}

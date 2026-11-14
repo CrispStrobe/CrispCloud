@@ -1,0 +1,418 @@
+{
+  "schema": 1,
+  "qualified_source_revision": "8bbdc25c7eca7598215bdc1053e8558ef3f5d643",
+  "scope": "All files in this evidence directory recursively, except this index itself.",
+  "created_at_utc": "2026-11-14T12:32:02.724345+00:00",
+  "files": [
+    {
+      "file": "PROGRESS.md",
+      "bytes": 6882,
+      "sha256": "85494933a87c259fe7ddee877b1a7b16985d9f1fa3c555b84d19401a3e046712"
+    },
+    {
+      "file": "README.md",
+      "bytes": 8919,
+      "sha256": "9862c98b7b4f0b1d8999b465ffd72b4550529c6b7e8b5d27cef653bc913c566d"
+    },
+    {
+      "file": "ext-core-first-events.json.gz",
+      "bytes": 3061,
+      "sha256": "815eba6f1685af4cad09309d5b8cbca9b29f546da06b3866064357774cae7ac0"
+    },
+    {
+      "file": "ext-core-first-receipt.json",
+      "bytes": 1203,
+      "sha256": "5c83ad66dca9d740b7dd794cc69b552a3186721b05e98ba21e9cba01219b257e"
+    },
+    {
+      "file": "ext-core-first-source-binding.json.gz",
+      "bytes": 384012,
+      "sha256": "64c2de3df218fabdc968deda27cffd060eb45507177e6f224d5629ae7829195c"
+    },
+    {
+      "file": "ext-core-first-summary.json",
+      "bytes": 616,
+      "sha256": "1902bc1b9dd1815549bcdd39ba375de518c701fb8b20d2ab1975a5b56e438483"
+    },
+    {
+      "file": "ext-core-first.log",
+      "bytes": 14851,
+      "sha256": "ee836ce4ab015f3bc27d98a5d5bb93e36eda2532fd7db187b3ad360b05f94c7e"
+    },
+    {
+      "file": "ext-core-followup-events.json.gz",
+      "bytes": 2927,
+      "sha256": "0fdfa6d2adc90a94ca4459261ea59ebbe0149bfa9ba9b843aca738142f786000"
+    },
+    {
+      "file": "ext-core-followup-receipt.json",
+      "bytes": 1206,
+      "sha256": "97f2f1172e41c7378c45236676959a3fb524b558cbcfd054bc99a7f9207211a7"
+    },
+    {
+      "file": "ext-core-followup-source-binding.json.gz",
+      "bytes": 383828,
+      "sha256": "e27aecfaf3ef7aa551c366f882113c401d49e6fe47af19d74c2a5f4f73811781"
+    },
+    {
+      "file": "ext-core-followup-summary.json",
+      "bytes": 449,
+      "sha256": "285e9bd2774e2e08173caa4a4fd35db8c35577a5bb320895006ea65672d29cb3"
+    },
+    {
+      "file": "ext-core-followup.log",
+      "bytes": 14259,
+      "sha256": "ef0dee9095a77137f1323b9038061292e831389da2bcac4028d1993d38c36526"
+    },
+    {
+      "file": "ext-final-analysis-receipt.json",
+      "bytes": 5086,
+      "sha256": "12d22a60caac9d93d624907ee6cfcf02e60e345c3fe08718c11c52fdc734d8d8"
+    },
+    {
+      "file": "ext-final-analysis.log",
+      "bytes": 958,
+      "sha256": "11d99cb0e4a45d498d4f1e8e2c2704068b669433a163d19da840e6b6941b61d5"
+    },
+    {
+      "file": "ext-final-native-events.json.gz",
+      "bytes": 43384,
+      "sha256": "b62b9e2d45ab4f6ec9dba7fe06bd79ca6ce201d15b266e7d813eddff83c0b5a8"
+    },
+    {
+      "file": "ext-final-native-files.json",
+      "bytes": 1628,
+      "sha256": "10af1bdc5c7206e21f50dd18b968827f8c9efc06927df22cb1641e880ec932a0"
+    },
+    {
+      "file": "ext-final-native-receipt.json",
+      "bytes": 2857,
+      "sha256": "b6de19140487b12236703dab3a91be02839b12189cdc9acb869fbd783fd8a064"
+    },
+    {
+      "file": "ext-final-native-source-binding.json.gz",
+      "bytes": 383934,
+      "sha256": "a37f93bdece95e430bfd2dd97973c1927ca7cc94fbf2c1eaa3ff960d7fe349b5"
+    },
+    {
+      "file": "ext-final-native-summary.json",
+      "bytes": 4338,
+      "sha256": "712e89b470101c017b4cb2710797541c2d5acf17f3f4da3e03e1f28f3dceccbe"
+    },
+    {
+      "file": "ext-final-native-sync.json",
+      "bytes": 90,
+      "sha256": "6f340278b5a7bcdf78de69df88c1e29b99032c3b391d6a71a6186f8300d96c5a"
+    },
+    {
+      "file": "ext-final-native.log.gz",
+      "bytes": 8444,
+      "sha256": "288b7c6d4c06642d1e1204d95e0fbaee725e5b171c74d891cc3b78c1327cf62e"
+    },
+    {
+      "file": "ext-final-portable-commands.json",
+      "bytes": 4502,
+      "sha256": "2105a2f9ee04005a79e4a872381b7c3f97bde4871441b7709a0c3ec14fc1374a"
+    },
+    {
+      "file": "ext-final-portable-compile-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ext-final-portable-compile.log",
+      "bytes": 111,
+      "sha256": "11b7be374e5930a7e36f3c65b8a0c8c4f7eabd56160782144fc54946c143e9ef"
+    },
+    {
+      "file": "ext-final-portable-compiler-inputs.json",
+      "bytes": 165600,
+      "sha256": "dc26ddd0db1451203af0e84f01ad3eb920c6c691755c0ccd2c61e8fd863b09d0"
+    },
+    {
+      "file": "ext-final-portable-dart-version-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ext-final-portable-dart-version.log",
+      "bytes": 82,
+      "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+    },
+    {
+      "file": "ext-final-portable-dependency-paths.log",
+      "bytes": 58930,
+      "sha256": "652e6feae46af545caf3cb7289ebc138cb4c6432ba63ca7c162b646d1db87515"
+    },
+    {
+      "file": "ext-final-portable-js-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ext-final-portable-js.json",
+      "bytes": 3610,
+      "sha256": "72d23161e5f47e1b43d059b747f698f02465ae165befd1fbe4cca5351ec69eea"
+    },
+    {
+      "file": "ext-final-portable-js.log",
+      "bytes": 2938,
+      "sha256": "12eeddc14e18e37d10f54b84eeba4f2538d87ead35d163e5c92df41b28d2a431"
+    },
+    {
+      "file": "ext-final-portable-node-version-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ext-final-portable-node-version.log",
+      "bytes": 9,
+      "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81"
+    },
+    {
+      "file": "ext-final-portable-preflight-attempt1.json",
+      "bytes": 869,
+      "sha256": "ba2ccc264c618f423db56b857d2a7b7237473578e6678b554864dd489cb9afee"
+    },
+    {
+      "file": "ext-final-portable-receipt.json",
+      "bytes": 22168,
+      "sha256": "0f30baebb97a623fde834e68144c88a182ebf0bcaf00b85bfe4dbd6a42774e6e"
+    },
+    {
+      "file": "ext-final-portable-source-binding.json",
+      "bytes": 1561927,
+      "sha256": "1bffcac47e7e4ff65418d2b3e2e7ff1235b5cd5acf1952c3824accfb9358dca6"
+    },
+    {
+      "file": "ext-final-portable-vm-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "ext-final-portable-vm.json",
+      "bytes": 3610,
+      "sha256": "72d23161e5f47e1b43d059b747f698f02465ae165befd1fbe4cca5351ec69eea"
+    },
+    {
+      "file": "ext-final-portable-vm.log",
+      "bytes": 2938,
+      "sha256": "12eeddc14e18e37d10f54b84eeba4f2538d87ead35d163e5c92df41b28d2a431"
+    },
+    {
+      "file": "ext-final-web-0.log",
+      "bytes": 1661,
+      "sha256": "7ea6420080612359408d030ddc1bf7e73bc45b9b20046d4293f6015c61d6fa55"
+    },
+    {
+      "file": "ext-final-web-1.log",
+      "bytes": 779,
+      "sha256": "18504751893148924962ba58907d6771d1b12513f3d8fb8687e2769e0e280acf"
+    },
+    {
+      "file": "ext-final-web-receipt.json",
+      "bytes": 2208,
+      "sha256": "f16f81202957d85d3cbcf5cb600f3ac1421d4cc729b1b992d1d211a126831105"
+    },
+    {
+      "file": "ext-final-web-source-binding.json.gz",
+      "bytes": 383919,
+      "sha256": "f5fd459248335a0a4c179c0b12bd19421e863f771bbea2e439963a80bf3fb867"
+    },
+    {
+      "file": "ext-focused-first-events.json.gz",
+      "bytes": 20281,
+      "sha256": "d677c7d3715dc539b660b4163e2a872342a8a1728d78f21ada374a7267dbf7e9"
+    },
+    {
+      "file": "ext-focused-first-receipt.json",
+      "bytes": 1675,
+      "sha256": "175e536091200032d8c43555fd26b480c2d1ba335bb675883376916832e38a3c"
+    },
+    {
+      "file": "ext-focused-first-source-binding.json.gz",
+      "bytes": 384007,
+      "sha256": "dc473d3ebc7106d6948f4dbf9265b143f03eca5cc88d310380af0220a61266ce"
+    },
+    {
+      "file": "ext-focused-first-summary.json",
+      "bytes": 2027,
+      "sha256": "178e297641d20f160a58718fe2352c85202f0ed7fa0ec36a54b8b07ff770d5c6"
+    },
+    {
+      "file": "ext-focused-first.log.gz",
+      "bytes": 4486,
+      "sha256": "f1d1cfb4340274b82fdb3a1bb213988914c84963df94e72eaeb0c795a62a9ede"
+    },
+    {
+      "file": "ext-integration-fix-events.json.gz",
+      "bytes": 8996,
+      "sha256": "15e97f3380f809511bfd10c773b2cf64c2766d155df6ba9a3987694b7a40c5bc"
+    },
+    {
+      "file": "ext-integration-fix-receipt.json",
+      "bytes": 1502,
+      "sha256": "e5cb4bfb57ffd5e68968233ffc46bd2793d2a980a227214092d34a1a5b164d61"
+    },
+    {
+      "file": "ext-integration-fix-source-binding.json.gz",
+      "bytes": 383953,
+      "sha256": "f1d978edc2019ea1ab4726dccc4698b20d611c13004bd0bef95d9e4e2c4f77e7"
+    },
+    {
+      "file": "ext-integration-fix-summary.json",
+      "bytes": 1113,
+      "sha256": "5381dc393e9f477127fe8349fa59118fb26016c2012ca544a0f0d58c8b6d91a8"
+    },
+    {
+      "file": "ext-integration-fix.log.gz",
+      "bytes": 2452,
+      "sha256": "9b110a1905a9588a482c30649e4785296e4835f90985fb8ee017648e0e91afaf"
+    },
+    {
+      "file": "external-fixture-reproduction.json",
+      "bytes": 6171,
+      "sha256": "383b931602aff78ad256649de0b62e3d26804614a021bbe955279206cc260f9d"
+    },
+    {
+      "file": "external-fixture-reproduction.log",
+      "bytes": 703,
+      "sha256": "2d34d17185031b95ae2f9c158372e5aaefd208a75ca6581aa3367b100decac2f"
+    },
+    {
+      "file": "final-validation.json",
+      "bytes": 4095,
+      "sha256": "99d7d6da81afa114b5acecb354aecec5cbb7c2d3aeac4b083ae0b3041d931f5a"
+    },
+    {
+      "file": "hosted-ci-status.json",
+      "bytes": 7691,
+      "sha256": "584ba55239fe9fd3bb67bd657dea88921fdb2c20997007ef55193a70243e6bd8"
+    },
+    {
+      "file": "intermediate/ext-extraction-first-receipt.json",
+      "bytes": 1215,
+      "sha256": "d424d56a159b597df680352a6e8640522f3dde66a846393fd2a4f26b3939fe39"
+    },
+    {
+      "file": "intermediate/ext-extraction-first-source-binding.json.gz",
+      "bytes": 384321,
+      "sha256": "a602f543fd8a50f4854a1e184817d483c67daee031a4211f00a254522bfc7947"
+    },
+    {
+      "file": "intermediate/ext-extraction-first.log",
+      "bytes": 1163,
+      "sha256": "c623b0de3e97d53a5610e836b7174836ca8e42ffd8afc6ec9c154cf0c215aae6"
+    },
+    {
+      "file": "intermediate/host-and-extraction-attempts.json",
+      "bytes": 5220,
+      "sha256": "9fd023a2ec8354afcff2f108916f83246d650cad4470e24632893024097ecb55"
+    },
+    {
+      "file": "intermediate/host-smoke-cargo-receipt.json",
+      "bytes": 1052,
+      "sha256": "2a45c19a155fa75b120226789798f000a55eafb9e45007adcc726c6a97d01eb7"
+    },
+    {
+      "file": "intermediate/host-smoke-cargo-source-binding.json.gz",
+      "bytes": 383457,
+      "sha256": "7268f8e1d8802540b8d249a702ee05e73abb2659ecfbbdcde26cb0e18b9f8efd"
+    },
+    {
+      "file": "intermediate/host-smoke-cargo.log",
+      "bytes": 1971,
+      "sha256": "c65f0ee54e1dd6c8181386966144900acfa73003745347b79214d7fb3c6cd415"
+    },
+    {
+      "file": "intermediate/host-smoke-receipt.json",
+      "bytes": 1052,
+      "sha256": "3662b2f1071a1152b2a79048f97d8a563228af6131de30376d72e37f9393fdf3"
+    },
+    {
+      "file": "intermediate/host-smoke-rust-receipt.json",
+      "bytes": 1052,
+      "sha256": "63bfa0c068c8b099de8b1fa41a63fbaf746754f39497dceba9faf7b8ba50f6d7"
+    },
+    {
+      "file": "intermediate/host-smoke-rust-source-binding.json.gz",
+      "bytes": 383457,
+      "sha256": "7268f8e1d8802540b8d249a702ee05e73abb2659ecfbbdcde26cb0e18b9f8efd"
+    },
+    {
+      "file": "intermediate/host-smoke-rust.log",
+      "bytes": 2244,
+      "sha256": "2cee4f6c39e898eb93d7ad7273be097e7bb2ad03f7fb5285e69847afea70cb1d"
+    },
+    {
+      "file": "intermediate/host-smoke-source-binding.json.gz",
+      "bytes": 383457,
+      "sha256": "7268f8e1d8802540b8d249a702ee05e73abb2659ecfbbdcde26cb0e18b9f8efd"
+    },
+    {
+      "file": "intermediate/host-smoke.log",
+      "bytes": 2846,
+      "sha256": "4d516fe2c71bdc260587d5264fb719c893d564cc5163a26159e55606182af73b"
+    },
+    {
+      "file": "intermediate-evidence-index.json",
+      "bytes": 5555,
+      "sha256": "5df281ef173b5ed4bdc954650071ce4a92b54a323a0d1c64675dd4baee78377a"
+    },
+    {
+      "file": "native-and-web-validation.json",
+      "bytes": 2404,
+      "sha256": "c77aae85c415436c1842d5ae7c51b307453b3d6750add7d1de1372fdfc4c4d30"
+    },
+    {
+      "file": "native-web-evidence-index.json",
+      "bytes": 7119,
+      "sha256": "441df003630133d2193fed5766d348a8f622d9afbe6695a64e1e6f6b3ddcb6cd"
+    },
+    {
+      "file": "reconciliation-final.json",
+      "bytes": 20011,
+      "sha256": "d66ac5859c08130b1b1ce72c0b861209f1d4916f4a9f341e08a23a8e46fafc68"
+    },
+    {
+      "file": "reconciliation-start.json",
+      "bytes": 18875,
+      "sha256": "27b098a60199fff3d965124759e91cabee8adedb087441918db9de5c4c923e05"
+    },
+    {
+      "file": "validation-cargo-launcher.sh",
+      "bytes": 542,
+      "sha256": "f8bd05aa79488ddd397dd103a62128a595f9470be66c0b39f613b918e4728e73"
+    },
+    {
+      "file": "validation-host-env.sh",
+      "bytes": 1038,
+      "sha256": "647cfe3bd02f59b0f0876b327531925c2b7e7b714b5c77157007969b9aa10313"
+    },
+    {
+      "file": "validation-host-environment.json",
+      "bytes": 4784,
+      "sha256": "4184c20cf58bc3a4a8e36a3c34d324f319fcd25d8c8af71b98ee6b4b6e875314"
+    },
+    {
+      "file": "validation-run-native.py",
+      "bytes": 4490,
+      "sha256": "c8938569c4dee1f9a9542b349c95c3ce2a3b34082e80476db368e3afb1fabee1"
+    },
+    {
+      "file": "validation-run-release.py",
+      "bytes": 4701,
+      "sha256": "34b97dfb03d235bb95c148da2bf27c77eb92ca3f873ac1be3933da9ff9558242"
+    },
+    {
+      "file": "validation-summarize-tests.py",
+      "bytes": 1329,
+      "sha256": "878434e36c3702c53cea12d7f14a333bfb7a1dcaf87a9a681a95bc75902ff0a4"
+    },
+    {
+      "file": "validation-sync-sources.py",
+      "bytes": 1501,
+      "sha256": "bca974b2f9247f6aadbf2a41cdc27e34f02a296e1f4b183e49810d3e523a6801"
+    }
+  ]
+}

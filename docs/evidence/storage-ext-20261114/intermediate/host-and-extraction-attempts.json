@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "qualified_source_revision": null,
+  "scope": "Historical setup and pre-test download attempts; source-hash bindings are preserved and are not attributed to the final source revision. The last extraction attempt stopped before tests because a 95-byte upstream connection-error response failed the unchanged SQLite binary SHA256 check. The subsequent final native run downloaded the expected original binary and passed.",
+  "artifacts": [
+    {
+      "file": "intermediate/host-smoke.log",
+      "encoding": "utf-8",
+      "original_file": "host-smoke.log",
+      "original_bytes": 2846,
+      "original_sha256": "4d516fe2c71bdc260587d5264fb719c893d564cc5163a26159e55606182af73b",
+      "stored_bytes": 2846,
+      "stored_sha256": "4d516fe2c71bdc260587d5264fb719c893d564cc5163a26159e55606182af73b"
+    },
+    {
+      "file": "intermediate/host-smoke-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "host-smoke-receipt.json",
+      "original_bytes": 1052,
+      "original_sha256": "3662b2f1071a1152b2a79048f97d8a563228af6131de30376d72e37f9393fdf3",
+      "stored_bytes": 1052,
+      "stored_sha256": "3662b2f1071a1152b2a79048f97d8a563228af6131de30376d72e37f9393fdf3"
+    },
+    {
+      "file": "intermediate/host-smoke-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "host-smoke-source-binding.json",
+      "original_bytes": 1112662,
+      "original_sha256": "c15b6719122b1fdffd630e18ab05589ffad2533ecdce2e15c1ee62a97289c419",
+      "stored_bytes": 383457,
+      "stored_sha256": "7268f8e1d8802540b8d249a702ee05e73abb2659ecfbbdcde26cb0e18b9f8efd"
+    },
+    {
+      "file": "intermediate/host-smoke-rust.log",
+      "encoding": "utf-8",
+      "original_file": "host-smoke-rust.log",
+      "original_bytes": 2244,
+      "original_sha256": "2cee4f6c39e898eb93d7ad7273be097e7bb2ad03f7fb5285e69847afea70cb1d",
+      "stored_bytes": 2244,
+      "stored_sha256": "2cee4f6c39e898eb93d7ad7273be097e7bb2ad03f7fb5285e69847afea70cb1d"
+    },
+    {
+      "file": "intermediate/host-smoke-rust-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "host-smoke-rust-receipt.json",
+      "original_bytes": 1052,
+      "original_sha256": "63bfa0c068c8b099de8b1fa41a63fbaf746754f39497dceba9faf7b8ba50f6d7",
+      "stored_bytes": 1052,
+      "stored_sha256": "63bfa0c068c8b099de8b1fa41a63fbaf746754f39497dceba9faf7b8ba50f6d7"
+    },
+    {
+      "file": "intermediate/host-smoke-rust-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "host-smoke-rust-source-binding.json",
+      "original_bytes": 1112662,
+      "original_sha256": "c15b6719122b1fdffd630e18ab05589ffad2533ecdce2e15c1ee62a97289c419",
+      "stored_bytes": 383457,
+      "stored_sha256": "7268f8e1d8802540b8d249a702ee05e73abb2659ecfbbdcde26cb0e18b9f8efd"
+    },
+    {
+      "file": "intermediate/host-smoke-cargo.log",
+      "encoding": "utf-8",
+      "original_file": "host-smoke-cargo.log",
+      "original_bytes": 1971,
+      "original_sha256": "c65f0ee54e1dd6c8181386966144900acfa73003745347b79214d7fb3c6cd415",
+      "stored_bytes": 1971,
+      "stored_sha256": "c65f0ee54e1dd6c8181386966144900acfa73003745347b79214d7fb3c6cd415"
+    },
+    {
+      "file": "intermediate/host-smoke-cargo-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "host-smoke-cargo-receipt.json",
+      "original_bytes": 1052,
+      "original_sha256": "2a45c19a155fa75b120226789798f000a55eafb9e45007adcc726c6a97d01eb7",
+      "stored_bytes": 1052,
+      "stored_sha256": "2a45c19a155fa75b120226789798f000a55eafb9e45007adcc726c6a97d01eb7"
+    },
+    {
+      "file": "intermediate/host-smoke-cargo-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "host-smoke-cargo-source-binding.json",
+      "original_bytes": 1112662,
+      "original_sha256": "c15b6719122b1fdffd630e18ab05589ffad2533ecdce2e15c1ee62a97289c419",
+      "stored_bytes": 383457,
+      "stored_sha256": "7268f8e1d8802540b8d249a702ee05e73abb2659ecfbbdcde26cb0e18b9f8efd"
+    },
+    {
+      "file": "intermediate/ext-extraction-first.log",
+      "encoding": "utf-8",
+      "original_file": "ext-extraction-first.log",
+      "original_bytes": 1163,
+      "original_sha256": "c623b0de3e97d53a5610e836b7174836ca8e42ffd8afc6ec9c154cf0c215aae6",
+      "stored_bytes": 1163,
+      "stored_sha256": "c623b0de3e97d53a5610e836b7174836ca8e42ffd8afc6ec9c154cf0c215aae6"
+    },
+    {
+      "file": "intermediate/ext-extraction-first-receipt.json",
+      "encoding": "utf-8",
+      "original_file": "ext-extraction-first-receipt.json",
+      "original_bytes": 1215,
+      "original_sha256": "d424d56a159b597df680352a6e8640522f3dde66a846393fd2a4f26b3939fe39",
+      "stored_bytes": 1215,
+      "stored_sha256": "d424d56a159b597df680352a6e8640522f3dde66a846393fd2a4f26b3939fe39"
+    },
+    {
+      "file": "intermediate/ext-extraction-first-source-binding.json.gz",
+      "encoding": "gzip",
+      "original_file": "ext-extraction-first-source-binding.json",
+      "original_bytes": 1115823,
+      "original_sha256": "504a8d058c3d70a52db083fda32256fb03eb01f0b575de935cde00f8be0191ce",
+      "stored_bytes": 384321,
+      "stored_sha256": "a602f543fd8a50f4854a1e184817d483c67daee031a4211f00a254522bfc7947"
+    }
+  ]
+}

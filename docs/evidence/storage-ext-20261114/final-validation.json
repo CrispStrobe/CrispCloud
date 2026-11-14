@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "source_revision": "8bbdc25c7eca7598215bdc1053e8558ef3f5d643",
+  "compiled_at_utc": "2026-11-14T12:32:02.716720+00:00",
+  "result": "passed_with_one_documented_opt_in_skip",
+  "native": {
+    "passed": 1007,
+    "failed": 0,
+    "skipped": 1,
+    "files": 37,
+    "exit_code": 0,
+    "profile": "Linux host Flutter tests; only optional ebook conversion hook disabled in isolated copy. Original catalogue native hook compiled with actual Rust. Both production manifests restored byte-for-byte; lockfile unchanged during tests.",
+    "skip": "Existing native TGZ member larger than 2 GiB requires CRISP_RUN_LARGE_ARCHIVE_TESTS=1 and was not enabled.",
+    "receipt": "ext-final-native-receipt.json",
+    "summary": "ext-final-native-summary.json",
+    "source_binding": "ext-final-native-source-binding.json.gz"
+  },
+  "portable": {
+    "targets": [
+      "Dart VM",
+      "dart2js JavaScript executed by Node"
+    ],
+    "groups_per_target": 19,
+    "checks_per_target": 3360,
+    "full_json_equal": true,
+    "serialized_stdout_equal": true,
+    "excluded_comparison_fields": [],
+    "counts_are_not_additive_with_native_gate": true,
+    "source_binding": {
+      "path": "ext-final-portable-source-binding.json",
+      "count": 5032,
+      "all_matched_before_and_after": true,
+      "sha256": "1bffcac47e7e4ff65418d2b3e2e7ff1235b5cd5acf1952c3824accfb9358dca6"
+    },
+    "compiler_input_binding": {
+      "path": "ext-final-portable-compiler-inputs.json",
+      "count": 605,
+      "all_unchanged": true,
+      "sha256": "dc26ddd0db1451203af0e84f01ad3eb920c6c691755c0ccd2c61e8fd863b09d0"
+    }
+  },
+  "strict_analysis": {
+    "changed_dart_files": 30,
+    "exit_code": 0,
+    "source_matches_before_and_after": true,
+    "receipt": "ext-final-analysis-receipt.json"
+  },
+  "production_web": {
+    "exit_code": 0,
+    "app_version": "1.3.0+23",
+    "original_manifests_unchanged": true,
+    "revision_stamp_present": true,
+    "app_version_present": true,
+    "apple_lzfse_license_present": true,
+    "outputs": {
+      "main.dart.js": {
+        "bytes": 27764490,
+        "sha256": "28974f2dc299f2d246bfc537e0b41d178d552eeb322bb4be13f8db53fb36e37d"
+      },
+      "flutter_bootstrap.js": {
+        "bytes": 13091,
+        "sha256": "85fc3db12da5a6d27a55815cfeefb9363172ccecdbabd933bb41bf4d6997d192"
+      },
+      "index.html": {
+        "bytes": 2346,
+        "sha256": "30a0f3c562c65352e1cb8eab221a162351964b383ac08ba5eeddb0a476dbb7be"
+      },
+      "assets/packages/apple_lzfse/LICENSE": {
+        "bytes": 1514,
+        "sha256": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32"
+      }
+    },
+    "receipt": "ext-final-web-receipt.json",
+    "source_binding": "ext-final-web-source-binding.json.gz"
+  },
+  "external_fixture_reproduction": {
+    "result": "passed",
+    "images": 5,
+    "regular_file_instances": 48,
+    "special_entry_instances": 15,
+    "directory_instances": 15,
+    "all_full_images_and_generated_files_reproduced": true,
+    "all_e2fsck_checks_passed": true,
+    "all_payloads_dumped_independently": true,
+    "receipt": "external-fixture-reproduction.json"
+  },
+  "production_manifest_sha256": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "final_runtime_source_unchanged_since_qualified_commit": true,
+  "native_web_analysis_bound_nondoc_paths": 8075,
+  "portable_receipt": "ext-final-portable-receipt.json",
+  "hosted_qualification_complete": false,
+  "hosted_snapshot": "hosted-ci-status.json",
+  "limits": [
+    "Native profile disables only the optional ebook conversion hook; original catalogue Rust hook compiled. Production manifests restored.",
+    "One opt-in physical TGZ >2 GiB test skipped. Test counts overlap and must not be summed.",
+    "Host tests and JS release build do not qualify native/device release packaging, browser interaction or WebAssembly.",
+    "The exact ext profile and all source-specific boundaries are documented in ../../archive-ext-profile.md."
+  ]
+}

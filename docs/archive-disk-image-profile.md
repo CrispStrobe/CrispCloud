@@ -16,7 +16,7 @@ one-based table index:
 
 | Entry | Meaning |
 | --- | --- |
-| `partition-001/` | First populated table entry's directory. Gaps in table indices remain gaps in these identifiers. |
+| `partition-001/` | Table entry 1 when populated's directory. Gaps in table indices remain gaps in these identifiers. |
 | `partition-001/raw.img` | Exact bounded bytes of that partition, including its filesystem metadata and unused space. |
 | `partition-001/files/` | Added only after a supported FAT/ext filesystem has been validated completely. |
 | `partition-001/files/HELLO.TXT` | A filesystem member, read lazily from its verified allocation extents. |
