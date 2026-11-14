@@ -18,7 +18,8 @@ interoperability tests and millimetre conventions. No CAD kernel, manifold-3d,
 fflate, model-library asset or WebView runtime is copied or added as a dependency.
 The reader uses Quds' existing bounded ZIP decoder and the existing XML parser.
 
-F3 shows STL and core and production-part 3MF geometry with orbit, zoom, fit and wireframe controls.
+F3 shows STL and 3MF core/production geometry with orbit, zoom, fit and
+wireframe controls.
 Limits: 16 MiB packed input, 16 MiB total model XML, 4,096 package entries/component
 visits, 128 model parts, 32 component levels, 150,000 unique vertices and 50,000 expanded triangles.
 Repeated component meshes are decoded once, within a shared vertex budget. STL units are unknown;
