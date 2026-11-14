@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-11-14T19:51:10.069509+00:00",
+  "app_parent_commit": "a066856fc53076f26f3ea30cbac503e2aa329ea2",
+  "canonical_commit": "30cb194a7275e3310d07b3bab185d81f79fc8c1c",
+  "canonical_positive_tests": 80,
+  "canonical_analysis": "No issues found",
+  "managed_files": 2176,
+  "writes": [
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+    "packages/quds_office_editor/test/sheet_grid_history_test.dart",
+    "packages/quds_office_editor/test/sheet_view_history_test.dart"
+  ],
+  "deletes": [],
+  "guarded_plan_equals_applied": true,
+  "source_and_git_index_verification_exit": 0,
+  "host_positive_validation": "pending",
+  "file_sha256": {
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart": "90a843c324a40a799bffae06f3c01304ac460ca435d426ae4aa44016215d32a9",
+    "packages/quds_office_editor/test/sheet_grid_history_test.dart": "daf39b601a20e54aa84a11d2ebc9b4f4bdade1c63d5920ae5e167e3d8e0054f5",
+    "packages/quds_office_editor/test/sheet_view_history_test.dart": "7846192a71ff8fca7dfffa25eac4249763fe79422275984dcbcc9bd78f092e17",
+    "tool/office_fidelity_manifest.json": "288ce8c1bf90f2616d73b43b7e208557d779a181102a89a5e382a771b6238e52"
+  },
+  "evidence_sha256": {
+    "source-verification.log": "f69457799a448e3bf0b56186ff3576db796caefe769941080e647d064b888521",
+    "sync-applied.json": "914674fba8fe2544218ac01b243ccd0c5eca6c89fb90ddd26c65ae24acf600ad",
+    "sync-plan.json": "be34065238dc7f723b2430f9d9097705fce5618d51ecb059a8b6109ad9c5e391"
+  }
+}

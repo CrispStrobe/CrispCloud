@@ -1,0 +1,21 @@
+{
+  "head": "a3897dfbe2d3721e0ec0756a1872132daf9f6b90",
+  "scope": "Pre-change contract probes. Each probe adds one proposed source.xlsx path to the existing outputs list, then invokes the unchanged expected_paths(). No host execution or schema validation is claimed.",
+  "files_sha256": {
+    "office_host_evidence.py": "1ea14e6dea214baa93c13e580d973f7ff85f93d5742f933385968a95c2afe873",
+    "test_office_host_evidence.py": "283a72f412e66e2e1208aee85d8f321933bd4b0dfa5fb18e56759f4529588612",
+    "office_host_evidence.json": "1d2bc373c7811a3db65d27b06caa7cb6ca9ace9996101eac3823ca3d4359410d"
+  },
+  "checks": [
+    {
+      "probe_path": "build/office-fill-host-acceptance/source.xlsx",
+      "accepted": false,
+      "error": "Invalid host evidence path: build/office-fill-host-acceptance/source.xlsx"
+    },
+    {
+      "probe_path": "build/office-sheet-state-acceptance/source.xlsx",
+      "accepted": false,
+      "error": "Invalid host evidence path: build/office-sheet-state-acceptance/source.xlsx"
+    }
+  ]
+}

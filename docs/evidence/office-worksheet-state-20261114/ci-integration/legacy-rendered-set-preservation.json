@@ -1,0 +1,24 @@
+{
+  "baseline_commit": "5454096520802adac784282ee3d4d06d77564ba5",
+  "manifest_path": "tool/office_host_evidence.json",
+  "baseline_manifest_sha256": "1d2bc373c7811a3db65d27b06caa7cb6ca9ace9996101eac3823ca3d4359410d",
+  "candidate_manifest_sha256": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c",
+  "comparison": "Exact JSON array equality, including entry order and every reference path/fixture/SHA-256 field; canonical JSON hashes retained for reproduction",
+  "rendered_outputs": 146,
+  "pinned_rendered_references": 3,
+  "rendered_total": 149,
+  "checks": {
+    "outputs": {
+      "structurally_equal_including_order": true,
+      "count": 146,
+      "baseline_canonical_json_sha256": "d338d8a3b18c7c73819ffa7132a10a7fb9ec6ed9e82746e4b18d2f354d137fd3",
+      "candidate_canonical_json_sha256": "d338d8a3b18c7c73819ffa7132a10a7fb9ec6ed9e82746e4b18d2f354d137fd3"
+    },
+    "references": {
+      "structurally_equal_including_order": true,
+      "count": 3,
+      "baseline_canonical_json_sha256": "786aae2a074d8b35bcc73bce6da6d4cb90894cd589954a6d76ef1e881e2ea68a",
+      "candidate_canonical_json_sha256": "786aae2a074d8b35bcc73bce6da6d4cb90894cd589954a6d76ef1e881e2ea68a"
+    }
+  }
+}

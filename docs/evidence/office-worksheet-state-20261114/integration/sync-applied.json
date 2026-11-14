@@ -1,0 +1,12 @@
+{
+  "from": "3543b29a2daa82279777802df8728d72dc96e9c5",
+  "to": "30cb194a7275e3310d07b3bab185d81f79fc8c1c",
+  "write": [
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+    "packages/quds_office_editor/test/sheet_grid_history_test.dart",
+    "packages/quds_office_editor/test/sheet_view_history_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2176,
+  "applied": true
+}

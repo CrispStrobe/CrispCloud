@@ -1,0 +1,18 @@
+{
+  "cross-sheet-applied.xlsx": {
+    "sha256": "a9d0e38c6e7f3844d36436bb3a7f2e056a329a84967cd8b7bcd6f9b3e6827cb6",
+    "bytes": 22049
+  },
+  "cross-sheet-undo.xlsx": {
+    "sha256": "c6ad8597f50d7e1bf66b23bf81df6ffe126aab4b49e48b57234b58dd62c6597f",
+    "bytes": 37609
+  },
+  "native-undo.xlsx": {
+    "sha256": "11f7bbe6576be75f7dc39f266fbecdef50ef081c75fe2392812e40e49e149b19",
+    "bytes": 22046
+  },
+  "source.xlsx": {
+    "sha256": "ce064557d720146d4184e441e1c0d1aaa73ef05eb41964493cad660eb25ed466",
+    "bytes": 5333
+  }
+}

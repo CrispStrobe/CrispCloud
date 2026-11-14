@@ -7716,11 +7716,20 @@ class SheetEditorController extends OfficeController {
 
   /// setSheetRightToLeft API.
   void setSheetRightToLeft(bool value) {
-    if (sheet.rightToLeft == value) {
+    if (!config.allowsMutation) {
       return;
     }
-    sheet.rightToLeft = value;
-    notifyListeners();
+    final SmlWorksheet target = sheet;
+    final bool before = target.rightToLeft;
+    if (before == value) {
+      return;
+    }
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => target.rightToLeft = value,
+        undoFn: () => target.rightToLeft = before,
+      ),
+    );
   }
 
   /// toggleSheetRightToLeft API.
@@ -7733,13 +7742,7 @@ class SheetEditorController extends OfficeController {
 
   /// unfreezePanes API.
   void unfreezePanes() {
-    if (!hasFrozenPanes) {
-      return;
-    }
-    sheet.freezeRows = 0;
-    sheet.freezeCols = 0;
-    clampSheetViewport();
-    notifyListeners();
+    _setFrozenPanes(0, 0);
   }
 
   /// Excel Freeze Panes: lock rows above and columns left of the selection.
@@ -7747,6 +7750,9 @@ class SheetEditorController extends OfficeController {
   /// A full row freezes from that row (no columns). A full column freezes
   /// from that column (no rows). A cell freezes from its row and column.
   void freezePanesFromSelection() {
+    if (!config.allowsMutation) {
+      return;
+    }
     var rows = 0;
     var cols = 0;
     if (selection.isFullRowSelection && selection.isFullColumnSelection) {
@@ -7769,10 +7775,7 @@ class SheetEditorController extends OfficeController {
       unfreezePanes();
       return;
     }
-    sheet.freezeRows = rows.clamp(0, SmlWorksheet.excelRowCount - 1);
-    sheet.freezeCols = cols.clamp(0, SmlWorksheet.excelColumnCount - 1);
-    clampSheetViewport();
-    notifyListeners();
+    _setFrozenPanes(rows, cols);
   }
 
   /// toggleFreezePanes API.
@@ -7786,18 +7789,41 @@ class SheetEditorController extends OfficeController {
 
   /// freezeTopRow API.
   void freezeTopRow() {
-    sheet.freezeRows = 1;
-    sheet.freezeCols = 0;
-    clampSheetViewport();
-    notifyListeners();
+    _setFrozenPanes(1, 0);
   }
 
   /// freezeFirstColumn API.
   void freezeFirstColumn() {
-    sheet.freezeRows = 0;
-    sheet.freezeCols = 1;
-    clampSheetViewport();
-    notifyListeners();
+    _setFrozenPanes(0, 1);
+  }
+
+  void _setFrozenPanes(int rows, int cols) {
+    if (!config.allowsMutation) {
+      return;
+    }
+    final SmlWorksheet target = sheet;
+    final int beforeRows = target.freezeRows;
+    final int beforeCols = target.freezeCols;
+    final int afterRows = rows.clamp(0, SmlWorksheet.excelRowCount - 1);
+    final int afterCols = cols.clamp(0, SmlWorksheet.excelColumnCount - 1);
+    if (beforeRows == afterRows && beforeCols == afterCols) {
+      return;
+    }
+    void apply(int rowCount, int colCount) {
+      target
+        ..freezeRows = rowCount
+        ..freezeCols = colCount;
+      if (identical(sheet, target)) {
+        clampSheetViewport();
+      }
+    }
+
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => apply(afterRows, afterCols),
+        undoFn: () => apply(beforeRows, beforeCols),
+      ),
+    );
   }
 
   /// canMergeAndCenter API.
@@ -7823,11 +7849,11 @@ class SheetEditorController extends OfficeController {
       return;
     }
     final SmlRange range = selection.range;
-    _mutateSheetGrid(() {
+    _mutateSheetGrid((SmlWorksheet target) {
       if (range.isSingleCell) {
-        sheet.toggleMergeAndCenter(range);
+        target.toggleMergeAndCenter(range);
       } else {
-        sheet.mergeAndCenter(range);
+        target.mergeAndCenter(range);
       }
     });
     final SmlMerge? merge = sheet.mergeAt(range.minCol, range.minRow);
@@ -7842,7 +7868,8 @@ class SheetEditorController extends OfficeController {
     if (!canUnmergeCells) {
       return;
     }
-    _mutateSheetGrid(() => sheet.unmerge(selection.range));
+    final SmlRange range = selection.range;
+    _mutateSheetGrid((SmlWorksheet target) => target.unmerge(range));
     notifyListeners();
   }
 
@@ -7881,18 +7908,90 @@ class SheetEditorController extends OfficeController {
   /// fontRgb of the active cell.
   String get selectionFontRgb => sheet.cell(activeCell).fontRgb;
 
+  /// Sets bold on the selected cells as one reversible formatting command.
+  void setSelectionFontBold(bool bold) {
+    _applySelectionStyle(
+      (SmlCell cell) => cell.fontBold = bold,
+      needsChange: (SmlCell? cell) => (cell?.fontBold ?? false) != bold,
+    );
+  }
+
+  /// Sets a finite, positive font size in points on the selected cells.
+  void setSelectionFontSize(double size) {
+    if (!size.isFinite || size <= 0) {
+      return;
+    }
+    _applySelectionStyle(
+      (SmlCell cell) => cell.fontSize = size,
+      needsChange: (SmlCell? cell) => (cell?.fontSize ?? 11) != size,
+    );
+  }
+
+  /// Sets horizontal alignment on the selected cells.
+  void setSelectionHorizontalAlign(SmlHAlign align) {
+    _applySelectionStyle(
+      (SmlCell cell) => cell.horizontalAlign = align,
+      needsChange: (SmlCell? cell) =>
+          (cell?.horizontalAlign ?? SmlHAlign.general) != align,
+    );
+  }
+
+  /// Resets the host ribbon's six formatting fields: bold, size, horizontal
+  /// alignment, fill color, font color, and style index. Other modeled cell
+  /// properties are outside this command's scope. Clearing colors is explicit,
+  /// even when an imported native fill or font has an empty modeled RGB.
+  void clearSelectionFormatting() {
+    _applySelectionStyle((SmlCell cell) {
+      cell
+        ..fontBold = false
+        ..fontSize = 11
+        ..horizontalAlign = SmlHAlign.general
+        ..fillRgb = ''
+        ..fontRgb = ''
+        ..styleIndex = 0;
+    });
+  }
+
+  void _applySelectionStyle(
+    void Function(SmlCell) update, {
+    bool Function(SmlCell?)? needsChange,
+  }) {
+    if (!config.allowsMutation) {
+      return;
+    }
+    final SmlWorksheet target = sheet;
+    final SmlRange range = selection.range;
+    final bool hasChange = range.cells.any(
+      (SmlCellRef ref) =>
+          !target.isCovered(ref.col, ref.row) &&
+          (needsChange?.call(target.cellOrNull(ref)) ?? true),
+    );
+    if (!hasChange) {
+      return;
+    }
+    _mutateSheetGrid((SmlWorksheet owner) {
+      for (final SmlCellRef ref in range.cells) {
+        if (!owner.isCovered(ref.col, ref.row)) {
+          update(owner.cell(ref));
+        }
+      }
+    });
+    notifyListeners();
+  }
+
   /// setSelectionFillRgb API.
   void setSelectionFillRgb(String rgb) {
     if (!config.allowsMutation) {
       return;
     }
     final String next = SmlStyleSheet.normalizeRgb(rgb);
-    _mutateSheetGrid(() {
-      for (final SmlCellRef ref in selection.range.cells) {
-        if (sheet.isCovered(ref.col, ref.row)) {
+    final SmlRange range = selection.range;
+    _mutateSheetGrid((SmlWorksheet target) {
+      for (final SmlCellRef ref in range.cells) {
+        if (target.isCovered(ref.col, ref.row)) {
           continue;
         }
-        sheet.cell(ref).fillRgb = next;
+        target.cell(ref).fillRgb = next;
       }
     });
     notifyListeners();
@@ -7904,12 +8003,13 @@ class SheetEditorController extends OfficeController {
       return;
     }
     final String next = SmlStyleSheet.normalizeRgb(rgb);
-    _mutateSheetGrid(() {
-      for (final SmlCellRef ref in selection.range.cells) {
-        if (sheet.isCovered(ref.col, ref.row)) {
+    final SmlRange range = selection.range;
+    _mutateSheetGrid((SmlWorksheet target) {
+      for (final SmlCellRef ref in range.cells) {
+        if (target.isCovered(ref.col, ref.row)) {
           continue;
         }
-        sheet.cell(ref).fontRgb = next;
+        target.cell(ref).fontRgb = next;
       }
     });
     notifyListeners();
@@ -8883,7 +8983,7 @@ class SheetEditorController extends OfficeController {
         ? range.start.row
         : range.end.row;
     final int at = index ?? (after ? maxRow + 1 : minRow);
-    _mutateSheetGrid(() => sheet.insertRows(at, count));
+    _mutateSheetGrid((SmlWorksheet target) => target.insertRows(at, count));
     selection.selectCell(SmlCellRef(selection.focus.col, at.clamp(0, 1048575)));
     notifyListeners();
   }
@@ -8901,7 +9001,7 @@ class SheetEditorController extends OfficeController {
         ? range.start.col
         : range.end.col;
     final int at = index ?? (after ? maxCol + 1 : minCol);
-    _mutateSheetGrid(() => sheet.insertCols(at, count));
+    _mutateSheetGrid((SmlWorksheet target) => target.insertCols(at, count));
     selection.selectCell(SmlCellRef(at.clamp(0, 16383), selection.focus.row));
     notifyListeners();
   }
@@ -8916,7 +9016,7 @@ class SheetEditorController extends OfficeController {
         ? range.start.row
         : range.end.row;
     final int at = index ?? minRow;
-    _mutateSheetGrid(() => sheet.deleteRows(at, count));
+    _mutateSheetGrid((SmlWorksheet target) => target.deleteRows(at, count));
     selection.selectCell(SmlCellRef(selection.focus.col, at.clamp(0, 1048575)));
     notifyListeners();
   }
@@ -8931,22 +9031,31 @@ class SheetEditorController extends OfficeController {
         ? range.start.col
         : range.end.col;
     final int at = index ?? minCol;
-    _mutateSheetGrid(() => sheet.deleteCols(at, count));
+    _mutateSheetGrid((SmlWorksheet target) => target.deleteCols(at, count));
     selection.selectCell(SmlCellRef(at.clamp(0, 16383), selection.focus.row));
     notifyListeners();
   }
 
   /// Function API.
-  void _mutateSheetGrid(void Function() mutate) {
-    final _SheetGridSnap snap = _SheetGridSnap.capture(sheet);
+  void _mutateSheetGrid(void Function(SmlWorksheet) mutate) {
+    final SmlWorksheet target = sheet;
+    final _SheetGridSnap before = _SheetGridSnap.capture(target);
+    _SheetGridSnap? after;
     commands.commit(
       _CallbackCommand(
         executeFn: () {
-          mutate();
+          final _SheetGridSnap? capturedAfter = after;
+          if (capturedAfter == null) {
+            mutate(target);
+            recalculateWorkbook();
+            after = _SheetGridSnap.capture(target);
+            return;
+          }
+          capturedAfter.restore(target);
           recalculateWorkbook();
         },
         undoFn: () {
-          snap.restore(sheet);
+          before.restore(target);
           recalculateWorkbook();
         },
       ),
@@ -9391,7 +9500,7 @@ class SheetEditorController extends OfficeController {
     }
     commitPendingEdits();
     final SmlWorksheet target = sheet;
-    final before = _SheetGridSnap.capture(target, preserveCellIdentities: true);
+    final before = _SheetGridSnap.capture(target);
     _SheetGridSnap? after;
     commands.commit(
       _CallbackCommand(
@@ -9402,10 +9511,7 @@ class SheetEditorController extends OfficeController {
               SmlSortKey(column: column ?? range.minCol, ascending: ascending),
             ]);
             recalculateWorkbook();
-            after = _SheetGridSnap.capture(
-              target,
-              preserveCellIdentities: true,
-            );
+            after = _SheetGridSnap.capture(target);
           } else {
             saved.restore(target);
             recalculateWorkbook();
@@ -11826,39 +11932,39 @@ class _HeadingSnap {
 
 class _SheetGridSnap {
   _SheetGridSnap._({
+    required this.rowIndices,
     required this.cells,
     required this.widths,
     required this.heights,
     required this.merges,
-    this.cellIdentities,
   });
 
   /// capture API.
-  factory _SheetGridSnap.capture(
-    SmlWorksheet sheet, {
-    bool preserveCellIdentities = false,
-  }) {
-    final originalCells = sheet.allCells.toList();
+  factory _SheetGridSnap.capture(SmlWorksheet sheet) {
     return _SheetGridSnap._(
-      cells: <SmlCell>[
-        for (final SmlCell cell in originalCells)
-          SmlCell(
-            ref: cell.ref,
-            type: cell.type,
-            value: cell.value,
-            formula: cell.formula,
-            styleIndex: cell.styleIndex,
-            hasExplicitStyleIndex: cell.hasExplicitStyleIndex,
-            horizontalAlign: cell.horizontalAlign,
-            fillRgb: cell.fillRgb,
-            hasExplicitFillColorEdit: cell.hasExplicitFillColorEdit,
-            fontRgb: cell.fontRgb,
-            hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
-            fontBold: cell.fontBold,
-            fontSize: cell.fontSize,
-            borderRgb: cell.borderRgb,
-            borderWidth: cell.borderWidth,
-            locked: cell.locked,
+      rowIndices: List<int>.of(sheet.rows.keys),
+      cells: <({SmlCell target, SmlCell state})>[
+        for (final SmlCell cell in sheet.allCells)
+          (
+            target: cell,
+            state: SmlCell(
+              ref: cell.ref,
+              type: cell.type,
+              value: cell.value,
+              formula: cell.formula,
+              styleIndex: cell.styleIndex,
+              hasExplicitStyleIndex: cell.hasExplicitStyleIndex,
+              horizontalAlign: cell.horizontalAlign,
+              fillRgb: cell.fillRgb,
+              hasExplicitFillColorEdit: cell.hasExplicitFillColorEdit,
+              fontRgb: cell.fontRgb,
+              hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
+              fontBold: cell.fontBold,
+              fontSize: cell.fontSize,
+              borderRgb: cell.borderRgb,
+              borderWidth: cell.borderWidth,
+              locked: cell.locked,
+            ),
           ),
       ],
       widths: sheet.captureColumns(),
@@ -11866,15 +11972,15 @@ class _SheetGridSnap {
       merges: <SmlMerge>[
         for (final SmlMerge merge in sheet.merges) merge.copy(),
       ],
-      cellIdentities: preserveCellIdentities ? originalCells : null,
     );
   }
 
-  /// cells API.
-  final List<SmlCell> cells;
+  // Empty rows are part of the grid even when they contain no cells.
+  final List<int> rowIndices;
 
-  // Sort history must retain cells held by text commands before and after it.
-  final List<SmlCell>? cellIdentities;
+  // Other history commands retain these cell objects. Copy their data without
+  // replacing their identities when a grid edit is undone or redone.
+  final List<({SmlCell target, SmlCell state})> cells;
 
   /// widths API.
   final Map<int, SmlColumnSnapshot> widths;
@@ -11888,9 +11994,12 @@ class _SheetGridSnap {
   /// restore API.
   void restore(SmlWorksheet sheet) {
     sheet.rows.clear();
-    for (var index = 0; index < cells.length; index++) {
-      final SmlCell cell = cells[index];
-      final SmlCell target = cellIdentities?[index] ?? sheet.cell(cell.ref);
+    for (final int index in rowIndices) {
+      sheet.rows[index] = SmlRow(index);
+    }
+    for (final ({SmlCell target, SmlCell state}) entry in cells) {
+      final SmlCell cell = entry.state;
+      final SmlCell target = entry.target;
       target
         ..ref = cell.ref
         ..type = cell.type
@@ -11908,9 +12017,7 @@ class _SheetGridSnap {
         ..borderRgb = cell.borderRgb
         ..borderWidth = cell.borderWidth
         ..locked = cell.locked;
-      if (cellIdentities != null) {
-        sheet.row(cell.ref.row).cells[cell.ref.col] = target;
-      }
+      sheet.row(cell.ref.row).cells[cell.ref.col] = target;
     }
     sheet.restoreColumns(widths);
     sheet.rowHeights

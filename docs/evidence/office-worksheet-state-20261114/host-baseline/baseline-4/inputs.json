@@ -1,0 +1,70 @@
+{
+  "attempt": "baseline-4",
+  "captured_at": "2026-11-14T19:36:15.198890+00:00",
+  "head": "5454096520802adac784282ee3d4d06d77564ba5",
+  "git_status": "M .github/workflows/office-fidelity.yml\n M tool/check_office_fidelity.sh\n M tool/office_host_evidence.json\n M tool/office_host_evidence.py\n M tool/test_office_host_evidence.py\n?? test/widget/office_sheet_state_workflow_test.dart",
+  "input_files": 4740,
+  "input_tree_sha256_before": "8893e93c8aeef3bff9286b9fa0752530ad2b2152632d016b0aeb4e9f47c0d6c3",
+  "source_snapshot_sha256": "709636269e51583b87b9219d8c154553b4b875f278853f06c1869122ad157521",
+  "pubspec_committed_sha256": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+  "pubspec_expected_collected_sha256": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/collect_office_host_coverage.py",
+    "--flutter",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "build/office-sheet-state-coverage-baseline-4",
+    "--",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/widget/office_sheet_state_workflow_test.dart"
+  ],
+  "environment_overrides": {
+    "CI": "true",
+    "BOT": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "TMPDIR": "/workspace/scratch/f035141943c7/toolchain/tmp",
+    "PUB_CACHE": "/workspace/scratch/f035141943c7/toolchain/pub-cache",
+    "RUSTUP_HOME": "/workspace/scratch/f035141943c7/toolchain/rustup",
+    "CARGO_HOME": "/workspace/scratch/f035141943c7/toolchain/cargo",
+    "CARGO": "/workspace/scratch/f035141943c7/toolchain/native-launchers/cargo",
+    "PATH": "/workspace/scratch/f035141943c7/toolchain/native-launchers:/workspace/scratch/f035141943c7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/llvm-19/bin:/workspace/scratch/f035141943c7/toolchain/flutter/bin:/workspace/scratch/f035141943c7/toolchain/cargo/bin:/home/agent/.codex/tmp/arg0-linux/codex-arg07A19SN:/opt/codex/codex-path:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "LD_LIBRARY_PATH": "/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/x86_64-linux-gnu:/workspace/scratch/f035141943c7/toolchain/native/lib"
+  },
+  "changed_input_snapshots": {
+    ".github/workflows/office-fidelity.yml": {
+      "sha256": "a0cb0032f3a4b41c951de46cb7b247f18fde771df3b04571a6e4020a527243f9",
+      "snapshot": "changed-inputs/.github/workflows/office-fidelity.yml.gz",
+      "collector_input": false
+    },
+    "test/widget/office_sheet_state_workflow_test.dart": {
+      "sha256": "a13bad97e9a0e39ba5c38266912f6b55018314f7f5fd43b6ca025218b5f5551c",
+      "snapshot": "changed-inputs/test/widget/office_sheet_state_workflow_test.dart.gz",
+      "collector_input": true
+    },
+    "tool/check_office_fidelity.sh": {
+      "sha256": "fc6f2524b81055080c432412e07c29c462def8306b443ffa0f6a1581a5676647",
+      "snapshot": "changed-inputs/tool/check_office_fidelity.sh.gz",
+      "collector_input": true
+    },
+    "tool/office_host_evidence.json": {
+      "sha256": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c",
+      "snapshot": "changed-inputs/tool/office_host_evidence.json.gz",
+      "collector_input": true
+    },
+    "tool/office_host_evidence.py": {
+      "sha256": "edcba08d07122bbc895c1a0afe8a59b8a4d8f2ce4c7ba8fecc57dd7d6cc6fb03",
+      "snapshot": "changed-inputs/tool/office_host_evidence.py.gz",
+      "collector_input": true
+    },
+    "tool/test_office_host_evidence.py": {
+      "sha256": "fc23d006b8d4dfa698c0945189988e97ed857ea9d5e093777a6e636281c4559e",
+      "snapshot": "changed-inputs/tool/test_office_host_evidence.py.gz",
+      "collector_input": true
+    }
+  },
+  "scope": "Only five worksheet state/history host cases; independent ZIP/XML assertions and actual toolbar uploads. Worksheet navigation alone uses public setActiveSheet because this host has no sheet selector."
+}

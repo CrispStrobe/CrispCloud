@@ -1,0 +1,6 @@
+{
+  "cargo": "1140eeed03a11f98b6f46532477f506f736949edd21dc42486b43aae860a8f37",
+  "clang": "9e5cb0ece13e36c1fcc16f99a032bceebf0778bceeaf996abd6d96b93b8a5ece",
+  "clang++": "0c1b4c1460fb7cb234eefaf1dba8f40161fca197eeb19ce0e6dbe43a06796e8e",
+  "llvm-ar": "48de1195695b30e8fc1228519b596e37350665d707bcd23255fdaaf0583f50fc"
+}

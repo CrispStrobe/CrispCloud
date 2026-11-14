@@ -2140,9 +2140,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       items: kOfficeFontSizes,
       label: (int value) => '$value',
       width: 58,
-      onChanged: (int value) => _sheetStyle((SmlCell cell) {
-        cell.fontSize = value.toDouble();
-      }),
+      onChanged: (int value) => _sheet.setSelectionFontSize(value.toDouble()),
     );
   }
 
@@ -3265,25 +3263,13 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   // Sheet actions
   // ---------------------------------------------------------------------------
 
-  void _sheetStyle(void Function(SmlCell cell) update) {
-    if (!_canMutate) return;
-    final SmlRange range = _sheet.selection.range;
-    final _CellStyleCommand command = _CellStyleCommand(
-      controller: _sheet,
-      range: range,
-      update: update,
-    );
-    _sheet.commands.commit(command);
-    _sheet.refresh();
-  }
-
   void _sheetBold() {
-    final bool bold = !_cell.fontBold;
-    _sheetStyle((SmlCell cell) => cell.fontBold = bold);
+    if (!_canMutate) return;
+    _sheet.setSelectionFontBold(!_cell.fontBold);
   }
 
   void _sheetAlign(SmlHAlign align) {
-    _sheetStyle((SmlCell cell) => cell.horizontalAlign = align);
+    _sheet.setSelectionHorizontalAlign(align);
   }
 
   Future<void> _sheetFill() async {
@@ -3298,7 +3284,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _sheetFillValue(String color) {
-    _sheetStyle((SmlCell cell) => cell.fillRgb = color);
+    _sheet.setSelectionFillRgb(color);
   }
 
   Future<void> _sheetFontColor() async {
@@ -3311,18 +3297,11 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   void _sheetFontColorValue(String color) {
-    _sheetStyle((SmlCell cell) => cell.fontRgb = color);
+    _sheet.setSelectionFontRgb(color);
   }
 
   void _sheetClearFormat() {
-    _sheetStyle((SmlCell cell) {
-      cell.fontBold = false;
-      cell.fontSize = 11;
-      cell.horizontalAlign = SmlHAlign.general;
-      cell.fillRgb = '';
-      cell.fontRgb = '';
-      cell.styleIndex = 0;
-    });
+    _sheet.clearSelectionFormatting();
   }
 
   void _sheetDeleteRows() {
@@ -3756,97 +3735,6 @@ class _MenuButton extends StatelessWidget {
           },
     );
   }
-}
-
-// -----------------------------------------------------------------------------
-// Sheet cell style command (font bold / size / alignment / fill / color)
-// -----------------------------------------------------------------------------
-
-class _CellStyleCommand implements OfficeCommand {
-  _CellStyleCommand({
-    required this.controller,
-    required this.range,
-    required this.update,
-  }) {
-    for (final SmlCellRef ref in range.cells) {
-      final SmlCell cell = controller.sheet.cell(ref);
-      _before[ref.a1] = (
-        ref: ref,
-        bold: cell.fontBold,
-        size: cell.fontSize,
-        align: cell.horizontalAlign,
-        fill: cell.fillRgb,
-        font: cell.fontRgb,
-        styleIndex: cell.styleIndex,
-      );
-    }
-  }
-
-  final SheetEditorController controller;
-  final SmlRange range;
-  final void Function(SmlCell cell) update;
-
-  final Map<
-    String,
-    ({
-      SmlCellRef ref,
-      bool bold,
-      double size,
-      SmlHAlign align,
-      String fill,
-      String font,
-      int styleIndex,
-    })
-  >
-  _before =
-      <
-        String,
-        ({
-          SmlCellRef ref,
-          bool bold,
-          double size,
-          SmlHAlign align,
-          String fill,
-          String font,
-          int styleIndex,
-        })
-      >{};
-
-  @override
-  void execute() {
-    for (final SmlCellRef ref in range.cells) {
-      update(controller.sheet.cell(ref));
-    }
-    controller.refresh();
-  }
-
-  @override
-  void undo() {
-    for (final ({
-          SmlCellRef ref,
-          bool bold,
-          double size,
-          SmlHAlign align,
-          String fill,
-          String font,
-          int styleIndex,
-        })
-        snap
-        in _before.values) {
-      final SmlCell cell = controller.sheet.cell(snap.ref);
-      cell
-        ..fontBold = snap.bold
-        ..fontSize = snap.size
-        ..horizontalAlign = snap.align
-        ..fillRgb = snap.fill
-        ..fontRgb = snap.font
-        ..styleIndex = snap.styleIndex;
-    }
-    controller.refresh();
-  }
-
-  @override
-  OfficeCommand invert() => this;
 }
 
 // -----------------------------------------------------------------------------

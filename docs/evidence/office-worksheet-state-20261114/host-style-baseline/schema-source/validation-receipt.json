@@ -1,0 +1,39 @@
+{
+  "scope": "Exact independently authored style-history input from the active two-case native host baseline; isolated byte-identical staging for SDK validation. No host outcome or renderer result is claimed.",
+  "host_head": "bd910b1454e30afd1793ea20ae3977821bf5cdb2",
+  "host_input_capture_sha256": "44e0aa47890b8b6fdb34bfcf801a4a6fb16564121a3933a3b08da48c85abf912",
+  "host_test_path": "/workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart",
+  "host_test_sha256": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe",
+  "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-style-history-acceptance/source.xlsx",
+  "source_sha256": "ce064557d720146d4184e441e1c0d1aaa73ef05eb41964493cad660eb25ed466",
+  "staged_file": "input/source.xlsx",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "validator_assembly_sha256": "8910f715c4d47f7b4834e3c3638d8272f21e57d3e269f080343846b353a61f05",
+  "sdk": "8.0.428",
+  "runtime": "8.0.34",
+  "openxml": "3.3.0",
+  "commands": [
+    {
+      "label": "self-test",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "--self-test"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "schema",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "/workspace/scratch/f035141943c7/external-sheet-state-validation/style-baseline-1-source/input",
+        "/workspace/scratch/f035141943c7/external-sheet-state-validation/style-baseline-1-source/schema-report.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "schema_files": 1,
+  "schema_failures": 0,
+  "source_and_test_hashes_unchanged": true
+}

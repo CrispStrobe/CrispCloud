@@ -1,0 +1,125 @@
+{
+  "file_count": 24,
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 3741,
+      "sha256": "de0dc1a09c44e7a7d5c9b4c927df7608956aa9f504b991e8567b8163bb427c1c"
+    },
+    {
+      "path": "artifact-flow-control/artifact-flow-receipt.json",
+      "size_bytes": 4022,
+      "sha256": "3857a91b6454f5019431c6ba0f04bf1da00f4acaf43b9deeef26ed15188f0301"
+    },
+    {
+      "path": "artifact-flow-control/complete-inventory.log",
+      "size_bytes": 169,
+      "sha256": "ad9e7afb2abff7a156fdb7948cb709c89db59072d655878f15f94ebc6ae8e767"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-fill-host-acceptance.json",
+      "size_bytes": 67695,
+      "sha256": "2c8e95a3e9f8ddb22714bf641c0c4b45f25280a5f27552c753d4bf7f437d5356"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-fill-host-acceptance.log",
+      "size_bytes": 474,
+      "sha256": "350ed088dfd93306d9a8fbbaffe4f0289090b4763bc072ff46d3a2ae111a5220"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-sheet-state-acceptance.json",
+      "size_bytes": 63453,
+      "sha256": "5832febd3b7edc306e338c9d561182f724f6e453d835ba686e6b5ecfd3191420"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-sheet-state-acceptance.log",
+      "size_bytes": 1611,
+      "sha256": "fcba99eebf6df6f53d9885e2f4b06b1e1f2ee3ae63693e2db9c1e532673f726e"
+    },
+    {
+      "path": "artifact-flow-control/positive-host-inventory.json",
+      "size_bytes": 68951,
+      "sha256": "692fcbe3d97d98e9a85a42d516cf142503a3a9385c5d7647c6a7229f8e49e17e"
+    },
+    {
+      "path": "artifact-flow-control/workflow-render-stage.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "artifact-flow-control/workflow-render-stage.sh",
+      "size_bytes": 934,
+      "sha256": "d52a40ad311a64fa6177c6d6b88e09d2717b1dc733e765a20713264ff69712d3"
+    },
+    {
+      "path": "baseline/office_host_evidence.json",
+      "size_bytes": 8327,
+      "sha256": "1d2bc373c7811a3db65d27b06caa7cb6ca9ace9996101eac3823ca3d4359410d"
+    },
+    {
+      "path": "baseline/office_host_evidence.py",
+      "size_bytes": 11676,
+      "sha256": "1ea14e6dea214baa93c13e580d973f7ff85f93d5742f933385968a95c2afe873"
+    },
+    {
+      "path": "baseline/reproduce_root_rejection.py",
+      "size_bytes": 1413,
+      "sha256": "62732ac580ac6433bf9f6fbe07d03028f9d7aa4e1fa671bde9ff35ac236a1d39"
+    },
+    {
+      "path": "baseline/root-rejection-receipt.json",
+      "size_bytes": 1017,
+      "sha256": "26b11d0e3bc95ecb1a75cd2800dc025fc6aa4d67ffd92a9f5a95b0efc1939026"
+    },
+    {
+      "path": "baseline/test_office_host_evidence.py",
+      "size_bytes": 12181,
+      "sha256": "283a72f412e66e2e1208aee85d8f321933bd4b0dfa5fb18e56759f4529588612"
+    },
+    {
+      "path": "baseline-reproduction.log",
+      "size_bytes": 383,
+      "sha256": "bf1fb4f99da8d301e718abf0e253549c68cb942efa179f7f2b16bb4e2127280b"
+    },
+    {
+      "path": "candidate-inputs.json",
+      "size_bytes": 1285,
+      "sha256": "42b18b1256ce029e29d2016320f063bb4269b1010af75e78627765dba4ea2e23"
+    },
+    {
+      "path": "commands.json",
+      "size_bytes": 1447,
+      "sha256": "f4039d409cf662121ce06f3fce69b4a1a900d83bbbe3a3d95cab6eb1b8ce0473"
+    },
+    {
+      "path": "diff-check.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-validation.json",
+      "size_bytes": 3161,
+      "sha256": "14c964b2c8c573624e88db3bc13f5c964f03b6f9fbba782d2b9e3e3404521657"
+    },
+    {
+      "path": "gate-shell-syntax.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "inventory-unittests.log",
+      "size_bytes": 3966,
+      "sha256": "743b48f54888d80b8d576579957a63ca9edf9f3a2dbed7af3cf115c95123a50a"
+    },
+    {
+      "path": "legacy-rendered-set-preservation.json",
+      "size_bytes": 1208,
+      "sha256": "eb1a77c99338fac1852e076d21e88b3e59e4f8648d7143fada304bacbd4bf06d"
+    },
+    {
+      "path": "run_artifact_flow_control.py",
+      "size_bytes": 6071,
+      "sha256": "8271743a1d8970dca3bcafca4e9a2d45215035a036a5868c2677aeb165df161d"
+    }
+  ]
+}

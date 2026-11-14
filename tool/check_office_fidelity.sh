@@ -33,6 +33,7 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/widget/office_editor_dialog_test.dart \
   test/widget/office_editor_lifecycle_test.dart \
   test/widget/office_native_workflow_test.dart \
+  test/widget/office_sheet_state_workflow_test.dart \
   test/widget/office_editor_ribbon_test.dart \
   test/widget/office_ribbon_state_test.dart \
   test/widget/office_paragraph_dialog_test.dart \

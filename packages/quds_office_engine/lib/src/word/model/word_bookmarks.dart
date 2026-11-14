@@ -200,6 +200,60 @@ abstract final class WordBookmarks {
     return result;
   }
 
+  /// Import-time repair of unpaired endpoints, matching how Word reads
+  /// them: a start without an end extends to the end of its story, an end
+  /// without a start is ignored. Returns the number of repairs. Documents
+  /// with such bookmarks are common (edited templates, form fields) and were
+  /// previously refused as a whole.
+  static int repairUnpaired(WmlDocument document) {
+    // Frame anchors appear in story lists as synthetic paragraphs that are
+    // never written; only close ranges in paragraphs the model owns.
+    final real = Set<WmlParagraph>.identity()
+      ..addAll(document.paragraphs)
+      ..addAll(
+        WordTree.paragraphs([
+          for (final note in [...document.footnotes, ...document.endnotes])
+            ...note.blocks,
+        ]),
+      )
+      ..addAll([
+        for (final section in document.sections) ...[
+          ...section.header,
+          ...section.footer,
+          ...section.firstHeader,
+          ...section.firstFooter,
+          ...section.evenHeader,
+          ...section.evenFooter,
+        ],
+        for (final comment in document.comments) ...comment.paragraphs,
+      ]);
+    var repairs = 0;
+    for (final story in _stories(document)) {
+      final open = <String, WmlBookmarkBoundary>{};
+      for (final paragraph in story) {
+        paragraph.inlines.removeWhere((inline) {
+          if (inline is! WmlBookmarkBoundary) return false;
+          final id = canonicalId(inline.id);
+          if (inline.isStart) {
+            open[id] = inline;
+            return false;
+          }
+          if (open.remove(id) != null) return false;
+          repairs++;
+          return true;
+        });
+      }
+      if (open.isEmpty) continue;
+      final last = story.lastWhere(real.contains, orElse: () => WmlParagraph());
+      if (!real.contains(last)) continue;
+      for (final start in open.values) {
+        last.inlines.add(WmlBookmarkBoundary(id: start.id, isStart: false));
+        repairs++;
+      }
+    }
+    return repairs;
+  }
+
   /// Native ranges are joined by ID, not by a nesting stack: Word permits
   /// overlapping bookmarks whose end order differs from their start order.
   static List<WmlBookmarkRange> ranges(WmlDocument document) {

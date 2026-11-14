@@ -18,6 +18,12 @@ session-only. Nextcloud web connections provide endpoint and browser diagnostics
 server CORS still needs configuration. See the [live verification and limits](docs/cloud-issues-96-98-verification.md).
 
 
+The current Office integration includes undoable worksheet direction, frozen panes,
+grid edits and selection formatting, plus more tolerant DOCX bookmark and measurement
+imports. Cell identity is retained across sorting and grid undo. Imported control-ID
+duplicates are retained; edits cannot add more. See the tested scope and remaining
+limits in [the Office integration record](docs/integration-viewers-20261114.md).
+
 F3 now previews binary/ASCII STL and core and production-part 3MF geometry with rotate, zoom, fit and
 wireframe controls. The portable Flutter preview handles 3MF units, build items
 and component transforms; materials, textures and required format extensions

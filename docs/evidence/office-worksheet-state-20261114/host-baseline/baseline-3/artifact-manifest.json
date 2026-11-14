@@ -1,0 +1,14 @@
+{
+  "grid-delete.xlsx": {
+    "sha256": "8f04be4c7823734d087136bcc808efc296a588fe5b79f97eacd5a7663e5f1dcb",
+    "bytes": 23096
+  },
+  "grid-undo-other-sheet.xlsx": {
+    "sha256": "7cf027022d8db51251bd702713a6058c7ae68381c4aff49649d57b3694913307",
+    "bytes": 39416
+  },
+  "source.xlsx": {
+    "sha256": "89ee1674a1c9a53536109ac68b70814db19d775fbd4649aba6638988e161fb31",
+    "bytes": 5602
+  }
+}

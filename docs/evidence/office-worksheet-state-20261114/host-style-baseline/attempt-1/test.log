@@ -1,0 +1,84 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart
+00:00 +0: ribbon style history (setUpAll)
+00:00 +0: ribbon style history targets its owning worksheet after navigation
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: <false>
+            Actual: <true>
+          Budget!A1 must reflect only its own style command.
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withStyleHistoryHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart:674:3)
+<asynchronous suspension>
+#5      main.<anonymous closure>.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart:838:7)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart line 674
+The test description was:
+  targets its owning worksheet after navigation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:06 +0 -1: ribbon style history targets its owning worksheet after navigation [E]
+  Test failed. See exception logs above.
+  The test description was: targets its owning worksheet after navigation
+  
+00:06 +0 -1: ribbon style history preserves native fill font and style provenance on undo
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: '<s:fill><s:gradientFill degree="90"><s:stop position="0"><s:color
+rgb="FFFF0000"/></s:stop><s:stop position="1"><s:color
+rgb="FF0000FF"/></s:stop></s:gradientFill></s:fill>'
+            Actual: '<s:fill><s:patternFill patternType="none"/></s:fill>'
+             Which: is different.
+                    Expected: ... s:fill><s:gradientFi ...
+                      Actual: ... s:fill><s:patternFil ...
+                                            ^
+                     Differ at offset 11
+          Budget!A1 lost an independently authored native fill.
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withStyleHistoryHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart:674:3)
+<asynchronous suspension>
+#5      main.<anonymous closure>.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart:863:7)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart line 674
+The test description was:
+  preserves native fill font and style provenance on undo
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:07 +0 -2: ribbon style history preserves native fill font and style provenance on undo [E]
+  Test failed. See exception logs above.
+  The test description was: preserves native fill font and style provenance on undo
+  
+00:07 +0 -2: ribbon style history (tearDownAll)
+00:14 +0 -2: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: ribbon style history preserves native fill font and style provenance on undo
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart: ribbon style history targets its owning worksheet after navigation
+Host coverage collection failed: Flutter test failed with exit code 1; no receipt issued
