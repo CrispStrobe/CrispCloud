@@ -21,3 +21,7 @@ packages/crisp_storage/NOTICE-LIBSMB2.txt text eol=lf
 
 # Pinned document runtimes, grants and MPL source archives are hashed as bytes.
 packages/file_viewer_documents/** -text -whitespace
+
+# Catalogue provenance hashes identify exact upstream bytes on every host.
+packages/crisp_catalog/** text eol=lf
+cli/test/fixtures/catalog/*.caf binary

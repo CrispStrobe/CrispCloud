@@ -14,3 +14,7 @@ Pinned Flutter 3.47.8 / Dart 3.13.7, macOS arm64 host. This records focused acce
 The Nextcloud follow-up independently rechecked Nextcloud 33.0.11: native DAV 207; approved-origin preflight 204; unauthenticated DAV 401; unapproved origin lacks an allow-origin header. Real headless Chrome completed PROPFIND/PUT/GET/DELETE with identical content and no network/CORS errors. Generated test users were removed afterward. Issue #96 now has a concise explanation and the exact-origin proxy configuration link. Its reporter's redacted server remains unverified.
 
 Scope limits: SQLite remains the working catalogue; CAF is optional dated interchange with explicit coverage/encoding limits. Global GUI search intentionally bounds previews. Web catalogue execution and public Rust crate publication remain pending. New feature branches published during qualification require their own integration; this record does not claim they were merged.
+
+The preceding native CLI CI passed on macOS and Linux; Windows exposed checkout newline conversion in the provenance guard. Catalogue source now explicitly uses LF through `.gitattributes`; the digest verifier remains byte-exact.
+
+The universal macOS application built successfully at `f6ea214b` (235.1 MB). Local signing and launch are recorded separately from compilation.
