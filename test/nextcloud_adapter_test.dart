@@ -320,6 +320,29 @@ void main() {
   });
 
   group('NextcloudClientAdapter - delta sync with DeltaSyncService', () {
+    const fixtureBlockSize = 64 * 1024;
+
+    BlockMap fixtureMap(List<int> fillBytes) {
+      final service = DeltaSyncService();
+      return BlockMap(
+        filePath: '/test.bin',
+        totalSize: fillBytes.length * fixtureBlockSize,
+        blockSize: fixtureBlockSize,
+        blockCount: fillBytes.length,
+        signatures: List.generate(fillBytes.length, (index) {
+          final bytes = List<int>.filled(fixtureBlockSize, fillBytes[index]);
+          return BlockSignature(
+            blockIndex: index,
+            offset: index * fixtureBlockSize,
+            size: fixtureBlockSize,
+            weakHash: service.adler32(bytes),
+            strongHash: service.sha256Hex(bytes),
+          );
+        }),
+        createdAt: DateTime.utc(2026, 6, 8),
+      );
+    }
+
     test('DeltaSyncService block map round-trip matches Nextcloud format', () {
       // Verify the BlockMap JSON format matches what the server app returns
       final blockMap = BlockMap(
@@ -368,90 +391,21 @@ void main() {
 
     test('DeltaResult correctly identifies changed blocks', () {
       final svc = DeltaSyncService();
-
-      final localMap = BlockMap(
-        filePath: '/test.bin',
-        totalSize: 8388608,
-        blockSize: 4194304,
-        blockCount: 2,
-        signatures: [
-          const BlockSignature(
-            blockIndex: 0,
-            offset: 0,
-            size: 4194304,
-            weakHash: 0xAAAA,
-            strongHash: 'aaaa',
-          ),
-          const BlockSignature(
-            blockIndex: 1,
-            offset: 4194304,
-            size: 4194304,
-            weakHash: 0xBBBB,
-            strongHash: 'changed_hash',
-          ),
-        ],
-        createdAt: DateTime.utc(2026, 6, 8),
-      );
-
-      final remoteMap = BlockMap(
-        filePath: '/test.bin',
-        totalSize: 8388608,
-        blockSize: 4194304,
-        blockCount: 2,
-        signatures: [
-          const BlockSignature(
-            blockIndex: 0,
-            offset: 0,
-            size: 4194304,
-            weakHash: 0xAAAA,
-            strongHash: 'aaaa',
-          ),
-          const BlockSignature(
-            blockIndex: 1,
-            offset: 4194304,
-            size: 4194304,
-            weakHash: 0xCCCC,
-            strongHash: 'original_hash',
-          ),
-        ],
-        createdAt: DateTime.utc(2026, 6, 7),
-      );
+      final localMap = fixtureMap([0x11, 0x22]);
+      final remoteMap = fixtureMap([0x11, 0x33]);
 
       final delta = svc.compareBlockMaps(localMap, remoteMap);
       expect(delta.changedBlocks, equals([1]));
       expect(delta.unchangedBlocks, equals(1));
-      expect(delta.changedBytes, equals(4194304));
+      expect(delta.changedBytes, equals(fixtureBlockSize));
       expect(delta.savingsPercent, closeTo(50.0, 0.1));
     });
 
     test('BlockTransferPlan skips unchanged blocks', () {
       final svc = DeltaSyncService();
-      const delta = DeltaResult(
-        filePath: '/test.bin',
-        totalBlocks: 3,
-        changedBlocks: [1],
-        unchangedBlocks: 2,
-        totalBytes: 12582912,
-        changedBytes: 4194304,
-      );
-
-      final localMap = BlockMap(
-        filePath: '/test.bin',
-        totalSize: 12582912,
-        blockSize: 4194304,
-        blockCount: 3,
-        signatures: List.generate(
-          3,
-          (i) => BlockSignature(
-            blockIndex: i,
-            offset: i * 4194304,
-            size: 4194304,
-            weakHash: i,
-            strongHash: 'hash$i',
-          ),
-        ),
-        createdAt: DateTime.utc(2026, 6, 8),
-      );
+      final localMap = fixtureMap([0x11, 0x22, 0x33]);
+      final remoteMap = fixtureMap([0x11, 0x44, 0x33]);
+      final delta = svc.compareBlockMaps(localMap, remoteMap);
 
       final plan = svc.createTransferPlan(
         delta,
@@ -462,7 +416,7 @@ void main() {
       expect(plan.operations[0].type, equals(BlockOperationType.skip));
       expect(plan.operations[1].type, equals(BlockOperationType.upload));
       expect(plan.operations[2].type, equals(BlockOperationType.skip));
-      expect(plan.transferSize, equals(4194304));
+      expect(plan.transferSize, equals(fixtureBlockSize));
       expect(plan.savingsPercent, closeTo(66.7, 0.1));
     });
   });

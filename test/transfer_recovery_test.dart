@@ -805,6 +805,94 @@ void main() {
     },
   );
 
+  for (final mode in TransferRecoveryMode.values) {
+    test(
+      'verified-block $mode recovery becomes streaming and preserves review options',
+      () async {
+        final source = _MemoryBackend('a')..file('/a', 'abcdefghij');
+        final target = _MemoryBackend('b')
+          ..file('/target/.crisp-transfer-saved', 'abc');
+        final normal = await plan(source, target);
+        final options = FileOperationOptions(
+          copyMethod: FileCopyMethod.verifiedDelta,
+          fileConflict: FileConflictPolicy.replace,
+          verifyContents: true,
+          preserveModified: true,
+          preservePermissions: true,
+          preserveOwnership: true,
+          preserveExtendedAttributes: true,
+          preserveAcl: true,
+          preserveWindowsAttributes: true,
+          stopOnError: false,
+          clientBytesPerSecond: 512,
+          destinationMask: '[N].[E]',
+          duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+          minimumSize: 1,
+          maximumSize: 1024,
+          modifiedBefore: DateTime.utc(2027),
+        );
+        final savedPlan = FileOperationPlan(
+          source: source,
+          destination: target,
+          targetDirectory: normal.targetDirectory,
+          options: options,
+          entries: normal.entries,
+          errors: const [],
+        );
+        savedPlan.entries.single.recovery = {
+          'stagedPath': '/target/.crisp-transfer-saved',
+        };
+        final journal = TransferJournal(MemoryTransferJournalStorage());
+        await journal.create('verified-block', savedPlan);
+        final preview = await const TransferRecoveryService().prepare(
+          journal.job('verified-block')!,
+          source: source,
+          destination: target,
+          control: FileOperationControl(),
+          mode: mode,
+        );
+        expect(preview.issues, isEmpty);
+        expect(preview.plan.options.toJson(), {
+          ...options.toJson(),
+          'copyMethod': FileCopyMethod.stream.name,
+          if (mode == TransferRecoveryMode.restartIncomplete)
+            'fileConflict': FileConflictPolicy.ask.name,
+        });
+        expect(
+          preview.actions[0],
+          contains('Recovery uses ordinary streaming'),
+        );
+        expect(preview.actions[0], contains('block reuse is not restored'));
+        if (mode == TransferRecoveryMode.retryRemaining) {
+          expect(preview.actions[0], contains('3 verified staged bytes'));
+          expect(
+            preview.plan.entries.single.recovery!['resumeStagePath'],
+            '/target/.crisp-transfer-saved',
+          );
+        } else {
+          expect(
+            preview.plan.entries.single.recovery!['resumeStagePath'],
+            isNull,
+          );
+        }
+        expect(
+          preview.plan.entries.single.recovery!['stagedPath'],
+          '/target/.crisp-transfer-saved',
+        );
+        expect(preview.excluding({}).options.copyMethod, FileCopyMethod.stream);
+        expect(
+          journal.job('verified-block')!.options.copyMethod,
+          FileCopyMethod.verifiedDelta,
+        );
+        expect(target.writes, 0);
+        expect(
+          target.bytes['/target/.crisp-transfer-saved'],
+          utf8.encode('abc'),
+        );
+      },
+    );
+  }
+
   test('background conflicts persist waiting state instead of successful completion', () async {
     final source = _MemoryBackend('a')..file('/a', 'new');
     final target = _MemoryBackend('b')..file('/target/a', 'old');

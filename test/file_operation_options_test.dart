@@ -68,6 +68,72 @@ void main() {
       options.toJson(),
     );
   });
+  test('verified S3 block reuse is an explicit serializable copy method', () {
+    final options = FileOperationOptions(
+      copyMethod: FileCopyMethod.verifiedDelta,
+      fileConflict: FileConflictPolicy.replace,
+      destinationName: 'updated.bin',
+      destinationMask: '[N].[E]',
+      duplicateNameTemplate: '{name}_copy-{counter:000}{ext}',
+      preserveModified: true,
+      preservePermissions: true,
+      preserveOwnership: true,
+      preserveExtendedAttributes: true,
+      preserveAcl: true,
+      preserveWindowsAttributes: true,
+      verifyContents: true,
+      stopOnError: false,
+      includeHidden: false,
+      clientBytesPerSecond: 512,
+      minimumSize: 1,
+      maximumSize: 1024,
+      modifiedBefore: DateTime.utc(2027),
+    );
+    final restored = FileOperationOptions.fromJson(options.toJson());
+    expect(restored.toJson(), options.toJson());
+    expect(restored.copyMethod, FileCopyMethod.verifiedDelta);
+    expect(const FileOperationOptions().copyMethod, FileCopyMethod.automatic);
+  });
+
+  for (final example in const [
+    (
+      'move',
+      FileOperationOptions(
+        copyMethod: FileCopyMethod.verifiedDelta,
+        kind: FileOperationKind.move,
+      ),
+    ),
+    (
+      'append',
+      FileOperationOptions(
+        copyMethod: FileCopyMethod.verifiedDelta,
+        fileConflict: FileConflictPolicy.append,
+      ),
+    ),
+    (
+      'partial resume',
+      FileOperationOptions(
+        copyMethod: FileCopyMethod.verifiedDelta,
+        fileConflict: FileConflictPolicy.resumeVerified,
+      ),
+    ),
+    (
+      'disk preallocation',
+      FileOperationOptions(
+        copyMethod: FileCopyMethod.verifiedDelta,
+        preallocate: true,
+      ),
+    ),
+  ]) {
+    test('verified block reuse rejects ${example.$1}', () {
+      final invalid = example.$2;
+      expect(invalid.validateTransferSettings, throwsFormatException);
+      expect(
+        () => FileOperationOptions.fromJson(invalid.toJson()),
+        throwsFormatException,
+      );
+    });
+  }
   test(
     'profiles save defaults without previous paths or exact target names',
     () async {

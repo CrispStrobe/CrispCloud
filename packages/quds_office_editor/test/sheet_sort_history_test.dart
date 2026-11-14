@@ -101,6 +101,42 @@ void main() {
     expect(target.cellA1('B2').value, 'Changed label');
   });
 
+  test('sort composes with formatting and grid history after navigation', () {
+    final controller = _controller();
+    final owner = controller.sheet;
+    final originalCell = owner.cellA1('A2');
+    owner.row(7); // Preserve imported empty rows across every snapshot restore.
+    controller.sortSelection();
+    _select(controller, 'A2', 'A2');
+    controller.setSelectionFontBold(true);
+    controller.deleteSheetRows(index: 1);
+    controller.setActiveSheet(1);
+    final neighbor = controller.sheet;
+
+    controller.undo(); // Restore the removed sorted, formatted row.
+    expect(_values(owner), ['Header', 1, 2]);
+    expect(owner.cellA1('A2'), same(originalCell));
+    expect(owner.cellA1('A2').fontBold, isTrue);
+    expect(owner.rows[7]?.cells, isEmpty);
+    controller.undo(); // Formatting restores its original owning cells.
+    expect(owner.cellA1('A2').fontBold, isFalse);
+    expect(owner.cellA1('A2'), same(originalCell));
+    controller.undo(); // Sorting restores the original order.
+    expect(_values(owner), ['Header', 2, 1]);
+    expect(owner.cellA1('A2'), same(originalCell));
+    expect(owner.rows[7]?.cells, isEmpty);
+
+    controller.redo();
+    controller.redo();
+    expect(_values(owner), ['Header', 1, 2]);
+    expect(owner.cellA1('A2').fontBold, isTrue);
+    expect(owner.cellA1('A2'), same(originalCell));
+    expect(owner.rows[7]?.cells, isEmpty);
+    expect(controller.sheet, same(neighbor));
+    expect(neighbor.allCells.map((cell) => cell.value), ['Unchanged']);
+    expect(controller.contentRevision, 8);
+  });
+
   test('a pending cell edit is committed before its sort history entry', () {
     final controller = _controller();
     controller.selection.selectCell(const SmlCellRef(0, 1));

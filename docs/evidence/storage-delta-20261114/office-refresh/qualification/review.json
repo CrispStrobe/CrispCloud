@@ -1,0 +1,301 @@
+{
+  "source_commit": "b98cd70e6dae21ba486a0704e7946cf35ab6575a",
+  "source_tree": "11329c5e82aa1f86afd48ab0ec366de2bb73a3b1",
+  "tests": {
+    "errors": 0,
+    "failed": 0,
+    "other_results": 0,
+    "passed": 60,
+    "skipped": 0,
+    "tests": 60
+  },
+  "suite_count": 6,
+  "input_count": 8384,
+  "inputs_unchanged": true,
+  "head_tree_status_stable": true,
+  "run_started_at": "2026-11-14T21:03:54.837309+00:00",
+  "run_finished_at": "2026-11-14T21:05:19.548839+00:00",
+  "host_outputs": [
+    {
+      "path": "build/fidelity-host/back-save-later-revision.docx",
+      "sha256": "627df9bbd3cbf7a23cc3c600e6fc9320c2a7a1815f182cfb38f7fdb5879c1436",
+      "size": 8267,
+      "mtime_utc": "2026-11-14T21:04:42.948586+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/back-save.docx",
+      "sha256": "55970c71d6ae0a23e2fef99be8b894733ab0b41d8d732b831b0d5d0ea7f934aa",
+      "size": 8262,
+      "mtime_utc": "2026-11-14T21:04:41.156607+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-sheet-1.xlsx",
+      "sha256": "c136c6eeb420bc472f4b772bccabcda6921f0df8bfdc5fa4e666db64bbf41d32",
+      "size": 20096,
+      "mtime_utc": "2026-11-14T21:05:06.972309+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-sheet-2.xlsx",
+      "sha256": "3923299c2558d9523f0c70eae7eccf2166eb685f57e306016b8029ad017d7759",
+      "size": 20096,
+      "mtime_utc": "2026-11-14T21:05:07.556302+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-sheet-3.xlsx",
+      "sha256": "d57d43ab3dba46b6fb76585d550674a7f78a5b0557d4d0c02fea016c3ce5adeb",
+      "size": 20096,
+      "mtime_utc": "2026-11-14T21:05:08.052296+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-slide-1.pptx",
+      "sha256": "fd6cba266be8a733b9aa780b5d6c250c6e5034469feb0c55184fecabe555b82c",
+      "size": 37358,
+      "mtime_utc": "2026-11-14T21:05:08.880286+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-slide-2.pptx",
+      "sha256": "02a4b6dfcccf7cb850c7dd5ff33bd3067f9ab0a74f84fdf11988fdb9f9fffe8a",
+      "size": 37358,
+      "mtime_utc": "2026-11-14T21:05:09.176283+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-slide-3.pptx",
+      "sha256": "b10dd3bcd5aafdb307e1de9bfcc84b7af67ad97173c1ffbb52ec5a353b03f765",
+      "size": 37357,
+      "mtime_utc": "2026-11-14T21:05:09.692277+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-word-1.docx",
+      "sha256": "aa34b11a685a019881a3ba70a1807c554c76e08928a4ad68db832cc7e7caef45",
+      "size": 4799,
+      "mtime_utc": "2026-11-14T21:05:04.896333+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-word-2.docx",
+      "sha256": "c7118c56007ed56e31d00137be95604dd5969013cb0abfb37de4d7f212eaae55",
+      "size": 4833,
+      "mtime_utc": "2026-11-14T21:05:05.368327+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/native-word-3.docx",
+      "sha256": "00cfed42f81bf3f7fcee6e0911ad6773a45d72bdc42d0b19161d82e13283d35d",
+      "size": 4832,
+      "mtime_utc": "2026-11-14T21:05:05.832322+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/protection-after-late-change.docx",
+      "sha256": "6da0f06c53259a6b43afc3878a2787bbc5e481a9076edca9eac86bf35c9b8486",
+      "size": 8605,
+      "mtime_utc": "2026-11-14T21:04:47.452535+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/protection-before-late-change.docx",
+      "sha256": "167394e65ec9801c579e2493b8c2f2e5012650adaf92a8f54c98b7399e6469cf",
+      "size": 8261,
+      "mtime_utc": "2026-11-14T21:04:47.308536+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/protection-undo-save.docx",
+      "sha256": "6eccd4337fab5e5894c4860031f1ccef98fdcc0b2aa5d7245546b8c90d2f1d6b",
+      "size": 8261,
+      "mtime_utc": "2026-11-14T21:04:47.656532+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-cancel-retry.docx",
+      "sha256": "42f85c415b1e7a0e5f9f746985768f4f7768d2c886b8b377640f6255e6ad8cd8",
+      "size": 8263,
+      "mtime_utc": "2026-11-14T21:04:44.148572+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-disconnected-copy.docx",
+      "sha256": "6b078449b7b08ce6d5f254a2bf181c2f688c4ebb0aced60785718f086d4b8a4d",
+      "size": 8268,
+      "mtime_utc": "2026-11-14T21:04:43.472580+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-error-retry.docx",
+      "sha256": "c15aac82540254a9dca7ba31ce331564c6c9b10a2beec4f01ec20c0104dfe4c1",
+      "size": 8262,
+      "mtime_utc": "2026-11-14T21:04:44.608567+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-pending-cell.xlsx",
+      "sha256": "b07c87f1da7b2daf580fab5a55fa73060e22c41e880fa13deb7e75a5837befb3",
+      "size": 15065,
+      "mtime_utc": "2026-11-14T21:04:45.904552+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-pending-slide.pptx",
+      "sha256": "c4bdb821ac42692823180b1cfdce6e13fee25bc008a6c3599bc93818a6dec8e9",
+      "size": 55572,
+      "mtime_utc": "2026-11-14T21:04:46.224549+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-picker-copy.docx",
+      "sha256": "327ccf19cdd863621e9ded3094aefc816f487b354845eab42e5da249d6d688dd",
+      "size": 8262,
+      "mtime_utc": "2026-11-14T21:04:45.272559+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/recovery-picker-later-save.docx",
+      "sha256": "d3deb86a610ab14ee6a538625e2d83aeb0f6a94c4c6695ed286f44a11c805e2e",
+      "size": 8272,
+      "mtime_utc": "2026-11-14T21:04:45.272559+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/reference/native-sheet-expected.xlsx",
+      "sha256": "5acb9d1a879577a309cf42beb08b2e5a663af36eacbf8c33d8bdeeff0a6b16d3",
+      "size": 5418,
+      "mtime_utc": "2026-11-14T21:05:05.876321+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/reference/native-slide-expected.pptx",
+      "sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1",
+      "size": 33115,
+      "mtime_utc": "2026-11-14T21:05:08.140295+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/reference/native-word-expected.docx",
+      "sha256": "d95d0e28e2783ef4b1055fc0f63fd2000cf853365c7431f5d3107622228c6fc3",
+      "size": 1669,
+      "mtime_utc": "2026-11-14T21:05:03.168352+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/tracking-enabled-save.docx",
+      "sha256": "6eb6f425b75a5ae17152b29d7fa2e6520394e83d9577844840b6072c9f990737",
+      "size": 8566,
+      "mtime_utc": "2026-11-14T21:04:48.032528+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/tracking-redo-save.docx",
+      "sha256": "f41f0d90b5d879ff2db8a792ff127564ecb2e9a5b8cab4d2caa9a4aba107a8b2",
+      "size": 8566,
+      "mtime_utc": "2026-11-14T21:04:48.316525+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/tracking-undo-save.docx",
+      "sha256": "5db5d593f0c7d176581c4246a22d1508ed47ac587b63aa9c62ec9cb39458992a",
+      "size": 8248,
+      "mtime_utc": "2026-11-14T21:04:48.168526+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/word-docm-save.docm",
+      "sha256": "a1fab64eb902b1968fb2af8dc2caa343fdae21f288f94354a1f24f9d3b36e572",
+      "size": 5992,
+      "mtime_utc": "2026-11-14T21:05:13.684230+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/word-dotm-save.dotm",
+      "sha256": "ca1ae6c74160197dc4af6eb1b3bc2b64288f3ecfe3ea3316d08d307d01ded2ae",
+      "size": 5999,
+      "mtime_utc": "2026-11-14T21:05:14.380222+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/fidelity-host/word-dotx-save.dotx",
+      "sha256": "cf718c60ba2dc21f87ddc34d261bceda19160f192599556d3826378f9ff8dc85",
+      "size": 5119,
+      "mtime_utc": "2026-11-14T21:05:15.036214+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-fill-host-acceptance/saved-1.xlsx",
+      "sha256": "b1dbf4a91ae1e0179facda954f84497533f608a7bc45fe3b7ee0239bb1cb7cac",
+      "size": 21674,
+      "mtime_utc": "2026-11-14T21:04:53.080469+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-fill-host-acceptance/saved-2.xlsx",
+      "sha256": "bd9b0f524f6b94f1d06f5d1d137614daaf93c0ae15c26e157543a1e8705ebf4f",
+      "size": 21674,
+      "mtime_utc": "2026-11-14T21:04:53.816461+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-fill-host-acceptance/saved-3.xlsx",
+      "sha256": "6bfd211441ad445466b89f1dee7f2cea672e108b3c86837ca4cfafd9b1600175",
+      "size": 21673,
+      "mtime_utc": "2026-11-14T21:04:54.516453+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-fill-host-acceptance/source.xlsx",
+      "sha256": "c1b000265a887a4fe86adc910276322842a26eef0374e2eff23826d57a7a8989",
+      "size": 4839,
+      "mtime_utc": "2026-11-14T21:04:50.296502+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-applied.xlsx",
+      "sha256": "c39d72270865a5609037167209da28aa4c07e9f6bac892901359a57f5cc17f03",
+      "size": 22049,
+      "mtime_utc": "2026-11-14T21:04:55.936436+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-redo.xlsx",
+      "sha256": "bfd44a203c3058a6ab95b6468200f1b20e085e377954bf172b174cc5086deda8",
+      "size": 37545,
+      "mtime_utc": "2026-11-14T21:04:59.680393+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-undo.xlsx",
+      "sha256": "de945062e8e77d9b9c229e5a49f96d966220dfa0efe61db94e00313ba8a05fe4",
+      "size": 37467,
+      "mtime_utc": "2026-11-14T21:04:57.852414+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-style-history-acceptance/native-redo.xlsx",
+      "sha256": "710bef629467b4f21797dabdd839ec19f50219adcf7e96e1372db61350521da2",
+      "size": 22048,
+      "mtime_utc": "2026-11-14T21:05:03.028354+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-style-history-acceptance/native-undo.xlsx",
+      "sha256": "5dc7132c409f534cdfa9b4d1d515382c060a03ac7d9520475b95df78ab2ffaa2",
+      "size": 21975,
+      "mtime_utc": "2026-11-14T21:05:01.740369+00:00",
+      "zip_crc_and_xml_well_formed": true
+    },
+    {
+      "path": "build/office-style-history-acceptance/source.xlsx",
+      "sha256": "be511df14ed5a2793b760acdebe4e4ac74cd57913877f8356265281d7a0f1251",
+      "size": 5333,
+      "mtime_utc": "2026-11-14T21:04:54.632451+00:00",
+      "zip_crc_and_xml_well_formed": true
+    }
+  ],
+  "scope": "Fresh host outputs only; ZIP CRC and XML well-formedness are not external schema or rendering acceptance."
+}

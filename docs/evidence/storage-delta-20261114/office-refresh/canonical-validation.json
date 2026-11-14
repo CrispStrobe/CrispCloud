@@ -1,0 +1,11 @@
+{
+  "qualified_source": "a379ecc455890032906098b6cf58e17504581ed0",
+  "evidence_commit": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+  "url": "https://github.com/CrispStrobe/quds_office_suite/tree/579f2105cf7fca61536f7e3f9b59004929bdb6c5/docs/evidence/crispcloud-storage-reconcile-20261114/word-followup",
+  "word_tests_passed": 117,
+  "editor_tests_passed": 115,
+  "failed": 0,
+  "skipped": 0,
+  "unchanged_inputs": 2955,
+  "strict_analysis": "passed"
+}

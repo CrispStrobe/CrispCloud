@@ -1,7 +1,6 @@
 // test/pcloud_adapter_test.dart
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -282,18 +281,11 @@ void main() {
       expect(result, isNull);
     });
 
-    test('deltaUpload throws when enabled but not authenticated', () async {
+    test('deltaUpload declines before authentication even when enabled', () async {
       adapter.deltaSyncEnabled = true;
-      // Auth check runs before file size check
       expect(
-        () => adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('authenticate'),
-          ),
-        ),
+        await adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
+        isNull,
       );
     });
 
@@ -514,7 +506,7 @@ void main() {
     );
 
     test(
-      'applyDelta upload reads correct block data for pwrite simulation',
+      'applyDelta upload refuses raw pwrite callbacks before mutation',
       () async {
         final dir = await Directory.systemTemp.createTemp(
           'pcloud_delta_apply_',
@@ -547,19 +539,23 @@ void main() {
             modMap,
           );
 
-          // Simulate pwrite: capture the block data that would be written
-          final writtenBlocks = <int, Uint8List>{};
-          await deltaSvc.applyDelta(
-            plan,
-            mod.path,
-            remoteWriteBlock: (blockIndex, offset, data) async {
-              writtenBlocks[blockIndex] = Uint8List.fromList(data);
-            },
+          final originalBytes = await orig.readAsBytes();
+          final modifiedBytes = await mod.readAsBytes();
+          var writes = 0;
+          await expectLater(
+            deltaSvc.applyDelta(
+              plan,
+              mod.path,
+              remoteWriteBlock: (_, _, _) async {
+                writes++;
+              },
+            ),
+            throwsUnsupportedError,
           );
 
-          expect(writtenBlocks.keys, equals({1}));
-          expect(writtenBlocks[1]!.length, equals(bs));
-          expect(writtenBlocks[1]!.every((b) => b == 0xFF), isTrue);
+          expect(writes, 0);
+          expect(await orig.readAsBytes(), originalBytes);
+          expect(await mod.readAsBytes(), modifiedBytes);
         } finally {
           await dir.delete(recursive: true);
         }
@@ -578,7 +574,7 @@ void main() {
       expect(path1, endsWith('.json'));
     });
 
-    test('deltaUpload with cache dir saves and loads block map', () async {
+    test('block map cache saves and loads informational signatures', () async {
       final dir = await Directory.systemTemp.createTemp('pcloud_delta_cache_');
       try {
         final file = File('${dir.path}/test.bin');

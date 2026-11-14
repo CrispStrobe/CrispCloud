@@ -1,0 +1,24 @@
+{
+  "from": "0f935a6f24ae11aa9851a5cc3498808554194446",
+  "to": "a38c7659c7485f096e5a3f6bd52d2d9482aa3265",
+  "write": [
+    "packages/quds_office_editor/lib/src/embed/office_controller.dart",
+    "packages/quds_office_engine/lib/src/opc/content_types.dart",
+    "packages/quds_office_engine/lib/src/opc/office_isolate_save.dart",
+    "packages/quds_office_engine/lib/src/sheet/serial/sheet_serial.dart",
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-explicit-expected.xlsx",
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xlsx",
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-unrelated-expected.xlsx",
+    "packages/quds_office_engine/test/sheet_comments_schema_test.dart",
+    "packages/quds_office_engine/test/sheet_fill_fidelity_test.dart",
+    "packages/quds_office_engine/test/sheet_save_cache_and_freeze_test.dart",
+    "packages/quds_office_engine/tool/fidelity/check.sh",
+    "packages/quds_office_engine/tool/fidelity/make_sheet_fill_fixture.py",
+    "packages/quds_office_engine/tool/fidelity/output_manifest.json",
+    "tool/office-validation/render.py",
+    "tool/office-validation/test_render.py"
+  ],
+  "delete": [],
+  "pinned_files": 2185,
+  "applied": true
+}

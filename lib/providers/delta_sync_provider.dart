@@ -6,9 +6,8 @@
 //   deltaSyncServiceProvider  — singleton DeltaSyncService
 //   deltaBlockSizeProvider    — configurable block size (persisted via
 //                               SharedPreferences, default 4 MB)
-//   deltaSyncEnabledProvider  — toggle: whether to use delta sync at all
-//                               (default: true — applied automatically to
-//                               files larger than the 10 MB threshold)
+//   deltaSyncEnabledProvider  — retained experimental preference; no automatic
+//                               queue activation is wired to this value
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,12 +18,12 @@ import '../services/delta_sync_service.dart';
 // Constants
 // ---------------------------------------------------------------------------
 
-const int _kDefaultBlockSize  = 4 * 1024 * 1024; // 4 MB
-const int _kMinBlockSize      = 64 * 1024;         // 64 KB
-const int _kMaxBlockSize      = 64 * 1024 * 1024; // 64 MB
+const int _kDefaultBlockSize = 4 * 1024 * 1024; // 4 MB
+const int _kMinBlockSize = 64 * 1024; // 64 KB
+const int _kMaxBlockSize = 64 * 1024 * 1024; // 64 MB
 
-const String _kBlockSizeKey   = 'delta_sync_block_size';
-const String _kEnabledKey     = 'delta_sync_enabled';
+const String _kBlockSizeKey = 'delta_sync_block_size';
+const String _kEnabledKey = 'delta_sync_enabled';
 
 // ---------------------------------------------------------------------------
 // Singleton service
@@ -73,8 +72,7 @@ class _BlockSizeNotifier extends StateNotifier<int> {
 ///
 /// Default: 4 MB.  Persisted via SharedPreferences across app restarts.
 /// Valid range: 64 KB – 64 MB.
-final deltaBlockSizeProvider =
-    StateNotifierProvider<_BlockSizeNotifier, int>(
+final deltaBlockSizeProvider = StateNotifierProvider<_BlockSizeNotifier, int>(
   (_) => _BlockSizeNotifier(),
 );
 
@@ -92,7 +90,7 @@ class _DeltaSyncEnabledNotifier extends StateNotifier<bool> {
     state = prefs.getBool(_kEnabledKey) ?? true;
   }
 
-  /// Enable or disable delta sync globally.
+  /// Retain the experimental preference; this does not enable queue execution.
   Future<void> setEnabled(bool value) async {
     state = value;
     final prefs = await SharedPreferences.getInstance();
@@ -102,11 +100,11 @@ class _DeltaSyncEnabledNotifier extends StateNotifier<bool> {
   Future<void> toggle() => setEnabled(!state);
 }
 
-/// Whether delta sync is globally enabled.
+/// Persisted experimental preference, retained for migration compatibility.
 ///
-/// When true, files larger than 10 MB are synced using block-level deltas
-/// instead of full re-uploads.  Persisted via SharedPreferences.
+/// Automatic delta queue execution is unavailable; the Settings control is
+/// disabled. Qualified adapter APIs require separate explicit admission.
 final deltaSyncEnabledProvider =
     StateNotifierProvider<_DeltaSyncEnabledNotifier, bool>(
-  (_) => _DeltaSyncEnabledNotifier(),
-);
+      (_) => _DeltaSyncEnabledNotifier(),
+    );

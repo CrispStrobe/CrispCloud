@@ -1,0 +1,4 @@
+{
+  "qualified": false,
+  "reason": "Pilot worktree changed during execution; six old test-contract failures were corrected before the frozen run. Raw output retained without acceptance claim."
+}

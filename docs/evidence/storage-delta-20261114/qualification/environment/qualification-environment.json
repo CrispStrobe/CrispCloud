@@ -1,0 +1,11 @@
+{
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14",
+  "source_commit": "331981649872e363253aef13f57a638e5747b8e5",
+  "source_tree": "6ec8e483ff2c597c145dfcff4e3f75331ad9faae",
+  "pubspec_sha256": "29b957d0e7e797aa098eafff9ff2d084422ffd8bd13f439db19a159331ae0b53",
+  "lock_sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+  "no_dependency_overrides": true,
+  "native_hooks_enabled": true,
+  "note": "Historical setup predates the upstream license-asset-only pubspec change; current manifests above are those of the qualified integrated source."
+}

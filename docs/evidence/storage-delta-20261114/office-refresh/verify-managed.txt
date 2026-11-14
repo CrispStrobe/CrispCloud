@@ -1,0 +1,2 @@
+Verified 2187 Office files; Quds source a379ecc455890032906098b6cf58e17504581ed0.
+Standalone source packages/legacy_doc_parser: CrispStrobe/legacy-doc-parser at 544a50e7f8ad095a618b6206ccece7e0cb335f4b.

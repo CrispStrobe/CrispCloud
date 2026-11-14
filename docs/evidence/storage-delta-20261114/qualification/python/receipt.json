@@ -1,0 +1,219 @@
+{
+  "scope": "Four requested Python reconciliation gates only; native Flutter qualification is separate.",
+  "started_at": "2026-11-14T20:45:52.051309+00:00",
+  "finished_at": "2026-11-14T20:46:19.553339+00:00",
+  "python_version": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "python_executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+  "wrapper_path": "/workspace/scratch/209f165653d7/toolchain/run",
+  "wrapper_sha256": "abe07326d8ea0c52cf010d6068b2b28a9a3a35068b272d5e49f77c5ece48fb33",
+  "tmpdir": "/workspace/scratch/209f165653d7/toolchain/tmp",
+  "git_before": {
+    "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+    "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+    "status_porcelain": ""
+  },
+  "git_after": {
+    "head": "b4d961fd51412037dfd163aa7c28f99dc73fd87c",
+    "tree": "6ec8e483ff2c597c145dfcff4e3f75331ad9faae",
+    "status_porcelain": ""
+  },
+  "git_state_unchanged": false,
+  "quds_git_before": {
+    "head": "1c7b0c121ed476090def463d9bc59f5c8a3462b7",
+    "tree": "d3641ffee204f61ebda2d5ba6af7fe1b19445c0e",
+    "status_porcelain": ""
+  },
+  "quds_git_after": {
+    "head": "1c7b0c121ed476090def463d9bc59f5c8a3462b7",
+    "tree": "d3641ffee204f61ebda2d5ba6af7fe1b19445c0e",
+    "status_porcelain": ""
+  },
+  "quds_git_state_unchanged": true,
+  "input_hashes_before": {
+    "tool/verify_office_fidelity.py": "e6e2907c122b1e97d164b98f759243964de9b68804a191ab0af582a8bbb983ae",
+    "tool/sync_office_fidelity.py": "dcf6f70382e7762ddf1e83c95125dcd8b4c900850e0e1aac98e10dbe08f8beaa",
+    "tool/sync_legacy_doc_parser.py": "65f63f66fc285ca86c066cccc2d3a0fc1434c834948ccc9df425d1cfda72384a",
+    "tool/office_host_evidence.py": "4325ea8adc13eb7cbf087fe2b0ebe01eb6fc8168a3abc427c78a660d05c53401",
+    "tool/office_host_evidence.json": "aabbd75793f0468f5e0ba8a25bcfc5ab2944fb194fb515ab026e788fc848b6e0",
+    "tool/office_fidelity_manifest.json": "74d3d194c61b50df203b5806d8260a3ac4cb4e5d5da55f7ab0bd6ddf864c14ed",
+    "tool/test_sync_office_fidelity.py": "bf13365b5c9f4b4d6d5e0c89623cdefdeaf62b71d3c269114022ae1d5959fcac",
+    "tool/test_sync_legacy_doc_parser.py": "a48f047d971d11977853ce9e678dd743d837b5fb54202099557828471148fd60",
+    "tool/test_office_host_evidence.py": "393dbdbd130c20fe8ca9bd630f442f220480a399a56aaefba6949eba5d70642e"
+  },
+  "input_hashes_after": {
+    "tool/verify_office_fidelity.py": "e6e2907c122b1e97d164b98f759243964de9b68804a191ab0af582a8bbb983ae",
+    "tool/sync_office_fidelity.py": "dcf6f70382e7762ddf1e83c95125dcd8b4c900850e0e1aac98e10dbe08f8beaa",
+    "tool/sync_legacy_doc_parser.py": "65f63f66fc285ca86c066cccc2d3a0fc1434c834948ccc9df425d1cfda72384a",
+    "tool/office_host_evidence.py": "4325ea8adc13eb7cbf087fe2b0ebe01eb6fc8168a3abc427c78a660d05c53401",
+    "tool/office_host_evidence.json": "aabbd75793f0468f5e0ba8a25bcfc5ab2944fb194fb515ab026e788fc848b6e0",
+    "tool/office_fidelity_manifest.json": "74d3d194c61b50df203b5806d8260a3ac4cb4e5d5da55f7ab0bd6ddf864c14ed",
+    "tool/test_sync_office_fidelity.py": "bf13365b5c9f4b4d6d5e0c89623cdefdeaf62b71d3c269114022ae1d5959fcac",
+    "tool/test_sync_legacy_doc_parser.py": "a48f047d971d11977853ce9e678dd743d837b5fb54202099557828471148fd60",
+    "tool/test_office_host_evidence.py": "393dbdbd130c20fe8ca9bd630f442f220480a399a56aaefba6949eba5d70642e"
+  },
+  "input_hashes_unchanged": true,
+  "results": [
+    {
+      "gate": "verify-office-fidelity",
+      "command": [
+        "/workspace/scratch/209f165653d7/toolchain/run",
+        "python",
+        "tool/verify_office_fidelity.py",
+        "--source",
+        "../quds_office_suite"
+      ],
+      "cwd": "/workspace/scratch/209f165653d7/CrispCloud",
+      "environment_overrides": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "GIT_OPTIONAL_LOCKS": "0"
+      },
+      "started_at": "2026-11-14T20:45:52.108697+00:00",
+      "finished_at": "2026-11-14T20:45:53.545721+00:00",
+      "wall_seconds": 1.4369003120009438,
+      "exit_code": 0,
+      "log": "verify-office-fidelity.log",
+      "log_bytes": 203,
+      "log_sha256": "cf69a8a7e6153f7df159952217ce99cbfe5c4b241e270bafbcac0c15d430c3fc",
+      "unittest_count": null,
+      "unittest_reported_seconds": null,
+      "verified_office_files": 2185,
+      "verified_quds_pin": "cb42ef232e5794ac4c147ef1992133cf8710ab01",
+      "git_before": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_after": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_state_unchanged": true
+    },
+    {
+      "gate": "sync-office-fidelity",
+      "command": [
+        "/workspace/scratch/209f165653d7/toolchain/run",
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_sync_office_fidelity.py"
+      ],
+      "cwd": "/workspace/scratch/209f165653d7/CrispCloud",
+      "environment_overrides": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "GIT_OPTIONAL_LOCKS": "0"
+      },
+      "started_at": "2026-11-14T20:45:52.101215+00:00",
+      "finished_at": "2026-11-14T20:45:52.654771+00:00",
+      "wall_seconds": 0.5535287429993332,
+      "exit_code": 0,
+      "log": "sync-office-fidelity.log",
+      "log_bytes": 106,
+      "log_sha256": "2efed999d8b22fd8938403530ae0e2dcb7e28531432fa6cae59bce9e31562a85",
+      "unittest_count": 8,
+      "unittest_reported_seconds": 0.419,
+      "verified_office_files": null,
+      "verified_quds_pin": null,
+      "git_before": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_after": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_state_unchanged": true
+    },
+    {
+      "gate": "sync-legacy-doc-parser",
+      "command": [
+        "/workspace/scratch/209f165653d7/toolchain/run",
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_sync_legacy_doc_parser.py"
+      ],
+      "cwd": "/workspace/scratch/209f165653d7/CrispCloud",
+      "environment_overrides": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "GIT_OPTIONAL_LOCKS": "0"
+      },
+      "started_at": "2026-11-14T20:45:52.106830+00:00",
+      "finished_at": "2026-11-14T20:45:54.646915+00:00",
+      "wall_seconds": 2.540071605999401,
+      "exit_code": 0,
+      "log": "sync-legacy-doc-parser.log",
+      "log_bytes": 118,
+      "log_sha256": "77fee9f764b68eb802e0515efd1c8786dbd5a78e2d2a76a244365306cfa1f701",
+      "unittest_count": 19,
+      "unittest_reported_seconds": 2.354,
+      "verified_office_files": null,
+      "verified_quds_pin": null,
+      "git_before": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_after": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_state_unchanged": true
+    },
+    {
+      "gate": "office-host-evidence",
+      "command": [
+        "/workspace/scratch/209f165653d7/toolchain/run",
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tool",
+        "-p",
+        "test_office_host_evidence.py"
+      ],
+      "cwd": "/workspace/scratch/209f165653d7/CrispCloud",
+      "environment_overrides": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "GIT_OPTIONAL_LOCKS": "0"
+      },
+      "started_at": "2026-11-14T20:45:52.104700+00:00",
+      "finished_at": "2026-11-14T20:46:19.417790+00:00",
+      "wall_seconds": 27.313072130000364,
+      "exit_code": 0,
+      "log": "office-host-evidence.log",
+      "log_bytes": 123,
+      "log_sha256": "d0154340b7ec2b9a214e4cbca2b0bbd0d34866f192d8229d8b75e1aa952e7392",
+      "unittest_count": 23,
+      "unittest_reported_seconds": 27.124,
+      "verified_office_files": null,
+      "verified_quds_pin": null,
+      "git_before": {
+        "head": "9d4197f4cedc4279f3c7f1b83148c2a43bebc882",
+        "tree": "0072d0271ad8280c42e0772f73d2aa726dcdf170",
+        "status_porcelain": ""
+      },
+      "git_after": {
+        "head": "b4d961fd51412037dfd163aa7c28f99dc73fd87c",
+        "tree": "6ec8e483ff2c597c145dfcff4e3f75331ad9faae",
+        "status_porcelain": ""
+      },
+      "git_state_unchanged": false
+    }
+  ],
+  "all_exit_codes_zero": true,
+  "unit_tests_run": 50
+}

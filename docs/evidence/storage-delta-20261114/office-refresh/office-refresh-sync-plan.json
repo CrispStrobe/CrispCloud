@@ -1,0 +1,16 @@
+{
+  "from": "cb42ef232e5794ac4c147ef1992133cf8710ab01",
+  "to": "a379ecc455890032906098b6cf58e17504581ed0",
+  "write": [
+    "packages/quds_office_engine/lib/src/word/model/wml_document.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_bookmarks.dart",
+    "packages/quds_office_engine/lib/src/word/model/word_content_controls.dart",
+    "packages/quds_office_engine/lib/src/word/serial/word_deserializer.dart",
+    "packages/quds_office_engine/test/bookmark_fidelity_test.dart",
+    "packages/quds_office_engine/test/word_block_bookmark_import_test.dart",
+    "packages/quds_office_engine/test/word_import_tolerance_test.dart"
+  ],
+  "delete": [],
+  "pinned_files": 2187,
+  "applied": false
+}

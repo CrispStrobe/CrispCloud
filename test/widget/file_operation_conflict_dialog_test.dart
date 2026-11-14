@@ -100,6 +100,7 @@ void main() {
     String language = 'en',
     double width = 1000,
     double scale = 1,
+    FileCopyMethod copyMethod = FileCopyMethod.automatic,
   }) async {
     tester.view.physicalSize = Size(width, 1000);
     tester.view.devicePixelRatio = 1;
@@ -132,6 +133,7 @@ void main() {
                     existing: destination.file,
                     source: source,
                     destination: destination,
+                    copyMethod: copyMethod,
                     previewService: previews,
                   );
                 },
@@ -152,6 +154,40 @@ void main() {
     await tester.ensureVisible(find.text(text));
     await tester.tap(find.text(text));
     await tester.pumpAndSettle();
+  }
+
+  for (final method in [
+    FileCopyMethod.automatic,
+    FileCopyMethod.verifiedDelta,
+  ]) {
+    testWidgets('$method conflict decisions preserve the copy profile', (
+      tester,
+    ) async {
+      final review = await show(tester, copyMethod: method);
+      await tester.pumpAndSettle();
+      for (final label in [
+        'Resume after prefix check',
+        'Append to existing file',
+      ]) {
+        final button = tester.widget<TextButton>(
+          find.widgetWithText(TextButton, label),
+        );
+        expect(
+          button.onPressed != null,
+          method != FileCopyMethod.verifiedDelta,
+        );
+      }
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Replace file'),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      await press(tester, 'Replace file');
+      expect((await review.result).decision, FileConflictDecision.replace);
+    });
   }
 
   testWidgets(

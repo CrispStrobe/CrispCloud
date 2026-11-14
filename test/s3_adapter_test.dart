@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crisp_cloud/services/s3_client_adapter.dart';
 import 'package:crisp_cloud/services/s3_config_service.dart';
 import 'package:crisp_cloud/services/delta_sync_service.dart';
+import 'package:crisp_cloud/services/file_operation_backend.dart';
+import 'package:crisp_cloud/services/local_file_service.dart';
 import 'package:crisp_cloud/services/secure_storage_service.dart';
 
 void main() {
@@ -579,24 +581,37 @@ void main() {
       expect(result, isNull);
     });
 
-    test('deltaDownload throws when enabled but not authenticated', () async {
+    test('deltaDownload declines without a cache before authentication', () async {
       adapter.deltaSyncEnabled = true;
-      // Auth check fires before file existence check
       expect(
-        () => adapter.deltaDownload('/remote/file.bin', '/tmp/nonexistent.bin'),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(), 'message', contains('authenticate'),
-        )),
+        await adapter.deltaDownload('/remote/file.bin', '/tmp/nonexistent.bin'),
+        isNull,
       );
     });
 
-    test('deltaUpload throws when enabled but not authenticated', () async {
+    test('deltaDownload requires authentication when a cache is supplied', () async {
+      adapter.deltaSyncEnabled = true;
+      await expectLater(
+        adapter.deltaDownload(
+          '/remote/file.bin',
+          '/tmp/nonexistent.bin',
+          cacheDir: '/tmp/nonexistent-cache',
+        ),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('authenticate'),
+          ),
+        ),
+      );
+    });
+
+    test('deltaUpload declines before authentication even when enabled', () async {
       adapter.deltaSyncEnabled = true;
       expect(
-        () => adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
-        throwsA(isA<Exception>().having(
-          (e) => e.toString(), 'message', contains('authenticate'),
-        )),
+        await adapter.deltaUpload('/tmp/any.bin', '/remote/any.bin'),
+        isNull,
       );
     });
 
@@ -728,7 +743,7 @@ void main() {
       }
     });
 
-    test('applyDelta download simulates Range GET → local file patch', () async {
+    test('applyDelta download stages and verifies a complete range result', () async {
       final dir = await Directory.systemTemp.createTemp('s3_delta_apply_');
       try {
         // Simulate the remote file data on S3
@@ -764,6 +779,10 @@ void main() {
         await deltaSvc.applyDelta(
           plan,
           localFile.path,
+          destinationBackend: LocalOperationBackend(
+            LocalFileService(),
+            isCurrent: () => true,
+          ),
           remoteReadBlock: (blockIndex, offset, size) async {
             return remoteData.sublist(offset, offset + size);
           },
@@ -771,9 +790,15 @@ void main() {
 
         // Verify local file is now identical to remote
         final result = await localFile.readAsBytes();
-        expect(result.sublist(0, bs), equals(List.filled(bs, 0x11)));
-        expect(result.sublist(bs, 2 * bs), equals(List.filled(bs, 0x22)));
-        expect(result.sublist(2 * bs, 3 * bs), equals(List.filled(bs, 0x33)));
+        expect(result, remoteData);
+        expect(await localFile.length(), remoteData.length);
+        expect(
+          dir.listSync().where(
+            (entry) => entry.path.split(Platform.pathSeparator).last
+                .startsWith('.crisp-transfer-'),
+          ),
+          isEmpty,
+        );
       } finally {
         await dir.delete(recursive: true);
       }
@@ -796,11 +821,10 @@ void main() {
         final modMap = await deltaSvc.computeBlockMap(mod.path, blockSize: bs);
         final delta = deltaSvc.compareBlockMaps(modMap, origMap);
 
-        // S3 can detect changes but must upload entire file (no partial write)
+        // Planning can detect changes; the adapter declines delta upload.
         expect(delta.changedBlocks, equals([1]));
         expect(delta.changedBlocks.isNotEmpty, isTrue);
-        // The S3 adapter would do a full uploadFile here, not block-level write
-        // The savings come from *skipping* the upload when no changes detected
+        // The caller must select the ordinary upload route after that decline.
       } finally {
         await dir.delete(recursive: true);
       }
@@ -817,7 +841,7 @@ void main() {
 
         final delta = deltaSvc.compareBlockMaps(map1, map2);
         expect(delta.changedBlocks, isEmpty);
-        // S3 adapter would skip the upload entirely in this case
+        // Identical planning does not itself admit remote delta execution.
       } finally {
         await dir.delete(recursive: true);
       }

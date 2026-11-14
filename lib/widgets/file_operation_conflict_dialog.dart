@@ -17,6 +17,7 @@ Future<FileConflictResolution> showFileOperationConflict(
   required FileItem existing,
   required FileOperationBackend source,
   required FileOperationBackend destination,
+  FileCopyMethod copyMethod = FileCopyMethod.automatic,
   FileConflictPreviewService previewService =
       const FileConflictPreviewService(),
 }) async =>
@@ -28,6 +29,7 @@ Future<FileConflictResolution> showFileOperationConflict(
         existing: existing,
         source: source,
         destination: destination,
+        copyMethod: copyMethod,
         previewService: previewService,
       ),
     ) ??
@@ -39,12 +41,14 @@ class _ConflictDialog extends StatefulWidget {
     required this.existing,
     required this.source,
     required this.destination,
+    required this.copyMethod,
     required this.previewService,
   });
   final FileOperationEntry entry;
   final FileItem existing;
   final FileOperationBackend source;
   final FileOperationBackend destination;
+  final FileCopyMethod copyMethod;
   final FileConflictPreviewService previewService;
   @override
   State<_ConflictDialog> createState() => _ConflictDialogState();
@@ -450,6 +454,8 @@ class _ConflictDialogState extends State<_ConflictDialog> {
     final folder = entry.source.isFolder;
     final strings = FileConflictPreviewStrings(context);
     final canChoose = _reviewProblem == null && _reviewIsCurrent;
+    final canAppendOrResume =
+        canChoose && widget.copyMethod != FileCopyMethod.verifiedDelta;
     final canCompare =
         canChoose &&
         !_comparing &&
@@ -579,7 +585,7 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                   spacing: 8,
                   children: [
                     TextButton(
-                      onPressed: !canChoose
+                      onPressed: !canAppendOrResume
                           ? null
                           : () => _choose(FileConflictDecision.resumeVerified),
                       child: Text(
@@ -587,7 +593,7 @@ class _ConflictDialogState extends State<_ConflictDialog> {
                       ),
                     ),
                     TextButton(
-                      onPressed: !canChoose
+                      onPressed: !canAppendOrResume
                           ? null
                           : () => _choose(FileConflictDecision.append),
                       child: Text(

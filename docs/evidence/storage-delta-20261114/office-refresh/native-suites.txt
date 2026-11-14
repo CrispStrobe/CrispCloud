@@ -1,0 +1,6 @@
+test/widget/office_editor_lifecycle_test.dart
+test/widget/office_native_workflow_test.dart
+test/word_template_preservation_test.dart
+test/office_document_service_test.dart
+test/office_roundtrip_preservation_test.dart
+test/office_editor_fixes_test.dart

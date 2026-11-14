@@ -27,6 +27,13 @@ const _ncUrl = 'http://localhost:8889';
 const _ncUser = 'admin';
 const _ncPass = 'CrispAdmin2026!';
 
+// These historical mutation cases require a provider contract that the adapter
+// deliberately does not expose. Login, map inspection and refusal cases remain
+// executable; no skipped mutation case is counted as current qualification.
+const _deltaMutationUnavailable =
+    'Provider delta mutation is unavailable until version-bound staging, '
+    'final verification and conditional publication are implemented.';
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -61,7 +68,7 @@ Future<Uint8List> _webdavDownload(String remoteName) async {
 }
 
 String _base64Auth(String user, String pass) {
-  final bytes = '${user}:${pass}'.codeUnits;
+  final bytes = '$user:$pass'.codeUnits;
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   final result = StringBuffer();
   for (var i = 0; i < bytes.length; i += 3) {
@@ -240,7 +247,7 @@ void main() {
 
       // Cleanup
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
 
     test('returns null when deltaSyncEnabled is false', () async {
       adapter.deltaSyncEnabled = false;
@@ -285,7 +292,7 @@ void main() {
       expect(result.savingsPercent, equals(100.0));
 
       await _webdavDelete(identicalFile);
-    });
+    }, skip: _deltaMutationUnavailable);
   });
 
   // =========================================================================
@@ -343,7 +350,7 @@ void main() {
       }
 
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
 
     test('returns null when deltaSyncEnabled is false', () async {
       adapter.deltaSyncEnabled = false;
@@ -396,7 +403,7 @@ void main() {
       expect(downloaded.every((b) => b == 0xBB), isTrue);
 
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
 
     test('block map cached after deltaUpload can be used for next sync', () async {
       adapter.deltaSyncEnabled = true;
@@ -408,7 +415,9 @@ void main() {
 
       // First delta upload (block 0 changed)
       final mod1 = List<int>.from(original);
-      for (int i = 0; i < blockSize; i++) mod1[i] = 0xFF;
+      for (int i = 0; i < blockSize; i++) {
+        mod1[i] = 0xFF;
+      }
       final localFile = File('${tempDir.path}/cache-reuse.bin');
       await localFile.writeAsBytes(mod1);
 
@@ -422,7 +431,9 @@ void main() {
 
       // Second delta upload (block 2 changed) — should reuse cached map
       final mod2 = List<int>.from(mod1);
-      for (int i = 2 * blockSize; i < 3 * blockSize; i++) mod2[i] = 0xEE;
+      for (int i = 2 * blockSize; i < 3 * blockSize; i++) {
+        mod2[i] = 0xEE;
+      }
       await localFile.writeAsBytes(mod2);
 
       final result2 = await adapter.deltaUpload(
@@ -441,6 +452,6 @@ void main() {
       expect(downloaded[2 * blockSize], equals(0xEE));
 
       await _webdavDelete(testFile);
-    });
+    }, skip: _deltaMutationUnavailable);
   });
 }

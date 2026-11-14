@@ -1,0 +1,253 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":29,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":2}
+{"count":6,"time":13,"type":"allSuites"}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":16452}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":25,"line":null,"column":null,"url":null},"type":"group","time":16455}
+{"test":{"id":3,"name":"sorting alone prompts on Back and saves undoable reordered rows","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":89,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":16456}
+{"testID":3,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":16994}
+{"testID":3,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":19823}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":20467}
+{"test":{"id":4,"name":"speaker-notes-only edits prompt on Back and save before closing","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":147,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":20471}
+{"testID":4,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":20481}
+{"testID":4,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":21764}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":22255}
+{"test":{"id":5,"name":"speaker notes edited during Save and Close stay open and dirty","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":191,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":22256}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":22262}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":22913}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":23260}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":23656}
+{"test":{"id":6,"name":"Save and Close preserves an open notes dialog and its draft","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":228,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":23657}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":23664}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":24330}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":24695}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":24778}
+{"test":{"id":7,"name":"speaker notes undo and redo survive actual host saves","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":275,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":24779}
+{"testID":7,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":24787}
+{"testID":7,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":25214}
+{"testID":7,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":25438}
+{"testID":7,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":25751}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":25918}
+{"test":{"id":8,"name":"notes-only recovery copy preserves dirty state after disconnect","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":304,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":25919}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":25941}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":26515}
+{"test":{"id":9,"name":"system Back prompts once and Cancel retains unsaved edits","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":335,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":26516}
+{"testID":9,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":26524}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":27069}
+{"test":{"id":10,"name":"system Back discards only after explicit confirmation","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":362,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":27070}
+{"testID":10,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":27106}
+{"testID":10,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":27530}
+{"test":{"id":11,"name":"system Back closes a clean document without a prompt","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":384,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":27531}
+{"testID":11,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":27536}
+{"testID":11,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":27845}
+{"test":{"id":12,"name":"system Back Save writes the captured original before closing","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":402,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":27846}
+{"testID":12,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":27851}
+{"testID":12,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":28405}
+{"testID":12,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":28909}
+{"test":{"id":13,"name":"Back and Close cannot discard an in-flight save","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":423,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":28910}
+{"testID":13,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":28916}
+{"testID":13,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":29354}
+{"testID":13,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":29463}
+{"test":{"id":14,"name":"Back Save keeps later edits open until their own save","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":449,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":29464}
+{"testID":14,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":29478}
+{"testID":14,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":30171}
+{"testID":14,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":30407}
+{"testID":14,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":30700}
+{"test":{"id":15,"name":"disconnected original can export edited copy without cleaning","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":479,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":30703}
+{"testID":15,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":30710}
+{"testID":15,"messageType":"print","message":"⚠️ [OfficeEditor] office editor save failed\n  Error: The original storage is disconnected or changed. Reopen the file before saving.","type":"print","time":30988}
+{"testID":15,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":31355}
+{"test":{"id":16,"name":"copy cancel retains edits and permits a successful retry","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":518,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":31355}
+{"testID":16,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":31384}
+{"testID":16,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":31907}
+{"test":{"id":17,"name":"copy error retains edits and permits a successful retry","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":518,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":31908}
+{"testID":17,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":31921}
+{"testID":17,"messageType":"print","message":"⚠️ [OfficeEditor] office copy export failed\n  Error: Bad state: Destination full","type":"print","time":32165}
+{"testID":17,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":32372}
+{"test":{"id":18,"name":"copy picker owns one revision while newer edits remain unsaved","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":559,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":32372}
+{"testID":18,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":32386}
+{"testID":18,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":32900}
+{"testID":18,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":33031}
+{"test":{"id":19,"name":"copying an unchanged document leaves it clean","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":602,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":33032}
+{"testID":19,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":33045}
+{"testID":19,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":33361}
+{"test":{"id":20,"name":"recovery copy commits pending cell text after disconnect","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":627,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":33361}
+{"testID":20,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":33371}
+{"testID":20,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":33668}
+{"test":{"id":21,"name":"recovery copy commits pending slide text after disconnect","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":627,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":33669}
+{"testID":21,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":33688}
+{"testID":21,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":33985}
+{"test":{"id":22,"name":"refused input exports its captured original without reserializing","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":716,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":33986}
+{"testID":22,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":33999}
+{"testID":22,"messageType":"print","message":"⚠️ [OfficeEditor] office editor load failed\n  Error: FormatException: Invalid Word package ZIP: Buffer is too small to be a ZIP archive","type":"print","time":34042}
+{"testID":22,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":34126}
+{"test":{"id":23,"name":"signed-marker xlsx refusal retains an exact original copy","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":748,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":34127}
+{"testID":23,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34160}
+{"testID":23,"messageType":"print","message":"⚠️ [OfficeEditor] office editor load failed\n  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.","type":"print","time":34189}
+{"testID":23,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":34267}
+{"test":{"id":24,"name":"signed-marker pptx refusal retains an exact original copy","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":748,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":34268}
+{"testID":24,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34275}
+{"testID":24,"messageType":"print","message":"⚠️ [OfficeEditor] office editor load failed\n  Error: FormatException: This Office package is digitally signed. Save an unsigned copy in Office before editing it here. The original has not been changed.","type":"print","time":34301}
+{"testID":24,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":34377}
+{"test":{"id":25,"name":"copy completion after host disposal has no late UI callbacks","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":796,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":34378}
+{"testID":25,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34383}
+{"testID":25,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":34650}
+{"test":{"id":26,"name":"protection changed during upload remains dirty until saved","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":822,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":34651}
+{"testID":26,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34657}
+{"testID":26,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":34994}
+{"testID":26,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35127}
+{"testID":26,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35349}
+{"testID":26,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":35414}
+{"test":{"id":27,"name":"Track Changes follows save, undo and redo in actual host bytes","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":855,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_editor_lifecycle_test.dart"},"type":"testStart","time":35415}
+{"testID":27,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35419}
+{"testID":27,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35720}
+{"testID":27,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":35859}
+{"testID":27,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":36011}
+{"testID":27,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":36076}
+{"suite":{"id":28,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"suite","time":36136}
+{"test":{"id":29,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart","suiteID":28,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":36165}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":29,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":37734}
+{"group":{"id":30,"suiteID":28,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":9,"line":null,"column":null,"url":null},"type":"group","time":37734}
+{"test":{"id":31,"name":"native fills survive unrelated formatting through three host uploads","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":777,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":37734}
+{"testID":31,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":38102}
+{"testID":31,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":40685}
+{"testID":31,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":40978}
+{"testID":31,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":41456}
+{"testID":31,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":41654}
+{"testID":31,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":42163}
+{"testID":31,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":42355}
+{"group":{"id":32,"suiteID":28,"parentID":30,"name":"ribbon style history","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":827,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"group","time":42357}
+{"test":{"id":33,"name":"ribbon style history (setUpAll)","suiteID":28,"groupIDs":[30,32],"metadata":{"skip":false,"skipReason":null},"line":829,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":42357}
+{"testID":33,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":42380}
+{"test":{"id":34,"name":"ribbon style history targets its owning worksheet after navigation","suiteID":28,"groupIDs":[30,32],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":835,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":42381}
+{"testID":34,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":42390}
+{"testID":34,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":43608}
+{"testID":34,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":45505}
+{"testID":34,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":47334}
+{"testID":34,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":47552}
+{"test":{"id":35,"name":"ribbon style history preserves native fill font and style provenance on undo","suiteID":28,"groupIDs":[30,32],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":860,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":47554}
+{"testID":35,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":47561}
+{"testID":35,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":49356}
+{"testID":35,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":50697}
+{"testID":35,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":50887}
+{"test":{"id":36,"name":"ribbon style history (tearDownAll)","suiteID":28,"groupIDs":[30,32],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":50888}
+{"testID":36,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":50891}
+{"test":{"id":37,"name":"native-word rejects a substituted valid expected package","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":881,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":50892}
+{"testID":37,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":50899}
+{"test":{"id":38,"name":"native-word matches independent expectations through three host saves","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":887,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":50900}
+{"testID":38,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":50923}
+{"testID":38,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":52568}
+{"testID":38,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":52679}
+{"testID":38,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":53027}
+{"testID":38,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":53139}
+{"testID":38,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":53475}
+{"testID":38,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":53602}
+{"test":{"id":39,"name":"native-sheet rejects a substituted valid expected package","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":881,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":53603}
+{"testID":39,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":53611}
+{"test":{"id":40,"name":"native-sheet matches independent expectations through three host saves","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":887,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":53613}
+{"testID":40,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":53623}
+{"testID":40,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":54658}
+{"testID":40,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":54802}
+{"testID":40,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":55243}
+{"testID":40,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":55360}
+{"testID":40,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":55733}
+{"testID":40,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":55871}
+{"test":{"id":41,"name":"native-slide rejects a substituted valid expected package","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":881,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":55872}
+{"testID":41,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":55879}
+{"test":{"id":42,"name":"native-slide matches independent expectations through three host saves","suiteID":28,"groupIDs":[30],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":887,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/widget/office_native_workflow_test.dart"},"type":"testStart","time":55879}
+{"testID":42,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":55888}
+{"testID":42,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":56535}
+{"testID":42,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":56641}
+{"testID":42,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":56863}
+{"testID":42,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":56935}
+{"testID":42,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":57380}
+{"testID":42,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":57470}
+{"suite":{"id":43,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"suite","time":57515}
+{"test":{"id":44,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart","suiteID":43,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":57516}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":44,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":58623}
+{"group":{"id":45,"suiteID":43,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":12,"line":null,"column":null,"url":null},"type":"group","time":58624}
+{"test":{"id":46,"name":"docm preview routes through the shared Word format","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":279,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":58624}
+{"testID":46,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":59010}
+{"test":{"id":47,"name":"actual host uploads edited docm with preserved package","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":286,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":59010}
+{"testID":47,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":59468}
+{"testID":47,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":61165}
+{"testID":47,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":61510}
+{"test":{"id":48,"name":"dotm preview routes through the shared Word format","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":279,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":61515}
+{"testID":48,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":61547}
+{"test":{"id":49,"name":"actual host uploads edited dotm with preserved package","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":286,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":61548}
+{"testID":49,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":61568}
+{"testID":49,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":62023}
+{"testID":49,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":62150}
+{"test":{"id":50,"name":"dotx preview routes through the shared Word format","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":279,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":62150}
+{"testID":50,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":62191}
+{"test":{"id":51,"name":"actual host uploads edited dotx with preserved package","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":286,"root_column":5,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":62192}
+{"testID":51,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":62224}
+{"testID":51,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":62686}
+{"testID":51,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":62810}
+{"test":{"id":52,"name":"actual host blocks a changed macro part before upload","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":327,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":62810}
+{"testID":52,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false","type":"print","time":62832}
+{"testID":52,"messageType":"print","message":"⚠️ [OfficeEditor] office editor save failed\n  Error: FormatException: Saving would change a preserved Word binary or macro part. The original was not changed.","type":"print","time":63156}
+{"testID":52,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":63299}
+{"test":{"id":53,"name":"DOTM opens the real Word editor","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":379,"root_column":3,"root_url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":63299}
+{"testID":53,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":63511}
+{"test":{"id":54,"name":"docx package signatures are rejected before editing","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":418,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":63511}
+{"testID":54,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":63536}
+{"test":{"id":55,"name":"dotm package signatures are rejected before editing","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":418,"column":5,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":63536}
+{"testID":55,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":63556}
+{"test":{"id":56,"name":"DOCX embedded object bytes and their relationship remain protected","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":436,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":63557}
+{"testID":56,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":63590}
+{"test":{"id":57,"name":"DOCX signature parts outside the usual folder are rejected by type or relationship","suiteID":43,"groupIDs":[45],"metadata":{"skip":false,"skipReason":null},"line":482,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/word_template_preservation_test.dart"},"type":"testStart","time":63591}
+{"testID":57,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":63625}
+{"suite":{"id":58,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"suite","time":63663}
+{"test":{"id":59,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart","suiteID":58,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":63663}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":59,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":64474}
+{"group":{"id":60,"suiteID":58,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":9,"line":null,"column":null,"url":null},"type":"group","time":64475}
+{"test":{"id":61,"name":"DOCX produces Markdown with headings, bold runs and tables","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":23,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64475}
+{"testID":61,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64607}
+{"test":{"id":62,"name":"XLSX produces CSV from shared strings and cell references","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":48,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64608}
+{"testID":62,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64624}
+{"test":{"id":63,"name":"PPTX produces one section per slide","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":77,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64624}
+{"testID":63,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64636}
+{"test":{"id":64,"name":"PPTX exposes slide geometry, text and fills","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":96,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64636}
+{"testID":64,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64647}
+{"test":{"id":65,"name":"truncated legacy PPT has a structured extraction failure","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":142,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64648}
+{"testID":65,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64652}
+{"test":{"id":66,"name":"ODT content.xml produces headings and paragraphs","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":152,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64652}
+{"testID":66,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64658}
+{"test":{"id":67,"name":"EPUB chapters become Markdown","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":170,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64658}
+{"testID":67,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64699}
+{"test":{"id":68,"name":"EPUB extraction follows relocated OPF spine and excludes navigation","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":187,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64699}
+{"testID":68,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64720}
+{"test":{"id":69,"name":"malformed documents fail gracefully","suiteID":58,"groupIDs":[60],"metadata":{"skip":false,"skipReason":null},"line":211,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_document_service_test.dart"},"type":"testStart","time":64721}
+{"testID":69,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":64729}
+{"suite":{"id":70,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/office_roundtrip_preservation_test.dart"},"type":"suite","time":64742}
+{"test":{"id":71,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/office_roundtrip_preservation_test.dart","suiteID":70,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":64742}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":71,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":65729}
+{"group":{"id":72,"suiteID":70,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":3,"line":null,"column":null,"url":null},"type":"group","time":65732}
+{"test":{"id":73,"name":"Quds preserves footnotes across an unedited save","suiteID":70,"groupIDs":[72],"metadata":{"skip":false,"skipReason":null},"line":108,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_roundtrip_preservation_test.dart"},"type":"testStart","time":65732}
+{"testID":73,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":66155}
+{"test":{"id":74,"name":"Quds preserves footnotes across a minimal edit","suiteID":70,"groupIDs":[72],"metadata":{"skip":false,"skipReason":null},"line":140,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_roundtrip_preservation_test.dart"},"type":"testStart","time":66156}
+{"testID":74,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":66196}
+{"test":{"id":75,"name":"host preserves source note marker position and formatting through three saves","suiteID":70,"groupIDs":[72],"metadata":{"skip":false,"skipReason":null},"line":158,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_roundtrip_preservation_test.dart"},"type":"testStart","time":66197}
+{"testID":75,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":66280}
+{"suite":{"id":76,"platform":"vm","path":"/workspace/scratch/209f165653d7/CrispCloud/test/office_editor_fixes_test.dart"},"type":"suite","time":66307}
+{"test":{"id":77,"name":"loading /workspace/scratch/209f165653d7/CrispCloud/test/office_editor_fixes_test.dart","suiteID":76,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":66307}
+
+[{"event":"test.startedProcess","params":{"vmServiceUri":null}}]
+{"testID":77,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":67052}
+{"group":{"id":78,"suiteID":76,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":2,"line":null,"column":null,"url":null},"type":"group","time":67053}
+{"test":{"id":79,"name":"header edits relayout into the header band, not the body","suiteID":76,"groupIDs":[78],"metadata":{"skip":false,"skipReason":null},"line":7,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_editor_fixes_test.dart"},"type":"testStart","time":67053}
+{"testID":79,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":67187}
+{"test":{"id":80,"name":"select all marks the whole document","suiteID":76,"groupIDs":[78],"metadata":{"skip":false,"skipReason":null},"line":28,"column":3,"url":"file:///workspace/scratch/209f165653d7/CrispCloud/test/office_editor_fixes_test.dart"},"type":"testStart","time":67188}
+{"testID":80,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":67198}
+{"success":true,"type":"done","time":67214}

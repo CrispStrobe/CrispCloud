@@ -1,0 +1,48 @@
+{
+  "delivered_code_commit": "b98cd70e6dae21ba486a0704e7946cf35ab6575a",
+  "delivered_code_tree": "11329c5e82aa1f86afd48ab0ec366de2bb73a3b1",
+  "included_main_and_v1.3.2": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+  "canonical_source": "a379ecc455890032906098b6cf58e17504581ed0",
+  "canonical_evidence": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+  "managed_office_files": 2187,
+  "native_baseline": {
+    "source": "331981649872e363253aef13f57a638e5747b8e5",
+    "tests_passed": 790,
+    "suites": 43,
+    "failures": 0,
+    "skips": 0,
+    "stable_inputs": 8382
+  },
+  "native_word_followup": {
+    "source": "b98cd70e6dae21ba486a0704e7946cf35ab6575a",
+    "tests_passed": 60,
+    "suites": 6,
+    "failures": 0,
+    "skips": 0,
+    "stable_inputs": 8384
+  },
+  "canonical_followup": {
+    "source": "a379ecc455890032906098b6cf58e17504581ed0",
+    "tests_passed": 232,
+    "suites": 19,
+    "failures": 0,
+    "skips": 0,
+    "stable_inputs": 2955
+  },
+  "python_gates_passed": 50,
+  "strict_scoped_analysis": "passed",
+  "reference_observation_cutoff": "2026-11-14T20:54:46.035421+00:00",
+  "observed_pr_heads_incorporated": 96,
+  "observed_branch_heads_incorporated": 3,
+  "observed_tag_objects": 23,
+  "archive_disposition": "The annotated MadEdit2 archive checkpoint remains preserved as an incompatible alternate API; it is not merged over the current implementation.",
+  "qualification_boundaries": [
+    "Linux native VM",
+    "S3 mocks and real loopback HTTP",
+    "No live-provider/browser/mobile qualification",
+    "Delta remains explicit API; no automatic queue admission or durable delta resume",
+    "No qualified remote delta mutation",
+    "Existing native publication is not external-writer CAS"
+  ],
+  "canonical_draft_pr": "https://github.com/CrispStrobe/quds_office_suite/pull/12"
+}

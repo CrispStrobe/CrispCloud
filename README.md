@@ -2,7 +2,7 @@
 
 **Cross-platform dual-panel cloud file manager** built with Flutter. Open-source, privacy-first, running on macOS, Windows, Linux, Android, iOS, and Web/PWA.
 
-Local, cloud and network storage. Automated unit, widget and native protocol tests. Block-level delta sync. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
+Local, cloud and network storage. Automated unit, widget and native protocol tests. End-to-end encryption. 9 UI languages, with English fallback for untranslated messages.
 
 Credential-storage recovery identifies the selected store, its path where available,
 the failed operation and native status, with copyable original stack traces.
@@ -45,32 +45,56 @@ favorite, open it in the other pane, or swap pane locations.
 | **SFTP** | Native streaming, key auth |
 | **WebDAV** | Standard operations |
 | **SMB / NAS** | Native SMB2/3 browsing, streaming reads/writes, file operations, signed connections and required SMB3 encryption by default |
-| **S3** | Presigned URLs, SSE-S3/KMS/C, 8 storage classes, delta sync (Range GET) |
+| **S3** | Presigned URLs, SSE-S3/KMS/C, 8 storage classes; explicit [bounded native delta-download API](docs/storage-delta-profile.md) qualified on Linux with mock and loopback transports |
 | **FTP/FTPS** | Standard + TLS |
 | **Google Drive** | OAuth2, shared drives, starred files, file versions, Google Docs export (6 formats) |
-| **OneDrive / SharePoint** | Graph API, delta sync, shared libraries (SharePoint sites + drives) |
+| **OneDrive / SharePoint** | Graph API, change tracking (delta API), shared libraries (SharePoint sites + drives) |
 | **Dropbox** | Shared folders, content hash, Paper docs (list + export) |
-| **Nextcloud** | Block-level delta sync (server app), chunked upload v2, ETag tracking |
-| **pCloud** | Random-access I/O (pread/pwrite), delta sync |
+| **Nextcloud** | Standard transfers, chunked upload v2, ETag tracking |
+| **pCloud** | Standard transfers, random-access API helpers (pread/pwrite) |
 | **Azure Blob** | SAS tokens, blob operations |
 | **Backblaze B2** | S3-compatible + native API |
 | **Hetzner Storage Box** | SFTP/WebDAV/FTP access |
 
 ## Block-Level Delta Sync
 
-For large files (VeraCrypt containers, disk images, databases), CrispCloud uploads only the 4 MB blocks that changed instead of the entire file.
+Automatic delta transfers are unavailable in the queue. Files use standard
+transfers; Settings → Advanced → Delta Sync displays a disabled, localized
+status while retaining previously saved preferences.
 
-- **Algorithm:** Adler-32 weak hash + SHA-256 strong hash per block
-- **Providers:** Nextcloud (via [server app](https://github.com/CrispStrobe/crispcloud-delta-sync)), pCloud (native pread/pwrite), S3 (Range GET download)
-- **Savings:** A 500 MB file with 8 MB changed = 98.4% bandwidth saved
+The current implementation provides validated block maps and an explicit
+native S3 delta-download API. A deliberate seed first reads and hashes the
+whole remote object. The same adapter can then reconstruct a local file from
+that still-current remote revision, fetching differing blocks and reusing
+verified local blocks through private staging. A changed remote revision,
+restart, recreated adapter or absent seed receipt requires a fresh seed;
+persisted cache JSON alone cannot authorize reuse. ETags identify revisions;
+SHA-256 and Adler-32 check block contents.
+
+Blocks range from 64 KiB to 64 MiB (4 MiB by default), within an 8 GiB file
+profile. Upload execution and the legacy pCloud/Nextcloud delta orchestration
+decline until they have separately qualified staging and publication contracts.
+Normal transfers continue through their existing paths.
+
+The combined Linux native cohort passed 790 tests across 43 suites, including
+real loopback HTTP reconstruction and the delta failure cases. A later
+canonical Word refresh passed 60 focused host tests and 232 canonical tests;
+each run retains its own exact source pin. See the
+[delta profile](docs/storage-delta-profile.md)
+for exact API, identity, publication and platform boundaries, and the
+[continuation receipt](docs/evidence/storage-delta-20261114/PROGRESS.md) for
+saved source checkpoints and validation results. Changed-block estimates do
+not include the initial full seed or verification work.
 
 ### Desktop Client Forks
 
-We also maintain patched Nextcloud and ownCloud desktop clients with delta sync support, settings UI, activity display, and notifications:
+These are separate projects with their own feature and release histories. The
+links are retained as project references; this CrispCloud increment does not
+qualify their binaries, servers, settings or delta behavior:
 
 - **[Nextcloud Desktop (delta sync)](https://github.com/CrispStrobe/nextcloud-desktop)** — [download binaries](https://github.com/CrispStrobe/nextcloud-desktop/releases/tag/delta-sync-latest) (Linux, Windows, macOS)
 - **[ownCloud Desktop (delta sync)](https://github.com/CrispStrobe/owncloud-client)** — [download binaries](https://github.com/CrispStrobe/owncloud-client/releases/tag/delta-sync-latest) (Linux, Windows, macOS)
-- **[Server App](https://github.com/CrispStrobe/crispcloud-delta-sync)** — PHP app for Nextcloud 25+ / ownCloud 10.11+, plus Dart CLI demo
+- **[Server App](https://github.com/CrispStrobe/crispcloud-delta-sync)** — companion server and CLI project
 
 ## Key Features
 

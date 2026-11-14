@@ -1800,7 +1800,7 @@
     "packages/quds_office_editor/test/sheet_normal_font_auto_test.dart": "c45e852cd7beb71eae5902f8ee3f016911880db2a554cd585d589f4b03be24c7",
     "packages/quds_office_editor/test/sheet_normal_font_metrics_test.dart": "d24cc9e8ebf8f799ca49d465929829ed8adc8c5cf7424babaf7d77ca974213af",
     "packages/quds_office_editor/test/sheet_rename_controller_test.dart": "be19241eee642af9840d872dfdf5992c1eed3e26c41dac4c6a4c743d1f886177",
-    "packages/quds_office_editor/test/sheet_sort_history_test.dart": "73a21a928e0db1a52e1b8566ac4cdd2b99e5705334cb2e760e53902a1cd5d9df",
+    "packages/quds_office_editor/test/sheet_sort_history_test.dart": "53aae131f3a541b2a93f3ac1299aed1e5bc37143695c3c30086eed3d639c11a9",
     "packages/quds_office_editor/test/sheet_style_history_test.dart": "e67c3f37f388b8a5edb4598ecd5540a4f7e4a581c526ede10c5c5246eac2fb2e",
     "packages/quds_office_editor/test/sheet_view_history_test.dart": "7846192a71ff8fca7dfffa25eac4249763fe79422275984dcbcc9bd78f092e17",
     "packages/quds_office_editor/test/slide_arrange_history_test.dart": "58db66ae020a48df80d15c9e4dd373223bfb4e58fb3ce2f0a83df5acf80eae81",

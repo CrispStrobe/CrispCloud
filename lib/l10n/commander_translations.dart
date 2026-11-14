@@ -5631,6 +5631,38 @@ const commanderTranslations = <String, List<String>>{
     "기록 시 복사 복제 필수",
     "اشتراط استنساخ بالنسخ عند الكتابة",
   ],
+  "Reuse verified S3 blocks": [
+    "Verifizierte S3-Blöcke wiederverwenden",
+    "Réutiliser les blocs S3 vérifiés",
+    "Reutilizar bloques S3 verificados",
+    "Reutilizar blocos S3 verificados",
+    "重用已验证的 S3 块",
+    "検証済みの S3 ブロックを再利用",
+    "검증된 S3 블록 재사용",
+    "إعادة استخدام كتل S3 المتحقق منها",
+  ],
+  "The first copy downloads the whole file once and builds a verified block map. Later copies can reuse local blocks for the same S3 version during this connection.":
+      [
+        "Die erste Kopie lädt die gesamte Datei einmal herunter und erstellt eine verifizierte Blockübersicht. Weitere Kopien können während dieser Verbindung lokale Blöcke derselben S3-Version wiederverwenden.",
+        "La première copie télécharge le fichier entier une seule fois et crée une table de blocs vérifiée. Les copies suivantes peuvent réutiliser les blocs locaux de la même version S3 pendant cette connexion.",
+        "La primera copia descarga el archivo completo una vez y crea un mapa de bloques verificado. Las copias posteriores pueden reutilizar bloques locales de la misma versión S3 durante esta conexión.",
+        "A primeira cópia descarrega o ficheiro completo uma vez e cria um mapa de blocos verificado. As cópias seguintes podem reutilizar blocos locais da mesma versão S3 durante esta ligação.",
+        "首次复制会完整下载文件一次，并建立经过验证的块映射。在此连接期间，后续复制可为同一 S3 版本重用本地块。",
+        "最初のコピーではファイル全体を一度ダウンロードし、検証済みのブロックマップを作成します。この接続中は、同じ S3 バージョンの後続のコピーでローカルブロックを再利用できます。",
+        "첫 복사는 전체 파일을 한 번 다운로드하고 검증된 블록 맵을 만듭니다. 이 연결 동안 같은 S3 버전을 다시 복사할 때 로컬 블록을 재사용할 수 있습니다.",
+        "تُنزّل النسخة الأولى الملف كاملًا مرة واحدة وتُنشئ خريطة كتل متحققًا منها. يمكن للنسخ اللاحقة إعادة استخدام الكتل المحلية لإصدار S3 نفسه أثناء هذا الاتصال.",
+      ],
+  "Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.":
+      [
+        "Die Wiederverwendung verifizierter Blöcke erfordert reguläre S3-Dateien und nativen lokalen Zielspeicher, ohne Anhängen, Fortsetzen von Teilkopien oder vorherige Speicherreservierung.",
+        "La réutilisation de blocs vérifiés nécessite des fichiers S3 ordinaires copiés vers un stockage local natif, sans ajout, reprise partielle ni préallocation du disque.",
+        "La reutilización de bloques verificados requiere archivos S3 normales copiados al almacenamiento local nativo, sin añadir, reanudar parcialmente ni reservar espacio en disco.",
+        "A reutilização de blocos verificados requer ficheiros S3 normais copiados para armazenamento local nativo, sem acrescentar, retomar parcialmente ou pré-alocar espaço em disco.",
+        "重用已验证的块要求将普通 S3 文件复制到原生本地存储，且不能使用追加、部分续传或磁盘空间预分配。",
+        "検証済みブロックの再利用には、通常の S3 ファイルをネイティブのローカルストレージにコピーする必要があります。追記、部分的な再開、ディスクの事前割り当ては併用できません。",
+        "검증된 블록 재사용은 일반 S3 파일을 네이티브 로컬 저장소로 복사할 때 지원되며, 추가, 부분 이어받기 또는 디스크 사전 할당과 함께 사용할 수 없습니다.",
+        "تتطلب إعادة استخدام الكتل المتحقق منها نسخ ملفات S3 عادية إلى تخزين محلي أصلي، دون إلحاق أو استئناف جزئي أو حجز مساحة القرص مسبقًا.",
+      ],
   "Require password to access": [
     "Passwort für Zugriff erforderlich",
     "Exiger un mot de passe pour accéder",

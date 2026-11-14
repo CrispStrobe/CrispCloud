@@ -20,7 +20,6 @@ import '../l10n/settings_strings.dart';
 
 import '../providers/accessibility_provider.dart';
 import '../providers/analytics_provider.dart';
-import '../providers/delta_sync_provider.dart';
 import '../providers/file_type_color_provider.dart';
 import '../providers/panel_source_provider.dart';
 import '../providers/core_providers.dart';
@@ -895,109 +894,30 @@ class _PrivacySection extends ConsumerWidget {
 // Section: Advanced
 // ---------------------------------------------------------------------------
 
-/// Block-size options shown in the selector (bytes → display label).
-const _kBlockSizeOptions = [
-  (64 * 1024, '64 KB'),
-  (256 * 1024, '256 KB'),
-  (512 * 1024, '512 KB'),
-  (1 * 1024 * 1024, '1 MB'),
-  (2 * 1024 * 1024, '2 MB'),
-  (4 * 1024 * 1024, '4 MB (default)'),
-  (8 * 1024 * 1024, '8 MB'),
-  (16 * 1024 * 1024, '16 MB'),
-  (32 * 1024 * 1024, '32 MB'),
-  (64 * 1024 * 1024, '64 MB'),
-];
-
-class _AdvancedSection extends ConsumerWidget {
+class _AdvancedSection extends StatelessWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final s = SettingsStrings(context);
-    final deltaSyncEnabled = ref.watch(deltaSyncEnabledProvider);
-    final blockSize = ref.watch(deltaBlockSizeProvider);
-
-    // Find the nearest option or use a fallback label.
-    final blockSizeLabel =
-        _kBlockSizeOptions
-            .cast<(int, String)?>()
-            .firstWhere((o) => o!.$1 == blockSize, orElse: () => null)
-            ?.$2 ??
-        '${(blockSize / (1024 * 1024)).toStringAsFixed(1)} MB';
-
-    final localizedBlockSizeLabel = s.text(blockSizeLabel);
-
     return _Section(
       title: s.text('Advanced'),
       icon: Icons.settings_applications_outlined,
       children: [
         SwitchListTile(
           key: const Key('settings_delta_sync_toggle'),
-          value: deltaSyncEnabled,
-          onChanged: (value) =>
-              ref.read(deltaSyncEnabledProvider.notifier).setEnabled(value),
+          value: false,
+          onChanged: null,
           title: Text(s.text('Delta Sync')),
           subtitle: Text(
             s.text(
-              'Transfer only changed blocks for files larger than 10 MB, reducing bandwidth usage.',
+              'Automatic delta transfers are unavailable. Files use standard transfers.',
             ),
           ),
-          secondary: Icon(
-            deltaSyncEnabled
-                ? Icons.compare_arrows
-                : Icons.compare_arrows_outlined,
-            color: deltaSyncEnabled
-                ? Theme.of(context).colorScheme.primary
-                : null,
-          ),
-          dense: false,
+          secondary: const Icon(Icons.compare_arrows_outlined),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 24,
             vertical: 4,
           ),
         ),
-        if (deltaSyncEnabled) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-            child: DropdownButtonFormField<int>(
-              key: const Key('settings_delta_block_size'),
-              isExpanded: true,
-              initialValue:
-                  _kBlockSizeOptions
-                      .cast<(int, String)?>()
-                      .firstWhere((o) => o!.$1 == blockSize, orElse: () => null)
-                      ?.$1 ??
-                  blockSize,
-              decoration: InputDecoration(
-                labelText: s.text('Block Size'),
-                border: const OutlineInputBorder(),
-                isDense: true,
-                helperText: s.text(
-                  'Smaller blocks improve bandwidth savings; larger blocks reduce hashing overhead.',
-                ),
-              ),
-              items: _kBlockSizeOptions
-                  .map(
-                    (o) => DropdownMenuItem<int>(
-                      value: o.$1,
-                      child: Text(s.text(o.$2)),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(deltaBlockSizeProvider.notifier).setBlockSize(value);
-                }
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-            child: Text(
-              s.current(localizedBlockSizeLabel),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ],
       ],
     );
   }

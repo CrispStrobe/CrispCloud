@@ -92,6 +92,28 @@ void main() {
   });
 
   test(
+    'verified block copy has translated method, cost and eligibility text',
+    () {
+      for (final text in [
+        'Reuse verified S3 blocks',
+        'The first copy downloads the whole file once and builds a verified block map. Later copies can reuse local blocks for the same S3 version during this connection.',
+        'Verified block reuse requires regular S3 files copied to native local storage, without append, partial resume, or disk preallocation.',
+      ]) {
+        expect(CommanderStrings.contains(text), isTrue);
+        for (final language in CommanderStrings.supportedLanguageCodes.skip(
+          1,
+        )) {
+          expect(
+            CommanderStrings.forLanguage(language, text),
+            isNot(text),
+            reason: '$language / $text',
+          );
+        }
+      }
+    },
+  );
+
+  test(
     'formatting preserves literal filenames, placeholders and mask syntax',
     () {
       const path = r'/report/{1}/$1/name.txt';

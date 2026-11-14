@@ -158,7 +158,8 @@ class JournaledTransferRunner {
             }
             final expected = entry.recovery?['sourceSha256'] as String?;
             if (expected != null ||
-                transferFileVersion(entry.source) == null ||
+                (plan.options.copyMethod != FileCopyMethod.verifiedDelta &&
+                    transferFileVersion(entry.source) == null) ||
                 entry.source.isSymlink == true) {
               final digest = await transferDigest(
                 plan.source,
@@ -607,10 +608,21 @@ class TransferRecoveryService {
     }
     final options = FileOperationOptions.fromJson({
       ...job.options.toJson(),
+      // A saved method is intent, never authority to reuse a live adapter's
+      // verified block map. Recovery retains the ordinary prefix/hash checks
+      // and reviewed stages while returning to the standard streaming path.
+      if (job.options.copyMethod == FileCopyMethod.verifiedDelta)
+        'copyMethod': FileCopyMethod.stream.name,
       // Restarts that would touch an existing destination require a new choice.
       if (mode == TransferRecoveryMode.restartIncomplete)
         'fileConflict': FileConflictPolicy.ask.name,
     });
+    if (job.options.copyMethod == FileCopyMethod.verifiedDelta) {
+      for (final index in actions.keys.toList()) {
+        actions[index] =
+            'Recovery uses ordinary streaming; verified S3 block reuse is not restored. ${actions[index]}';
+      }
+    }
     return TransferRecoveryPreview(
       plan: FileOperationPlan(
         source: source,
