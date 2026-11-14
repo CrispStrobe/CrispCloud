@@ -43,6 +43,10 @@ G18 additionally has a delivered native local archive workflow, and G14 has a
 delivered native viewer-preparation lifecycle increment. Both remain in the
 25 implementation gaps: remote/browser archive publication and verified remote
 paging/larger text comparison still require code, alongside native acceptance.
+G29 also has a [qualified foreground native HTTP increment](transfer-bandwidth-http-profile.md)
+with persisted shared limits and Activity counters. Its remaining provider paths,
+direct protocols and background ownership keep it in the implementation gaps;
+the separate browser helper acceptance is recorded with its evidence.
 
 The [12 November validation record](validation-20261112.md) separates passing
 unit/widget/native-loopback evidence, static analysis, JavaScript compilation,
@@ -112,7 +116,7 @@ the existing size limits and does not claim immutable provider snapshots.
 | [G26](04-connections-and-transfers.md#g26) | Server-to-server FTP transfer | Scoped | G25 transfer evidence; server support |
 | [G27](04-connections-and-transfers.md#g27) | SOCKS4 HTTP routing | Closed: native HTTP/HTTPS scope | Direct-protocol proxy work remains G28 |
 | [G28](04-connections-and-transfers.md#g28) | Direct-protocol proxy routing | Scoped | Per-protocol socket factories |
-| [G29](04-connections-and-transfers.md#g29) | Global transfer bandwidth limits | Implementing foreground HTTP profile | Shared transfer scheduler |
+| [G29](04-connections-and-transfers.md#g29) | Global transfer bandwidth limits | Partially implemented: foreground HTTP | Shared transfer scheduler |
 | [G30](04-connections-and-transfers.md#g30) | Network volume discovery | Scoped | Native discovery adapters |
 | [G31](04-connections-and-transfers.md#g31) | SCP provider | Scoped | SSH host verification; streaming adapters |
 | [G32](04-connections-and-transfers.md#g32) | AFP provider | Platform research | Permissive implementation; target server/OS |

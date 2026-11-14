@@ -1,0 +1,7 @@
+{
+  "classification": "HTTP fixture preparation before its first runtime run",
+  "file": "test/transfer_bandwidth_http_test.dart",
+  "sha256": "b242b9e9412f86d70142a43ffed9621a5e54121ee6824a366e41891a390ac561",
+  "scoped_analysis": "No issues found; exit0 with --fatal-infos",
+  "earlier_analysis_note": "The first scoped analysis reported one curly_braces_in_flow_control_structures info in the new test helper. The helper was corrected before runtime testing; this was not a runtime/product failure."
+}

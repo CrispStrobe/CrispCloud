@@ -1,6 +1,6 @@
 # Shared transfer bandwidth implementation design
 
-Gap: **G29**. Status: **Implementing the foreground common-HTTP profile**.
+Gap: **G29**. Status: **Partially implemented: qualified foreground native HTTP profile**.
 Original source review: 12 November 2026, after the G05/G09/G25/G49 continuation.
 The 14 November [implementation profile](transfer-bandwidth-http-profile.md)
 records actual hooks, user controls and remaining paths. The
