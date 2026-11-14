@@ -92,7 +92,7 @@ fn aggregate(db: &Connection, request: &Value) -> Result<()> {
     let mut rows = stmt.query([])?;
     let mut processed = 0u64;
     while let Some(row) = rows.next()? {
-        if processed % 256 == 0 {
+        if processed.is_multiple_of(256) {
             jobs::check(request)?;
             jobs::update(request, json!({"phase":"aggregating","entries":processed}));
         }
@@ -251,7 +251,7 @@ fn scan(v: &Value) -> Result<Value> {
         let (mut files, mut directories, mut bytes) = (0u64, 0u64, 0u64);
         for result in walker {
             jobs::check(v)?;
-            if visited % 256 == 0 {
+            if visited.is_multiple_of(256) {
                 jobs::update(
                     v,
                     json!({"phase":"scanning","entries":visited,"files":files,"directories":directories,"bytes":bytes}),
@@ -624,7 +624,7 @@ fn export_caf(v: &Value) -> Result<Value> {
     let mut rows = stmt.query([])?;
     while let Some(row) = rows.next()? {
         jobs::check(v)?;
-        if idx.all_files.len() % 256 == 0 {
+        if idx.all_files.len().is_multiple_of(256) {
             jobs::update(
                 v,
                 json!({"phase":"exporting","entries":idx.all_files.len()}),
@@ -804,6 +804,11 @@ pub fn execute(v: &Value) -> Result<Value> {
 }
 /// C API owns the returned string until `crisp_catalog_free`. Requests are
 /// bounded JSON; metadata rows stay in SQLite/Rust instead of crossing FFI.
+///
+/// # Safety
+/// `request` must be null or point to a readable NUL-terminated byte string
+/// that remains valid and unmodified for the entire call. Free the returned
+/// allocation exactly once with `crisp_catalog_free`.
 #[no_mangle]
 pub unsafe extern "C" fn crisp_catalog_call(request: *const c_char) -> *mut c_char {
     let response = std::panic::catch_unwind(|| {
@@ -829,6 +834,12 @@ pub unsafe extern "C" fn crisp_catalog_call(request: *const c_char) -> *mut c_ch
     .unwrap_or_else(|_| json!({"error":"Native catalogue operation failed"}));
     CString::new(response.to_string()).unwrap().into_raw()
 }
+/// Releases a response allocated by `crisp_catalog_call`.
+///
+/// # Safety
+/// `value` must be null or a still-owned pointer returned by `crisp_catalog_call`.
+/// It must not have been freed already, and no thread may access it during or
+/// after this call.
 #[no_mangle]
 pub unsafe extern "C" fn crisp_catalog_free(value: *mut c_char) {
     if !value.is_null() {
