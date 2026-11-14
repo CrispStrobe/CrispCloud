@@ -3,7 +3,10 @@
 The existing Compare dialog's **Binary** mode compares bytes at the same
 offsets, groups contiguous unequal positions, and navigates their Hex windows.
 The continuation on `integration/storage-binary-20261114` binds that interface
-to verified, owned input copies. Review: [PR #104](https://github.com/CrispStrobe/CrispCloud/pull/104).
+to verified, owned input copies. The initial implementation was integrated through
+[PR #104](https://github.com/CrispStrobe/CrispCloud/pull/104); the error-delivery
+regressions and final evidence are reviewed in
+[PR #105](https://github.com/CrispStrobe/CrispCloud/pull/105).
 Qualification records and the exact tested revisions are kept separately in
 [`evidence/storage-binary-20261114/`](evidence/storage-binary-20261114/).
 

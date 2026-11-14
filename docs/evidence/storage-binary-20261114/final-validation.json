@@ -1,0 +1,67 @@
+{
+  "source_revision": "22bd67b887c81a11ea22664defc3474a07eef50a",
+  "source_tree": "13abd6211f8ad2de199718afaac320753a9fb8b6",
+  "integrated_main_revision": "6ecf25262aaa4dd2bc9ea59a396dc708c2048948",
+  "classification": "Final reconciled native and scoped analysis pass; browser runtime qualification pending",
+  "native": {
+    "passed": 94,
+    "failed": 0,
+    "skipped": 0,
+    "receipt": "reconciled-native-receipt.json",
+    "summary": "reconciled-native-summary.json"
+  },
+  "analysis": {
+    "changed_dart_files": 10,
+    "result": "No issues found",
+    "exit_code": 0,
+    "receipt": "reconciled-analysis-receipt.json"
+  },
+  "completed_gate_source_paths": 8137,
+  "completed_gate_source_unchanged": true,
+  "package_map_unchanged": true,
+  "production_manifests": {
+    "pubspec.yaml": {
+      "sha256": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+      "unchanged_from_baseline": true
+    },
+    "pubspec.lock": {
+      "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+      "unchanged_from_baseline": true
+    }
+  },
+  "browser": {
+    "status": "not_qualified_for_this_revision",
+    "configured_cases": 31,
+    "portable_cases": 21,
+    "limits_cases": 10,
+    "executed_here": false,
+    "earlier_attempt_source": "e52ea1f9399c2547978bb497073adcee5022cc81",
+    "earlier_attempt_status": "browser_not_executed_environment_blocked",
+    "earlier_attempt_details": "intermediate/browser-sandbox/README.md",
+    "retry_started": false
+  },
+  "hosted_ci": {
+    "status": "queued_at_observation",
+    "details": "reconciled-hosted-ci-status.json"
+  },
+  "earlier_source_results": [
+    {
+      "source_revision": "e52ea1f9399c2547978bb497073adcee5022cc81",
+      "native_passed": 92,
+      "details": "validation-e52ea1f9.json"
+    },
+    {
+      "source_revision": "254842f99844574bdf82e61cfc2115489fc035ec",
+      "native_passed": 94,
+      "details": "integration-native-summary.json"
+    }
+  ],
+  "pull_request": "https://github.com/CrispStrobe/CrispCloud/pull/105",
+  "limitations": [
+    "Not an atomic or simultaneous provider snapshot",
+    "Requires pause-respecting input producers",
+    "Linux native/widget qualification only; no all-platform release claim",
+    "Largest physical comparison fixture is 9 MiB; not an end-to-end ceiling-size qualification",
+    "Browser and hosted CI pass not claimed"
+  ]
+}

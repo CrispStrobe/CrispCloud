@@ -194,3 +194,32 @@ The portable cohort now has 21 tests, plus the 10 raw-limit tests configured
 for Chrome. No new browser launch is attempted in the blocked environment.
 The combined native cohort and strict analysis will run again against the
 saved integration source; earlier receipts remain pinned to e52ea1f9.
+
+## Final reconciled qualification
+
+`254842f9` saved the two-parent merge and both stalled-cleanup regressions.
+Its native gate passed **94 tests**, and its strict analysis passed, with
+**8,124 unchanged source paths** and an unchanged package map. Those receipts
+remain under their original `integration-*` filenames.
+
+Main continued to `6ecf2526`, incorporating earlier branch checkpoints plus
+additional Office fixtures and evidence. `22bd67b8` preserves that main history
+in another ordinary two-parent merge. The comparison implementation and its
+cohort files are byte-identical to `254842f9`; the capture conflict retains
+prompt error delivery and is now covered in both passes. No main Office change
+was discarded.
+
+The gates were rerun against saved source
+`22bd67b887c81a11ea22664defc3474a07eef50a`: **94 native tests passed, 0 failed,
+0 skipped**, and strict analysis of all **10 changed Dart files** found no
+issues. Both completed receipts bind **8,137 unchanged tracked non-document
+paths**, unchanged package maps and the original dependency manifests. The
+`reconciled-*` files and [final result](final-validation.json) identify this
+source; subsequent evidence-only commits preserve the same runtime source.
+
+[PR #105](https://github.com/CrispStrobe/CrispCloud/pull/105) provides the follow-up
+review. Browser execution for this revision remains pending: the expanded
+21-case portable plus 10-case limits cohort is configured in CI, while the
+earlier local launch was blocked before tests. Hosted workflows are queued at
+the recorded source-head observation. The concurrent main integration's
+independent macOS/Chrome claims remain separate from these receipts.
