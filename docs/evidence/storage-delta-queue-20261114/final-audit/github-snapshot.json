@@ -1,0 +1,1317 @@
+{
+  "receipt_generated_at": "2026-11-14T21:39:52.318Z",
+  "primary_pr": {
+    "url": "https://github.com/CrispStrobe/CrispCloud/pull/107",
+    "number": 107,
+    "state": "open",
+    "merged": false,
+    "mergeable": true,
+    "draft": true,
+    "body": "## Why\n\nContinue Stage 7 of the storage-capabilities roadmap. The latent delta paths lacked a complete version-bound reconstruction and publication contract, and Settings advertised automatic delta transfers that were not connected to the queue.\n\nThis PR first reconciles the recent repository work, then adds a bounded native delta-download profile using existing hashing, staging and foreground HTTP bandwidth facilities. It adds no runtime dependency.\n\n## Changes\n\n- Validate block-map geometry, lengths, counts, identities and hashes at runtime; freeze source/baseline snapshots and reject contradictory or unbound plans.\n- Reconstruct native downloads privately, verify downloaded and reused blocks, reread the complete candidate and original destination, and revalidate the source before the existing local publication boundary. Empty files and shrink-only plans apply their exact final size.\n- Add explicit S3 full-revision seeding and conditional range reconstruction. Admission binds account, object, strong ETag and length, plus a private receipt from the same adapter's verified seed. Persistent JSON alone cannot authorize reuse.\n- Require exact HTTP 206/range/body metadata, reject URI aliases and unsupported profiles, and reuse the captured bandwidth context.\n- Refuse raw remote delta uploads and decline the unqualified pCloud/Nextcloud high-level mutation paths before I/O. Ordinary transfers keep their existing behavior.\n- Show a disabled, localized Delta Sync status in Settings and replace historical automatic-execution claims with the actual profile.\n\nLimits: 64 KiB–64 MiB blocks, 8 GiB files, 131,072 signatures and 32 MiB serialized maps. A new remote version, adapter restart or lost seed receipt requires fresh explicit seeding.\n\n## Reconciled source work\n\nThe initial fetch covered 5 branches, 96 PR heads and 22 tags, including Office notes/sorting, Office recovery and bandwidth PR #106. Subsequent refreshes incorporated the STL/3MF previews, content detection, pane path menus, newer Office work, main `2c373371973b2506fc4fc03e599ef093d14a4be1` and annotated `v1.3.2`.\n\nAll branch and PR heads observed at the recorded 20:54:46 UTC cutoff are ancestors. The superseded MadEdit2 alternate API remains preserved under its archive tag, consistent with its existing disposition.\n\nThe guarded Office sync pins `a379ecc455890032906098b6cf58e17504581ed0`, retaining the combined sorting/history regression and latest canonical Word fixes. Companion review: https://github.com/CrispStrobe/quds_office_suite/pull/12.\n\n## Validation\n\n| Gate | Exact source | Result |\n| --- | --- | --- |\n| Broad native delta/provider/queue/bandwidth/Office/mesh/staging cohort | `33198164` | 790 passed across 43 suites; 0 failed/skipped; 8,382 stable inputs |\n| Follow-up for the four newer Word runtime files | `b98cd70e` | 60 host cases passed across 6 suites; 0 failed/skipped; 8,384 stable inputs |\n| Canonical Word and editor history | `a379ecc4` | 232 passed across 19 suites; 0 failed/skipped; 2,955 stable inputs |\n| Python sync/evidence controls | Recorded input-bound receipts | 50 passed; all recorded Python inputs stable |\n| Managed Office provenance | `a379ecc4` | All 2,187 files verified |\n\nStrict scoped analysis passes. Linux validation uses Flutter 3.47.8 / Dart 3.13.7 with native hooks enabled and no dependency override. S3 coverage includes fault-injected mocks and real signed loopback HTTP ranges. Final changes after `b98cd70e` only preserve documentation and evidence.\n\n[Profile](https://github.com/CrispStrobe/CrispCloud/blob/781458d765100ae3556906ff8ca923e70c956afa/docs/storage-delta-profile.md) · [Progress and checkpoints](https://github.com/CrispStrobe/CrispCloud/blob/781458d765100ae3556906ff8ca923e70c956afa/docs/evidence/storage-delta-20261114/PROGRESS.md) · [Broad raw receipts](https://github.com/CrispStrobe/CrispCloud/blob/781458d765100ae3556906ff8ca923e70c956afa/docs/evidence/storage-delta-20261114/qualification/README.md) · [Word follow-up](https://github.com/CrispStrobe/CrispCloud/blob/781458d765100ae3556906ff8ca923e70c956afa/docs/evidence/storage-delta-20261114/office-refresh/README.md)\n\n## Remaining scope\n\nAutomatic delta queue admission, durable delta resume/path claims and remote conditional publication remain future work. This is Linux native qualification with mock/loopback transports, not live-provider, browser or mobile qualification. Cancellation is cooperative; the existing native check/rename boundary is not external-writer CAS. Ten historical Nextcloud/ownCloud live mutation scenarios remain explicitly unavailable and are not counted as passes.",
+    "title": "feat(storage): validate and stage native delta downloads",
+    "base": "main",
+    "base_sha": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+    "head": "integration/storage-delta-20261114",
+    "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+    "head_repo_id": 1107206579,
+    "head_repo_full_name": "CrispStrobe/CrispCloud",
+    "merge_commit_sha": "7cfc9d1b0ec9a3bf5423241c812513b438dad04b",
+    "user": {
+      "login": "CrispStrobe",
+      "name": "CrispStrobe",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+      "id": 154636388
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "diff": null,
+    "comments": null,
+    "created_at": "2026-11-14T21:10:40Z",
+    "updated_at": "2026-11-14T21:36:32Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 12,
+    "changed_files": 389,
+    "additions": 62721,
+    "deletions": 1646,
+    "display_url": "https://github.com/CrispStrobe/CrispCloud/pull/107",
+    "display_title": "feat(storage): validate and stage native delta downloads"
+  },
+  "primary_branches": [
+    {
+      "name": "codex/office-recovery-20261114",
+      "sha": "764cb5184c93ac89dc57638fc0e88d42aa82154b"
+    },
+    {
+      "name": "integration/storage-delta-20261114",
+      "sha": "59704919d5af3e256e7279ae94965f7d4c5fb279"
+    },
+    {
+      "name": "main",
+      "sha": "e58da70149182301efbbe85807edb6298ff37ff1"
+    }
+  ],
+  "primary_recent_prs": [
+    {
+      "number": 107,
+      "title": "feat(storage): validate and stage native delta downloads",
+      "state": "open",
+      "draft": true,
+      "head": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+      "head_ref": "integration/storage-delta-20261114",
+      "base": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": "7cfc9d1b0ec9a3bf5423241c812513b438dad04b",
+      "updated_at": "2026-11-14T21:36:32Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/107"
+    },
+    {
+      "number": 106,
+      "title": "Add shared queued HTTP payload limits for G29",
+      "state": "closed",
+      "draft": true,
+      "head": "2e683c9de9e8bc801dd9e2f3dea4380b4b854ca6",
+      "head_ref": "integration/storage-bandwidth-20261114",
+      "base": "022ac6c91ccaa86f1d36a4d8cc1b20733037a67d",
+      "base_ref": "main",
+      "merged_at": "2026-11-14T20:12:42Z",
+      "merge_commit_sha": "d40ca389c009803c1f811458215a1c7e8d6a0973",
+      "updated_at": "2026-11-14T20:37:33Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/106"
+    },
+    {
+      "number": 103,
+      "title": "Add bounded read-only NTFS filesystem image browsing",
+      "state": "closed",
+      "draft": true,
+      "head": "d504409acc779b670de482247f3231a7247dcd92",
+      "head_ref": "integration/storage-ntfs-20261114",
+      "base": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "base_ref": "integration/storage-ext-20261114",
+      "merged_at": null,
+      "merge_commit_sha": "3700b81fbc5562eb05c487abb18457c299511a7d",
+      "updated_at": "2026-11-14T18:42:30Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/103"
+    },
+    {
+      "number": 105,
+      "title": "Preserve comparison backpressure and prompt read errors",
+      "state": "closed",
+      "draft": true,
+      "head": "22bd67b887c81a11ea22664defc3474a07eef50a",
+      "head_ref": "integration/storage-binary-20261114",
+      "base": "6ecf25262aaa4dd2bc9ea59a396dc708c2048948",
+      "base_ref": "main",
+      "merged_at": "2026-11-14T17:55:45Z",
+      "merge_commit_sha": "1ba3d652f931aed719c55e7afc37d006d9956bdf",
+      "updated_at": "2026-11-14T17:57:42Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/105"
+    },
+    {
+      "number": 104,
+      "title": "Bind binary comparison navigation to verified bounded snapshots",
+      "state": "closed",
+      "draft": true,
+      "head": "542c1c8b97643e5ad2e7c44f35b5417ef95c7d6a",
+      "head_ref": "integration/storage-binary-20261114",
+      "base": "9e025c440b4d9a247844bcf4d6edf08a34aeeb30",
+      "base_ref": "main",
+      "merged_at": "2026-11-14T17:33:23Z",
+      "merge_commit_sha": "54605abbfc01fea25c153e4bece48122a0757895",
+      "updated_at": "2026-11-14T17:33:23Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/104"
+    },
+    {
+      "number": 102,
+      "title": "Add bounded read-only ext filesystem image browsing",
+      "state": "closed",
+      "draft": true,
+      "head": "ffdd6a86820b0d58cf8b93b4e626d0439beefab9",
+      "head_ref": "integration/storage-ext-20261114",
+      "base": "a34f7fcab53441da7d1d6c96e9d9e5ba25111907",
+      "base_ref": "main",
+      "merged_at": "2026-11-14T13:44:27Z",
+      "merge_commit_sha": "4936c9cc65ea8dce32e8552f31d16b1c8771233f",
+      "updated_at": "2026-11-14T14:07:52Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/102"
+    },
+    {
+      "number": 101,
+      "title": "Add FAT/UDF image browsing, LZFSE, ZIP recovery and partition tools",
+      "state": "closed",
+      "draft": true,
+      "head": "03f37893819ee999a9a660f029306f53ed7f2d0f",
+      "head_ref": "integration/storage-capabilities-20261114",
+      "base": "14e022eb51c417803a1913131e78912a8a19b3be",
+      "base_ref": "main",
+      "merged_at": "2026-11-14T11:37:29Z",
+      "merge_commit_sha": "e14782e3cd6c2bdc7d4620319c485234a7e8c7c8",
+      "updated_at": "2026-11-14T14:07:51Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/101"
+    },
+    {
+      "number": 100,
+      "title": "Integrate all saved branch work and extend archive/container support",
+      "state": "closed",
+      "draft": false,
+      "head": "c582f2d7a413c54dcf954f6f25f8201e36ba81d2",
+      "head_ref": "integration/archive-containers-20261113",
+      "base": "e13fb727e4cfe785219c1ef31206d2fbefa8d6c9",
+      "base_ref": "main",
+      "merged_at": "2026-11-13T22:13:16Z",
+      "merge_commit_sha": "81639c44da5c9c905e5bcbe8d04308fce7bda17a",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/100"
+    },
+    {
+      "number": 97,
+      "title": "Expand Commander archive workflows on the shared operation queue",
+      "state": "closed",
+      "draft": true,
+      "head": "cfae329b3dee73ececc6b689c9936339dd3e6a49",
+      "head_ref": "feature/archive-commander-parity-20261113",
+      "base": "07928e070135d422fbd136fccd1bf53d0d2d47b6",
+      "base_ref": "main",
+      "merged_at": "2026-11-13T21:42:42Z",
+      "merge_commit_sha": "1918dfd665a1914150d23e49de10abccb6ddbb76",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/97"
+    },
+    {
+      "number": 95,
+      "title": "Improve document fonts, preview alternatives, and legacy DOC recovery",
+      "state": "closed",
+      "draft": true,
+      "head": "02160e56ffb3ec2e11c47447fa2c3203e4268cc3",
+      "head_ref": "feature/apache-file-viewer-20261113",
+      "base": "07928e070135d422fbd136fccd1bf53d0d2d47b6",
+      "base_ref": "main",
+      "merged_at": "2026-11-13T21:42:43Z",
+      "merge_commit_sha": "3d47583736eee67e5236f6c602c57846535ec54c",
+      "updated_at": "2026-11-14T14:07:50Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/95"
+    },
+    {
+      "number": 84,
+      "title": "Consolidate Linux ebook host readiness and platform parity recovery",
+      "state": "closed",
+      "draft": true,
+      "head": "464e4dd3f548302ee5b9f78994fa09caf95437bc",
+      "head_ref": "feature/ebook-parity-canary-20261112",
+      "base": "5dce28e8c64b2557d3e42ef305da916e3bfcd91f",
+      "base_ref": "feature/ebook-reader-editor",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "updated_at": "2026-11-14T14:07:50Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/84"
+    },
+    {
+      "number": 94,
+      "title": "Retain final DOC fidelity receipts and verified source pins",
+      "state": "closed",
+      "draft": true,
+      "head": "ef88da683a8ad68e57bde5d6d794698add46d2b1",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "b6bc7b13e56fe6bbdeafc1c4f84d405e0a6226c5",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T21:21:51Z",
+      "merge_commit_sha": "7f8248de581856c53e022ac7e2ddbc91db9e3d54",
+      "updated_at": "2026-11-13T00:08:15Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/94"
+    },
+    {
+      "number": 92,
+      "title": "Add reviewed archive copy, integrity reports and portable codecs",
+      "state": "closed",
+      "draft": true,
+      "head": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "head_ref": "feature/archive-workflows-codecs-20261112",
+      "base": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "base_ref": "feature/archive-package-readers-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "e9c8d83fc4f7154c0a3300f249e5a05d9f02b9e7",
+      "updated_at": "2026-11-12T21:23:27Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/92"
+    },
+    {
+      "number": 93,
+      "title": "Archive member rearrangement and preserved legacy CPIO writing",
+      "state": "closed",
+      "draft": true,
+      "head": "19bbb8606a87492f991261eb3fb79ed1d9f2c299",
+      "head_ref": "feature/archive-rearrange-cpio-20261112",
+      "base": "7cb65d768f2b096230f8bd32afc6c954baae7416",
+      "base_ref": "feature/archive-workflows-codecs-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "34738b857ce24b31a39d0da84b823a898fce91ba",
+      "updated_at": "2026-11-12T20:32:48Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/93"
+    },
+    {
+      "number": 90,
+      "title": "Browse RPM, CAB and Apple PBZX/portable CPIO payloads",
+      "state": "closed",
+      "draft": true,
+      "head": "e103d8c6fd6dc8c8c3d73467a8a1eb15fb8471d4",
+      "head_ref": "feature/archive-package-readers-20261112",
+      "base": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "base_ref": "feature/archive-writers-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "af4e74c835c2a6b8cd2cb30c53e04e937ea561ba",
+      "updated_at": "2026-11-12T20:13:08Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/90"
+    },
+    {
+      "number": 91,
+      "title": "Integrate tested DOC fidelity fixes and complete source receipts",
+      "state": "closed",
+      "draft": true,
+      "head": "b3be1616199a049a6a239a0199a3b5ac890aea21",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "be3f7bc4700d15645fdcdf5bad3bfaee9286e7e9",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T20:12:46Z",
+      "merge_commit_sha": "f9cc264c8030b713f9071522bf4ed74559576ffa",
+      "updated_at": "2026-11-12T20:12:46Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/91"
+    },
+    {
+      "number": 89,
+      "title": "Expand writable archives and verified data-image creation",
+      "state": "closed",
+      "draft": true,
+      "head": "84c3a1172759abdbab0c320142ae190e532f7753",
+      "head_ref": "feature/archive-writers-20261112",
+      "base": "120f839ab9091bdbedf326621347ee737140e043",
+      "base_ref": "feature/archive-containers-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "f3955eca444d7cb48d0a0503447b48a6cba9c36a",
+      "updated_at": "2026-11-12T19:17:00Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/89"
+    },
+    {
+      "number": 87,
+      "title": "Integrate measured legacy DOC fidelity and preserve native review semantics",
+      "state": "closed",
+      "draft": true,
+      "head": "8b0c01597c231814815bf5456ab0a616102e7307",
+      "head_ref": "feature/legacy-doc-fidelity-20261112",
+      "base": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T18:32:19Z",
+      "merge_commit_sha": "c2799b7208d7e5b466ad84da515be1ab28325d81",
+      "updated_at": "2026-11-12T18:33:10Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/87"
+    },
+    {
+      "number": 88,
+      "title": "Integrate DOC fidelity parser and vector previews with verified source pins",
+      "state": "closed",
+      "draft": true,
+      "head": "b100cd751688f13609a8829180b487b381588d14",
+      "head_ref": "feature/office-fidelity-oracles-20261112",
+      "base": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T18:21:06Z",
+      "merge_commit_sha": "504101505a059c0956011cc16d5b22a93d1a5b3b",
+      "updated_at": "2026-11-12T18:32:57Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/88"
+    },
+    {
+      "number": 79,
+      "title": "Consume shared Office font, table and custom-tab improvements",
+      "state": "closed",
+      "draft": true,
+      "head": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "head_ref": "feature/office-fidelity-followup-20261112",
+      "base": "02be67fecad5be2a040e6dcd1579a2a54fa51933",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T15:38:50Z",
+      "merge_commit_sha": "3c5220d8c7e90c8f8e6cdb2b63f056b2cbae3d10",
+      "updated_at": "2026-11-12T18:32:55Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/79"
+    },
+    {
+      "number": 85,
+      "title": "Consume expanded Office fidelity and recover font and picture workflows",
+      "state": "closed",
+      "draft": true,
+      "head": "d8643faed99c03a3d6fdba91bf047c690a50ea5b",
+      "head_ref": "feature/office-fidelity-expansion-20261112",
+      "base": "788e1f005e72371d0cf2182ae0cec81dd4e84adb",
+      "base_ref": "feature/office-fidelity-followup-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "9a7884cf0e7dae9bba3a8c5cca0f00c3f41fdf70",
+      "updated_at": "2026-11-12T18:32:53Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/85"
+    },
+    {
+      "number": 86,
+      "title": "Add ISO/DMG and package archive readers with source-backed F3 browsing",
+      "state": "closed",
+      "draft": true,
+      "head": "120f839ab9091bdbedf326621347ee737140e043",
+      "head_ref": "feature/archive-containers-20261112",
+      "base": "467c4a3deb31e18e33e558d3c08b19f2ddc7231c",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T18:21:06Z",
+      "merge_commit_sha": "1569d49d4dc78da7b53100e525b89e7fa72aa515",
+      "updated_at": "2026-11-12T18:32:51Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/86"
+    },
+    {
+      "number": 83,
+      "title": "Bound remote viewer preparation and temporary-copy cleanup",
+      "state": "closed",
+      "draft": true,
+      "head": "d46b35a23a3d0631bc509e115fa003b1e64ebd67",
+      "head_ref": "feature/viewer-spool-lifecycle-20261112",
+      "base": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "base_ref": "feature/writable-archive-endpoints-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "332edff034987bf4a80d5eb1948fed143915e304",
+      "updated_at": "2026-11-12T16:00:17Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/83"
+    },
+    {
+      "number": 81,
+      "title": "Add reviewed archive imports and verified native publication",
+      "state": "closed",
+      "draft": true,
+      "head": "3bb4874de0785edf0b0fa24d2d0ea05a74c58b71",
+      "head_ref": "feature/writable-archive-endpoints-20261112",
+      "base": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "base_ref": "feature/external-remote-editing-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "f5e4b2afeea2c4b32da35140605e0fc1f2617688",
+      "updated_at": "2026-11-12T15:39:52Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/81"
+    },
+    {
+      "number": 75,
+      "title": "Add retained private staging for external tools",
+      "state": "closed",
+      "draft": true,
+      "head": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "head_ref": "feature/private-tool-staging-20261112",
+      "base": "e473083f7439b5d8592f43c6ca2f013cdb50c5a1",
+      "base_ref": "feature/external-tools-archive-scope-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "efc05f6833fcd1d59906f6968311dfccbdf21f3a",
+      "updated_at": "2026-11-12T15:39:50Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/75"
+    },
+    {
+      "number": 68,
+      "title": "Consolidate Quds Office fidelity and captured legacy Word conversion",
+      "state": "closed",
+      "draft": true,
+      "head": "9cd18e7c704937897d037b1051d38341d4928bf5",
+      "head_ref": "feature/office-fidelity-gap-closure-20261112",
+      "base": "977b5037f133cb2d33c57db761864183455a705e",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T13:53:00Z",
+      "merge_commit_sha": "4c9164d227f57b8e59beab6da8b59037965345ef",
+      "updated_at": "2026-11-12T15:39:48Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/68"
+    },
+    {
+      "number": 82,
+      "title": "Use standalone MPL DOC parser and extend reviewed DOCX/DOCM preservation",
+      "state": "closed",
+      "draft": true,
+      "head": "085495527e0ab02f52eeded928d54cb766b79910",
+      "head_ref": "feature/format-viewers-path-favorites-20261112",
+      "base": "02be67fecad5be2a040e6dcd1579a2a54fa51933",
+      "base_ref": "main",
+      "merged_at": "2026-11-12T15:38:51Z",
+      "merge_commit_sha": "21d3c51759b530624b88c03c8a34216b69bb5687",
+      "updated_at": "2026-11-12T15:39:46Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/82"
+    },
+    {
+      "number": 80,
+      "title": "Add retained external editing with revision-guarded remote saves",
+      "state": "closed",
+      "draft": true,
+      "head": "fdf8c35014367834570bb89a3902f50fd132e865",
+      "head_ref": "feature/external-remote-editing-20261112",
+      "base": "005771bd53f2cd437cb70b23ebe83c224792bd00",
+      "base_ref": "feature/archive-publication-recovery-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "9613144cfdcf202f79188aca9838a91acbaf422e",
+      "updated_at": "2026-11-12T15:39:44Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/80"
+    },
+    {
+      "number": 77,
+      "title": "Add reviewed external text and image comparison tools",
+      "state": "closed",
+      "draft": true,
+      "head": "77af99427e2d7d1b3719a22376a4ebf56508edbd",
+      "head_ref": "feature/external-comparison-tools-20261112",
+      "base": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "base_ref": "feature/conditional-remote-publication-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "61b181994e78f4eb1b80d4a47d8ca0e1252d4027",
+      "updated_at": "2026-11-12T15:39:42Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/77"
+    },
+    {
+      "number": 76,
+      "title": "Add conditional publication for retained remote edits",
+      "state": "closed",
+      "draft": true,
+      "head": "2297f8e3f7a261c8cbf80b48ffa70bf25df2998d",
+      "head_ref": "feature/conditional-remote-publication-20261112",
+      "base": "47b7c57012cfc23f8100bad8c5a7fb4c53171a12",
+      "base_ref": "feature/private-tool-staging-20261112",
+      "merged_at": null,
+      "merge_commit_sha": "673f739adeb0ca80334a1a90f0be8e1e0ba3c325",
+      "updated_at": "2026-11-12T15:39:40Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/76"
+    }
+  ],
+  "primary_open_prs": [
+    {
+      "number": 107,
+      "title": "feat(storage): validate and stage native delta downloads",
+      "state": "open",
+      "draft": true,
+      "head": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+      "head_ref": "integration/storage-delta-20261114",
+      "base": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": "7cfc9d1b0ec9a3bf5423241c812513b438dad04b",
+      "updated_at": "2026-11-14T21:36:32Z",
+      "url": "https://github.com/CrispStrobe/CrispCloud/pull/107"
+    }
+  ],
+  "primary_comments": [],
+  "primary_reviews": [],
+  "primary_threads": [],
+  "primary_checks": {
+    "total_count": 37,
+    "items": [
+      {
+        "id": 132596706874,
+        "name": "Crypto gate (ubuntu-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706874",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706874",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706857,
+        "name": "Build linux (Ubuntu)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706857",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706857",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706818,
+        "name": "iOS folder and embedded shell tests",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706818",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706818",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706762,
+        "name": "Crypto gate (macos-15-intel)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706762",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706762",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706743,
+        "name": "Build web (Ubuntu)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706743",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706743",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706729,
+        "name": "Crypto release evidence",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706729",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706729",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706723,
+        "name": "Build android (Ubuntu)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706723",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706723",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706684,
+        "name": "Build Windows",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706684",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706684",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706637,
+        "name": "Browser storage + terminal (Chrome)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706637",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706637",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706623,
+        "name": "Analyze + Test (Linux)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706623",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706623",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706598,
+        "name": "host-roundtrip",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729640/job/132596706598",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729640/job/132596706598",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706379,
+        "name": "Crypto gate (windows-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706379",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729626/job/132596706379",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706219,
+        "name": "PDF package (dart_pdf_editor_secure_storage)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596706219",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596706219",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706096,
+        "name": "Office recovery copy in Chromium",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729640/job/132596706096",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729640/job/132596706096",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706064,
+        "name": "PDF web build",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596706064",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596706064",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596706055,
+        "name": "Shared PDF operations and CLI",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596706055",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596706055",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705951,
+        "name": "PDF package (dart_pdf_editor)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596705951",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596705951",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705773,
+        "name": "Image editor in Chrome",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729529/job/132596705773",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729529/job/132596705773",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705726,
+        "name": "Image contracts and real file round trips",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729529/job/132596705726",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729529/job/132596705726",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705649,
+        "name": "workspace",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729616/job/132596705649",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729616/job/132596705649",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705637,
+        "name": "PDF integration and independent parser",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596705637",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729652/job/132596705637",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705617,
+        "name": "Media contracts and real audio exports",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729516/job/132596705617",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729516/job/132596705617",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705553,
+        "name": "Real AVFoundation exports and unsigned iOS build",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729516/job/132596705553",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729516/job/132596705553",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705388,
+        "name": "Maintained image engine regression tests",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729529/job/132596705388",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729529/job/132596705388",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596705206,
+        "name": "Real Media3 exports on Android",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729516/job/132596705206",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729516/job/132596705206",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596704744,
+        "name": "archives",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729583/job/132596704744",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729583/job/132596704744",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596704385,
+        "name": "Archive, FAT, ext, NTFS, partition, UDF and ZIP recovery regression gate",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729523/job/132596704385",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729523/job/132596704385",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596704087,
+        "name": "BSD provenance and actual JavaScript acceptance",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:38Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729523/job/132596704087",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729523/job/132596704087",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701677,
+        "name": "contracts",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729667/job/132596701677",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729667/job/132596701677",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701614,
+        "name": "Native contracts (windows-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729546/job/132596701614",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729546/job/132596701614",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701542,
+        "name": "contracts",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729546/job/132596701542",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729546/job/132596701542",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701419,
+        "name": "gui",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729667/job/132596701419",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729667/job/132596701419",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701390,
+        "name": "Shared allocator on Dart VM and actual JavaScript",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729514/job/132596701390",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729514/job/132596701390",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701324,
+        "name": "Native contracts (macos-latest)",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729546/job/132596701324",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729546/job/132596701324",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596701209,
+        "name": "HTTP transport, queue lifecycle, policy and UI",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:37Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729514/job/132596701209",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643729514/job/132596701209",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596684036,
+        "name": "gui",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:33Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643724313/job/132596684036",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643724313/job/132596684036",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132596683727,
+        "name": "contracts",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+        "started_at": "2026-11-14T21:36:33Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643724313/job/132596683727",
+        "details_url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43643724313/job/132596683727",
+        "annotations_count": 0,
+        "summary": null
+      }
+    ]
+  },
+  "primary_combined_status": {
+    "sha": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+    "state": "pending",
+    "total_count": 0,
+    "statuses": []
+  },
+  "main_compare": {
+    "status": "ahead",
+    "ahead_by": 4,
+    "behind_by": 0,
+    "merge_base": "2c373371973b2506fc4fc03e599ef093d14a4be1",
+    "url": "https://github.com/CrispStrobe/CrispCloud/compare/2c373371973b2506fc4fc03e599ef093d14a4be1...e58da70149182301efbbe85807edb6298ff37ff1",
+    "commits": [
+      {
+        "sha": "7a52e60694413258328c940dd6e366b5b22c53a0",
+        "parents": [
+          "2c373371973b2506fc4fc03e599ef093d14a4be1"
+        ],
+        "message": "Fix Windows catalogue self-exclusion and prepare version 1.3.3",
+        "committed_at": "2026-11-14T20:53:11Z"
+      },
+      {
+        "sha": "8556c11d7c5aa6b24a1349ed3294caa56734954b",
+        "parents": [
+          "7a52e60694413258328c940dd6e366b5b22c53a0"
+        ],
+        "message": "Document catalogue FFI ownership and keep Rust contracts clean",
+        "committed_at": "2026-11-14T20:56:20Z"
+      },
+      {
+        "sha": "5e2bead667035f8c71a60850bcb7d1ed9e25fad7",
+        "parents": [
+          "8556c11d7c5aa6b24a1349ed3294caa56734954b"
+        ],
+        "message": "Cover catalogue output aliases and clarify Windows path matching",
+        "committed_at": "2026-11-14T21:14:22Z"
+      },
+      {
+        "sha": "e58da70149182301efbbe85807edb6298ff37ff1",
+        "parents": [
+          "5e2bead667035f8c71a60850bcb7d1ed9e25fad7"
+        ],
+        "message": "Record signed 1.3.3 app and Windows catalogue release fix",
+        "committed_at": "2026-11-14T21:22:14Z"
+      }
+    ],
+    "files": [
+      {
+        "path": "cli/pubspec.yaml",
+        "status": "modified",
+        "sha": "092d82ca18b7f50fd33865dec8d8908e1d4b046b",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "path": "docs/apple-export-policy.json",
+        "status": "modified",
+        "sha": "677212d1d8ce2f82b9c8c3653153577f8cb8c011",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "path": "docs/evidence/integration-viewers-20261114/acceptance-5e0cb337.json",
+        "status": "added",
+        "sha": "ec26d954019fc8f68a0d6986d4332d5c3c14f4df",
+        "additions": 148,
+        "deletions": 0
+      },
+      {
+        "path": "docs/evidence/integration-viewers-20261114/acceptance.json",
+        "status": "modified",
+        "sha": "b58755b2148035223f35472b745ad73768f4604d",
+        "additions": 38,
+        "deletions": 16
+      },
+      {
+        "path": "docs/integration-viewers-20261114.md",
+        "status": "modified",
+        "sha": "8beaeae5b2fd60808db52b8611312e56792afbac",
+        "additions": 31,
+        "deletions": 1
+      },
+      {
+        "path": "packages/crisp_catalog/native/src/lib.rs",
+        "status": "modified",
+        "sha": "b7b05ff2d21b2095b61649ebebb08a1965255afb",
+        "additions": 43,
+        "deletions": 7
+      },
+      {
+        "path": "pubspec.yaml",
+        "status": "modified",
+        "sha": "7dc35b59cad68b038205bf4e066fc08fbb817733",
+        "additions": 1,
+        "deletions": 1
+      }
+    ]
+  },
+  "office_compare": {
+    "status": "ahead",
+    "ahead_by": 1,
+    "behind_by": 0,
+    "merge_base": "f974b9911b1547c806279279a87f2b21a1ac4357",
+    "url": "https://github.com/CrispStrobe/CrispCloud/compare/f974b9911b1547c806279279a87f2b21a1ac4357...764cb5184c93ac89dc57638fc0e88d42aa82154b",
+    "commits": [
+      {
+        "sha": "764cb5184c93ac89dc57638fc0e88d42aa82154b",
+        "parents": [
+          "f974b9911b1547c806279279a87f2b21a1ac4357"
+        ],
+        "message": "docs(office): checkpoint worksheet navigation scope",
+        "committed_at": "2026-11-14T21:18:55Z"
+      }
+    ],
+    "files": [
+      {
+        "path": "docs/office-worksheet-navigation-20261114.md",
+        "status": "added",
+        "sha": "c2e4040a2370ec130b96d2baf2aca924bead0bbb",
+        "additions": 31,
+        "deletions": 0
+      }
+    ]
+  },
+  "companion_pr": {
+    "url": "https://github.com/CrispStrobe/quds_office_suite/pull/12",
+    "number": 12,
+    "state": "open",
+    "merged": false,
+    "mergeable": true,
+    "draft": true,
+    "body": "## Why\n\nCrispCloud's Office notes/sorting and worksheet recovery branches initially pinned different canonical sources. This continuation preserves their history and adds a regression proving that sorting, formatting, structural deletion, and undo/redo retain original cells and the owning worksheet.\n\nCrispCloud main subsequently incorporated canonical Office main `c1678ade3b5b9fd13088e94d752fd17fd14eb3e8`, including Word import improvements. This branch now merges that exact canonical revision while retaining the extra sorting/history regression and earlier evidence.\n\n## What this branch adds\n\nThe runtime controller and the shared recovery files match canonical main. The remaining substantive addition against that main is the combined sorting/history regression, accompanied by source-bound validation evidence. Both the original reconciliation and the current canonical main remain in the ancestry.\n\nThe latest merge adds the canonical Word bookmark import/repair, imported content-control ID tolerance, and finite measurement handling to the source used by CrispCloud. It introduces no additional runtime patch or dependency change. Open Word PRs #9, #10, and #11 are outside this branch's source pin and qualification.\n\n## Current qualification\n\n- Qualified source: `a379ecc455890032906098b6cf58e17504581ed0`; tree `0b083a5019ca07503765a649e4ff5c9712f705c6`.\n- Merge parents: prior reconciliation `1c7b0c121ed476090def463d9bc59f5c8a3462b7` and canonical main `c1678ade3b5b9fd13088e94d752fd17fd14eb3e8`.\n- Nine focused Word engine suites: **117 passed, 0 failed, 0 skipped**.\n- All ten prior worksheet/presentation history suites rerun: **115 passed, 0 failed, 0 skipped**.\n- Total: **232 passing tests across 19 suites** on native Linux, using Flutter 3.47.8 and Dart 3.13.7.\n- Strict analysis (`--fatal-infos`) passed for the four changed engine files, nine Word suites, controller, and sort regression.\n- All **2,955 captured source/generated input hashes** remained unchanged; source HEAD and worktree were clean throughout qualification.\n- Initial concurrent wrapper launches failed before tests because of a shared Flutter bootstrap stamp collision. Those logs are retained separately; the successful engine retry used the direct pinned Dart SDK.\n- Evidence-only head: `579f2105cf7fca61536f7e3f9b59004929bdb6c5`.\n- Receipts and raw compressed logs: [word follow-up evidence](https://github.com/CrispStrobe/quds_office_suite/tree/579f2105cf7fca61536f7e3f9b59004929bdb6c5/docs/evidence/crispcloud-storage-reconcile-20261114/word-followup).\n\n## Earlier qualification and limits\n\nThe earlier **115-test** result remains bound to `cb42ef232e5794ac4c147ef1992133cf8710ab01`, with its original 3,667-input inventory. The separate CrispCloud **790-test** result remains bound to application revision `331981649872e363253aef13f57a638e5747b8e5`; it is not relabelled as a run on this follow-up.\n\nCrispCloud consumes the canonical source through its guarded Office sync. These receipts qualify the stated native Dart/Flutter behavior and static analysis. Browser, live-cloud, external rendering/schema acceptance, and whole-application testing retain their separate scopes.",
+    "title": "test(office): preserve combined sorting and worksheet history regression",
+    "base": "main",
+    "base_sha": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+    "head": "integration/crispcloud-storage-reconcile-20261114",
+    "head_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+    "head_repo_id": 1446096841,
+    "head_repo_full_name": "CrispStrobe/quds_office_suite",
+    "merge_commit_sha": "a97200c3441f587101cbab8dfd05a2e0cfc0389a",
+    "user": {
+      "login": "CrispStrobe",
+      "name": "CrispStrobe",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/154636388?v=4",
+      "id": 154636388
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "diff": null,
+    "comments": null,
+    "created_at": "2026-11-14T20:50:58Z",
+    "updated_at": "2026-11-14T21:04:44Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 6,
+    "changed_files": 42,
+    "additions": 986,
+    "deletions": 0,
+    "display_url": "https://github.com/CrispStrobe/quds_office_suite/pull/12",
+    "display_title": "test(office): preserve combined sorting and worksheet history regression"
+  },
+  "companion_comments": [],
+  "companion_reviews": [],
+  "companion_checks": {
+    "total_count": 4,
+    "items": [
+      {
+        "id": 132587809153,
+        "name": "office-fidelity",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+        "started_at": "2026-11-14T21:04:21Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828270/job/132587809153",
+        "details_url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828270/job/132587809153",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132587806570,
+        "name": "quds_office_editor",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+        "started_at": "2026-11-14T21:04:20Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828224/job/132587806570",
+        "details_url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828224/job/132587806570",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132587806562,
+        "name": "quds_report_studio",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+        "started_at": "2026-11-14T21:04:20Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828224/job/132587806562",
+        "details_url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828224/job/132587806562",
+        "annotations_count": 0,
+        "summary": null
+      },
+      {
+        "id": 132587806314,
+        "name": "quds_office_engine",
+        "status": "queued",
+        "conclusion": null,
+        "head_sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+        "started_at": "2026-11-14T21:04:20Z",
+        "completed_at": null,
+        "url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828224/job/132587806314",
+        "details_url": "https://github.com/CrispStrobe/quds_office_suite/actions/runs/43640828224/job/132587806314",
+        "annotations_count": 0,
+        "summary": null
+      }
+    ]
+  },
+  "canonical_branches": [
+    {
+      "name": "codex/office-recovery-20261114",
+      "sha": "d7284d5a3fc8e185f8603a22787848dc175453c5"
+    },
+    {
+      "name": "fix/word-block-bookmarks",
+      "sha": "a86a360bf9bd45c729e00b31dd9a97492e23f2e7"
+    },
+    {
+      "name": "fix/word-media-dedupe",
+      "sha": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5"
+    },
+    {
+      "name": "fix/word-sym-chars",
+      "sha": "58de54567d45e38c05dd77064b7607c577374b9d"
+    },
+    {
+      "name": "fix/word-textbox-nesting",
+      "sha": "1b1bac125f426b05f868d482e9fbd657d4ffb73a"
+    },
+    {
+      "name": "integration/crispcloud-storage-reconcile-20261114",
+      "sha": "579f2105cf7fca61536f7e3f9b59004929bdb6c5"
+    },
+    {
+      "name": "main",
+      "sha": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8"
+    }
+  ],
+  "canonical_open_prs": [
+    {
+      "number": 12,
+      "title": "test(office): preserve combined sorting and worksheet history regression",
+      "state": "open",
+      "draft": true,
+      "head": "579f2105cf7fca61536f7e3f9b59004929bdb6c5",
+      "head_ref": "integration/crispcloud-storage-reconcile-20261114",
+      "base": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": "a97200c3441f587101cbab8dfd05a2e0cfc0389a",
+      "updated_at": "2026-11-14T21:04:44Z",
+      "url": "https://github.com/CrispStrobe/quds_office_suite/pull/12"
+    },
+    {
+      "number": 11,
+      "title": "Reuse identical media payloads instead of storing a copy on every save",
+      "state": "open",
+      "draft": false,
+      "head": "5c1ab430c6911bb11f71d29efa35027ead5ac1d5",
+      "head_ref": "fix/word-media-dedupe",
+      "base": "c1678ade3b5b9fd13088e94d752fd17fd14eb3e8",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": "109730d08f4d59810a1a5fd5aedf28a6a37df629",
+      "updated_at": "2026-11-14T20:42:56Z",
+      "url": "https://github.com/CrispStrobe/quds_office_suite/pull/11"
+    },
+    {
+      "number": 10,
+      "title": "Stop text boxes anchored in one paragraph from nesting exponentially",
+      "state": "open",
+      "draft": false,
+      "head": "1b1bac125f426b05f868d482e9fbd657d4ffb73a",
+      "head_ref": "fix/word-textbox-nesting",
+      "base": "4bdb70c9d86fd1ee09ed99d3114b178e965cfa01",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "updated_at": "2026-11-14T20:19:39Z",
+      "url": "https://github.com/CrispStrobe/quds_office_suite/pull/10"
+    },
+    {
+      "number": 9,
+      "title": "Keep symbol-font characters (w:sym) through import and save",
+      "state": "open",
+      "draft": false,
+      "head": "58de54567d45e38c05dd77064b7607c577374b9d",
+      "head_ref": "fix/word-sym-chars",
+      "base": "4bdb70c9d86fd1ee09ed99d3114b178e965cfa01",
+      "base_ref": "main",
+      "merged_at": null,
+      "merge_commit_sha": "a7d84460053e8540807a2faf90ee8ba8fe3fd7b2",
+      "updated_at": "2026-11-14T20:14:09Z",
+      "url": "https://github.com/CrispStrobe/quds_office_suite/pull/9"
+    }
+  ],
+  "canonical_recovery_compare": {
+    "status": "ahead",
+    "ahead_by": 1,
+    "behind_by": 0,
+    "merge_base": "a85a977a8ab95bcf42214eb6dd05c73e2fcb5243",
+    "url": "https://github.com/CrispStrobe/quds_office_suite/compare/a85a977a8ab95bcf42214eb6dd05c73e2fcb5243...d7284d5a3fc8e185f8603a22787848dc175453c5",
+    "commits": [
+      {
+        "sha": "d7284d5a3fc8e185f8603a22787848dc175453c5",
+        "parents": [
+          "a85a977a8ab95bcf42214eb6dd05c73e2fcb5243"
+        ],
+        "message": "docs(office): checkpoint draft-safe worksheet navigation scope",
+        "committed_at": "2026-11-14T21:19:01Z"
+      }
+    ],
+    "files": [
+      {
+        "path": "docs/office-worksheet-navigation-20261114.md",
+        "status": "added",
+        "sha": "2dd407089caba209f6dd063c898dccf34f5d8f42",
+        "additions": 34,
+        "deletions": 0
+      }
+    ]
+  }
+}

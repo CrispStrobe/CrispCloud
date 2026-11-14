@@ -1,0 +1,1213 @@
+{
+  "candidate": {
+    "actual_tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808",
+    "commit": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+    "expected_tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+  },
+  "catalogue_receipt_carryover": {
+    "accepted_for_candidate": true,
+    "alias_regression_passed": true,
+    "artifacts": {
+      "all_match": true,
+      "complete": true,
+      "count": 12,
+      "files": [
+        {
+          "bytes": 559,
+          "hash_matches": true,
+          "path": "command.json",
+          "sha256": "464ef390f74e560fa6701a0fa64083ff9fca6b976cc43e39741a8a275648a1b1",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1217,
+          "hash_matches": true,
+          "path": "environment.json",
+          "sha256": "d34da74e0b46ee31db8e6997e1fba214abfd4779980818f173e04bb8a8c62d0a",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 2,
+          "hash_matches": true,
+          "path": "exit-code.txt",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 4160,
+          "hash_matches": true,
+          "path": "inputs-after.json",
+          "sha256": "89c9b355223f9259b2223994c5d99d0bc3c1bebdbb2d29b33e297018d63bdf28",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 4160,
+          "hash_matches": true,
+          "path": "inputs-before.json",
+          "sha256": "89c9b355223f9259b2223994c5d99d0bc3c1bebdbb2d29b33e297018d63bdf28",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 6652,
+          "hash_matches": true,
+          "path": "run_gate.py",
+          "sha256": "48413739dbde47ba61bccf0020a9d95b85513f7c9917355f558f244520d09e81",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1064,
+          "hash_matches": true,
+          "path": "runtime.json",
+          "sha256": "d88c53def765015bb987c6fdb85a1a6ac61d246290b68f7f9365b2ae3013f69a",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 185,
+          "hash_matches": true,
+          "path": "source-after.json",
+          "sha256": "df47fad86ae05e50db7a8419c83db25bf90da58b79ae911c5f40ec045a8aea68",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 185,
+          "hash_matches": true,
+          "path": "source-before.json",
+          "sha256": "df47fad86ae05e50db7a8419c83db25bf90da58b79ae911c5f40ec045a8aea68",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1898,
+          "hash_matches": true,
+          "path": "stderr.log",
+          "sha256": "de0d69e9f609b8b4c1386201a17ed77063d956087c8528299a09ab05afa1d009",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1470,
+          "hash_matches": true,
+          "path": "stdout.log",
+          "sha256": "53e9e73afe4b42ea995403e9f6b441faf95a83dad3525b629a3f82554e0af145",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1175,
+          "hash_matches": true,
+          "path": "summary.json",
+          "sha256": "3c566b642073d4c4dda6fba8b774282e85a83aefd2d37b91b97863aa9af62105",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        }
+      ],
+      "manifest_sha256": "1210e702d62f2fde0e53ab1380642b6e17114e69fbacd094e6522fef4dc0c6ec"
+    },
+    "before_after_inputs_identical": true,
+    "ignored_scope": "Existing explicit million-row SQLite stress test; not counted as a pass.",
+    "ignored_test": "volume_scale_test::more_than_one_million_entries_remain_queryable",
+    "input_checks": [
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "9a699c9a939b3f309b12c391e9de81fbdd0346e547a9c64d622817e96e0f3f9a",
+        "current_sha256": "9a699c9a939b3f309b12c391e9de81fbdd0346e547a9c64d622817e96e0f3f9a",
+        "path": "packages/crisp_catalog/native/Cargo.lock",
+        "recorded_sha256": "9a699c9a939b3f309b12c391e9de81fbdd0346e547a9c64d622817e96e0f3f9a"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "87728b78f6765a685436ce2cdcb851cc95db9d26c2bee82412476a1a11447037",
+        "current_sha256": "87728b78f6765a685436ce2cdcb851cc95db9d26c2bee82412476a1a11447037",
+        "path": "packages/crisp_catalog/native/Cargo.toml",
+        "recorded_sha256": "87728b78f6765a685436ce2cdcb851cc95db9d26c2bee82412476a1a11447037"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+        "current_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+        "path": "packages/crisp_catalog/native/LICENSE",
+        "recorded_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "a5da801fb698c3b588fb5262181a420fa1f784834524e6465863696bfd4680b1",
+        "current_sha256": "a5da801fb698c3b588fb5262181a420fa1f784834524e6465863696bfd4680b1",
+        "path": "packages/crisp_catalog/native/src/jobs.rs",
+        "recorded_sha256": "a5da801fb698c3b588fb5262181a420fa1f784834524e6465863696bfd4680b1"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "db6ad4d538a5e3a4d279962215484dcfd1b9057144558968a8a46258ab6573b9",
+        "current_sha256": "db6ad4d538a5e3a4d279962215484dcfd1b9057144558968a8a46258ab6573b9",
+        "path": "packages/crisp_catalog/native/src/lib.rs",
+        "recorded_sha256": "db6ad4d538a5e3a4d279962215484dcfd1b9057144558968a8a46258ab6573b9"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90",
+        "current_sha256": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/Cargo.lock",
+        "recorded_sha256": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f",
+        "current_sha256": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/Cargo.toml",
+        "recorded_sha256": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+        "current_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/LICENSE",
+        "recorded_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8",
+        "current_sha256": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/README.md",
+        "recorded_sha256": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "a63e4e6efc157e20f06cd428828d4898cb7afa5e5649577f3c812f1471aeb5a9",
+        "current_sha256": "a63e4e6efc157e20f06cd428828d4898cb7afa5e5649577f3c812f1471aeb5a9",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/UPSTREAM.json",
+        "recorded_sha256": "a63e4e6efc157e20f06cd428828d4898cb7afa5e5649577f3c812f1471aeb5a9"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564",
+        "current_sha256": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/VALIDATION.md",
+        "recorded_sha256": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
+        "current_sha256": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/src/caf.rs",
+        "recorded_sha256": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072",
+        "current_sha256": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/src/index.rs",
+        "recorded_sha256": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072"
+      },
+      {
+        "candidate_and_current_match_receipt": true,
+        "candidate_sha256": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00",
+        "current_sha256": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00",
+        "path": "packages/crisp_catalog/native/vendor/crispcat-format/src/lib.rs",
+        "recorded_sha256": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00"
+      }
+    ],
+    "platform_limit": "Linux x86_64 Rust unit qualification and Unix alias regression; does not establish actual Windows path-prefix behavior.",
+    "raw_test_groups": [
+      {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 1,
+        "measured": 0,
+        "passed": 14,
+        "result": "ok"
+      },
+      {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 0,
+        "result": "ok"
+      }
+    ],
+    "runtime_checks": [
+      {
+        "component": "launcher",
+        "matches_receipt": true,
+        "path": "/workspace/scratch/209f165653d7/toolchain/run",
+        "sha256": "abe07326d8ea0c52cf010d6068b2b28a9a3a35068b272d5e49f77c5ece48fb33"
+      },
+      {
+        "component": "cargo_binary",
+        "matches_receipt": true,
+        "path": "/workspace/scratch/209f165653d7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+        "sha256": "84d55d77232a921da96bcf2e1f78532ef5c5221803aae4448d9e220d48ebd808"
+      },
+      {
+        "component": "rustc_binary",
+        "matches_receipt": true,
+        "path": "/workspace/scratch/209f165653d7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc",
+        "sha256": "5073422953727c9427a76b7fce03aa9404da46315e5a1e4965389512a41e8db0"
+      }
+    ],
+    "source_commit": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f"
+  },
+  "current_git": {
+    "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+    "status": "",
+    "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+  },
+  "final_analysis": {
+    "artifacts": {
+      "all_match": true,
+      "complete": true,
+      "count": 9,
+      "files": [
+        {
+          "bytes": 2432,
+          "hash_matches": true,
+          "path": "command.json",
+          "sha256": "f52558848a775056ddcf28393d5d001eceddfe25468ee1da460f97655dc72fac",
+          "size_matches": true
+        },
+        {
+          "bytes": 907,
+          "hash_matches": true,
+          "path": "files.txt",
+          "sha256": "7e33bedca349718c7af0ebb4931b823055c2941ba0af22879f636573b037e926",
+          "size_matches": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-after.json.gz",
+          "sha256": "95600dbf022b8a9ed9f5422f6b74d52454fe467688ae0f8035bf79a5be33bba0",
+          "size_matches": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-before.json.gz",
+          "sha256": "45e425692b1fee563e443578c8076851e72788d5e11d12ab77083397154a9bbe",
+          "size_matches": true
+        },
+        {
+          "bytes": 6013,
+          "hash_matches": true,
+          "path": "metadata.json",
+          "sha256": "627584d3873f90558dd33a3f6a1f639d3565f28b5226145d1cb74db84e765c0f",
+          "size_matches": true
+        },
+        {
+          "bytes": 6361,
+          "hash_matches": true,
+          "path": "run_analysis.py",
+          "sha256": "d672e8373906d36e2fa41981a8b91bc0d6e92dc6dc03807f194157442b3b249a",
+          "size_matches": true
+        },
+        {
+          "bytes": 0,
+          "hash_matches": true,
+          "path": "stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_matches": true
+        },
+        {
+          "bytes": 737,
+          "hash_matches": true,
+          "path": "stdout.log",
+          "sha256": "8742b298431c000480f0efd1361288536b11bf8b04f1df1d6f2397c8bf4c9111",
+          "size_matches": true
+        },
+        {
+          "bytes": 1146,
+          "hash_matches": true,
+          "path": "versions.json",
+          "sha256": "df41e71f234b1c7938f05cb28d4adb6b21e45ebd3005362b0b76b2b9fece763e",
+          "size_matches": true
+        }
+      ],
+      "manifest_sha256": "37468cf3cac5fed34ef3eac46083f59e9685163afe550c02fea807feefaa0e53"
+    },
+    "complete": true,
+    "file_count": 23,
+    "inputs": {
+      "after_present": true,
+      "changed_entries": [],
+      "snapshots": [
+        {
+          "count": 8390,
+          "entries_sha256": "240ce3c451df1b1781e53a48cf533fd3a80d3e4797764fa4bd75a21c3d59a865",
+          "file_sha256": "45e425692b1fee563e443578c8076851e72788d5e11d12ab77083397154a9bbe",
+          "path": "validation/queue-analysis-final/inputs-before.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        },
+        {
+          "count": 8390,
+          "entries_sha256": "240ce3c451df1b1781e53a48cf533fd3a80d3e4797764fa4bd75a21c3d59a865",
+          "file_sha256": "95600dbf022b8a9ed9f5422f6b74d52454fe467688ae0f8035bf79a5be33bba0",
+          "path": "validation/queue-analysis-final/inputs-after.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        }
+      ]
+    },
+    "returncode": 0,
+    "source_after": {
+      "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+      "status": "",
+      "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+    },
+    "source_before": {
+      "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+      "status": "",
+      "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+    },
+    "stderr": "",
+    "stdout": "Analyzing commander_translations.dart, settings_strings.dart, delta_sync_service.dart, file_operation_backend.dart, file_operation_content_strategy.dart, file_operation_options.dart, file_operation_service.dart, s3_client_adapter.dart, transfer_recovery_service.dart, file_operation_conflict_dialog.dart, file_operation_dialog.dart, settings_dialog.dart, commander_strings_test.dart, delta_prepared_contents_test.dart, file_operation_options_test.dart, file_operation_service_test.dart, s3_verified_block_contents_test.dart, settings_dialog_i18n_test.dart, verified_s3_fixture.dart, transfer_recovery_test.dart, verified_block_copy_test.dart, file_operation_conflict_dialog_test.dart, file_operation_dialog_test.dart...\nNo issues found!\n",
+    "strict_flags": [
+      "--fatal-infos",
+      "--fatal-warnings"
+    ]
+  },
+  "final_native_run": {
+    "artifacts": {
+      "all_match": true,
+      "complete": true,
+      "count": 8,
+      "files": [
+        {
+          "bytes": 4638,
+          "hash_matches": true,
+          "path": "command.json",
+          "sha256": "a3ccb5e4876ef6b885f376489163a8f38cf019506a97de095ad5e485cd89bf28",
+          "size_matches": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-after.json.gz",
+          "sha256": "6268318beaac29c2fdc15d591d6ade6d46466f5ce222fe7be5c1df958cfbd6b6",
+          "size_matches": true
+        },
+        {
+          "bytes": 440695,
+          "hash_matches": true,
+          "path": "inputs-before.json.gz",
+          "sha256": "b7ac9345866a93cf0613b44e4f6d6747284b3d807ae0dd0d2d48f878a158f789",
+          "size_matches": true
+        },
+        {
+          "bytes": 3575,
+          "hash_matches": true,
+          "path": "metadata.json",
+          "sha256": "1da251a0942de92e0802328ef410cb8722a4faed743aa36ea0311db32a4dbe8e",
+          "size_matches": true
+        },
+        {
+          "bytes": 117,
+          "hash_matches": true,
+          "path": "stderr.log",
+          "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+          "size_matches": true
+        },
+        {
+          "bytes": 629786,
+          "hash_matches": true,
+          "path": "stdout.jsonl",
+          "sha256": "d7e4c84f01d813523160c327c40efbecd21b2d759b6c647fd19dfe502d837414",
+          "size_matches": true
+        },
+        {
+          "bytes": 1974,
+          "hash_matches": true,
+          "path": "suites-manifest.original",
+          "sha256": "2d57334f5cff2a142773a12839e96dfd3f2121aec688919b20f85ef52ddec184",
+          "size_matches": true
+        },
+        {
+          "bytes": 13002,
+          "hash_matches": true,
+          "path": "summary.json",
+          "sha256": "48408b30a330f117c5018c727c67b9b14e24ffa89972a0878b0d60db23e6de4c",
+          "size_matches": true
+        }
+      ],
+      "manifest_sha256": "d1d4f0e78cad700ac7343b2e085849c4fe01e81b6aed0bbf20e2115155f54070"
+    },
+    "complete": true,
+    "done_events": [
+      {
+        "success": true,
+        "time": 224077,
+        "type": "done"
+      }
+    ],
+    "duplicate_visible_completions": [],
+    "error_events": [],
+    "expected_suite_count": 52,
+    "failed_tests": [],
+    "hidden_completions": 54,
+    "inputs": {
+      "after_present": true,
+      "changed_entries": [],
+      "snapshots": [
+        {
+          "count": 8390,
+          "entries_sha256": "240ce3c451df1b1781e53a48cf533fd3a80d3e4797764fa4bd75a21c3d59a865",
+          "file_sha256": "b7ac9345866a93cf0613b44e4f6d6747284b3d807ae0dd0d2d48f878a158f789",
+          "path": "validation/queue-native-final/inputs-before.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        },
+        {
+          "count": 8390,
+          "entries_sha256": "240ce3c451df1b1781e53a48cf533fd3a80d3e4797764fa4bd75a21c3d59a865",
+          "file_sha256": "6268318beaac29c2fdc15d591d6ade6d46466f5ce222fe7be5c1df958cfbd6b6",
+          "path": "validation/queue-native-final/inputs-after.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        }
+      ]
+    },
+    "missing_suites": [],
+    "non_json_lines": 52,
+    "non_object_json_lines": 52,
+    "observed_suite_count": 52,
+    "per_suite_counts": {
+      "test/b2_bounded_transfer_test.dart": {
+        "passed": 14
+      },
+      "test/background_transfer_journal_test.dart": {
+        "passed": 22
+      },
+      "test/catalogue_gui_test.dart": {
+        "passed": 13
+      },
+      "test/commander_strings_test.dart": {
+        "passed": 7
+      },
+      "test/delta_prepared_contents_test.dart": {
+        "passed": 23
+      },
+      "test/delta_provider_admission_test.dart": {
+        "passed": 9
+      },
+      "test/delta_sync_safety_test.dart": {
+        "passed": 35
+      },
+      "test/delta_sync_test.dart": {
+        "passed": 79
+      },
+      "test/file_operation_backend_test.dart": {
+        "passed": 54
+      },
+      "test/file_operation_metadata_test.dart": {
+        "passed": 18
+      },
+      "test/file_operation_options_test.dart": {
+        "passed": 18
+      },
+      "test/file_operation_phase_guard_test.dart": {
+        "passed": 13
+      },
+      "test/file_operation_service_test.dart": {
+        "passed": 83
+      },
+      "test/filen_bounded_transfer_test.dart": {
+        "passed": 18
+      },
+      "test/gallery_catalog_service_test.dart": {
+        "passed": 5
+      },
+      "test/internxt_bounded_transfer_test.dart": {
+        "passed": 29
+      },
+      "test/multi_cloud_transfer_regression_test.dart": {
+        "passed": 4
+      },
+      "test/nextcloud_adapter_test.dart": {
+        "passed": 44
+      },
+      "test/nextcloud_bounded_transfer_test.dart": {
+        "passed": 7
+      },
+      "test/operation_progress_test.dart": {
+        "passed": 9
+      },
+      "test/operations_i18n_test.dart": {
+        "passed": 3
+      },
+      "test/pcloud_adapter_test.dart": {
+        "passed": 43
+      },
+      "test/pcloud_bounded_transfer_test.dart": {
+        "passed": 13
+      },
+      "test/provider_transfer_primitives_test.dart": {
+        "passed": 14
+      },
+      "test/s3_adapter_test.dart": {
+        "passed": 62
+      },
+      "test/s3_delta_download_test.dart": {
+        "passed": 36
+      },
+      "test/s3_listing_completeness_test.dart": {
+        "passed": 5
+      },
+      "test/s3_multipart_resume_test.dart": {
+        "passed": 14
+      },
+      "test/s3_streaming_upload_test.dart": {
+        "passed": 8
+      },
+      "test/s3_verified_block_contents_test.dart": {
+        "passed": 27
+      },
+      "test/settings_dialog_i18n_test.dart": {
+        "passed": 10
+      },
+      "test/stream_rate_limiter_test.dart": {
+        "passed": 10
+      },
+      "test/transfer_bandwidth_browser_test.dart": {
+        "passed": 8
+      },
+      "test/transfer_bandwidth_http_test.dart": {
+        "passed": 14
+      },
+      "test/transfer_bandwidth_provider_test.dart": {
+        "passed": 9
+      },
+      "test/transfer_bandwidth_queue_test.dart": {
+        "passed": 9
+      },
+      "test/transfer_job_management_test.dart": {
+        "passed": 11
+      },
+      "test/transfer_job_schedule_test.dart": {
+        "passed": 3
+      },
+      "test/transfer_job_scheduler_test.dart": {
+        "passed": 15
+      },
+      "test/transfer_queue_controls_test.dart": {
+        "passed": 4
+      },
+      "test/transfer_queue_reorder_test.dart": {
+        "passed": 8
+      },
+      "test/transfer_queue_test.dart": {
+        "passed": 8
+      },
+      "test/transfer_recovery_test.dart": {
+        "passed": 21
+      },
+      "test/transfer_stage_cleanup_test.dart": {
+        "passed": 17
+      },
+      "test/transfer_stream_control_test.dart": {
+        "passed": 6
+      },
+      "test/verified_block_copy_test.dart": {
+        "passed": 18
+      },
+      "test/webdav_exact_transfer_test.dart": {
+        "passed": 5
+      },
+      "test/widget/file_operation_conflict_dialog_test.dart": {
+        "passed": 10
+      },
+      "test/widget/file_operation_dialog_test.dart": {
+        "passed": 39
+      },
+      "test/widget/file_operations_localization_test.dart": {
+        "passed": 2
+      },
+      "test/widget/operations_panel_test.dart": {
+        "passed": 15
+      },
+      "test/widget/transfer_bandwidth_dialog_test.dart": {
+        "passed": 10
+      }
+    },
+    "raw_sha256": "d7e4c84f01d813523160c327c40efbecd21b2d759b6c647fd19dfe502d837414",
+    "returncode": 0,
+    "source_after": {
+      "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+      "status": "",
+      "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+    },
+    "source_before": {
+      "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+      "status": "",
+      "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+    },
+    "summary_row_mismatches": [],
+    "summary_sha256": "48408b30a330f117c5018c727c67b9b14e24ffa89972a0878b0d60db23e6de4c",
+    "unexpected_suites": [],
+    "visible_counts": {
+      "passed": 981
+    },
+    "visible_test_count": 981
+  },
+  "final_review_accepted": true,
+  "final_review_complete": true,
+  "findings": [],
+  "input_snapshot_limit": "Matching snapshots establish before/after equality of recorded files, not absence of transient writes. Ignored build artifacts outside the selector are not represented as independently hash-qualified.",
+  "prior_analysis": {
+    "artifacts": {
+      "all_match": true,
+      "complete": true,
+      "count": 9,
+      "files": [
+        {
+          "bytes": 2349,
+          "hash_matches": true,
+          "path": "command.json",
+          "sha256": "43a81fb435859ded4efd44d114442619066050840a3f900e82ad1256db5d067a",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 869,
+          "hash_matches": true,
+          "path": "files.txt",
+          "sha256": "f3d9bfaa9f7c999eb5968709a7b82cc08c8b8df8091532653d6367bf22de7f46",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-after.json.gz",
+          "sha256": "248184f0cb3b40c4866953a2b82d8ac7b009a3c9b42ccaf59ca386cbd455be37",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 440695,
+          "hash_matches": true,
+          "path": "inputs-before.json.gz",
+          "sha256": "a5ff275d86202e87ad26b702cec72364a37f02638dbecceba56bd09f3ef72f05",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 5940,
+          "hash_matches": true,
+          "path": "metadata.json",
+          "sha256": "f60936cc8fb4b9b5b4e3611a545ec4f3b8e7e7823e0f26aae8398b5d5fbe17e8",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 6361,
+          "hash_matches": true,
+          "path": "run_analysis.py",
+          "sha256": "19f62a07d113918718f484475ea5e0964021f6e2145c653dac7984882e7baf2a",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 0,
+          "hash_matches": true,
+          "path": "stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 703,
+          "hash_matches": true,
+          "path": "stdout.log",
+          "sha256": "cf8a203ef60ff36487178e0fae3f82421bb537736fb852738c217b734545d49b",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1146,
+          "hash_matches": true,
+          "path": "versions.json",
+          "sha256": "df41e71f234b1c7938f05cb28d4adb6b21e45ebd3005362b0b76b2b9fece763e",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        }
+      ],
+      "manifest_sha256": "753e01308f349eec03009b8fa5f042fef4ff65ba4271faf7429a082ce6a62bf3"
+    },
+    "complete": true,
+    "file_count": 22,
+    "inputs": {
+      "after_present": true,
+      "changed_entries": [],
+      "snapshots": [
+        {
+          "count": 8390,
+          "entries_sha256": "e51ba0b6ec5d49968ab0ae74ea01ae025b733f2ee4d184f75947f3497ff35b26",
+          "file_sha256": "a5ff275d86202e87ad26b702cec72364a37f02638dbecceba56bd09f3ef72f05",
+          "path": "validation/queue-analysis-qualification/inputs-before.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        },
+        {
+          "count": 8390,
+          "entries_sha256": "e51ba0b6ec5d49968ab0ae74ea01ae025b733f2ee4d184f75947f3497ff35b26",
+          "file_sha256": "248184f0cb3b40c4866953a2b82d8ac7b009a3c9b42ccaf59ca386cbd455be37",
+          "path": "validation/queue-analysis-qualification/inputs-after.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        }
+      ]
+    },
+    "returncode": 0,
+    "source_after": {
+      "head": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+      "status": "",
+      "tree": "74cafe6de213bcfca7d24362823106e3757a23f5"
+    },
+    "source_before": {
+      "head": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+      "status": "",
+      "tree": "74cafe6de213bcfca7d24362823106e3757a23f5"
+    },
+    "stderr": "",
+    "stdout": "Analyzing commander_translations.dart, settings_strings.dart, delta_sync_service.dart, file_operation_backend.dart, file_operation_content_strategy.dart, file_operation_options.dart, file_operation_service.dart, s3_client_adapter.dart, transfer_recovery_service.dart, file_operation_conflict_dialog.dart, file_operation_dialog.dart, settings_dialog.dart, commander_strings_test.dart, delta_prepared_contents_test.dart, file_operation_options_test.dart, s3_verified_block_contents_test.dart, settings_dialog_i18n_test.dart, verified_s3_fixture.dart, transfer_recovery_test.dart, verified_block_copy_test.dart, file_operation_conflict_dialog_test.dart, file_operation_dialog_test.dart...\nNo issues found!\n",
+    "strict_flags": [
+      "--fatal-infos",
+      "--fatal-warnings"
+    ]
+  },
+  "prior_candidate": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+  "prior_native_run": {
+    "artifacts": {
+      "all_match": true,
+      "complete": true,
+      "count": 8,
+      "files": [
+        {
+          "bytes": 4638,
+          "hash_matches": true,
+          "path": "command.json",
+          "sha256": "a3ccb5e4876ef6b885f376489163a8f38cf019506a97de095ad5e485cd89bf28",
+          "size_matches": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-after.json.gz",
+          "sha256": "b18e266ae8066b1908ad5347c9a898eb916f82851e56331cfa4e2ff3283e32d7",
+          "size_matches": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-before.json.gz",
+          "sha256": "4d126f353cad4338436dd9ffef4eb2f3036fd84189a79384ded3ca8eaf7a4e4b",
+          "size_matches": true
+        },
+        {
+          "bytes": 3575,
+          "hash_matches": true,
+          "path": "metadata.json",
+          "sha256": "7a063a1791e485be345ca48d66dcfb5614d376113d76afc0967785c1819f969e",
+          "size_matches": true
+        },
+        {
+          "bytes": 117,
+          "hash_matches": true,
+          "path": "stderr.log",
+          "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+          "size_matches": true
+        },
+        {
+          "bytes": 630709,
+          "hash_matches": true,
+          "path": "stdout.jsonl",
+          "sha256": "3303a7db1201d01fdccb1595b827f43d85c1a39c1f8193429a7e7fcde322ea8e",
+          "size_matches": true
+        },
+        {
+          "bytes": 1974,
+          "hash_matches": true,
+          "path": "suites-manifest.original",
+          "sha256": "2d57334f5cff2a142773a12839e96dfd3f2121aec688919b20f85ef52ddec184",
+          "size_matches": true
+        },
+        {
+          "bytes": 13377,
+          "hash_matches": true,
+          "path": "summary.json",
+          "sha256": "b2cbadf7fab6dc8347dff7208b0ce1403078e02fc83224cd7f5ca411eff5cd14",
+          "size_matches": true
+        }
+      ],
+      "manifest_sha256": "fd62f3e91f945a32a17c3a2be5c6bee41f2f5457950dfc66d61bcaa7480fe35b"
+    },
+    "complete": true,
+    "done_events": [
+      {
+        "success": false,
+        "time": 328330,
+        "type": "done"
+      }
+    ],
+    "duplicate_visible_completions": [],
+    "error_events": [
+      {
+        "error": "Expected: true\n  Actual: <false>\n",
+        "isFailure": true,
+        "stackTrace": "package:matcher                                     expect\npackage:flutter_test/src/widget_tester.dart 473:18  expect\ntest/file_operation_service_test.dart 189:9         main.<fn>.<fn>\n",
+        "testID": 956,
+        "time": 241536,
+        "type": "error"
+      }
+    ],
+    "expected_suite_count": 52,
+    "failed_tests": [
+      {
+        "name": "copy method contracts verifiedDelta honors a filesystem that refuses cloning",
+        "path": "test/file_operation_service_test.dart",
+        "result": "failure",
+        "test_id": 956
+      }
+    ],
+    "hidden_completions": 54,
+    "inputs": {
+      "after_present": true,
+      "changed_entries": [],
+      "snapshots": [
+        {
+          "count": 8390,
+          "entries_sha256": "e51ba0b6ec5d49968ab0ae74ea01ae025b733f2ee4d184f75947f3497ff35b26",
+          "file_sha256": "4d126f353cad4338436dd9ffef4eb2f3036fd84189a79384ded3ca8eaf7a4e4b",
+          "path": "validation/queue-native-qualification/inputs-before.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        },
+        {
+          "count": 8390,
+          "entries_sha256": "e51ba0b6ec5d49968ab0ae74ea01ae025b733f2ee4d184f75947f3497ff35b26",
+          "file_sha256": "b18e266ae8066b1908ad5347c9a898eb916f82851e56331cfa4e2ff3283e32d7",
+          "path": "validation/queue-native-qualification/inputs-after.json.gz",
+          "reported_count_matches": true,
+          "reported_entries_sha256_matches": true
+        }
+      ]
+    },
+    "missing_suites": [],
+    "non_json_lines": 52,
+    "non_object_json_lines": 52,
+    "observed_suite_count": 52,
+    "per_suite_counts": {
+      "test/b2_bounded_transfer_test.dart": {
+        "passed": 14
+      },
+      "test/background_transfer_journal_test.dart": {
+        "passed": 22
+      },
+      "test/catalogue_gui_test.dart": {
+        "passed": 13
+      },
+      "test/commander_strings_test.dart": {
+        "passed": 7
+      },
+      "test/delta_prepared_contents_test.dart": {
+        "passed": 23
+      },
+      "test/delta_provider_admission_test.dart": {
+        "passed": 9
+      },
+      "test/delta_sync_safety_test.dart": {
+        "passed": 35
+      },
+      "test/delta_sync_test.dart": {
+        "passed": 79
+      },
+      "test/file_operation_backend_test.dart": {
+        "passed": 54
+      },
+      "test/file_operation_metadata_test.dart": {
+        "passed": 18
+      },
+      "test/file_operation_options_test.dart": {
+        "passed": 18
+      },
+      "test/file_operation_phase_guard_test.dart": {
+        "passed": 13
+      },
+      "test/file_operation_service_test.dart": {
+        "failed": 1,
+        "passed": 82
+      },
+      "test/filen_bounded_transfer_test.dart": {
+        "passed": 18
+      },
+      "test/gallery_catalog_service_test.dart": {
+        "passed": 5
+      },
+      "test/internxt_bounded_transfer_test.dart": {
+        "passed": 29
+      },
+      "test/multi_cloud_transfer_regression_test.dart": {
+        "passed": 4
+      },
+      "test/nextcloud_adapter_test.dart": {
+        "passed": 44
+      },
+      "test/nextcloud_bounded_transfer_test.dart": {
+        "passed": 7
+      },
+      "test/operation_progress_test.dart": {
+        "passed": 9
+      },
+      "test/operations_i18n_test.dart": {
+        "passed": 3
+      },
+      "test/pcloud_adapter_test.dart": {
+        "passed": 43
+      },
+      "test/pcloud_bounded_transfer_test.dart": {
+        "passed": 13
+      },
+      "test/provider_transfer_primitives_test.dart": {
+        "passed": 14
+      },
+      "test/s3_adapter_test.dart": {
+        "passed": 62
+      },
+      "test/s3_delta_download_test.dart": {
+        "passed": 36
+      },
+      "test/s3_listing_completeness_test.dart": {
+        "passed": 5
+      },
+      "test/s3_multipart_resume_test.dart": {
+        "passed": 14
+      },
+      "test/s3_streaming_upload_test.dart": {
+        "passed": 8
+      },
+      "test/s3_verified_block_contents_test.dart": {
+        "passed": 27
+      },
+      "test/settings_dialog_i18n_test.dart": {
+        "passed": 10
+      },
+      "test/stream_rate_limiter_test.dart": {
+        "passed": 10
+      },
+      "test/transfer_bandwidth_browser_test.dart": {
+        "passed": 8
+      },
+      "test/transfer_bandwidth_http_test.dart": {
+        "passed": 14
+      },
+      "test/transfer_bandwidth_provider_test.dart": {
+        "passed": 9
+      },
+      "test/transfer_bandwidth_queue_test.dart": {
+        "passed": 9
+      },
+      "test/transfer_job_management_test.dart": {
+        "passed": 11
+      },
+      "test/transfer_job_schedule_test.dart": {
+        "passed": 3
+      },
+      "test/transfer_job_scheduler_test.dart": {
+        "passed": 15
+      },
+      "test/transfer_queue_controls_test.dart": {
+        "passed": 4
+      },
+      "test/transfer_queue_reorder_test.dart": {
+        "passed": 8
+      },
+      "test/transfer_queue_test.dart": {
+        "passed": 8
+      },
+      "test/transfer_recovery_test.dart": {
+        "passed": 21
+      },
+      "test/transfer_stage_cleanup_test.dart": {
+        "passed": 17
+      },
+      "test/transfer_stream_control_test.dart": {
+        "passed": 6
+      },
+      "test/verified_block_copy_test.dart": {
+        "passed": 18
+      },
+      "test/webdav_exact_transfer_test.dart": {
+        "passed": 5
+      },
+      "test/widget/file_operation_conflict_dialog_test.dart": {
+        "passed": 10
+      },
+      "test/widget/file_operation_dialog_test.dart": {
+        "passed": 39
+      },
+      "test/widget/file_operations_localization_test.dart": {
+        "passed": 2
+      },
+      "test/widget/operations_panel_test.dart": {
+        "passed": 15
+      },
+      "test/widget/transfer_bandwidth_dialog_test.dart": {
+        "passed": 10
+      }
+    },
+    "raw_sha256": "3303a7db1201d01fdccb1595b827f43d85c1a39c1f8193429a7e7fcde322ea8e",
+    "returncode": 1,
+    "source_after": {
+      "head": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+      "status": "",
+      "tree": "74cafe6de213bcfca7d24362823106e3757a23f5"
+    },
+    "source_before": {
+      "head": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+      "status": "",
+      "tree": "74cafe6de213bcfca7d24362823106e3757a23f5"
+    },
+    "summary_row_mismatches": [],
+    "summary_sha256": "b2cbadf7fab6dc8347dff7208b0ce1403078e02fc83224cd7f5ca411eff5cd14",
+    "tracked_artifacts": {
+      "all_match": true,
+      "complete": true,
+      "count": 8,
+      "files": [
+        {
+          "bytes": 4638,
+          "hash_matches": true,
+          "path": "command.json",
+          "sha256": "a3ccb5e4876ef6b885f376489163a8f38cf019506a97de095ad5e485cd89bf28",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-after.json.gz",
+          "sha256": "b18e266ae8066b1908ad5347c9a898eb916f82851e56331cfa4e2ff3283e32d7",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 440696,
+          "hash_matches": true,
+          "path": "inputs-before.json.gz",
+          "sha256": "4d126f353cad4338436dd9ffef4eb2f3036fd84189a79384ded3ca8eaf7a4e4b",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 3575,
+          "hash_matches": true,
+          "path": "metadata.json",
+          "sha256": "7a063a1791e485be345ca48d66dcfb5614d376113d76afc0967785c1819f969e",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 117,
+          "hash_matches": true,
+          "path": "stderr.log",
+          "sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 630709,
+          "hash_matches": true,
+          "path": "stdout.jsonl",
+          "sha256": "3303a7db1201d01fdccb1595b827f43d85c1a39c1f8193429a7e7fcde322ea8e",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 1974,
+          "hash_matches": true,
+          "path": "suites-manifest.original",
+          "sha256": "2d57334f5cff2a142773a12839e96dfd3f2121aec688919b20f85ef52ddec184",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        },
+        {
+          "bytes": 13377,
+          "hash_matches": true,
+          "path": "summary.json",
+          "sha256": "b2cbadf7fab6dc8347dff7208b0ce1403078e02fc83224cd7f5ca411eff5cd14",
+          "size_matches": true,
+          "tracked_copy_identical": true
+        }
+      ],
+      "manifest_sha256": "fd62f3e91f945a32a17c3a2be5c6bee41f2f5457950dfc66d61bcaa7480fe35b"
+    },
+    "unexpected_suites": [],
+    "visible_counts": {
+      "failed": 1,
+      "passed": 980
+    },
+    "visible_test_count": 981
+  },
+  "review_scope": "Independent read-only local source/evidence review; no tests, remote refresh, staging, merges, or tracked edits.",
+  "review_script_sha256": "1a777a2670b29e3a15ec2d91587bbbd00774b9fa737dd717587e094a50097806",
+  "reviewed_at": "2026-11-14T21:58:00.785459+00:00",
+  "schema_version": 1,
+  "source_equivalence": {
+    "candidate_input_count": 8390,
+    "changed_paths": [
+      "docs/evidence/storage-delta-queue-20261114/PROGRESS.md",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/artifacts-sha256.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/command.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/environment.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/exit-code.txt",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/inputs-after.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/inputs-before.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/run_gate.py",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/runtime.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/source-after.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/source-before.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/stderr.log",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/stdout.log",
+      "docs/evidence/storage-delta-queue-20261114/qualification/catalogue/summary.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/artifacts-sha256.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/command.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/files.txt",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/inputs-after.json.gz",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/inputs-before.json.gz",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/metadata.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/run_analysis.py",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/stderr.log",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/stdout.log",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-analysis/versions.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/artifacts-sha256.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/command.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/inputs-after.json.gz",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/inputs-before.json.gz",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/metadata.json",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/stderr.log",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/stdout.jsonl",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/suites-manifest.original",
+      "docs/evidence/storage-delta-queue-20261114/qualification/prior-native/summary.json",
+      "test/file_operation_service_test.dart"
+    ],
+    "input_changes_between_runs": [
+      "test/file_operation_service_test.dart"
+    ],
+    "native_and_analysis_start_inputs_identical": true,
+    "non_evidence_changes": [
+      "test/file_operation_service_test.dart"
+    ],
+    "prior_input_count": 8390,
+    "runtime_generated_inputs_identical": true,
+    "runtime_native_sources_identical": true,
+    "tracked_test_change": "Restricts generic local clone fallback expectations to automatic/stream/copyOnWrite; adds explicit verifiedDelta unsupported-local-source rejection before clone/write."
+  }
+}

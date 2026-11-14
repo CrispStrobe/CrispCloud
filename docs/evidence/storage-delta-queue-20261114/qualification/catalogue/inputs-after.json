@@ -1,0 +1,100 @@
+[
+  {
+    "bytes": 13588,
+    "frozen_sha256": "9a699c9a939b3f309b12c391e9de81fbdd0346e547a9c64d622817e96e0f3f9a",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/Cargo.lock",
+    "sha256": "9a699c9a939b3f309b12c391e9de81fbdd0346e547a9c64d622817e96e0f3f9a"
+  },
+  {
+    "bytes": 319,
+    "frozen_sha256": "87728b78f6765a685436ce2cdcb851cc95db9d26c2bee82412476a1a11447037",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/Cargo.toml",
+    "sha256": "87728b78f6765a685436ce2cdcb851cc95db9d26c2bee82412476a1a11447037"
+  },
+  {
+    "bytes": 1068,
+    "frozen_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/LICENSE",
+    "sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215"
+  },
+  {
+    "bytes": 2851,
+    "frozen_sha256": "a5da801fb698c3b588fb5262181a420fa1f784834524e6465863696bfd4680b1",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/src/jobs.rs",
+    "sha256": "a5da801fb698c3b588fb5262181a420fa1f784834524e6465863696bfd4680b1"
+  },
+  {
+    "bytes": 50457,
+    "frozen_sha256": "db6ad4d538a5e3a4d279962215484dcfd1b9057144558968a8a46258ab6573b9",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/src/lib.rs",
+    "sha256": "db6ad4d538a5e3a4d279962215484dcfd1b9057144558968a8a46258ab6573b9"
+  },
+  {
+    "bytes": 5491,
+    "frozen_sha256": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/Cargo.lock",
+    "sha256": "bad86f275cf7eb715098e4e27867c5cbf24f6eb8c893435b59635096262f3b90"
+  },
+  {
+    "bytes": 648,
+    "frozen_sha256": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/Cargo.toml",
+    "sha256": "6f50700e8cd1e66009dc6f1627179d122340fa5e84d76b5c9fb27ada405f9b1f"
+  },
+  {
+    "bytes": 1068,
+    "frozen_sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/LICENSE",
+    "sha256": "6f15866be3d86d362657cfef49198bcf7583612c35389af4a2d35849272fd215"
+  },
+  {
+    "bytes": 1892,
+    "frozen_sha256": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/README.md",
+    "sha256": "cf804009bf7a58bf7154717b95e5dfa0c4e4d71b87d000c805dd405e15d5bca8"
+  },
+  {
+    "bytes": 1947,
+    "frozen_sha256": "a63e4e6efc157e20f06cd428828d4898cb7afa5e5649577f3c812f1471aeb5a9",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/UPSTREAM.json",
+    "sha256": "a63e4e6efc157e20f06cd428828d4898cb7afa5e5649577f3c812f1471aeb5a9"
+  },
+  {
+    "bytes": 1480,
+    "frozen_sha256": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/VALIDATION.md",
+    "sha256": "c773a5535914686de5eb9cb88986dbb3566ef643f9e6f7736e440c261aa58564"
+  },
+  {
+    "bytes": 62389,
+    "frozen_sha256": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/src/caf.rs",
+    "sha256": "4203f6cda1ec591817f9fae91da60ad32c1be18a96af9d1b54022ddfdd9adc32"
+  },
+  {
+    "bytes": 9109,
+    "frozen_sha256": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/src/index.rs",
+    "sha256": "0d7a3c45c9f947bff280ba8399d12f1cba04ed9f00e3f9da979a4e26c91c0072"
+  },
+  {
+    "bytes": 277,
+    "frozen_sha256": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00",
+    "matches_frozen": true,
+    "path": "packages/crisp_catalog/native/vendor/crispcat-format/src/lib.rs",
+    "sha256": "97c276691008e9fa4b6dca363d43646878c23f02f9ed5b0643053acffef51a00"
+  }
+]

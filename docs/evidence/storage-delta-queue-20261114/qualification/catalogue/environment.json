@@ -1,0 +1,19 @@
+{
+  "AR": null,
+  "CARGO_BUILD_JOBS": "2",
+  "CARGO_BUILD_TARGET": null,
+  "CARGO_ENCODED_RUSTFLAGS": null,
+  "CARGO_HOME": "/workspace/scratch/209f165653d7/toolchain/cargo",
+  "CARGO_TARGET_DIR": "/workspace/scratch/209f165653d7/toolchain/queue-catalogue-test-target",
+  "CARGO_TERM_COLOR": "never",
+  "CC": null,
+  "CI": "true",
+  "CXX": null,
+  "LD_LIBRARY_PATH": "/workspace/scratch/209f165653d7/toolchain/native-libs",
+  "PATH": "/workspace/scratch/209f165653d7/toolchain/bin:/workspace/scratch/209f165653d7/toolchain/flutter/bin:/workspace/scratch/209f165653d7/toolchain/cargo/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+  "RUSTDOCFLAGS": null,
+  "RUSTFLAGS": null,
+  "RUSTUP_HOME": "/workspace/scratch/209f165653d7/toolchain/rustup",
+  "RUSTUP_TOOLCHAIN": null,
+  "TMPDIR": "/workspace/scratch/209f165653d7/toolchain/tmp"
+}

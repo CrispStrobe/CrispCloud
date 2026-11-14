@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-11-14T21:37:51.136414+00:00",
+  "head": "59704919d5af3e256e7279ae94965f7d4c5fb279",
+  "tree": "65899fa387695f73de93e61e317b64796610b9f3",
+  "git_status": " M README.md\n M docs/adr/007-block-level-delta-sync.md\n M docs/storage-capabilities-20261114.md\n M docs/storage-delta-profile.md\n M lib/l10n/settings_strings.dart\n M lib/widgets/settings_dialog.dart\n M test/settings_dialog_i18n_test.dart\n"
+}

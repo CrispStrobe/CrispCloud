@@ -1,0 +1,62 @@
+[
+  {
+    "bytes": 559,
+    "path": "command.json",
+    "sha256": "464ef390f74e560fa6701a0fa64083ff9fca6b976cc43e39741a8a275648a1b1"
+  },
+  {
+    "bytes": 1217,
+    "path": "environment.json",
+    "sha256": "d34da74e0b46ee31db8e6997e1fba214abfd4779980818f173e04bb8a8c62d0a"
+  },
+  {
+    "bytes": 2,
+    "path": "exit-code.txt",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  {
+    "bytes": 4160,
+    "path": "inputs-after.json",
+    "sha256": "89c9b355223f9259b2223994c5d99d0bc3c1bebdbb2d29b33e297018d63bdf28"
+  },
+  {
+    "bytes": 4160,
+    "path": "inputs-before.json",
+    "sha256": "89c9b355223f9259b2223994c5d99d0bc3c1bebdbb2d29b33e297018d63bdf28"
+  },
+  {
+    "bytes": 6652,
+    "path": "run_gate.py",
+    "sha256": "48413739dbde47ba61bccf0020a9d95b85513f7c9917355f558f244520d09e81"
+  },
+  {
+    "bytes": 1064,
+    "path": "runtime.json",
+    "sha256": "d88c53def765015bb987c6fdb85a1a6ac61d246290b68f7f9365b2ae3013f69a"
+  },
+  {
+    "bytes": 185,
+    "path": "source-after.json",
+    "sha256": "df47fad86ae05e50db7a8419c83db25bf90da58b79ae911c5f40ec045a8aea68"
+  },
+  {
+    "bytes": 185,
+    "path": "source-before.json",
+    "sha256": "df47fad86ae05e50db7a8419c83db25bf90da58b79ae911c5f40ec045a8aea68"
+  },
+  {
+    "bytes": 1898,
+    "path": "stderr.log",
+    "sha256": "de0d69e9f609b8b4c1386201a17ed77063d956087c8528299a09ab05afa1d009"
+  },
+  {
+    "bytes": 1470,
+    "path": "stdout.log",
+    "sha256": "53e9e73afe4b42ea995403e9f6b441faf95a83dad3525b629a3f82554e0af145"
+  },
+  {
+    "bytes": 1175,
+    "path": "summary.json",
+    "sha256": "3c566b642073d4c4dda6fba8b774282e85a83aefd2d37b91b97863aa9af62105"
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "../toolchain/run",
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "--manifest-path",
+    "packages/crisp_catalog/native/Cargo.toml"
+  ],
+  "cwd": "/workspace/scratch/209f165653d7/CrispCloud",
+  "expected_remote_head": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+  "expected_tree": "74cafe6de213bcfca7d24362823106e3757a23f5",
+  "network_mode": "Cargo --offline",
+  "scope": "native catalogue bridge unit tests and doc tests; existing ignored scale test is not requested",
+  "started_utc": "2026-11-14T21:45:06.281900+00:00"
+}

@@ -1,5 +1,7 @@
 # Verified S3 block copy through the reviewed queue
 
+**Completed:** 981 passed / 52 native suites; strict analysis clean across 23 changed Dart files. Qualified source `832d3a26e004cf5268928d093841d3df61a3c5ea`, with 8,390 stable inputs. [Full qualification](qualification/README.md) · [Machine-readable result](FINAL.json). The sections below preserve the checkpoint history.
+
 ## Starting point
 
 Continuation of PR #107 at `781458d765100ae3556906ff8ca923e70c956afa`, following the validated native delta core. The fresh source audit at **2026-11-14 22:15:39 Europe/Berlin** found no incoming primary source work: all three current branch heads and all 97 PR heads are ancestors of the integration branch. The audit includes 23 tag objects and preserves the previously documented alternate MadEdit2 archive disposition. See [initial-audit/receipt.json](initial-audit/receipt.json) and its hashed supporting files.
@@ -25,3 +27,23 @@ This checkpoint preserves the audit and plan. Implementation and qualification a
 The explicit method, scoped core/provider contents, ordinary queue/journal integration, UI eligibility, recovery downgrade and focused regressions are implemented. Independent source reviews addressed final captured-backend authority after provider proof, missing-ETag admission before source bytes, and cancellation/transport exception ordering.
 
 A first native development cohort exercised the new queue integration and existing delta core/provider suites. The core/provider regressions passed. Three new recovery cases revealed that the fixture had not initialized the durable local installation identity; that setup was corrected so the tests exercise actual persistent recovery rather than a session-only destination. Combined qualification is still pending; this is a preservation checkpoint, not a passing release claim.
+
+## Reconciled source cutoff before qualification
+
+The final remote audit found and integrated main `e58da70149182301efbbe85807edb6298ff37ff1` (the four-commit catalogue self-exclusion / version 1.3.3 continuation) and Office recovery `764cb5184c93ac89dc57638fc0e88d42aa82154b` (worksheet-navigation scope documentation). All five new primary commits are retained as ancestors. No merge conflict or managed Office source change was required. The qualified canonical pin stays `a379ecc455890032906098b6cf58e17504581ed0`.
+
+The [final audit](final-audit/receipt.json) records 3 current branches, 97 PR heads and 24 tag objects, including v1.3.3. All source work outstanding at that finite cutoff is incorporated; the archived alternate MadEdit2 API remains preserved under its documented disposition. PR checks were queued, without completed CI results.
+
+The next fixed-source cohort covers 52 native Flutter suites, including the explicit queue path, provider/core fault cases, reviewed copy/recovery UI, ordinary transfers, bandwidth and the newly merged catalogue surfaces. Catalogue Rust tests will run separately. Dependencies were resolved offline using the committed manifest/lock and its existing declared overrides; no task-specific override was introduced. Development receipts remain separate from qualification.
+
+## First fixed-source gates at `8b2ec107`
+
+The complete native run executed all 52 suites: **980 passed, 1 failed, 0 skipped**, with all 8,390 captured inputs unchanged. The single failure was an existing clone-contract test that iterated every copy-method enum value and incorrectly expected the newly added S3-only method to permit local-to-local copying. It now explicitly tests the supported ordinary methods and separately asserts verified-block admission refusal before clone/write side effects. No runtime implementation change was needed. All new prepared-content, S3 strategy and queue/recovery tests passed, including real signed loopback HTTP. The full fixed-source cohort is being rerun after this test correction.
+
+Strict analysis at `8b2ec107` passed for all 22 then-changed Dart files. The separately merged catalogue Rust gate passed 14 cases with its one pre-existing million-row stress case explicitly ignored; all 14 Rust inputs stayed fixed. These complete receipts are preserved under `qualification/prior-native`, `qualification/prior-analysis` and `qualification/catalogue`. The catalogue gate remains applicable because the following correction changes only a Dart test and evidence.
+
+## Accepted fixed-source result
+
+At `832d3a26e004cf5268928d093841d3df61a3c5ea` (tree `5b185bf4c52650cb64c0895f0c7c349f800c8808`), the complete 52-suite native rerun passed **981 cases**, with zero failures, skips or error events. Strict analysis passed all **23** changed Dart files. Both gates retained identical before/after hashes for **8,390** inputs and unchanged clean HEAD/tree state. The separate catalogue gate remains 14 passed plus one explicitly ignored pre-existing stress case; all its native inputs are unchanged in the accepted candidate. See [qualification/README.md](qualification/README.md) for scope and exact receipts.
+
+Remote checkpoints for this continuation are `b162f1a3` (fresh audit/scope), `59704919` (reviewed-copy implementation), `8b2ec107` (new main/Office source reconciliation, documentation and real HTTP regression), and `832d3a26` (admission-test correction and first complete receipts). The following final commit changes only documentation/evidence.

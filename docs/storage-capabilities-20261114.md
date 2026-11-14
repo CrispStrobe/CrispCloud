@@ -544,30 +544,52 @@ downloaded and reused blocks, and complete private-candidate verification
 through the existing native staged backend. Its limits are 64 KiB–64 MiB blocks,
 8 GiB files, 131,072 signatures and 32 MiB cache files. The native backend's
 final check/rename boundary does not establish an atomic compare-and-swap
-against external writers, and these APIs add no durable resume record or path
-reservation.
+against external writers. The standalone APIs do not add durable resume or
+path reservations; the new explicit copy method uses the existing reviewed
+queue, journal and scheduler claims without claiming cross-process exclusion.
 
-The explicit S3 profile first reads a complete remote revision with
-`seedDeltaBlockMap`. A subsequent `deltaDownload` requires a matching account,
-object, length and opaque strong ETag, plus a private receipt from that adapter's
-own seed. Receipts are bounded to 128 and cleared at authentication lifecycle
-changes; persisted JSON alone cannot authorize reuse after restart or adapter
-recreation. Object-path aliases are rejected. Each range requires `206`, exact
-`Content-Range` and body length, and matching block hashes. The existing G29
-HTTP helpers are reused when a transfer bandwidth context is present. Browser
-and SSE-C delta profiles remain outside this increment.
+The Copy dialog now offers **Reuse verified S3 blocks** for supported native
+S3-to-local regular-file copies. The first conditional full copy supplies the
+file and learns its block map in one pass. Later copies can reuse local blocks
+for the same S3 revision when the current adapter retains a matching private
+receipt. There is no seed-then-download pass in this workflow. The standalone
+`seedDeltaBlockMap` / `deltaDownload` API remains separately available.
 
-Automatic delta queue execution is unavailable. Settings displays a disabled,
-localized status and retains saved preferences. Upload execution and the older
-pCloud/Nextcloud delta orchestration decline until their remote staging and
-publication contracts are separately admitted; ordinary transfers continue.
-Small files can use the explicit S3 API when its requirements hold, without the
-historical 10 MiB heuristic becoming automatic admission.
+Both paths bind account, object, exact length and opaque strong ETag. Receipts
+are bounded to 128 and cleared at authentication lifecycle changes; persisted
+JSON alone cannot authorize reuse. Restart, a changed revision or loss of the
+receipt makes a newly reviewed verified-block copy read the whole source again.
+Each range requires `206`, exact `Content-Range` and body length, and verified
+block contents. Object-path aliases are rejected. The existing G29 HTTP helpers
+account for covered network bytes; the per-job streaming limiter and progress
+operate on complete logical contents, including reused blocks. Browser and
+SSE-C profiles remain outside this increment.
 
-The [new evidence](evidence/storage-delta-20261114/PROGRESS.md) records incremental
+Automatic delta selection is unavailable. Settings stays disabled and points
+to the explicit Copy-dialog method; saved experimental enable/block-size
+preferences do not activate or configure it. Moves, append, explicit partial
+resume and preallocation are excluded. Reviewed recovery switches to ordinary
+streaming and retains existing prefix/hash, completed-copy and staged-file
+reconciliation. Late cancellation after acknowledged publication can still
+stop remaining metadata work; committed data remains journaled for review.
+There is no durable delta authority or automatic restart. Upload execution and
+older pCloud/Nextcloud delta orchestration continue to decline. Small files can
+use the admitted S3 paths without the historical 10 MiB heuristic becoming
+automatic admission.
+
+The queue integration passed **981 tests across 52 Linux native suites** at
+`832d3a26e004cf5268928d093841d3df61a3c5ea`, with no failures or skips. All
+8,390 recorded inputs remained unchanged and strict analysis passed all 23
+changed Dart files. The [complete qualification](evidence/storage-delta-queue-20261114/qualification/README.md)
+includes mock fault injection, real signed loopback HTTP through the new
+journaled method, recovery and independent receipt verification. The
+[queued-copy receipt](evidence/storage-delta-queue-20261114/PROGRESS.md)
+preserves its incremental remote checkpoints and source cutoff. The
+[earlier evidence](evidence/storage-delta-20261114/PROGRESS.md) records incremental
 remote checkpoints, clean strict analysis, and 790 passed tests across 43 Linux
 native suites at source `331981649872e363253aef13f57a638e5747b8e5`, with no failures
-or skips. All 8,382 captured inputs remained unchanged. The S3 evidence uses
+or skips. All 8,382 captured inputs remained unchanged. That run qualifies the
+earlier standalone implementation, not the current queue changes. Its S3 evidence uses
 mock and real loopback HTTP transports, not a live-provider interoperability
 claim. The original
 [pinned investigation note](evidence/storage-capabilities-20261114/delta-source-review.txt)

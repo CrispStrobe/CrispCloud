@@ -1,0 +1,13 @@
+{
+  "qualified_source": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+  "runtime_source_unchanged": true,
+  "non_evidence_document_changes": [
+    "README.md",
+    "docs/adr/007-block-level-delta-sync.md",
+    "docs/storage-capabilities-20261114.md",
+    "docs/storage-delta-profile.md"
+  ],
+  "receipt_artifacts_checked": 46,
+  "local_document_links_checked": true,
+  "note": "Final delivery adds documentation/evidence only. The qualification source pin remains the exact tested commit."
+}

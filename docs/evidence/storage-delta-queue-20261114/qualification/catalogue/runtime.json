@@ -1,0 +1,25 @@
+{
+  "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+  "cargo_binary": {
+    "path": "/workspace/scratch/209f165653d7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+    "sha256": "84d55d77232a921da96bcf2e1f78532ef5c5221803aae4448d9e220d48ebd808"
+  },
+  "launcher": {
+    "path": "/workspace/scratch/209f165653d7/toolchain/run",
+    "sha256": "abe07326d8ea0c52cf010d6068b2b28a9a3a35068b272d5e49f77c5ece48fb33"
+  },
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5",
+  "rustc_binary": {
+    "path": "/workspace/scratch/209f165653d7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc",
+    "sha256": "5073422953727c9427a76b7fce03aa9404da46315e5a1e4965389512a41e8db0"
+  },
+  "uname": [
+    "Linux",
+    "db63fb1a6667",
+    "6.18.57",
+    "#1 SMP Tue Oct 20 21:56:04 UTC 2026",
+    "x86_64",
+    ""
+  ]
+}

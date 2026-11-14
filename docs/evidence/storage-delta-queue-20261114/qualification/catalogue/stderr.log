@@ -1,0 +1,48 @@
+   Compiling crossbeam-utils v0.8.23
+   Compiling proc-macro2 v1.0.107
+   Compiling crossbeam-epoch v0.9.21
+   Compiling quote v1.0.47
+   Compiling crossbeam-deque v0.8.8
+   Compiling unicode-ident v1.0.27
+   Compiling shlex v2.0.1
+   Compiling serde_core v1.0.229
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling vcpkg v0.2.15
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling rayon-core v1.13.0
+   Compiling syn v3.0.10
+   Compiling libsqlite3-sys v0.36.0
+   Compiling foldhash v0.2.0
+   Compiling getrandom v0.4.3
+   Compiling bitflags v2.13.2
+   Compiling serde v1.0.229
+   Compiling rustix v1.1.6
+   Compiling zmij v1.0.23
+   Compiling hashbrown v0.16.1
+   Compiling serde_derive v1.0.229
+   Compiling crossbeam-queue v0.3.14
+   Compiling crossbeam-channel v0.5.17
+   Compiling linux-raw-sys v0.12.1
+   Compiling cfg-if v1.0.5
+   Compiling either v1.19.0
+   Compiling serde_json v1.0.154
+   Compiling rayon v1.12.0
+   Compiling crossbeam v0.8.5
+   Compiling hashlink v0.11.1
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.19
+   Compiling smallvec v1.16.5
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling once_cell v1.21.4
+   Compiling fastrand v2.5.0
+   Compiling fallible-iterator v0.3.0
+   Compiling tempfile v3.27.0
+   Compiling rusqlite v0.38.0
+   Compiling crispcat-format v0.1.0 (/workspace/scratch/209f165653d7/CrispCloud/packages/crisp_catalog/native/vendor/crispcat-format)
+   Compiling jwalk v0.8.1
+   Compiling crisp_catalog_bridge v0.1.0 (/workspace/scratch/209f165653d7/CrispCloud/packages/crisp_catalog/native)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.08s
+     Running unittests src/lib.rs (/workspace/scratch/209f165653d7/toolchain/queue-catalogue-test-target/debug/build/crisp_catalog_bridge/aed5d29dab8e8b23/out/crisp_catalog_bridge-aed5d29dab8e8b23)
+   Doc-tests crisp_catalog_bridge

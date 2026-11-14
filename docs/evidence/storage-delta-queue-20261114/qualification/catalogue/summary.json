@@ -1,0 +1,40 @@
+{
+  "accepted": true,
+  "alias_case_passed": true,
+  "doc_test_groups": [
+    {
+      "duration": "0.00s",
+      "failed": 0,
+      "filtered_out": 0,
+      "ignored": 0,
+      "measured": 0,
+      "passed": 0,
+      "result": "ok"
+    }
+  ],
+  "elapsed_seconds": 22.218177087001095,
+  "ended_utc": "2026-11-14T21:45:28.968068+00:00",
+  "exit_code": 0,
+  "head_unchanged": true,
+  "ignored_scope": "Existing million-row SQLite stress test; not included as a pass.",
+  "input_bytes": 152584,
+  "input_count": 14,
+  "inputs_match_frozen": true,
+  "inputs_unchanged": true,
+  "qualification_boundary": "Linux x86_64 native Rust only. The Unix alias case is exercised; this does not reproduce or establish the Windows canonical-prefix fix.",
+  "source_head": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+  "source_tree": "74cafe6de213bcfca7d24362823106e3757a23f5",
+  "started_utc": "2026-11-14T21:45:06.281900+00:00",
+  "tracked_tree_clean_after": true,
+  "tracked_tree_clean_before": true,
+  "tree_unchanged": true,
+  "unit_tests": {
+    "duration": "0.05s",
+    "failed": 0,
+    "filtered_out": 0,
+    "ignored": 1,
+    "measured": 0,
+    "passed": 14,
+    "result": "ok"
+  }
+}
