@@ -1,0 +1,8 @@
+{
+  "entry": {
+    "path": "build/office-style-history-acceptance/source.xlsx",
+    "role": "authored_input"
+  },
+  "accepted": false,
+  "error": "Invalid or duplicate schema-only artifact path: build/office-style-history-acceptance/source.xlsx"
+}

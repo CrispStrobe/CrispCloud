@@ -1,0 +1,24 @@
+{
+  "head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "started_at": "2026-11-14T20:12:12.633873+00:00",
+  "completed_at": "2026-11-14T20:12:46.082329+00:00",
+  "command": [
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "analyze",
+    "--no-pub",
+    "lib/widgets/office_editor_ribbon.dart",
+    "test/widget/office_sheet_state_workflow_test.dart",
+    "test/widget/office_native_workflow_test.dart"
+  ],
+  "returncode": 0,
+  "input_files": 4743,
+  "input_tree_sha256": "ec91296bf7ff165802b85f559151a98ffeed366ad7345bd7d6d6195fb11bbbe5",
+  "changed_inputs": [],
+  "analyzed_file_sha256": {
+    "lib/widgets/office_editor_ribbon.dart": "8c1954036e6ead90e0b7e49dcba467be5f7f9519bb81caab548b3b4f3e53f969",
+    "test/widget/office_sheet_state_workflow_test.dart": "0ada99c43f88d5c4062dcade0726be7ee3b671be27341c49ecf62b80814a5974",
+    "test/widget/office_native_workflow_test.dart": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe"
+  },
+  "pubspec_restored": true,
+  "log_sha256": "d83da5ad4930d32b0040de727843e99d7a8e7b53f9d045f0195145f20b346d02"
+}

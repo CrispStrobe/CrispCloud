@@ -1,0 +1,15 @@
+{
+  "head": "bd910b1454e30afd1793ea20ae3977821bf5cdb2",
+  "scope": "Preserved two-root verifier rejects an explicitly declared third schema-only root; no host or SDK result is claimed.",
+  "probe": {
+    "path": "build/office-style-history-acceptance/source.xlsx",
+    "role": "authored_input"
+  },
+  "accepted": false,
+  "error": "Invalid or duplicate schema-only artifact path: build/office-style-history-acceptance/source.xlsx",
+  "files_sha256": {
+    "office_host_evidence.py": "8e38bded2fe04c6155ebf69fbcac36a4843bc8ee09d706206aa7aba9920545b8",
+    "test_office_host_evidence.py": "f735e56e3e100168d127b4ee6b7b357cfc44f9475d0785dfd9232e2bd62d5b48",
+    "office_host_evidence.json": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c"
+  }
+}

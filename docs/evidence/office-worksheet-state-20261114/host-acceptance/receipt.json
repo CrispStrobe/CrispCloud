@@ -1,0 +1,150 @@
+{
+  "head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "status": "All eight focused host tests, three source-bound collection verifications, and the focused three-file Flutter analysis succeeded.",
+  "host_tests_passed": 8,
+  "xlsx_packages": 27,
+  "authored_inputs": 3,
+  "actual_uploads": 24,
+  "all_original_input_maps_identical": true,
+  "all_collected_input_maps_identical": true,
+  "cohorts": {
+    "worksheet": {
+      "tests_passed": 5,
+      "xlsx_files": 17,
+      "authored_inputs": 1,
+      "actual_uploads": 16,
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-sheet-state-coverage-worksheet-positive-1",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "test/widget/office_sheet_state_workflow_test.dart"
+      ],
+      "head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "original_input_tree_sha256": "ec91296bf7ff165802b85f559151a98ffeed366ad7345bd7d6d6195fb11bbbe5",
+      "collected_input_tree_sha256": "fa309130de431f2137e11afb7159743d5ef533d739efb3f6659a0615e6c89876",
+      "input_files": 4743,
+      "pubspec_view_difference": {
+        "pubspec.yaml": {
+          "original": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+          "collected": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf"
+        }
+      },
+      "collection_receipt_sha256": "c5f47fdde6822a3b0292e71c28552048179bd2a9cf97e05b9b2b6d223810251c",
+      "raw_lcov_sha256": "f4c9ab855da2ad583b145eefe697f459bc80dc5c2c9ee5703a729dde61d773fc",
+      "raw_lcov_bytes": 616511,
+      "artifact_manifest_sha256": "35f894fca91242ac9de0eccb5564dbe838758bf742bd5d2bee7186e37b2f7c70",
+      "scope": "Independent successful collection; coverage is scoped to this cohort and must not be added across overlapping runs."
+    },
+    "style": {
+      "tests_passed": 2,
+      "xlsx_files": 6,
+      "authored_inputs": 1,
+      "actual_uploads": 5,
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-style-history-coverage-style-positive-1",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "--plain-name",
+        "ribbon style history",
+        "test/widget/office_native_workflow_test.dart"
+      ],
+      "head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "original_input_tree_sha256": "ec91296bf7ff165802b85f559151a98ffeed366ad7345bd7d6d6195fb11bbbe5",
+      "collected_input_tree_sha256": "fa309130de431f2137e11afb7159743d5ef533d739efb3f6659a0615e6c89876",
+      "input_files": 4743,
+      "pubspec_view_difference": {
+        "pubspec.yaml": {
+          "original": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+          "collected": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf"
+        }
+      },
+      "collection_receipt_sha256": "ef818347e645dc7714d16c98a6a1d069f0d26b7dae5be60bf58605bddd23922f",
+      "raw_lcov_sha256": "a98e96841b2fd5e993016a034786379ac7e548109414dbd06b8e71fc8721a410",
+      "raw_lcov_bytes": 616511,
+      "artifact_manifest_sha256": "4a4da5db52edf82eba3a9dc5441771d80d69a4a4bbcd0163301adb803b439a02",
+      "scope": "Independent successful collection; coverage is scoped to this cohort and must not be added across overlapping runs."
+    },
+    "native-fill": {
+      "tests_passed": 1,
+      "xlsx_files": 4,
+      "authored_inputs": 1,
+      "actual_uploads": 3,
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-native-fill-coverage-native-fill-positive-1",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "--plain-name",
+        "native fills survive unrelated formatting through three host uploads",
+        "test/widget/office_native_workflow_test.dart"
+      ],
+      "head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "original_input_tree_sha256": "ec91296bf7ff165802b85f559151a98ffeed366ad7345bd7d6d6195fb11bbbe5",
+      "collected_input_tree_sha256": "fa309130de431f2137e11afb7159743d5ef533d739efb3f6659a0615e6c89876",
+      "input_files": 4743,
+      "pubspec_view_difference": {
+        "pubspec.yaml": {
+          "original": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+          "collected": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf"
+        }
+      },
+      "collection_receipt_sha256": "8d52e73c0ea482e7e93e42f16e3f30e7a88f981e4322f31f84a6f4f75279bd0c",
+      "raw_lcov_sha256": "7c6fb21151cf292e243f2dc366b9a0e649ecc098132c0c9dc69a0676b51770d6",
+      "raw_lcov_bytes": 616511,
+      "artifact_manifest_sha256": "7cfaeb955619be89fb8cf8239e22d304bdfda26d72af1eac9a71bf79aa39b2ec",
+      "scope": "Independent successful collection; coverage is scoped to this cohort and must not be added across overlapping runs."
+    }
+  },
+  "navigation_limit": "Worksheet switching alone uses public setActiveSheet because the host has no sheet selector. New worksheet and style commands/history/save paths use actual ribbon/menu controls; the existing native-fill case uses the real host save callback.",
+  "analysis": {
+    "head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+    "started_at": "2026-11-14T20:12:12.633873+00:00",
+    "completed_at": "2026-11-14T20:12:46.082329+00:00",
+    "command": [
+      "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+      "analyze",
+      "--no-pub",
+      "lib/widgets/office_editor_ribbon.dart",
+      "test/widget/office_sheet_state_workflow_test.dart",
+      "test/widget/office_native_workflow_test.dart"
+    ],
+    "returncode": 0,
+    "input_files": 4743,
+    "input_tree_sha256": "ec91296bf7ff165802b85f559151a98ffeed366ad7345bd7d6d6195fb11bbbe5",
+    "changed_inputs": [],
+    "analyzed_file_sha256": {
+      "lib/widgets/office_editor_ribbon.dart": "8c1954036e6ead90e0b7e49dcba467be5f7f9519bb81caab548b3b4f3e53f969",
+      "test/widget/office_sheet_state_workflow_test.dart": "0ada99c43f88d5c4062dcade0726be7ee3b671be27341c49ecf62b80814a5974",
+      "test/widget/office_native_workflow_test.dart": "02ca881a3456e51e87badb79c1953425825efa7e2b25523a1498dca3476b2abe"
+    },
+    "pubspec_restored": true,
+    "log_sha256": "d83da5ad4930d32b0040de727843e99d7a8e7b53f9d045f0195145f20b346d02"
+  },
+  "independent_schema_reported_result": {
+    "xlsx_files": 27,
+    "schema_errors": 0,
+    "authored_inputs": 3,
+    "actual_uploads": 24,
+    "note": "Independent validator agent retains separate exact-byte/source-bound receipts; this field summarizes its confirmed result, not a replacement for those reports."
+  }
+}

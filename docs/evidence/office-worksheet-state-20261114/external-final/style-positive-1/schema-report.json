@@ -1,0 +1,36 @@
+{
+  "Files": 6,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/cross-sheet-applied.xlsx",
+      "Sha256": "13ce6b4a944a6ceff5be01dfdeccea252d8515dea7d2a992f507b9c44b6fade9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/cross-sheet-redo.xlsx",
+      "Sha256": "42d5e99ea62f71bb21d224dcbf8f3d01d50a8b4efe6708a1e22cb4879e195320",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/cross-sheet-undo.xlsx",
+      "Sha256": "ced9964b03209251f9340dbd013542bddfe4c5ea716636c1a147bec0d9df4c92",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/native-redo.xlsx",
+      "Sha256": "c53d0bbd6fdadde71ad9b6d22fb4bb116ca559728f8e192ffa1c7bf3bf19b2a6",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/native-undo.xlsx",
+      "Sha256": "5373043e5820419a4be3ab01eeb4ba049458f46e48390c206e40d2da0ba69016",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/style-positive-1/artifacts/source.xlsx",
+      "Sha256": "a7169355e89a1e5f232a407652adf4a5bed20bd0ddfbf8390f152f9ebb230107",
+      "Errors": []
+    }
+  ]
+}

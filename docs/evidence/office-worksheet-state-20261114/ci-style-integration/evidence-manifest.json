@@ -1,0 +1,136 @@
+{
+  "file_count": 26,
+  "total_size_bytes": 353895,
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 3836,
+      "sha256": "c6c9be21a01fe56ca966d61bfe8714cb27c9f1734a3dc530e02d14b323054178"
+    },
+    {
+      "path": "artifact-flow-control/artifact-flow-receipt.json",
+      "size_bytes": 4951,
+      "sha256": "c53b6609e84adaa5623b690be1a783aab23daa087283c25c005522e8fa1f3410"
+    },
+    {
+      "path": "artifact-flow-control/complete-inventory.log",
+      "size_bytes": 172,
+      "sha256": "c3a054ddd692c92159d2046658c6f117387d0952a9e0ff5ccd65c72ca02c8d9e"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-fill-host-acceptance.json",
+      "size_bytes": 70196,
+      "sha256": "0c61a1488434f5a69e8cd5770f7064aca7a25136c45ca503aaa0f93e98ab6c60"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-fill-host-acceptance.log",
+      "size_bytes": 477,
+      "sha256": "fba90d8bb36c286f4d6713303a48d6457420cd77c97f2090cf6dc0ff26bf9f2a"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-sheet-state-acceptance.json",
+      "size_bytes": 65955,
+      "sha256": "7b6eeb50d29d4d3540fd208b588e76eb1dfae30c5780a69504f55758d83a88c2"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-sheet-state-acceptance.log",
+      "size_bytes": 1614,
+      "sha256": "8aefef22093e900cfbccd739a5d2110892ea61866d066a6154c7a3b2a7baf3a3"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-style-history-acceptance.json",
+      "size_bytes": 69506,
+      "sha256": "7b671c2baed29b042dad1a212e44c09405e4116f49798f951a2c63d13cdceb83"
+    },
+    {
+      "path": "artifact-flow-control/missing-office-style-history-acceptance.log",
+      "size_bytes": 693,
+      "sha256": "76481a223d554155e95cb5fd058ff298cefaaa22a174338b75322782167bdabd"
+    },
+    {
+      "path": "artifact-flow-control/positive-host-inventory.json",
+      "size_bytes": 71452,
+      "sha256": "6a3b8a84f6e4c284beddb6d64f22ee6b024cedbcef2fa3bab50d083558223209"
+    },
+    {
+      "path": "artifact-flow-control/workflow-render-stage.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "artifact-flow-control/workflow-render-stage.sh",
+      "size_bytes": 930,
+      "sha256": "d40dc294688434dbf753d63ba1fe821de838ccc40431893617edd5a4e6a92c5f"
+    },
+    {
+      "path": "baseline/office_host_evidence.json",
+      "size_bytes": 10728,
+      "sha256": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c"
+    },
+    {
+      "path": "baseline/office_host_evidence.py",
+      "size_bytes": 14605,
+      "sha256": "8e38bded2fe04c6155ebf69fbcac36a4843bc8ee09d706206aa7aba9920545b8"
+    },
+    {
+      "path": "baseline/reproduce_third_root_rejection.py",
+      "size_bytes": 1103,
+      "sha256": "2028058932a919b499c9a743d5b6c5fff8948d35932e182971123aa3cd38af6d"
+    },
+    {
+      "path": "baseline/test_office_host_evidence.py",
+      "size_bytes": 18705,
+      "sha256": "f735e56e3e100168d127b4ee6b7b357cfc44f9475d0785dfd9232e2bd62d5b48"
+    },
+    {
+      "path": "baseline/third-root-rejection.json",
+      "size_bytes": 761,
+      "sha256": "dd583d717432e18b371397fe0295905619df259f10572f11890ae9e1d6873a4d"
+    },
+    {
+      "path": "baseline-reproduction.log",
+      "size_bytes": 248,
+      "sha256": "c13822f161b253986764e22b0589a28bc1eb89b25524df3e9340e0eef6e1c6e3"
+    },
+    {
+      "path": "candidate-inputs.json",
+      "size_bytes": 1559,
+      "sha256": "fdbf3e80c6984a18fb8cabc0d44487ffe5778484db4dad1022be348b0b77ecbd"
+    },
+    {
+      "path": "commands.json",
+      "size_bytes": 1456,
+      "sha256": "655c68fc2c83ad50249dd36bf014394d6050419c6bcb614ca11407a1932b0b17"
+    },
+    {
+      "path": "diff-check.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused-validation.json",
+      "size_bytes": 3275,
+      "sha256": "e036cefbcff537c8aaa8a5c976cecb212381bf184e1cb8bdcb55b55d91e6c10b"
+    },
+    {
+      "path": "gate-shell-syntax.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "inventory-unittests.log",
+      "size_bytes": 3958,
+      "sha256": "bbf4f9e177db20ebc7e3a3547fddaa8211ba7663201c43da11d0f11697c0a2ac"
+    },
+    {
+      "path": "run_artifact_flow_control.py",
+      "size_bytes": 6071,
+      "sha256": "8d208e97feeaa9656c3b2bbbab5af6bc712d23735144684abd33628e9f145e2b"
+    },
+    {
+      "path": "scope-preservation.json",
+      "size_bytes": 1644,
+      "sha256": "3a64c6d165c351665cf15d9804beef2bd2f2853f1d7858aef30643b337197c24"
+    }
+  ]
+}

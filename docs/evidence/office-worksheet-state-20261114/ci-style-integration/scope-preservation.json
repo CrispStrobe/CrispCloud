@@ -1,0 +1,50 @@
+{
+  "legacy_commit": "5454096520802adac784282ee3d4d06d77564ba5",
+  "manifest_path": "tool/office_host_evidence.json",
+  "legacy_outputs": {
+    "count": 146,
+    "structurally_equal_including_order": true,
+    "sha256": "d338d8a3b18c7c73819ffa7132a10a7fb9ec6ed9e82746e4b18d2f354d137fd3"
+  },
+  "legacy_references": {
+    "count": 3,
+    "structurally_equal_including_order": true,
+    "sha256": "786aae2a074d8b35bcc73bce6da6d4cb90894cd589954a6d76ef1e881e2ea68a"
+  },
+  "prior_schema_only_artifacts": {
+    "count": 21,
+    "structurally_equal_including_order": true,
+    "sha256": "4ca5e3ea75c331148d8ccb3d8d3a7e1f023985ca0d4ea3f5d6a941162e4832da"
+  },
+  "new_artifacts": [
+    {
+      "path": "build/office-style-history-acceptance/source.xlsx",
+      "role": "authored_input"
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-applied.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/cross-sheet-redo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/native-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-style-history-acceptance/native-redo.xlsx",
+      "role": "host_output"
+    }
+  ],
+  "candidate_manifest_sha256": "aabbd75793f0468f5e0ba8a25bcfc5ab2944fb194fb515ab026e788fc848b6e0",
+  "prior_manifest_sha256": "a38aca8f43e2fd6add34fa4dd2287acdeffa51c3aa8fc4b132c246ebced3183c",
+  "rendered_total": 149,
+  "schema_only_total": 27,
+  "required_total": 176
+}

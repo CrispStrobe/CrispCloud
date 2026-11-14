@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+  "validation_scope": "Independent OpenXML SDK schema validation of exact current captured host files; no rendering claim",
+  "files": 27,
+  "authored_inputs": 3,
+  "captured_uploads": 24,
+  "schema_failures": 0,
+  "all_cohorts_exit_zero": true,
+  "all_byte_checks_passed": true,
+  "cohorts": [
+    {
+      "label": "worksheet-positive-1",
+      "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "files": 17,
+      "authored_inputs": 1,
+      "captured_uploads": 16,
+      "schema_failures": 0,
+      "schema_exit_code": 0,
+      "self_test_exit_code": 0,
+      "source_xlsx_sha256": "ea001af95d00b2a64d657bbc430ee75b0ba5fc10ce84456b9b39863b643dcabd",
+      "host_artifact_manifest_sha256": "35f894fca91242ac9de0eccb5564dbe838758bf742bd5d2bee7186e37b2f7c70",
+      "host_collection_receipt_sha256": "c5f47fdde6822a3b0292e71c28552048179bd2a9cf97e05b9b2b6d223810251c",
+      "sdk_report_sha256": "5e5d2d2408eb2346ac004f3ed6bccfed8c6c01b881665598f42f662da28f353c",
+      "validation_summary_sha256": "433b47e4eba82540a4737f38c7c437f3cb60e69c792d405f36b5508760785a4f",
+      "byte_checks": true
+    },
+    {
+      "label": "style-positive-1",
+      "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "files": 6,
+      "authored_inputs": 1,
+      "captured_uploads": 5,
+      "schema_failures": 0,
+      "schema_exit_code": 0,
+      "self_test_exit_code": 0,
+      "source_xlsx_sha256": "a7169355e89a1e5f232a407652adf4a5bed20bd0ddfbf8390f152f9ebb230107",
+      "host_artifact_manifest_sha256": "4a4da5db52edf82eba3a9dc5441771d80d69a4a4bbcd0163301adb803b439a02",
+      "host_collection_receipt_sha256": "ef818347e645dc7714d16c98a6a1d069f0d26b7dae5be60bf58605bddd23922f",
+      "sdk_report_sha256": "ac3b6b5e70a4adec28bd571b87579fc78c314b46fb4ba6002e1c37fe5c05fcd7",
+      "validation_summary_sha256": "4e65f86d0fae0e34156ed8bcb64f1ae6c3d1a81cd17e26cadd4b6cda18c9be60",
+      "byte_checks": true
+    },
+    {
+      "label": "native-fill-positive-1",
+      "execution_head": "ccba883b3a042582d3fd80f75772c20bff9e2c4b",
+      "files": 4,
+      "authored_inputs": 1,
+      "captured_uploads": 3,
+      "schema_failures": 0,
+      "schema_exit_code": 0,
+      "self_test_exit_code": 0,
+      "source_xlsx_sha256": "46e2283f807e8776e8d6a6413f43ab06d87c61ce52ec0aa4a171e4aae4eceacb",
+      "host_artifact_manifest_sha256": "7cfaeb955619be89fb8cf8239e22d304bdfda26d72af1eac9a71bf79aa39b2ec",
+      "host_collection_receipt_sha256": "8d52e73c0ea482e7e93e42f16e3f30e7a88f981e4322f31f84a6f4f75279bd0c",
+      "sdk_report_sha256": "81abfb6610c6d952145819e17aab077dd3bbb119b650cc828994348e8eb9e6a1",
+      "validation_summary_sha256": "9ec8c5e85c5c48107f02d1e1e157a6f2241ae15940fe98ba01b32efbd9d7b578",
+      "byte_checks": true
+    }
+  ]
+}

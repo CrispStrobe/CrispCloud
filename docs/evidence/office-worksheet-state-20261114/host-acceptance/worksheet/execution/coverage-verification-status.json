@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/office_host_coverage.py",
+    "build/office-sheet-state-coverage-worksheet-positive-1/lcov.info",
+    "--output",
+    "build/office-sheet-state-coverage-worksheet-positive-1/coverage-report.json",
+    "--require-receipt"
+  ],
+  "returncode": 0,
+  "pubspec_restored": true,
+  "changed_inputs": []
+}
