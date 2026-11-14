@@ -40,3 +40,12 @@ The full archive run preceded preference-mock corrections in three test hosts. T
 Filesystem readers are bounded and read-only; their [ext](archive-ext-profile.md) and [NTFS](archive-ntfs-profile.md) contracts retain unsupported-layout, metadata and size limits. They do not mount or repair disks. SQLite remains the working catalogue index; CAF is optional portable interchange and does not encode scan completeness.
 
 The local app version is 1.3.2+25. The signed universal macOS app was built from runtime checkpoint `436c7926`, installed and launched. The standalone CLI bundle was also built and installed as both `crispcloud` and `crisp`; a real scan → CAF export/import → offline ranking smoke passed. Imported CAF ranking returns valid data and the deliberate incomplete-coverage exit status 1, since CAF cannot certify original scan coverage. The existing v1.3.1 GitHub queue is left alone; no new release tag or store submission is created by this increment. Hosted cross-platform binaries, web deployment and TestFlight remain separate from these local results.
+
+
+## Additional filesystem and live GUI regressions
+
+The follow-up adds five real local-filesystem tests in `test/csv_spreadsheet_local_copy_test.dart`: existing-file preservation, directory collisions, symlink redirection refusal, loss of captured-source authority during listing, and two concurrent imports targeting the same filename. The concurrency test holds both initial listings at a barrier so both see an unused destination; exactly one publication may succeed. These five tests and the eight existing CSV import tests pass together (**13 passed**, no skips on macOS).
+
+The desktop harness now passes **five live tests**. Two new cases exercise an existing XLSX collision followed by a successful retry under a new filename, and the real Rust/SQLite-backed catalogue GUI importing a CAF after its original source directory is deleted. The GUI case checks the unknown-coverage warning, filename search and navigation into an empty folder and back. The real catalogue database and filesystem operations use app-owned temporary paths; only the library registry is in memory and application-support path selection is redirected for isolation. This does not qualify user bookmark recovery or remote account access.
+
+The three original image/CSV cases were rerun as part of the five-test desktop run. Static analysis of both changed Dart test files passes with fatal infos. No production implementation changed in this follow-up, and the installed release application remains 1.3.2+25.

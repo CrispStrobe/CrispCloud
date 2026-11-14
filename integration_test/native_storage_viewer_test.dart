@@ -11,15 +11,22 @@ import 'package:crisp_cloud/models/file_item.dart';
 import 'package:crisp_cloud/providers/panel_source_provider.dart';
 import 'package:crisp_cloud/providers/providers.dart';
 import 'package:crisp_cloud/services/archive_service.dart';
+import 'package:crisp_cloud/services/catalogue_format.dart';
+import 'package:crisp_cloud/services/catalogue_library.dart';
+import 'package:crisp_cloud/services/file_collection_storage.dart';
 import 'package:crisp_cloud/services/local_file_service_native.dart';
 import 'package:crisp_cloud/services/panel_source_service.dart';
 import 'package:crisp_cloud/widgets/hex_viewer.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/catalogue_dialog.dart';
+import 'package:crisp_cloud/widgets/csv_spreadsheet_import_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:crisp_catalog/crisp_catalog.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:quds_office_engine/quds_office_engine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,6 +52,13 @@ class _AppOwnedLocal extends MacosFileService {
     fullReads++;
     return super.readFile(path, fileItem: fileItem);
   }
+}
+
+class _AppOwnedPaths extends PathProviderPlatform {
+  _AppOwnedPaths(this.root);
+  final String root;
+  @override
+  Future<String?> getApplicationSupportPath() async => root;
 }
 
 Future<void> _until(WidgetTester tester, bool Function() done) async {
@@ -171,6 +185,142 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'live CSV collision can be retried without overwriting either existing file',
+    (tester) async {
+      final directory = await Directory.systemTemp.createTemp(
+        'crisp-live-csv-collision-',
+      );
+      final original = File('${directory.path}/table.csv');
+      final existing = File('${directory.path}/table-imported.xlsx');
+      await original.writeAsString('id,value\n001,7');
+      await existing.writeAsString('existing data must survive');
+      try {
+        await _mount(tester, directory, 'table.csv');
+        final action = find.byKey(const ValueKey('viewer-import-spreadsheet'));
+        await _until(tester, () => action.evaluate().isNotEmpty);
+        await tester.ensureVisible(action);
+        await tester.tap(action);
+        await _until(
+          tester,
+          () => find.text('2 rows · 2 columns').evaluate().isNotEmpty,
+        );
+        await tester.tap(find.text('Create XLSX copy and edit'));
+        await _until(
+          tester,
+          () => find
+              .textContaining('A file already exists:')
+              .evaluate()
+              .isNotEmpty,
+        );
+        expect(await existing.readAsString(), 'existing data must survive');
+        final filename = find.descendant(
+          of: find.byType(CsvSpreadsheetImportDialog),
+          matching: find.byType(TextField),
+        );
+        await tester.enterText(filename, 'table-copy.xlsx');
+        await tester.tap(find.text('Create XLSX copy and edit'));
+        await _until(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isNotEmpty,
+        );
+        final sheet = SheetDeserializer()
+            .readBytes(
+              await File('${directory.path}/table-copy.xlsx').readAsBytes(),
+            )
+            .sheets
+            .single;
+        expect(sheet.cell(const SmlCellRef(0, 1)).value, '001');
+        expect(await existing.readAsString(), 'existing data must survive');
+        expect(await original.readAsString(), 'id,value\n001,7');
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(milliseconds: 250));
+        await directory.delete(recursive: true);
+      }
+    },
+  );
+
+  testWidgets(
+    'live CAF GUI imports, searches and browses after the original folder is gone',
+    (tester) async {
+      final directory = await Directory.systemTemp.createTemp(
+        'crisp-live-catalogue-',
+      );
+      final previousPaths = PathProviderPlatform.instance;
+      PathProviderPlatform.instance = _AppOwnedPaths(directory.path);
+      SharedPreferences.setMockInitialValues({});
+      try {
+        final source = Directory('${directory.path}/source');
+        await Directory('${source.path}/empty').create(recursive: true);
+        await File('${source.path}/small.txt').writeAsString('abc');
+        await File('${source.path}/largest.txt').writeAsString('123456789');
+        final canonicalRoot = await source.resolveSymbolicLinks();
+        final db = '${directory.path}/original.crispindex';
+        final caf = '${directory.path}/portable.caf';
+        await const CrispCatalog().execute({
+          'op': 'scan',
+          'path': source.path,
+          'output': db,
+        });
+        await const CrispCatalog().execute({
+          'op': 'export',
+          'index': db,
+          'output': caf,
+        });
+        await source.delete(recursive: true);
+        final library = CatalogueLibrary(
+          storage: MemoryFileCollectionStorage(),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: CatalogueDialog(
+              local: _AppOwnedLocal(directory.path),
+              library: library,
+              initialPath: caf,
+              initialFormat: CatalogueFormat.caf,
+            ),
+          ),
+        );
+        final largest = find.byKey(const ValueKey('catalogue-row-largest.txt'));
+        await _until(tester, () => largest.evaluate().isNotEmpty);
+        expect(find.text('Partial or unknown source coverage'), findsOneWidget);
+        expect((await library.list()).single.root, canonicalRoot);
+        final search = find.byKey(const ValueKey('catalogue-search'));
+        await tester.enterText(search, 'largest');
+        await _until(
+          tester,
+          () =>
+              largest.evaluate().isNotEmpty &&
+              find
+                  .byKey(const ValueKey('catalogue-row-small.txt'))
+                  .evaluate()
+                  .isEmpty,
+        );
+        await tester.enterText(search, '');
+        final empty = find.byKey(const ValueKey('catalogue-row-empty'));
+        await _until(tester, () => empty.evaluate().isNotEmpty);
+        await tester.ensureVisible(empty);
+        await tester.tap(empty);
+        final parent = find.byKey(const ValueKey('catalogue-parent'));
+        await _until(tester, () => parent.evaluate().isNotEmpty);
+        await tester.tap(parent);
+        await _until(tester, () => largest.evaluate().isNotEmpty);
+        expect(await source.exists(), false);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(milliseconds: 250));
+        PathProviderPlatform.instance = previousPaths;
+        await directory.delete(recursive: true);
+      }
+    },
+  );
 
   testWidgets(
     'live CSV import creates an XLSX in the original local directory',
