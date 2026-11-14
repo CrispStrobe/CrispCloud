@@ -85,15 +85,18 @@ profile. Upload execution and the legacy pCloud/Nextcloud delta orchestration
 decline until they have separately qualified staging and publication contracts.
 Normal transfers continue through their existing paths.
 
-Qualification of this queued-copy increment is **pending**; its
-[continuation receipt](docs/evidence/storage-delta-queue-20261114/PROGRESS.md)
-will bind the results to the tested source. The earlier standalone delta
-implementation passed 790 tests across 43 Linux native suites at its own source
-pin, including loopback HTTP reconstruction and failure cases. Its subsequent
-Word-only refresh passed 60 host cases and 232 canonical cases. Those
-[earlier receipts](docs/evidence/storage-delta-20261114/PROGRESS.md) retain their
-original scope and do not qualify this new integration. See the
-[delta profile](docs/storage-delta-profile.md) for exact boundaries.
+The reviewed-copy integration passed **981 tests across 52 Linux native
+suites**, with no failures or skips, at source
+`832d3a26e004cf5268928d093841d3df61a3c5ea`. All 8,390 captured inputs remained
+unchanged; strict analysis passed all 23 changed Dart files. Coverage includes
+fault-injected transports and real signed loopback HTTP through the new
+journaled method. See the
+[complete qualification](docs/evidence/storage-delta-queue-20261114/qualification/README.md)
+and [saved checkpoints](docs/evidence/storage-delta-queue-20261114/PROGRESS.md).
+The earlier standalone 790/43, Word 60-case and canonical 232-case
+[receipts](docs/evidence/storage-delta-20261114/PROGRESS.md) retain their own
+source pins and are not added to this total. The
+[delta profile](docs/storage-delta-profile.md) records exact boundaries.
 Changed-block estimates exclude the initial full transfer and verification
 work; they are not end-to-end bandwidth measurements.
 

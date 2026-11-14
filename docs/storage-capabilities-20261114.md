@@ -577,9 +577,14 @@ older pCloud/Nextcloud delta orchestration continue to decline. Small files can
 use the admitted S3 paths without the historical 10 MiB heuristic becoming
 automatic admission.
 
-**Qualification of this queue integration is pending** in the
-[queued-copy receipt](evidence/storage-delta-queue-20261114/PROGRESS.md), which
-will identify its exact tested source and results. The
+The queue integration passed **981 tests across 52 Linux native suites** at
+`832d3a26e004cf5268928d093841d3df61a3c5ea`, with no failures or skips. All
+8,390 recorded inputs remained unchanged and strict analysis passed all 23
+changed Dart files. The [complete qualification](evidence/storage-delta-queue-20261114/qualification/README.md)
+includes mock fault injection, real signed loopback HTTP through the new
+journaled method, recovery and independent receipt verification. The
+[queued-copy receipt](evidence/storage-delta-queue-20261114/PROGRESS.md)
+preserves its incremental remote checkpoints and source cutoff. The
 [earlier evidence](evidence/storage-delta-20261114/PROGRESS.md) records incremental
 remote checkpoints, clean strict analysis, and 790 passed tests across 43 Linux
 native suites at source `331981649872e363253aef13f57a638e5747b8e5`, with no failures

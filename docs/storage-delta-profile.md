@@ -1,9 +1,11 @@
 # Bounded native delta downloads
 
-Status: the explicit reviewed-copy integration is implemented;
-**source-pinned runtime qualification for this increment is pending**. The
-[queued-copy continuation receipt](evidence/storage-delta-queue-20261114/PROGRESS.md)
-records its checkpoints and will identify the accepted source and test results.
+Status: the explicit reviewed-copy integration is qualified on Linux at
+`832d3a26e004cf5268928d093841d3df61a3c5ea`: **981 tests passed across 52 native
+suites**, with no failures or skips. Strict analysis passed all 23 changed Dart
+files. The [complete qualification](evidence/storage-delta-queue-20261114/qualification/README.md)
+and [saved checkpoints](evidence/storage-delta-queue-20261114/PROGRESS.md)
+bind the results to their exact source and transport/platform scope.
 
 The earlier standalone implementation was qualified on Linux at
 `331981649872e363253aef13f57a638e5747b8e5`: 790 native tests passed across 43
@@ -312,11 +314,23 @@ also keeps its original revision and observations.
 
 ## Qualification
 
-**Qualification of the reviewed queued-copy increment is pending.** Its final
-source/tree pin, native suite counts, analysis and transport scope will be
-recorded in the
-[queued-copy receipt](evidence/storage-delta-queue-20261114/PROGRESS.md).
-Implementation and static review alone do not establish runtime acceptance.
+The [reviewed-copy qualification](evidence/storage-delta-queue-20261114/qualification/README.md)
+binds **981 passes across 52 native suites** to source
+`832d3a26e004cf5268928d093841d3df61a3c5ea`, tree
+`5b185bf4c52650cb64c0895f0c7c349f800c8808`. There were no failures, skips or
+error events. All **8,390** recorded inputs and the clean HEAD/tree stayed
+unchanged. Strict analysis passed all **23** changed Dart files. An independent
+parse verified every suite count, input inventory and receipt artifact.
+
+The three new runtime suites provide 68 prepared-content, provider and queued
+copy cases. Coverage includes source/baseline/candidate changes after the
+committing journal write, pause/cancel and abort races, captured connection
+revocation, map provenance/tampering, first-copy cache creation, logical-stream
+and HTTP-byte accounting, reviewed recovery, and a lost committed
+acknowledgement. Real signed loopback HTTP executes a first journaled copy and
+an all-reuse repeat. Fault-injected HTTP fixtures cover differing local blocks
+and malformed or stalled responses. These results do not establish live S3
+interoperability or another platform's execution behavior.
 
 ### Earlier standalone qualification
 
@@ -345,7 +359,8 @@ Ten historical Nextcloud/ownCloud live mutation scenarios remain explicitly
 skipped in their opt-in suites; those suites were not part of this native
 cohort. They are not counted among the 790 passes or treated as qualified.
 
-Those earlier tests do not qualify the new provider strategy, queue/UI
-admission or recovery downgrade. This document makes no browser, mobile
-packaging, live-S3 interoperability, external desktop-fork, crash-injection
-qualification or general remote-write claim for the new increment.
+The earlier tests retain their original scope; the 981-case cohort above
+qualifies the reviewed provider strategy, queue/UI admission and ordinary
+recovery downgrade on Linux. This document makes no browser/mobile packaging,
+Windows/macOS execution, live-S3 interoperability, external desktop-fork,
+process-crash injection or general remote-write qualification claim.

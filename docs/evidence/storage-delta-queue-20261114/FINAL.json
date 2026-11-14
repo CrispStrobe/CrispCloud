@@ -1,0 +1,49 @@
+{
+  "status": "qualified",
+  "qualified_source": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+  "qualified_tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808",
+  "branch": "integration/storage-delta-20261114",
+  "pull_request": "https://github.com/CrispStrobe/CrispCloud/pull/107",
+  "runtime_implementation_source": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+  "main_incorporated": "e58da70149182301efbbe85807edb6298ff37ff1",
+  "office_recovery_incorporated": "764cb5184c93ac89dc57638fc0e88d42aa82154b",
+  "office_canonical_pin": "a379ecc455890032906098b6cf58e17504581ed0",
+  "native": {
+    "passed": 981,
+    "suites": 52,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "stable_input_entries": 8390,
+    "exit_code": 0
+  },
+  "analysis": {
+    "files": 23,
+    "issues": 0,
+    "stable_input_entries": 8390,
+    "exit_code": 0
+  },
+  "catalogue_rust": {
+    "source": "8b2ec1079ecaa340cf29bff0d04ae05e5368bf8f",
+    "passed": 14,
+    "failed": 0,
+    "ignored": 1,
+    "doc_tests": 0,
+    "unchanged_native_inputs": 14,
+    "exit_code": 0
+  },
+  "platform": "Linux x86-64",
+  "flutter": "3.47.8",
+  "dart": "3.13.7",
+  "rust": "1.100.0",
+  "source_cutoff": "final-audit/receipt.json",
+  "qualification": "qualification/README.md",
+  "limits": [
+    "Explicit reviewed native S3-to-local regular-file copies only",
+    "One full conditional copy on absent/stale/untrusted map",
+    "Map reuse requires the same live adapter and source revision",
+    "Reviewed recovery uses ordinary streaming",
+    "No automatic selection, remote delta writes, SSE-C, browser/mobile acceptance or external-writer CAS",
+    "Catalogue Rust gate is Linux-only; one stress case was not run"
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "after_entries_sha256": "240ce3c451df1b1781e53a48cf533fd3a80d3e4797764fa4bd75a21c3d59a865",
+  "after_git": {
+    "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+    "status": "",
+    "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+  },
+  "after_tools": {
+    "dart_binary": {
+      "path": "/workspace/scratch/209f165653d7/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "launcher": {
+      "path": "/workspace/scratch/209f165653d7/toolchain/run",
+      "sha256": "abe07326d8ea0c52cf010d6068b2b28a9a3a35068b272d5e49f77c5ece48fb33"
+    },
+    "runner": {
+      "path": "/workspace/scratch/209f165653d7/validation/queue-analysis-final/run_analysis.py",
+      "sha256": "d672e8373906d36e2fa41981a8b91bc0d6e92dc6dc03807f194157442b3b249a"
+    }
+  },
+  "base_commit": "781458d765100ae3556906ff8ca923e70c956afa",
+  "before_entries_sha256": "240ce3c451df1b1781e53a48cf533fd3a80d3e4797764fa4bd75a21c3d59a865",
+  "before_git": {
+    "head": "832d3a26e004cf5268928d093841d3df61a3c5ea",
+    "status": "",
+    "tree": "5b185bf4c52650cb64c0895f0c7c349f800c8808"
+  },
+  "before_tools": {
+    "dart_binary": {
+      "path": "/workspace/scratch/209f165653d7/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+      "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+    },
+    "launcher": {
+      "path": "/workspace/scratch/209f165653d7/toolchain/run",
+      "sha256": "abe07326d8ea0c52cf010d6068b2b28a9a3a35068b272d5e49f77c5ece48fb33"
+    },
+    "runner": {
+      "path": "/workspace/scratch/209f165653d7/validation/queue-analysis-final/run_analysis.py",
+      "sha256": "d672e8373906d36e2fa41981a8b91bc0d6e92dc6dc03807f194157442b3b249a"
+    }
+  },
+  "command": [
+    "/workspace/scratch/209f165653d7/toolchain/run",
+    "/workspace/scratch/209f165653d7/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+    "analyze",
+    "--fatal-infos",
+    "--fatal-warnings",
+    "lib/l10n/commander_translations.dart",
+    "lib/l10n/settings_strings.dart",
+    "lib/services/delta_sync_service.dart",
+    "lib/services/file_operation_backend.dart",
+    "lib/services/file_operation_content_strategy.dart",
+    "lib/services/file_operation_options.dart",
+    "lib/services/file_operation_service.dart",
+    "lib/services/s3_client_adapter.dart",
+    "lib/services/transfer_recovery_service.dart",
+    "lib/widgets/file_operation_conflict_dialog.dart",
+    "lib/widgets/file_operation_dialog.dart",
+    "lib/widgets/settings_dialog.dart",
+    "test/commander_strings_test.dart",
+    "test/delta_prepared_contents_test.dart",
+    "test/file_operation_options_test.dart",
+    "test/file_operation_service_test.dart",
+    "test/s3_verified_block_contents_test.dart",
+    "test/settings_dialog_i18n_test.dart",
+    "test/support/verified_s3_fixture.dart",
+    "test/transfer_recovery_test.dart",
+    "test/verified_block_copy_test.dart",
+    "test/widget/file_operation_conflict_dialog_test.dart",
+    "test/widget/file_operation_dialog_test.dart"
+  ],
+  "elapsed_seconds": 66.5403645319966,
+  "file_count": 23,
+  "files": [
+    "lib/l10n/commander_translations.dart",
+    "lib/l10n/settings_strings.dart",
+    "lib/services/delta_sync_service.dart",
+    "lib/services/file_operation_backend.dart",
+    "lib/services/file_operation_content_strategy.dart",
+    "lib/services/file_operation_options.dart",
+    "lib/services/file_operation_service.dart",
+    "lib/services/s3_client_adapter.dart",
+    "lib/services/transfer_recovery_service.dart",
+    "lib/widgets/file_operation_conflict_dialog.dart",
+    "lib/widgets/file_operation_dialog.dart",
+    "lib/widgets/settings_dialog.dart",
+    "test/commander_strings_test.dart",
+    "test/delta_prepared_contents_test.dart",
+    "test/file_operation_options_test.dart",
+    "test/file_operation_service_test.dart",
+    "test/s3_verified_block_contents_test.dart",
+    "test/settings_dialog_i18n_test.dart",
+    "test/support/verified_s3_fixture.dart",
+    "test/transfer_recovery_test.dart",
+    "test/verified_block_copy_test.dart",
+    "test/widget/file_operation_conflict_dialog_test.dart",
+    "test/widget/file_operation_dialog_test.dart"
+  ],
+  "finished_at": "2026-11-14T21:54:20.863676+00:00",
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "input_count": 8390,
+  "input_stability_note": "Before/after equality does not prove absence of transient writes.",
+  "inputs_and_commit_stable": true,
+  "qualification_success": true,
+  "repo": "/workspace/scratch/209f165653d7/CrispCloud",
+  "returncode": 0,
+  "scope": "Strict static analysis of every changed Dart file under lib/test since base; no tests, package resolution, formatting edits, or runtime qualification.",
+  "started_at": "2026-11-14T21:53:14.323062+00:00",
+  "versions": {
+    "dart": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+    "dart_version_command": [
+      "/workspace/scratch/209f165653d7/toolchain/run",
+      "/workspace/scratch/209f165653d7/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+      "--version"
+    ],
+    "flutter_cache_version": {
+      "channel": "[user-branch]",
+      "dartSdkVersion": "3.13.7",
+      "devToolsVersion": "2.60.0",
+      "engineBuildDate": "2026-10-23 05:34:48.330",
+      "engineCommitDate": "2026-10-23 02:13:38.000Z",
+      "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+      "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+      "flutterVersion": "3.47.8",
+      "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+      "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+      "frameworkVersion": "3.47.8",
+      "repositoryUrl": "https://github.com/flutter/flutter.git"
+    },
+    "flutter_cache_version_file": "/workspace/scratch/209f165653d7/toolchain/flutter/bin/cache/flutter.version.json",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+  }
+}

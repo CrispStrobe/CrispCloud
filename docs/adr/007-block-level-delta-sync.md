@@ -27,9 +27,12 @@ after data publication while retaining its journal evidence.
 
 The profile does not inherit the old 10 MiB activation rule or establish
 durable block-level resume, cross-process exclusion, or atomic compare-and-swap
-against external local writers. **Qualification of the reviewed-copy extension
-is pending** in its
-[new receipt](../evidence/storage-delta-queue-20261114/PROGRESS.md). The earlier
+against external local writers. The reviewed-copy extension passed **981 tests
+across 52 Linux native suites**, with no failures or skips, at
+`832d3a26e004cf5268928d093841d3df61a3c5ea`; strict analysis passed all 23
+changed Dart files. Its [qualification](../evidence/storage-delta-queue-20261114/qualification/README.md)
+and [checkpoint receipt](../evidence/storage-delta-queue-20261114/PROGRESS.md)
+preserve exact inputs, transport boundaries and recovery evidence. The earlier
 standalone Linux cohort passed 790 tests across 43 suites at its own source
 pin; its exact source and mock/loopback transport boundaries remain in the
 [earlier receipt](../evidence/storage-delta-20261114/PROGRESS.md) and do not qualify
