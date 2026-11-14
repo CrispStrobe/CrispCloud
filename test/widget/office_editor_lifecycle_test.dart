@@ -87,6 +87,64 @@ Future<void> _choose(WidgetTester tester, String label) async {
 
 void main() {
   testWidgets(
+    'sorting alone prompts on Back and saves undoable reordered rows',
+    (tester) async {
+      await tester.runAsync(() async {
+        final host = await OfficeTestHarness.open(
+          tester,
+          name: 'sorted.xlsx',
+          fixture: 'native.xlsx',
+        );
+        final sheet = host.controller as SheetEditorController;
+        expect(sheet.isDirty, isFalse);
+        expect(sheet.sheet.cellA1('A2').value, 'North');
+        expect(sheet.sheet.cellA1('A3').value, 'South');
+        sheet.selection
+          ..selectCell(SmlCellRef.parse('A1'))
+          ..extendTo(SmlCellRef.parse('C3'));
+        final revision = sheet.contentRevision;
+        await tester
+            .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+            .perform(OfficeEditorAction.sortDescending);
+        await tester.pump();
+        expect(sheet.sheet.cellA1('A2').value, 'South');
+        expect(sheet.sheet.cellA1('A3').value, 'North');
+        expect(sheet.isDirty, isTrue);
+        expect(host.ribbon.dirty, isTrue);
+        expect(sheet.contentRevision, greaterThan(revision));
+        await host.back();
+        expect(find.text('Unsaved changes'), findsOneWidget);
+        await _choose(tester, 'Cancel');
+        expect(host.cloud.writes, isEmpty);
+        sheet.undo();
+        expect(sheet.sheet.cellA1('A2').value, 'North');
+        expect(sheet.sheet.cellA1('A3').value, 'South');
+        sheet.redo();
+        expect(sheet.sheet.cellA1('A2').value, 'South');
+        await host.back();
+        await _choose(tester, 'Save');
+        await officePumpUntil(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+        );
+        final reopened = SheetEditorController.fromBytes(host.savedBytes);
+        try {
+          expect(reopened.sheet.cellA1('A1').value, 'Region');
+          expect(reopened.sheet.cellA1('A2').value, 'South');
+          expect(reopened.sheet.cellA1('B2').value, 5);
+          expect(reopened.sheet.cellA1('A3').value, 'North');
+          expect(reopened.sheet.cellA1('B3').value, 2);
+        } finally {
+          reopened.dispose();
+        }
+        expect(host.cloud.writes, ['/sorted.xlsx']);
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'speaker-notes-only edits prompt on Back and save before closing',
     (tester) async {
       await tester.runAsync(() async {
@@ -166,6 +224,53 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Save and Close preserves an open notes dialog and its draft', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final host = await OfficeTestHarness.open(
+        tester,
+        name: 'notes.pptx',
+        fixture: 'native.pptx',
+      );
+      await _editSlideNotes(tester, 'Uploaded notes revision');
+      host.cloud.pauseNextUpload();
+      await host.back();
+      await _choose(tester, 'Save');
+      await officePumpUntil(tester, () => host.cloud.pendingBytes != null);
+      await tester
+          .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+          .perform(OfficeEditorAction.speakerNotes);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final field = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(field, 'Unapplied notes draft during upload');
+      host.cloud.releaseUpload();
+      await officePumpUntil(tester, () => !host.ribbon.saving);
+      expect(find.byType(OfficeEditorDialog), findsOneWidget);
+      expect(find.text('Speaker Notes'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(field).controller!.text,
+        'Unapplied notes draft during upload',
+      );
+      expect(_slideNotes(host.savedBytes), 'Uploaded notes revision');
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Apply'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(host.controller.isDirty, isTrue);
+      await host.save();
+      expect(
+        _slideNotes(host.savedBytes),
+        'Unapplied notes draft during upload',
+      );
+      await host.dispose();
+    });
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('speaker notes undo and redo survive actual host saves', (
     tester,

@@ -355,7 +355,15 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${context.tr('Saved')}: ${widget.file.name}')),
       );
-      if (popAfter && mounted && !_dirty) Navigator.of(context).pop();
+      // A notes/formatting dialog can hold a newer draft while the upload runs.
+      // Only close this editor's own route; popping the current top route would
+      // cancel that dialog and silently discard its unapplied text.
+      if (popAfter &&
+          mounted &&
+          !_dirty &&
+          ModalRoute.of(context)?.isCurrent == true) {
+        Navigator.of(context).pop();
+      }
     } catch (e, st) {
       _log.warn('office editor save failed', e, st);
       if (!mounted) return;
