@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "status": "compiled",
+  "browser_execution": "not_performed",
+  "entrypoint": "test/support/office_device_export_web_acceptance.dart",
+  "entrypoint_sha256": "784b99a13019798522af4e100460d8823700ac72bb5da8927bf748a571a7940e",
+  "wrapper_sha256": "bc7a8bebafa7338393619c4bd56d2d11a3cb113ec98b81364977a6bd4a429eec",
+  "adapter_sha256": "810613add90c2dbea892e8a8ee49993d11847a7fa47bddb386854024bc859c1f",
+  "compiled_sha256": "b3d598d4fa789aefa238ec80b5e018c7e23ca1883ffed6ec6a9fc697b293b182",
+  "dependency_resolution": {
+    "scope": "explicit_package_config",
+    "package_config": "/workspace/scratch/f035141943c7/toolchain/office-browser-deps/.dart_tool/package_config.json",
+    "package_config_sha256": "76dbdda12539c7dd260fbe06b49e33164364378f305f6611dd817eec1435cb76",
+    "application_lock_sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  }
+}
