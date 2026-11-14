@@ -23,6 +23,11 @@ in actual saved XLSX bytes. The delayed-upload baseline establishes an unchanged
 revision after a confirmed view mutation; its immediate editor-presence assertion
 did not fail. Positive host validation awaits the guarded canonical source sync.
 
+The [retained host baseline](evidence/office-worksheet-state-20261114/host-baseline/README.md)
+records the final five behavioral failures, all earlier test-harness attempts,
+4,740 stable execution inputs, exact workbook bytes and independent validation
+of the authored input. Its final test source is committed at `4518e771`.
+
 The previous 52-test host cohort, corrected fill rerun and independent four-file
 schema acceptance remain unchanged. New negative controls, implementation and
 execution results will be recorded separately. The remote CI jobs have not

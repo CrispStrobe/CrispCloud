@@ -1,0 +1,224 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: clean RTL ribbon edits prompt on close and save through history
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: exactly one matching candidate
+            Actual: _WidgetPredicateWidgetFinder:<Found 2 widgets with widget matching predicate: [
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#93d22]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#e0ae4(ticker inactive)),
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#74e25]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#6559a(ticker inactive)),
+                    ]>
+             Which: is too many
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:289:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:303:7)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart line 289
+The test description was:
+  clean RTL ribbon edits prompt on close and save through history
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +0 -1: clean RTL ribbon edits prompt on close and save through history [E]
+  Test failed. See exception logs above.
+  The test description was: clean RTL ribbon edits prompt on close and save through history
+  
+00:03 +0 -1: clean freeze ribbon edits prompt and persist each pane command
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: exactly one matching candidate
+            Actual: _WidgetPredicateWidgetFinder:<Found 2 widgets with widget matching predicate: [
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#04392]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#a56f3(ticker inactive)),
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#0c1ea]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#10075(ticker inactive)),
+                    ]>
+             Which: is too many
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:289:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:342:7)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart line 289
+The test description was:
+  clean freeze ribbon edits prompt and persist each pane command
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +0 -2: clean freeze ribbon edits prompt and persist each pane command [E]
+  Test failed. See exception logs above.
+  The test description was: clean freeze ribbon edits prompt and persist each pane command
+  
+00:03 +0 -2: rtl changed during close upload remains open until saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: exactly one matching candidate
+            Actual: _WidgetPredicateWidgetFinder:<Found 2 widgets with widget matching predicate: [
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#aebe0]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#5ccd1(ticker inactive)),
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#8d331]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#c7a27(ticker inactive)),
+                    ]>
+             Which: is too many
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:289:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:399:9)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart line 289
+The test description was:
+  rtl changed during close upload remains open until saved
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +0 -3: rtl changed during close upload remains open until saved [E]
+  Test failed. See exception logs above.
+  The test description was: rtl changed during close upload remains open until saved
+  
+00:04 +0 -3: freeze changed during close upload remains open until saved
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: exactly one matching candidate
+            Actual: _WidgetPredicateWidgetFinder:<Found 2 widgets with widget matching predicate: [
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#436ac]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#22c13(ticker inactive)),
+                      RawTooltip-[LabeledGlobalKey<RawTooltipState>#370b8]("Close", hover delay:
+0:00:00.000000, touch delay: 0:00:01.500000, dismiss delay: 0:00:00.100000, triggerMode:
+TooltipTriggerMode.longPress, enableFeedback: true, positionDelegate: Closure:
+(TooltipPositionContext) => Offset from Function '_getDefaultPositionDelegate@2629220820':., state:
+RawTooltipState#e7ffd(ticker inactive)),
+                    ]>
+             Which: is too many
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:289:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:399:9)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart line 289
+The test description was:
+  freeze changed during close upload remains open until saved
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +0 -4: freeze changed during close upload remains open until saved [E]
+  Test failed. See exception logs above.
+  The test description was: freeze changed during close upload remains open until saved
+  
+00:04 +0 -4: grid undo and redo after navigation save only the owning sheet
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+🐛 [PanelNotifier] refresh: side=PanelSide.remote archive=false flat=false
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: TestFailure:<Expected: {
+                      'A1': 'Header',
+                      'B1': 'Amount',
+                      'A2': 'Travel',
+                      'B2': 125.5,
+                      'A3': 'Equipment',
+                      'B3': 300
+                    }
+            Actual: {'A1': 'Header', 'B1': 'Amount', 'A2': 'Equipment', 'B2': 300.0}
+             Which: has different length and is missing map key 'A3'
+          History must update the worksheet that owns the grid command.
+          >
+
+When the exception was thrown, this was the stack:
+#4      _withHost (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:289:3)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart:478:5)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart line 289
+The test description was:
+  grid undo and redo after navigation save only the owning sheet
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:06 +0 -5: grid undo and redo after navigation save only the owning sheet [E]
+  Test failed. See exception logs above.
+  The test description was: grid undo and redo after navigation save only the owning sheet
+  
+00:06 +0 -5: (tearDownAll)
+00:14 +0 -5: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: clean RTL ribbon edits prompt on close and save through history
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: clean freeze ribbon edits prompt and persist each pane command
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: freeze changed during close upload remains open until saved
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: grid undo and redo after navigation save only the owning sheet
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: rtl changed during close upload remains open until saved
+Host coverage collection failed: Flutter test failed with exit code 1; no receipt issued

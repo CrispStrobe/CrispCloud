@@ -1,0 +1,9 @@
+{
+  "started_at": "2026-11-14T19:36:15.262893+00:00",
+  "completed_at": "2026-11-14T19:36:45.991408+00:00",
+  "returncode": 1,
+  "pubspec_restored": true,
+  "changed_inputs": [],
+  "input_tree_sha256_after": "8893e93c8aeef3bff9286b9fa0752530ad2b2152632d016b0aeb4e9f47c0d6c3",
+  "artifacts": 3
+}

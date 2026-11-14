@@ -1,0 +1,22 @@
+{
+  "freeze-upload-before.xlsx": {
+    "sha256": "9e0bc668cfd3ad9b941cd560d667c4f11c0d2ef703a1a419acf6576b6801adf2",
+    "bytes": 23082
+  },
+  "grid-delete.xlsx": {
+    "sha256": "865ca979c4cb1dd91e1b85f1f4b2f8d23b6454251dd7e838fc9529b99dfc9248",
+    "bytes": 23094
+  },
+  "grid-undo-other-sheet.xlsx": {
+    "sha256": "55cf5a66432c84077992fd777e44e766e3d4bd84a31657a12ba09c58ea1a0d1f",
+    "bytes": 39416
+  },
+  "rtl-upload-before.xlsx": {
+    "sha256": "a0efbcf7ed814e5e9ca874fd0cad77315fad00a975e0a9d7ebfee619998df8c2",
+    "bytes": 23081
+  },
+  "source.xlsx": {
+    "sha256": "d34eea0d7347fe74c8cba77fbeddc6b9fad29dfb4f31a099d7ce953f7fbae2ad",
+    "bytes": 5602
+  }
+}

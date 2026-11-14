@@ -1,0 +1,259 @@
+{
+  "captured_at": "2026-11-14T19:39:38.048631+00:00",
+  "scope": "Failed baseline against unchanged production source; no successful host or coverage claim.",
+  "head": "5454096520802adac784282ee3d4d06d77564ba5",
+  "attempts": {
+    "baseline-1": {
+      "label": "Four Close tooltip finder failures; actual cross-sheet undo persisted-data failure.",
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-sheet-state-coverage-baseline-1",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "test/widget/office_sheet_state_workflow_test.dart"
+      ],
+      "input_files": 4740,
+      "input_tree_sha256_before": "a9c03a5bea73fd6ba1dcd3033a6c9d9b703a6e5bbef69c7553bb48272ac28c88",
+      "test_sha256": "eb13d5b04ed4154a93e433d44d3d459c38513380b09862c721d88d726ef0d76b",
+      "run_status": {
+        "started_at": "2026-11-14T19:32:43.463350+00:00",
+        "completed_at": "2026-11-14T19:33:18.379816+00:00",
+        "returncode": 1,
+        "pubspec_restored": true,
+        "changed_inputs": [],
+        "input_tree_sha256_after": "a9c03a5bea73fd6ba1dcd3033a6c9d9b703a6e5bbef69c7553bb48272ac28c88",
+        "artifacts": 3
+      },
+      "failed_collection_outputs": {
+        "lcov.info": {
+          "sha256": "fdf02923797c08df9cdb26984ef407c63b0c34e8acc3f877ad97ce7dc895edab",
+          "bytes": 616901,
+          "snapshot": "failed-collection-output/lcov.info.gz"
+        }
+      }
+    },
+    "baseline-2": {
+      "label": "Test compilation failed because the new Close finder helper was scoped inside _withHost.",
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-sheet-state-coverage-baseline-2",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "test/widget/office_sheet_state_workflow_test.dart"
+      ],
+      "input_files": 4740,
+      "input_tree_sha256_before": "3ce1db45fcf29fa7fe2334b20f0bbde8867bbb3a648634a771f0391ffdd21c4f",
+      "test_sha256": "2927434ffa6930d3cff4725610a8204251cdcb7147995d31024bd57486b89adf",
+      "run_status": {
+        "started_at": "2026-11-14T19:33:56.901051+00:00",
+        "completed_at": "2026-11-14T19:34:12.683829+00:00",
+        "returncode": 1,
+        "pubspec_restored": true,
+        "changed_inputs": [],
+        "input_tree_sha256_after": "3ce1db45fcf29fa7fe2334b20f0bbde8867bbb3a648634a771f0391ffdd21c4f"
+      },
+      "failed_collection_outputs": {}
+    },
+    "baseline-3": {
+      "label": "Four Close tooltip finder failures after narrowing to the ribbon; actual cross-sheet undo persisted-data failure.",
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-sheet-state-coverage-baseline-3",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "test/widget/office_sheet_state_workflow_test.dart"
+      ],
+      "input_files": 4740,
+      "input_tree_sha256_before": "5723db870e6fa5dc65eb7562ac2fd63dbb8036403bb48be1a7eb524fe83c6a9b",
+      "test_sha256": "056dfa9ec21aa184136b18d825c0112ae60081b37d252e3b13283b464c85017d",
+      "run_status": {
+        "started_at": "2026-11-14T19:35:04.820701+00:00",
+        "completed_at": "2026-11-14T19:35:33.400409+00:00",
+        "returncode": 1,
+        "pubspec_restored": true,
+        "changed_inputs": [],
+        "input_tree_sha256_after": "5723db870e6fa5dc65eb7562ac2fd63dbb8036403bb48be1a7eb524fe83c6a9b",
+        "artifacts": 3
+      },
+      "failed_collection_outputs": {
+        "lcov.info": {
+          "sha256": "fdf02923797c08df9cdb26984ef407c63b0c34e8acc3f877ad97ce7dc895edab",
+          "bytes": 616901,
+          "snapshot": "failed-collection-output/lcov.info.gz"
+        }
+      }
+    },
+    "baseline-4": {
+      "label": "Four Close IconButton finder failures: the ribbon exposes both a back arrow and X; actual cross-sheet undo persisted-data failure.",
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-sheet-state-coverage-baseline-4",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "test/widget/office_sheet_state_workflow_test.dart"
+      ],
+      "input_files": 4740,
+      "input_tree_sha256_before": "8893e93c8aeef3bff9286b9fa0752530ad2b2152632d016b0aeb4e9f47c0d6c3",
+      "test_sha256": "a13bad97e9a0e39ba5c38266912f6b55018314f7f5fd43b6ca025218b5f5551c",
+      "run_status": {
+        "started_at": "2026-11-14T19:36:15.262893+00:00",
+        "completed_at": "2026-11-14T19:36:45.991408+00:00",
+        "returncode": 1,
+        "pubspec_restored": true,
+        "changed_inputs": [],
+        "input_tree_sha256_after": "8893e93c8aeef3bff9286b9fa0752530ad2b2152632d016b0aeb4e9f47c0d6c3",
+        "artifacts": 3
+      },
+      "failed_collection_outputs": {
+        "lcov.info": {
+          "sha256": "fdf02923797c08df9cdb26984ef407c63b0c34e8acc3f877ad97ce7dc895edab",
+          "bytes": 616901,
+          "snapshot": "failed-collection-output/lcov.info.gz"
+        }
+      }
+    },
+    "baseline-5": {
+      "label": "Five expected behavioral failures; no finder or compilation failure.",
+      "command": [
+        "python3",
+        "tool/with_ci_system_sqlite.py",
+        "python3",
+        "tool/collect_office_host_coverage.py",
+        "--flutter",
+        "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+        "build/office-sheet-state-coverage-baseline-5",
+        "--",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "test/widget/office_sheet_state_workflow_test.dart"
+      ],
+      "input_files": 4740,
+      "input_tree_sha256_before": "a9642bb7776a7166206c49cffd41284c4f21c0f86b48195287babeca0f128d5b",
+      "test_sha256": "0ada99c43f88d5c4062dcade0726be7ee3b671be27341c49ecf62b80814a5974",
+      "run_status": {
+        "started_at": "2026-11-14T19:37:11.955684+00:00",
+        "completed_at": "2026-11-14T19:37:47.496949+00:00",
+        "returncode": 1,
+        "pubspec_restored": true,
+        "changed_inputs": [],
+        "input_tree_sha256_after": "a9642bb7776a7166206c49cffd41284c4f21c0f86b48195287babeca0f128d5b",
+        "artifacts": 5
+      },
+      "failed_collection_outputs": {
+        "lcov.info": {
+          "sha256": "a094b7075c24782ef30c1ab90a98a382c364d7780a39aaa399da47b56c41fa7f",
+          "bytes": 616901,
+          "snapshot": "failed-collection-output/lcov.info.gz"
+        }
+      }
+    }
+  },
+  "final_expected_failures": [
+    {
+      "case": "clean RTL ribbon edits prompt on close and save through history",
+      "confirmed_action": "Data > Right-to-left set rightToLeft=true",
+      "failed_expectation": "Unsaved changes prompt after clicking the ribbon X",
+      "actual": "No matching Unsaved changes prompt"
+    },
+    {
+      "case": "clean freeze ribbon edits prompt and persist each pane command",
+      "confirmed_action": "Data > Freeze panes set freezeRows=4 and freezeCols=2 at C5",
+      "failed_expectation": "Unsaved changes prompt after clicking the ribbon X",
+      "actual": "No matching Unsaved changes prompt"
+    },
+    {
+      "case": "rtl changed during close upload remains open until saved",
+      "confirmed_action": "Right-to-left became true while an actual upload was paused; first uploaded bytes match the pre-change capture",
+      "failed_expectation": "contentRevision advances beyond the saving revision",
+      "actual": "1 -> 1",
+      "limit": "Immediate editor-presence assertion passed; this baseline proves missing revision tracking, not completed dismissal or loss of the later setting."
+    },
+    {
+      "case": "freeze changed during close upload remains open until saved",
+      "confirmed_action": "Freeze top row set freezeRows=1 and freezeCols=0 while an actual upload was paused; first uploaded bytes match the pre-change capture",
+      "failed_expectation": "contentRevision advances beyond the saving revision",
+      "actual": "1 -> 1",
+      "limit": "Immediate editor-presence assertion passed; this baseline proves missing revision tracking, not completed dismissal or loss of the later setting."
+    },
+    {
+      "case": "grid undo and redo after navigation save only the owning sheet",
+      "confirmed_action": "Delete rows removed Budget row 2; Reference became active; real Edit > Undo and toolbar Save completed",
+      "failed_expectation": "Saved Budget returns to the original six populated cells",
+      "actual": "Saved Budget still contains only Header/Amount/Equipment/300; Travel and the third row are absent",
+      "limit": "The case stopped before Redo; redo acceptance belongs to the positive run."
+    }
+  ],
+  "source_comparison": {
+    "initial_sha256": "1bf2bbb70f0dbea81a6398a934dd267d943335edf92b6f46028ede4248bf1d71",
+    "final_sha256": "d34eea0d7347fe74c8cba77fbeddc6b9fad29dfb4f31a099d7ce953f7fbae2ad",
+    "note": "Exact ZIP hashes differ due to generated container metadata; every native package part is byte-identical. Each retained file keeps its own exact hash.",
+    "parts": {
+      "[Content_Types].xml": {
+        "sha256": "86636a7ba764814ac0206636fed9dbd5df57a6506cebc32ef71896a94ce5e2a1",
+        "identical": true
+      },
+      "_rels/.rels": {
+        "sha256": "c545941ba36c15fcdce4ae4568c663f3ced1a2226ad5082d3fd66b178bfac11a",
+        "identical": true
+      },
+      "docProps/app.xml": {
+        "sha256": "209fca6b00afe72a5029754b94be5953d8f16d96f67130325566b9366ad4ccc5",
+        "identical": true
+      },
+      "docProps/core.xml": {
+        "sha256": "22c5c1a2aeaa4fc78c7e42fb14f9e7603aa563e2197ec0e4d0b82df4df51494e",
+        "identical": true
+      },
+      "xl/_rels/workbook.xml.rels": {
+        "sha256": "e34c69f976578568183b455f1cf3712d06f2f337b27a34b7af94fa404f290348",
+        "identical": true
+      },
+      "xl/styles.xml": {
+        "sha256": "15384c4835ff40981cdc2a60bf44e290005400f1e224b457a55d1ac719d2a2fd",
+        "identical": true
+      },
+      "xl/theme/theme1.xml": {
+        "sha256": "d15e8ebf78ef7b9720839d7ae8fdc81a7df5bc24706d8e137df61a5683c358d9",
+        "identical": true
+      },
+      "xl/workbook.xml": {
+        "sha256": "94cf6b2bded122dd515db981f587cb185ebb1762013a298ae952a90ed2b0f845",
+        "identical": true
+      },
+      "xl/worksheets/sheet1.xml": {
+        "sha256": "7b7a15a332c7f4b2641e017974e3049831ac452a6bfa2f1fe780e9bf87f9367f",
+        "identical": true
+      },
+      "xl/worksheets/sheet2.xml": {
+        "sha256": "8ae30eed6510aa9545755e7c4e542534d333e674354e0fd86e2ef709ca430312",
+        "identical": true
+      }
+    }
+  },
+  "navigation_limit": "Worksheet navigation uses public setActiveSheet because the host has no worksheet selector. Deletion, Undo/Redo, close and save use actual UI controls.",
+  "harness_note": "run_validation.py retains the final capture harness. Baseline-1 preceded adding a non-executed workflow snapshot and its collector_input labels; commands and executed test snapshots are retained per attempt."
+}

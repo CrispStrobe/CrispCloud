@@ -1,0 +1,5 @@
+#!/bin/sh
+export CARGO_HOME='/workspace/scratch/f035141943c7/toolchain/cargo'
+export RUSTUP_HOME='/workspace/scratch/f035141943c7/toolchain/rustup'
+export PATH='/workspace/scratch/f035141943c7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin':"$PATH"
+exec '/workspace/scratch/f035141943c7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo' "$@"

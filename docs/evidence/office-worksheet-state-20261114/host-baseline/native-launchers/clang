@@ -1,0 +1,3 @@
+#!/bin/sh
+export LD_LIBRARY_PATH='/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/x86_64-linux-gnu'
+exec '/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/llvm-19/bin/clang' "$@"
