@@ -18,7 +18,7 @@ session-only. Nextcloud web connections provide endpoint and browser diagnostics
 server CORS still needs configuration. See the [live verification and limits](docs/cloud-issues-96-98-verification.md).
 
 
-F3 now previews binary/ASCII STL and core 3MF geometry with rotate, zoom, fit and
+F3 now previews binary/ASCII STL and core and production-part 3MF geometry with rotate, zoom, fit and
 wireframe controls. The portable Flutter preview handles 3MF units, build items
 and component transforms; materials, textures and required format extensions
 remain unsupported. Models are limited to 16 MiB and 50,000 expanded triangles.

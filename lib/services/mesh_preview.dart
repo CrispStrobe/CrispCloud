@@ -12,6 +12,8 @@ import 'package:xml/xml_events.dart';
 const meshPreviewByteLimit = 16 * 1024 * 1024;
 const meshPreviewTriangleLimit = 50000;
 const _core = 'http://schemas.microsoft.com/3dmanufacturing/core/2015/02';
+const _production =
+    'http://schemas.microsoft.com/3dmanufacturing/production/2015/06';
 
 /// Expanded triangles, in millimetres for 3MF; STL carries no unit metadata.
 class PreviewMesh {
@@ -164,14 +166,13 @@ XmlElement _one(XmlElement element, String name) {
 
 int _id(String? value) {
   final result = int.tryParse(value ?? '');
-  if (result == null || result < 0) _invalid('Invalid 3MF reference.');
+  if (result == null || result < 0 || result > 0x7fffffff) {
+    _invalid('Invalid 3MF reference.');
+  }
   return result;
 }
 
 List<double>? _transform(XmlElement e) {
-  if (e.attributes.any((a) => a.name.local == 'path')) {
-    _invalid('External 3MF object references are unsupported.');
-  }
   final value = e.getAttribute('transform');
   if (value == null) return null;
   final result = value.trim().split(RegExp(r'\s+')).map(_number).toList();
@@ -215,37 +216,107 @@ PreviewMesh _threeMf(Uint8List bytes) {
       path.contains('%')) {
     _invalid('Unsupported 3MF model path.');
   }
-  final model = _xml(zip.read(path, maxBytes: meshPreviewByteLimit));
-  if (model.name.local != 'model' || model.namespaceUri != _core) {
-    _invalid('Not a 3MF core model.');
+  final parts =
+      <
+        String,
+        ({XmlElement model, double scale, Map<int, XmlElement> objects})
+      >{};
+  var remainingXml = meshPreviewByteLimit;
+  ({XmlElement model, double scale, Map<int, XmlElement> objects}) loadPart(
+    String name,
+  ) {
+    final cached = parts[name];
+    if (cached != null) return cached;
+    if (parts.length >= 128) _invalid('Too many 3MF model parts.');
+    if (!zip.contains(name)) _invalid('Missing 3MF model part.');
+    final bytes = zip.read(name, maxBytes: remainingXml);
+    remainingXml -= bytes.length;
+    final model = _xml(bytes);
+    if (model.name.local != 'model' || model.namespaceUri != _core) {
+      _invalid('Not a 3MF core model.');
+    }
+    final declarations = {
+      for (final a in model.attributes)
+        if (a.name.prefix == 'xmlns') a.name.local: a.value,
+    };
+    for (final prefix
+        in (model.getAttribute('requiredextensions') ?? '').trim().split(
+          RegExp(r'\s+'),
+        )) {
+      if (prefix.isNotEmpty && declarations[prefix] != _production) {
+        _invalid('This model requires unsupported 3MF extensions.');
+      }
+    }
+    final scale = switch (model.getAttribute('unit') ?? 'millimeter') {
+      'micron' => 0.001,
+      'millimeter' => 1.0,
+      'centimeter' => 10.0,
+      'inch' => 25.4,
+      'foot' => 304.8,
+      'meter' => 1000.0,
+      _ => throw const FormatException('Unsupported 3MF unit.'),
+    };
+    final objects = <int, XmlElement>{};
+    for (final object in _children(_one(model, 'resources'), 'object')) {
+      final id = _id(object.getAttribute('id'));
+      if (objects.containsKey(id)) _invalid('Duplicate 3MF object ID.');
+      objects[id] = object;
+    }
+    final result = (model: model, scale: scale, objects: objects);
+    parts[name] = result;
+    return result;
   }
-  if ((model.getAttribute('requiredextensions') ?? '').trim().isNotEmpty) {
-    _invalid('This model requires unsupported 3MF extensions.');
+
+  // Production paths are absolute package paths, never filesystem/URL paths.
+  // Only the root model can reference another part; child build lists are ignored.
+  String targetPart(XmlElement element, String owner) {
+    final paths = element.attributes
+        .where((a) => a.name.local == 'path')
+        .toList();
+    if (paths.isEmpty) return owner;
+    if (paths.length != 1 ||
+        paths.single.namespaceUri != _production ||
+        owner != path) {
+      _invalid('Unsupported or non-root 3MF part reference.');
+    }
+    final value = paths.single.value;
+    if (!value.startsWith('/') ||
+        value.startsWith('//') ||
+        value.contains('\\') ||
+        value.contains(':') ||
+        value.contains('%') ||
+        value.contains('?') ||
+        value.contains('#') ||
+        value
+            .substring(1)
+            .split('/')
+            .any((s) => s.isEmpty || s == '.' || s == '..')) {
+      _invalid('Unsafe 3MF production part path.');
+    }
+    return value.substring(1);
   }
-  final scale = switch (model.getAttribute('unit') ?? 'millimeter') {
-    'micron' => 0.001,
-    'millimeter' => 1.0,
-    'centimeter' => 10.0,
-    'inch' => 25.4,
-    'foot' => 304.8,
-    'meter' => 1000.0,
-    _ => throw const FormatException('Unsupported 3MF unit.'),
-  };
-  final objects = <int, XmlElement>{};
-  for (final object in _children(_one(model, 'resources'), 'object')) {
-    final id = _id(object.getAttribute('id'));
-    if (objects.containsKey(id)) _invalid('Duplicate 3MF object ID.');
-    objects[id] = object;
-  }
+
+  final rootPart = loadPart(path);
+  final scale = rootPart.scale;
   final values = <double>[];
-  final parsedMeshes = <int, (List<List<double>>, List<List<int>>)>{};
+  final parsedMeshes = <(String, int), (List<List<double>>, List<List<int>>)>{};
   var vertexBudget = 0;
   var visits = 0;
-  void emit(int id, List<List<double>> transforms, Set<int> active) {
-    if (active.contains(id) || active.length >= 32 || ++visits > 4096) {
+  void emit(
+    String owner,
+    int id,
+    List<List<double>> transforms,
+    Set<(String, int)> active,
+  ) {
+    final key = (owner, id);
+    if (active.contains(key) || active.length >= 32 || ++visits > 4096) {
       _invalid('Cyclic or excessive 3MF components.');
     }
-    final object = objects[id];
+    final part = loadPart(owner);
+    if (part.scale != scale) {
+      _invalid('Mixed-unit 3MF model parts are unsupported.');
+    }
+    final object = part.objects[id];
     if (object == null) _invalid('Missing 3MF object.');
     final meshes = _children(object, 'mesh');
     final components = _children(object, 'components');
@@ -256,14 +327,15 @@ PreviewMesh _threeMf(Uint8List bytes) {
       for (final component in _children(components.single, 'component')) {
         final transform = _transform(component);
         emit(
+          targetPart(component, owner),
           _id(component.getAttribute('objectid')),
           [...transforms, if (transform != null) transform],
-          {...active, id},
+          {...active, key},
         );
       }
       return;
     }
-    var decoded = parsedMeshes[id];
+    var decoded = parsedMeshes[key];
     if (decoded == null) {
       final mesh = meshes.single;
       final vertexElements = _children(_one(mesh, 'vertices'), 'vertex');
@@ -294,7 +366,7 @@ PreviewMesh _threeMf(Uint8List bytes) {
           )
           .toList();
       decoded = (vertices, indices);
-      parsedMeshes[id] = decoded;
+      parsedMeshes[key] = decoded;
     }
     final vertices = decoded.$1;
     for (final triangle in decoded.$2) {
@@ -321,13 +393,13 @@ PreviewMesh _threeMf(Uint8List bytes) {
     }
   }
 
-  for (final item in _children(_one(model, 'build'), 'item')) {
+  for (final item in _children(_one(rootPart.model, 'build'), 'item')) {
     if (item.getAttribute('printable') == '0' ||
         item.getAttribute('printable') == 'false') {
       continue;
     }
     final transform = _transform(item);
-    emit(_id(item.getAttribute('objectid')), [
+    emit(targetPart(item, path), _id(item.getAttribute('objectid')), [
       if (transform != null) transform,
     ], {});
   }

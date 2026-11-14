@@ -29,8 +29,8 @@ Existing broader source acceptance and its limits remain in the Office reports.
   component instances, affine transforms and conversion of declared units to mm.
 - Orbit, scroll/pinch zoom, fit, wireframe and accessible button alternatives.
   Narrow-screen controls scroll within a bounded area so the canvas stays usable.
-- Core 3MF geometry previews omit materials, colours, textures and print settings.
-  Required extensions and cross-part object references are refused. This is not
+- Core/production 3MF geometry previews omit materials, colours, textures and print settings.
+  Unknown required extensions and mixed-unit parts are refused. This is not
   manifold/printability validation or a replacement for a CAD editor.
 - Limits: 16 MiB input/model XML, 50,000 expanded triangles, 150,000 unique
   vertices, 4,096 ZIP entries/component visits and 32 component levels. Shared

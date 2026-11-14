@@ -50,6 +50,58 @@ Uint8List threeMf({
   return w.close();
 }
 
+const productionNs =
+    'http://schemas.microsoft.com/3dmanufacturing/production/2015/06';
+String partXml(
+  String resources,
+  String build, {
+  String unit = 'millimeter',
+  String namespace = productionNs,
+}) =>
+    '<model xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:prod="$namespace" requiredextensions="prod" unit="$unit"><resources>$resources</resources><build>$build</build></model>';
+Uint8List productionMf({
+  String target = '/3D/child.model',
+  String childGeometry = triangle,
+  String childUnit = 'millimeter',
+  bool directBuild = false,
+  String namespace = productionNs,
+}) {
+  // Authored package: the same local object ID deliberately exists in each part.
+  final writer = ZipWriter();
+  writer.addFile(
+    '_rels/.rels',
+    utf8.encode(
+      '<Relationships><Relationship Id="r" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" Target="/3D/3dmodel.model"/></Relationships>',
+    ),
+  );
+  writer.addFile(
+    '3D/3dmodel.model',
+    utf8.encode(
+      partXml(
+        directBuild
+            ? ''
+            : '<object id="1"><components><component objectid="1" prod:path="$target" transform="1 0 0 0 1 0 0 0 1 2 0 0"/></components></object>',
+        directBuild
+            ? '<item objectid="1" prod:path="$target"/>'
+            : '<item objectid="1" transform="2 0 0 0 2 0 0 0 2 0 0 0"/>',
+        namespace: namespace,
+      ),
+    ),
+  );
+  writer.addFile(
+    '3D/child.model',
+    utf8.encode(
+      partXml(
+        '<object id="1">$childGeometry</object>',
+        '<item objectid="999999"/>',
+        unit: childUnit,
+        namespace: namespace,
+      ),
+    ),
+  );
+  return writer.close();
+}
+
 void main() {
   test('imports the current Brickwright CAD exporter output', () {
     final mesh = decodePreviewMesh(
@@ -185,6 +237,78 @@ void main() {
       filename: 'instances.3mf',
     );
     expect(mesh.triangleCount, 6);
+  });
+  test('production components resolve package parts with scoped IDs and transform order', () {
+    final mesh = decodePreviewMesh(productionMf(), filename: 'parts.3mf');
+    expect(mesh.triangleCount, 1);
+    expect(mesh.positions[0], 4);
+    expect(mesh.positions[3], 6);
+  });
+  test('production build item can reference a package part and ignores child build', () {
+    final mesh = decodePreviewMesh(
+      productionMf(directBuild: true),
+      filename: 'parts.3mf',
+    );
+    expect(mesh.positions, [0, 0, 0, 1, 0, 0, 0, 1, 0]);
+  });
+  for (final path in [
+    '3D/child.model',
+    '/../3D/child.model',
+    '//host/child.model',
+    'https://host/child.model',
+    '/3D/%63hild.model',
+    '/3D/missing.model',
+  ]) {
+    test('production path is confined: $path', () {
+      expect(
+        () => decodePreviewMesh(
+          productionMf(target: path),
+          filename: 'parts.3mf',
+        ),
+        throwsFormatException,
+      );
+    });
+  }
+  test('child model cannot introduce another cross-part reference', () {
+    expect(
+      () => decodePreviewMesh(
+        productionMf(
+          childGeometry: '<components><component objectid="1" prod:path="/3D/3dmodel.model"/></components>',
+        ),
+        filename: 'parts.3mf',
+      ),
+      throwsFormatException,
+    );
+  });
+  test(
+    'required production prefix must resolve to the supported namespace',
+    () {
+      expect(
+        () => decodePreviewMesh(
+          productionMf(namespace: 'https://unrecognized.example.test'),
+          filename: 'parts.3mf',
+        ),
+        throwsFormatException,
+      );
+    },
+  );
+  test('mixed-unit model parts are refused rather than mis-scaled', () {
+    expect(
+      () => decodePreviewMesh(
+        productionMf(childUnit: 'inch'),
+        filename: 'parts.3mf',
+      ),
+      throwsFormatException,
+    );
+  });
+  test('oversized 3MF IDs cannot alias on JavaScript targets', () {
+    expect(
+      () => decodePreviewMesh(
+        threeMf(build: '<item objectid="9007199254740993"/>'),
+        filename: 'ids.3mf',
+      ),
+      throwsFormatException,
+    );
   });
   test('F3 recognizes STL and 3MF before ZIP magic', () {
     const s = InternalViewerService();
