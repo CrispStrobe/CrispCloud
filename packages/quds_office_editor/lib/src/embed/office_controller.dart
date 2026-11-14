@@ -9385,11 +9385,38 @@ class SheetEditorController extends OfficeController {
       return;
     }
     final SmlRange range = selection.range;
-    SmlAnalysis.sort(sheet, range, <SmlSortKey>[
-      SmlSortKey(column: column ?? range.minCol, ascending: ascending),
-    ]);
-    recalculateWorkbook();
-    notifyListeners();
+    // The first selected row is the header; one body row cannot move.
+    if (range.maxRow - range.minRow < 2) {
+      return;
+    }
+    commitPendingEdits();
+    final SmlWorksheet target = sheet;
+    final before = _SheetGridSnap.capture(target, preserveCellIdentities: true);
+    _SheetGridSnap? after;
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () {
+          final saved = after;
+          if (saved == null) {
+            SmlAnalysis.sort(target, range, <SmlSortKey>[
+              SmlSortKey(column: column ?? range.minCol, ascending: ascending),
+            ]);
+            recalculateWorkbook();
+            after = _SheetGridSnap.capture(
+              target,
+              preserveCellIdentities: true,
+            );
+          } else {
+            saved.restore(target);
+            recalculateWorkbook();
+          }
+        },
+        undoFn: () {
+          before.restore(target);
+          recalculateWorkbook();
+        },
+      ),
+    );
   }
 
   /// filterSelection API.
@@ -11621,8 +11648,17 @@ class SlideEditorController extends OfficeController {
     if (!config.allowsMutation) {
       return;
     }
-    slide.notes = value;
-    notifyListeners();
+    final PmlSlide target = slide;
+    final String before = target.notes;
+    if (before == value) {
+      return;
+    }
+    commands.commit(
+      _CallbackCommand(
+        executeFn: () => target.notes = value,
+        undoFn: () => target.notes = before,
+      ),
+    );
   }
 
   /// addSlideSection API.
@@ -11794,13 +11830,18 @@ class _SheetGridSnap {
     required this.widths,
     required this.heights,
     required this.merges,
+    this.cellIdentities,
   });
 
   /// capture API.
-  factory _SheetGridSnap.capture(SmlWorksheet sheet) {
+  factory _SheetGridSnap.capture(
+    SmlWorksheet sheet, {
+    bool preserveCellIdentities = false,
+  }) {
+    final originalCells = sheet.allCells.toList();
     return _SheetGridSnap._(
       cells: <SmlCell>[
-        for (final SmlCell cell in sheet.allCells)
+        for (final SmlCell cell in originalCells)
           SmlCell(
             ref: cell.ref,
             type: cell.type,
@@ -11815,6 +11856,9 @@ class _SheetGridSnap {
             hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
             fontBold: cell.fontBold,
             fontSize: cell.fontSize,
+            borderRgb: cell.borderRgb,
+            borderWidth: cell.borderWidth,
+            locked: cell.locked,
           ),
       ],
       widths: sheet.captureColumns(),
@@ -11822,11 +11866,15 @@ class _SheetGridSnap {
       merges: <SmlMerge>[
         for (final SmlMerge merge in sheet.merges) merge.copy(),
       ],
+      cellIdentities: preserveCellIdentities ? originalCells : null,
     );
   }
 
   /// cells API.
   final List<SmlCell> cells;
+
+  // Sort history must retain cells held by text commands before and after it.
+  final List<SmlCell>? cellIdentities;
 
   /// widths API.
   final Map<int, SmlColumnSnapshot> widths;
@@ -11840,9 +11888,11 @@ class _SheetGridSnap {
   /// restore API.
   void restore(SmlWorksheet sheet) {
     sheet.rows.clear();
-    for (final SmlCell cell in cells) {
-      final SmlCell target = sheet.cell(cell.ref);
+    for (var index = 0; index < cells.length; index++) {
+      final SmlCell cell = cells[index];
+      final SmlCell target = cellIdentities?[index] ?? sheet.cell(cell.ref);
       target
+        ..ref = cell.ref
         ..type = cell.type
         ..value = cell.value
         ..formula = cell.formula
@@ -11854,7 +11904,13 @@ class _SheetGridSnap {
         ..fontRgb = cell.fontRgb
         ..hasExplicitFontColorEdit = cell.hasExplicitFontColorEdit
         ..fontBold = cell.fontBold
-        ..fontSize = cell.fontSize;
+        ..fontSize = cell.fontSize
+        ..borderRgb = cell.borderRgb
+        ..borderWidth = cell.borderWidth
+        ..locked = cell.locked;
+      if (cellIdentities != null) {
+        sheet.row(cell.ref.row).cells[cell.ref.col] = target;
+      }
     }
     sheet.restoreColumns(widths);
     sheet.rowHeights

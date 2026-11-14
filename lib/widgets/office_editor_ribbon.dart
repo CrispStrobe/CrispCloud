@@ -80,6 +80,7 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   int _tab = 0;
   bool _collapsed = false;
   bool _protectionPending = false;
+  bool _slideDeletePending = false;
   bool _lineNumbers = false;
   bool _transitionAll = false;
 
@@ -1517,7 +1518,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _group('Slides', <Widget>[
             _bigButton(Icons.add_box_outlined, 'New slide', _slideNew),
             _bigButton(Icons.copy_all_outlined, 'Duplicate', _slideDuplicate),
-            _bigButton(Icons.delete_outline, 'Delete', _slideDelete),
+            _bigButton(
+              Icons.delete_outline,
+              'Delete',
+              _slideDelete,
+              enabled: _canMutate && !_slideDeletePending,
+            ),
           ]),
           _group('Font', <Widget>[
             _slideFontSizeDropdown(),
@@ -1655,7 +1661,12 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
           _group('Slides', <Widget>[
             _bigButton(Icons.add_box_outlined, 'New slide', _slideNew),
             _bigButton(Icons.copy_all_outlined, 'Duplicate', _slideDuplicate),
-            _bigButton(Icons.delete_outline, 'Delete', _slideDelete),
+            _bigButton(
+              Icons.delete_outline,
+              'Delete',
+              _slideDelete,
+              enabled: _canMutate && !_slideDeletePending,
+            ),
             _bigButton(Icons.notes, 'Notes', _slideNotes),
           ]),
           _group('Text', <Widget>[
@@ -3396,6 +3407,8 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
   }
 
   Future<void> _slideDelete() async {
+    if (!_canMutate || _slideDeletePending) return;
+    final controller = _slides;
     if (_slideCount <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -3404,20 +3417,38 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       );
       return;
     }
-    final bool confirmed = await showOfficeConfirm(
-      context,
-      title: context.tr('Delete slide'),
-      message: '${context.tr('Delete slide')} ${_slides.activeSlideIndex + 1}?',
-      confirmLabel: context.tr('Delete'),
-      destructive: true,
-    );
-    if (!confirmed) return;
-    final _DeleteSlideCommand command = _DeleteSlideCommand(
-      controller: _slides,
-      index: _slides.activeSlideIndex,
-    );
-    _slides.commands.commit(command);
-    _slides.refresh();
+    final index = controller.activeSlideIndex;
+    final slide = controller.slide;
+    final revision = controller.contentRevision;
+    setState(() => _slideDeletePending = true);
+    try {
+      final bool confirmed = await showOfficeConfirm(
+        context,
+        title: context.tr('Delete slide'),
+        message: '${context.tr('Delete slide')} ${index + 1}?',
+        confirmLabel: context.tr('Delete'),
+        destructive: true,
+      );
+      // A native menu command or embedded host can change the deck while its
+      // confirmation is open. Approval applies only to the displayed slide and
+      // revision, and must never remove a replacement or the remaining slide.
+      if (!confirmed ||
+          !mounted ||
+          !identical(controller, widget.controller) ||
+          !controller.config.allowsMutation ||
+          controller.contentRevision != revision ||
+          controller.presentation.slides.length <= 1 ||
+          controller.activeSlideIndex != index ||
+          !identical(controller.slide, slide)) {
+        return;
+      }
+      controller.commands.commit(
+        _DeleteSlideCommand(controller: controller, index: index),
+      );
+      controller.refresh();
+    } finally {
+      if (mounted) setState(() => _slideDeletePending = false);
+    }
   }
 
   void _slideTextBox() async {
@@ -3607,16 +3638,27 @@ class OfficeEditorRibbonState extends State<OfficeEditorRibbon> {
       _slides.startShow(from: _slides.activeSlideIndex);
 
   void _slideNotes() async {
+    if (!_canMutate) return;
+    final controller = _slides;
+    final slide = controller.slide;
+    final revision = controller.contentRevision;
     final String? text = await showOfficePromptDialog(
       context,
       title: context.tr('Speaker Notes'),
       label: context.tr('Notes'),
-      initial: _slides.speakerNotes,
+      initial: controller.speakerNotes,
       multiline: true,
       confirmLabel: context.tr('Apply'),
     );
-    if (text == null) return;
-    _slides.setSpeakerNotes(text);
+    if (text == null ||
+        !mounted ||
+        !identical(controller, widget.controller) ||
+        !controller.config.allowsMutation ||
+        controller.contentRevision != revision ||
+        !identical(controller.slide, slide)) {
+      return;
+    }
+    controller.setSpeakerNotes(text);
   }
 
   void _slideToggleHidden() {
