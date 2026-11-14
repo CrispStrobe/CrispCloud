@@ -7,7 +7,8 @@ import 'package:quds_office_engine/quds_office_engine.dart'
     show ZipReader, ZipWriter;
 
 import '../test/support/mesh_fixtures.dart';
-import '../lib/services/mesh_preview.dart';
+
+import 'package:crisp_cloud/services/mesh_preview.dart';
 
 void main() {
   final mesh = decodePreviewMesh(
@@ -24,8 +25,9 @@ void main() {
   final view = ByteData.sublistView(stl)..setUint32(80, 1, Endian.little);
   view.setFloat32(108, 1, Endian.little);
   view.setFloat32(124, 1, Endian.little);
-  if (decodePreviewMesh(stl, filename: 'authored.stl').triangleCount != 1)
+  if (decodePreviewMesh(stl, filename: 'authored.stl').triangleCount != 1) {
     throw StateError('STL import failed.');
+  }
   final original = ZipReader.fromBytes(
     base64Decode(brickwrightTriangle3mfBase64),
   );
@@ -47,6 +49,8 @@ void main() {
       production.positions[3] != 12) {
     throw StateError('3MF production package geometry did not survive import.');
   }
+  // Standalone VM/Node command-line verification result.
+  // ignore: avoid_print
   print(
     'STL, current Brickwright 3MF and cross-part production imports passed.',
   );
