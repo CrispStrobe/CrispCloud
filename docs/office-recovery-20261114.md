@@ -1,0 +1,34 @@
+# Office host preservation continuation — 14 November 2026
+
+Starting app commit: `15a389f57e3a8fe9837f786407ce787fe198386f`.
+Starting canonical suite pin: `b0335829428d50968258219c4fdced15d546f7c9`.
+Checkpoint branch in both repositories: `codex/office-recovery-20261114`.
+
+The prior interrupted session's newer fixes and final test receipts were not
+present in the remote app tree. Its claimed totals are not evidence for this
+continuation. Historical coverage/schema/render documents retain their original
+scope and source identity.
+
+## Scoped tasks
+
+| ID | Owner | Acceptance | Status |
+| --- | --- | --- | --- |
+| REC-05 | Host dialog/export adapters | Unsaved Back and Close share one guarded prompt; edits survive failed saves and disconnected targets; recovery copies export independently and leave the original dirty; cancellation/failure/retry are tested. | Planned |
+| REC-06 | Host ribbon | Tracking and protection reflect the active controller on import, replacement and history changes; async confirmation cannot mutate a disposed/replaced controller. Depends on suite REC-03. | Planned |
+| REC-07 | Source synchronization and host gate | Import reviewed canonical changes only through `tool/sync_office_fidelity.py`; verify every managed hash and run focused real-host tests with pinned Flutter 3.47.8. | Planned |
+| REC-08 | Independent workflow evidence | Add independently authored first-save references and inspect actual saved packages; do not accept self-consistency across repeated lossy saves as sufficient evidence. | Open |
+
+Canonical formula, style namespace, Word settings/history and signed-package
+work is tracked in the suite's `docs/office-recovery-20261114.md` (REC-01–04).
+Do not edit vendored copies separately from that source.
+
+## Validation boundaries
+
+Record executed results and exact source identities as work completes. Browser
+execution, physical devices, genuinely signed Office fixtures and independent
+schema/render comparisons remain open until their own gates are executed.
+Remote commits are incremental backups; they are not a merge or deployment.
+
+## Checkpoints
+
+- Recovery plan and remote baselines recorded before implementation.
