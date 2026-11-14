@@ -170,10 +170,7 @@ class OfficeFontSet {
       selected = choose(faces.where((face) => face.matches(defaultFamily!)));
     }
     if (selected == null) {
-      for (final font in <SfntFont>[
-        if (primary != null) primary!,
-        ...fallbacks,
-      ]) {
+      for (final font in <SfntFont>[?primary, ...fallbacks]) {
         if (font.hasTable('glyf') && font.glyphIdFor(codePoint) != 0) {
           selected = OfficeFontFace(font: font, family: 'Supplied font');
           break;

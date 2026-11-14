@@ -85,10 +85,20 @@ void main() {
     );
     expect(
       PaintRunText.familyFor(text: 'مرحبا', runFamily: 'Tajawal'),
-      'Tajawal',
+      'Noto Naskh Arabic',
     );
     expect(
       PaintRunText.familyFor(text: 'Hello', runFamily: 'Georgia'),
+      'Liberation Sans',
+    );
+    // Painting an unloaded face uses a bundled fallback without rewriting
+    // the document's requested family or claiming another font's metrics.
+    expect(
+      OfficeTypeface.paintFamily(text: 'مرحبا', runFamily: 'Tajawal'),
+      'Tajawal',
+    );
+    expect(
+      OfficeTypeface.paintFamily(text: 'Hello', runFamily: 'Georgia'),
       'Georgia',
     );
   });
