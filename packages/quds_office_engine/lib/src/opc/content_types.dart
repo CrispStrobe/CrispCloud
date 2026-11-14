@@ -150,6 +150,10 @@ abstract final class OfficeContentTypes {
   static const String sheetStyles =
       'application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml';
 
+  /// Cell comments (notes) part.
+  static const String sheetComments =
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml';
+
   /// slideMain API.
   static const String slideMain =
       'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml';

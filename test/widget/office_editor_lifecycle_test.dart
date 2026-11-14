@@ -5,7 +5,9 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:crisp_cloud/services/office_device_export.dart';
+import 'package:crisp_cloud/services/office_editor_menu.dart';
 import 'package:crisp_cloud/widgets/office_editor_dialog.dart';
+import 'package:crisp_cloud/widgets/office_editor_ribbon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quds_office_editor/quds_office_editor.dart';
@@ -23,6 +25,33 @@ String _text(Uint8List bytes) => _part(bytes, 'word/document.xml').descendants
     .where((element) => element.name.local == 't')
     .map((element) => element.innerText)
     .join();
+
+String _slideNotes(Uint8List bytes) {
+  final controller = SlideEditorController.fromBytes(bytes);
+  try {
+    return controller.slide.notes;
+  } finally {
+    controller.dispose();
+  }
+}
+
+Future<void> _editSlideNotes(WidgetTester tester, String text) async {
+  await tester
+      .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+      .perform(OfficeEditorAction.speakerNotes);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.enterText(
+    find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    ),
+    text,
+  );
+  await tester.tap(find.widgetWithText(ElevatedButton, 'Apply'));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+}
 
 bool _setting(Uint8List bytes, String name) {
   const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -57,6 +86,252 @@ Future<void> _choose(WidgetTester tester, String label) async {
 }
 
 void main() {
+  testWidgets(
+    'sorting alone prompts on Back and saves undoable reordered rows',
+    (tester) async {
+      await tester.runAsync(() async {
+        final host = await OfficeTestHarness.open(
+          tester,
+          name: 'sorted.xlsx',
+          fixture: 'native.xlsx',
+        );
+        final sheet = host.controller as SheetEditorController;
+        expect(sheet.isDirty, isFalse);
+        expect(sheet.sheet.cellA1('A2').value, 'North');
+        expect(sheet.sheet.cellA1('A3').value, 'South');
+        sheet.selection
+          ..selectCell(SmlCellRef.parse('A1'))
+          ..extendTo(SmlCellRef.parse('C3'));
+        final revision = sheet.contentRevision;
+        await tester
+            .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+            .perform(OfficeEditorAction.sortDescending);
+        await tester.pump();
+        expect(sheet.sheet.cellA1('A2').value, 'South');
+        expect(sheet.sheet.cellA1('A3').value, 'North');
+        expect(sheet.isDirty, isTrue);
+        expect(host.ribbon.dirty, isTrue);
+        expect(sheet.contentRevision, greaterThan(revision));
+        await host.back();
+        expect(find.text('Unsaved changes'), findsOneWidget);
+        await _choose(tester, 'Cancel');
+        expect(host.cloud.writes, isEmpty);
+        sheet.undo();
+        expect(sheet.sheet.cellA1('A2').value, 'North');
+        expect(sheet.sheet.cellA1('A3').value, 'South');
+        sheet.redo();
+        expect(sheet.sheet.cellA1('A2').value, 'South');
+        await host.back();
+        await _choose(tester, 'Save');
+        await officePumpUntil(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+        );
+        final reopened = SheetEditorController.fromBytes(host.savedBytes);
+        try {
+          expect(reopened.sheet.cellA1('A1').value, 'Region');
+          expect(reopened.sheet.cellA1('A2').value, 'South');
+          expect(reopened.sheet.cellA1('B2').value, 5);
+          expect(reopened.sheet.cellA1('A3').value, 'North');
+          expect(reopened.sheet.cellA1('B3').value, 2);
+        } finally {
+          reopened.dispose();
+        }
+        expect(host.cloud.writes, ['/sorted.xlsx']);
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'speaker-notes-only edits prompt on Back and save before closing',
+    (tester) async {
+      await tester.runAsync(() async {
+        final host = await OfficeTestHarness.open(
+          tester,
+          name: 'notes.pptx',
+          fixture: 'native.pptx',
+        );
+        final slides = host.controller as SlideEditorController;
+        final revision = slides.contentRevision;
+        expect(slides.isDirty, isFalse);
+        await _editSlideNotes(
+          tester,
+          'Notes edited without changing any slide shape',
+        );
+        expect(slides.isDirty, isTrue);
+        expect(host.ribbon.dirty, isTrue);
+        expect(slides.contentRevision, greaterThan(revision));
+        await host.back();
+        expect(find.text('Unsaved changes'), findsOneWidget);
+        await _choose(tester, 'Cancel');
+        expect(
+          slides.slide.notes,
+          'Notes edited without changing any slide shape',
+        );
+        expect(host.cloud.writes, isEmpty);
+        await host.back();
+        await _choose(tester, 'Save');
+        await officePumpUntil(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+        );
+        expect(
+          _slideNotes(host.savedBytes),
+          'Notes edited without changing any slide shape',
+        );
+        expect(host.cloud.writes, ['/notes.pptx']);
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'speaker notes edited during Save and Close stay open and dirty',
+    (tester) async {
+      await tester.runAsync(() async {
+        final host = await OfficeTestHarness.open(
+          tester,
+          name: 'notes.pptx',
+          fixture: 'native.pptx',
+        );
+        final slides = host.controller as SlideEditorController;
+        await _editSlideNotes(tester, 'First notes revision');
+        host.cloud.pauseNextUpload();
+        await host.back();
+        await _choose(tester, 'Save');
+        await officePumpUntil(tester, () => host.cloud.pendingBytes != null);
+        slides.setSpeakerNotes('Later notes revision');
+        host.cloud.releaseUpload();
+        await officePumpUntil(tester, () => !host.ribbon.saving);
+        expect(slides.isDirty, isTrue);
+        expect(host.ribbon.dirty, isTrue);
+        expect(find.byType(OfficeEditorDialog), findsOneWidget);
+        expect(_slideNotes(host.savedBytes), 'First notes revision');
+        expect(slides.slide.notes, 'Later notes revision');
+        await host.back();
+        await _choose(tester, 'Save');
+        await officePumpUntil(
+          tester,
+          () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+        );
+        expect(_slideNotes(host.savedBytes), 'Later notes revision');
+        expect(host.cloud.writes, ['/notes.pptx', '/notes.pptx']);
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('Save and Close preserves an open notes dialog and its draft', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final host = await OfficeTestHarness.open(
+        tester,
+        name: 'notes.pptx',
+        fixture: 'native.pptx',
+      );
+      await _editSlideNotes(tester, 'Uploaded notes revision');
+      host.cloud.pauseNextUpload();
+      await host.back();
+      await _choose(tester, 'Save');
+      await officePumpUntil(tester, () => host.cloud.pendingBytes != null);
+      await tester
+          .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+          .perform(OfficeEditorAction.speakerNotes);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final field = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(field, 'Unapplied notes draft during upload');
+      host.cloud.releaseUpload();
+      await officePumpUntil(tester, () => !host.ribbon.saving);
+      expect(find.byType(OfficeEditorDialog), findsOneWidget);
+      expect(find.text('Speaker Notes'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(field).controller!.text,
+        'Unapplied notes draft during upload',
+      );
+      expect(_slideNotes(host.savedBytes), 'Uploaded notes revision');
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Apply'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(host.controller.isDirty, isTrue);
+      await host.save();
+      expect(
+        _slideNotes(host.savedBytes),
+        'Unapplied notes draft during upload',
+      );
+      await host.dispose();
+    });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('speaker notes undo and redo survive actual host saves', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final host = await OfficeTestHarness.open(
+        tester,
+        name: 'notes.pptx',
+        fixture: 'native.pptx',
+      );
+      final slides = host.controller as SlideEditorController;
+      final originalNotes = slides.slide.notes;
+      await _editSlideNotes(tester, 'Undoable speaker notes');
+      await host.save();
+      expect(_slideNotes(host.savedBytes), 'Undoable speaker notes');
+      expect(slides.isDirty, isFalse);
+      slides.undo();
+      expect(slides.isDirty, isTrue);
+      await host.save();
+      expect(_slideNotes(host.savedBytes), originalNotes);
+      slides.redo();
+      expect(slides.isDirty, isTrue);
+      await host.save();
+      expect(_slideNotes(host.savedBytes), 'Undoable speaker notes');
+      expect(host.cloud.writes, ['/notes.pptx', '/notes.pptx', '/notes.pptx']);
+      await host.dispose();
+    });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'notes-only recovery copy preserves dirty state after disconnect',
+    (tester) async {
+      await tester.runAsync(() async {
+        Uint8List? copied;
+        final host = await OfficeTestHarness.open(
+          tester,
+          name: 'notes.pptx',
+          fixture: 'native.pptx',
+          copyExporter: (bytes, name, title) async {
+            copied = bytes;
+            return OfficeCopyOutcome.savedCopy;
+          },
+        );
+        final original = Uint8List.fromList(host.savedBytes);
+        await _editSlideNotes(tester, 'Recover these notes');
+        host.cloud.current = false;
+        await host.copy();
+        expect(_slideNotes(copied!), 'Recover these notes');
+        expect(host.controller.isDirty, isTrue);
+        expect(host.savedBytes, orderedEquals(original));
+        expect(host.cloud.writes, isEmpty);
+        await host.back();
+        expect(find.text('Unsaved changes'), findsOneWidget);
+        await _choose(tester, 'Cancel');
+        await host.dispose();
+      });
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('system Back prompts once and Cancel retains unsaved edits', (
     tester,
   ) async {

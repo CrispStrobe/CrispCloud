@@ -43,6 +43,8 @@ SOFFICE_SIGKILL_RETURN_CODE = -int(signal.SIGKILL) if hasattr(signal, 'SIGKILL')
 # The directory and Office format are part of this specific corpus contract.
 REQUIRED_SERIES_BASELINES = {
     ('fidelity-schema', 'namespace-style.xlsx'): 'namespace-style-reference.xlsx',
+    ('fidelity-sheet-fill', 'unrelated.xlsx'): 'unrelated-expected.xlsx',
+    ('fidelity-sheet-fill', 'explicit.xlsx'): 'explicit-expected.xlsx',
     ('fidelity-host', 'native-word.docx'): 'reference/native-word-expected.docx',
     ('fidelity-host', 'native-sheet.xlsx'): 'reference/native-sheet-expected.xlsx',
     ('fidelity-host', 'native-slide.pptx'): 'reference/native-slide-expected.pptx',
@@ -732,8 +734,9 @@ def cycle_coverage(files, records, *, root=None):
                 compare_records(reference, records[name], root=root)
             case = Path(key)
             candidates = []
+            context = Path(root) / case if root is not None else case
             required_baseline = REQUIRED_SERIES_BASELINES.get(
-                (case.parent.name, case.name))
+                (context.parent.name, case.name))
             required_grid_baseline = table_grid_baseline(case, root)
             page_order = section_page_order(case, root)
             if page_order is not None:
