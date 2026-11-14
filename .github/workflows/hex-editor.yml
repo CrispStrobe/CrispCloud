@@ -29,6 +29,7 @@ on:
       - 'lib/widgets/code_highlighting.dart'
       - 'lib/l10n/mesh_preview_strings.dart'
       - 'test/mesh_preview_test.dart'
+      - 'test/support/mesh_fixtures.dart'
       - 'test/content_highlighting_test.dart'
       - 'test/widget/mesh_preview_test.dart'
       - 'tool/mesh_portability_smoke.dart'

@@ -28,7 +28,8 @@ unsafe part paths and required unimplemented 3MF extensions are refused.
 Materials, colours, textures, print settings and CAD editing are not supported.
 This is a bounded software-projected preview, not a CAD fidelity renderer.
 
-The authored triangle in `tool/mesh_portability_smoke.dart` was emitted by that
+The authored triangle shared by the test and `tool/mesh_portability_smoke.dart`
+in `test/support/mesh_fixtures.dart` was emitted by that
 exact exporter using fflate from Brickwright’s existing installation. ZIP SHA-256:
 `20f6dce8a60f04758a8750da430a9dc2eade252b25a9f15a1227f845332ec77c`. Its import runs on Dart VM and actual Dart-to-JavaScript/Node.
 

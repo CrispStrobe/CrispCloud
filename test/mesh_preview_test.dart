@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../tool/mesh_portability_smoke.dart' show brickwrightTriangle3mfBase64;
+import 'support/mesh_fixtures.dart' show brickwrightTriangle3mfBase64;
 
 import 'dart:typed_data';
 
