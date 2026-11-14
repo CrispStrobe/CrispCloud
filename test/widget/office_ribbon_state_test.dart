@@ -40,6 +40,48 @@ Widget _ribbon(WordEditorController controller) => OfficeEditorRibbon(
   onFind: controller.requestFind,
 );
 
+SlideEditorController _slides({int count = 2}) {
+  final controller = SlideEditorController(
+    presentation: PmlPresentation(
+      slides: [
+        for (var index = 0; index < count; index++) PmlSlide(id: 256 + index),
+      ],
+    ),
+    config: const OfficeSurfaceConfig(
+      mode: OfficeInteractionMode.editing,
+      autofocus: false,
+      adaptiveChrome: false,
+    ),
+  );
+  addTearDown(controller.dispose);
+  return controller;
+}
+
+Widget _slideRibbon(SlideEditorController controller) => OfficeEditorRibbon(
+  controller: controller,
+  kind: OfficeEditorKind.slides,
+  config: controller.config,
+  onSave: () {},
+  onClose: () {},
+  onConfigChanged: controller.syncConfig,
+  onFind: controller.requestFind,
+);
+
+Future<void> _slideAction(
+  WidgetTester tester,
+  OfficeEditorAction action,
+) async {
+  await tester
+      .state<OfficeEditorRibbonState>(find.byType(OfficeEditorRibbon))
+      .perform(action);
+  await _settle(tester);
+}
+
+Future<void> _confirmSlideDelete(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(ElevatedButton, 'Delete'));
+  await _settle(tester);
+}
+
 Widget _host(Widget child) => MaterialApp(
   locale: const Locale('en'),
   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -62,6 +104,204 @@ InkWell _button(WidgetTester tester, String label) => tester.widget<InkWell>(
 );
 
 void main() {
+  testWidgets('confirmed slide deletion keeps undo and redo history', (
+    tester,
+  ) async {
+    final controller = _slides();
+    final original = controller.presentation.slides.toList();
+    await tester.pumpWidget(_host(_slideRibbon(controller)));
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    expect(find.text('Delete slide 1?'), findsOneWidget);
+    expect(controller.presentation.slides, original);
+    await _confirmSlideDelete(tester);
+    expect(controller.presentation.slides, [original.last]);
+    expect(controller.isDirty, isTrue);
+    controller.undo();
+    expect(controller.presentation.slides, original);
+    controller.redo();
+    expect(controller.presentation.slides, [original.last]);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('slide delete prompts once and cancellation allows a retry', (
+    tester,
+  ) async {
+    final controller = _slides();
+    await tester.pumpWidget(_host(_slideRibbon(controller)));
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(_button(tester, 'Delete').onTap, isNull);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await _settle(tester);
+    expect(controller.presentation.slides, hasLength(2));
+    expect(controller.isDirty, isFalse);
+    expect(_button(tester, 'Delete').onTap, isNotNull);
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    await _confirmSlideDelete(tester);
+    expect(controller.presentation.slides, hasLength(1));
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('slide delete confirmation cannot delete a new selection', (
+    tester,
+  ) async {
+    final controller = _slides();
+    final original = controller.presentation.slides.toList();
+    await tester.pumpWidget(_host(_slideRibbon(controller)));
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    controller.setActiveSlide(1);
+    await _confirmSlideDelete(tester);
+    expect(controller.presentation.slides, original);
+    expect(controller.activeSlideIndex, 1);
+    expect(controller.isDirty, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('slide delete confirmation rejects a changed deck revision', (
+    tester,
+  ) async {
+    final controller = _slides();
+    final first = controller.slide;
+    await tester.pumpWidget(_host(_slideRibbon(controller)));
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    controller.duplicateSlide(0);
+    controller.setActiveSlide(0);
+    final changed = controller.presentation.slides.toList();
+    expect(controller.slide, same(first));
+    await _confirmSlideDelete(tester);
+    expect(controller.presentation.slides, changed);
+    expect(controller.presentation.slides, hasLength(3));
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('slide delete confirmation cannot remove the final slide', (
+    tester,
+  ) async {
+    final controller = _slides(count: 1);
+    final first = controller.slide;
+    controller.duplicateSlide(0);
+    controller.setActiveSlide(0);
+    await tester.pumpWidget(_host(_slideRibbon(controller)));
+    await _slideAction(tester, OfficeEditorAction.deleteSlide);
+    controller.undo();
+    expect(controller.presentation.slides, [first]);
+    await _confirmSlideDelete(tester);
+    expect(controller.presentation.slides, [first]);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'slide delete respects viewing mode before and after its prompt',
+    (tester) async {
+      final controller = _slides();
+      await tester.pumpWidget(_host(_slideRibbon(controller)));
+      controller.setMode(OfficeInteractionMode.viewing);
+      await _slideAction(tester, OfficeEditorAction.deleteSlide);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(_button(tester, 'Delete').onTap, isNull);
+      controller.setMode(OfficeInteractionMode.editing);
+      await _slideAction(tester, OfficeEditorAction.deleteSlide);
+      controller.setMode(OfficeInteractionMode.viewing);
+      await _confirmSlideDelete(tester);
+      expect(controller.presentation.slides, hasLength(2));
+      expect(controller.isDirty, isFalse);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  for (final dispose in [false, true]) {
+    testWidgets(
+      'pending slide deletion handles ${dispose ? 'ribbon disposal' : 'a replacement controller'}',
+      (tester) async {
+        final first = _slides();
+        final second = _slides();
+        final selected = ValueNotifier<SlideEditorController?>(first);
+        addTearDown(selected.dispose);
+        await tester.pumpWidget(
+          _host(
+            ValueListenableBuilder(
+              valueListenable: selected,
+              builder: (context, controller, child) => controller == null
+                  ? const SizedBox.shrink()
+                  : _slideRibbon(controller),
+            ),
+          ),
+        );
+        await _slideAction(tester, OfficeEditorAction.deleteSlide);
+        selected.value = dispose ? null : second;
+        await tester.pump();
+        await _confirmSlideDelete(tester);
+        expect(first.presentation.slides, hasLength(2));
+        expect(second.presentation.slides, hasLength(2));
+        expect(first.isDirty, isFalse);
+        expect(second.isDirty, isFalse);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  for (final change in [
+    'slide',
+    'controller',
+    'revision',
+    'viewing',
+    'dispose',
+  ]) {
+    testWidgets('speaker notes dialog rejects changed $change', (tester) async {
+      final first = _slides();
+      final second = _slides();
+      final selected = ValueNotifier<SlideEditorController?>(first);
+      addTearDown(selected.dispose);
+      await tester.pumpWidget(
+        _host(
+          ValueListenableBuilder(
+            valueListenable: selected,
+            builder: (context, controller, child) => controller == null
+                ? const SizedBox.shrink()
+                : _slideRibbon(controller),
+          ),
+        ),
+      );
+      await _slideAction(tester, OfficeEditorAction.speakerNotes);
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'Notes for the original slide',
+      );
+      switch (change) {
+        case 'slide':
+          first.setActiveSlide(1);
+        case 'controller':
+          selected.value = second;
+        case 'revision':
+          first.duplicateSlide(0);
+          first.setActiveSlide(0);
+        case 'viewing':
+          first.setMode(OfficeInteractionMode.viewing);
+        case 'dispose':
+          selected.value = null;
+      }
+      await tester.pump();
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Apply'));
+      await _settle(tester);
+      expect(
+        first.presentation.slides.every((slide) => slide.notes.isEmpty),
+        isTrue,
+      );
+      expect(
+        second.presentation.slides.every((slide) => slide.notes.isEmpty),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets(
     'Track Changes renders imported state and follows undo and redo',
     (tester) async {
