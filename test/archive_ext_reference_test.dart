@@ -15,8 +15,8 @@ void main() {
   test('external ext2/ext3/ext4 payloads and corruption controls pass portable acceptance', () async {
     final result = await runExtReferenceAcceptance();
     expect(result['independent_reference_images'], hasLength(5));
-    expect(result['groups'], hasLength(16));
-    expect(result['derived_partition_wrappers'], hasLength(3));
+    expect(result['groups'], hasLength(19));
+    expect(result['derived_partition_wrappers'], hasLength(4));
     expect(result['all_payload_and_complete_image_hashes_match'], isTrue);
   });
 

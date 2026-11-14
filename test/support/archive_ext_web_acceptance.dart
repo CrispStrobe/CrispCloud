@@ -346,6 +346,16 @@ Future<Map<String, Object>> runExtReferenceAcceptance() async {
   check(live.closeCount == 1, 'Lazy failure source ownership');
   groups.add('lazy-payload-failure');
 
+  final nameCollision = extGptFixture(volumes: [ExtReferenceSource('ext2')]);
+  final collisionLayout = nameCollision.gpt!;
+  collisionLayout.primaryTable.setRange(56, 58, [0x53, 0xef]);
+  collisionLayout.backupTable.setAll(0, collisionLayout.primaryTable);
+  collisionLayout.updateTableCrc();
+  collisionLayout.updateTableCrc(backup: true);
+  check(
+    await hasExtVolumeRecognition(nameCollision),
+    'GPT name creates the coincidental short ext marker',
+  );
   final wrappers = <(String, String, DiskImageFixture, int?)>[
     (
       'derived-linux-mbr',
@@ -371,6 +381,7 @@ Future<Map<String, Object>> runExtReferenceAcceptance() async {
       ),
       null,
     ),
+    ('derived-linux-gpt-ext-marker-name', 'ext2', nameCollision, null),
   ];
   final wrapperResults = <String, Object>{};
   for (final (label, fixture, disk, sector) in wrappers) {
@@ -445,6 +456,65 @@ Future<Map<String, Object>> runExtReferenceAcceptance() async {
     };
     groups.add(label);
   }
+
+  final damagedGpt = extGptFixture(volumes: [ExtReferenceSource('ext2')]);
+  final damagedLayout = damagedGpt.gpt!;
+  damagedLayout.primaryTable.setRange(56, 58, [0x53, 0xef]);
+  damagedLayout.backupTable.setAll(0, damagedLayout.primaryTable);
+  damagedLayout.updateTableCrc();
+  damagedLayout.updateTableCrc(backup: true);
+  damagedLayout.primaryHeader[16] ^= 1;
+  check(
+    await hasDiskImagePartitionRecognition(damagedGpt),
+    'Corrupt GPT remains recognized ahead of an incidental ext marker',
+  );
+  ArchiveViewException? gptError;
+  try {
+    final opened = await openDiskImageArchive(
+      damagedGpt,
+      maxMemberBytes: kArchiveStreamingLimit,
+    );
+    await opened.close();
+  } on ArchiveViewException catch (error) {
+    gptError = error;
+  }
+  check(
+    gptError?.code == ArchiveMessageCode.corrupt,
+    'Damaged GPT cannot fall through to the ext marker',
+  );
+  check(damagedGpt.closeCount == 1, 'Damaged GPT source ownership');
+  groups.add('derived-corrupt-gpt-ext-marker-name');
+
+  final bootRecords = extReferenceBytes('ext2');
+  bootRecords.setRange(510, 512, [0x55, 0xaa]);
+  bootRecords[450] = 0x83;
+  _put32(bootRecords, 454, 128);
+  _put32(bootRecords, 458, 512);
+  final standalone = ExtReviewSource(bootRecords);
+  check(
+    !await hasDiskImagePartitionRecognition(standalone),
+    'Standalone ext precedes incidental MBR boot records',
+  );
+  final standaloneArchive = await openExtArchive(
+    standalone,
+    maxMemberBytes: 2 * 1024 * 1024,
+  );
+  final standaloneHello = standaloneArchive.members.singleWhere(
+    (m) => m.name == 'hello.txt',
+  );
+  check(
+    sha256
+            .convert(await standaloneArchive.readMember(standaloneHello))
+            .toString() ==
+        extReferencePayloads['hello.txt'],
+    'Standalone ext with boot code retains its original payload',
+  );
+  await standaloneArchive.close();
+  check(
+    standalone.closeCount == 1,
+    'Standalone boot-area case source ownership',
+  );
+  groups.add('derived-ext-with-mbr-boot-records');
 
   return {
     'groups': groups,

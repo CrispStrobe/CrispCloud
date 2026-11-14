@@ -426,6 +426,38 @@ void main() {
       );
     });
 
+    test('buffered reads cannot raise the fixed 64 MiB ceiling', () async {
+      final f = ExtFixture();
+      extPut32(f.bytes, f.inodeOffset(12) + 4, kArchiveReadLimit + 1);
+      extPut32(f.bytes, f.inodeOffset(12) + 28, 0);
+      extPut32(f.bytes, f.inodeOffset(12) + 40, 0);
+      final source = f.source();
+      final archive = await openExtArchive(
+        source,
+        maxMemberBytes: kArchiveStreamingLimit,
+      );
+      addTearDown(archive.close);
+      source.reads.clear();
+      await expectLater(
+        archive.readMember(
+          archive.members.single,
+          maxBytes: kArchiveStreamingLimit,
+        ),
+        throwsA(_error(ArchiveMessageCode.archiveLimit, '64 MiB')),
+      );
+      expect(source.reads, isEmpty);
+      final stream = StreamIterator(
+        archive.openMember(
+          archive.members.single,
+          maxBytes: kArchiveStreamingLimit,
+          chunkSize: 3,
+        ),
+      );
+      expect(await stream.moveNext(), isTrue);
+      expect(stream.current, [0, 0, 0]);
+      await stream.cancel();
+    });
+
     test('provider exception identity survives cleanup failure', () async {
       final failure = StateError('provider revoked');
       final source = ExtFixture().source()

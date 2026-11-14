@@ -481,11 +481,21 @@ class _ExtReader {
       maxStreamingMemberBytes: maxMemberBytes,
       close: close,
       read: (member, maxBytes) async {
-        final output = BytesBuilder(copy: false);
-        await for (final chunk in _stream(_files[member.index], _readBytes)) {
-          output.add(chunk);
+        _cancel();
+        if (member.size > kArchiveReadLimit ||
+            member.size > maxMemberBytes ||
+            member.size > maxBytes) {
+          _limit(
+            'Buffered member reads retain the 64 MiB ceiling and caller allowance.',
+          );
         }
-        return output.takeBytes();
+        final output = Uint8List(member.size);
+        var offset = 0;
+        await for (final chunk in _stream(_files[member.index], _readBytes)) {
+          output.setRange(offset, offset + chunk.length, chunk);
+          offset += chunk.length;
+        }
+        return output;
       },
       streamReader: (member, chunkSize) =>
           _stream(_files[member.index], chunkSize),
@@ -510,8 +520,21 @@ class _ExtReader {
     await _claim(index);
     final bytes = await _read(index * _blockBytes, _blockBytes);
     final seen = <int>{};
-    bool reserved(int block) =>
-        _reservedGdt.any((r) => block >= r.start && block < r.end);
+    bool reserved(int block) {
+      // Groups were visited in order. Use a logarithmic lookup so malformed
+      // pointer tables cannot multiply traversal work by every block group.
+      var low = 0, high = _reservedGdt.length;
+      while (low < high) {
+        final middle = (low + high) ~/ 2;
+        if (_reservedGdt[middle].start <= block) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+      return low > 0 && block < _reservedGdt[low - 1].end;
+    }
+
     for (var i = 0; i < _blockBytes; i += 4) {
       await _checkpoint();
       final indirect = _u32(bytes, i);

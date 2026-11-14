@@ -8,6 +8,8 @@ the complete visible namespace before returning it.
 Open a standalone `.ext`, `.ext2`, `.ext3`, `.ext4` or recognized raw image, or
 browse an admitted Linux partition in an MBR/GPT image. Content recognition
 also handles a misleading archive suffix without granting write permissions.
+The [implementation review](https://github.com/CrispStrobe/CrispCloud/pull/102)
+and [qualification records](evidence/storage-ext-20261114) track this increment.
 The image stays read-only: there is no mounting, journal replay, undelete,
 filesystem repair or filesystem writer.
 
@@ -26,7 +28,7 @@ metadata needed for the published members.
 | Sparse regular files | Holes and unwritten extents read as zero bytes. Unwritten blocks still receive allocation validation. Extraction creates the correct logical bytes; it does not promise a sparse destination file. |
 | Directories and names | Linear directory records, validated self/parent entries, strict UTF-8 components, unique paths, bounded recursion. The compatible `dir_index` capability flag may be present, but an actual indexed-directory inode is refused. |
 | Hard links | Multiple regular-file paths may share one validated inode and its immutable allocation map. Extraction emits ordinary file contents; it does not recreate host hard links. |
-| Links and special files | Listed as special metadata entries. They cannot be previewed/extracted as ordinary files, and symbolic links are never followed. |
+| Links and special files | Retained as disabled metadata entries in F3. The pane/workspace/extraction index contains regular files and directories only, after validating the complete namespace. Links cannot be previewed/extracted as ordinary files and are never followed. |
 | Metadata checksums | CRC32c for the primary superblock, group descriptors, referenced bitmaps/inodes, traversed directory blocks and external extent-tree blocks when `metadata_csum` is present. UUID-derived and explicit `metadata_csum_seed` variants are supported. Legacy `gdt_csum` group descriptors use CRC16. |
 | File metadata | POSIX mode and UTC modification timestamps at millisecond precision are exposed. Ownership, ACLs, xattrs and link identity are not restored. |
 

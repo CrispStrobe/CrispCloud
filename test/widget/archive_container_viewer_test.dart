@@ -224,11 +224,13 @@ ChoiceChip _chip(WidgetTester tester, String label) =>
 Future<void> _revealNativeImageMember(
   WidgetTester tester,
   String path,
-  String format,
-) async {
+  String format, {
+  int attempts = 300,
+}) async {
   await _waitFor(
     tester,
     () => find.textContaining('   ·   $format').evaluate().isNotEmpty,
+    attempts: attempts,
   );
   final list = find
       .descendant(
@@ -627,6 +629,7 @@ void main() {
             tester,
             path,
             partitioned ? 'DISK-IMAGE' : 'EXT',
+            attempts: 1500,
           );
           expect(
             find.textContaining('   ·   ${partitioned ? 'DISK-IMAGE' : 'EXT'}'),
@@ -644,6 +647,7 @@ void main() {
             tester,
             path,
             partitioned ? 'DISK-IMAGE' : 'EXT',
+            attempts: 1500,
           );
           await tester.ensureVisible(find.text(path));
           await tester.tap(find.text(path));

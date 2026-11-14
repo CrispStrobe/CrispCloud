@@ -408,18 +408,21 @@ Future<ViewerArchive> _openSource(
         isCancelled: isCancelled,
       );
     }
-    if (await hasExtVolumeRecognition(source)) {
-      return await openExtArchive(
-        source,
-        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
-        isCancelled: isCancelled,
-      );
-    }
+    // The two-byte ext marker can also occur in a GPT partition name.
+    // Disk recognition gives explicit GPT headers priority, while suppressing
+    // incidental MBR entries in a standalone ext volume's boot area.
     if (await hasDiskImagePartitionRecognition(source)) {
       return await openDiskImageArchive(
         source,
         maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
         logicalSectorBytes: diskImageSectorBytes,
+        isCancelled: isCancelled,
+      );
+    }
+    if (await hasExtVolumeRecognition(source)) {
+      return await openExtArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
         isCancelled: isCancelled,
       );
     }

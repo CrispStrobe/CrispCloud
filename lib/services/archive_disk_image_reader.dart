@@ -49,8 +49,11 @@ class ArchiveDiskImageCancelledException extends ArchiveViewException {
 }
 
 /// Non-owning recognition at fixed MBR/GPT positions, not a filesystem scan.
-/// A recognized FAT/ext volume takes precedence over apparent partition bytes
-/// in its boot code. An MBR boot signature alone is insufficient recognition.
+/// A recognized FAT volume takes precedence over apparent partition bytes in
+/// its boot code. Explicit GPT signatures precede the short ext marker: the
+/// first GPT partition name can contain that marker at the same byte offset.
+/// Ext volumes still precede apparent MBR entries in their unused boot area.
+/// An MBR boot signature alone is insufficient recognition.
 /// At most two 512-byte reads, one two-byte ext probe and four eight-byte GPT
 /// probes are requested.
 /// Recognition does not establish a valid or authoritative partition table.
@@ -64,7 +67,6 @@ Future<bool> hasDiskImagePartitionRecognition(koni.ByteSource source) async {
     );
   }
   if (await hasFatVolumeRecognition(source)) return false;
-  if (await hasExtVolumeRecognition(source)) return false;
   for (final sector in const [512, 4096]) {
     final last = (source.length ~/ sector - 1) * sector;
     for (final offset in {sector, last}) {
@@ -79,6 +81,7 @@ Future<bool> hasDiskImagePartitionRecognition(koni.ByteSource source) async {
       if (_gptSignature(bytes)) return true;
     }
   }
+  if (await hasExtVolumeRecognition(source)) return false;
   if (prefix[510] != 0x55 || prefix[511] != 0xaa) return false;
   final data = ByteData.sublistView(prefix);
   var records = 0;
@@ -319,11 +322,6 @@ class _DiskImageReader {
         'This source is a standalone FAT volume, not a partitioned disk.',
       );
     }
-    if (await hasExtVolumeRecognition(source)) {
-      _unsupported(
-        'This source is a standalone ext volume, not a partitioned disk.',
-      );
-    }
     final analysis = await inspectDiskPartitions(
       totalBytes: source.length,
       read: source.read,
@@ -332,6 +330,12 @@ class _DiskImageReader {
       validateUnchanged: source.validate,
     );
     source.check();
+    if (analysis.scheme == DiskPartitionScheme.mbr &&
+        await hasExtVolumeRecognition(source)) {
+      _unsupported(
+        'This source is a standalone ext volume, not a partitioned disk.',
+      );
+    }
     final partitions = _admitDiskImageAnalysis(
       analysis,
       maxPartitions: maxPartitions,

@@ -58,3 +58,25 @@ the extended timestamp test incorrectly selected a 128-byte inode specimen.
 The test now selects the 256-byte inode specimen it requires. Its full original
 logs, summary, receipt and source hashes are preserved here (larger records use
 lossless gzip). See `intermediate-evidence-index.json`.
+
+## Integration follow-up
+
+- `d5dbff96`: saved allocation/source hardening, five external images,
+  malformed-image controls and the initial native evidence.
+- Draft review: [PR #102](https://github.com/CrispStrobe/CrispCloud/pull/102).
+- The first focused app gate passed 427 and failed four checks: two native
+  workspaces rejected metadata-only links; two F3 checks exhausted the native
+  fake-clock wait. Complete failed-run evidence is retained.
+- Ext/disk-image selectable namespaces now validate all names before omitting
+  special metadata. F3 retains disabled metadata rows. Direct whole-image
+  extraction uses the same policy. Other archive formats retain strict refusal.
+- The targeted integration follow-up passed 138 tests, zero failures/skips,
+  including native ext/GPT workspace extraction and F3 preview/mode changes.
+- The core follow-up passed 70 tests, zero failures/skips. Tests overlap these
+  runs; counts are not additive or attributed to a later source revision.
+- Explicit GPT signatures now take priority over an ext marker that can also
+  occur in a valid GPT partition name. Native and portable collision regressions
+  cover valid and corrupt GPTs, while standalone ext retains MBR precedence.
+- The expanded portable smoke run passed 19 groups / 3,360 checks on both VM
+  and actual compiled JavaScript with exact output equality. The authoritative
+  final gates will run again against the next saved complete source checkpoint.

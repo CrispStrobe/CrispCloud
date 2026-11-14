@@ -1,0 +1,41 @@
+{
+  "label": "ext-focused-first",
+  "passed": 427,
+  "failed": 4,
+  "skipped": 0,
+  "total": 431,
+  "files": [
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_integration_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_workspace_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_disk_image_reader_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_fat_reader_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_fat_integration_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_fat_workspace_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_format_registry_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_container_dispatch_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_container_viewer_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/disk_partition_viewer_test.dart"
+  ],
+  "failures": [
+    {
+      "test": "ext native workspace streams an image above 64 MiB without write authority",
+      "result": "error"
+    },
+    {
+      "test": "GPT native workspace streams an image above 64 MiB without write authority",
+      "result": "error"
+    },
+    {
+      "test": "native F3 ext browses and previews without a full image read",
+      "result": "error"
+    },
+    {
+      "test": "native F3 Linux GPT browses and previews without a full image read",
+      "result": "error"
+    }
+  ],
+  "run_success": false,
+  "events_sha256": "61eaee6ce6ff974230a10823b0221fe04727d70706de33c76b8bb93180227729"
+}

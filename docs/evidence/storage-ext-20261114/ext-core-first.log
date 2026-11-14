@@ -1,0 +1,86 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart
+00:00 +0: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls synthetic ext2 listing remains lazy, owns source and streams exactly
+00:00 +1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls provider-reused offset buffers cannot change parsed metadata
+00:00 +2: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls empty files need no allocation
+00:00 +3: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls immutable allocations survive later mapping-byte mutation
+00:00 +4: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects superblock bounds before publication
+00:00 +5: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects inode geometry before publication
+00:00 +6: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects overlapping metadata before publication
+00:00 +7: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects data aliases inode table before publication
+00:00 +8: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects data aliases directory before publication
+00:00 +9: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects data leaves image before publication
+00:00 +10: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects referenced free block before publication
+00:00 +11: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects referenced free inode before publication
+00:00 +12: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects deleted live inode before publication
+00:00 +13: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects zero record length before publication
+00:00 +14: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects cross-block directory record before publication
+00:00 +15: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects incorrect parent before publication
+00:00 +16: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects type disagreement before publication
+00:00 +17: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects short-name invalid UTF8 before publication
+00:00 +18: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls refuses unsafe component ..
+00:00 +19: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls refuses unsafe component ../escape
+00:00 +20: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls refuses unsafe component slash/name
+00:00 +21: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls refuses unsafe component back\slash
+00:00 +22: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls refuses unsafe component C:drive
+00:00 +23: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls refuses unsafe component line
+break
+00:00 +24: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1116/4096
+00:00 +25: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1120/4
+00:00 +26: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1120/16
+00:00 +27: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1120/32768
+00:00 +28: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1120/65536
+00:00 +29: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1120/131072
+00:00 +30: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls rejects unsupported feature 1124/512
+00:00 +31: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls unclean filesystem cannot be browsed
+00:00 +32: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls indexed directory is explicitly unsupported
+00:00 +33: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls external xattrs cannot be mistaken for data
+00:00 +34: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls duplicate names are refused
+00:00 +35: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls regular hard links reuse verified allocation
+00:00 +36: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls hard link count under-reporting is refused
+00:00 +37: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls directory cycle is refused
+00:00 +38: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls long symlink blocks cannot alias a regular file
+00:00 +39: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls short symlink payload is never read as a block map
+00:00 +40: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls unwritten extents return zeroes without reading backing content
+00:00 +41: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls sparse gaps precede exact extent payload
+00:00 +42: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls overlapping extent records are refused
+00:00 +43: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls extent high halves cannot escape exact integer bounds
+00:00 +44: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls indirect cycles are refused before publication
+00:00 +45: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls lowered metadata limit is enforced
+00:00 +46: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls lowered directory limit is enforced
+00:00 +47: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls lowered path limit is enforced
+00:00 +48: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls lowered blocks limit is enforced
+00:00 +49: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls lowered extents limit is enforced
+00:00 +50: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls failed opens consume shared traversal budget
+00:00 +51: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls argument failures close source once
+00:00 +52: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls larger member limit is enforced during read
+00:00 +53: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls provider exception identity survives cleanup failure
+00:00 +54: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls short signature read is a failure, not a negative probe
+00:00 +55: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls source length changes during opening are refused
+00:00 +56: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls source length changes before extraction are refused
+00:00 +57: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls cancellation at opening and during streaming stays distinct
+00:00 +58: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls resize-inode index cannot be exposed as file contents
+00:00 +59: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external ext2/ext3/ext4 payloads and corruption controls pass portable acceptance
+00:00 +59 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external ext2/ext3/ext4 payloads and corruption controls pass portable acceptance
+00:00 +59 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls future ext timestamps use exact UTC millisecond precision [E]
+  Expected: a value greater than or equal to <256>
+    Actual: <128>
+     Which: is not a value greater than or equal to <256>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/archive_ext_reader_test.dart 551:7             main.<fn>.<fn>
+  
+00:06 +60 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: file content stays lazy and configured member ceilings precede payload reads
+00:06 +61 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: validated classic allocation decisions survive mutation of borrowed metadata buffers
+00:06 +62 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external images obey the configured entry count budget
+00:06 +63 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external images obey the configured metadata bytes budget
+00:06 +64 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external images obey the configured directory bytes budget
+00:07 +65 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external images obey the configured retained paths budget
+00:07 +66 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external images obey the configured traversed blocks budget
+00:08 +67 -1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart: external images obey the configured extent count budget
+00:08 +68 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart: bounded ext reader adversarial and boundary controls future ext timestamps use exact UTC millisecond precision

@@ -1,0 +1,41 @@
+{
+  "command": [
+    "flutter",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "expanded",
+    "--file-reporter",
+    "json:/workspace/scratch/4f6714f1660a/runtime-setup/logs/ext-focused-first-events.json",
+    "test/archive_ext_integration_test.dart",
+    "test/archive_ext_reader_test.dart",
+    "test/archive_ext_reference_test.dart",
+    "test/archive_ext_workspace_test.dart",
+    "test/archive_disk_image_reader_test.dart",
+    "test/archive_fat_reader_test.dart",
+    "test/archive_fat_integration_test.dart",
+    "test/archive_fat_workspace_test.dart",
+    "test/archive_format_registry_test.dart",
+    "test/archive_container_dispatch_test.dart",
+    "test/widget/archive_container_viewer_test.dart",
+    "test/widget/disk_partition_viewer_test.dart"
+  ],
+  "cwd": "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation",
+  "native_ebook_hook_disabled": true,
+  "production_hashes": {
+    "pubspec.yaml": "fa927d4b11e1f3c2de1250c8d5970dd9234fbaf247da1c4df12575c67c005fd7",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "test_manifest_sha256": "9b13d439b8e6d16416a41ff255809d62353635810cf8ab897fcb34bd625e0119",
+  "source_head": "eeefe937911f14621b81286a22310689762a97e6",
+  "verified_revision": null,
+  "source_paths": 8072,
+  "source_binding_sha256": "bbd0965ed7491c742b2cda138ba858f390bf4a35fdb23aa944530ceac6c6ae05",
+  "started_at_utc": "2026-11-14T12:11:22Z",
+  "lock_unchanged_during_test": true,
+  "exit_code": 1,
+  "manifests_restored": true,
+  "source_drift_after": [],
+  "finished_at_utc": "2026-11-14T12:13:26Z",
+  "log_sha256": "629deea31b1472fb17ce1a92957ea24155c2cae4fce1ae93630878d36c8f68df"
+}

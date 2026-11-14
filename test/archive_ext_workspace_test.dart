@@ -94,6 +94,20 @@ void main() {
         expect(workspace.canSynchronizeDirectory, isFalse);
         final prefix = partitioned ? '/partition-001/files' : '';
         expect(
+          workspace
+              .list(prefix.isEmpty ? '/' : prefix)
+              .map((entry) => entry.name),
+          isNot(contains('hello-link')),
+        );
+        await expectLater(
+          workspace.read('$prefix/hello-link'),
+          throwsStateError,
+        );
+        await expectLater(
+          workspace.openRead('$prefix/named-pipe').toList(),
+          throwsStateError,
+        );
+        expect(
           sha256
               .convert(await workspace.read('$prefix/nested/café-雪.txt'))
               .toString(),

@@ -1,0 +1,20 @@
+{
+  "label": "ext-integration-fix",
+  "passed": 138,
+  "failed": 0,
+  "skipped": 0,
+  "total": 138,
+  "files": [
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_workspace_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_member_index_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_container_viewer_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_workspace_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_streamed_extraction_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_batch_extraction_service_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_viewer_service_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_dmg_workspace_test.dart"
+  ],
+  "failures": [],
+  "run_success": true,
+  "events_sha256": "82b0dfa76893f7896a35bf9a1d018b1011cf41a6f8a14ff2ae924ec92c2f19c0"
+}

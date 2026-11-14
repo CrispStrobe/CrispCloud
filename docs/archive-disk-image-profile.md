@@ -35,7 +35,9 @@ listed even when the selected preview or extraction operation cannot read it.
 
 Recognition and admission are separate. Recognition performs bounded probes at
 the MBR prefix and fixed primary/physical-tail GPT positions. A standalone FAT/ext
-volume takes precedence over plausible partition records in its boot code. A
+volume takes precedence over plausible MBR records in its boot code. Explicit
+GPT signatures take priority over the short ext marker, which can also occur
+in a valid GPT partition name. A
 `55 AA` trailer with no plausible nonempty MBR record is not sufficient for
 disk-image recognition. Recognition does not confer table authority.
 

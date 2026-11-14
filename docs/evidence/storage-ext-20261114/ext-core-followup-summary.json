@@ -1,0 +1,14 @@
+{
+  "label": "ext-core-followup",
+  "passed": 70,
+  "failed": 0,
+  "skipped": 0,
+  "total": 70,
+  "files": [
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reader_test.dart",
+    "/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ext_reference_test.dart"
+  ],
+  "failures": [],
+  "run_success": true,
+  "events_sha256": "ecbc76c1b822188470cf66b2e4a954720266f8fbc1330d5c3be617093d8cd1a1"
+}
