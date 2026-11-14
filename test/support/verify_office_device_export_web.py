@@ -5,6 +5,9 @@ Requires resolved Dart packages and already-installed Playwright/Chromium. This
 does not install packages, build Flutter, or open an authenticated site. The
 download is captured through the browser's real download event; instrumentation
 observes native URL and anchor calls while preserving their original behavior.
+The default uses the application's resolved dependencies. An explicit --packages
+configuration supports a smaller SDK-only probe, identified separately in both
+receipts; it does not claim resolution of the full application's dependency graph.
 """
 
 import argparse
@@ -68,13 +71,25 @@ def main() -> None:
     parser.add_argument("--chromium", default=shutil.which("chromium"))
     parser.add_argument("--compile-only", action="store_true",
                         help="Compile the real wrapper/adapter without claiming browser execution")
+    parser.add_argument("--packages", type=Path,
+                        default=ROOT / ".dart_tool/package_config.json",
+                        help="Explicit package configuration for a scoped dependency probe; "
+                             "defaults to the application's resolved package configuration")
     parser.add_argument("--output", type=Path, default=ROOT / "build/office-web-copy")
     args = parser.parse_args()
     if not args.dart or (not args.compile_only and not args.chromium):
         parser.error("Provide already-installed Dart and Chromium executables")
-    packages = ROOT / ".dart_tool/package_config.json"
+    packages = args.packages.resolve()
     if not packages.is_file():
-        parser.error("The repository needs an existing package_config.json")
+        parser.error("The selected package_config.json must already exist")
+    application_packages = (ROOT / ".dart_tool/package_config.json").resolve()
+    dependency_resolution = {
+        "scope": "application" if packages == application_packages else "explicit_package_config",
+        "package_config": str(packages.relative_to(ROOT))
+                          if packages.is_relative_to(ROOT) else str(packages),
+        "package_config_sha256": digest(packages),
+        "application_lock_sha256": digest(ROOT / "pubspec.lock"),
+    }
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     compiled = output / "acceptance.js"
@@ -87,12 +102,15 @@ def main() -> None:
     )
     (output / "compile.log").write_text(result.stdout + result.stderr)
     require(result.returncode == 0, "Dart-to-JavaScript compilation failed; see compile.log")
+    require(digest(packages) == dependency_resolution["package_config_sha256"],
+            "The dependency configuration changed during compilation")
     compile_receipt = {
         "version": 1, "status": "compiled", "browser_execution": "not_performed",
         "entrypoint": str(SOURCE.relative_to(ROOT)), "entrypoint_sha256": digest(SOURCE),
         "wrapper_sha256": digest(ROOT / "lib/services/office_device_export.dart"),
         "adapter_sha256": digest(ROOT / "lib/services/office_device_export_web.dart"),
         "compiled_sha256": digest(compiled),
+        "dependency_resolution": dependency_resolution,
     }
     (output / "compile-receipt.json").write_text(json.dumps(compile_receipt, indent=2) + "\n")
     if args.compile_only:
@@ -164,6 +182,7 @@ def main() -> None:
                 "wrapper_sha256": digest(ROOT / "lib/services/office_device_export.dart"),
                 "adapter_sha256": digest(ROOT / "lib/services/office_device_export_web.dart"),
                 "compiled_sha256": digest(compiled), "outcome": status["outcome"],
+                "dependency_resolution": dependency_resolution,
                 "filename": download.suggested_filename, "download_bytes": len(EXPECTED_BYTES),
                 "download_sha256": digest(artifact), "blob_mime": created["type"],
                 "anchor_connected_at_click": clicked["connected"], "remaining_download_anchors": anchors,

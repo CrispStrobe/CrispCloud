@@ -1,0 +1,19 @@
+name: office_browser_dependency_probe
+description: SDK-only dependencies for the unchanged CrispCloud Office browser-copy
+  acceptance entrypoint.
+publish_to: none
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+dependencies:
+  async: 2.13.1
+  charcode: 1.4.0
+  collection: 1.19.1
+  csslib: 1.0.2
+  html: 0.15.6
+  meta: 1.19.0
+  path: 1.9.1
+  source_span: 1.10.2
+  term_glyph: 1.2.2
+  typed_data: 1.4.0
+  universal_html: 2.3.0
+  universal_io: 2.3.1

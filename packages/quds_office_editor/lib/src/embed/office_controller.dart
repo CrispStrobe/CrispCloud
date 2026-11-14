@@ -11810,6 +11810,7 @@ class _SheetGridSnap {
             hasExplicitStyleIndex: cell.hasExplicitStyleIndex,
             horizontalAlign: cell.horizontalAlign,
             fillRgb: cell.fillRgb,
+            hasExplicitFillColorEdit: cell.hasExplicitFillColorEdit,
             fontRgb: cell.fontRgb,
             hasExplicitFontColorEdit: cell.hasExplicitFontColorEdit,
             fontBold: cell.fontBold,
@@ -11849,6 +11850,7 @@ class _SheetGridSnap {
         ..hasExplicitStyleIndex = cell.hasExplicitStyleIndex
         ..horizontalAlign = cell.horizontalAlign
         ..fillRgb = cell.fillRgb
+        ..hasExplicitFillColorEdit = cell.hasExplicitFillColorEdit
         ..fontRgb = cell.fontRgb
         ..hasExplicitFontColorEdit = cell.hasExplicitFontColorEdit
         ..fontBold = cell.fontBold

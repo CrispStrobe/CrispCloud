@@ -194,7 +194,8 @@ class SmlCell {
     this.styleIndex = 0,
     this.hasExplicitStyleIndex = false,
     this.horizontalAlign = SmlHAlign.general,
-    this.fillRgb = '',
+    this._fillRgb = '',
+    this.hasExplicitFillColorEdit = false,
     this._fontRgb = '',
     this.hasExplicitFontColorEdit = false,
     this.fontBold = false,
@@ -226,8 +227,20 @@ class SmlCell {
   /// horizontalAlign API.
   SmlHAlign horizontalAlign;
 
-  /// Solid fill as `RRGGBB`; empty means no fill.
-  String fillRgb;
+  String _fillRgb;
+
+  /// Solid fill as `RRGGBB`; empty means no fill. Assigning this property
+  /// explicitly replaces native theme, pattern or gradient fill semantics,
+  /// even when the modeled RGB is unchanged.
+  String get fillRgb => _fillRgb;
+  set fillRgb(String value) {
+    _fillRgb = value;
+    hasExplicitFillColorEdit = true;
+  }
+
+  /// Whether a solid/no-fill command was applied after import. Importers and
+  /// history/copy operations restore this provenance along with [fillRgb].
+  bool hasExplicitFillColorEdit;
 
   String _fontRgb;
 

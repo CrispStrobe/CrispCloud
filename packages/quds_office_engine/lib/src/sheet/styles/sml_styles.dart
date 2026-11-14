@@ -39,13 +39,15 @@ class SmlColumnMetrics {
 }
 
 /// Return null when the requested font cannot be resolved reliably.
-typedef SmlColumnMetricsResolver =
-    SmlColumnMetrics? Function(SmlNormalFont normalFont);
+typedef SmlColumnMetricsResolver = SmlColumnMetrics? Function(
+  SmlNormalFont normalFont,
+);
 
 /// Parsed `styles.xml` subset: numFmts, fills, fonts, and cellXfs.
 class SmlStyleSheet {
   XmlDocument? _source;
   List<XmlElement>? _sourceFonts;
+  List<XmlElement>? _sourceFills;
   final Map<int, int> _fontBases = {};
   final Set<int> _explicitFontColors = {};
   final Map<int, int> _xfBases = {};
@@ -190,9 +192,9 @@ class SmlStyleSheet {
 
   /// Reads the Latin major/minor theme faces used for the ten ASCII digits.
   static Map<String, String> parseThemeFontFamilies(String xml) {
-    final scheme = XmlDocument.parse(
-      xml,
-    ).root?.firstChild('themeElements')?.firstChild('fontScheme');
+    final scheme = XmlDocument.parse(xml).root
+        ?.firstChild('themeElements')
+        ?.firstChild('fontScheme');
     return <String, String>{
       for (final kind in ['major', 'minor'])
         if (scheme
@@ -452,6 +454,7 @@ class SmlStyleSheet {
   int xfFor({
     SmlHAlign align = SmlHAlign.general,
     String fillRgb = '',
+    bool fillColorExplicit = false,
     String fontRgb = '',
     bool fontColorExplicit = false,
     bool bold = false,
@@ -478,22 +481,30 @@ class SmlStyleSheet {
             baseStyleIndex < cellXfsAlign.length
         ? baseStyleIndex
         : null;
-    final explicitColor =
+    final String fill = normalizeRgb(fillRgb);
+    final String font = normalizeRgb(fontRgb);
+    final explicitFill =
         base != null &&
-        fontColorExplicit &&
-        !_hasDirectFontColor(base, normalizeRgb(fontRgb));
+        fillColorExplicit &&
+        !_hasDirectFill(cellXfsFillId[base], fill);
+    final explicitColor =
+        base != null && fontColorExplicit && !_hasDirectFontColor(base, font);
     if (base != null &&
+        !explicitFill &&
         !explicitColor &&
         alignAt(base) == align &&
-        fillAt(base) == normalizeRgb(fillRgb) &&
-        fontAt(base) == normalizeRgb(fontRgb) &&
+        fillAt(base) == fill &&
+        fontAt(base) == font &&
         boldAt(base) == bold &&
         sizeAt(base) == size) {
       return base;
     }
-    final String fill = normalizeRgb(fillRgb);
-    final String font = normalizeRgb(fontRgb);
-    final int fillId = _idFor(fillRgbs, fill, reserveNone: true);
+    // The modeled RGB is not a fill's identity: gradients may have no scalar
+    // color, and patterns/theme colors may share an RGB with a different fill.
+    // Unrelated font/alignment edits must retain the original native fill.
+    final int fillId = base != null && !explicitFill && fillAt(base) == fill
+        ? cellXfsFillId[base]
+        : _fillId(fill);
     final int? baseFont = base == null ? null : cellXfsFontId[base];
     final int fontId;
     if (baseFont != null &&
@@ -577,18 +588,60 @@ class SmlStyleSheet {
     return fontRgbs.length - 1;
   }
 
-  int _idFor(List<String> values, String rgb, {required bool reserveNone}) {
-    if (rgb.isEmpty) {
-      return 0;
-    }
-    final int start = reserveNone && values.length > 1 ? 2 : 0;
-    for (int i = start; i < values.length; i++) {
-      if (values[i] == rgb) {
+  int _fillId(String rgb) {
+    for (int i = 0; i < fillRgbs.length; i++) {
+      // A solid-color command must not accidentally select a native pattern,
+      // gradient or theme/indexed color that merely resolves to the same RGB.
+      if (fillRgbs[i] == rgb && _hasDirectFill(i, rgb)) {
         return i;
       }
     }
-    values.add(rgb);
-    return values.length - 1;
+    // The generated second empty fill is the required gray125 placeholder,
+    // never the target of an explicit no-fill command.
+    if (rgb.isEmpty && fillRgbs.length == 1) fillRgbs.add('');
+    fillRgbs.add(rgb);
+    return fillRgbs.length - 1;
+  }
+
+  bool _hasDirectFill(int id, String rgb) {
+    if (id < 0 || id >= fillRgbs.length) return false;
+    final root = _source?.root;
+    final fills = _sourceFills ??=
+        root
+            ?.firstChild('fills', namespaceUri: root.namespaceUri)
+            ?.childrenNamed('fill', namespaceUri: root.namespaceUri)
+            .toList() ??
+        [];
+    if (id >= fills.length) {
+      // Newly generated fills are direct solid colors, no fill, or gray125.
+      return fillRgbs[id] == rgb && !(id == 1 && rgb.isEmpty);
+    }
+    final fill = fills[id];
+    if (fill.firstChild('gradientFill', namespaceUri: fill.namespaceUri) !=
+        null) {
+      return false;
+    }
+    final pattern = fill.firstChild(
+      'patternFill',
+      namespaceUri: fill.namespaceUri,
+    );
+    final type = pattern == null ? 'none' : _attribute(pattern, 'patternType');
+    if (rgb.isEmpty) return type == null || type == 'none';
+    if (type != 'solid') return false;
+    final color = pattern!.firstChild(
+      'fgColor',
+      namespaceUri: fill.namespaceUri,
+    );
+    if (color == null) return false;
+    if (const [
+      'theme',
+      'indexed',
+      'tint',
+      'auto',
+    ].any((name) => _attribute(color, name) != null)) {
+      return false;
+    }
+    return normalizeRgb(_attribute(color, 'rgb') ?? '') == rgb;
   }
 
   /// parseHAlign API.
@@ -1037,9 +1090,9 @@ class SmlStyleSheet {
     }
 
     final int v = int.parse(rgb, radix: 16);
-    final String r = channel(
-      (v >> 16) & 0xFF,
-    ).toRadixString(16).padLeft(2, '0');
+    final String r = channel((v >> 16) & 0xFF)
+        .toRadixString(16)
+        .padLeft(2, '0');
     final String g = channel((v >> 8) & 0xFF).toRadixString(16).padLeft(2, '0');
     final String b = channel(v & 0xFF).toRadixString(16).padLeft(2, '0');
     return '$r$g$b'.toUpperCase();

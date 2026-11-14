@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<s:styleSheet xmlns:s="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <s:fonts count="1"><s:font><s:color rgb="FF000000"/><s:sz val="11"/><s:name val="Calibri"/></s:font></s:fonts>
+  <s:fills count="7">
+    <s:fill><s:patternFill patternType="none"/></s:fill>
+    <s:fill><s:patternFill patternType="gray125"/></s:fill>
+    <s:fill><s:patternFill patternType="solid"><s:fgColor rgb="FF000000"/></s:patternFill></s:fill>
+    <s:fill><s:patternFill patternType="solid"><s:fgColor theme="1"/></s:patternFill></s:fill>
+    <s:fill><s:patternFill patternType="darkGrid"><s:fgColor rgb="FF000000"/><s:bgColor rgb="FFFFFFFF"/></s:patternFill></s:fill>
+    <s:fill><s:gradientFill degree="90"><s:stop position="0"><s:color rgb="FFFF0000"/></s:stop><s:stop position="1"><s:color rgb="FF0000FF"/></s:stop></s:gradientFill></s:fill>
+    <s:fill><s:patternFill patternType="solid"><s:fgColor indexed="2"/></s:patternFill></s:fill>
+  </s:fills>
+  <s:borders count="1"><s:border><s:left/><s:right/><s:top/><s:bottom/><s:diagonal/></s:border></s:borders>
+  <s:cellStyleXfs count="1"><s:xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></s:cellStyleXfs>
+  <s:cellXfs count="6">
+    <s:xf numFmtId="0" fontId="0" fillId="3" borderId="0" xfId="0" applyFill="1"/>
+    <s:xf numFmtId="0" fontId="0" fillId="4" borderId="0" xfId="0" applyFill="1"/>
+    <s:xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1"/>
+    <s:xf numFmtId="0" fontId="0" fillId="6" borderId="0" xfId="0" applyFill="1"/>
+    <s:xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>
+    <s:xf numFmtId="0" fontId="0" fillId="1" borderId="0" xfId="0" applyFill="1"/>
+  </s:cellXfs>
+  <s:cellStyles count="1"><s:cellStyle name="Normal" xfId="0" builtinId="0"/></s:cellStyles>
+</s:styleSheet>

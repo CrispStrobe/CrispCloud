@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "status": "compilation_passed_browser_launch_blocked",
+  "production_checkpoint": "394dc3199270599dd0badd91f89fdf1726c3fb46",
+  "source_sha256": {
+    "test/support/verify_office_device_export_web.py": "3619a9bd1251b8c8dad6fe0da39243611f78e758b34430200c12a6f99146975b",
+    "test/support/office_device_export_web_acceptance.dart": "784b99a13019798522af4e100460d8823700ac72bb5da8927bf748a571a7940e",
+    "lib/services/office_device_export.dart": "bc7a8bebafa7338393619c4bd56d2d11a3cb113ec98b81364977a6bd4a429eec",
+    "lib/services/office_device_export_web.dart": "810613add90c2dbea892e8a8ee49993d11847a7fa47bddb386854024bc859c1f",
+    "lib/services/office_device_export_types.dart": "3046bcd7a8df5661a32fa90c902513538315fb58e4e3a16ed5f9fdacb47d32a9",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+    ".github/workflows/office-fidelity.yml": "a605593cf2682044160c1d9b9f7abac9c1f3d333b8370db11fc42825abb64a76"
+  },
+  "runtime": {
+    "dart": "3.13.7",
+    "flutter": "3.47.8",
+    "chromium": "156.0.8078.79",
+    "python_playwright": "1.62.0"
+  },
+  "compilation": {
+    "exit_code": 0,
+    "compiled_sha256": "b3d598d4fa789aefa238ec80b5e018c7e23ca1883ffed6ec6a9fc697b293b182",
+    "matches_integrated_macos_compiled_sha256": true,
+    "dependency_scope": "Explicit SDK-only universal_html closure; all 12 packages match app-lock versions and archive hashes."
+  },
+  "browser": {
+    "exit_code": 1,
+    "acceptance_executed": false,
+    "failure_stage": "Chromium process startup",
+    "reason": "process_singleton_posix.cc socket() failed: Operation not permitted",
+    "successful_prior_receipt": "docs/evidence/office-recovery-20261114/integrated-macos/browser-copy-receipt.json",
+    "prior_evidence_is_a_separate_run": true
+  },
+  "evidence_sha256": {
+    "acceptance.js.gz": "c54f57e3f0785a89c116573bc5b266706cabef3d94d9c97be26444789be605a2",
+    "browser-attempt.log": "8aeb0d7e01ae0f912b949999d10defc105aa8cf823c501269e0133c834aa4438",
+    "compile-receipt.json": "3e2de63cb51c212c0d7f654977c4c0e9e32a67e93ef1ca7e7195833c04e87c82",
+    "compile.log": "b61dc1ee2ba470857f1461ef7f60d4bce9bd043d712db6b55d34c7ee37370573",
+    "dependency-resolution.json": "68d85d0dd490cda526874c77d4aa0d15af929c051ad80d03dc4c4407e0c3bfa4",
+    "package-config.json": "76dbdda12539c7dd260fbe06b49e33164364378f305f6611dd817eec1435cb76",
+    "probe-pubspec.lock": "d5253265d2564a986cc8687a792060bd7fe888db68531fe1dcf5cea14ce2616e",
+    "probe-pubspec.yaml": "1775af9c720b3aab7f590e013888f1bf167c58485c59f279a86edefacc30e593"
+  },
+  "boundaries": [
+    "No full app dependency-resolution or native-host test run is claimed here.",
+    "This compilation and blocked launch are not a successful browser acceptance run.",
+    "The unchanged production adapter has a separately retained successful macOS browser receipt.",
+    "The new GitHub Actions browser-copy job has not yet completed."
+  ],
+  "command": [
+    "python3",
+    "test/support/verify_office_device_export_web.py",
+    "--dart",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/cache/dart-sdk/bin/dart",
+    "--packages",
+    "/workspace/scratch/f035141943c7/toolchain/office-browser-deps/.dart_tool/package_config.json",
+    "--chromium",
+    "/usr/bin/chromium",
+    "--output",
+    "build/office-web-copy-resume-20261114"
+  ]
+}

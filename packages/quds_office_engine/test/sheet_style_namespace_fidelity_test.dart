@@ -514,7 +514,24 @@ void main() {
     () {
       final workbook = SmlWorkbook();
       workbook.firstSheet.cellA1('A1').value = 'Preserve formatting';
+      // Rotated, indented RTL text is clipped outside a default-width cell.
+      // Author enough column space for the first-save pixel comparison.
+      workbook.firstSheet.columnWidths[0] = 480;
       final package = SheetSerializer().write(workbook);
+      // The imported theme color needs its real theme part to be visible in
+      // an independent renderer. Reuse the independently authored native
+      // fixture's theme, before creating either the expected or edited file.
+      final nativeTheme = OpcPackage.openBytes(
+        File(
+          'test/fixtures/fidelity/sheet-rename-native.xlsx',
+        ).readAsBytesSync(),
+      ).getPart('/xl/theme/theme1.xml')!.readBytes();
+      package
+          .createPart('/xl/theme/theme1.xml', OfficeContentTypes.theme)
+          .writeBytes(nativeTheme);
+      package
+          .relationshipsFor('/xl/workbook.xml')
+          .add(type: RelationshipTypes.theme, target: 'theme/theme1.xml');
       package
           .createPart('/xl/styles.xml', OfficeContentTypes.sheetStyles)
           .writeText(_nativeStyles(prefix: 's', foreignDefault: true));
@@ -546,8 +563,13 @@ void main() {
         File(
           '${evidence.path}/namespace-style-${cycle + 1}.xlsx',
         ).writeAsBytesSync(saved);
+        final savedPackage = OpcPackage.openBytes(saved);
+        expect(
+          savedPackage.getPart('/xl/theme/theme1.xml')!.readBytes(),
+          nativeTheme,
+        );
         final root = XmlDocument.parse(
-          OpcPackage.openBytes(saved).getPart('/xl/styles.xml')!.readText(),
+          savedPackage.getPart('/xl/styles.xml')!.readText(),
         ).root!;
         reopened = SheetDeserializer().readBytes(saved);
         final cell = reopened.firstSheet.cellA1('A1');

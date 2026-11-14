@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "Historical archive integrity, source binding and saved pixel/text replay only",
+  "suite_evidence_commit": "41072ce7fac74eb54cdbc5e3803a45e605533b06",
+  "measured_app_commit": "05905b86ca3a7fc8db3df131620842da3e134061",
+  "integrated_evidence_commit": "2316efe611663e08ebdde8786e9bb3fef280bf40",
+  "suite_supporting_hashes_verified": 11,
+  "external_report_hashes_verified": 5,
+  "external_archive_sha256": "ec6911d1ee449e1927d2c1045dd5ff6a81a2b6db181129ce8d0560ac616908cc",
+  "external_archive_entries_verified": 235,
+  "host_inventory_bindings_verified": 149,
+  "historical_schema_report_bindings": {
+    "host": 149,
+    "namespace": 4
+  },
+  "saved_render_replay": {
+    "render_inputs": 16,
+    "equal_cycle_and_reference_groups": 4
+  },
+  "historical_source_binding": {
+    "snapshot_inputs": 4732,
+    "verified_tracked_inputs": 4727,
+    "untracked_inputs_with_hash_only": [
+      ".dart_tool/package_config.json",
+      ".dart_tool/package_graph.json",
+      "packages/quds_office_engine/.dart_tool/package_config.json",
+      "packages/quds_office_engine/.dart_tool/package_graph.json",
+      "packages/quds_office_engine/pubspec.lock"
+    ],
+    "sqlite_test_view_reconstructed": true
+  },
+  "integrated_report_hashes_verified": 2,
+  "integrated_browser_source_hashes_verified": 3,
+  "limits": [
+    "No Flutter tests, schema validator, LibreOffice conversion or browser were rerun.",
+    "Historical LCOV and full host test log were not preserved in this archive.",
+    "Historical test totals and coverage percentages were not recalculated.",
+    "Results do not certify the current branch or physical-device/live-provider behavior."
+  ]
+}

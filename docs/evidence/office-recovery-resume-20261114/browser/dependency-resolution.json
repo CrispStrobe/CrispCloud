@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "scope": "SDK-only transitive dependency closure of universal_html; not full CrispCloud dependency resolution",
+  "application_lock": "CrispCloud/pubspec.lock",
+  "application_lock_sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+  "entrypoint": "CrispCloud/test/support/office_device_export_web_acceptance.dart",
+  "wrapper": "CrispCloud/lib/services/office_device_export.dart",
+  "adapter": "CrispCloud/lib/services/office_device_export_web.dart",
+  "dependencies": {
+    "async": {
+      "version": "2.13.1",
+      "source": "hosted",
+      "archive_sha256": "e2eb0491ba5ddb6177742d2da23904574082139b07c1e33b8503b9f46f3e1a37",
+      "dependencies": [
+        "collection",
+        "meta"
+      ]
+    },
+    "charcode": {
+      "version": "1.4.0",
+      "source": "hosted",
+      "archive_sha256": "fb0f1107cac15a5ea6ef0a6ef71a807b9e4267c713bb93e00e92d737cc8dbd8a",
+      "dependencies": []
+    },
+    "collection": {
+      "version": "1.19.1",
+      "source": "hosted",
+      "archive_sha256": "2f5709ae4d3d59dd8f7cd309b4e023046b57d8a6c82130785d2b0e5868084e76",
+      "dependencies": []
+    },
+    "csslib": {
+      "version": "1.0.2",
+      "source": "hosted",
+      "archive_sha256": "09bad715f418841f976c77db72d5398dc1253c21fb9c0c7f0b0b985860b2d58e",
+      "dependencies": [
+        "source_span"
+      ]
+    },
+    "html": {
+      "version": "0.15.6",
+      "source": "hosted",
+      "archive_sha256": "6d1264f2dffa1b1101c25a91dff0dc2daee4c18e87cd8538729773c073dbf602",
+      "dependencies": [
+        "csslib",
+        "source_span"
+      ]
+    },
+    "meta": {
+      "version": "1.19.0",
+      "source": "hosted",
+      "archive_sha256": "307249ce4ff29d58a18e97f6345f539382eb9c9c29ecda628900f31de0443dd9",
+      "dependencies": []
+    },
+    "path": {
+      "version": "1.9.1",
+      "source": "hosted",
+      "archive_sha256": "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5",
+      "dependencies": []
+    },
+    "source_span": {
+      "version": "1.10.2",
+      "source": "hosted",
+      "archive_sha256": "56a02f1f4cd1a2d96303c0144c93bd6d909eea6bee6bf5a0e0b685edbd4c47ab",
+      "dependencies": [
+        "collection",
+        "path",
+        "term_glyph"
+      ]
+    },
+    "term_glyph": {
+      "version": "1.2.2",
+      "source": "hosted",
+      "archive_sha256": "7f554798625ea768a7518313e58f83891c7f5024f88e46e7182a4558850a4b8e",
+      "dependencies": []
+    },
+    "typed_data": {
+      "version": "1.4.0",
+      "source": "hosted",
+      "archive_sha256": "f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    "universal_html": {
+      "version": "2.3.0",
+      "source": "hosted",
+      "archive_sha256": "c0bcae5c733c60f26c7dfc88b10b0fd27cbcc45cb7492311cdaa6067e21c9cd4",
+      "dependencies": [
+        "async",
+        "charcode",
+        "collection",
+        "csslib",
+        "html",
+        "meta",
+        "source_span",
+        "typed_data",
+        "universal_io"
+      ]
+    },
+    "universal_io": {
+      "version": "2.3.1",
+      "source": "hosted",
+      "archive_sha256": "f63cbc48103236abf48e345e07a03ce5757ea86285ed313a6a032596ed9301e2",
+      "dependencies": [
+        "collection",
+        "meta",
+        "typed_data"
+      ]
+    }
+  },
+  "status": "resolved_all_packages_match_application_lock",
+  "resolved_package_count": 12,
+  "probe_pubspec_sha256": "1775af9c720b3aab7f590e013888f1bf167c58485c59f279a86edefacc30e593",
+  "resolved_lock_sha256": "d5253265d2564a986cc8687a792060bd7fe888db68531fe1dcf5cea14ce2616e",
+  "package_config_sha256": "76dbdda12539c7dd260fbe06b49e33164364378f305f6611dd817eec1435cb76"
+}
