@@ -1,7 +1,7 @@
 {
   "source_repository": "CrispStrobe/quds_office_suite",
   "source_branch": "codex/office-recovery-20261114",
-  "source_commit": "c37789b596a6f6516d9e2cee78ce57ab33872b07",
+  "source_commit": "3543b29a2daa82279777802df8728d72dc96e9c5",
   "files": {
     "packages/legacy_doc_parser/.gitattributes": "e03c93473e616ad6fcd8697f797b4774076aa6fc468bf0f72860d2c6512eebbf",
     "packages/legacy_doc_parser/.github/workflows/ci.yml": "111910a34c0e41774a325c0bc5c6c3d7517298254a08c79df6dce7d7f70e3605",
@@ -1959,7 +1959,7 @@
     "packages/quds_office_engine/test/fixtures/fidelity/scripts/word-structure-edit.json": "7538e5f2b33f7b81c026cf0866e7f6c8bcc5025a054bb29df2bff37c650e38fd",
     "packages/quds_office_engine/test/fixtures/fidelity/scripts/word-structure-remove.json": "2162f994cec425357cb5a7316c776a7d4adac64322f5ab8fc65e2a781b6e44bb",
     "packages/quds_office_engine/test/fixtures/fidelity/scripts/word.json": "ec1c89156be54a676940840edbc6aa4a95b0ff9ee5cfb8d1241922f532f6b233",
-    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml": "4e716eba0a385256dc2cbc5001f990f9cd16ef79a40663248dcc6cac18f52dcb",
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml": "96bc63cd301baa981947f7fb8fac6f7f48032c17b9d57b40e223966707a3ef6e",
     "packages/quds_office_engine/test/fixtures/fidelity/sheet-normal-font-native.xlsx": "7021b9a131d929d4ae6d4074a69056c997efa5b96f7693d4ba15d6c9a41b737f",
     "packages/quds_office_engine/test/fixtures/fidelity/sheet-qualified-names-native.xlsx": "aeb3b6c808a4d4ad43b61e45e8e04664e9cc3581c65c6d94eac8590030ff0d8f",
     "packages/quds_office_engine/test/fixtures/fidelity/sheet-qualified-names-recalculated-expected.xlsx": "ee946f7410d3aa2cdd26ec88005ebe9fdbb5d5fc2c497ca1e4f4575411f9da64",
