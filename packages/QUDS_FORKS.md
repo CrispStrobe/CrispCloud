@@ -22,6 +22,26 @@ The goal of the fixes is simple: opening a real Word, LibreOffice, Excel or
 PowerPoint file, editing it and saving it must not silently change or lose
 content.
 
+## State (14 November 2026, spreadsheet fidelity)
+
+- Pinned fork revision: `5d57de3bff3fd8946936220b8983addc2ce0c638` (fork
+  `main`), also containing the recovery checkpoint `2d2a7be4`.
+- Four spreadsheet defects found by the Excel fidelity audit are fixed and
+  regression-tested:
+  - cell comments now write a schema-valid `CT_Comments` part (`<authors>`,
+    `<commentList>`, `authorId`), the comments content type, and the worksheet
+    relationship (`2536169e`);
+  - `OfficeIsolateSave.workbook` accepts `recalculate: false`, so a no-edit
+    save preserves native formula caches instead of overwriting them with the
+    engine's approximate evaluator (`f8983b46`);
+  - frozen panes are anchored on `topLeftCell`, not positional `xSplit`, and
+    `state="frozenSplit"` is accepted (`f8983b46`, `574f834`);
+  - authored custom number formats are emitted as `<numFmts>` entries and merge
+    with native collections in schema order (`5d57de3`).
+- Sheet cohort: 361 tests pass in the fork and in this checkout.
+- Audit harness and recipes: <https://github.com/CrispStrobe/excel-steering>
+  (private workbooks are never committed).
+
 ## State (12 November 2026)
 
 - Pinned fork revision: `84b11839126a9577b6688b6acf80edd3cc2601ee` (fork
