@@ -1,0 +1,355 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-11-14T05:02:26Z",
+  "status": "candidate_research_only",
+  "scope": "Pinned license texts and selected capability/build-configuration sources. No dependency integration, transitive build-graph audit, target build, security qualification or complete application-wide license review was performed.",
+  "policy_interpretation": "MIT/Apache/BSD/MPL/similar candidates; no GPL or noncommercial grants selected. LGPL is conservatively excluded unless a separate acceptable dual-license grant is explicitly chosen.",
+  "hash_method": "SHA-256 of exact UTF-8 file bytes returned by the GitHub connector, independently checked against each Git blob SHA-1 (blob <length> NUL <bytes>).",
+  "candidates": [
+    {
+      "id": "lzfse",
+      "repository": "https://github.com/lzfse/lzfse",
+      "observed_ref": "refs/heads/master",
+      "observed_commit": "e634ca58b4821d9f3d560cdc6df5dec02ffc93fd",
+      "commit_observation_methods": [
+        "git ls-remote",
+        "GitHub Git refs API"
+      ],
+      "ref_evidence_url": "https://api.github.com/repos/lzfse/lzfse/git/ref/heads/master",
+      "revision_status": "Observed branch head for research; not a selected release or approval to add dependency.",
+      "license_evidence": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/lzfse/lzfse/blob/e634ca58b4821d9f3d560cdc6df5dec02ffc93fd/LICENSE",
+          "git_blob_sha1": "c81aa178b42d5533bac516af7fc4d1d505da48d3",
+          "sha256": "2a20082c2219edbbdb2e862a0566ba4f762a564ade7c04b09250ae4464bc4b32",
+          "bytes": 1514,
+          "git_blob_verified": true
+        }
+      ],
+      "selected_license_scope": "BSD-3-Clause for the selected Apple LZFSE C library sources; not a DMG/APFS parser or an audit of bindings.",
+      "candidate_role": "Narrow LZFSE/LZVN codec adapter for the existing DMG block reader.",
+      "capabilities": [
+        "Reference LZFSE compression/decompression C implementation",
+        "Caller-supplied output and scratch buffers"
+      ],
+      "build_restrictions": [
+        "Select and inventory only required library sources; do not assume a third-party language binding shares this license.",
+        "Record native/Wasm target artifacts separately; neither has been built or qualified here."
+      ],
+      "integration_limits": [
+        "The public decoder can return dst_size after filling the buffer even when decoded output is longer; returned length alone does not establish complete decoding. Require bounded completion and input-consumption verification in the adapter.",
+        "Retain current DMG source ownership, block resource bounds and read-only writer policy."
+      ],
+      "capability_and_configuration_sources": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/lzfse/lzfse/blob/e634ca58b4821d9f3d560cdc6df5dec02ffc93fd/README.md",
+          "git_blob_sha1": "88f3f9d29af93f27ae249c5b2594915e83567829",
+          "sha256": "37ca7d4fe64b9daad4e8d230eed089a9dad4fa002ff4db16e1c6110ca16ae496",
+          "bytes": 2582,
+          "git_blob_verified": true
+        },
+        {
+          "path": "src/lzfse.h",
+          "url": "https://github.com/lzfse/lzfse/blob/e634ca58b4821d9f3d560cdc6df5dec02ffc93fd/src/lzfse.h",
+          "git_blob_sha1": "e522cbe6740b1948528839321819c6b1dbd84729",
+          "sha256": "a71a29096c022ac4b42af79a8b014538b93cc00bd30295f51ad8b49f3f65a304",
+          "bytes": 5679,
+          "git_blob_verified": true
+        }
+      ]
+    },
+    {
+      "id": "minizip-ng",
+      "repository": "https://github.com/zlib-ng/minizip-ng",
+      "observed_ref": "refs/heads/master",
+      "observed_commit": "7b2387161c542fa9f427352dcdef76097d0d692b",
+      "commit_observation_methods": [
+        "git ls-remote",
+        "GitHub Git refs API"
+      ],
+      "ref_evidence_url": "https://api.github.com/repos/zlib-ng/minizip-ng/git/ref/heads/master",
+      "revision_status": "Observed branch head for research; not a selected release or approval to add dependency.",
+      "license_evidence": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/zlib-ng/minizip-ng/blob/7b2387161c542fa9f427352dcdef76097d0d692b/LICENSE",
+          "git_blob_sha1": "3b6c4e142ebbd9ff28a627c38e509db0852dedff",
+          "sha256": "675181c03fc1302a1c8554c00f7be9bb420c5dbc9dcc2013433cec144413de03",
+          "bytes": 877,
+          "git_blob_verified": true
+        }
+      ],
+      "selected_license_scope": "Zlib license for minizip-ng itself; enabled codec, crypto and character conversion dependencies require their own reviewed grants.",
+      "candidate_role": "ZIP central-directory salvage and optional split-ZIP support; ordinary ZIP read/write mostly duplicates current app capabilities.",
+      "capabilities": [
+        "ZIP create/extract and entry add/remove",
+        "ZIP64, AES, split archives and streaming interface",
+        "Documented recovery of corrupt or missing central directory"
+      ],
+      "build_restrictions": [
+        "Set MZ_FETCH_LIBS=OFF and MZ_FORCE_FETCH_LIBS=OFF; resolve reviewed immutable dependencies explicitly.",
+        "Set MZ_ICONV=OFF unless the exact linked iconv implementation has an accepted license; encoding behavior must reflect the selected profile.",
+        "Select reviewed codec and crypto implementations explicitly; retain required notices and verify linked native artifacts per platform.",
+        "Do not infer all dependency licenses from minizip-ng LICENSE or the README dependency summary."
+      ],
+      "integration_limits": [
+        "Salvage writes a new verified output and reports partial/unrecoverable entries; no guarantee of reconstructing all payloads.",
+        "Native bridge and browser/Wasm support are unqualified."
+      ],
+      "capability_and_configuration_sources": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/zlib-ng/minizip-ng/blob/7b2387161c542fa9f427352dcdef76097d0d692b/README.md",
+          "git_blob_sha1": "8e4e81547a8645685d4348f3c13e25b42489329f",
+          "sha256": "4ae93187b624b08b78bfbd94c0831884662e97f9565ea34ec786c03f3b443d3d",
+          "bytes": 8948,
+          "git_blob_verified": true
+        },
+        {
+          "path": "CMakeLists.txt",
+          "url": "https://github.com/zlib-ng/minizip-ng/blob/7b2387161c542fa9f427352dcdef76097d0d692b/CMakeLists.txt",
+          "git_blob_sha1": "9b4cfcd02597d22d72f5c330e30677f28a355207",
+          "sha256": "3e3d04d0494548e23a654fe93343a659e3f0334200a79ab9bcd7c98338ef0066",
+          "bytes": 38592,
+          "git_blob_verified": true
+        }
+      ]
+    },
+    {
+      "id": "libarchive",
+      "repository": "https://github.com/libarchive/libarchive",
+      "observed_ref": "refs/heads/master",
+      "observed_commit": "4a5944b726d24c8e86589ad09cef958c6f1a6e9c",
+      "commit_observation_methods": [
+        "git ls-remote",
+        "GitHub Git refs API"
+      ],
+      "ref_evidence_url": "https://api.github.com/repos/libarchive/libarchive/git/ref/heads/master",
+      "revision_status": "Observed branch head for research; not a selected release or approval to add dependency.",
+      "license_evidence": [
+        {
+          "path": "COPYING",
+          "url": "https://github.com/libarchive/libarchive/blob/4a5944b726d24c8e86589ad09cef958c6f1a6e9c/COPYING",
+          "git_blob_sha1": "9d0bcf81ff613bf5f36d71983b75e20cd0f69213",
+          "sha256": "30e556b3959e3985d66efefec5eaac51d4995053caa1d3cffe6eb916f146f229",
+          "bytes": 3089,
+          "git_blob_verified": true
+        }
+      ],
+      "selected_license_scope": "COPYING: predominantly BSD-2-Clause; named compress/mtree files also BSD-3-Clause, archive_parse_date.c public domain; choose Apache-2.0 for listed triple-licensed BLAKE2 files. Per-file statements control. Build scripts have separate mixed terms.",
+      "candidate_role": "Optional native uncommon-format backend and independent interoperability oracle; not a replacement for current encrypted 7z/RAR readers.",
+      "capabilities": [
+        "Streaming read/write archive APIs across documented format families",
+        "Read-only support for additional uncommon formats",
+        "Callback-based source/destination integration"
+      ],
+      "build_restrictions": [
+        "Keep ENABLE_LZO=OFF: upstream LZO is GPLv2+ under its open-source grant.",
+        "Keep ENABLE_NETTLE=OFF under the conservative no-LGPL policy.",
+        "Set ENABLE_ICONV=OFF unless an exact acceptable implementation is reviewed.",
+        "Use explicitly pinned acceptable crypto/codec dependencies; prevent invocation of unapproved external compressor fallback programs.",
+        "Inventory selected library files and compiled dependencies; do not treat the mixed-license source distribution or every build script as BSD-only."
+      ],
+      "integration_limits": [
+        "Direct in-place editing/random archive member access are not promised by this streaming library.",
+        "Native encrypted 7z/RAR extraction is not a supported replacement for the current app path.",
+        "No full selected-source, transitive graph or binary audit completed."
+      ],
+      "additional_evidence_urls": [
+        "https://github.com/libarchive/libarchive/wiki/LibarchiveFormats",
+        "https://github.com/libarchive/libarchive/issues/2516",
+        "https://www.oberhumer.com/opensource/lzo/"
+      ],
+      "capability_and_configuration_sources": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/libarchive/libarchive/blob/4a5944b726d24c8e86589ad09cef958c6f1a6e9c/README.md",
+          "git_blob_sha1": "3009e1b54d184df9abe42641892d2ce699c23a77",
+          "sha256": "158527b45cc55cce474530d54e8c7e1a6fd3f57c6cf0967777421c07ea34398d",
+          "bytes": 11351,
+          "git_blob_verified": true
+        },
+        {
+          "path": "CMakeLists.txt",
+          "url": "https://github.com/libarchive/libarchive/blob/4a5944b726d24c8e86589ad09cef958c6f1a6e9c/CMakeLists.txt",
+          "git_blob_sha1": "e6acfb955ec142c0e61bc4520b9ca8967ee43ffd",
+          "sha256": "18e37860cc101be028c75ac4c2e44cab96aaefba794d5bad3e6ab90c0a60d02b",
+          "bytes": 90258,
+          "git_blob_verified": true
+        }
+      ]
+    },
+    {
+      "id": "libzip",
+      "repository": "https://github.com/nih-at/libzip",
+      "observed_ref": "refs/heads/main",
+      "observed_commit": "f15c0b0bb3a7fcff0bf042f67a7c5d69acf42fa3",
+      "commit_observation_methods": [
+        "git ls-remote",
+        "GitHub Git refs API"
+      ],
+      "ref_evidence_url": "https://api.github.com/repos/nih-at/libzip/git/ref/heads/main",
+      "revision_status": "Observed branch head for research; not a selected release or approval to add dependency.",
+      "license_evidence": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/nih-at/libzip/blob/f15c0b0bb3a7fcff0bf042f67a7c5d69acf42fa3/LICENSE",
+          "git_blob_sha1": "785f951ec1650d26022330661d2f009cea991962",
+          "sha256": "84a3444c82344fe8e6e13e5745a3e74dc13abd714d307aa0eb41ae26e51f9ae7",
+          "bytes": 1454,
+          "git_blob_verified": true
+        }
+      ],
+      "selected_license_scope": "BSD-3-Clause for libzip; selected compression and encryption backend licenses remain separate.",
+      "candidate_role": "Optional ZIP transactional editing backend; largely overlaps existing CrispCloud ZIP workflow.",
+      "capabilities": [
+        "Read/create/modify ZIP",
+        "ZIP64, selected compression methods, AES and discarding uncommitted changes",
+        "Documented temporary-file and atomic replacement approach for local file updates"
+      ],
+      "build_restrictions": [
+        "Set ENABLE_GNUTLS=OFF to avoid selecting GnuTLS/Nettle under the conservative no-LGPL profile.",
+        "Choose reviewed OpenSSL 3 or platform crypto and pin every codec implementation.",
+        "Set an explicit LIMIT_LZMA_WINDOW or disable LZMA if the bound cannot fit the application profile; pinned CMake defaults the limit OFF.",
+        "Qualify native target artifacts; local libzip replacement behavior does not establish remote/provider publication guarantees."
+      ],
+      "integration_limits": [
+        "Existing application source identity, reviewed publication, metadata preservation and recovery contracts still apply.",
+        "Browser/Wasm integration has not been built."
+      ],
+      "additional_evidence_urls": [
+        "https://libzip.org/documentation/libzip/",
+        "https://libzip.org/license/"
+      ],
+      "capability_and_configuration_sources": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/nih-at/libzip/blob/f15c0b0bb3a7fcff0bf042f67a7c5d69acf42fa3/README.md",
+          "git_blob_sha1": "5069204806f2cde016ff1f02a7d5b9c24bc8d0e7",
+          "sha256": "c7fa1adeba1078279e2c3d5f0014447da8f453eb18b6275fc2826fdecb4f58de",
+          "bytes": 3566,
+          "git_blob_verified": true
+        },
+        {
+          "path": "CMakeLists.txt",
+          "url": "https://github.com/nih-at/libzip/blob/f15c0b0bb3a7fcff0bf042f67a7c5d69acf42fa3/CMakeLists.txt",
+          "git_blob_sha1": "1edc930baa651b2fbadafcdf1379d6b9078258eb",
+          "sha256": "a848a275eb6a2365be05dcf9857ce215f62c8e0862567518dcd35565ed6ff8b9",
+          "bytes": 19320,
+          "git_blob_verified": true
+        }
+      ]
+    },
+    {
+      "id": "go-containerregistry",
+      "repository": "https://github.com/google/go-containerregistry",
+      "observed_ref": "refs/heads/main",
+      "observed_commit": "bc0638f2d1730249dfef1f0230f3143150dc433a",
+      "commit_observation_methods": [
+        "git ls-remote",
+        "GitHub Git refs API"
+      ],
+      "ref_evidence_url": "https://api.github.com/repos/google/go-containerregistry/git/ref/heads/main",
+      "revision_status": "Observed branch head for research; not a selected release or approval to add dependency.",
+      "license_evidence": [
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/google/go-containerregistry/blob/bc0638f2d1730249dfef1f0230f3143150dc433a/LICENSE",
+          "git_blob_sha1": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+          "bytes": 11357,
+          "git_blob_verified": true
+        }
+      ],
+      "selected_license_scope": "Apache-2.0 for google/go-containerregistry; exact Go module graph and external helpers are not yet license-audited.",
+      "candidate_role": "OCI/Docker image layout, layer and merged-filesystem inspection without running containers.",
+      "capabilities": [
+        "Image, Layer and ImageIndex abstractions backed by registry, tarball and other media",
+        "Functional mutations and export primitives",
+        "Merged export code handles per-file whiteouts and opaque directory markers"
+      ],
+      "build_restrictions": [
+        "Use the pinned revision and an immutable selected Go dependency graph; audit required module license texts and retain Apache notices.",
+        "Select packages deliberately; do not assume CLI, Docker daemon, registry authentication helpers or credential executables are part of a qualified offline library profile.",
+        "Start with an explicit desktop helper or separately reviewed Dart port; browser/Wasm interoperability is unqualified."
+      ],
+      "integration_limits": [
+        "Container inspection must retain layer provenance and distinguish raw layers from the merged filesystem.",
+        "Do not execute image entrypoints or package scripts as part of inspection."
+      ],
+      "capability_and_configuration_sources": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/google/go-containerregistry/blob/bc0638f2d1730249dfef1f0230f3143150dc433a/README.md",
+          "git_blob_sha1": "de70fb7c57349f3dfef0a9297304e4af615a7c15",
+          "sha256": "2e867ce27735e837308e777cfd70180236977dfba68f9199d6fb604db593bfeb",
+          "bytes": 6377,
+          "git_blob_verified": true
+        },
+        {
+          "path": "pkg/v1/mutate/mutate.go",
+          "url": "https://github.com/google/go-containerregistry/blob/bc0638f2d1730249dfef1f0230f3143150dc433a/pkg/v1/mutate/mutate.go",
+          "git_blob_sha1": "00ad8c0d49d165bb922e8f664b6236a4dd188dca",
+          "sha256": "6e456cd8727f544e37b802557c5b355b070ab791249104f4180e004f3dde6739",
+          "bytes": 19608,
+          "git_blob_verified": true
+        },
+        {
+          "path": "go.mod",
+          "url": "https://github.com/google/go-containerregistry/blob/bc0638f2d1730249dfef1f0230f3143150dc433a/go.mod",
+          "git_blob_sha1": "48fdbce204116b9b14f9a63495a1dc6b16975b50",
+          "sha256": "8f077ffa17009b978d424ac44b91f1dd9d8406001dbab94b37deab77c68fc725",
+          "bytes": 2092,
+          "git_blob_verified": true
+        }
+      ]
+    },
+    {
+      "id": "liblzma",
+      "repository": "https://github.com/tukaani-project/xz",
+      "observed_ref": "refs/heads/master",
+      "observed_commit": "f54febc540607b3bdee0a0e6793355df2a7e9f61",
+      "commit_observation_methods": [
+        "git ls-remote",
+        "GitHub Git refs API"
+      ],
+      "ref_evidence_url": "https://api.github.com/repos/tukaani-project/xz/git/ref/heads/master",
+      "revision_status": "Observed branch head for research; not a selected release or approval to add dependency.",
+      "license_evidence": [
+        {
+          "path": "COPYING",
+          "url": "https://github.com/tukaani-project/xz/blob/f54febc540607b3bdee0a0e6793355df2a7e9f61/COPYING",
+          "git_blob_sha1": "ef3371389d7d45db6593a146fd9e027347f3122c",
+          "sha256": "616a3ad264ce29b8f1cb97e53037b139d406899ca8d1f799651e17bfa09830b8",
+          "bytes": 3119,
+          "git_blob_verified": true
+        },
+        {
+          "path": "COPYING.0BSD",
+          "url": "https://github.com/tukaani-project/xz/blob/f54febc540607b3bdee0a0e6793355df2a7e9f61/COPYING.0BSD",
+          "git_blob_sha1": "4322122aecf1aecff317bd50334ba206dcb9ac41",
+          "sha256": "0b01625d853911cd0e2e088dcfb743261034a091bb379246cb25a14cc4c74bf1",
+          "bytes": 607,
+          "git_blob_verified": true
+        }
+      ],
+      "selected_license_scope": "0BSD for liblzma according to pinned XZ COPYING and COPYING.0BSD; not the whole XZ Utils distribution.",
+      "candidate_role": "Optional codec dependency/acceleration only; XZ and LZMA already exist in CrispCloud.",
+      "capabilities": [
+        "XZ/LZMA codec library with separately documented permissive scope"
+      ],
+      "build_restrictions": [
+        "Select liblzma sources and inventory platform build inputs explicitly.",
+        "Exclude GPL helper scripts from the shipped runtime; command-line builds may include LGPL getopt_long on some systems.",
+        "Do not describe all XZ source/build files as 0BSD; COPYING identifies mixed-license tooling."
+      ],
+      "integration_limits": [
+        "No new archive format claimed.",
+        "Exact configured source graph and compiled artifacts have not been audited."
+      ],
+      "capability_and_configuration_sources": []
+    }
+  ]
+}

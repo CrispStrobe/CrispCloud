@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-11-14T05:03:03.223986+00:00",
+  "purpose": "Candidate evidence for CrispCloud archive/container/filesystem capability research; no app dependencies added.",
+  "status": "Upstream observations, not approved dependency lockfile or complete transitive-license/security/build audit.",
+  "policy": "MIT/Apache/BSD/MPL or similar; no GPL or noncommercial. LGPL excluded conservatively for these recommendations.",
+  "hash_method": "SHA-256 over exact downloaded license bytes from commit-pinned raw GitHub URLs. git_blob_sha1 uses standard Git blob framing.",
+  "entries": [
+    {
+      "name": "rclone",
+      "repository": "rclone/rclone",
+      "ref": "refs/heads/master",
+      "license": "MIT",
+      "scope": "Optional native Go CLI / authenticated RC helper for additional providers and checked copy; retain the existing CrispCloud queue and durable journal.",
+      "caveats": [
+        "No universal persistent partial-file resume or rsync binary-delta behavior.",
+        "Checksum comparison can fall back to size if no common hash; downloaded comparison is a separate option.",
+        "RC job IDs/status are process-scoped; dependency/build-feature audit still required."
+      ],
+      "behavior_sources": [
+        "https://rclone.org/rc/",
+        "https://rclone.org/faq/",
+        "https://rclone.org/commands/rclone_check/"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:37.912831+00:00",
+      "upstream_url": "https://github.com/rclone/rclone",
+      "observed_commit": "b0ef5f6a6eca641a6bfb55bc05ef1595f4105d07",
+      "observed_default_head": "b0ef5f6a6eca641a6bfb55bc05ef1595f4105d07",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "COPYING",
+          "source_url": "https://raw.githubusercontent.com/rclone/rclone/b0ef5f6a6eca641a6bfb55bc05ef1595f4105d07/COPYING",
+          "sha256": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04",
+          "git_blob_sha1": "8c27c67fd0a12a1e18db983f19450abed435e689",
+          "bytes": 1095
+        }
+      ]
+    },
+    {
+      "name": "BLAKE3",
+      "repository": "BLAKE3-team/BLAKE3",
+      "ref": "refs/heads/master",
+      "license": "Apache-2.0 OR Apache-2.0 WITH LLVM-exception OR CC0-1.0",
+      "selected_license": "Apache-2.0",
+      "scope": "Optional strong block/extent hashes and comparison acceleration using the official C/Rust implementation.",
+      "caveats": [
+        "Preserve SHA-256 journal compatibility unless an explicit versioned migration is implemented.",
+        "Wasm integration and performance need separate qualification.",
+        "A matching digest proves bytes match the expected digest, not publisher authenticity."
+      ],
+      "behavior_sources": [
+        "https://github.com/BLAKE3-team/BLAKE3"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:37.913104+00:00",
+      "upstream_url": "https://github.com/BLAKE3-team/BLAKE3",
+      "observed_commit": "657284b1fa4c4378aa7422b4450dcb5c2c9052fc",
+      "observed_default_head": "657284b1fa4c4378aa7422b4450dcb5c2c9052fc",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE_A2",
+          "source_url": "https://raw.githubusercontent.com/BLAKE3-team/BLAKE3/657284b1fa4c4378aa7422b4450dcb5c2c9052fc/LICENSE_A2",
+          "sha256": "00fcc7a934ddbc9ece2a7cc063ac788e284b703b1d705ccbba72d462aa97921e",
+          "git_blob_sha1": "d512ca94d0ca6bf6a7272b16c83f51b7045902ca",
+          "bytes": 11361
+        }
+      ]
+    },
+    {
+      "name": "xxHash library",
+      "repository": "Cyan4973/xxHash",
+      "ref": "refs/heads/dev",
+      "license": "BSD-2-Clause",
+      "scope": "Optional fast noncryptographic fingerprints used only as a prefilter.",
+      "caveats": [
+        "The library license does not cover the CLI: cli/COPYING is GPLv2 text.",
+        "Do not use noncryptographic hashes as the sole evidence for safe move deletion, recovery, or authenticated data."
+      ],
+      "behavior_sources": [
+        "https://github.com/Cyan4973/xxHash"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:37.913272+00:00",
+      "upstream_url": "https://github.com/Cyan4973/xxHash",
+      "observed_commit": "2ec67caeb18ec15ae60c0853174331089acddfc0",
+      "observed_default_head": "2ec67caeb18ec15ae60c0853174331089acddfc0",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE",
+          "source_url": "https://raw.githubusercontent.com/Cyan4973/xxHash/2ec67caeb18ec15ae60c0853174331089acddfc0/LICENSE",
+          "sha256": "6ffedbc0f7878612d2b23589f1ff2ab15633e1df7963a5d9fc750ec5500c7e7a",
+          "git_blob_sha1": "e4c5da7234eca7baad9a46f0b144e49ccad2e500",
+          "bytes": 1389
+        },
+        {
+          "path": "cli/COPYING",
+          "source_url": "https://raw.githubusercontent.com/Cyan4973/xxHash/2ec67caeb18ec15ae60c0853174331089acddfc0/cli/COPYING",
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+          "git_blob_sha1": "d159169d1050894d3ea3b98e1c965c4058208fe1",
+          "bytes": 18092,
+          "component": "xxhsum CLI",
+          "decision": "excluded",
+          "license": "GPL-2.0-family"
+        }
+      ]
+    },
+    {
+      "name": "binrw",
+      "repository": "jam1garner/binrw",
+      "ref": "refs/heads/master",
+      "license": "MIT",
+      "scope": "Rust declarative binary readers/writers for deeper format inspectors behind a narrow native/Wasm bridge.",
+      "caveats": [
+        "A binary writer is not a proven format repair implementation.",
+        "Maintain explicit bounds and validate the selected format and dependency feature set."
+      ],
+      "behavior_sources": [
+        "https://github.com/jam1garner/binrw"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:37.913674+00:00",
+      "upstream_url": "https://github.com/jam1garner/binrw",
+      "observed_commit": "585d48134e7b71be74d8b81b54cdbd07f6f1a1c4",
+      "observed_default_head": "585d48134e7b71be74d8b81b54cdbd07f6f1a1c4",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE",
+          "source_url": "https://raw.githubusercontent.com/jam1garner/binrw/585d48134e7b71be74d8b81b54cdbd07f6f1a1c4/LICENSE",
+          "sha256": "08159509fe99d146416fe110053a7360ddfccbba5f0c8f955bdbda025d4d2a20",
+          "git_blob_sha1": "b091711f581d4528ebbd92dc60a6e5624a9ef0b9",
+          "bytes": 1085
+        }
+      ]
+    },
+    {
+      "name": "file / libmagic",
+      "repository": "file/file",
+      "ref": "refs/heads/master",
+      "license": "BSD-2-Clause-style; exact upstream COPYING terms preserved",
+      "scope": "Optional content-based file type identification, especially misnamed files and recovered fragments.",
+      "caveats": [
+        "Type recognition is not format validation, carving, or filesystem parsing.",
+        "Audit individual magic database notices and optional codecs/helpers and build dependencies.",
+        "Bound work on untrusted inputs; avoid accidental external decompressor invocation."
+      ],
+      "behavior_sources": [
+        "https://github.com/file/file"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:47.949332+00:00",
+      "upstream_url": "https://github.com/file/file",
+      "observed_commit": "8f2696b23a912c7ad1b04d2371ba4a06245b6ca4",
+      "observed_default_head": "8f2696b23a912c7ad1b04d2371ba4a06245b6ca4",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "COPYING",
+          "source_url": "https://raw.githubusercontent.com/file/file/8f2696b23a912c7ad1b04d2371ba4a06245b6ca4/COPYING",
+          "sha256": "0bfa856a9930bddadbef95d1be1cf4e163c0be618e76ea3275caaf255283e274",
+          "git_blob_sha1": "16410a17f2f5b533f7f6455c15b17b0a0e724363",
+          "bytes": 1649
+        }
+      ]
+    },
+    {
+      "name": "Xdelta 3",
+      "repository": "jmacd/xdelta",
+      "ref": "refs/heads/main",
+      "license": "Apache-2.0 for maintained Xdelta 3 branches",
+      "scope": "Optional VCDIFF/RFC3284 patch export/application for large binary/image changes.",
+      "caveats": [
+        "Select the Apache-relicensed Xdelta 3 main/release*_apl source; exclude xdelta-gpl and historical Xdelta 1.",
+        "Verify base and final digests, apply to a private staged output, validate exact length before publication.",
+        "Audit optional liblzma/BLAKE3 and build features; no blanket claim for prebuilt packages."
+      ],
+      "behavior_sources": [
+        "https://github.com/jmacd/xdelta",
+        "https://jmacd.github.io/xdelta/"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:48.216702+00:00",
+      "upstream_url": "https://github.com/jmacd/xdelta",
+      "observed_commit": "5d936d2c30f78729375c3ae070248a05bef27bd2",
+      "observed_default_head": "5d936d2c30f78729375c3ae070248a05bef27bd2",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "xdelta3/LICENSE",
+          "source_url": "https://raw.githubusercontent.com/jmacd/xdelta/5d936d2c30f78729375c3ae070248a05bef27bd2/xdelta3/LICENSE",
+          "sha256": "6cf63d87586c7c25c3ab8e62eef5c75bbaa982b0a6f9c00c59e2720255aac9ec",
+          "git_blob_sha1": "7a774156a6820befeca5067631b3a50b86481495",
+          "bytes": 9156
+        }
+      ],
+      "license_fetch_errors": [
+        {
+          "path": "xdelta3/COPYING",
+          "error": "HTTP Error 404: Not Found"
+        }
+      ]
+    },
+    {
+      "name": "openrsync",
+      "repository": "kristapsdz/openrsync",
+      "ref": "refs/heads/master",
+      "license": "ISC",
+      "scope": "Optional Unix/SSH rsync-protocol transport where that capability is specifically wanted.",
+      "caveats": [
+        "Protocol 27 compatibility and only a subset of rsync command-line options.",
+        "Official target is OpenBSD, portable to other Unix; no qualified Windows/mobile/web adapter.",
+        "Do not substitute it for the current staged publication and journal contracts."
+      ],
+      "behavior_sources": [
+        "https://github.com/kristapsdz/openrsync"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:48.235290+00:00",
+      "upstream_url": "https://github.com/kristapsdz/openrsync",
+      "observed_commit": "8235c68f11b4fad5e24849a01d04ea153c29ee28",
+      "observed_default_head": "8235c68f11b4fad5e24849a01d04ea153c29ee28",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE.md",
+          "source_url": "https://raw.githubusercontent.com/kristapsdz/openrsync/8235c68f11b4fad5e24849a01d04ea153c29ee28/LICENSE.md",
+          "sha256": "5e113c7cdf0ae649ea0832f60363c171fef0bcee793dcc66462e6d0ae5852d0e",
+          "git_blob_sha1": "989032c9548523b35d99c215adc1a101bc4542bd",
+          "bytes": 755
+        }
+      ]
+    },
+    {
+      "name": "restic",
+      "repository": "restic/restic",
+      "ref": "refs/heads/master",
+      "license": "BSD-2-Clause",
+      "scope": "Optional backup/restore engine for versioned deduplicated repositories.",
+      "caveats": [
+        "Backup repository/retention/restore semantics differ from ordinary copy/move.",
+        "Prefer a versioned native helper protocol; exact dependencies and binaries still require review."
+      ],
+      "behavior_sources": [
+        "https://github.com/restic/restic"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:50.083446+00:00",
+      "upstream_url": "https://github.com/restic/restic",
+      "observed_commit": "c734245fd3ae9bcac8ab3aaafb4482d4b5d0ae92",
+      "observed_default_head": "c734245fd3ae9bcac8ab3aaafb4482d4b5d0ae92",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE",
+          "source_url": "https://raw.githubusercontent.com/restic/restic/c734245fd3ae9bcac8ab3aaafb4482d4b5d0ae92/LICENSE",
+          "sha256": "6f08a01a9fab5b24e139a09f15cc24a73087c7bc09e3bacf099fdf2d767bf897",
+          "git_blob_sha1": "29b2ee55a92ff2c5516d7b916224c85fa7e9139a",
+          "bytes": 1345
+        }
+      ]
+    },
+    {
+      "name": "Kopia",
+      "repository": "kopia/kopia",
+      "ref": "refs/heads/master",
+      "license": "Apache-2.0",
+      "scope": "Alternative optional backup/restore engine with snapshots, deduplication, encryption and compression.",
+      "caveats": [
+        "Choose between backup engines based on product needs; do not add both by default.",
+        "Native Go application, not a drop-in Flutter file transfer library.",
+        "Audit exact dependencies/build rather than assuming its top-level license covers everything."
+      ],
+      "behavior_sources": [
+        "https://github.com/kopia/kopia"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:58.247334+00:00",
+      "upstream_url": "https://github.com/kopia/kopia",
+      "observed_commit": "fce0f2713e6dd123c4781696f1f134d779196410",
+      "observed_default_head": "fce0f2713e6dd123c4781696f1f134d779196410",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE",
+          "source_url": "https://raw.githubusercontent.com/kopia/kopia/fce0f2713e6dd123c4781696f1f134d779196410/LICENSE",
+          "sha256": "cd83acc95b12c0ee2a9271950b7f23be45294483b9e12869ef0d31fc9e8248f8",
+          "git_blob_sha1": "c9baf85cb43261dceb4b0c45fd258cdaf7a58360",
+          "bytes": 10763
+        }
+      ]
+    },
+    {
+      "name": "goblin",
+      "repository": "m4b/goblin",
+      "ref": "refs/heads/master",
+      "license": "MIT",
+      "scope": "Optional deeper ELF, PE/COFF and Mach-O inspection beyond the current bounded header parser.",
+      "caveats": [
+        "Does not provide disassembly or general disk filesystem support.",
+        "Keep bounded allocation and exact architecture/format feature profiles."
+      ],
+      "behavior_sources": [
+        "https://github.com/m4b/goblin"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:58.252404+00:00",
+      "upstream_url": "https://github.com/m4b/goblin",
+      "observed_commit": "cc6beec889d74680d8f77626f508cb9d949dfc23",
+      "observed_default_head": "cc6beec889d74680d8f77626f508cb9d949dfc23",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSE",
+          "source_url": "https://raw.githubusercontent.com/m4b/goblin/cc6beec889d74680d8f77626f508cb9d949dfc23/LICENSE",
+          "sha256": "655e3ee7a4c27430774962e62a6d37d7348e5f2f292010ad674ce1bebefd24bc",
+          "git_blob_sha1": "020448d30918c4fd0c80bc78e47e761e5bf6d369",
+          "bytes": 1075
+        }
+      ]
+    },
+    {
+      "name": "Capstone",
+      "repository": "capstone-engine/capstone",
+      "ref": "refs/heads/next",
+      "license": "BSD-3-Clause core plus version-specific bundled notices",
+      "scope": "Optional disassembly view paired with selected hex bytes.",
+      "caveats": [
+        "Lower priority than disk/container structural inspection for CrispCloud.",
+        "The selected next branch is an observation pin, not a recommended release.",
+        "Review all bundled LLVM/other notices for the exact selected release and build."
+      ],
+      "behavior_sources": [
+        "https://www.capstone-engine.org/features",
+        "https://github.com/capstone-engine/capstone"
+      ],
+      "observed_at_utc": "2026-11-14T05:02:58.285700+00:00",
+      "upstream_url": "https://github.com/capstone-engine/capstone",
+      "observed_commit": "823242a51299ce5a8bac79c0914278419fe4f7a6",
+      "observed_default_head": "823242a51299ce5a8bac79c0914278419fe4f7a6",
+      "commit_observation_method": "git ls-remote",
+      "license_sources": [
+        {
+          "path": "LICENSES/LICENSE.TXT",
+          "source_url": "https://raw.githubusercontent.com/capstone-engine/capstone/823242a51299ce5a8bac79c0914278419fe4f7a6/LICENSES/LICENSE.TXT",
+          "sha256": "65e9ed46a59976eda8f5bd1ea79a680dea38dd299c760bc9a8d87a764ef5029b",
+          "git_blob_sha1": "0dabdc749eee9faeaa358ecd831064463cd756bc",
+          "bytes": 1687
+        }
+      ]
+    }
+  ]
+}

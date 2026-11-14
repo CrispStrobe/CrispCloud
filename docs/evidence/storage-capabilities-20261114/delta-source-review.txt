@@ -1,0 +1,113 @@
+CrispCloud delta transfer source-review investigation notes
+
+Status: source review only. Untested hypotheses and source-level observations.
+No runtime reproduction, live-provider test, device test, or production incident
+has been established by this review. No app source was changed by this agent.
+Ordinary FileOperationService / JournaledTransferRunner copy and move paths
+already have separate staging, verification, journal and recovery guarantees.
+The findings below must not be described as proving those ordinary paths broken.
+
+Baseline commit: 4d65b86dab36ca8f5dcd192c776de369aa5a4932
+Observed at UTC: 2026-11-14T05:03:18.547796+00:00
+
+Reachability boundary
+---------------------
+A repository-wide rg for deltaUpload(, deltaDownload( and applyDelta( found
+adapter definitions, calls inside adapters, and test invocations. It did not
+identify ordinary application production callers invoking those adapter delta
+entry points. This is search evidence, not proof of unreachability. Adapter
+boolean flags default false. The settings Riverpod notifier defaults true, but
+its existence does not prove the toggle is connected to adapter execution.
+Confirm caller wiring before reporting user-visible exposure.
+
+Investigation items
+-------------------
+1. Cached S3 block maps are not bound to observed object revision.
+   In S3ClientAdapter.deltaDownload, the comment says the cached map is validated
+   against ETag, but the implementation only clears it when currentEtag == null.
+   There is no equality comparison with an ETag stored in the map. BlockMap has
+   filePath, totalSize, blockSize, blockCount, signatures, createdAt; it has no
+   account/bucket/object-version/ETag binding. Hypothesis: a non-null new ETag can
+   leave an obsolete map usable, so changed source data may be skipped or mixed.
+   Reproduction needed: same-size object changes; same path on another account;
+   stale map with non-null changed ETag; object mutation between range requests.
+
+2. Download delta application modifies the caller's localPath directly.
+   DeltaSyncService.applyDelta opens localPath in FileMode.append and attempts
+   setPosition followed by writeFrom. It has no private stage/publication phase,
+   no expected block digest field in BlockOperation, and no check that returned
+   range data length matches op.size. It does not compare bytes to a trusted
+   source digest before accepting them. The exact platform behavior of append
+   plus setPosition has not been reproduced here and is a separate question.
+   Reproduction needed: short/long range response, ignored Range with HTTP 200,
+   wrong bytes, exception after one applied block, cancellation/restart, and
+   append-mode behavior on each target runtime. Preserve original destination
+   throughout failed candidate creation and verify full output before install.
+
+3. Shrink-only updates can be classified as no changed blocks.
+   compareBlockMaps iterates only the source/local signatures and deliberately
+   ignores destination/remote-only trailing blocks. It does not incorporate a
+   totalSize mismatch as a mandatory final-size operation. Adapter early returns
+   when changedBlocks is empty can therefore bypass a necessary truncation.
+   applyDelta's download path also does not truncate to plan.totalSize.
+   Reproduction needed: shrink a file exactly to a prior block boundary with
+   every retained block unchanged; shrink to zero; shrink within a last block;
+   verify actual resulting bytes and final length on local and remote outputs.
+
+4. pCloud delta upload mutates the existing remote file directly.
+   The adapter resolves a remote ID, loads a cached map or reads a new map,
+   compares it, opens the existing remote descriptor for writing, and calls
+   filePwrite for changed blocks. It closes the descriptor and saves the new
+   cached map. No staged output, conditional publish, complete final digest,
+   explicit truncation, or durable per-block reconciliation is visible in this
+   entry point. This is a contract gap relative to ordinary journaled transfer,
+   not a reproduced provider bug. Confirm pCloud API capabilities and caller
+   reachability before selecting a repair approach.
+
+5. Source short reads and map shape need validation.
+   computeBlockMap and upload loops allocate requested-size Uint8List buffers
+   and call readInto without checking its returned byte count. A changed or
+   short source can leave zero-filled tails inside the buffer being hashed or
+   sent. computeBlockMap validates blockSize only with assert. JSON BlockMap
+   deserialization and compareBlockMaps need review for contradictory block
+   sizes, offsets, counts and total lengths before any external map is trusted.
+   Reproduction needed: truncation during map construction, malformed map,
+   out-of-range indices, mixed block sizes, and invalid parameters in release.
+
+Suggested scope for a future fix
+-------------------------------
+- Confirm whether adapter entry points are connected to normal user workflows.
+- Introduce versioned identity-bound block maps and strict map validation.
+- Validate exact range lengths and strong block digests, and pin all ranges to
+  one source version; reject unsupported conditional-read semantics honestly.
+- Represent final length changes even when zero content blocks differ.
+- Build a private candidate, preferably seeded with an existing verified clone,
+  apply patches there, verify the final length/content, then use the existing
+  staged publication and durable journal. Never delete move sources early.
+- Bring cancellation, source revalidation and recovery under existing queue
+  ownership/path reservations instead of adding an independent destructive
+  retry loop.
+- Preserve default ordinary transfer behavior while qualification is pending.
+
+Source locations in the pinned baseline
+--------------------------------------
+BlockMap model: lib/services/delta_sync_service.dart:104
+computeBlockMap: lib/services/delta_sync_service.dart:309
+compareBlockMaps: lib/services/delta_sync_service.dart:377
+applyDelta: lib/services/delta_sync_service.dart:464
+direct local write: lib/services/delta_sync_service.dart:522
+S3 cache ETag check: lib/services/s3_client_adapter.dart:2073
+S3 delta download: lib/services/s3_client_adapter.dart:2044
+S3 delta upload: lib/services/s3_client_adapter.dart:2119
+pCloud delta upload: lib/services/pcloud_client_adapter.dart:1058
+Nextcloud delta download: lib/services/nextcloud_client_adapter.dart:1284
+settings default: lib/providers/delta_sync_provider.dart:86
+
+SHA-256 of exact source blobs inspected for this note
+--------------------------------------------------
+f3a7d11990d686848daf1a0d575e393e9cbee57d9ab62d6ec7f0da7da5acf43b  lib/services/delta_sync_service.dart
+0956406aa960c7256dac5b0e61e32f2d56813a8ac9fab4c0ea39b5d16a8d8dc8  lib/services/s3_client_adapter.dart
+76850ebd231cec369380cead092fd71cdf76b257dbbd1e144605720b6ea301e4  lib/services/pcloud_client_adapter.dart
+4a09fbd2a5df8f3f00035364bac31c7752d362192b1bd432dcb2e5cc6283b070  lib/services/nextcloud_client_adapter.dart
+bacf5982f20f6bdfc72ae4d83586d3ef4db90f77d2dc74b44b68996c4e0f1182  lib/providers/delta_sync_provider.dart
+37d5d3c317f75fb724ed5bb00453aac6da01a77ef856e7da464c0f3dad61c86d  docs/adr/007-block-level-delta-sync.md
