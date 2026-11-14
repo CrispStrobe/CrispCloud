@@ -63,8 +63,9 @@ class ArchiveNtfsTraversalBudget {
   int get remainingExtents => maxExtents - _extents;
 
   void _clustersFor(int count) {
-    if (count > remainingClusters)
+    if (count > remainingClusters) {
       _limit('Shared allocated-cluster traversal.');
+    }
     _clusters += count;
   }
 
@@ -592,8 +593,9 @@ class _NtfsReader {
     }
     _recordBytes = _recordSize(boot[64]);
     _indexBytes = _recordSize(boot[68]);
-    final backup = await _read(sectors * _sectorBytes, 512);
-    if (!_sameBytes(boot, backup)) {
+    final primary = _sectorBytes == 512 ? boot : await _read(0, _sectorBytes);
+    final backup = await _read(sectors * _sectorBytes, _sectorBytes);
+    if (!_sameBytes(primary, backup)) {
       _bad('The primary and backup boot sectors disagree.');
     }
   }
@@ -813,8 +815,28 @@ class _NtfsReader {
     if (!terminated) _bad('Missing attribute terminator.');
     if (number < 12 || number >= 16) {
       if (modified == null || links == 0 || names.isEmpty) {
-        _bad('FILE record $number lacks standard information, a name, or links.');
+        _bad(
+          'FILE record $number lacks standard information, a name, or links.',
+        );
       }
+    } else if (flags != 1 ||
+        links != 0 ||
+        names.isNotEmpty ||
+        attributes.any(
+          (a) =>
+              a.type != 0x10 &&
+              a.type != 0x50 &&
+              !(a.type == 0x80 && a.name.isEmpty && a.value.size == 0),
+        )) {
+      _unsupported('An unexpected layout in a reserved FILE record.');
+    }
+    if (flags & 2 == 0 &&
+        attributes.any(
+          (a) =>
+              a.name == r'$I30' &&
+              (a.type == 0x90 || a.type == 0xa0 || a.type == 0xb0),
+        )) {
+      _bad('A non-directory record contains a filename directory index.');
     }
     return _Record(
       number,
@@ -924,7 +946,7 @@ class _NtfsReader {
         }
         previousLcn = lcn;
         physical += count;
-        _claim(lcn, count, '$recordNumber:$type:$name');
+        _claim(lcn, count, '$recordNumber:$type');
       }
       cursor += offsetBytes;
       _extent();
@@ -1081,6 +1103,8 @@ class _NtfsReader {
   }
 
   Stream<Uint8List> _stream(_Data data, int chunkSize) async* {
+    _cancel();
+    if (data.size > maxMemberBytes) _limit('Member streaming allowance.');
     final chunk = chunkSize > _readBytes ? _readBytes : chunkSize;
     for (var at = 0; at < data.size;) {
       _cancel();
@@ -1114,6 +1138,12 @@ class _NtfsReader {
   }
 
   Future<void> _systemMappings() async {
+    for (var number = 0; number < 12; number++) {
+      final record = _records[number];
+      if (record == null || record.directory != (number == 5 || number == 11)) {
+        _bad('A required system record has the wrong directory kind.');
+      }
+    }
     final boot = _required(_records[7]!, 0x80);
     _plainMetadata(boot, 'boot stream');
     if (boot.resident != null ||
@@ -1186,11 +1216,12 @@ class _NtfsReader {
     if (allocation != null) {
       _plainMetadata(allocation, 'directory index allocation');
       _plainMetadata(bitmap!, 'directory index bitmap');
-      if (allocation.resident != null ||
-          allocation.size % _indexBytes != 0 ||
-          allocation.size > maxDirectoryBytes ||
-          bitmap.size > maxDirectoryBytes) {
+      if (allocation.resident != null || allocation.size % _indexBytes != 0) {
         _bad('Invalid directory allocation size or storage form.');
+      }
+      if (allocation.size > maxDirectoryBytes ||
+          bitmap.size > maxDirectoryBytes) {
+        _limit('Directory allocation or bitmap bytes.');
       }
       blocks = allocation.size ~/ _indexBytes;
       if (bitmap.size < (blocks + 7) ~/ 8) {
@@ -1330,6 +1361,18 @@ class _NtfsReader {
       _bad('A directory is repeated or forms a cycle.');
     }
     final entries = await _index(directory);
+    if (directory.number == 5) {
+      for (final required in _systemNames.entries) {
+        if (!entries.any(
+          (entry) =>
+              entry.reference.number == required.key &&
+              entry.name.name == required.value &&
+              entry.name.namespace != 2,
+        )) {
+          _bad('The root directory omits a required system metadata link.');
+        }
+      }
+    }
     final primaryNames = <(int, String)>{};
     for (final entry in entries) {
       if (entry.name.namespace != 2) {
@@ -1399,7 +1442,7 @@ class _NtfsReader {
   }
 
   void _retain(String value) {
-    final bytes = utf8.encode(value).length;
+    final bytes = value.length * 2;
     if (bytes > maxRetainedPathBytes - _pathBytes) {
       _limit('Retained paths and stream notices.');
     }
@@ -1408,12 +1451,21 @@ class _NtfsReader {
 
   void _addMember(_Record record, String path) {
     if (_members.length >= maxEntries) _limit('Member entries.');
+    if (path.length > 4096) _limit('Individual member path length.');
     if (!_paths.add(path)) _bad('A duplicate archive path.');
     _retain(path);
-    final data = record.directory ? null : _required(record, 0x80);
-    if (data != null && data.size > maxMemberBytes) {
-      _limit('A regular file exceeds the caller member-size allowance.');
+    for (final attribute in record.attributes) {
+      if (attribute.type == 0x90 ||
+          attribute.type == 0xa0 ||
+          attribute.type == 0xb0) {
+        if (!record.directory || attribute.name != r'$I30') {
+          _unsupported(
+            'Only the ordinary directory filename index is exposed.',
+          );
+        }
+      }
     }
+    final data = record.directory ? null : _required(record, 0x80);
     final index = _members.length;
     _members.add(
       ViewerArchiveMember(

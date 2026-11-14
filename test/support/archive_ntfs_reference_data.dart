@@ -9180,8 +9180,9 @@ class NtfsReferenceSource implements koni.ByteSource {
       final end = offset + count < at + data.length
           ? offset + count
           : at + data.length;
-      if (end > start)
+      if (end > start) {
         out.setRange(start - offset, end - offset, data, start - at);
+      }
     }
     return out;
   }

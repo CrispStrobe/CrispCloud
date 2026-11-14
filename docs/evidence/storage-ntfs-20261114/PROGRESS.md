@@ -64,6 +64,8 @@ No final NTFS qualification has run at this checkpoint.
 - `e237cdc5`: preserved ext qualification, current remote reference ancestry
   and the separate hosted-CI state before new implementation work.
 - `6593fe0f`: saved the fail-closed public contract and initial shared routing.
+- `5bb28763`: saved the first functional reader, independently generated corpus,
+  shared app and partition integration, and native viewer coverage.
 - Draft review: [PR #103](https://github.com/CrispStrobe/CrispCloud/pull/103),
   stacked on the preserved ext branch/PR #102.
 - The next checkpoint adds the public NTFS reader contract and shared
@@ -103,3 +105,27 @@ and renamed `.zip` inputs, Hex/Archive transitions, cancellation, source
 preservation and one access release. This snapshot is an intermediate result,
 not a qualification claim for a later commit. Focused app and core adversarial
 tests are still being completed.
+
+## Source candidate and preliminary checks
+
+The source candidate adds synthetic malformed/boundary coverage, reference
+payload comparisons and portable acceptance. Required system-record kinds and
+canonical metadata links now prevent omitted system directories from concealing
+their referenced allocations. Directory/path limits, complete logical boot
+sectors, true NTFS 3.0 FILE header layout and failed shared-budget attempts have
+explicit regression coverage. The documented profile distinguishes structural
+index validation from Windows collation and security-descriptor interpretation.
+
+Before the final source freeze, the separate focused app run passed 50 tests;
+the standalone viewer run passed six. Portable smoke acceptance passed 18 groups
+and 2,037 checks on each of Dart VM and actual compiled JavaScript with matching
+output. These runs used recorded working-tree snapshots and remain preliminary;
+later source changes are not attributed to them. Full native regression,
+source-bound portable acceptance, strict changed-file analysis and the
+original-manifest production web build will qualify an explicit saved revision.
+
+The external tool diagnostics are retained without treating exit status alone
+as a pass: `ntfsinfo` reports a `$SDS` diagnostic on both an untouched `mkntfs`
+control and a populated image. Security-descriptor content inspection remains
+incomplete, while separate `ntfscat` payload extraction and read-only volume
+checks retain their own results.

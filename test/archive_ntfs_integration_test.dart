@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart';
 import 'package:crisp_cloud/models/archive_endpoint.dart';
 import 'package:crisp_cloud/services/archive_disk_image_reader.dart';
 import 'package:crisp_cloud/services/archive_endpoint_policy.dart';
+import 'package:crisp_cloud/services/archive_ext_reader.dart';
 import 'package:crisp_cloud/services/archive_ntfs_reader.dart';
 import 'package:crisp_cloud/services/archive_format_registry.dart';
 import 'package:crisp_cloud/services/archive_service.dart';
@@ -18,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'support/archive_disk_image_fixture.dart';
+import 'support/archive_ext_reference_data.dart';
 import 'support/archive_ntfs_disk_fixture.dart';
 import 'support/archive_ntfs_reference_data.dart';
 import 'support/archive_fat_fixture.dart';
@@ -373,6 +375,124 @@ void main() {
       await archive.close();
     },
   );
+
+  test(
+    'NTFS, ext and FAT share one combined disk allocation allowance',
+    () async {
+      final ntfsBudget = ArchiveNtfsTraversalBudget();
+      final ntfs = await openNtfsArchive(
+        NtfsReferenceSource('ntfs31'),
+        maxMemberBytes: kArchiveReadLimit,
+        traversalBudget: ntfsBudget,
+      );
+      await ntfs.close();
+      final extBudget = ArchiveExtTraversalBudget();
+      final ext = await openExtArchive(
+        ExtReferenceSource('ext2'),
+        maxMemberBytes: kArchiveReadLimit,
+        traversalBudget: extBudget,
+      );
+      await ext.close();
+      final source = DiskImageFixture.mbr(
+        volumes: [
+          NtfsReferenceSource('ntfs31'),
+          ExtReferenceSource('ext2'),
+          FatFixture().source(),
+        ],
+        types: [0x07, 0x83, 0x01],
+      );
+      final archive = await openDiskImageArchive(
+        source,
+        maxMemberBytes: kArchiveReadLimit,
+        maxClusters: ntfsBudget.clustersVisited + extBudget.blocksVisited,
+      );
+      expect(
+        archive.members.any((e) => e.name == 'partition-001/files/hello.txt'),
+        isTrue,
+      );
+      expect(
+        archive.members.any((e) => e.name == 'partition-002/files/hello.txt'),
+        isTrue,
+      );
+      expect(
+        archive.members.any((e) => e.name == 'partition-003/raw.img'),
+        isTrue,
+      );
+      expect(
+        archive.members.any((e) => e.name.startsWith('partition-003/files')),
+        isFalse,
+      );
+      expect(archive.notices.join(' '), contains('No listing budget remains'));
+      await archive.close();
+      expect(source.closeCount, 1);
+    },
+  );
+
+  test('a refused NTFS child keeps its debit against later children', () async {
+    final bad = ntfsReferenceBytes('ntfs31');
+    final boot = ByteData.sublistView(bad);
+    expect(boot.getUint32(60, Endian.little), 0);
+    final mirrorOffset =
+        boot.getUint32(56, Endian.little) *
+        boot.getUint16(11, Endian.little) *
+        bad[13];
+    bad[mirrorOffset] ^= 1;
+    final failedBudget = ArchiveNtfsTraversalBudget();
+    await expectLater(
+      openNtfsArchive(
+        koni.MemoryByteSource(bad),
+        maxMemberBytes: kArchiveReadLimit,
+        traversalBudget: failedBudget,
+      ),
+      throwsA(isA<ArchiveViewException>()),
+    );
+    expect(failedBudget.clustersVisited, greaterThan(0));
+    final validBudget = ArchiveNtfsTraversalBudget();
+    final valid = await openNtfsArchive(
+      NtfsReferenceSource('ntfs31'),
+      maxMemberBytes: kArchiveReadLimit,
+      traversalBudget: validBudget,
+    );
+    await valid.close();
+    final source = DiskImageFixture.mbr(
+      volumes: [koni.MemoryByteSource(bad), NtfsReferenceSource('ntfs31')],
+      types: [0x07, 0x07],
+    );
+    final archive = await openDiskImageArchive(
+      source,
+      maxMemberBytes: kArchiveReadLimit,
+      maxClusters:
+          failedBudget.clustersVisited + validBudget.clustersVisited - 1,
+    );
+    expect(archive.members.map((e) => e.name), [
+      'partition-001',
+      'partition-001/raw.img',
+      'partition-002',
+      'partition-002/raw.img',
+    ]);
+    expect(archive.notices.join(' '), contains('NTFS listing was refused'));
+    await archive.close();
+    expect(source.closeCount, 1);
+  });
+
+  test('composite notice exhaustion refuses instead of silently losing ADS metadata', () async {
+    final source = ntfsGptFixture(
+      volumes: List.generate(32, (_) => NtfsReferenceSource('ntfs31')),
+    );
+    await expectLater(
+      openDiskImageArchive(source, maxMemberBytes: kArchiveReadLimit),
+      throwsA(
+        isA<ArchiveViewException>()
+            .having((e) => e.code, 'code', ArchiveMessageCode.archiveLimit)
+            .having(
+              (e) => e.message,
+              'message',
+              contains('exact NTFS metadata notice'),
+            ),
+      ),
+    );
+    expect(source.closeCount, 1);
+  });
 }
 
 class _ObservedSource implements koni.ByteSource {

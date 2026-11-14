@@ -358,7 +358,9 @@ def dart_file(images: list[dict]) -> str:
         "    for (final (at, data) in blocks) {",
         "      final start = offset > at ? offset : at;",
         "      final end = offset + count < at + data.length ? offset + count : at + data.length;",
-        "      if (end > start) out.setRange(start - offset, end - offset, data, start - at);",
+        "      if (end > start) {",
+        "        out.setRange(start - offset, end - offset, data, start - at);",
+        "      }",
         "    }", "    return out;", "  }", "  @override",
         "  Future<void> close() async { closed = true; closeCount++; }", "}", "",
     ]
