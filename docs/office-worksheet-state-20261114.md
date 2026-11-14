@@ -6,8 +6,11 @@ Checkpoint branch: `codex/office-recovery-20261114` in both repositories.
 
 The next increment makes persisted worksheet RTL/frozen-pane settings participate
 in history, dirty state and save revisions. It also addresses grid history that
-can target the wrong sheet after navigation. Quds owns these controller fixes;
-the app will consume exact reviewed source bytes through the guarded sync.
+can target the wrong sheet after navigation. Quds owns these controller fixes.
+The app now pins canonical implementation `30cb194a7275e3310d07b3bab185d81f79fc8c1c`
+through the guarded sync. All 2,176 managed files match their declared hashes
+and staged Git bytes. The canonical seven-file regression group passes all 80
+tests, with zero issues in the scoped analysis.
 
 Actual host acceptance will cover the ribbon/close path, a view change during
 an upload, and saved workbook contents after history across worksheet tabs.
@@ -26,12 +29,17 @@ Five new host cases reproduce missing close prompts for RTL/freeze changes,
 missing revision tracking during delayed uploads, and wrong-sheet grid history
 in actual saved XLSX bytes. The delayed-upload baseline establishes an unchanged
 revision after a confirmed view mutation; its immediate editor-presence assertion
-did not fail. Positive host validation awaits the guarded canonical source sync.
+did not fail. Positive host validation is pending against the synced source.
 
 The [retained host baseline](evidence/office-worksheet-state-20261114/host-baseline/README.md)
 records the final five behavioral failures, all earlier test-harness attempts,
 4,740 stable execution inputs, exact workbook bytes and independent validation
 of the authored input. Its final test source is committed at `4518e771`.
+
+The [integration receipt](evidence/office-worksheet-state-20261114/integration/receipt.json)
+retains the guarded plan, applied result and full source/index verification.
+Only the controller, its two new regression files and the source manifest change
+in this sync.
 
 The previous 52-test host cohort, corrected fill rerun and independent four-file
 schema acceptance remain unchanged. New negative controls, implementation and
