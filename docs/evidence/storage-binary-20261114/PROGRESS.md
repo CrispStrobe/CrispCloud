@@ -59,10 +59,33 @@ mismatches, byte/chunk/empty-chunk limits, inactivity and elapsed-work limits,
 cancellation, and failed-open cleanup have explicit handling and regression
 tests. Viewer loads and navigation have generation ownership, with cleanup on
 reload, swap, Stop, failure and disposal. The UI labels captured-copy semantics
-and the applicable per-input limit in all eight existing locales.
+and the applicable per-input limit in English plus all eight existing translations.
 
 The exact Flutter 3.47.8 / Dart 3.13.7 SDK has been downloaded and its archive
 hash verified. Original locked dependencies are still being prepared at this
 checkpoint. The new code has been formatted and whitespace checked, but no
 new runtime test pass is claimed yet. This checkpoint is recoverable work in
 progress; subsequent commits will preserve corrections and actual results.
+
+## Preserved integration and qualification candidate
+
+- `445e48e6` saved the initial continuation record remotely.
+- `ef17fafa` saved the initial capture, scan, viewer and regression implementation.
+- `ae30d225` merged main's `9e025c44` release-publication fix without source
+  conflicts. Both parents remain in history; no prior checkpoint was rewritten.
+- [Draft PR #104](https://github.com/CrispStrobe/CrispCloud/pull/104) tracks review.
+
+The next candidate adds a portable suite that exercises the real native and
+browser capture implementations, a documented capability profile, and native/
+Chrome coverage in the storage workflow. Browser capture takes ownership of
+its private contiguous bytes without a redundant full-size copy.
+
+The original locked dependency graph now resolves successfully. The first
+strict analysis identified an incorrect test-only `IOOverrides.runZoned`
+argument plus lint findings; these were corrected before runtime qualification.
+The initial native attempt reached build hooks but no tests: automatic approval
+review blocked an unclear GitHub request. Read-only inspection established that
+the existing SMB hook requests a public, hash-pinned build dependency through a
+bodyless GET. A normal test-command retry uses that evidence; it does not alter
+the hook, dependency graph or approval policy. No native pass is claimed from
+the interrupted attempt.

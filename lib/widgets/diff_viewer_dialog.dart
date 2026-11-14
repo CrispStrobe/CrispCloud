@@ -13,7 +13,6 @@ import '../l10n/commander_strings.dart';
 import '../models/file_item.dart';
 import '../models/panel_side.dart';
 import '../providers/providers.dart';
-import '../services/binary_comparison_source.dart';
 import '../services/log_service.dart';
 import '../services/file_comparison_service.dart';
 import '../services/file_operation_backend.dart';

@@ -31,7 +31,7 @@ class BinaryComparisonLimits {
   final Duration overallTimeout, inactivityTimeout;
 
   void validate() {
-    final ceiling = kIsWeb
+    const ceiling = kIsWeb
         ? kBinaryComparisonWebInputLimit
         : kBinaryComparisonNativeInputLimit;
     if (maxBytes < 1 || maxBytes > ceiling) {
@@ -161,7 +161,7 @@ class BinaryComparisonSnapshot {
         await for (final part in input()) {
           bytes.add(part);
         }
-        source = MemoryHexByteSource(bytes.takeBytes());
+        source = _MemoryCaptureSource(bytes.takeBytes());
       } else {
         // Await storage ownership before cancelling/cleaning it: racing this
         // allocation against cancellation could orphan a late-created spool.
@@ -315,7 +315,7 @@ class BinaryComparisonSnapshot {
         );
       }
       guard.check();
-      // MemoryHexByteSource may return a view. Never expose mutable snapshot
+      // The memory source returns a view. Never expose mutable snapshot
       // storage to a caller that can subsequently change the comparison.
       return Uint8List.fromList(bytes);
     } finally {
@@ -334,6 +334,24 @@ class BinaryComparisonSnapshot {
         await _spool?.dispose();
       }
     }();
+  }
+}
+
+/// Takes ownership of the builder's private contiguous bytes without a second
+/// full-size browser copy. All public snapshot reads make their own small copy.
+class _MemoryCaptureSource implements HexByteSource {
+  _MemoryCaptureSource(this._bytes);
+  final Uint8List _bytes;
+
+  @override
+  int get length => _bytes.length;
+
+  @override
+  Future<Uint8List> read(int offset, int count) async {
+    if (offset < 0 || count < 0 || offset > length || count > length - offset) {
+      throw RangeError('Invalid captured memory byte range.');
+    }
+    return Uint8List.sublistView(_bytes, offset, offset + count);
   }
 }
 
@@ -540,8 +558,9 @@ class _ComparisonGuard {
             check();
             completed.completeError(error, stack);
           } catch (halted, haltedStack) {
-            if (!completed.isCompleted)
+            if (!completed.isCompleted) {
               completed.completeError(halted, haltedStack);
+            }
           }
         },
       ),
