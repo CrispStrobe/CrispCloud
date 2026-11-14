@@ -112,6 +112,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Test release publication safeguards
+        run: python3 -m unittest discover -s tool -p test_release_publication.py -v
+
       - name: Select Xcode 26.3 on macOS
         if: runner.os == 'macOS'
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
@@ -170,9 +173,9 @@ jobs:
           python3 tool/with_ci_system_sqlite.py flutter test --concurrency=4
           --exclude-tags=benchmark,live,deploy,mock_server,integration,connection_dialog,golden
 
-  # ---------- Create Release (empty, assets added by each build) ----------
+  # ---------- Prepare private draft; publish after all binary uploads ----------
   create-release:
-    name: Create Release
+    name: Prepare Release Draft
     needs: test
     runs-on: ubuntu-latest
     outputs:
@@ -219,7 +222,7 @@ jobs:
             echo "**Full diff**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG}"
           } > changelog.md
 
-      - name: Create GitHub Release
+      - name: Prepare GitHub Release draft without deleting existing assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -229,13 +232,9 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
-          gh release delete "$TAG" --yes 2>/dev/null || true
-          PRERELEASE_FLAG=""
-          if [ "$IS_PRERELEASE" = "true" ]; then PRERELEASE_FLAG="--prerelease"; fi
-          gh release create "$TAG" \
-            --title "CrispCloud $TAG" \
-            --notes-file changelog.md \
-            $PRERELEASE_FLAG
+          python3 tool/release_publication.py prepare "$TAG" \
+            --title "CrispCloud $TAG" --notes-file changelog.md \
+            --prerelease "$IS_PRERELEASE"
 
   # ---------- Web ----------
   build-web:
@@ -863,3 +862,15 @@ jobs:
     with:
       release_tag: ${{ needs.create-release.outputs.tag }}
     secrets: inherit
+
+  publish-release:
+    name: Publish complete release
+    needs: [create-release, build-web, build-linux, build-macos, build-windows, build-android, build-ios, build-cli]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify all platform binaries and publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.create-release.outputs.tag }}
+        run: python3 tool/release_publication.py publish "$RELEASE_TAG"
