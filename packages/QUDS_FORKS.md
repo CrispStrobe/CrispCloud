@@ -29,7 +29,8 @@ verify. This includes authored number formats, shared history/sorting coverage,
 Word media deduplication, supported symbol characters and sibling text-box
 isolation. Legacy VML content retains its opaque source and relationship
 integrity through export without claiming full visual rendering. Legacy conversion exports canonical built-in style names and offers
-explicit auxiliary-feature recovery; strict parsing stays the default.
+explicit auxiliary-feature recovery at the parser API; the app import route
+continues to use strict parsing.
 
 ## Spreadsheet audit checkpoint (14 November 2026)
 

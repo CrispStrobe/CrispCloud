@@ -28,8 +28,9 @@ The current Office integration preserves authored spreadsheet number formats and
 includes Word media deduplication, supported symbol characters and independent
 sibling text boxes. Legacy VML pictures, shapes and rules retain their source
 content for export; their native rendering and editing remain unsupported.
-Legacy DOC import offers explicit auxiliary-feature recovery
-and exports canonical built-in style names. It also includes undoable worksheet direction, frozen panes,
+The vendored legacy DOC parser adds opt-in auxiliary-feature recovery and
+exports canonical built-in style names. CrispCloud currently keeps strict import;
+a recovery choice in the app remains pending. It also includes undoable worksheet direction, frozen panes,
 grid edits and selection formatting, plus more tolerant DOCX bookmark and measurement
 imports. Cell identity is retained across sorting and grid undo. Imported control-ID
 duplicates are retained; edits cannot add more. See the tested scope and remaining

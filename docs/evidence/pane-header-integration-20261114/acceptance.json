@@ -1,0 +1,65 @@
+{
+  "recorded_at": "2026-11-14T22:32:01.602863+00:00",
+  "runtime_commit": "af7a37526bd17b24f13ddc5df22ddd9b7649e8ed",
+  "quds_commit": "5133ce0343cb7c9456f852a4e760c771294ae6de",
+  "legacy_parser_commit": "f9d10b5a5e68b4216892d64622caa8b0a15c7afd",
+  "managed_office_files": 2194,
+  "app_final": {
+    "suites": 16,
+    "passed": 339,
+    "failed": 0,
+    "skipped": 0,
+    "dependency_configuration": "Committed production configuration, no overrides"
+  },
+  "app_broad_initial": {
+    "suites": 56,
+    "passed": 1003,
+    "conditional_skips": 23,
+    "failed": 1,
+    "failure": "Ask background-copy widget fixture left its finite rate-update timer pending; fixture now lets its idle window expire, verified by final production run",
+    "native_dependency_note": "Unchanged crisperbooks 505d3d7 native library reused from prior build through a temporary local hook setting; production pubspec restored before final run"
+  },
+  "legacy_parser_full": {
+    "passed": 4072,
+    "failed": 0
+  },
+  "quds_engine_full": {
+    "passed": 1756,
+    "conditional_skips": 3,
+    "timeouts": 2,
+    "timeout_followup": "Both timed-out CLI cases passed in the separate two-suite, 20-test rerun; no remaining observed failure"
+  },
+  "quds_word_vml_followup": {
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_source_guards": 27,
+  "python_apple_controls": 38,
+  "focused_analyzers": "No issues found",
+  "build": {
+    "status": "Built; signing pending local keychain unlock",
+    "version": "1.3.3+26",
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "bundle": "/Users/christianstrobele/code/local/cci/build/macos/Build/Products/Release/CrispCloud.app",
+    "signing_status": "Build keychain locked; Security.framework unlock dialog refused with OSStatus -60008. User asked to unlock through Keychain Access. No signed installation or successful startup claimed."
+  },
+  "preserved_external_work": "Uncommitted legacy Excel importer work in code/local/quds_office_suite was left intact; its committed fad26db baseline is integrated.",
+  "release_queue": "Existing tags and queued release workflows unchanged",
+  "log_sha256": {
+    "host-broad.log.gz": "8a78a55ded558809d295539bb183cc79c6d427fc27eee8913d743156e8ee8b9c",
+    "host-final.log.gz": "8c3fd09e3c90b06224d91c3127ea1b9e1c2bb83d507e33900f32338b8cda8cf8",
+    "legacy-full.log.gz": "35a23086ef865c4b22f98f9bcf548586011625630f5f579f3b675d3ac0673fc5",
+    "quds-engine-full.log.gz": "79add517c77238546b5b0531bd958507f0bd724bfc5fc8bd9732f1d9ac4cfc68",
+    "quds-cli-rerun.log.gz": "034d2fbe92b285a94fa292e4d9aa162ab5a6e6378c6825e79a2bbcb93bb9b17e",
+    "quds-vml.log.gz": "0e642d57a48bb1599b50f580478ec0468cefde9b63cee315e4bd7cfa77443de0",
+    "source-guard-tests.log.gz": "3d92af625d216f90f73841f0ef61e22330da6e151738da85c2d3d666cb7fb44b",
+    "apple-control-tests.log.gz": "161b8b3599257c820cc88d8a02dd6bd30bcf28b3f99a5796070dedc3dccf4080",
+    "macos-build.log.gz": "786b92c7b0d1e6d7aa5f461b834ab93e8251a727df83f5b99e0d42def4d77932",
+    "app-analysis.log.gz": "ab6d9116b05988d0533807be6411097f3a8f7be2e5c72af4ee922f1be8a591bc",
+    "quds-vml-analysis.log.gz": "f4c699575777455e4fc40290dee879063534585485eaa44fd21784dee628c6e8"
+  }
+}
