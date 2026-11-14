@@ -1,0 +1,13 @@
+Unhandled exception:
+Bad state: Catalogue Cargo build failed for x86_64-unknown-linux-gnu.
+
+error: rustup could not choose a version of cargo to run, because one wasn't specified explicitly, and no default is configured.
+help: run 'rustup default stable' to download the latest stable release of Rust and set it as your default toolchain.
+
+#0      main.<anonymous closure> (file:///workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/hook/build.dart:138:7)
+<asynchronous suspension>
+#1      build (package:hooks/src/api/build_and_link.dart:250:5)
+<asynchronous suspension>
+#2      main (file:///workspace/scratch/f035141943c7/CrispCloud/packages/crisp_catalog/hook/build.dart:6:3)
+<asynchronous suspension>
+

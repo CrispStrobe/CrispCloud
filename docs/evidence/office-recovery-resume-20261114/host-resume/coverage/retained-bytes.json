@@ -1,0 +1,20 @@
+{
+  "lcov.info": {
+    "stored_as": "lcov.info.gz",
+    "raw_bytes": 617045,
+    "raw_sha256": "9746805d9a50ea3f69802c57074a219336e6ea2f18a8ffb79a5253cf9c11a322",
+    "stored_sha256": "0637d87d88eadeae1da7f3030b5b2b9c16fd69a5a9ae78968b5f397a29d0a730"
+  },
+  "collection-receipt.json": {
+    "stored_as": "collection-receipt.json.gz",
+    "raw_bytes": 642441,
+    "raw_sha256": "9f8ae82d78dd1e071142c6fcf9c7b89a3d43ae5d4f1393d921f2ef3cd024e363",
+    "stored_sha256": "5497af66306abd2356c2b86434f72a4f2f9b868b100c697a2215d5cd7ac24fc9"
+  },
+  "coverage-report.json": {
+    "stored_as": "coverage-report.json",
+    "raw_bytes": 32888,
+    "raw_sha256": "e09758d0374e64e7a362059983065a50544da8be5a516995ae28703d90cd2aae",
+    "stored_sha256": "e09758d0374e64e7a362059983065a50544da8be5a516995ae28703d90cd2aae"
+  }
+}

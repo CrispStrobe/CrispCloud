@@ -1,0 +1,41 @@
+{
+  "scope": "Diagnostic copy only. This is not a host-produced artifact and is not replacement acceptance evidence. It isolates the SDK-rejected font child ordering in the preserved independently authored input.",
+  "source_path": "/workspace/scratch/f035141943c7/external-fill-validation/native-fill/artifacts/source.xlsx",
+  "source_sha256": "ec7108cc5fc40ea71a5d37e46b8f276e17483a81fab80198dac622c1cfda39ad",
+  "diagnostic_path": "/workspace/scratch/f035141943c7/external-fill-validation/font-order-diagnostic/input/source-reordered.xlsx",
+  "diagnostic_sha256": "9fb2573a847601c0414d5c60a8868ce2df0f38980873f5173db57557fbb26bc0",
+  "changed_uncompressed_parts": [
+    "xl/styles.xml"
+  ],
+  "single_xml_replacement": {
+    "part": "xl/styles.xml",
+    "before": "<s:color rgb=\"FF000000\"/><s:sz val=\"11\"/>",
+    "after": "<s:sz val=\"11\"/><s:color rgb=\"FF000000\"/>",
+    "occurrences": 1
+  },
+  "all_other_uncompressed_parts_identical": true,
+  "validator": "Existing unchanged tool/office-validation/Program.cs with OpenXML SDK 3.3.0; Office2019 target",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "schema_failures": 0,
+  "commands": [
+    {
+      "label": "self-test",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "--self-test"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "schema",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "/workspace/scratch/f035141943c7/external-fill-validation/font-order-diagnostic/input",
+        "/workspace/scratch/f035141943c7/external-fill-validation/font-order-diagnostic/schema-report.json"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

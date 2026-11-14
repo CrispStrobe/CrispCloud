@@ -1,0 +1,21 @@
+{
+  "assets": {},
+  "config": {
+    "build_asset_types": [
+      "code_assets/code"
+    ],
+    "extensions": {
+      "code_assets": {
+        "link_mode_preference": "dynamic",
+        "target_architecture": "x64",
+        "target_os": "linux"
+      }
+    },
+    "linking_enabled": false
+  },
+  "out_dir_shared": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/",
+  "out_file": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/crisp_ebook_conversion/6b4ebf10e7/output.json",
+  "package_name": "crisp_ebook_conversion",
+  "package_root": "/workspace/scratch/f035141943c7/toolchain/pub-cache/git/crisperbooks-505d3d7bfb922e5f0d77b7230cd38b0e266d0606/packages/crisp_ebook_conversion/",
+  "user_defines": {}
+}

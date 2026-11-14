@@ -1,0 +1,42 @@
+[
+  {
+    "file": "source.xlsx",
+    "role": "independently_authored_input",
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/source.xlsx",
+    "size_bytes": 4839,
+    "sha256": "f5ce92914660d846682688046f843d6fad26e8206201e10ac305ad05cfb16f97",
+    "validation_errors": 0,
+    "exception": null,
+    "evidence_copy": "artifacts/source.xlsx"
+  },
+  {
+    "file": "saved-1.xlsx",
+    "role": "actual_host_saved_output",
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-1.xlsx",
+    "size_bytes": 21674,
+    "sha256": "6c5d72466efcf72823e605ffb8c80fc8a61e73e466294bfeb19037bb40ce48c8",
+    "validation_errors": 0,
+    "exception": null,
+    "evidence_copy": "artifacts/saved-1.xlsx"
+  },
+  {
+    "file": "saved-2.xlsx",
+    "role": "actual_host_saved_output",
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-2.xlsx",
+    "size_bytes": 21674,
+    "sha256": "f0082d65160634491318cbc462cebcc727060182689bb7ee26b6c1f1d824fe95",
+    "validation_errors": 0,
+    "exception": null,
+    "evidence_copy": "artifacts/saved-2.xlsx"
+  },
+  {
+    "file": "saved-3.xlsx",
+    "role": "actual_host_saved_output",
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-3.xlsx",
+    "size_bytes": 21674,
+    "sha256": "4256287299bafb51fc7271ffb2fa77b2fcd165ca3f36975e29b6d4b0bb220ac9",
+    "validation_errors": 0,
+    "exception": null,
+    "evidence_copy": "artifacts/saved-3.xlsx"
+  }
+]

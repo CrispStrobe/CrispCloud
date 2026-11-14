@@ -1,0 +1,5 @@
+/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-1.xlsx: 0 validation errors
+/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-2.xlsx: 0 validation errors
+/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-3.xlsx: 0 validation errors
+/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/source.xlsx: 1 validation errors
+  Sch_UnexpectedElementContentExpectingComplex: The element has unexpected child element 'http://schemas.openxmlformats.org/spreadsheetml/2006/main:sz'. [/xl/styles.xml /s:styleSheet[1]/s:fonts[1]/s:font[1]]

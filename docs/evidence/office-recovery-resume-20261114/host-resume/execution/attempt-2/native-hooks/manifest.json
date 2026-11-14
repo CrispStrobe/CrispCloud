@@ -1,0 +1,89 @@
+{
+  "crisp_catalog": {
+    "files": {
+      "input.json": "c4a6666ded68b65ee74eda2431a5f9d9b4d2183d489bb6fa2ebd1139c533116f",
+      "output.json": "0a8fc090635f0e1e6dbff10e2a1e813c378fe01a1b6c81c4617d1e35dc7fe6c4",
+      "stdout.txt": "9cfff5c82c23ad6da5f1f037c55a7729ad59860079a748feaad13e1bfc981e04",
+      "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "code_assets": [
+      {
+        "path": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/crisp_catalog/build/6b4ebf10e7/libcrisp_catalog_bridge.so",
+        "bytes": 3610392,
+        "sha256": "63ede80e43d6f000549a4a6d5a0465145c40eaf02912164dc8dbe9a8b04db3cf"
+      }
+    ]
+  },
+  "crisp_ebook_conversion": {
+    "files": {
+      "input.json": "71472ad5e3b76f41bca849e993fd994b2f589f608c7c1a2636f242edad6c5179",
+      "output.json": "3b033e2e6fa5c1b55a9f32577ea7d9087c0128c800e59538ddbb9d50cc490f39",
+      "stdout.txt": "996bee5a2ec1dec6ba61d18ac4f649faed821fc177fc24e5d1a7afa1dab9bb1d",
+      "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "code_assets": [
+      {
+        "path": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/crisp_ebook_conversion/build/6b4ebf10e7/libcrisp_kindling_bridge.so",
+        "bytes": 12175304,
+        "sha256": "a4ca827acdbaec5fd19934d806e90f1dff2aa1908e66a05b923a1be747fde96d"
+      }
+    ]
+  },
+  "crisp_storage": {
+    "files": {
+      "input.json": "50594b20746bc9b1ce714d214c558f2a712177eb16971e840702953f3ed8097a",
+      "output.json": "196d2115d84f158a8563bd01880fe83708bff672a8e9d21d48d8e6e729b72fdf",
+      "stdout.txt": "a851e9ca851271a08dd8a85a8f445a6cdca3d8d6e799bc01654aeccc5ccec77d",
+      "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "code_assets": []
+  },
+  "dart_smb2": {
+    "files": {
+      "input.json": "c29cd126985752805862d784004c0d7300da7bac1768fcbcf47a02e57d64baed",
+      "output.json": "f72241e58ef5554d7c0ea14ba32767fd2148657d6b35a544caa0310e7a6361be",
+      "stdout.txt": "40a08a06cb8b5b9b8f8a1eeb0f993e9b50a582e41c92b8618f520ea953d1bbc1",
+      "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "code_assets": [
+      {
+        "path": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/dart_smb2/build/6b4ebf10e7/libdart_smb2.so",
+        "bytes": 294472,
+        "sha256": "4612ed4499f4c066d0db295679469c62545c6252849bfa61eb5f45ec1bbd3577"
+      }
+    ]
+  },
+  "flutter_pty2": {
+    "files": {
+      "input.json": "de00a0833ee16b92449550404559047762d903db9f6dc973d30f90764c5bab8f",
+      "output.json": "cf0e95ba61ae4e2224eb3a91e90a2e16b68916e336f12139e670edf0b9b2a17e",
+      "stdout.txt": "d6793e120d1b754c69a3e2a2b1a7bce83706bac236312c4866f07eba5d4f4520",
+      "stderr.txt": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322"
+    },
+    "code_assets": [
+      {
+        "path": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/flutter_pty2/build/6b4ebf10e7/libflutter_pty2.so",
+        "bytes": 61776,
+        "sha256": "7335b50f41c3109db7d6cb0cdb44f6450572590bea825b61e87fc29b8f8e91f8"
+      }
+    ]
+  },
+  "objective_c": {
+    "files": {
+      "input.json": "e660a94a3a14bb174015295e2298e1fda39f583a39b3ba69ccb54f1eeaa7059b",
+      "output.json": "5c85227da735c120129bd6b55c391c1b68a7140acd069320a41e25d26c7c87fd",
+      "stdout.txt": "c356bdc7406d7c0f17fb4cca48e58e55f9a2722876786b479a5cd6508770159b",
+      "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "code_assets": []
+  },
+  "sqlite3": {
+    "files": {
+      "input.json": "87d586d6dcf9b29163d07b149180f5244d6f8e603c2e2e89cd826529175e049a",
+      "output.json": "7508ebb4ab07aeab2bc103787a90ff5057b6dd4b0bb186057750e795d0e4a08d",
+      "stdout.txt": "d4bd4255f00044618304020ec0473369dc089e019c528ffae7df44f19cd87d01",
+      "stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "code_assets": []
+  }
+}

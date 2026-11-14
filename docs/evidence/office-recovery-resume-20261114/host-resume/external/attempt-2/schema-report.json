@@ -1,0 +1,26 @@
+{
+  "Files": 4,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-1.xlsx",
+      "Sha256": "6c5d72466efcf72823e605ffb8c80fc8a61e73e466294bfeb19037bb40ce48c8",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-2.xlsx",
+      "Sha256": "f0082d65160634491318cbc462cebcc727060182689bb7ee26b6c1f1d824fe95",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-3.xlsx",
+      "Sha256": "4256287299bafb51fc7271ffb2fa77b2fcd165ca3f36975e29b6d4b0bb220ac9",
+      "Errors": []
+    },
+    {
+      "File": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/source.xlsx",
+      "Sha256": "f5ce92914660d846682688046f843d6fad26e8206201e10ac305ad05cfb16f97",
+      "Errors": []
+    }
+  ]
+}

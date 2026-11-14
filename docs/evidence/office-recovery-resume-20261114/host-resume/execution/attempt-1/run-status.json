@@ -1,0 +1,28 @@
+{
+  "status": "failed",
+  "started_at": "2026-11-14T18:57:45.445740+00:00",
+  "source_head": "31838929276690e2804231c7928ddd8f1e46811c",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/collect_office_host_coverage.py",
+    "--flutter",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "build/office-fill-host-coverage",
+    "--",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/office_device_export_test.dart",
+    "test/widget/office_editor_lifecycle_test.dart",
+    "test/widget/office_ribbon_state_test.dart",
+    "test/widget/office_native_workflow_test.dart",
+    "test/widget/office_save_fidelity_test.dart"
+  ],
+  "completed_at": "2026-11-14T18:58:15.826915+00:00",
+  "returncode": 1,
+  "input_tree_sha256_after": "085d605d4d8924d21dffcff01b1137b0ccae9abe972bb8b41db94bea46a035ef",
+  "changed_inputs": [],
+  "pubspec_restored": true,
+  "host_tests_log_sha256": "0f3dcd99d36e7dda5e0f78867e339c8308516e66fccb28495636bf45239a36ef"
+}
