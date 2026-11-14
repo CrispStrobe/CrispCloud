@@ -58,3 +58,20 @@ No final NTFS qualification has run at this checkpoint.
    receipts before attributing results to a source revision.
 3. Keep failed/intermediate attempts separate from final results.
 4. Save concrete increments remotely; do not rewrite earlier checkpoints.
+
+## Incremental checkpoints
+
+- `e237cdc5`: preserved ext qualification, current remote reference ancestry
+  and the separate hosted-CI state before new implementation work.
+- The next checkpoint adds the public NTFS reader contract and shared
+  recognition, read-only policy, streaming and MBR/GPT integration. The initial
+  reader remains explicitly unsupported until its bounded parser is complete;
+  this checkpoint does not claim working NTFS extraction or passing NTFS tests.
+- Independent fixture production has demonstrated ordinary NTFS 3.1 images,
+  Unicode and nested names, hard links, alternate streams, real sparse and
+  fragmented data, and 4096-byte sectors. These are producer observations;
+  reader qualification is still pending.
+- System metadata records and `$Extend` descendants will be omitted from
+  selectable files with an explicit notice while validating/reserving their
+  allocations. Alternate stream notices retain exact names and sizes and state
+  that those streams are not read, tested or extracted.

@@ -24,6 +24,7 @@ bool isStreamedArchiveViewerName(String name) {
     '.ext2',
     '.ext3',
     '.ext4',
+    '.ntfs',
     '.img',
     '.ima',
     '.dd',
@@ -70,6 +71,7 @@ bool matchesStreamedArchiveViewerSignature(String name, List<int> prefix) {
       lower.endsWith('.ext2') ||
       lower.endsWith('.ext3') ||
       lower.endsWith('.ext4') ||
+      lower.endsWith('.ntfs') ||
       lower.endsWith('.img') ||
       lower.endsWith('.ima') ||
       lower.endsWith('.dd') ||

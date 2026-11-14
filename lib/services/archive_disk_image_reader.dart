@@ -26,6 +26,7 @@ import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_fat_reader.dart';
 import 'archive_ext_reader.dart';
+import 'archive_ntfs_reader.dart';
 import 'archive_slice_source.dart';
 import 'archive_types.dart';
 import 'disk_partition_inspector.dart';
@@ -49,13 +50,13 @@ class ArchiveDiskImageCancelledException extends ArchiveViewException {
 }
 
 /// Non-owning recognition at fixed MBR/GPT positions, not a filesystem scan.
-/// A recognized FAT volume takes precedence over apparent partition bytes in
+/// A recognized NTFS/FAT volume takes precedence over apparent partition bytes in
 /// its boot code. Explicit GPT signatures precede the short ext marker: the
 /// first GPT partition name can contain that marker at the same byte offset.
 /// Ext volumes still precede apparent MBR entries in their unused boot area.
 /// An MBR boot signature alone is insufficient recognition.
-/// At most two 512-byte reads, one two-byte ext probe and four eight-byte GPT
-/// probes are requested.
+/// At most two 512-byte reads, one eight-byte NTFS probe, one two-byte ext probe
+/// and four eight-byte GPT probes are requested.
 /// Recognition does not establish a valid or authoritative partition table.
 Future<bool> hasDiskImagePartitionRecognition(koni.ByteSource source) async {
   if (source.length < 512 || source.length > _maxExactOffset) return false;
@@ -66,6 +67,7 @@ Future<bool> hasDiskImagePartitionRecognition(koni.ByteSource source) async {
       code: ArchiveMessageCode.corrupt,
     );
   }
+  if (await hasNtfsVolumeRecognition(source)) return false;
   if (await hasFatVolumeRecognition(source)) return false;
   for (final sector in const [512, 4096]) {
     final last = (source.length ~/ sector - 1) * sector;
@@ -112,7 +114,7 @@ bool _gptSignature(Uint8List bytes) {
 }
 
 /// Browse validated primary MBR or mirrored GPT partitions as read-only entries.
-/// Each admitted partition has `partition-NNN/raw.img`; eligible FAT/ext volumes
+/// Each admitted partition has `partition-NNN/raw.img`; eligible FAT/ext/NTFS volumes
 /// also have `partition-NNN/files/...`. Names and numbers come from the chosen
 /// table's original indices, never from untrusted filesystem or volume labels.
 ///
@@ -178,6 +180,10 @@ Future<ViewerArchive> openDiskImageArchive(
         maxExtents: maxExtents,
       ),
       ArchiveExtTraversalBudget(maxBlocks: maxClusters, maxExtents: maxExtents),
+      ArchiveNtfsTraversalBudget(
+        maxClusters: maxClusters,
+        maxExtents: maxExtents,
+      ),
     );
     return await reader.open();
   } catch (error, stack) {
@@ -296,6 +302,7 @@ class _DiskImageReader {
     this.maxRetainedPathBytes,
     this.traversalBudget,
     this.extTraversalBudget,
+    this.ntfsTraversalBudget,
   );
 
   final _DiskImageSource source;
@@ -304,6 +311,7 @@ class _DiskImageReader {
   final int maxPartitions, maxEntries, maxRetainedPathBytes;
   final ArchiveFatTraversalBudget traversalBudget;
   final ArchiveExtTraversalBudget extTraversalBudget;
+  final ArchiveNtfsTraversalBudget ntfsTraversalBudget;
   final _members = <ViewerArchiveMember>[];
   final _targets = <_DiskImageTarget?>[];
   final _children = <ViewerArchive>[];
@@ -317,6 +325,11 @@ class _DiskImageReader {
       _bad('The image length is outside the supported exact range.');
     }
     await source.validate();
+    if (await hasNtfsVolumeRecognition(source)) {
+      _unsupported(
+        'This source is a standalone NTFS volume, not a partitioned disk.',
+      );
+    }
     if (await hasFatVolumeRecognition(source)) {
       _unsupported(
         'This source is a standalone FAT volume, not a partitioned disk.',
@@ -371,8 +384,14 @@ class _DiskImageReader {
         target: _DiskImageTarget.raw(offset),
       );
       final ext = _extType(partition, analysis.scheme);
-      final filesystemName = ext ? 'ext' : 'FAT';
-      if (!ext && !_fatType(partition, analysis.scheme)) {
+      final fatEligible = _fatType(partition, analysis.scheme);
+      final ntfsEligible = _ntfsType(partition, analysis.scheme);
+      var filesystemName = ext
+          ? 'ext'
+          : ntfsEligible
+          ? (fatEligible ? 'FAT/NTFS' : 'NTFS')
+          : 'FAT';
+      if (!ext && !fatEligible && !ntfsEligible) {
         _notice(
           '$prefix: partition type ${partition.type} is exposed as raw bytes '
           'only. No filesystem, extended chain, dynamic disk or encryption '
@@ -389,9 +408,17 @@ class _DiskImageReader {
       );
       ViewerArchive? child;
       try {
-        final recognized = ext
-            ? await hasExtVolumeRecognition(slice)
-            : await hasFatVolumeRecognition(slice);
+        // Partition types permit a bounded probe; they do not identify a
+        // filesystem. In shared Microsoft Basic Data partitions an explicit
+        // NTFS OEM signature owns the attempt, including any later refusal.
+        final ntfs = ntfsEligible && await hasNtfsVolumeRecognition(slice);
+        final recognized =
+            ntfs ||
+            (ext
+                ? await hasExtVolumeRecognition(slice)
+                : fatEligible && await hasFatVolumeRecognition(slice));
+        if (ntfs) filesystemName = 'NTFS';
+        if (recognized && !ext && !ntfs) filesystemName = 'FAT';
         if (!recognized) {
           _notice(
             '$prefix: no supported $filesystemName volume was recognized; raw bytes remain available.',
@@ -406,17 +433,19 @@ class _DiskImageReader {
         final remainingEntries = maxEntries - _members.length - 1;
         final remainingPaths =
             maxRetainedPathBytes - _pathBytes - root.length * 2;
-        // Both filesystem kinds spend the same disk-wide allocation allowance.
+        // All filesystem kinds spend the same disk-wide allocation allowance.
         // Failed children retain their debits; mixing formats cannot multiply
         // the budget by giving each adapter a fresh full allocation allowance.
         final remainingBlocks =
             traversalBudget.maxClusters -
             traversalBudget.clustersVisited -
-            extTraversalBudget.blocksVisited;
+            extTraversalBudget.blocksVisited -
+            ntfsTraversalBudget.clustersVisited;
         final remainingExtents =
             traversalBudget.maxExtents -
             traversalBudget.extentsCreated -
-            extTraversalBudget.extentsCreated;
+            extTraversalBudget.extentsCreated -
+            ntfsTraversalBudget.extentsCreated;
         if (remainingEntries <= 0 ||
             remainingPaths <= 0 ||
             remainingBlocks <= 0 ||
@@ -424,7 +453,19 @@ class _DiskImageReader {
             source.metadataRemaining <= 0) {
           _limit('No listing budget remains for another filesystem.');
         }
-        child = ext
+        child = ntfs
+            ? await openNtfsArchive(
+                slice,
+                maxMemberBytes: maxMemberBytes,
+                maxEntries: remainingEntries,
+                maxMetadataBytes: source.metadataRemaining,
+                maxRetainedPathBytes: remainingPaths,
+                maxClusters: remainingBlocks,
+                maxExtents: remainingExtents,
+                traversalBudget: ntfsTraversalBudget,
+                isCancelled: () => source.cancelled,
+              )
+            : ext
             ? await openExtArchive(
                 slice,
                 maxMemberBytes: maxMemberBytes,
@@ -452,6 +493,8 @@ class _DiskImageReader {
       } on ArchiveFatCancelledException {
         rethrow;
       } on ArchiveExtCancelledException {
+        rethrow;
+      } on ArchiveNtfsCancelledException {
         rethrow;
       } on ArchiveViewException catch (error) {
         source.throwReadFailure();
@@ -540,6 +583,11 @@ class _DiskImageReader {
       scheme == DiskPartitionScheme.gpt
       ? partition.type == _linuxFilesystemGuid
       : partition.type == '0x83';
+
+  bool _ntfsType(DiskPartitionEntry partition, DiskPartitionScheme scheme) =>
+      scheme == DiskPartitionScheme.gpt
+      ? partition.type == _basicDataGuid
+      : partition.type == '0x07';
 
   void _add(
     String path,

@@ -305,11 +305,18 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     notes: 'Read-only ext filesystem images within an explicitly checked feature profile. Regular files and directories use validated, bounded positional reads; sparse data is preserved as zero bytes. Unsupported layouts, journal recovery and filesystem writes are outside this profile.',
   ),
   ArchiveFormatCapability(
+    id: 'ntfs',
+    label: 'NTFS filesystem image',
+    suffixes: ['.ntfs'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read-only NTFS filesystem images within an explicitly checked feature profile. Unnamed file data uses validated, bounded positional reads. Alternate stream names and sizes are metadata only; compression, encryption, reparse points, journal recovery and filesystem writes are outside this profile.',
+  ),
+  ArchiveFormatCapability(
     id: 'disk-image',
     label: 'Raw disk image',
     suffixes: ['.img', '.ima', '.dd', '.raw'],
     mimeType: 'application/octet-stream',
-    notes: 'Read supported FAT/ext volumes or unambiguous primary MBR/GPT images. Raw partition slices remain available; supported FAT and Linux ext partitions expose files. Other filesystem and virtual-disk formats are not implied by the filename. Read-only; no mounting, repair or partition writes.',
+    notes: 'Read supported FAT/ext/NTFS volumes or unambiguous primary MBR/GPT images. Raw partition slices remain available; admitted filesystem partitions expose files. Other filesystem and virtual-disk formats are not implied by the filename. Read-only; no mounting, repair or partition writes.',
   ),
   ArchiveFormatCapability(
     id: 'dmg',

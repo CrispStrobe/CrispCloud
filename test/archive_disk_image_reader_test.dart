@@ -69,7 +69,7 @@ void main() {
           expect(source.closeCount, 0);
           expect(
             source.reads.fold<int>(0, (sum, read) => sum + read.$2),
-            lessThanOrEqualTo(1058),
+            lessThanOrEqualTo(1066),
           );
           expect(
             source.reads.any((read) => _readTouchesVolume(source, read)),

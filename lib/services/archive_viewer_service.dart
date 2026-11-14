@@ -25,6 +25,7 @@ import 'archive_cab_reader.dart';
 import 'archive_disk_image_reader.dart';
 import 'archive_dmg_reader.dart';
 import 'archive_ext_reader.dart';
+import 'archive_ntfs_reader.dart';
 import 'archive_fat_reader.dart';
 import 'archive_format_registry.dart';
 import 'archive_hfs_reader.dart';
@@ -73,7 +74,7 @@ Future<ViewerArchive> openViewerArchiveSource(
   String? password,
   int maxMemberBytes = kArchiveReadLimit,
   int maxBufferedContainerBytes = kArchiveReadLimit,
-  // Only direct FAT/ext/partitioned-image readers receive this larger positional
+  // Only direct FAT/ext/NTFS/partitioned-image readers receive this larger positional
   // allowance. Other codecs and decoded wrappers retain their existing caps.
   int? maxDiskImageMemberBytes,
   int? diskImageSectorBytes,
@@ -108,6 +109,7 @@ Future<ViewerArchive> openViewerArchiveSource(
     final streamLimit =
         archive.formatName == 'fat' ||
             archive.formatName == 'ext' ||
+            archive.formatName == 'ntfs' ||
             archive.formatName == 'disk-image'
         ? maxDiskImageMemberBytes ?? maxMemberBytes
         : maxMemberBytes;
@@ -173,6 +175,15 @@ Future<ViewerArchive> _openSource(
       0,
       source.length < 512 ? source.length : 512,
     );
+    // An explicit NTFS boot signature owns the volume even when its payload
+    // contains unrelated container markers or its suffix suggests a writer.
+    if (await hasNtfsVolumeRecognition(source)) {
+      return await openNtfsArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        isCancelled: isCancelled,
+      );
+    }
     // Intercept PE files before any generic ZIP fallback. A ZIP self-extractor
     // retains executable offsets; treating it as an ordinary ZIP could later
     // authorize a rewrite that silently discards its executable prefix.
@@ -431,6 +442,13 @@ Future<ViewerArchive> _openSource(
     }
     final lower = name.toLowerCase();
     final descriptor = archiveFormatForName(name);
+    if (descriptor?.id == 'ntfs') {
+      return await openNtfsArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        isCancelled: isCancelled,
+      );
+    }
     if (descriptor?.id == 'ext') {
       return await openExtArchive(
         source,

@@ -220,6 +220,7 @@ class ArchiveWorkspace {
       '.ext2',
       '.ext3',
       '.ext4',
+      '.ntfs',
       '.img',
       '.ima',
       '.dd',
@@ -446,6 +447,7 @@ class ArchiveWorkspace {
                 (result.policy.format == ArchiveEndpointFormat.readOnly &&
                     (result.archive.formatName == 'fat' ||
                         result.archive.formatName == 'ext' ||
+                        result.archive.formatName == 'ntfs' ||
                         result.archive.formatName == 'disk-image')))) {
           return ArchiveWorkspace._(
             source,

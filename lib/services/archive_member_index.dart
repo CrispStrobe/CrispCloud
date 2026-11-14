@@ -7,14 +7,16 @@ import 'archive_viewer_service.dart';
 /// A shared validated namespace for browsing and editing. Sanitized traversal,
 /// special entries, duplicate names, and file/directory collisions never become
 /// selectable rows, including when they appear only in an implicit ancestor.
-/// Read-only ext/disk images retain special metadata in the original F3 listing,
+/// Read-only ext/NTFS/disk images retain special metadata in the original F3 listing,
 /// but omit it from this regular-file navigation/extraction namespace. Validate
 /// the complete namespace before omission so a hidden special entry cannot
 /// conceal a duplicate or act as an implicit directory for a selectable file.
 class ArchiveMemberIndex {
   ArchiveMemberIndex(ViewerArchive archive) {
     final imageMetadata =
-        archive.formatName == 'ext' || archive.formatName == 'disk-image';
+        archive.formatName == 'ext' ||
+        archive.formatName == 'ntfs' ||
+        archive.formatName == 'disk-image';
     for (final member in archive.members) {
       if (member.pathEscapedRoot ||
           (member.isSpecial && (!imageMetadata || !member.isFile))) {

@@ -74,12 +74,13 @@ class ArchiveEndpointPolicy {
   ) async {
     if (archive.formatName == 'fat' ||
         archive.formatName == 'ext' ||
+        archive.formatName == 'ntfs' ||
         archive.formatName == 'disk-image') {
       return const ArchiveEndpointPolicy(
         ArchiveEndpointFormat.readOnly,
         encrypted: false,
         encryptNames: false,
-        reason: 'FAT/ext filesystems and partitioned disk images support browsing and extraction only.',
+        reason: 'FAT/ext/NTFS filesystems and partitioned disk images support browsing and extraction only.',
       );
     }
     if (archive.formatName == 'udf') {
