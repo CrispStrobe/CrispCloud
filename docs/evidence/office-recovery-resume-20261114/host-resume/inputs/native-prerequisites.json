@@ -1,0 +1,9 @@
+{
+  "clang": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/f035141943c7/toolchain/clang/usr/lib/llvm-19/bin",
+  "llvm-ar": "Debian LLVM version 19.1.7\n  Optimized build.",
+  "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+  "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+  "gcc": "gcc (Debian 14.2.0-19) 14.2.0\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+  "sqlite_probe": "CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True",
+  "rustup_init_sha256": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55"
+}

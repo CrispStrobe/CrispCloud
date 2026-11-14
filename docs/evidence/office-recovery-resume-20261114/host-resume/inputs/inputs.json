@@ -1,0 +1,53 @@
+{
+  "status": "inputs captured; test execution pending",
+  "captured_at": "2026-11-14T18:56:55.110278+00:00",
+  "head": "31838929276690e2804231c7928ddd8f1e46811c",
+  "git_status": "",
+  "input_files": 4739,
+  "input_tree_sha256_before": "085d605d4d8924d21dffcff01b1137b0ccae9abe972bb8b41db94bea46a035ef",
+  "source_snapshot_sha256": "98493af28157d33e85f953102bdbbeb23508915b64fa1788f1a0bba7d434c81f",
+  "pubspec_committed_sha256": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+  "pubspec_expected_collected_sha256": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf",
+  "pubspec_note": "The committed CI helper temporarily adds system SQLite hook configuration and restores committed bytes in finally; collector receipt must bind the actual collected view.",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/collect_office_host_coverage.py",
+    "--flutter",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "build/office-fill-host-coverage",
+    "--",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/office_device_export_test.dart",
+    "test/widget/office_editor_lifecycle_test.dart",
+    "test/widget/office_ribbon_state_test.dart",
+    "test/widget/office_native_workflow_test.dart",
+    "test/widget/office_save_fidelity_test.dart"
+  ],
+  "environment_overrides": {
+    "CI": "true",
+    "BOT": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "TMPDIR": "/workspace/scratch/f035141943c7/toolchain/tmp",
+    "PUB_CACHE": "/workspace/scratch/f035141943c7/toolchain/pub-cache",
+    "RUSTUP_HOME": "/workspace/scratch/f035141943c7/toolchain/rustup",
+    "CARGO_HOME": "/workspace/scratch/f035141943c7/toolchain/cargo",
+    "CARGO": "/workspace/scratch/f035141943c7/toolchain/cargo/bin/cargo",
+    "PATH": "/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/llvm-19/bin:/workspace/scratch/f035141943c7/toolchain/flutter/bin:/workspace/scratch/f035141943c7/toolchain/cargo/bin:/home/agent/.codex/tmp/arg0-linux/codex-arg07A19SN:/opt/codex/codex-path:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "LD_LIBRARY_PATH": "/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/x86_64-linux-gnu:/workspace/scratch/f035141943c7/toolchain/native/lib"
+  },
+  "test_sha256": {
+    "test/office_device_export_test.dart": "6c29ff136ebbd95a6dbc2fabb0fa9e0b284df95b7b78950bd6dbe775795d9606",
+    "test/widget/office_editor_lifecycle_test.dart": "49b6b51885420a35d26595d2fe0b513b601d90964d950a203cc37632f20cd39e",
+    "test/widget/office_ribbon_state_test.dart": "1b205211fc63b477a973ef297a601c97a80df0c2c8ea5cccec01ad183f91cf14",
+    "test/widget/office_native_workflow_test.dart": "7d3650f54ea0462718dda83d8c3c0ccab2cea718c2204eaf803d69cc69239f37",
+    "test/widget/office_save_fidelity_test.dart": "76b3334dbe42e02920780c4a1bde94cef1afb157f3f3e5265152a81fe6e04a97"
+  },
+  "independent_input_sha256": {
+    "test/fixtures/office_native_workflows/native-sheet-source.xlsx": "548cf28efce66d0b4e3b9abb5a4f7f24f282ecadd7749cd65a5afa6ed0b5ba49",
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml": "4e716eba0a385256dc2cbc5001f990f9cd16ef79a40663248dcc6cac18f52dcb"
+  }
+}
