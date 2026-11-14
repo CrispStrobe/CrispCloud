@@ -129,7 +129,7 @@ routing remains G28; this closure does not claim live-server certification.
 
 ### Global transfer bandwidth limits
 
-**Status:** Implementing the foreground common-HTTP profile. **Dependencies:** Shared transfer scheduler.
+**Status:** Partially implemented: qualified foreground native HTTP profile. **Dependencies:** Shared transfer scheduler.
 
 **Scope:** Coordinate independent upload/download limits across simultaneous transfers.
 

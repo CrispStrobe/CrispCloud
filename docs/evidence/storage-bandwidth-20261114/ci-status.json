@@ -1,0 +1,57 @@
+{
+  "observed_at_utc": "2026-11-14 19:24:48 UTC",
+  "qualified_source": "d450a63e0041ef8d02f490b008681babf8ee6e38",
+  "scope": "Hosted bandwidth workflow status only; local source-bound gates are separate",
+  "runs": [
+    {
+      "id": 43631458997,
+      "event": "push",
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43631458997",
+      "jobs": [
+        {
+          "id": 132558777490,
+          "name": "Shared allocator on Dart VM and actual JavaScript",
+          "status": "queued",
+          "conclusion": null,
+          "run_id": 43631458997,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 132558777796,
+          "name": "HTTP transport, queue lifecycle, policy and UI",
+          "status": "queued",
+          "conclusion": null,
+          "run_id": 43631458997,
+          "logs_url": null,
+          "steps": null
+        }
+      ]
+    },
+    {
+      "id": 43631531807,
+      "event": "pull_request",
+      "url": "https://github.com/CrispStrobe/CrispCloud/actions/runs/43631531807",
+      "jobs": [
+        {
+          "id": 132559003669,
+          "name": "Shared allocator on Dart VM and actual JavaScript",
+          "status": "queued",
+          "conclusion": null,
+          "run_id": 43631531807,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 132559003906,
+          "name": "HTTP transport, queue lifecycle, policy and UI",
+          "status": "queued",
+          "conclusion": null,
+          "run_id": 43631531807,
+          "logs_url": null,
+          "steps": null
+        }
+      ]
+    }
+  ]
+}

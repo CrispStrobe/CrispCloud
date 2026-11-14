@@ -93,3 +93,18 @@ remote upload timing. Chrome qualification remains pending until observed.
 The [HTTP profile](../../file-manager-gaps/transfer-bandwidth-http-profile.md)
 records the actual hooked caller paths, buffering/accounting limits, persisted
 controls and remaining G29 scope. Original production manifests remain unchanged.
+
+## Saved-source local acceptance
+
+Source `d450a63e0041ef8d02f490b008681babf8ee6e38` passed the single
+28-suite native cohort: 314 passed, zero failures/skips, all suites observed.
+Strict analysis of 21 files passed, as did all 24 allocator cases on Dart VM
+and the same 24 after JavaScript compilation and actual Node execution.
+Every gate retained unchanged inventories of 8,155 source paths and an
+unchanged package map. Production manifests remain identical to the baseline.
+
+[The final local evidence](README.md) retains exact receipts, logs, native
+events, compiled JavaScript, measured loopback timing and preliminary failed
+UI attempts. Draft PR #106 is open. Hosted Chrome qualification remains queued
+at the preserved CI observation; G29 is marked partially implemented for the
+qualified foreground native HTTP profile, with other paths still explicit.

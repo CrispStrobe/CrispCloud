@@ -1,13 +1,14 @@
 # Queued HTTP payload limits
 
-G29 foreground HTTP increment, 14 November 2026. Qualification is being
-recorded in [the incremental evidence](../evidence/storage-bandwidth-20261114/).
+G29 foreground HTTP increment, 14 November 2026. Native qualification is
+recorded in [the source-bound evidence](../evidence/storage-bandwidth-20261114/).
+The dedicated actual-Chrome helper run remains pending hosted CI.
 The broader global-bandwidth gap remains open for the paths listed below.
 
 ## User controls and durable policy
 
-**Settings → Network → Queued HTTP payload limits** and **Activity → Payload
-limits** open the same dialog. Upload and download are independent, entered in
+**Settings → Network → Queued HTTP payload limits** and **Transfer queue panel →
+Payload limits** open the same dialog. Upload and download are independent, entered in
 KiB/s, and shared across participating queued jobs in the current foreground
 application runtime. Empty or zero means unlimited. Fractional KiB/s values
 are accepted down to one byte/s, with a maximum of one TiB/s per direction.
@@ -146,9 +147,9 @@ their own HTTP payload, not the remotely copied file size.
 
 The pure allocator's VM and compiled-JavaScript tests establish scheduling and
 lifecycle behavior. HTTP request fixtures and native loopback tests establish
-the exercised handoff and cancellation contracts. Chrome tests establish the
-browser helper's explicit unsupported upload behavior and paced response
-consumption. None proves live-service throughput, every adapter alternative,
+the exercised handoff and cancellation contracts. The dedicated Chrome cohort checks the browser helper's explicit unsupported
+upload behavior and paced response consumption using a mock HTTP client inside
+the actual browser runtime; its observed status is recorded separately. None proves live-service throughput, every adapter alternative,
 transport-buffer size or cross-process enforcement. Recorded source revisions,
 commands, successes and failures belong in the linked evidence; G29 closes only
 when its remaining implementation and acceptance requirements are satisfied.

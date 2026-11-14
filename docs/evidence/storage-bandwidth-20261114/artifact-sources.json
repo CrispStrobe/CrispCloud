@@ -1,0 +1,335 @@
+[
+  {
+    "path": "final-analysis-receipt.json",
+    "bytes": 2321,
+    "sha256": "e75b1d54009c4b03465d24644627920857b02d7ecb4c0b3e8583286407b74e96",
+    "original_bytes": 2321,
+    "original_sha256": "e75b1d54009c4b03465d24644627920857b02d7ecb4c0b3e8583286407b74e96",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-analysis-receipt.json"
+  },
+  {
+    "path": "final-analysis-source.json.gz",
+    "bytes": 633587,
+    "sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "original_bytes": 633587,
+    "original_sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-analysis-source.json.gz"
+  },
+  {
+    "path": "final-analysis.log.gz",
+    "bytes": 223,
+    "sha256": "eac7340ea73f5bc8446fe8911a520df75ea8a36bce349af890eac25d0665368d",
+    "original_bytes": 666,
+    "original_sha256": "e145297538cdf15344a71bbb80220d44c8f81ac0162f67bd6dc7117b572ee665",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/final-analysis.log"
+  },
+  {
+    "path": "final-allocator-vm-receipt.json",
+    "bytes": 1272,
+    "sha256": "bac6660da852d27f6e262895e6a178c48417dc60c72b833fdc1258fc81c0c80f",
+    "original_bytes": 1272,
+    "original_sha256": "bac6660da852d27f6e262895e6a178c48417dc60c72b833fdc1258fc81c0c80f",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-allocator-vm-receipt.json"
+  },
+  {
+    "path": "final-allocator-vm-source.json.gz",
+    "bytes": 633587,
+    "sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "original_bytes": 633587,
+    "original_sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-allocator-vm-source.json.gz"
+  },
+  {
+    "path": "final-allocator-vm.log.gz",
+    "bytes": 887,
+    "sha256": "6e1f2c406968ec4cc349e4cdc15521369f7dacd8feb0efa2a877fdf1936cb000",
+    "original_bytes": 2290,
+    "original_sha256": "16c1dc31c10f3060956910de813f7a6dd35020e84decbb9858ca45bc2f630248",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/final-allocator-vm.log"
+  },
+  {
+    "path": "final-allocator-js-compile-receipt.json",
+    "bytes": 1397,
+    "sha256": "51416659f74d550390330f2216a15974859047f229fe1c58c6c5d0857cfd0504",
+    "original_bytes": 1397,
+    "original_sha256": "51416659f74d550390330f2216a15974859047f229fe1c58c6c5d0857cfd0504",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-allocator-js-compile-receipt.json"
+  },
+  {
+    "path": "final-allocator-js-compile-source.json.gz",
+    "bytes": 633587,
+    "sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "original_bytes": 633587,
+    "original_sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-allocator-js-compile-source.json.gz"
+  },
+  {
+    "path": "final-allocator-js-compile.log.gz",
+    "bytes": 119,
+    "sha256": "151b92aadf345976ec4ab2a1301aac01e614a8474be2584089edd5fe58b44629",
+    "original_bytes": 111,
+    "original_sha256": "c6459e492b5b6d3a4f5ca866c04b7cf03eee0cc50a0733b0d0bef52ab925119d",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/final-allocator-js-compile.log"
+  },
+  {
+    "path": "final-allocator-js-receipt.json",
+    "bytes": 1244,
+    "sha256": "b3f5714256a32398d75b1764d77f756c8083b9020c85b088e8ac59e5e5ff9ea1",
+    "original_bytes": 1244,
+    "original_sha256": "b3f5714256a32398d75b1764d77f756c8083b9020c85b088e8ac59e5e5ff9ea1",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-allocator-js-receipt.json"
+  },
+  {
+    "path": "final-allocator-js-source.json.gz",
+    "bytes": 633587,
+    "sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "original_bytes": 633587,
+    "original_sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-allocator-js-source.json.gz"
+  },
+  {
+    "path": "final-allocator-js.log.gz",
+    "bytes": 887,
+    "sha256": "6e1f2c406968ec4cc349e4cdc15521369f7dacd8feb0efa2a877fdf1936cb000",
+    "original_bytes": 2290,
+    "original_sha256": "16c1dc31c10f3060956910de813f7a6dd35020e84decbb9858ca45bc2f630248",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/final-allocator-js.log"
+  },
+  {
+    "path": "final-native-receipt.json",
+    "bytes": 2664,
+    "sha256": "09588dc0d92ec3c8b37e8c7769d5b6631dd7f71981fae9bc2ca15369fb8f9aaf",
+    "original_bytes": 2664,
+    "original_sha256": "09588dc0d92ec3c8b37e8c7769d5b6631dd7f71981fae9bc2ca15369fb8f9aaf",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-native-receipt.json"
+  },
+  {
+    "path": "final-native-source.json.gz",
+    "bytes": 633587,
+    "sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "original_bytes": 633587,
+    "original_sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-native-source.json.gz"
+  },
+  {
+    "path": "final-native.log.gz",
+    "bytes": 6703,
+    "sha256": "e0ccb40bb450a6123596360d70071510af3cbc74fe7bba6f4487b1a6d8b01ce5",
+    "original_bytes": 67811,
+    "original_sha256": "8edadbc88939e7ecd2afa9ef8a1f68ff80209d390bbb0677dee9190a0994d040",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/final-native.log"
+  },
+  {
+    "path": "final-native-events.json.gz",
+    "bytes": 18919,
+    "sha256": "4ed7cad441893a7292fb810a291766b1bf38f49737f77065fe54901426f1c0b3",
+    "original_bytes": 177934,
+    "original_sha256": "bab0e307532e066d791651050ad53b9507683a1243964bbeef04ad232ff8e094",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/final-native-events.json"
+  },
+  {
+    "path": "allocator.js.gz",
+    "bytes": 52329,
+    "sha256": "6c5e3e4c63ce1efeac7fe4f9dd1879cfbfa7a3f465c266f1756583d15f4a42bc",
+    "original_bytes": 170888,
+    "original_sha256": "a646cfd62eeaede5810ed0171f44818bf3c6922eccd4ab4f39ddf823a7c49a69",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/allocator.js"
+  },
+  {
+    "path": "final-native-summary.json",
+    "bytes": 4645,
+    "sha256": "69832211387984cf4a1b6a4eba7339d24ccd40a8cb0b18cf0ef1b2503ddca375",
+    "original_bytes": 4645,
+    "original_sha256": "69832211387984cf4a1b6a4eba7339d24ccd40a8cb0b18cf0ef1b2503ddca375",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/final-native-summary.json"
+  },
+  {
+    "path": "preliminary/preliminary-start.json",
+    "bytes": 1413,
+    "sha256": "2499f161a400fe2ff1bd14644bc9423dd2a0dc8b8607f0aefd82fa41e0101d2d",
+    "original_bytes": 1413,
+    "original_sha256": "2499f161a400fe2ff1bd14644bc9423dd2a0dc8b8607f0aefd82fa41e0101d2d",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/preliminary-start.json"
+  },
+  {
+    "path": "preliminary/preliminary-receipt.json",
+    "bytes": 2930,
+    "sha256": "2fc4aed0b2ae5eeede15bbd479189ca20a38ed916ed84b9d5cd1dd09a1a0c698",
+    "original_bytes": 2930,
+    "original_sha256": "2fc4aed0b2ae5eeede15bbd479189ca20a38ed916ed84b9d5cd1dd09a1a0c698",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/preliminary-receipt.json"
+  },
+  {
+    "path": "preliminary/preliminary.log.gz",
+    "bytes": 868,
+    "sha256": "96b42fc182112b235eea82fd3410de6caf7594cec0727eeb889114ba02c2c672",
+    "original_bytes": 3957,
+    "original_sha256": "0ee9bfee609f51aedb68b70b10734a8a3ff67a558733fd93e6b8b5ae696cd01f",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/preliminary.log"
+  },
+  {
+    "path": "preliminary/preliminary-events.json.gz",
+    "bytes": 1830,
+    "sha256": "db546f2d17181df71dbf8042d7e735a50518ecf4286e601d3222ec88270bf0ea",
+    "original_bytes": 12207,
+    "original_sha256": "1dc8c5e6ffa0a3cbfea153058c22afc22a24d01d7f9a624447b5ddbc90d9c03c",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/preliminary-events.json"
+  },
+  {
+    "path": "preliminary/http-queue-initial-start.json",
+    "bytes": 1290,
+    "sha256": "7fbe05cb9cda1372fb69eee5ef71d958a98d507d37b2bbe044caea6b17b9f0b5",
+    "original_bytes": 1290,
+    "original_sha256": "7fbe05cb9cda1372fb69eee5ef71d958a98d507d37b2bbe044caea6b17b9f0b5",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/http-queue-initial-start.json"
+  },
+  {
+    "path": "preliminary/http-queue-initial-receipt.json",
+    "bytes": 2461,
+    "sha256": "60edbc65ca82a6b70519e434b711dbb98888825aceea9a310c295356e04006e0",
+    "original_bytes": 2461,
+    "original_sha256": "60edbc65ca82a6b70519e434b711dbb98888825aceea9a310c295356e04006e0",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/http-queue-initial-receipt.json"
+  },
+  {
+    "path": "preliminary/http-queue-initial.log.gz",
+    "bytes": 915,
+    "sha256": "b9c00eb43c29027c5f7ad354cecde7ee1a69fd19b4f9cb69b0f54c820e6df941",
+    "original_bytes": 5148,
+    "original_sha256": "a90431abe0af26b0f65f83eef3d3f12b9422e933418add3a30543b43fe4d3305",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/http-queue-initial.log"
+  },
+  {
+    "path": "preliminary/http-queue-initial-events.json.gz",
+    "bytes": 1730,
+    "sha256": "26529ba36c5fe3f628a4e127ec5823ad2b7e8fe2ce180cd02040ce8f90dc604c",
+    "original_bytes": 11912,
+    "original_sha256": "11a2b9d43ab4bce43117fd0691b79a551fe657037fb72bf141f8563735b35ee6",
+    "compression": "gzip",
+    "source": "build/storage-bandwidth-validation/http-queue-initial-events.json"
+  },
+  {
+    "path": "preliminary/http-fixture-preparation.json",
+    "bytes": 505,
+    "sha256": "547c04c5b497f3ead602a507e0159193a6d0b820efe79ecd7e59bf3e2f195442",
+    "original_bytes": 505,
+    "original_sha256": "547c04c5b497f3ead602a507e0159193a6d0b820efe79ecd7e59bf3e2f195442",
+    "compression": null,
+    "source": "build/storage-bandwidth-validation/http-fixture-preparation.json"
+  },
+  {
+    "path": "preliminary/transfer-bandwidth-ui-preliminary.jsonl.gz",
+    "bytes": 4760,
+    "sha256": "52081314a9427862b31c27092cff76e0ef0f6d95a0bd1a9082ddc1b95b2d8712",
+    "original_bytes": 47137,
+    "original_sha256": "7b5b5d0ea75e6fc849882d70b527fe2f3e94e7be6c1c64f4bc9965ed7d4153a0",
+    "compression": "gzip",
+    "source": "/workspace/scratch/0140f384d23a/toolchain/transfer-bandwidth-ui-preliminary.jsonl"
+  },
+  {
+    "path": "preliminary/transfer-bandwidth-ui-preliminary.stderr.log.gz",
+    "bytes": 116,
+    "sha256": "6ec8fd1e3c9fe0a9ce2f30bb3c8bf7b478858ce4bef9d45cead2e73b03191cdf",
+    "original_bytes": 117,
+    "original_sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+    "compression": "gzip",
+    "source": "/workspace/scratch/0140f384d23a/toolchain/transfer-bandwidth-ui-preliminary.stderr.log"
+  },
+  {
+    "path": "preliminary/transfer-bandwidth-ui-preliminary-attempt-2.jsonl.gz",
+    "bytes": 4490,
+    "sha256": "2bd076a3f1056076612d2042788f069d625770bd2881bb961b2f1eee6e56ab6e",
+    "original_bytes": 45595,
+    "original_sha256": "afd309872c8813a232474060cfbf37017866420d5cb0a3fc4c2a62e5a73da255",
+    "compression": "gzip",
+    "source": "/workspace/scratch/0140f384d23a/toolchain/transfer-bandwidth-ui-preliminary-attempt-2.jsonl"
+  },
+  {
+    "path": "preliminary/transfer-bandwidth-ui-preliminary-attempt-2.stderr.log.gz",
+    "bytes": 116,
+    "sha256": "6ec8fd1e3c9fe0a9ce2f30bb3c8bf7b478858ce4bef9d45cead2e73b03191cdf",
+    "original_bytes": 117,
+    "original_sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+    "compression": "gzip",
+    "source": "/workspace/scratch/0140f384d23a/toolchain/transfer-bandwidth-ui-preliminary-attempt-2.stderr.log"
+  },
+  {
+    "path": "preliminary/transfer-bandwidth-ui-dialog-preliminary-attempt-3.jsonl.gz",
+    "bytes": 1011,
+    "sha256": "d59870fbf23abc0365a2abff1c43ec5c2248d501ecc7812cf0e6527de4267aab",
+    "original_bytes": 5731,
+    "original_sha256": "050ac9d92ce1789ad33666713c57f36ea8de78599b0225e8d816a81746a62f65",
+    "compression": "gzip",
+    "source": "/workspace/scratch/0140f384d23a/toolchain/transfer-bandwidth-ui-dialog-preliminary-attempt-3.jsonl"
+  },
+  {
+    "path": "preliminary/transfer-bandwidth-ui-dialog-preliminary-attempt-3.stderr.log.gz",
+    "bytes": 116,
+    "sha256": "6ec8fd1e3c9fe0a9ce2f30bb3c8bf7b478858ce4bef9d45cead2e73b03191cdf",
+    "original_bytes": 117,
+    "original_sha256": "138ab25cddc127f3324fdac4bbd46553d91ce6961bc432b76a206ee7875e0322",
+    "compression": "gzip",
+    "source": "/workspace/scratch/0140f384d23a/toolchain/transfer-bandwidth-ui-dialog-preliminary-attempt-3.stderr.log"
+  },
+  {
+    "path": "toolchain/restoration-receipt.json",
+    "bytes": 4892,
+    "sha256": "9fa9c8cc867ce99df1767fe3217900ddcae369086976945da4b783f505ea49c5",
+    "original_bytes": 4892,
+    "original_sha256": "9fa9c8cc867ce99df1767fe3217900ddcae369086976945da4b783f505ea49c5",
+    "compression": null,
+    "source": "/workspace/scratch/0140f384d23a/toolchain/restoration-receipt.json"
+  },
+  {
+    "path": "toolchain/run.py",
+    "bytes": 1180,
+    "sha256": "db6bf4d3c4968040fa9a123e098b26d140aeb7d6eba7a569ddc2343aee4a3f58",
+    "original_bytes": 1180,
+    "original_sha256": "db6bf4d3c4968040fa9a123e098b26d140aeb7d6eba7a569ddc2343aee4a3f58",
+    "compression": null,
+    "source": "/workspace/scratch/0140f384d23a/toolchain/run.py"
+  },
+  {
+    "path": "toolchain/cargo-wrapper.py",
+    "bytes": 358,
+    "sha256": "4b70f00dbb2b25ea3b98cc484ec377ce8cbab94ac04e99b8f666763ee25b53d1",
+    "original_bytes": 358,
+    "original_sha256": "4b70f00dbb2b25ea3b98cc484ec377ce8cbab94ac04e99b8f666763ee25b53d1",
+    "compression": null,
+    "source": "/workspace/scratch/0140f384d23a/toolchain/bin/cargo"
+  },
+  {
+    "path": "toolchain/clang-wrapper.py",
+    "bytes": 378,
+    "sha256": "f0984bce259cb3611c4b55d47d2c4a9222be76dce36cf211c9d9d490dc959a4f",
+    "original_bytes": 378,
+    "original_sha256": "f0984bce259cb3611c4b55d47d2c4a9222be76dce36cf211c9d9d490dc959a4f",
+    "compression": null,
+    "source": "/workspace/scratch/0140f384d23a/toolchain/bin/clang"
+  }
+]

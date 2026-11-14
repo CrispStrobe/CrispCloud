@@ -1,0 +1,48 @@
+{
+  "classification": "Working-tree preliminary run; not a source-frozen qualification",
+  "source_frozen": false,
+  "observed_head_before": "35506118aa43a1852d8af476528f7901e3cc16d0",
+  "working_tree_status_before": "M lib/widgets/operations_panel.dart\n M packages/crisp_storage/lib/src/cloud/transfer_bandwidth_http.dart\n M test/widget/operations_panel_test.dart\n M test/widget/transfer_bandwidth_dialog_test.dart\n?? .github/workflows/transfer-bandwidth.yml\n?? test/transfer_bandwidth_http_test.dart\n?? tool/transfer_bandwidth_tests.txt",
+  "test_sha256_before": {
+    "test/transfer_bandwidth_http_test.dart": "2469f4877dd4bb6ee5ffca7167f4458f5317863eadfe79cfbbcfacd0b1c1e4ba",
+    "test/transfer_bandwidth_queue_test.dart": "ed516a7271f8fedb898da02c6619b96b1ec01653700e5719035cf2115cee2d94"
+  },
+  "started_at_utc": "2026-11-14T19:14:06.201176+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/0140f384d23a/toolchain/run.py",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "expanded",
+    "--file-reporter",
+    "json:build/storage-bandwidth-validation/http-queue-initial-events.json",
+    "test/transfer_bandwidth_http_test.dart",
+    "test/transfer_bandwidth_queue_test.dart"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 39.676,
+  "finished_at_utc": "2026-11-14T19:14:45.877771+00:00",
+  "observed_head_after": "35506118aa43a1852d8af476528f7901e3cc16d0",
+  "working_tree_status_after": "M lib/widgets/operations_panel.dart\n M packages/crisp_storage/lib/src/cloud/transfer_bandwidth_http.dart\n M test/widget/operations_panel_test.dart\n M test/widget/transfer_bandwidth_dialog_test.dart\n?? .github/workflows/transfer-bandwidth.yml\n?? test/transfer_bandwidth_http_test.dart\n?? tool/transfer_bandwidth_tests.txt",
+  "test_sha256_after": {
+    "test/transfer_bandwidth_http_test.dart": "2469f4877dd4bb6ee5ffca7167f4458f5317863eadfe79cfbbcfacd0b1c1e4ba",
+    "test/transfer_bandwidth_queue_test.dart": "ed516a7271f8fedb898da02c6619b96b1ec01653700e5719035cf2115cee2d94"
+  },
+  "log_sha256": "a90431abe0af26b0f65f83eef3d3f12b9422e933418add3a30543b43fe4d3305",
+  "test_events": {
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "done": [
+      {
+        "success": true,
+        "type": "done",
+        "time": 15127
+      }
+    ],
+    "hidden_failed": 0
+  },
+  "events_sha256": "11a2b9d43ab4bce43117fd0691b79a551fe657037fb72bf141f8563735b35ee6"
+}
