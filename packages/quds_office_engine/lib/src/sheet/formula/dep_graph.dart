@@ -35,85 +35,91 @@ class FormulaDepGraph {
     }
   }
 
-  /// Recalculates in dependency order. Returns cells that were updated.
+  /// Recalculates in evaluation order. Returns the formula cells visited.
   ///
   /// When [keepCachedOnUnsupported] is true, a formula this engine cannot
   /// evaluate (`#NAME?` for an unknown function, `#ERROR!` for unsupported
-  /// reference syntax or incomplete parsing) keeps the value saved in the file instead of replacing
-  /// it with the error.
+  /// reference syntax or incomplete parsing) keeps its imported value and type.
+  /// A dependent formula receives the unsupported marker, never the retained
+  /// stale cache. Dynamic references use this same resolver and cycle detector.
   List<String> recalculate({bool keepCachedOnUnsupported = true}) {
     rebuild();
     final List<String> order = <String>[];
-    final Set<String> visiting = <String>{};
     final List<String> path = <String>[];
-    final Set<String> visited = <String>{};
+    final Map<String, int> visiting = <String, int>{};
+    final Map<String, Object?> results = <String, Object?>{};
 
-    void visit(String node) {
-      if (visited.contains(node)) {
-        return;
-      }
-      if (!visiting.add(node)) {
-        // Every participant must be marked before any old numeric cache is
-        // consulted; marking only the first would leave stale values in peers.
-        circular.addAll(path.skip(path.indexOf(node)));
-        return;
-      }
-      path.add(node);
-      for (final String d in _deps[node] ?? const <String>{}) {
-        visit(d);
-      }
-      visiting.remove(node);
-      path.removeLast();
-      visited.add(node);
-      order.add(node);
-    }
-
-    for (final String node in _deps.keys) {
-      visit(node);
-    }
-
-    for (final String key in order) {
-      final (SmlWorksheet sheet, SmlCellRef ref) = _parse(key);
+    Object? evaluateCell(SmlWorksheet sheet, SmlCellRef ref) {
+      final key = _key(sheet, ref);
+      if (results.containsKey(key)) return results[key];
       final SmlCell cell = sheet.cell(ref);
-      if (_unmodeledDependencies.contains(key)) {
-        if (keepCachedOnUnsupported && cell.value != null) continue;
-        cell.value = '#ERROR! Unmodeled formula dependencies';
-        cell.type = SmlCellType.error;
-        continue;
-      }
-      if (circular.contains(key)) {
-        cell.value = '#CIRC!';
-        cell.type = SmlCellType.error;
-        continue;
-      }
       if (cell.formula == null || cell.formula!.isEmpty) {
-        continue;
+        final value = cell.value;
+        return cell.type == SmlCellType.error && value is String
+            ? FormulaErrorValue(value)
+            : value;
       }
-      final Object? cached = cell.value;
-      final Object? result = evaluateFormulaForCache(
-        cell.formula!,
-        FormulaContext(workbook: workbook, sheet: sheet, origin: ref),
-      );
+      final cycleStart = visiting[key];
+      if (cycleStart != null) {
+        circular.addAll(path.skip(cycleStart));
+        return const FormulaErrorValue('#CIRC!');
+      }
+      visiting[key] = path.length;
+      path.add(key);
+      Object? result;
+      try {
+        result = _unmodeledDependencies.contains(key)
+            ? const FormulaErrorValue(
+                '#ERROR! Unmodeled formula dependencies',
+                isUnsupported: true,
+              )
+            : evaluateFormulaForCache(
+                cell.formula!,
+                FormulaContext(
+                  workbook: workbook,
+                  sheet: sheet,
+                  origin: ref,
+                  resolveCell: evaluateCell,
+                ),
+              );
+        result = FormulaErrorValue.unsupportedIn(result) ?? result;
+        // An IFERROR inside a cycle cannot turn a participant's recursion
+        // error into a plausible value. A non-cyclic dependent may handle it.
+        if (circular.contains(key)) {
+          result = const FormulaErrorValue('#CIRC!');
+        }
+      } finally {
+        visiting.remove(key);
+        path.removeLast();
+      }
+      results[key] = result;
+      order.add(key);
+      return result;
+    }
+
+    for (final key in _deps.keys) {
+      final (sheet, ref) = _parse(key);
+      evaluateCell(sheet, ref);
+    }
+
+    // Keep original caches intact during evaluation. Traversal order can never
+    // turn a retained unsupported result into fresh input for another formula.
+    for (final key in order) {
+      final (sheet, ref) = _parse(key);
+      final cell = sheet.cell(ref);
+      final result = results[key];
       if (keepCachedOnUnsupported &&
           result is FormulaErrorValue &&
           result.isUnsupported &&
-          cached != null) {
+          cell.value != null) {
         continue;
       }
       cell.value = FormulaErrorValue.unwrap(result);
-      if (cell.formula != null && cell.formula!.isNotEmpty) {
-        cell.type = result is FormulaErrorValue
-            ? SmlCellType.error
-            : result is String
-            ? SmlCellType.string
-            : SmlCellType.formula;
-      } else if (cell.value is num) {
-        cell.type = SmlCellType.number;
-      } else if (cell.value is bool) {
-        cell.type = SmlCellType.boolean;
-      } else {
-        cell.type = SmlCellType.string;
-      }
+      cell.type = result is FormulaErrorValue
+          ? SmlCellType.error
+          : result is String
+          ? SmlCellType.string
+          : SmlCellType.formula;
     }
     return order;
   }

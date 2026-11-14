@@ -201,6 +201,49 @@ class OpcPackage {
   /// parts API.
   Iterable<PackagePart> get parts => _parts.values;
 
+  /// Refuses editing when OPC signature metadata is present. This does not
+  /// verify signatures: rewriting any signed package could invalidate them.
+  /// Inspect only ZIP names, content types and relationships, leaving document
+  /// and media payloads lazy. Hosts can still export their unchanged input.
+  void assertUnsignedForEditing() {
+    bool signaturePath(String path) {
+      var value = path.replaceAll('\\', '/');
+      try {
+        value = Uri.decodeComponent(value);
+      } on FormatException {
+        // Invalid escapes cannot be treated as evidence of an unsigned part.
+        throw const FormatException('Invalid Office package part path.');
+      }
+      value = OpcUris.normalize(value).toLowerCase();
+      return value == '/_xmlsignatures' || value.startsWith('/_xmlsignatures/');
+    }
+
+    bool signatureType(String type) =>
+        type.toLowerCase().contains('digital-signature');
+
+    final signed =
+        (_source?.entries.any((entry) => signaturePath(entry.fileName)) ??
+            false) ||
+        partNames.any(signaturePath) ||
+        contentTypes.defaults.values.any(signatureType) ||
+        contentTypes.overrides.values.any(signatureType) ||
+        parts.any((part) => signatureType(part.contentType)) ||
+        <RelationshipCollection>[
+          _packageRelationships,
+          ..._partRels.values,
+        ].any(
+          (relationships) => relationships.items.any(
+            (relationship) => signatureType(relationship.type),
+          ),
+        );
+    if (signed) {
+      throw const FormatException(
+        'This Office package is digitally signed. Save an unsigned copy in '
+        'Office before editing it here. The original has not been changed.',
+      );
+    }
+  }
+
   /// kind API.
   OpcPackageKind get kind {
     final PackageRelationship? office = _packageRelationships.firstByType(

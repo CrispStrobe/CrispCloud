@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../model/sml_analysis.dart';
 import '../model/sml_workbook.dart';
 import 'formula_ast.dart';
+import 'formula_eval.dart';
 
 /// Broad catalog of spreadsheet functions (Excel-like names; not full Excel).
 abstract final class FormulaFunctions {
@@ -24,10 +25,26 @@ abstract final class FormulaFunctions {
     if (n == 'LET') {
       return _let(args, ctx);
     }
+    if (n == 'OFFSET') {
+      // The first argument supplies an address, not its current value. Reading
+      // it would invent dependencies (including self-cycles) outside the
+      // offset's actual target range.
+      final vals = <Object?>[
+        null,
+        for (final arg in args.skip(1)) arg.eval(ctx),
+      ];
+      final unsupported = FormulaErrorValue.unsupportedIn(vals);
+      if (unsupported != null) return unsupported;
+      final errors = flattenValues(vals).whereType<FormulaErrorValue>();
+      if (errors.isNotEmpty) return errors.first;
+      return _offset(ctx, args, vals);
+    }
     // Branching functions consume errors intentionally and evaluate only the
     // selected expression. An unused opaque name must not block a known result.
     if (n == 'IF') {
       final condition = args.isEmpty ? null : args[0].eval(ctx);
+      final unsupported = FormulaErrorValue.unsupportedIn(condition);
+      if (unsupported != null) return unsupported;
       if (condition is FormulaErrorValue) return condition;
       final selected = _truth(condition) ? 1 : 2;
       return args.length > selected ? args[selected].eval(ctx) : selected == 1;
@@ -36,7 +53,8 @@ abstract final class FormulaFunctions {
       final value = args.isEmpty ? null : args[0].eval(ctx);
       // Missing evaluator capability is not a genuine Excel error that a
       // fallback can safely replace. Preserve its provenance for cache policy.
-      if (value is FormulaErrorValue && value.isUnsupported) return value;
+      final unsupported = FormulaErrorValue.unsupportedIn(value);
+      if (unsupported != null) return unsupported;
       final fallback =
           _isErr(value, ctx) &&
           (n == 'IFERROR' || formulaString(value) == '#N/A');
@@ -45,6 +63,10 @@ abstract final class FormulaFunctions {
     final List<Object?> vals = args
         .map((FormulaNode a) => a.eval(ctx))
         .toList();
+    // Missing capability is never a native Excel error or ordinary text that
+    // COUNT, ISERROR, lookups, Boolean or text functions may consume safely.
+    final unsupported = FormulaErrorValue.unsupportedIn(vals);
+    if (unsupported != null) return unsupported;
     // Aggregators must not ignore native errors as nonnumeric text, and text
     // functions must not turn them into ordinary strings. Error-looking text
     // remains text, including when returned by a named scalar constant.
@@ -170,9 +192,8 @@ abstract final class FormulaFunctions {
         }
         return a - b * (a / b).floor();
       case 'PRODUCT':
-        return flattenNumbers(
-          vals,
-        ).fold<double>(1, (double p, double x) => p * x);
+        return flattenNumbers(vals)
+            .fold<double>(1, (double p, double x) => p * x);
       case 'POWER':
       case 'POW':
         return _powNum(_n(vals, 0) ?? 0, _n(vals, 1) ?? 0);
@@ -223,9 +244,8 @@ abstract final class FormulaFunctions {
       case 'SUMPRODUCT':
         return _sumproduct(vals);
       case 'SUMSQ':
-        return flattenNumbers(
-          vals,
-        ).fold<double>(0, (double s, double x) => s + x * x);
+        return flattenNumbers(vals)
+            .fold<double>(0, (double s, double x) => s + x * x);
       case 'MEDIAN':
         return _median(flattenNumbers(vals));
       case 'AVEDEV':
@@ -285,13 +305,15 @@ abstract final class FormulaFunctions {
       case 'COUNT':
         return flattenNumbers(vals).length.toDouble();
       case 'COUNTA':
-        return flattenValues(
-          vals,
-        ).where((Object? v) => v != null && v != '').length.toDouble();
+        return flattenValues(vals)
+            .where((Object? v) => v != null && v != '')
+            .length
+            .toDouble();
       case 'COUNTBLANK':
-        return flattenValues(
-          vals,
-        ).where((Object? v) => v == null || v == '').length.toDouble();
+        return flattenValues(vals)
+            .where((Object? v) => v == null || v == '')
+            .length
+            .toDouble();
       case 'SUMIF':
         return _sumIf(ctx, args);
       case 'COUNTIF':
@@ -418,9 +440,8 @@ abstract final class FormulaFunctions {
         }
       case 'CELL':
         {
-          final String info = formulaString(
-            vals.isEmpty ? null : vals[0],
-          ).toLowerCase();
+          final String info = formulaString(vals.isEmpty ? null : vals[0])
+              .toLowerCase();
           SmlCellRef ref = ctx.origin;
           if (args.length > 1 && args[1] is CellNode) {
             ref = (args[1] as CellNode).ref;
@@ -449,9 +470,8 @@ abstract final class FormulaFunctions {
         }
       case 'INFO':
         {
-          final String type = formulaString(
-            vals.isEmpty ? null : vals[0],
-          ).toLowerCase();
+          final String type = formulaString(vals.isEmpty ? null : vals[0])
+              .toLowerCase();
           return switch (type) {
             'directory' => '',
             'numfile' => 1.0,
@@ -621,8 +641,6 @@ abstract final class FormulaFunctions {
         return _textFmt(vals);
       case 'INDIRECT':
         return _indirect(ctx, vals);
-      case 'OFFSET':
-        return _offset(ctx, args, vals);
       case 'EDATE':
         return _edate(vals);
       case 'EOMONTH':
@@ -1229,9 +1247,9 @@ abstract final class FormulaFunctions {
       if (an != null && bn != null) {
         cmp = an.compareTo(bn);
       } else {
-        cmp = formulaString(
-          a,
-        ).toLowerCase().compareTo(formulaString(b).toLowerCase());
+        cmp = formulaString(a)
+            .toLowerCase()
+            .compareTo(formulaString(b).toLowerCase());
       }
       return ascending ? cmp : -cmp;
     });
@@ -1279,16 +1297,54 @@ abstract final class FormulaFunctions {
     if (vals.isEmpty) {
       return const FormulaErrorValue('#REF!');
     }
+    final errors = flattenValues(vals).whereType<FormulaErrorValue>();
+    if (errors.isNotEmpty) return errors.first;
+    if (vals.length > 1 && !_truth(vals[1])) {
+      return const FormulaErrorValue(
+        '#ERROR! R1C1 INDIRECT is not evaluated',
+        isUnsupported: true,
+      );
+    }
     final String ref = formulaString(vals[0]).trim();
+    if (ref.contains('[') || ref.contains(']')) {
+      return const FormulaErrorValue(
+        '#ERROR! External or structured INDIRECT references are not evaluated',
+        isUnsupported: true,
+      );
+    }
+    if (ref.startsWith('=')) return const FormulaErrorValue('#REF!');
     try {
-      if (ref.contains(':')) {
-        return RangeNode(SmlRange.parse(ref)).eval(ctx);
+      final target = parseFormula(ref);
+      if (target is CellNode) {
+        if (!_validCell(target.ref)) return const FormulaErrorValue('#REF!');
+        return target.eval(ctx);
       }
-      return CellNode(SmlCellRef.parse(ref)).eval(ctx);
+      if (target is RangeNode) {
+        if (!_validCell(target.range.start) || !_validCell(target.range.end)) {
+          return const FormulaErrorValue('#REF!');
+        }
+        return target.eval(ctx);
+      }
+      if (target is NamedRangeNode) {
+        final definition = target.resolve(ctx.workbook, ctx.sheet);
+        if (definition is SmlNamedRange) return target.eval(ctx);
+        if (definition is SmlFormulaName) {
+          return const FormulaErrorValue(
+            '#ERROR! Computed INDIRECT names are not evaluated',
+            isUnsupported: true,
+          );
+        }
+      }
+      return const FormulaErrorValue('#REF!');
+    } on UnsupportedError catch (error) {
+      return FormulaErrorValue('#ERROR! $error', isUnsupported: true);
     } on Object {
       return const FormulaErrorValue('#REF!');
     }
   }
+
+  static bool _validCell(SmlCellRef ref) =>
+      ref.col >= 0 && ref.col < 16384 && ref.row >= 0 && ref.row < 1048576;
 
   static Object? _offset(
     FormulaContext ctx,
@@ -1298,12 +1354,19 @@ abstract final class FormulaFunctions {
     if (args.isEmpty) {
       return const FormulaErrorValue('#VALUE!');
     }
-    SmlCellRef? origin;
+    SmlRange? range;
+    SmlWorksheet? target = ctx.sheet;
     final FormulaNode first = args[0];
     if (first is CellNode) {
-      origin = first.ref;
+      range = SmlRange(first.ref, first.ref);
+      target = first.sheetName == null
+          ? ctx.sheet
+          : ctx.workbook.sheetByName(first.sheetName!);
     } else if (first is RangeNode) {
-      origin = first.range.start;
+      range = first.range;
+      target = first.sheetName == null
+          ? ctx.sheet
+          : ctx.workbook.sheetByName(first.sheetName!);
     } else if (first is NamedRangeNode) {
       final definition = first.resolve(ctx.workbook, ctx.sheet);
       if (first.sheetName != null || definition?.localSheetId != null) {
@@ -1312,25 +1375,31 @@ abstract final class FormulaFunctions {
         throw UnsupportedError('OFFSET of scoped names is not evaluated');
       }
       final SmlNamedRange? named = ctx.workbook.namedRange(first.name);
-      origin = named?.range.start;
+      range = named?.range;
+      target = named == null ? null : ctx.workbook.sheetByName(named.sheetName);
     }
-    if (origin == null) {
+    if (range == null) {
       return const FormulaErrorValue('#VALUE!');
     }
+    if (target == null) return const FormulaErrorValue('#REF!');
+    final origin = SmlCellRef(range.minCol, range.minRow);
     final int rows = (_n(vals, 1) ?? 0).toInt();
     final int cols = (_n(vals, 2) ?? 0).toInt();
-    final int height = vals.length > 3 ? (_n(vals, 3) ?? 1).toInt() : 1;
-    final int width = vals.length > 4 ? (_n(vals, 4) ?? 1).toInt() : 1;
+    final int height = vals.length > 3
+        ? (_n(vals, 3) ?? 1).toInt()
+        : range.maxRow - range.minRow + 1;
+    final int width = vals.length > 4
+        ? (_n(vals, 4) ?? 1).toInt()
+        : range.maxCol - range.minCol + 1;
     final SmlCellRef start = SmlCellRef(origin.col + cols, origin.row + rows);
-    if (height <= 1 && width <= 1) {
-      return ctx.valueOf(start);
+    final end = SmlCellRef(start.col + width - 1, start.row + height - 1);
+    if (height <= 0 || width <= 0 || !_validCell(start) || !_validCell(end)) {
+      return const FormulaErrorValue('#REF!');
     }
-    return RangeNode(
-      SmlRange(
-        start,
-        SmlCellRef(start.col + width - 1, start.row + height - 1),
-      ),
-    ).eval(ctx);
+    if (height == 1 && width == 1) {
+      return ctx.valueOf(start, onSheet: target);
+    }
+    return RangeNode(SmlRange(start, end), sheetName: target.name).eval(ctx);
   }
 
   static Object? _edate(List<Object?> vals) {

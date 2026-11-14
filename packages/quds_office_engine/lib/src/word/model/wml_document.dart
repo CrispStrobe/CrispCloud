@@ -1061,7 +1061,7 @@ class WmlSection {
 }
 
 /// What a restricted document still allows.
-enum WmlRestrictMode { readOnly, comments, forms }
+enum WmlRestrictMode { readOnly, comments, forms, trackedChanges, none }
 
 /// Class WmlDocument.
 class WmlDocument {
@@ -1081,6 +1081,8 @@ class WmlDocument {
     this.watermark = '',
     this.restrictEditing = false,
     this.restrictMode = WmlRestrictMode.readOnly,
+    this.protectionHasPassword = false,
+    this.protectionFormattingRestricted = false,
     List<Map<String, String>>? mailMergeRecords,
     this.mailMergePreview = 0,
     this.sourceFileName = '',
@@ -1146,6 +1148,15 @@ class WmlDocument {
 
   /// restrictMode API.
   WmlRestrictMode restrictMode;
+
+  /// Imported protection carries password/hash metadata. Hosts must not offer
+  /// to remove or change it without a supported password verification flow.
+  /// The original metadata remains in the native settings part on save.
+  bool protectionHasPassword;
+
+  /// Native formatting restriction, retained even when editing mode is none.
+  /// Hosts without a formatting-only permission model conservatively view it.
+  bool protectionFormattingRestricted;
 
   /// Mail-merge data rows.
   final List<Map<String, String>> mailMergeRecords;

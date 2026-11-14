@@ -314,6 +314,13 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     if (controller == null || _saving || _exporting) return;
     setState(() => _saving = true);
     try {
+      // Keep the existing pre-save backup as well as the edited recovery copy.
+      // A failed upload must not replace the only snapshot of either revision.
+      final previousBytes = _loadedBytes;
+      if (previousBytes != null) {
+        await _saveSnapshot(previousBytes, kind: 'original');
+      }
+      if (!mounted) return;
       // Serialization captures this document revision. Editing remains enabled
       // while encoding/uploading, so completing this write cannot clean a newer
       // revision or dismiss it through Save and Close.
@@ -323,7 +330,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
       final savedRevision = controller.contentRevision;
       final bytes = await controller.saveBytesAsync();
       await _wordPreservation?.validateSaved(bytes);
-      await _saveSnapshot(bytes);
+      await _saveSnapshot(bytes, kind: 'recovery');
       if (!mounted) return;
       final target = _target;
       if (target == null) {
@@ -470,7 +477,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
     }
   }
 
-  Future<void> _saveSnapshot(Uint8List bytes) async {
+  Future<void> _saveSnapshot(Uint8List bytes, {required String kind}) async {
     if (kIsWeb) return;
     try {
       final support = await getApplicationSupportDirectory();
@@ -480,7 +487,7 @@ class _OfficeEditorDialogState extends ConsumerState<OfficeEditorDialog> {
         RegExp(r'[^A-Za-z0-9._-]'),
         '_',
       );
-      final name = '${DateTime.now().millisecondsSinceEpoch}_$safeName';
+      final name = '${DateTime.now().microsecondsSinceEpoch}_${kind}_$safeName';
       await File('${dir.path}/$name').writeAsBytes(bytes, flush: true);
     } catch (_) {
       // Snapshots are best-effort.

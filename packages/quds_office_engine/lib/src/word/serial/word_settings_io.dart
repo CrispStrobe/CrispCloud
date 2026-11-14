@@ -1,14 +1,31 @@
 import '../../xml/namespaces.dart';
 import '../../xml/xml_node.dart';
+import '../model/wml_document.dart';
 
 /// Owns three live settings without replacing the rest of the native part.
 abstract final class WordSettingsIo {
-  static ({bool tracking, bool protection, bool oddEven}) read(String xml) {
+  static ({
+    bool tracking,
+    bool protection,
+    bool oddEven,
+    WmlRestrictMode restrictMode,
+    bool protectionHasPassword,
+    bool protectionFormattingRestricted,
+  })
+  read(String xml) {
     final root = XmlDocument.parse(xml).root!;
     return (
       tracking: _enabled(root, 'trackRevisions'),
       protection: _enabled(root, 'documentProtection'),
       oddEven: _enabled(root, 'evenAndOddHeaders'),
+      restrictMode: _restrictMode(root),
+      protectionHasPassword: _hasPassword(root),
+      protectionFormattingRestricted: const {'1', 'true', 'on'}.contains(
+        root
+            .firstChild('documentProtection', namespaceUri: OfficeNamespaces.w)
+            ?.getAttribute('formatting', namespaceUri: OfficeNamespaces.w)
+            ?.toLowerCase(),
+      ),
     );
   }
 
@@ -18,6 +35,7 @@ abstract final class WordSettingsIo {
     required bool tracking,
     required bool protection,
     required bool oddEven,
+    WmlRestrictMode? restrictMode,
   }) {
     if (source == null && !tracking && !protection && !oddEven) return null;
     final document = source == null
@@ -32,11 +50,16 @@ abstract final class WordSettingsIo {
       'evenAndOddHeaders': oddEven,
     };
     for (final entry in values.entries) {
-      if (_enabled(root, entry.key) == entry.value) continue;
       var element = root.firstChild(
         entry.key,
         namespaceUri: OfficeNamespaces.w,
       );
+      final flagChanged = _enabled(root, entry.key) != entry.value;
+      final modeChanged =
+          entry.key == 'documentProtection' &&
+          ((element == null && protection) ||
+              (restrictMode != null && _restrictMode(root) != restrictMode));
+      if (!flagChanged && !modeChanged) continue;
       if (element == null) {
         element = XmlElement(
           localName: entry.key,
@@ -54,15 +77,78 @@ abstract final class WordSettingsIo {
         namespaceUri: 'http://www.w3.org/2000/xmlns/',
       );
       // Preserve all other attributes, including protection hashing metadata.
-      element.setAttribute(
-        entry.key == 'documentProtection' ? 'enforcement' : 'val',
-        entry.value ? '1' : '0',
-        prefix: prefix,
-        namespaceUri: OfficeNamespaces.w,
-      );
+      if (flagChanged) {
+        element.setAttribute(
+          entry.key == 'documentProtection' ? 'enforcement' : 'val',
+          entry.value ? '1' : '0',
+          prefix: prefix,
+          namespaceUri: OfficeNamespaces.w,
+        );
+      }
+      if (modeChanged) {
+        element.setAttribute(
+          'edit',
+          (restrictMode ?? WmlRestrictMode.readOnly).name,
+          prefix: prefix,
+          namespaceUri: OfficeNamespaces.w,
+        );
+      }
       changed = true;
     }
     return !changed && source != null ? source : document.toXmlString();
+  }
+
+  static WmlRestrictMode _restrictMode(XmlElement root) {
+    final node = root.firstChild(
+      'documentProtection',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (node == null) return WmlRestrictMode.readOnly;
+    final value = node.getAttribute('edit', namespaceUri: OfficeNamespaces.w);
+    return switch (value) {
+      null || 'none' => WmlRestrictMode.none,
+      'comments' => WmlRestrictMode.comments,
+      'forms' => WmlRestrictMode.forms,
+      'trackedChanges' => WmlRestrictMode.trackedChanges,
+      _ => WmlRestrictMode.readOnly,
+    };
+  }
+
+  static bool _hasPassword(XmlElement root) {
+    final node = root.firstChild(
+      'documentProtection',
+      namespaceUri: OfficeNamespaces.w,
+    );
+    if (node == null) return false;
+    // ECMA password metadata plus the later Word hash/salt attribute names.
+    // Fail closed on partial metadata instead of silently removing protection.
+    const names = <String>{
+      'password',
+      'hash',
+      'salt',
+      'hashValue',
+      'saltValue',
+      'algorithmName',
+      'cryptProviderType',
+      'cryptAlgorithmClass',
+      'cryptAlgorithmType',
+      'cryptAlgorithmSid',
+      'cryptSpinCount',
+      'spinCount',
+      'cryptProvider',
+      'algIdExt',
+      'algIdExtSource',
+      'cryptProviderTypeExt',
+      'cryptProviderTypeExtSource',
+    };
+    return node.attributes.any(
+      (attribute) =>
+          (attribute.namespaceUri == OfficeNamespaces.w ||
+              attribute.namespaceUri ==
+                  'http://schemas.microsoft.com/office/word/2010/wordml') &&
+          names.contains(attribute.localName) &&
+          attribute.value.isNotEmpty,
+    );
   }
 
   static String _unusedPrefix(XmlElement root) {

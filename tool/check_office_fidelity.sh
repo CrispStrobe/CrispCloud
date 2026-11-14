@@ -19,6 +19,7 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/office_ribbon_footnotes_test.dart \
   test/office_ribbon_common_i18n_test.dart \
   test/office_document_service_test.dart \
+  test/office_device_export_test.dart \
   test/legacy_word_document_test.dart \
   test/legacy_word_conversion_strings_test.dart \
   test/legacy_word_copy_target_test.dart \
@@ -31,6 +32,7 @@ python3 tool/collect_office_host_coverage.py "$office_host_coverage_dir" -- \
   test/office_pdf_service_test.dart \
   test/widget/office_editor_dialog_test.dart \
   test/widget/office_editor_lifecycle_test.dart \
+  test/widget/office_native_workflow_test.dart \
   test/widget/office_editor_ribbon_test.dart \
   test/widget/office_ribbon_state_test.dart \
   test/widget/office_paragraph_dialog_test.dart \

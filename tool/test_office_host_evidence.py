@@ -34,9 +34,14 @@ class HostEvidenceTest(unittest.TestCase):
 
     def populate(self, base=None):
         base = base or self.root
+        references = {entry['path']: entry for entry in evidence.reference_entries()}
         for name in evidence.expected_paths():
             file = base / name
-            package(file)
+            if name in references:
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_bytes((evidence.ROOT / references[name]['fixture']).read_bytes())
+            else:
+                package(file)
         return base
 
     def test_complete_tree_has_hashes_for_every_expected_export(self):
@@ -55,6 +60,27 @@ class HostEvidenceTest(unittest.TestCase):
         report = evidence.inspect(self.root)
         self.assertEqual(report['failures'], [])
         self.assertEqual(report['verified'], len(evidence.expected_paths()))
+
+    def test_references_are_distinct_from_actual_host_exports(self):
+        self.populate()
+        report = evidence.inspect(self.root)
+        self.assertEqual(report['failures'], [])
+        self.assertEqual(report['verified_references'], 3)
+        self.assertEqual(report['verified_host_outputs'], report['expected_host_outputs'])
+        self.assertEqual(report['verified'],
+                         report['verified_host_outputs'] + report['verified_references'])
+
+    def test_valid_substitute_package_cannot_satisfy_independent_reference(self):
+        for reference in evidence.reference_entries():
+            with self.subTest(path=reference['path']):
+                self.populate()
+                file = self.root / reference['path']
+                package(file)
+                self.assertTrue(evidence.inspect_package(file))
+                report = evidence.inspect(self.root)
+                self.assertEqual(report['verified_references'], 2)
+                self.assertTrue(any('reference SHA-256 mismatch' in failure
+                                    for failure in report['failures']))
 
     def test_missing_any_declared_host_output_fails(self):
         for name in evidence.expected_paths():

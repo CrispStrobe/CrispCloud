@@ -61,6 +61,27 @@ class FormulaErrorValue {
   /// Evaluation capability, distinct from the spelling of a real native error.
   final bool isUnsupported;
 
+  /// Finds missing evaluator capability even when a range or spill carries it.
+  /// Ordinary native errors remain distinct and may be consumed by IFERROR,
+  /// COUNT and the other functions that intentionally handle them.
+  static FormulaErrorValue? unsupportedIn(Object? value) {
+    if (value is FormulaErrorValue) {
+      return value.isUnsupported ? value : null;
+    }
+    final Iterable<Object?>? values = switch (value) {
+      FormulaSpill(:final rows) => rows,
+      List<Object?>() => value,
+      _ => null,
+    };
+    if (values != null) {
+      for (final item in values) {
+        final error = unsupportedIn(item);
+        if (error != null) return error;
+      }
+    }
+    return null;
+  }
+
   @override
   String toString() => code;
 
@@ -82,11 +103,13 @@ class FormulaContext {
     required this.sheet,
     required this.origin,
     this.onCircular,
+    this.resolveCell,
   }) : _stack = <String>{};
 
   FormulaContext._cell(FormulaContext parent, this.sheet, this.origin)
     : workbook = parent.workbook,
       onCircular = parent.onCircular,
+      resolveCell = parent.resolveCell,
       _stack = parent._stack,
       _typedErrors = parent._typedErrors;
 
@@ -101,6 +124,10 @@ class FormulaContext {
 
   /// Function API.
   final void Function(SmlCellRef ref)? onCircular;
+
+  /// Optional recalculation-run resolver. It returns fresh, typed results while
+  /// leaving workbook caches unchanged until the entire run has evaluated.
+  final Object? Function(SmlWorksheet sheet, SmlCellRef ref)? resolveCell;
   final Set<String> _stack;
   var _typedErrors = false;
 
@@ -128,6 +155,11 @@ class FormulaContext {
   /// valueOf API.
   Object? valueOf(SmlCellRef ref, {SmlWorksheet? onSheet}) {
     final SmlWorksheet target = onSheet ?? sheet;
+    final resolver = resolveCell;
+    if (resolver != null) {
+      final value = resolver(target, ref);
+      return tracksErrorTypes ? value : FormulaErrorValue.unwrap(value);
+    }
     final String key = '${target.name}!${ref.a1}';
     if (!_stack.add(key)) {
       onCircular?.call(ref);
@@ -250,9 +282,8 @@ class NamedRangeNode extends FormulaNode {
     final raw = formula.trim();
     if (raw.toUpperCase() == 'TRUE') return true;
     if (raw.toUpperCase() == 'FALSE') return false;
-    if (RegExp(
-      r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$',
-    ).hasMatch(raw)) {
+    if (RegExp(r'^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$')
+        .hasMatch(raw)) {
       final number = double.tryParse(raw);
       if (number != null && number.isFinite) return number;
     }
@@ -343,6 +374,10 @@ class BinaryNode extends FormulaNode {
   Object? eval(FormulaContext ctx) {
     final Object? a = left.eval(ctx);
     final Object? b = right.eval(ctx);
+    final unsupported =
+        FormulaErrorValue.unsupportedIn(a) ??
+        FormulaErrorValue.unsupportedIn(b);
+    if (unsupported != null) return unsupported;
     if (a is FormulaErrorValue) return a;
     if (b is FormulaErrorValue) return b;
     if (op == '&') {
@@ -389,6 +424,8 @@ class UnaryNode extends FormulaNode {
   /// eval API.
   Object? eval(FormulaContext ctx) {
     final value = expr.eval(ctx);
+    final unsupported = FormulaErrorValue.unsupportedIn(value);
+    if (unsupported != null) return unsupported;
     if (value is FormulaErrorValue) return value;
     final double? n = _num(value);
     if (n == null) {
