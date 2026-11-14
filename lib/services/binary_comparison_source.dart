@@ -365,8 +365,9 @@ class _MemoryCaptureSource implements HexByteSource {
   @override
   Future<Uint8List> read(int offset, int count) async {
     final bytes = _bytes;
-    if (bytes == null)
+    if (bytes == null) {
       throw StateError('The captured memory source is closed.');
+    }
     if (offset < 0 || count < 0 || offset > length || count > length - offset) {
       throw RangeError('Invalid captured memory byte range.');
     }
@@ -436,7 +437,9 @@ Stream<List<int>> _boundedInput(
   required int? expectedLength,
 }) async* {
   var bytes = 0, chunks = 0, emptyChunks = 0, sinceYield = 0;
-  final cursor = StreamIterator(guard.control.bind(stream));
+  // StreamIterator pauses after receiving each chunk. Propagate that pause
+  // before an upstream producer can resume and reuse its current buffer.
+  final cursor = StreamIterator(guard.control.bind(stream, sync: true));
   try {
     while (await guard.wait(cursor.moveNext)) {
       guard.check();

@@ -330,7 +330,7 @@ class _BinaryScanInput {
   final FileOperationControl _control;
   StreamIterator<List<int>>? _cursor;
   StreamIterator<List<int>> get cursor =>
-      _cursor ??= StreamIterator(_control.bind(_stream));
+      _cursor ??= StreamIterator(_control.bind(_stream, sync: true));
   final String name;
   final BinaryComparisonLimits limits;
   final int byteLimit;

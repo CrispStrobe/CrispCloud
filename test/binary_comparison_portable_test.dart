@@ -187,6 +187,49 @@ void main() {
   );
 
   test(
+    'reused large provider buffers stay paused across bounded capture parts',
+    () async {
+      const chunkBytes = 100 * 1024;
+      final expected = Uint8List(2 * chunkBytes)
+        ..fillRange(0, chunkBytes, 1)
+        ..fillRange(chunkBytes, 2 * chunkBytes, 2);
+      final backend = _PortableBackend(expected);
+      var reuses = 0;
+      backend.onRead = (_) {
+        Stream<List<int>> reused() async* {
+          final buffer = Uint8List(chunkBytes)..fillRange(0, chunkBytes, 1);
+          yield buffer;
+          reuses++;
+          buffer.fillRange(0, chunkBytes, 2);
+          yield buffer;
+        }
+
+        return reused();
+      };
+      final snapshot = await BinaryComparisonSnapshot.capture(
+        backend,
+        backend.item,
+      );
+      addTearDown(snapshot.close);
+      final observed = BytesBuilder(copy: false);
+      await for (final part in snapshot.readRange(0)) {
+        observed.add(part);
+      }
+      expect(snapshot.length, 2 * chunkBytes);
+      expect(observed.takeBytes(), expected);
+      // Independent Python hashlib digest of 100 KiB of 0x01 followed by
+      // 100 KiB of 0x02, not a hash computed by the implementation under test.
+      expect(
+        snapshot.sha256Digest,
+        '77a9a8b736635e6e1a3a935613433e158d907974e092881f9c7bcb1b07e7a7aa',
+      );
+      expect(backend.reads, 2);
+      expect(reuses, 2);
+      expect(backend.writes, 0);
+    },
+  );
+
+  test(
     'unknown-size capture measures exact length and obeys a lower byte cap',
     () async {
       final allowed = _PortableBackend([1, 2, 3])..knownSize = false;
