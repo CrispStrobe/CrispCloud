@@ -75,6 +75,66 @@ void _expectDirectFill(XmlElement fill, String rgb) {
 }
 
 void main() {
+  for (final phase in ['unrelated', 'explicit']) {
+    test('native fill reference checks first export and three saves: $phase', () async {
+      // All three native workbooks are independently authored OOXML from
+      // tool/fidelity/make_sheet_fill_fixture.py, never previous Dart exports.
+      // Their visible labels sit outside six large native fill swatches.
+      final source = OpcPackage.openBytes(
+        File('test/fixtures/fidelity/sheet-fill-native.xlsx').readAsBytesSync(),
+      );
+      final expected = OpcPackage.openBytes(
+        File('test/fixtures/fidelity/sheet-fill-$phase-expected.xlsx')
+            .readAsBytesSync(),
+      );
+      final evidence = Directory('build/fidelity-sheet-fill')
+        ..createSync(recursive: true);
+      File('test/fixtures/fidelity/sheet-fill-$phase-expected.xlsx')
+          .copySync('${evidence.path}/$phase-expected.xlsx');
+      final theme = source.getPart('/xl/theme/theme1.xml')!.readBytes();
+      var book = SheetDeserializer().read(source);
+      const requestedColors = ['000000', '000000', '', 'FF0000', '00A050', ''];
+      for (var index = 0; index < 6; index++) {
+        final cell = book.firstSheet.cellA1('B${index + 3}');
+        expect(cell.hasExplicitFillColorEdit, isFalse);
+        if (phase == 'unrelated') {
+          cell.fontBold = true;
+        } else {
+          cell.fillRgb = requestedColors[index];
+        }
+      }
+      for (var cycle = 1; cycle <= 3; cycle++) {
+        final bytes = cycle == 2
+            ? await OfficeIsolateSave.workbook(book)
+            : SheetSerializer().writeBytes(book);
+        File('${evidence.path}/$phase-$cycle.xlsx').writeAsBytesSync(bytes);
+        final saved = OpcPackage.openBytes(bytes);
+        expect(saved.getPart('/xl/theme/theme1.xml')!.readBytes(), theme);
+        for (var index = 0; index < 6; index++) {
+          final address = 'B${index + 3}';
+          if (phase == 'unrelated') {
+            expect(
+              _xml(_savedFill(saved, address)),
+              _xml(_savedFill(expected, address)),
+              reason: '$address cycle $cycle retains native fill identity',
+            );
+          } else {
+            _expectDirectFill(
+              _savedFill(saved, address),
+              requestedColors[index],
+            );
+          }
+        }
+        book = SheetDeserializer().read(saved);
+        if (phase == 'unrelated') {
+          for (var row = 3; row <= 8; row++) {
+            expect(book.firstSheet.cellA1('B$row').fontBold, isTrue);
+          }
+        }
+      }
+    });
+  }
+
   for (final edit in ['bold', 'alignment']) {
     test(
       'native fills survive an unrelated $edit edit and three saves',

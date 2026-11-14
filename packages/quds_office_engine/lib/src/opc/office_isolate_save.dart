@@ -117,8 +117,16 @@ abstract final class OfficeIsolateSave {
   }
 
   /// workbook API.
-  static Future<Uint8List> workbook(SmlWorkbook workbook, {String? password}) {
-    final _SheetSaveJob job = _SheetSaveJob(workbook, password);
+  ///
+  /// Pass `recalculate: false` for a no-edit save: Excel trusts native caches
+  /// and so must we, otherwise saving a workbook silently changes results that
+  /// the engine only approximates (for example locale-aware parsers).
+  static Future<Uint8List> workbook(
+    SmlWorkbook workbook, {
+    bool recalculate = true,
+    String? password,
+  }) {
+    final _SheetSaveJob job = _SheetSaveJob(workbook, recalculate, password);
     return _run(() => _encodeWorkbook(job));
   }
 
@@ -148,10 +156,13 @@ class _WordSaveJob {
 }
 
 class _SheetSaveJob {
-  const _SheetSaveJob(this.workbook, this.password);
+  const _SheetSaveJob(this.workbook, this.recalculate, this.password);
 
   /// workbook API.
   final SmlWorkbook workbook;
+
+  /// recalculate API.
+  final bool recalculate;
 
   /// password API.
   final String? password;
@@ -172,7 +183,11 @@ Uint8List _encodeWord(_WordSaveJob job) {
 }
 
 Uint8List _encodeWorkbook(_SheetSaveJob job) {
-  return SheetSerializer().writeBytes(job.workbook, password: job.password);
+  return SheetSerializer().writeBytes(
+    job.workbook,
+    recalculate: job.recalculate,
+    password: job.password,
+  );
 }
 
 Uint8List _encodePresentation(_SlideSaveJob job) {

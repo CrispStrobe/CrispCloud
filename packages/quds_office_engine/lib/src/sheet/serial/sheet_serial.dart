@@ -386,10 +386,28 @@ class SheetDeserializer {
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'pane') {
-        final int x = int.tryParse(reader.getAttribute('xSplit') ?? '0') ?? 0;
-        final int y = int.tryParse(reader.getAttribute('ySplit') ?? '0') ?? 0;
-        sheet.freezeCols = x.clamp(0, SmlWorksheet.excelColumnCount - 1);
-        sheet.freezeRows = y.clamp(0, SmlWorksheet.excelRowCount - 1);
+        // xSplit/ySplit are positional (1/20 pt) for frozen panes: Excel can
+        // write xSplit="1" while the frozen area is 36 columns wide. The
+        // authoritative anchor for a frozen pane is topLeftCell.
+        final String? state = reader.getAttribute('state');
+        final String? topLeft = reader.getAttribute('topLeftCell');
+        if (topLeft != null &&
+            (state == null || state == 'frozen' || state == 'frozenSplit')) {
+          final SmlCellRef anchor = SmlCellRef.parse(topLeft);
+          sheet.freezeCols = anchor.col.clamp(
+            0,
+            SmlWorksheet.excelColumnCount - 1,
+          );
+          sheet.freezeRows = anchor.row.clamp(
+            0,
+            SmlWorksheet.excelRowCount - 1,
+          );
+        } else {
+          final int x = int.tryParse(reader.getAttribute('xSplit') ?? '0') ?? 0;
+          final int y = int.tryParse(reader.getAttribute('ySplit') ?? '0') ?? 0;
+          sheet.freezeCols = x.clamp(0, SmlWorksheet.excelColumnCount - 1);
+          sheet.freezeRows = y.clamp(0, SmlWorksheet.excelRowCount - 1);
+        }
       }
       if (reader.eventType == XmlEventType.startElement &&
           reader.localName == 'sheetFormatPr') {
