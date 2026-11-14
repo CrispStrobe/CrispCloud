@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "outputs": [
     "build/fidelity-custom-tabs/host-tabs-1.docx",
     "build/fidelity-custom-tabs/host-tabs-2.docx",
@@ -163,6 +163,92 @@
       "path": "build/fidelity-host/reference/native-slide-expected.pptx",
       "fixture": "test/fixtures/office_native_workflows/native-slide-expected.pptx",
       "sha256": "022e48e176f5d1149578cfcc15015dc4f81129d18485e5ee6b77f26f9e972af1"
+    }
+  ],
+  "schema_only_artifacts": [
+    {
+      "path": "build/office-fill-host-acceptance/source.xlsx",
+      "role": "authored_input"
+    },
+    {
+      "path": "build/office-fill-host-acceptance/saved-1.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-fill-host-acceptance/saved-2.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-fill-host-acceptance/saved-3.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/source.xlsx",
+      "role": "authored_input"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/rtl-enabled.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/rtl-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/rtl-redo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-selection.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-undo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-redo.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-top-row.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-first-column.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-cleared.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/rtl-upload-before.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/rtl-upload-after.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-upload-before.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/freeze-upload-after.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/grid-delete.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/grid-undo-other-sheet.xlsx",
+      "role": "host_output"
+    },
+    {
+      "path": "build/office-sheet-state-acceptance/grid-redo-other-sheet.xlsx",
+      "role": "host_output"
     }
   ]
 }

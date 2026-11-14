@@ -11,9 +11,17 @@ the app will consume exact reviewed source bytes through the guarded sync.
 
 Actual host acceptance will cover the ribbon/close path, a view change during
 an upload, and saved workbook contents after history across worksheet tabs.
-The existing native-fill capture directory is absent from the current CI upload
-and inventory routes. That concrete gap will be closed together with the new
-worksheet-state artifacts, keeping schema and rendering scopes explicit.
+The existing native-fill capture directory was absent from the CI upload and
+inventory routes. The new routing declares 21 exact schema artifacts: two
+authored inputs and 19 actual host outputs across the native-fill and
+worksheet-state directories. The existing 146 rendered outputs and three pinned
+references remain unchanged. Focused inventory controls are pending.
+
+Five new host cases reproduce missing close prompts for RTL/freeze changes,
+missing revision tracking during delayed uploads, and wrong-sheet grid history
+in actual saved XLSX bytes. The delayed-upload baseline establishes an unchanged
+revision after a confirmed view mutation; its immediate editor-presence assertion
+did not fail. Positive host validation awaits the guarded canonical source sync.
 
 The previous 52-test host cohort, corrected fill rerun and independent four-file
 schema acceptance remain unchanged. New negative controls, implementation and

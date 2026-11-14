@@ -32,6 +32,12 @@ for extension, content_type in {
     MAIN_TYPES[extension] = MAIN_TYPES['.docx']
     MAIN_CONTENT_TYPES[extension] = content_type
 OFFICE = set(MAIN_TYPES)
+RENDERED_ROOTS = (('build', 'fidelity-host'), ('build', 'fidelity'),
+                  ('build', 'fidelity-custom-tabs'))
+# These are declared validation scopes, not renderer import exceptions. Only
+# explicitly enumerated files in these two acceptance roots may be schema-only.
+SCHEMA_ONLY_ROOTS = (('build', 'office-fill-host-acceptance'),
+                    ('build', 'office-sheet-state-acceptance'))
 
 
 def reference_entries():
@@ -61,10 +67,37 @@ def reference_entries():
     return entries
 
 
+def schema_only_entries():
+    """Authored inputs and uploads whose declared acceptance is schema-only."""
+    data = json.loads(MANIFEST.read_text())
+    if not isinstance(data, dict):
+        raise ValueError('Invalid host evidence manifest')
+    if data.get('version') == 1 and 'schema_only_artifacts' not in data:
+        return []
+    entries = data.get('schema_only_artifacts')
+    if (data.get('version') != 2 or not isinstance(entries, list) or not entries):
+        raise ValueError('Schema-only artifacts require a nonempty version 2 manifest section')
+    seen = set()
+    for entry in entries:
+        if (not isinstance(entry, dict) or set(entry) != {'path', 'role'}
+                or not isinstance(entry['path'], str)
+                or entry['role'] not in ('authored_input', 'host_output')):
+            raise ValueError('Schema-only artifact requires a path and explicit input/output role')
+        name = entry['path']
+        path = PurePosixPath(name)
+        if (path.is_absolute() or '..' in path.parts or '\\' in name
+                or str(path) != name or path.suffix != '.xlsx'
+                or path.parts[:2] not in SCHEMA_ONLY_ROOTS
+                or name in seen):
+            raise ValueError(f'Invalid or duplicate schema-only artifact path: {name}')
+        seen.add(name)
+    return entries
+
+
 def expected_paths():
     data = json.loads(MANIFEST.read_text())
     paths = data.get('outputs') if isinstance(data, dict) else None
-    if (not isinstance(data, dict) or data.get('version') != 1
+    if (not isinstance(data, dict) or data.get('version') not in (1, 2)
             or not isinstance(paths, list) or not paths
             or any(not isinstance(name, str) for name in paths)
             or len(paths) != len(set(paths))):
@@ -73,13 +106,15 @@ def expected_paths():
         path = PurePosixPath(name)
         if (path.is_absolute() or '..' in path.parts or '\\' in name
                 or str(path) != name or path.suffix not in OFFICE
-                or path.parts[:2] not in (('build', 'fidelity-host'), ('build', 'fidelity'),
-                                          ('build', 'fidelity-custom-tabs'))):
+                or path.parts[:2] not in RENDERED_ROOTS):
             raise ValueError(f'Invalid host evidence path: {name}')
     references = [entry['path'] for entry in reference_entries()]
     if set(paths) & set(references):
         raise ValueError('A reference cannot also be an actual host output')
-    return [*paths, *references]
+    schema_only = [entry['path'] for entry in schema_only_entries()]
+    if (set(paths) | set(references)) & set(schema_only):
+        raise ValueError('Rendered artifacts cannot also be schema-only')
+    return [*paths, *references, *schema_only]
 
 
 def inspect_package(file):
@@ -155,11 +190,13 @@ def inspect(root):
     root = root.resolve()
     expected = expected_paths()
     references = {entry['path']: entry for entry in reference_entries()}
+    schema_only = {entry['path']: entry for entry in schema_only_entries()}
     # GitHub artifact downloads may add a directory around the original tree.
     # Match the complete build/... suffix, never a filename from engine output.
     bases = {
         directory.parent.parent
-        for directory in root.rglob('fidelity-host')
+        for anchor in ('fidelity-host', *(parts[1] for parts in SCHEMA_ONLY_ROOTS))
+        for directory in root.rglob(anchor)
         if directory.is_dir() and directory.parent.name == 'build'
     }
     bases.add(root)
@@ -187,32 +224,44 @@ def inspect(root):
         if reference is not None and sha256 != reference['sha256']:
             failures.append(f'{name}: independent reference SHA-256 mismatch')
             continue
+        scoped = schema_only.get(name)
         files.append({
             'path': name,
             'file': str(file.relative_to(root)),
             'bytes': len(content),
             'sha256': sha256,
-            'role': 'independent_reference' if reference else 'host_output',
+            'role': ('independent_reference' if reference else
+                     scoped['role'] if scoped else 'host_output'),
+            'validation_scope': 'schema_only' if scoped else 'schema_and_render',
             **({'source_fixture': reference['fixture']} if reference else {}),
             'format': file.suffix.lower()[1:],
             'main_part': main_part,
         })
     if len(used_bases) > 1:
         failures.append('Required host files are spread across different artifact roots')
-    for base in used_bases:
-        for directory in ('build/fidelity-host', 'build/fidelity',
-                          'build/fidelity-custom-tabs'):
-            for file in (base / directory).rglob('*'):
-                if (file.is_file() and file.suffix.lower() in OFFICE
-                        and file.relative_to(base).as_posix() not in expected):
-                    failures.append(f'Unexpected host Office output: {file.relative_to(base)}')
+    scans = [(base, parts) for base in used_bases for parts in RENDERED_ROOTS]
+    # A separate wrapper containing only an undeclared acceptance file must
+    # still fail, even though it supplied none of the required artifacts.
+    scans += [(base, parts) for base in bases for parts in SCHEMA_ONLY_ROOTS]
+    for base, parts in sorted(scans):
+        for file in base.joinpath(*parts).rglob('*'):
+            if (file.is_file() and file.suffix.lower() in OFFICE
+                    and file.relative_to(base).as_posix() not in expected):
+                failures.append(f'Unexpected host Office output: {file.relative_to(base)}')
+    authored_inputs = sum(entry['role'] == 'authored_input' for entry in schema_only.values())
     return {
         'expected': len(expected),
         'verified': len(files),
-        'expected_host_outputs': len(expected) - len(references),
+        'expected_host_outputs': len(expected) - len(references) - authored_inputs,
         'verified_host_outputs': sum(entry['role'] == 'host_output' for entry in files),
         'expected_references': len(references),
         'verified_references': sum(entry['role'] == 'independent_reference' for entry in files),
+        'expected_authored_inputs': authored_inputs,
+        'verified_authored_inputs': sum(entry['role'] == 'authored_input' for entry in files),
+        'expected_schema_only': len(schema_only),
+        'verified_schema_only': sum(entry['validation_scope'] == 'schema_only' for entry in files),
+        'expected_rendered': len(expected) - len(schema_only),
+        'verified_rendered': sum(entry['validation_scope'] == 'schema_and_render' for entry in files),
         'manifest_sha256': hashlib.sha256(MANIFEST.read_bytes()).hexdigest(),
         'files': files,
         'failures': failures,

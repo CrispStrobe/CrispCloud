@@ -68,7 +68,117 @@ class HostEvidenceTest(unittest.TestCase):
         self.assertEqual(report['verified_references'], 3)
         self.assertEqual(report['verified_host_outputs'], report['expected_host_outputs'])
         self.assertEqual(report['verified'],
-                         report['verified_host_outputs'] + report['verified_references'])
+                         report['verified_host_outputs'] + report['verified_references']
+                         + report['verified_authored_inputs'])
+
+    def test_schema_only_acceptance_has_explicit_roles_and_preserves_rendered_set(self):
+        self.populate()
+        manifest = evidence.json.loads(evidence.MANIFEST.read_text())
+        scoped = {entry['path']: entry for entry in manifest['schema_only_artifacts']}
+        rendered = {*manifest['outputs'],
+                    *(entry['path'] for entry in manifest['references'])}
+        report = evidence.inspect(self.root)
+        self.assertEqual(report['failures'], [])
+        self.assertEqual(report['verified_schema_only'], len(scoped))
+        self.assertEqual(report['expected_rendered'], len(rendered))
+        self.assertEqual(report['verified_rendered'], len(rendered))
+        self.assertEqual({item['path'] for item in report['files']
+                          if item['validation_scope'] == 'schema_and_render'}, rendered)
+        for item in report['files']:
+            if item['path'] in scoped:
+                self.assertEqual(item['validation_scope'], 'schema_only')
+                self.assertEqual(item['role'], scoped[item['path']]['role'])
+        authored = sum(entry['role'] == 'authored_input' for entry in scoped.values())
+        self.assertEqual(report['expected_authored_inputs'], authored)
+        self.assertEqual(report['verified_authored_inputs'], authored)
+
+    def test_omitting_either_acceptance_directory_from_upload_fails(self):
+        for directory in ('office-fill-host-acceptance', 'office-sheet-state-acceptance'):
+            with self.subTest(directory=directory):
+                self.populate()
+                missing = [name for name in evidence.expected_paths()
+                           if name.startswith(f'build/{directory}/')]
+                self.assertTrue(missing)
+                for name in missing:
+                    (self.root / name).unlink()
+                report = evidence.inspect(self.root)
+                self.assertEqual(set(report['failures']),
+                                 {f'{name}: expected one file, found 0' for name in missing})
+                self.assertEqual(report['verified_rendered'], report['expected_rendered'])
+                self.assertLess(report['verified'], report['expected'])
+
+    def test_unexpected_office_file_in_either_acceptance_directory_fails(self):
+        self.populate()
+        for directory in ('office-fill-host-acceptance', 'office-sheet-state-acceptance'):
+            with self.subTest(directory=directory):
+                extra = self.root / 'build' / directory / 'unreviewed.docx'
+                package(extra)
+                report = evidence.inspect(self.root)
+                self.assertEqual(report['failures'],
+                                 [f'Unexpected host Office output: {extra.relative_to(self.root)}'])
+                extra.unlink()
+
+    def test_duplicate_acceptance_file_in_wrapper_without_legacy_root_fails(self):
+        first = self.populate(self.root / 'first')
+        name = 'build/office-fill-host-acceptance/source.xlsx'
+        duplicate = self.root / 'second' / name
+        duplicate.parent.mkdir(parents=True)
+        duplicate.write_bytes((first / name).read_bytes())
+        report = evidence.inspect(self.root)
+        self.assertIn(f'{name}: expected one file, found 2', report['failures'])
+
+    def test_unexpected_acceptance_file_in_separate_wrapper_fails(self):
+        self.populate(self.root / 'complete')
+        name = 'build/office-sheet-state-acceptance/unreviewed.xlsx'
+        package(self.root / 'extra-wrapper' / name)
+        report = evidence.inspect(self.root)
+        self.assertEqual(report['verified'], report['expected'])
+        self.assertEqual(report['failures'], [f'Unexpected host Office output: {name}'])
+
+    def test_rendered_output_or_pinned_reference_cannot_move_to_schema_only(self):
+        original = evidence.json.loads(evidence.MANIFEST.read_text())
+        manifest = self.root / 'manifest.json'
+        for source in ('outputs', 'references'):
+            with self.subTest(source=source):
+                data = evidence.json.loads(evidence.json.dumps(original))
+                moved = data[source].pop(0)
+                name = moved if isinstance(moved, str) else moved['path']
+                data['schema_only_artifacts'].append({'path': name, 'role': 'host_output'})
+                manifest.write_text(evidence.json.dumps(data))
+                with patch.object(evidence, 'MANIFEST', manifest):
+                    with self.assertRaisesRegex(ValueError, 'Invalid or duplicate schema-only'):
+                        evidence.expected_paths()
+
+    def test_schema_only_manifest_requires_version_roles_unique_and_scoped_paths(self):
+        original = evidence.json.loads(evidence.MANIFEST.read_text())
+        manifest = self.root / 'manifest.json'
+        invalid_entries = [
+            {'path': 'elsewhere/source.xlsx', 'role': 'authored_input'},
+            {'path': 'build/office-fill-host-acceptance/../source.xlsx', 'role': 'authored_input'},
+            {'path': 'build/./office-fill-host-acceptance/source.xlsx', 'role': 'authored_input'},
+            {'path': 'build/office-fill-host-acceptance/source.docx', 'role': 'authored_input'},
+            {'path': 'build/office-fill-host-acceptance/source.xlsx', 'role': 'independent_reference'},
+            {'path': 'build/office-fill-host-acceptance/source.xlsx'},
+        ]
+        for entry in invalid_entries:
+            with self.subTest(entry=entry):
+                data = evidence.json.loads(evidence.json.dumps(original))
+                data['schema_only_artifacts'] = [entry]
+                manifest.write_text(evidence.json.dumps(data))
+                with patch.object(evidence, 'MANIFEST', manifest), self.assertRaises(ValueError):
+                    evidence.expected_paths()
+        for mutation in ('duplicate', 'old-version', 'missing-section'):
+            with self.subTest(mutation=mutation):
+                data = evidence.json.loads(evidence.json.dumps(original))
+                if mutation == 'duplicate':
+                    data['schema_only_artifacts'].append(data['schema_only_artifacts'][0])
+                elif mutation == 'old-version':
+                    data['version'] = 1
+                else:
+                    del data['schema_only_artifacts']
+                manifest.write_text(evidence.json.dumps(data))
+                with patch.object(evidence, 'MANIFEST', manifest), self.assertRaises(ValueError):
+                    evidence.expected_paths()
 
     def test_valid_substitute_package_cannot_satisfy_independent_reference(self):
         for reference in evidence.reference_entries():
