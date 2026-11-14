@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "status": "PRE-FREEZE SMOKE ONLY",
+  "final_source_pin_qualification": false,
+  "qualification_commit": null,
+  "source_binding_limitation": "Application sources were evolving. No before/after complete source binding was captured for these smoke executions. A separately requested final saved-source qualification must supersede this.",
+  "cwd": "/workspace/scratch/4f6714f1660a/crispcloud",
+  "commands_observed_in_session": {
+    "vm": [
+      "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+      "--packages=.dart_tool/package_config.json",
+      "test/support/archive_ntfs_web_acceptance.dart"
+    ],
+    "compile": [
+      "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+      "compile",
+      "js",
+      "--packages=.dart_tool/package_config.json",
+      "-O2",
+      "test/support/archive_ntfs_web_acceptance.dart",
+      "-o",
+      "/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke.js"
+    ],
+    "node": [
+      "node",
+      "-e",
+      "global.self=global; require(\"/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke.js\");"
+    ]
+  },
+  "observed_exit_codes": {
+    "vm": 0,
+    "compile": 0,
+    "node": 0
+  },
+  "compiler_console_output_preservation": "Compiler exit and summary were observed in the session; no original raw compiler stdout/stderr file was captured. No retrospective compiler log is fabricated.",
+  "compiled_outputs_omitted_with_hashes": {
+    "ntfs-acceptance-smoke.js": {
+      "bytes": 717982,
+      "sha256": "839984d6ae877f6345a500e6ba0e130d64988ca81b96d5571e023956ecc36fa8"
+    },
+    "ntfs-acceptance-smoke.js.map": {
+      "bytes": 253691,
+      "sha256": "ed782b757be78f949bb159bacc4fae84e1a8501a8fc3cd338e24b6d4c6f7816b"
+    }
+  },
+  "groups": 18,
+  "checks": 2037,
+  "full_json_equal": true,
+  "stdout_bytes_equal": true,
+  "stdout": {
+    "bytes": 2088,
+    "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+  },
+  "supported_reference_images": 3,
+  "supported_unnamed_path_instances": 143,
+  "external_unsupported_control_images": 1,
+  "unsupported_control_payloads_not_read_by_application_acceptance": 61,
+  "named_streams_in_app_acceptance": "Metadata notices only; nonresident named stream payload is verified unread during listing.",
+  "files": [
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke-vm.json",
+      "original": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "stored_path": "preliminary-portable/vm-stdout.json",
+      "stored": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke-node.json",
+      "original": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "stored_path": "preliminary-portable/node-stdout.json",
+      "stored": {
+        "bytes": 2088,
+        "sha256": "3ab76b73e402f4065a6ddb29f4f81b2eef758035ef21de0e9f90345a99ab5f31"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke-vm.stderr.log",
+      "original": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stored_path": "preliminary-portable/vm-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke-node.stderr.log",
+      "original": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stored_path": "preliminary-portable/node-stderr.log",
+      "stored": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "encoding": "identity"
+    },
+    {
+      "original_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/ntfs-acceptance-smoke.js.deps",
+      "original": {
+        "bytes": 59021,
+        "sha256": "515aa7ed61e79098121e04673ce9387fa171756a934c0ce65d82d0e2337773f2"
+      },
+      "stored_path": "preliminary-portable/compiler-dependency-paths.log.gz",
+      "stored": {
+        "bytes": 4212,
+        "sha256": "aaf3258ed80e4e1caf441c8659166debba51d2a32673b1a2e81efa012bc746fe"
+      },
+      "encoding": "gzip; empty filename; mtime=0; level=9"
+    }
+  ],
+  "versions_at_packaging": {
+    "dart": {
+      "recorded_at": "evidence packaging; not a retrospective execution-time source binding",
+      "executable": "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+      "executable_hash_at_packaging": {
+        "bytes": 4835712,
+        "sha256": "01e869e4af277734b02ab8898b870c6b00c9bec61bbcf9c923cd14de7ed85fbb"
+      },
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/flutter/bin/cache/dart-sdk/bin/dart",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": {
+        "bytes": 82,
+        "sha256": "945e6a359e53647f8fd753347245ed78bc06c2808919b2d7749817181d010ff4"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "version": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"linux_x64\"",
+      "stdout_stored_path": "preliminary-portable/dart-version-at-packaging.stdout.log",
+      "stderr_stored_path": "preliminary-portable/dart-version-at-packaging.stderr.log"
+    },
+    "node": {
+      "recorded_at": "evidence packaging; not a retrospective execution-time source binding",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "executable_hash_at_packaging": {
+        "bytes": 126939688,
+        "sha256": "61ab14cd750fc24d5db53490ec5fc40f756e4b6e136b78cf7004265471d9bd1d"
+      },
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": {
+        "bytes": 9,
+        "sha256": "249baf635bb43877fcb9422efa1a4904b702d0ddf14d3949b7cd0950d5229c81"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "version": "v24.22.1",
+      "stdout_stored_path": "preliminary-portable/node-version-at-packaging.stdout.log",
+      "stderr_stored_path": "preliminary-portable/node-version-at-packaging.stderr.log"
+    }
+  },
+  "stored_representations_verified": true
+}

@@ -1,0 +1,54 @@
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart
+00:00 +0: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS filename capabilities are read-only and retain native streaming
+00:00 +1: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS content remains read-only when named volume.ntfs
+00:00 +2: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS content remains read-only when named volume.img
+00:00 +3: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS content remains read-only when named misnamed.zip
+00:00 +4: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS content remains read-only when named misnamed.7z
+00:00 +5: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS content remains read-only when named misnamed.iso
+00:00 +6: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: native NTFS source retains streamed member allowance
+00:00 +7: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_integration_test.dart: NTFS GPT 512 preserves raw and NTFS file views
+00:00 +8: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +9: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +10: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +11: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +12: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +13: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +14: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +15: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +16: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:00 +17: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +18: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +19: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +20: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +21: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +22: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +23: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +24: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +25: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +26: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +27: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:01 +28: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +29: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +30: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +31: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +32: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +33: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +34: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +35: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +36: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +37: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:02 +38: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: ntfs native workspace streams an image above 64 MiB without write authority
+00:03 +39: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: buffered API extracts NTFS GPT unnamed files and omits system/alternate-stream data
+00:03 +40: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: GPT native workspace streams an image above 64 MiB without write authority
+00:04 +41: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_workspace_test.dart: GPT native workspace streams an image above 64 MiB without write authority
+00:05 +42: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: native Extract here API extracts NTFS GPT unnamed files and omits system/alternate-stream data
+00:06 +43: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: ntfs refuses duplicate hidden path before any extraction or payload read
+00:06 +44: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: ntfs refuses hidden file ancestor before any extraction or payload read
+00:06 +45: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: ntfs refuses later hidden ancestor before any extraction or payload read
+00:06 +46: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: ntfs refuses normalized duplicate before any extraction or payload read
+00:06 +47: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: ntfs refuses hidden traversal before any extraction or payload read
+00:06 +48: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: generic archive extraction still rejects special entries before writes
+00:06 +49: /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/archive_ntfs_extraction_test.dart: integrity checks unnamed files and retains alternate-stream exclusions
+00:06 +50: All tests passed!

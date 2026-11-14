@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "classification": "preliminary working-tree source snapshots",
+  "qualification": "These runs qualify only their recorded source-binding hashes. They do not qualify a later commit or the eventual final source revision.",
+  "native_profile": "Original locked dependencies; isolated ebook-conversion hook disabled, catalogue Rust hook enabled; original manifests restored after each run.",
+  "runs": [
+    {
+      "label": "ntfs-viewer-preliminary",
+      "source_head_at_snapshot": "6593fe0fc75ab0bc70af7f38f1da411dc83dc812",
+      "source_binding_sha256": "ae899b6dd0f8cc8cc2406c8f362be7b4e64ba8c3f225cad54a341f20a80e7f70",
+      "verified_revision": null,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "source_paths": 8086,
+      "started_at_utc": "2026-11-14T12:55:44Z",
+      "finished_at_utc": "2026-11-14T12:56:31Z"
+    },
+    {
+      "label": "ntfs-integration-preliminary",
+      "source_head_at_snapshot": "6593fe0fc75ab0bc70af7f38f1da411dc83dc812",
+      "source_binding_sha256": "5e5d714afd2568abce279bd3e396e91130caa35186c2b17d291b13824634f8e3",
+      "verified_revision": null,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "source_paths": 8088,
+      "started_at_utc": "2026-11-14T12:57:54Z",
+      "finished_at_utc": "2026-11-14T12:58:20Z"
+    }
+  ],
+  "artifacts": [
+    {
+      "original_name": "ntfs-viewer-preliminary.log",
+      "stored_name": "ntfs-viewer-preliminary.log",
+      "encoding": "identity",
+      "original_bytes": 3309,
+      "stored_bytes": 3309,
+      "original_sha256": "e626674452ff8e21ceac0d394a5b4dcb772035eae56d711eb8a90c096ff7cb23",
+      "stored_sha256": "e626674452ff8e21ceac0d394a5b4dcb772035eae56d711eb8a90c096ff7cb23"
+    },
+    {
+      "original_name": "ntfs-viewer-preliminary-events.json",
+      "stored_name": "ntfs-viewer-preliminary-events.json",
+      "encoding": "identity",
+      "original_bytes": 8604,
+      "stored_bytes": 8604,
+      "original_sha256": "40e0b5355b9582f02241dfef1ea0bbb09b0b5b8128768fdf9b9b67746c30508d",
+      "stored_sha256": "40e0b5355b9582f02241dfef1ea0bbb09b0b5b8128768fdf9b9b67746c30508d"
+    },
+    {
+      "original_name": "ntfs-viewer-preliminary-receipt.json",
+      "stored_name": "ntfs-viewer-preliminary-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 1176,
+      "stored_bytes": 1176,
+      "original_sha256": "6a96011463065e851aa2a86cae763ae2d120b01a00be98ca8e6b94f10259c084",
+      "stored_sha256": "6a96011463065e851aa2a86cae763ae2d120b01a00be98ca8e6b94f10259c084"
+    },
+    {
+      "original_name": "ntfs-viewer-preliminary-source-binding.json",
+      "stored_name": "ntfs-viewer-preliminary-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1115840,
+      "stored_bytes": 384689,
+      "original_sha256": "ae899b6dd0f8cc8cc2406c8f362be7b4e64ba8c3f225cad54a341f20a80e7f70",
+      "stored_sha256": "e557b862832dc82d98d277a4cc56e46facde3d5faecc33ad103963313fcfffd2"
+    },
+    {
+      "original_name": "ntfs-viewer-preliminary-summary.json",
+      "stored_name": "ntfs-viewer-preliminary-summary.json",
+      "encoding": "identity",
+      "original_bytes": 371,
+      "stored_bytes": 371,
+      "original_sha256": "c660d6c692762e226d59fb4ab5fc08c2f7f48ee5423963c1ad20488fe248f601",
+      "stored_sha256": "c660d6c692762e226d59fb4ab5fc08c2f7f48ee5423963c1ad20488fe248f601"
+    },
+    {
+      "original_name": "ntfs-integration-preliminary.log",
+      "stored_name": "ntfs-integration-preliminary.log",
+      "encoding": "identity",
+      "original_bytes": 9455,
+      "stored_bytes": 9455,
+      "original_sha256": "b683e4f9b0d792ff7fe8fcfd53685080a22a1a857d91b66da5fc86bcd772e3aa",
+      "stored_sha256": "b683e4f9b0d792ff7fe8fcfd53685080a22a1a857d91b66da5fc86bcd772e3aa"
+    },
+    {
+      "original_name": "ntfs-integration-preliminary-events.json",
+      "stored_name": "ntfs-integration-preliminary-events.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 25811,
+      "stored_bytes": 2674,
+      "original_sha256": "a8d486f7eb26bf9a7bc2ff1b8ae715b4a108ccb4477bce6758dbedafb75bf229",
+      "stored_sha256": "9536f7aae3358085e1cc428189d8fd2e21f574ea27623e08c0501eb9d7b0de34"
+    },
+    {
+      "original_name": "ntfs-integration-preliminary-receipt.json",
+      "stored_name": "ntfs-integration-preliminary-receipt.json",
+      "encoding": "identity",
+      "original_bytes": 1365,
+      "stored_bytes": 1365,
+      "original_sha256": "d3ac1edcb5b2470cbc84f010b03d61802e8b430cbf485574ef17d92eaae6952c",
+      "stored_sha256": "d3ac1edcb5b2470cbc84f010b03d61802e8b430cbf485574ef17d92eaae6952c"
+    },
+    {
+      "original_name": "ntfs-integration-preliminary-source-binding.json",
+      "stored_name": "ntfs-integration-preliminary-source-binding.json.gz",
+      "encoding": "gzip; mtime=0; no filename",
+      "original_bytes": 1116113,
+      "stored_bytes": 384783,
+      "original_sha256": "5e5d714afd2568abce279bd3e396e91130caa35186c2b17d291b13824634f8e3",
+      "stored_sha256": "901d947b0afb3da3e4267be462103ca1cc7800193caf72da9b4da490ee229aa5"
+    },
+    {
+      "original_name": "ntfs-integration-preliminary-summary.json",
+      "stored_name": "ntfs-integration-preliminary-summary.json",
+      "encoding": "identity",
+      "original_bytes": 806,
+      "stored_bytes": 806,
+      "original_sha256": "fa53447ade27f54e4c0a52347e9364b6117f2abef102d09b899ef8737f146d4d",
+      "stored_sha256": "fa53447ade27f54e4c0a52347e9364b6117f2abef102d09b899ef8737f146d4d"
+    }
+  ]
+}

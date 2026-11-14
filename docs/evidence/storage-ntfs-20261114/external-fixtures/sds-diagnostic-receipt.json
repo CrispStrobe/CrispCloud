@@ -1,0 +1,204 @@
+{
+  "schema": 1,
+  "scope": "Targeted diagnostic control; not a full security-descriptor validation. Fresh volume formatted by mkntfs and never populated by the original helper.",
+  "tools": {
+    "mkntfs": {
+      "bytes": 88416,
+      "sha256": "c20783a186dd3ff64b1c6a5d2033dfeca11afd257edafa00eb0542241ed60447"
+    },
+    "ntfsinfo": {
+      "bytes": 59752,
+      "sha256": "0418071dcc8a100155bd03bbd8ffe4be71fde006f0e25e316e8fdc3949a62f2a"
+    },
+    "ntfscat": {
+      "bytes": 35160,
+      "sha256": "d6fc05a7969942b47ef3839488dcb49939f0f4222a90c9953bcecc7a882f1409"
+    }
+  },
+  "environment": {
+    "LD_LIBRARY_PATH": "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/lib/x86_64-linux-gnu",
+    "LD_PRELOAD": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs-reference-fixed-time.so",
+    "LC_ALL": "C.UTF-8",
+    "TZ": "UTC"
+  },
+  "time_shim": {
+    "bytes": 15416,
+    "sha256": "9251a14c28e397b5ee9f8610e9ea88caa6972d702f7e7f7e3cd14591f4c141dc"
+  },
+  "images": {
+    "fresh-unpopulated": {
+      "path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated.img",
+      "before": {
+        "bytes": 16777216,
+        "sha256": "f0568abcc7df988cab9cf438df2c3f662166c6bd4136ae8855383b993d323411"
+      },
+      "after": {
+        "bytes": 16777216,
+        "sha256": "f0568abcc7df988cab9cf438df2c3f662166c6bd4136ae8855383b993d323411"
+      },
+      "unchanged_by_readonly_inspection": true
+    },
+    "qualified-populated": {
+      "path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31.img",
+      "before": {
+        "bytes": 16777216,
+        "sha256": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d"
+      },
+      "after": {
+        "bytes": 16777216,
+        "sha256": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d"
+      },
+      "unchanged_by_readonly_inspection": true
+    }
+  },
+  "commands": [
+    {
+      "label": "fresh-format",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/sbin/mkntfs",
+        "-F",
+        "-Q",
+        "-T",
+        "-c",
+        "4096",
+        "-s",
+        "512",
+        "-p",
+        "0",
+        "-H",
+        "0",
+        "-S",
+        "0",
+        "-L",
+        "CRISP_NTFS_REF",
+        "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated.img"
+      ],
+      "started_utc": "2026-11-14T13:12:02.000100+00:00",
+      "finished_utc": "2026-11-14T13:12:02.014321+00:00",
+      "elapsed_seconds": 0.014220283999748062,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-format.stdout.log",
+      "stdout": {
+        "bytes": 81,
+        "sha256": "191bb9241247e0c361edeff5d047ad95274bcfdab694ae927f108d39d1f01f0e"
+      },
+      "stderr_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-format.stderr.log",
+      "stderr": {
+        "bytes": 142,
+        "sha256": "fb23245d0dbf368cc3abca520866c866832bee6765164a2444c28a09f13432a2"
+      },
+      "stdout_is_payload": false
+    },
+    {
+      "label": "fresh-unpopulated-ntfsinfo",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsinfo",
+        "-v",
+        "-i",
+        "9",
+        "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated.img"
+      ],
+      "started_utc": "2026-11-14T13:12:02.115405+00:00",
+      "finished_utc": "2026-11-14T13:12:02.118078+00:00",
+      "elapsed_seconds": 0.002663305996975396,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfsinfo.stdout.log",
+      "stdout": {
+        "bytes": 5139,
+        "sha256": "8b42b3af3a6425b60517d6277b5d2aad24fa06131006cf8fdfe6ac3e2ef9bfac"
+      },
+      "stderr_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfsinfo.stderr.log",
+      "stderr": {
+        "bytes": 103,
+        "sha256": "28c30373e05a7089c599e0e797bb80b109747719aa2aff5b292795cc54b390d3"
+      },
+      "stdout_is_payload": false
+    },
+    {
+      "label": "fresh-unpopulated-ntfscat",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfscat",
+        "-i",
+        "9",
+        "-n",
+        "$SDS",
+        "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated.img"
+      ],
+      "started_utc": "2026-11-14T13:12:02.118139+00:00",
+      "finished_utc": "2026-11-14T13:12:02.121320+00:00",
+      "elapsed_seconds": 0.003188922997651389,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfscat.stdout.bin",
+      "stdout": {
+        "bytes": 262396,
+        "sha256": "95aefacfebf228fd2c9e150a86b0eb1a3924fb25b0995c6e0e7c34feeade0a76"
+      },
+      "stderr_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/fresh-unpopulated-ntfscat.stderr.log",
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout_is_payload": true
+    },
+    {
+      "label": "qualified-populated-ntfsinfo",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfsinfo",
+        "-v",
+        "-i",
+        "9",
+        "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31.img"
+      ],
+      "started_utc": "2026-11-14T13:12:02.167943+00:00",
+      "finished_utc": "2026-11-14T13:12:02.170255+00:00",
+      "elapsed_seconds": 0.0022997449996182695,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfsinfo.stdout.log",
+      "stdout": {
+        "bytes": 5139,
+        "sha256": "8b42b3af3a6425b60517d6277b5d2aad24fa06131006cf8fdfe6ac3e2ef9bfac"
+      },
+      "stderr_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfsinfo.stderr.log",
+      "stderr": {
+        "bytes": 103,
+        "sha256": "28c30373e05a7089c599e0e797bb80b109747719aa2aff5b292795cc54b390d3"
+      },
+      "stdout_is_payload": false
+    },
+    {
+      "label": "qualified-populated-ntfscat",
+      "argv": [
+        "/workspace/scratch/4f6714f1660a/runtime-setup/ntfs3g/usr/bin/ntfscat",
+        "-i",
+        "9",
+        "-n",
+        "$SDS",
+        "/workspace/scratch/4f6714f1660a/ntfs-reference-work/final/ntfs31.img"
+      ],
+      "started_utc": "2026-11-14T13:12:02.170312+00:00",
+      "finished_utc": "2026-11-14T13:12:02.172956+00:00",
+      "elapsed_seconds": 0.002648534999025287,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfscat.stdout.bin",
+      "stdout": {
+        "bytes": 262396,
+        "sha256": "95aefacfebf228fd2c9e150a86b0eb1a3924fb25b0995c6e0e7c34feeade0a76"
+      },
+      "stderr_path": "/workspace/scratch/4f6714f1660a/ntfs-reference-work/sds-diagnostic-control/qualified-populated-ntfscat.stderr.log",
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout_is_payload": true
+    }
+  ],
+  "diagnostic_present_before_population": true,
+  "ntfsinfo_warning": "Corrupt attribute 0x80 in inode 9\nFailed to read $SDS attribute: Value too large for defined data type\n",
+  "ntfsinfo_security_descriptor_content_inspection": "incomplete",
+  "ntfscat_sds_outputs_equal": true,
+  "ntfscat_sds": {
+    "bytes": 262396,
+    "sha256": "95aefacfebf228fd2c9e150a86b0eb1a3924fb25b0995c6e0e7c34feeade0a76"
+  },
+  "does_not_establish": "Security-descriptor semantic validity, Windows chkdsk acceptance, or complete filesystem consistency."
+}

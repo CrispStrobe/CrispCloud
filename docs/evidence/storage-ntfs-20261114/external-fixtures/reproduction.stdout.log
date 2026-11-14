@@ -1,0 +1,3 @@
+Formatted /workspace/scratch/4f6714f1660a/ntfs-reference-work/final/archive_ntfs_reference_data.dart
+Formatted 1 file (1 changed) in 0.20 seconds.
+{"images": 4, "regular_file_instances": 204, "named_stream_instances": 8, "external_checks_passed": 4, "reproduction_check": true, "image_sha256": {"ntfs31": "0dc089551313771033c9b446506509677ad270f479345d415419d8c0be7a9b4d", "ntfs31-small": "3186351ffea391d40e77796a38c64a415c41ba775de7c47b524d771f142eee99", "ntfs31-4k": "9e6bdecb5c610e5b2edc356ae87912553732b0eee5a3b233088b34020601a4df", "ntfs31-4k-attrlist": "6688866a63976df0a81bb2c69c888437b192fc24c36059be851a835696b90cb5"}}

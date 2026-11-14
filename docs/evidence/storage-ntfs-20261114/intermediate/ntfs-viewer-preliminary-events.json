@@ -1,0 +1,46 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":5,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":3,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":7625}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":6,"line":null,"column":null,"url":null},"type":"group","time":7627}
+{"test":{"id":3,"name":"buffered NTFS opens in Archive and previews a regular file","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":222,"root_column":3,"root_url":"file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"testStart","time":7627}
+{"testID":3,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8590}
+{"test":{"id":4,"name":"NTFS named streams remain visible metadata in browse and check","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":235,"root_column":3,"root_url":"file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"testStart","time":8591}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":8875}
+{"test":{"id":5,"name":"native NTFS named large.ntfs uses one bounded streaming source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":289,"root_column":5,"root_url":"file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"testStart","time":8876}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":8932}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":8933}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":8937}
+{"testID":5,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ side=PanelSide.local","type":"print","time":8947}
+{"testID":5,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ)","type":"print","time":8949}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ (web=false)","type":"print","time":8949}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":8950}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ (web=false)","type":"print","time":8951}
+{"testID":5,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-GEQXUJ\") returned 1 entities","type":"print","time":8961}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":18530}
+{"test":{"id":6,"name":"native NTFS named misnamed.zip uses one bounded streaming source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":289,"root_column":5,"root_url":"file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"testStart","time":18534}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":18557}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":18557}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":18557}
+{"testID":6,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI side=PanelSide.local","type":"print","time":18558}
+{"testID":6,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI)","type":"print","time":18558}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI (web=false)","type":"print","time":18558}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":18558}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI (web=false)","type":"print","time":18558}
+{"testID":6,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-IBPKQI\") returned 1 entities","type":"print","time":18559}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":26892}
+{"test":{"id":7,"name":"leaving NTFS Archive cancels a queued member preview","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":354,"root_column":3,"root_url":"file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"testStart","time":26895}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":27132}
+{"test":{"id":8,"name":"closing NTFS during access acquisition releases the late source","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":380,"root_column":3,"root_url":"file:///workspace/scratch/4f6714f1660a/runtime-setup/app-validation/test/widget/archive_ntfs_viewer_test.dart"},"type":"testStart","time":27133}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":27157}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: / (web=false)","type":"print","time":27157}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/\") returned 0 entities","type":"print","time":27157}
+{"testID":8,"messageType":"print","message":"🐛 [PanelSource] setSource: Local path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX side=PanelSide.local","type":"print","time":27157}
+{"testID":8,"messageType":"print","message":"ℹ️ [PanelNotifier] Source switched: Local → Local (path=/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX)","type":"print","time":27157}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX (web=false)","type":"print","time":27158}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] refresh: side=PanelSide.local archive=false flat=false","type":"print","time":27158}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] _loadLocalFiles: /workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX (web=false)","type":"print","time":27158}
+{"testID":8,"messageType":"print","message":"🐛 [PanelNotifier] listDirectory(\"/workspace/scratch/4f6714f1660a/runtime-setup/tmp/f3-ntfs-RGCIQX\") returned 1 entities","type":"print","time":27159}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":27289}
+{"success":true,"type":"done","time":27328}
