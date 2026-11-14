@@ -2,14 +2,21 @@
 
 ## Current result
 
-The combined continuation is qualified at
-`331981649872e363253aef13f57a638e5747b8e5`: **790 native Linux tests passed
-across 43 suites, with zero failures or skips**, and all 8,382 captured inputs
-remained unchanged. Strict analysis passed with no issues. Fifty Python
-sync/evidence tests passed, and all 2,185 managed Office files verify against
-the combined canonical source. The [complete qualification](qualification/README.md)
-retains commands, raw logs, source inventories, prior attempts and 54 fresh
-Office artifacts. Subsequent changes only describe and preserve these results.
+The delivered code checkpoint is
+`b98cd70e6dae21ba486a0704e7946cf35ab6575a`, incorporating main and `v1.3.2` at
+`2c373371973b2506fc4fc03e599ef093d14a4be1`. The delta implementation and broad
+integration cohort passed **790 native Linux tests across 43 suites** at
+`331981649872e363253aef13f57a638e5747b8e5`, with all 8,382 captured inputs stable.
+The four later canonical Word runtime changes passed **60 focused host tests**
+at the delivered code checkpoint, with all 8,384 inputs stable. Both app runs
+had zero failures or skips; strict scoped analysis is clean.
+
+The latest canonical source passed **232 tests**, and all **2,187** managed
+Office files verify against it. Fifty Python sync/evidence tests also passed.
+The [broad qualification](qualification/README.md) and
+[Word follow-up](office-refresh/README.md) preserve their own source pins,
+commands, raw logs, input inventories and generated Office artifacts. Changes
+after the delivered code checkpoint only describe and preserve these results.
 
 ## Reconciled inputs
 
@@ -169,3 +176,10 @@ The [six-suite host follow-up](office-refresh/native-suites.txt) checks affected
 Word parsing, templates, round trips, layout and actual host save/recovery paths
 on this refreshed app source. Its runtime result will be recorded after the
 fixed-source run; the earlier 790-case qualification retains its exact pin.
+
+The refreshed source was published at
+`b98cd70e6dae21ba486a0704e7946cf35ab6575a` before that run. All **60 cases passed**
+across the six host suites, with zero failures/skips, all 8,384 inputs unchanged
+and clean Git state before/after. The [follow-up receipt](office-refresh/README.md)
+also retains 40 fresh host artifacts and links the canonical 232-case evidence
+at `579f2105cf7fca61536f7e3f9b59004929bdb6c5`.

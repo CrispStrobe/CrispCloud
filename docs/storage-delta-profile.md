@@ -4,6 +4,9 @@ Status: implemented on `integration/storage-delta-20261114` and qualified on
 Linux at `331981649872e363253aef13f57a638e5747b8e5`: 790 native tests passed
 across 43 suites, with no failures or skips. Strict scoped analysis passed.
 S3 transport evidence includes mocks and a real loopback HTTP server. The
+subsequent Word-only runtime refresh at
+`b98cd70e6dae21ba486a0704e7946cf35ab6575a` passed 60 focused host cases while
+leaving the delta implementation unchanged. The
 [continuation receipt](evidence/storage-delta-20261114/PROGRESS.md) records the
 saved checkpoints and subsequent validation. Earlier storage, bandwidth and
 Office receipts retain their own source revisions and scopes.
@@ -226,8 +229,10 @@ sequence with exact conditional ranges and complete output comparison.
 The tests cover malformed plans/maps, length changes, range and hash failures,
 cache provenance, source/account changes, staged-candidate verification,
 cancellation timing and rejection of legacy remote mutations. Fifty Python
-sync/evidence tests also passed, and 2,185 managed Office hashes verify. The
-separate canonical Office receipt covers 115 cases at its own exact source.
+sync/evidence tests also passed. The latest guarded Office refresh verifies
+2,187 managed hashes and passed 232 canonical cases plus 60 app host cases at
+their exact source revisions; see its
+[separate follow-up](evidence/storage-delta-20261114/office-refresh/README.md).
 
 Ten historical Nextcloud/ownCloud live mutation scenarios remain explicitly
 skipped in their opt-in suites; those suites were not part of this native

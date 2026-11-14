@@ -1,0 +1,43 @@
+{
+  "after_git": {
+    "head": "b98cd70e6dae21ba486a0704e7946cf35ab6575a",
+    "status": "",
+    "tree": "11329c5e82aa1f86afd48ab0ec366de2bb73a3b1"
+  },
+  "before_git": {
+    "head": "b98cd70e6dae21ba486a0704e7946cf35ab6575a",
+    "status": "",
+    "tree": "11329c5e82aa1f86afd48ab0ec366de2bb73a3b1"
+  },
+  "command": [
+    "/workspace/scratch/209f165653d7/toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--machine",
+    "test/widget/office_editor_lifecycle_test.dart",
+    "test/widget/office_native_workflow_test.dart",
+    "test/word_template_preservation_test.dart",
+    "test/office_document_service_test.dart",
+    "test/office_roundtrip_preservation_test.dart",
+    "test/office_editor_fixes_test.dart"
+  ],
+  "elapsed_seconds": 84.71124314799818,
+  "finished_at": "2026-11-14T21:05:19.548839+00:00",
+  "git_status_unchanged": true,
+  "input_changes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "inputs_and_commit_stable": true,
+  "launcher_sha256": "abe07326d8ea0c52cf010d6068b2b28a9a3a35068b272d5e49f77c5ece48fb33",
+  "manifest": "/workspace/scratch/209f165653d7/CrispCloud/docs/evidence/storage-delta-20261114/office-refresh/native-suites.txt",
+  "manifest_sha256": "64cb5728b5a890de661b5bdc67d5d219324ea235b9255cea88a01edf9667c804",
+  "repo": "/workspace/scratch/209f165653d7/CrispCloud",
+  "returncode": 0,
+  "runner_sha256": "706f3679ea91db768d7d68cecdf049357c5af45b10057187b41faf711e6ebfb1",
+  "started_at": "2026-11-14T21:03:54.837309+00:00",
+  "suite_count": 6
+}

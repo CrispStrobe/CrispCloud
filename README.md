@@ -77,7 +77,9 @@ decline until they have separately qualified staging and publication contracts.
 Normal transfers continue through their existing paths.
 
 The combined Linux native cohort passed 790 tests across 43 suites, including
-real loopback HTTP reconstruction and the delta failure cases. See the
+real loopback HTTP reconstruction and the delta failure cases. A later
+canonical Word refresh passed 60 focused host tests and 232 canonical tests;
+each run retains its own exact source pin. See the
 [delta profile](docs/storage-delta-profile.md)
 for exact API, identity, publication and platform boundaries, and the
 [continuation receipt](docs/evidence/storage-delta-20261114/PROGRESS.md) for

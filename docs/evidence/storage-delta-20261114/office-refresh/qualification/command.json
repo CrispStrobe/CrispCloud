@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/workspace/scratch/209f165653d7/toolchain/run",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--machine",
+    "test/widget/office_editor_lifecycle_test.dart",
+    "test/widget/office_native_workflow_test.dart",
+    "test/word_template_preservation_test.dart",
+    "test/office_document_service_test.dart",
+    "test/office_roundtrip_preservation_test.dart",
+    "test/office_editor_fixes_test.dart"
+  ],
+  "cwd": "/workspace/scratch/209f165653d7/CrispCloud",
+  "shell_display": "/workspace/scratch/209f165653d7/toolchain/run flutter test --no-pub --concurrency=1 --machine test/widget/office_editor_lifecycle_test.dart test/widget/office_native_workflow_test.dart test/word_template_preservation_test.dart test/office_document_service_test.dart test/office_roundtrip_preservation_test.dart test/office_editor_fixes_test.dart"
+}
