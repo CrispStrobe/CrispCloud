@@ -894,13 +894,17 @@ void main() {
       'a\\b',
       'a:b',
       '..',
-      '.',
       'nul\u0000name',
     ]) {
       test('unsafe component ${jsonEncode(name)}', () async {
         await _reject(NtfsFixture(name: name), ArchiveMessageCode.unsupported);
       });
     }
+    test('ordinary dot name collides with the root self-entry', () async {
+      // The root already indexes its legitimate dot entry. A second dot is
+      // refused as a duplicate index key before the ordinary FILE name is read.
+      await _reject(NtfsFixture(name: '.'), ArchiveMessageCode.corrupt);
+    });
     test('invalid UTF16 surrogate is rejected', () async {
       final f = NtfsFixture();
       _attribute(f, 24, 0x30, (b, at) {

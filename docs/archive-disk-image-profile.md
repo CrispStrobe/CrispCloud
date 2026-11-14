@@ -18,7 +18,7 @@ one-based table index:
 | --- | --- |
 | `partition-001/` | Directory for table entry 1, when populated. Gaps in table indices remain gaps in these identifiers. |
 | `partition-001/raw.img` | Exact bounded bytes of that partition, including its filesystem metadata and unused space. |
-| `partition-001/files/` | Added only after a supported FAT/ext/NTFS filesystem has been validated completely. |
+| `partition-001/files/` | Added only after the complete supported filesystem listing and its required metadata/allocation checks succeed. |
 | `partition-001/files/HELLO.TXT` | A filesystem member, read lazily from its verified allocation extents. |
 
 Names from the GPT table and filesystem volume labels never determine these

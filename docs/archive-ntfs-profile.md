@@ -86,7 +86,8 @@ content limit still applies when opening a whole workspace.
 
 | Resource | Default ceiling |
 | --- | --- |
-| Enumerated filename-index entries / published members | 100,000; index traversal includes system entries and DOS aliases. |
+| Published members | 100,000 by default, lowerable through the caller's entry allowance. |
+| Scanned filename-index entries | Fixed 200,064 per reader, including system entries and DOS aliases; this separate traversal ceiling is not lowered by the public member allowance. |
 | Directory depth | 64. |
 | Metadata source bytes requested | 64 MiB. |
 | Directory metadata bytes | 32 MiB. |

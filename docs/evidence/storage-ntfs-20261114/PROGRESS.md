@@ -129,3 +129,24 @@ as a pass: `ntfsinfo` reports a `$SDS` diagnostic on both an untouched `mkntfs`
 control and a populated image. Security-descriptor content inspection remains
 incomplete, while separate `ntfscat` payload extraction and read-only volume
 checks retain their own results.
+
+## Saved candidate results and test correction
+
+- `dec983b2fcb71dea7f90e1020c5d73e3f926a3f6` saved the completed runtime and
+  full regression candidate. `d7d66a43` then saved external provenance and
+  preliminary records without changing source.
+- The first 46-suite native gate at `dec983b2` finished with 1,186 passed,
+  one failed expectation and one existing opt-in large-TGZ skip. The failed
+  gate, complete log and source binding remain in
+  `intermediate/candidate-dec983b2/`.
+- The failed case named an ordinary file `.` in a root that already contained
+  its legitimate self-entry. Correct rejection occurs earlier as a corrupt
+  duplicate index key. A dedicated test now asserts that exact result; every
+  other unsafe-name test retains its exact unsupported-name expectation. This
+  is a test-only correction with no runtime or fixture change.
+- At `dec983b2`, strict analysis passed all 25 changed Dart files, portable
+  acceptance passed 18 groups / 2,037 checks on both VM and actual JavaScript
+  with identical output, and the original-manifest production web build passed
+  with the full revision and app version embedded. These executions retain
+  their actual source attribution; the final native gate will use the saved
+  corrected test revision.
