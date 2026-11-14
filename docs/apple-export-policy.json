@@ -15,7 +15,7 @@
   },
   "inventory_sha256": "b67c6769196abbc59f1c966262cc82ed426a46f508e35d0cf0960587ae4c4218",
   "pubspec_lock_sha256": "2a0b95288cf41be9087af0c01ea57afcc4a2f138876d15709bff2f866060ccb4",
-  "reviewed_source_sha256": "ec00d3fa6159b05ba6d7d1c6b0200004498e9484e0b2d4441cb23a6512f55caa",
+  "reviewed_source_sha256": "1ced20acdb8fe83a9420fda01ae7016235c4a95b35be6e1fe79206d2a155dc2c",
   "testflight": {
     "distribution_review": "no_france",
     "reference": "Reviewed external group b044f8c9-394b-47dd-a470-796fd052580a is invitation-only (publicLinkEnabled=false) and contains exactly the project owner (cstr+beta@mailbox.org), who is outside France. The previous public-link group 2649c41c-6c58-4dfd-b07a-03b2f537e73f had its public link disabled on 2026-11-08 and is not used for this release.",

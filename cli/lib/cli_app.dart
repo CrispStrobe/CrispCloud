@@ -10,6 +10,7 @@ import 'package:args/command_runner.dart';
 import 'commands/config.dart';
 import 'commands/connect.dart';
 import 'commands/download.dart';
+import 'commands/du.dart';
 import 'commands/ls.dart';
 import 'commands/pdf.dart';
 import 'commands/providers.dart';
@@ -46,6 +47,7 @@ CommandRunner<int> buildRunner({String? configPath}) {
     ..addCommand(DownloadCommand(config))
     ..addCommand(SyncCommand(config))
     ..addCommand(SearchCommand(config))
+    ..addCommand(DuCommand())
     ..addCommand(ShareCommand(config))
     ..addCommand(ProvidersCommand(config))
     ..addCommand(ConfigCommand(config))
@@ -100,7 +102,7 @@ _crisp_completion() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-  local commands="connect ls upload download sync search share providers config pdf completion"
+  local commands="connect ls upload download sync search du share providers config pdf completion"
 
   if [[ ${COMP_CWORD} -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
@@ -110,6 +112,9 @@ _crisp_completion() {
   case "${COMP_WORDS[1]}" in
     ls|download|search|share|sync)
       COMPREPLY=( $(compgen -W "--provider --json" -- "${cur}") )
+      ;;
+    du)
+      COMPREPLY=( $(compgen -f -- "${cur}") $(compgen -W "--top --recursive --files-only --dirs-only --max-entries --max-depth --bytes --json" -- "${cur}") )
       ;;
     upload)
       COMPREPLY=( $(compgen -f -- "${cur}") )
@@ -153,6 +158,7 @@ _crisp() {
         'upload[Upload a file]' \
         'download[Download a file]' \
         'sync[Sync local to remote]' \
+        'du[Find largest local files and folders]' \
         'search[Search for files]' \
         'share[Generate share link]' \
         'providers[List providers]' \
@@ -167,6 +173,9 @@ _crisp() {
           ;;
         config)
           _values 'subcommand' show path set-default remove smb-backend
+          ;;
+        du)
+          _arguments '--top[Number of results]:count:' '--recursive[Rank all depths]' '--files-only[Largest individual files]' '--dirs-only[Directories only]' '--max-entries[Entry budget]:count:' '--max-depth[Depth budget]:depth:' '--bytes[Exact bytes]' '--json[JSON output]' '*:path:_files'
           ;;
         pdf)
           if (( CURRENT == 3 )); then
@@ -192,7 +201,7 @@ _crisp "$@"
   static const _fishCompletion = r'''
 # crisp fish completion
 
-set -l commands connect ls upload download sync search share providers config pdf completion
+set -l commands connect ls upload download sync search du share providers config pdf completion
 
 # Top-level commands
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a connect -d "Connect a provider"
@@ -206,6 +215,16 @@ complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a providers
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a config -d "Manage configuration"
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a pdf -d "Inspect and edit PDFs"
 complete -c crisp -f -n "not __fish_seen_subcommand_from $commands" -a completion -d "Shell completion"
+
+complete -c crisp -n "not __fish_seen_subcommand_from $commands" -a du -d "Find largest local files and folders"
+complete -c crisp -n "__fish_seen_subcommand_from du" -l top -s n -x
+complete -c crisp -n "__fish_seen_subcommand_from du" -l recursive -s r
+complete -c crisp -n "__fish_seen_subcommand_from du" -l files-only
+complete -c crisp -n "__fish_seen_subcommand_from du" -l dirs-only
+complete -c crisp -n "__fish_seen_subcommand_from du" -l max-entries -x
+complete -c crisp -n "__fish_seen_subcommand_from du" -l max-depth -x
+complete -c crisp -n "__fish_seen_subcommand_from du" -l bytes
+complete -c crisp -n "__fish_seen_subcommand_from du" -l json -s j
 
 # connect provider types
 complete -c crisp -f -n "__fish_seen_subcommand_from connect" -a "s3 sftp smb webdav"

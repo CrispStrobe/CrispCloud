@@ -13,8 +13,40 @@ dart test
 For a distributable native bundle, use `dart build cli -o build/cli` and keep its
 native transport libraries alongside the executable. The existing storage
 commands are `connect`, `providers`, `ls`, `upload`, `download`, `search`, `share`,
-`sync`, and `config`. `crisp completion bash`, `zsh`, or `fish` includes PDF
+`sync`, `du`, and `config`. `crisp completion bash`, `zsh`, or `fish` includes PDF
 operations.
+
+## Largest local files and folders
+
+```bash
+crisp du ~/Downloads                    # largest immediate children, folder totals
+crisp du /some/path --files-only -n 30   # largest individual files at any depth
+crisp du /some/path --dirs-only -r       # folder totals at every depth
+crisp du /some/path --json --bytes       # structured report; JSON always uses bytes
+```
+
+The path defaults to the current directory. This metadata-only command works
+without cloud configuration, GUI startup or credential-store access. It supports
+Windows, macOS and Linux wherever the standalone CLI can run.
+
+Sizes are **logical file bytes**, not allocated disk blocks or reclaimable space.
+Hard links count once per pathname; sparse files, clones and compression can
+make these totals differ from physical usage. Folder totals include descendants.
+With `--recursive`, ancestor and descendant rows overlap and must not be added.
+An explicitly supplied symlink root resolves once; child symlinks are skipped,
+including broken links and loops. Other special entries are excluded. The scan
+is a live observation, not an atomic filesystem snapshot.
+
+Results default to the largest 20 entries (`--top 1..10000`). Traversal defaults
+to 1,000,000 entries and depth 200; adjust `--max-entries` or `--max-depth` if
+needed. Unreadable or changing entries, exceeded budgets, interruption or totals
+beyond the exact reporting bound produce **partial lower bounds**, never a
+claim of a complete ranking. JSON includes per-row completeness, issue paths
+and codes (first 100 issues, then a suppressed count), scan limits and skip
+counts. Text output marks partial totals with `>=`.
+
+Exit codes: `0` complete, `1` partial scan or inaccessible root, `2` invalid
+arguments, `130` interrupted by Ctrl+C. No file contents are read or modified.
 
 ## Storage providers and engines
 
