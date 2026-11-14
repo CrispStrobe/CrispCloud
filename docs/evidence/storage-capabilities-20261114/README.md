@@ -2,6 +2,7 @@
 
 This directory supports the
 [2026-11-14 architecture and library study](../../storage-capabilities-20261114.md).
+Review: [draft PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
 The study is documentation-only. Its upstream observations are candidate
 evidence, not approved dependency pins or claims of newly working runtime
 features.
@@ -68,3 +69,8 @@ corrections are incorporated in the plan.
 There are no new runtime test or build results for this branch. Existing
 verification logs elsewhere in the repository retain their original source
 and environment attribution.
+
+[final-validation.json](final-validation.json) records the final inherited-ref
+checks, documentation checks, reviewed source hashes and artifact digests.
+The receipt names the previously saved source checkpoint; the commit that adds
+the receipt is a documentation-only descendant of that checkpoint.

@@ -4,6 +4,8 @@ Status: source-backed architecture and library assessment. This branch changes
 documentation and evidence only; recommended capabilities require implementation
 and qualification before they can be advertised in the app.
 
+Review: [draft PR #101](https://github.com/CrispStrobe/CrispCloud/pull/101).
+
 ## Reconciled baseline
 
 On 2026-11-14 all remote branch heads, tags and `refs/pull/*/head` were fetched.
