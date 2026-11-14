@@ -94,6 +94,10 @@ void main() {
       await tester.pump();
       await host.back();
       await _choose(tester, 'Discard');
+      await officePumpUntil(
+        tester,
+        () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+      );
       expect(find.byType(OfficeEditorDialog), findsNothing);
       expect(host.savedBytes, orderedEquals(original));
       expect(host.cloud.writes, isEmpty);
@@ -108,6 +112,10 @@ void main() {
     await tester.runAsync(() async {
       final host = await OfficeTestHarness.open(tester);
       await host.back();
+      await officePumpUntil(
+        tester,
+        () => find.byType(OfficeEditorDialog).evaluate().isEmpty,
+      );
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(OfficeEditorDialog), findsNothing);
       expect(host.cloud.writes, isEmpty);

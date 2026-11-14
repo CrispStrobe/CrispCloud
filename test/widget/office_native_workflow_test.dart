@@ -51,7 +51,9 @@ List<_NativeCase> _cases() {
   final manifest = jsonDecode(
     File('$_fixtures/manifest.json').readAsStringSync(),
   ) as Map<String, Object?>;
-  expect(manifest['version'], 1);
+  if (manifest['version'] != 1) {
+    throw const FormatException('Unsupported native workflow fixture manifest');
+  }
   return [
     for (final entry in manifest['cases']! as List<Object?>)
       _NativeCase(entry! as Map<String, Object?>),
