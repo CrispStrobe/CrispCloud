@@ -1,0 +1,36 @@
+CI SQLite: libsqlite3.so, version 3.46.1, foreign keys/transactions verified; optional FTS5=True
+No Visual Studio installation found with the requested Microsoft.VisualStudio.Component.VC.Tools.x86.x64 component.
+
+00:00 +0: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart
+test/widget/office_sheet_state_workflow_test.dart:320:28: Error: Method not found: '_ribbonTooltip'.
+        await _tap(tester, _ribbonTooltip('Close'));
+                           ^^^^^^^^^^^^^^
+test/widget/office_sheet_state_workflow_test.dart:361:28: Error: Method not found: '_ribbonTooltip'.
+        await _tap(tester, _ribbonTooltip('Close'));
+                           ^^^^^^^^^^^^^^
+test/widget/office_sheet_state_workflow_test.dart:410:30: Error: Method not found: '_ribbonTooltip'.
+          await _tap(tester, _ribbonTooltip('Close'));
+                             ^^^^^^^^^^^^^^
+test/widget/office_sheet_state_workflow_test.dart:456:32: Error: Method not found: '_ribbonTooltip'.
+            await _tap(tester, _ribbonTooltip('Close'));
+                               ^^^^^^^^^^^^^^
+00:00 +0 -1: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart [E]
+  Failed to load "/workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart":
+  Compilation failed for testPath=/workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: test/widget/office_sheet_state_workflow_test.dart:320:28: Error: Method not found: '_ribbonTooltip'.
+          await _tap(tester, _ribbonTooltip('Close'));
+                             ^^^^^^^^^^^^^^
+  test/widget/office_sheet_state_workflow_test.dart:361:28: Error: Method not found: '_ribbonTooltip'.
+          await _tap(tester, _ribbonTooltip('Close'));
+                             ^^^^^^^^^^^^^^
+  test/widget/office_sheet_state_workflow_test.dart:410:30: Error: Method not found: '_ribbonTooltip'.
+            await _tap(tester, _ribbonTooltip('Close'));
+                               ^^^^^^^^^^^^^^
+  test/widget/office_sheet_state_workflow_test.dart:456:32: Error: Method not found: '_ribbonTooltip'.
+              await _tap(tester, _ribbonTooltip('Close'));
+                                 ^^^^^^^^^^^^^^
+  .
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart: loading /workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart
+Host coverage collection failed: Flutter test failed with exit code 1; no receipt issued

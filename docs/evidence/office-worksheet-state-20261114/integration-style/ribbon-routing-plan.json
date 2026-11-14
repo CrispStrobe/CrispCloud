@@ -1,0 +1,16 @@
+{
+  "source_app_commit": "bd910b1454e30afd1793ea20ae3977821bf5cdb2",
+  "path": "lib/widgets/office_editor_ribbon.dart",
+  "before_sha256": "1c2bc70387ea8d4e82631e342b3d856d71c7c32f2f45bbb8e90690ec85b85b86",
+  "after_sha256": "8c1954036e6ead90e0b7e49dcba467be5f7f9519bb81caab548b3b4f3e53f969",
+  "patch_sha256": "e5082befa107eae9e38ab477832c7949ac0ca561ccd761a879e286ed1837f3cd",
+  "applied": false,
+  "routes": [
+    "bold",
+    "font size",
+    "horizontal alignment",
+    "fill color",
+    "font color",
+    "six-field clear formatting"
+  ]
+}

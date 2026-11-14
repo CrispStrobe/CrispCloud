@@ -527,10 +527,16 @@ the associated output data has reached the required durability boundary.
 
 ### 7. Complete transfer gaps
 
-The existing [G29 bandwidth design](file-manager-gaps/transfer-bandwidth-design.md)
-already scopes aggregate upload/download allocation. Implement it at actual
-stream boundaries, with fair admission and permit release on pause, cancellation
-and failure. This delivers user value without another copy engine.
+The [G29 bandwidth design](file-manager-gaps/transfer-bandwidth-design.md)
+scopes aggregate upload/download allocation. The first
+[foreground HTTP profile](file-manager-gaps/transfer-bandwidth-http-profile.md)
+now connects a fair allocator to queued operation identities, finalized native
+HTTP bodies and covered response streams. Persistent independent limits are
+available in Network settings and Activity, with covered traffic separated from
+logical file progress. Its [incremental evidence](evidence/storage-bandwidth-20261114/)
+records qualification and remote checkpoints. Browser uploads, other provider
+methods, direct protocols and separate background runtimes remain outside this
+profile; this does not close the wider global-bandwidth gap.
 
 The source review also found incomplete delta-transfer entry points worth
 hardening before wider exposure. The S3 cached block map lacks the version

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <s:styleSheet xmlns:s="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <s:fonts count="1"><s:font><s:color rgb="FF000000"/><s:sz val="11"/><s:name val="Calibri"/></s:font></s:fonts>
+  <s:fonts count="1"><s:font><s:sz val="11"/><s:color rgb="FF000000"/><s:name val="Calibri"/></s:font></s:fonts>
   <s:fills count="7">
     <s:fill><s:patternFill patternType="none"/></s:fill>
     <s:fill><s:patternFill patternType="gray125"/></s:fill>

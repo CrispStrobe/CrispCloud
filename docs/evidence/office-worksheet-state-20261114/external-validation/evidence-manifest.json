@@ -1,0 +1,75 @@
+{
+  "file_count": 14,
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 2041,
+      "sha256": "93109cd027d074cee96576d83d4ee0c831476b54c34e9703b5f48c1c71f625d6"
+    },
+    {
+      "path": "baseline-5-source/host-inputs.json",
+      "size_bytes": 4385,
+      "sha256": "49c9f1a3ab13574f34f304400014bf5277f72787b5e5899cc4e8f80476415c5c"
+    },
+    {
+      "path": "baseline-5-source/input/source.xlsx",
+      "size_bytes": 5602,
+      "sha256": "d34eea0d7347fe74c8cba77fbeddc6b9fad29dfb4f31a099d7ce953f7fbae2ad"
+    },
+    {
+      "path": "baseline-5-source/schema-report.json",
+      "size_bytes": 285,
+      "sha256": "0ec680915377447b12468d7b69f594d890394e0d1c2bf8ad1c775bca67382b77"
+    },
+    {
+      "path": "baseline-5-source/schema.log",
+      "size_bytes": 121,
+      "sha256": "68f7b152c25d24a2b18d4e6774fa47208ecc19bbfdba7630679663903b56b9f9"
+    },
+    {
+      "path": "baseline-5-source/self-test.log",
+      "size_bytes": 110,
+      "sha256": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56"
+    },
+    {
+      "path": "baseline-5-source/source-binding.json",
+      "size_bytes": 966,
+      "sha256": "a10ac47fb55ee29159a11761c5099dbfcfcb9cc484e1bfbb01edeffc5317a48f"
+    },
+    {
+      "path": "baseline-5-source/validation-receipt.json",
+      "size_bytes": 1663,
+      "sha256": "242a0f355678978e8a217cdfd26bfbea57b1000986048ff892020d028e0185e9"
+    },
+    {
+      "path": "baseline-source/input/source.xlsx",
+      "size_bytes": 5602,
+      "sha256": "1bf2bbb70f0dbea81a6398a934dd267d943335edf92b6f46028ede4248bf1d71"
+    },
+    {
+      "path": "baseline-source/schema-report.json",
+      "size_bytes": 283,
+      "sha256": "2385dd89a6482b0ff70d20296edf51befcd628217b7b5c930727279c7ac813c0"
+    },
+    {
+      "path": "baseline-source/schema.log",
+      "size_bytes": 119,
+      "sha256": "424c83ee97108b4a2c4864aa41f777cf211ccb40657adbaa5ea0ce17643c79aa"
+    },
+    {
+      "path": "baseline-source/self-test.log",
+      "size_bytes": 110,
+      "sha256": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56"
+    },
+    {
+      "path": "baseline-source/validation-receipt.json",
+      "size_bytes": 1725,
+      "sha256": "b8fe59a451f15ef9d4d1f1f57bffb262c78110eb819a71b7a3116bfcd3f855c0"
+    },
+    {
+      "path": "validator-provenance.json",
+      "size_bytes": 5604,
+      "sha256": "f8a6f4bab517eb5fd0e18809a4fe121820ceab6524bcb112a34c3d94f3d22a68"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "label": "inventory-unittests",
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tool",
+      "-p",
+      "test_office_host_evidence.py",
+      "-v"
+    ],
+    "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+    "exit_code": 0,
+    "log": "inventory-unittests.log"
+  },
+  {
+    "label": "gate-shell-syntax",
+    "command": [
+      "bash",
+      "-n",
+      "tool/check_office_fidelity.sh"
+    ],
+    "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+    "exit_code": 0,
+    "log": "gate-shell-syntax.log"
+  },
+  {
+    "label": "baseline-reproduction",
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "/workspace/scratch/f035141943c7/ci-acceptance-integration/baseline/reproduce_root_rejection.py"
+    ],
+    "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+    "exit_code": 0,
+    "log": "baseline-reproduction.log"
+  },
+  {
+    "label": "diff-check",
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      ".github/workflows/office-fidelity.yml",
+      "tool/check_office_fidelity.sh",
+      "tool/office_host_evidence.json",
+      "tool/office_host_evidence.py",
+      "tool/test_office_host_evidence.py"
+    ],
+    "cwd": "/workspace/scratch/f035141943c7/CrispCloud",
+    "exit_code": 0,
+    "log": "diff-check.log"
+  }
+]

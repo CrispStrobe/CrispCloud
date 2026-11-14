@@ -1,0 +1,37 @@
+{
+  "scope": "Exact independently authored worksheet-state input captured by the active baseline host test; byte-identical staging for isolated SDK validation. No claim about host test outcome.",
+  "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-acceptance/source.xlsx",
+  "source_sha256": "1bf2bbb70f0dbea81a6398a934dd267d943335edf92b6f46028ede4248bf1d71",
+  "staged_file": "input/source.xlsx",
+  "test_source_path": "/workspace/scratch/f035141943c7/CrispCloud/test/widget/office_sheet_state_workflow_test.dart",
+  "test_source_sha256": "eb13d5b04ed4154a93e433d44d3d459c38513380b09862c721d88d726ef0d76b",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "validator_assembly_sha256": "8910f715c4d47f7b4834e3c3638d8272f21e57d3e269f080343846b353a61f05",
+  "sdk": "8.0.428",
+  "runtime": "8.0.34",
+  "openxml": "3.3.0",
+  "commands": [
+    {
+      "label": "self-test",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "--self-test"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "schema",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "/workspace/scratch/f035141943c7/external-sheet-state-validation/baseline-source/input",
+        "/workspace/scratch/f035141943c7/external-sheet-state-validation/baseline-source/schema-report.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "schema_files": 1,
+  "schema_failures": 0,
+  "source_hash_unchanged": true
+}

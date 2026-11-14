@@ -723,6 +723,8 @@ class CycleComparisonTests(unittest.TestCase):
 
     def test_expansion_first_saves_require_their_independent_native_references(self):
         authored = [
+            ('fidelity-sheet-fill', 'unrelated', '.xlsx', 'unrelated-expected.xlsx'),
+            ('fidelity-sheet-fill', 'explicit', '.xlsx', 'explicit-expected.xlsx'),
             ('fidelity-bookmark-copy', 'copied', '.docx', 'copied-expected.docx'),
             ('fidelity-bookmark-copy', 'editor', '.docx', 'copied-expected.docx'),
             ('fidelity-sheet-qualified-names', 'recalculated', '.xlsx', 'expected-recalculated.xlsx'),
@@ -749,6 +751,24 @@ class CycleComparisonTests(unittest.TestCase):
                     failure = render.cycle_coverage(files, records)
                     self.assertEqual(len(failure['failures']), 1)
                     self.assertIn('Render changed', failure['failures'][0]['error'])
+
+    def test_fill_baseline_is_required_when_the_corpus_directory_is_the_input_root(self):
+        # A scoped local render must enforce the same first-save oracle as the
+        # full CI artifact tree, including when all three bad saves agree.
+        for phase in ('unrelated', 'explicit'):
+            with self.subTest(phase=phase):
+                cycles = [f'{phase}-{n}.xlsx' for n in (1, 2, 3)]
+                baseline = f'{phase}-expected.xlsx'
+                records = {name: record(name) for name in cycles + [baseline]}
+                root = '/tmp/engine/fidelity-sheet-fill'
+                passed = render.cycle_coverage(cycles + [baseline], records, root=root)
+                self.assertEqual(passed['failures'], [])
+                self.assertEqual(passed['baseline_comparisons'], 1)
+                missing = render.cycle_coverage(cycles, records, root=root)
+                self.assertIn('Missing required native baseline', missing['failures'][0]['error'])
+                records[baseline] = record(baseline, pixels=['9' * 64])
+                changed = render.cycle_coverage(cycles + [baseline], records, root=root)
+                self.assertIn('Render changed (pixel_sha256)', changed['failures'][0]['error'])
 
     def test_explicit_clone_mapping_does_not_guess_other_scenario_baselines(self):
         for folder, case, suffix in (

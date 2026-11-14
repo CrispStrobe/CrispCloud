@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:crisp_storage/crisp_storage.dart'
+    show TransferBandwidthContext, TransferBandwidthDirection;
 import 'package:universal_html/html.dart' as html;
 
 import 'filen_web_stub.dart' if (dart.library.js_util) 'dart:js_util' as js;
@@ -18,6 +20,11 @@ Future<http.Response> uploadSpooledHttpBody(
   bool allowHttp = false,
   void Function(int, int)? onProgress,
 }) async {
+  final bandwidth = TransferBandwidthContext.current;
+  // Fetch consumes the completed File/Blob independently of Dart stream
+  // backpressure. Report this distinct path without pacing its preparation.
+  bandwidth?.markUnsupported(TransferBandwidthDirection.upload);
+  bandwidth?.markUnsupported(TransferBandwidthDirection.download);
   if ((uri.scheme != 'https' && !(allowHttp && uri.scheme == 'http')) ||
       uri.host.isEmpty ||
       uri.userInfo.isNotEmpty) {

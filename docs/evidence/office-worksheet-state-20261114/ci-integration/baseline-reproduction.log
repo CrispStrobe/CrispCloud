@@ -1,0 +1,12 @@
+[
+  {
+    "probe_path": "build/office-fill-host-acceptance/source.xlsx",
+    "accepted": false,
+    "error": "Invalid host evidence path: build/office-fill-host-acceptance/source.xlsx"
+  },
+  {
+    "probe_path": "build/office-sheet-state-acceptance/source.xlsx",
+    "accepted": false,
+    "error": "Invalid host evidence path: build/office-sheet-state-acceptance/source.xlsx"
+  }
+]

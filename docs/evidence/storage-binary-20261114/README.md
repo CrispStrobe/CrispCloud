@@ -6,7 +6,21 @@ This continuation advances the binary-comparison part of stage 6 in the
 identity, work-limit and cleanup contracts. It reuses the existing same-offset
 scanner, sparse range index and Hex navigation.
 
-## Qualified source and results
+## Subsequent hosted qualification
+
+The completed GitHub Actions artifact now supplies **31 passing Chrome
+comparison tests** and **1,373 passing native storage tests** for the same
+`22bd67b8` source. [Hosted evidence](hosted-22bd67b8/README.md) retains complete
+logs/events, artifact/source hashes and the separate overall-workflow failure:
+the later external FatFs archive download timed out. The browser gap recorded
+at the local handoff is therefore closed for this revision. These overlapping
+cohorts are not additive and do not qualify the next bandwidth continuation.
+
+## Local qualification recorded at handoff
+
+The following table and local-attempt notes preserve the results available
+before those hosted jobs completed. Their pending/queued labels describe that
+earlier observation; the hosted extension above records the subsequent result.
 
 The completed local gates below ran against saved source
 **`22bd67b887c81a11ea22664defc3474a07eef50a`**, tree

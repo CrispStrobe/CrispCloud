@@ -1,0 +1,37 @@
+{
+  "scope": "Exact independently authored source from the final stable-input host baseline (baseline-5); isolated byte-identical staging and SDK validation",
+  "source_path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-sheet-state-provenance/baseline-5/artifacts/source.xlsx",
+  "source_sha256": "d34eea0d7347fe74c8cba77fbeddc6b9fad29dfb4f31a099d7ce953f7fbae2ad",
+  "staged_file": "input/source.xlsx",
+  "same_uncompressed_parts_as_first_schema_valid_source": true,
+  "previous_source_sha256": "1bf2bbb70f0dbea81a6398a934dd267d943335edf92b6f46028ede4248bf1d71",
+  "validator_source_sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880",
+  "validator_assembly_sha256": "8910f715c4d47f7b4834e3c3638d8272f21e57d3e269f080343846b353a61f05",
+  "sdk": "8.0.428",
+  "runtime": "8.0.34",
+  "openxml": "3.3.0",
+  "commands": [
+    {
+      "label": "self-test",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "--self-test"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "schema",
+      "command": [
+        "/workspace/scratch/f035141943c7/toolchain/dotnet/dotnet",
+        "/workspace/scratch/f035141943c7/toolchain/office-validation/OfficeValidation.dll",
+        "/workspace/scratch/f035141943c7/external-sheet-state-validation/baseline-5-source/input",
+        "/workspace/scratch/f035141943c7/external-sheet-state-validation/baseline-5-source/schema-report.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "schema_files": 1,
+  "schema_failures": 0,
+  "source_hash_unchanged": true
+}

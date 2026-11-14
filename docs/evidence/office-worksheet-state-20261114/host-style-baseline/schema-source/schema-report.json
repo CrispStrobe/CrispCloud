@@ -1,0 +1,11 @@
+{
+  "Files": 1,
+  "Failures": 0,
+  "Reports": [
+    {
+      "File": "/workspace/scratch/f035141943c7/external-sheet-state-validation/style-baseline-1-source/input/source.xlsx",
+      "Sha256": "ce064557d720146d4184e441e1c0d1aaa73ef05eb41964493cad660eb25ed466",
+      "Errors": []
+    }
+  ]
+}

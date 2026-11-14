@@ -1,0 +1,17 @@
+{
+  "pubspec.lock": {
+    "sha256": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c",
+    "snapshot": "generated-inputs/pubspec.lock.gz",
+    "bytes": 63283
+  },
+  ".dart_tool/package_config.json": {
+    "sha256": "aa58115c4865438d8d6e0eb72bf03ca946c055be3f5b56b24191896549a29f58",
+    "snapshot": "generated-inputs/.dart_tool/package_config.json.gz",
+    "bytes": 59152
+  },
+  ".dart_tool/package_graph.json": {
+    "sha256": "69488b6c4ddb9676ade466539d5f9b6926f604991757f33490ad79b4b3a6ab75",
+    "snapshot": "generated-inputs/.dart_tool/package_graph.json.gz",
+    "bytes": 52197
+  }
+}

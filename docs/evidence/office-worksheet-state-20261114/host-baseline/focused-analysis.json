@@ -1,0 +1,11 @@
+{
+  "captured_at": "2026-11-14T19:35:20.211956+00:00",
+  "command": [
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/dart",
+    "analyze",
+    "test/widget/office_sheet_state_workflow_test.dart"
+  ],
+  "returncode": 0,
+  "stdout": "Analyzing office_sheet_state_workflow_test.dart...\nNo issues found!\n",
+  "source_sha256": "056dfa9ec21aa184136b18d825c0112ae60081b37d252e3b13283b464c85017d"
+}

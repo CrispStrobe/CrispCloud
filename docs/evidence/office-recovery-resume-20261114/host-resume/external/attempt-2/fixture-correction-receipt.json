@@ -1,0 +1,15 @@
+{
+  "scope": "Comparison of the two actual independently authored inputs emitted by the real host regression, before and after canonical fixture correction",
+  "original_source_sha256": "ec7108cc5fc40ea71a5d37e46b8f276e17483a81fab80198dac622c1cfda39ad",
+  "corrected_source_sha256": "f5ce92914660d846682688046f843d6fad26e8206201e10ac305ad05cfb16f97",
+  "changed_uncompressed_parts": [
+    "xl/styles.xml"
+  ],
+  "single_xml_replacement": {
+    "before": "<s:color rgb=\"FF000000\"/><s:sz val=\"11\"/>",
+    "after": "<s:sz val=\"11\"/><s:color rgb=\"FF000000\"/>",
+    "occurrences": 1
+  },
+  "all_other_uncompressed_parts_identical": true,
+  "source_and_corrected_entry_names_equal": true
+}

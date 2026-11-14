@@ -1,7 +1,7 @@
 {
   "version": 1,
   "package": "quds_office_engine",
-  "expected_file_count": 350,
+  "expected_file_count": 358,
   "description": "Authored from the scenarios and regression tests. These paths are an inventory, not a golden generated from current output. SHA receipts identify each run; the semantic and renderer oracles decide correctness.",
   "series": [
     {
@@ -930,6 +930,24 @@
         3
       ],
       "producer": "test/sheet_style_namespace_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-fill/unrelated-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_fill_fidelity_test.dart"
+    },
+    {
+      "pattern": "fidelity-sheet-fill/explicit-{cycle}.xlsx",
+      "cycles": [
+        1,
+        2,
+        3
+      ],
+      "producer": "test/sheet_fill_fidelity_test.dart"
     }
   ],
   "standalone": [
@@ -1096,6 +1114,14 @@
     {
       "path": "fidelity-schema/namespace-style-reference.xlsx",
       "producer": "test/sheet_style_namespace_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-fill/unrelated-expected.xlsx",
+      "producer": "test/sheet_fill_fidelity_test.dart"
+    },
+    {
+      "path": "fidelity-sheet-fill/explicit-expected.xlsx",
+      "producer": "test/sheet_fill_fidelity_test.dart"
     }
   ]
 }

@@ -1,0 +1,77 @@
+{
+  "status": "corrected independent fixture; one native fill regression pending",
+  "captured_at": "2026-11-14T19:10:59.031312+00:00",
+  "head": "9101520b12b7a9f17af10757775b9f6e98cbc4bf",
+  "git_status": " M docs/office-recovery-20261114.md\n?? docs/evidence/office-recovery-resume-20261114/host-resume/coverage/\n?? docs/evidence/office-recovery-resume-20261114/host-resume/execution/\n?? docs/evidence/office-recovery-resume-20261114/host-resume/font-order-diagnostic/\n?? docs/evidence/office-recovery-resume-20261114/host-resume/schema-attempt-1/\n",
+  "input_files": 4739,
+  "input_tree_sha256_before": "0a56df1bab59319843a561937d044f89d59289f01b32181e73dd56ef9e91c90e",
+  "source_snapshot_sha256": "bfb005aa01d1490665a7f42076fd5f76f98c734538438eb33d627e609cb09eb5",
+  "pubspec_committed_sha256": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+  "pubspec_expected_collected_sha256": "e7d7e583ce3898624498471c1ffaf28d87b82a396ac4b9d4dfcacba688262fbf",
+  "pubspec_note": "The committed CI helper temporarily adds system SQLite hook configuration and restores committed bytes in finally; collector receipt must bind the actual collected view.",
+  "command": [
+    "python3",
+    "tool/with_ci_system_sqlite.py",
+    "python3",
+    "tool/collect_office_host_coverage.py",
+    "--flutter",
+    "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+    "build/office-fill-host-coverage-3",
+    "--",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--plain-name",
+    "native fills survive unrelated formatting through three host uploads",
+    "test/widget/office_native_workflow_test.dart"
+  ],
+  "environment_overrides": {
+    "CI": "true",
+    "BOT": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "TMPDIR": "/workspace/scratch/f035141943c7/toolchain/tmp",
+    "PUB_CACHE": "/workspace/scratch/f035141943c7/toolchain/pub-cache",
+    "RUSTUP_HOME": "/workspace/scratch/f035141943c7/toolchain/rustup",
+    "CARGO_HOME": "/workspace/scratch/f035141943c7/toolchain/cargo",
+    "CARGO": "/workspace/scratch/f035141943c7/toolchain/native-launchers/cargo",
+    "PATH": "/workspace/scratch/f035141943c7/toolchain/native-launchers:/workspace/scratch/f035141943c7/toolchain/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/llvm-19/bin:/workspace/scratch/f035141943c7/toolchain/flutter/bin:/workspace/scratch/f035141943c7/toolchain/cargo/bin:/home/agent/.codex/tmp/arg0-linux/codex-arg07A19SN:/opt/codex/codex-path:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/opt/codex/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/agent/.local/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "LD_LIBRARY_PATH": "/workspace/scratch/f035141943c7/toolchain/clang/usr/lib/x86_64-linux-gnu:/workspace/scratch/f035141943c7/toolchain/native/lib"
+  },
+  "test_sha256": {
+    "test/widget/office_native_workflow_test.dart": "7d3650f54ea0462718dda83d8c3c0ccab2cea718c2204eaf803d69cc69239f37"
+  },
+  "independent_input_sha256": {
+    "test/fixtures/office_native_workflows/native-sheet-source.xlsx": "548cf28efce66d0b4e3b9abb5a4f7f24f282ecadd7749cd65a5afa6ed0b5ba49",
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml": "96bc63cd301baa981947f7fb8fac6f7f48032c17b9d57b40e223966707a3ef6e"
+  },
+  "captured_head": "9101520b12b7a9f17af10757775b9f6e98cbc4bf",
+  "toolchain_adjustment": "PATH launchers select actual installed compiler binaries and task-owned data/library paths after native hooks filter their inherited environment. No compiler, hook, source, SDK, or sandbox modifications.",
+  "launchers": {
+    "cargo": {
+      "path": "/workspace/scratch/f035141943c7/toolchain/native-launchers/cargo",
+      "sha256": "1140eeed03a11f98b6f46532477f506f736949edd21dc42486b43aae860a8f37"
+    },
+    "clang": {
+      "path": "/workspace/scratch/f035141943c7/toolchain/native-launchers/clang",
+      "sha256": "9e5cb0ece13e36c1fcc16f99a032bceebf0778bceeaf996abd6d96b93b8a5ece"
+    },
+    "clang++": {
+      "path": "/workspace/scratch/f035141943c7/toolchain/native-launchers/clang++",
+      "sha256": "0c1b4c1460fb7cb234eefaf1dba8f40161fca197eeb19ce0e6dbe43a06796e8e"
+    },
+    "llvm-ar": {
+      "path": "/workspace/scratch/f035141943c7/toolchain/native-launchers/llvm-ar",
+      "sha256": "48de1195695b30e8fc1228519b596e37350665d707bcd23255fdaaf0583f50fc"
+    }
+  },
+  "source_changes_since_52_test_cohort": {
+    "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml": {
+      "before": "4e716eba0a385256dc2cbc5001f990f9cd16ef79a40663248dcc6cac18f52dcb",
+      "after": "96bc63cd301baa981947f7fb8fac6f7f48032c17b9d57b40e223966707a3ef6e"
+    },
+    "tool/office_fidelity_manifest.json": {
+      "before": "d5d88d6ceaf76f3ff58f789cd5a0014703932c92ed1cba459de681356a0354b8",
+      "after": "2086fe8d570ea167e85625c31f6efa72c684c3e6405891c3c9241c69219f1fca"
+    }
+  }
+}

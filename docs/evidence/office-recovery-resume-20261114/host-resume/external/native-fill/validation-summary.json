@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "scope": "Four native-fill host regression packages only; independent OpenXML SDK schema validation, without rendering",
+  "started_utc": "2026-11-14T19:06:37.035567+00:00",
+  "completed_utc": "2026-11-14T19:06:39.023528+00:00",
+  "app_commit_at_validation": "31838929276690e2804231c7928ddd8f1e46811c",
+  "test_source": {
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart",
+    "sha256": "7d3650f54ea0462718dda83d8c3c0ccab2cea718c2204eaf803d69cc69239f37"
+  },
+  "fixture_recipe_inputs": [
+    {
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/test/widget/office_native_workflow_test.dart",
+      "sha256": "7d3650f54ea0462718dda83d8c3c0ccab2cea718c2204eaf803d69cc69239f37"
+    },
+    {
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml",
+      "sha256": "4e716eba0a385256dc2cbc5001f990f9cd16ef79a40663248dcc6cac18f52dcb"
+    },
+    {
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/test/fixtures/office_native_workflows/native-sheet-source.xlsx",
+      "sha256": "548cf28efce66d0b4e3b9abb5a4f7f24f282ecadd7749cd65a5afa6ed0b5ba49"
+    }
+  ],
+  "host_input_capture": {
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-provenance/attempt-2/inputs.json",
+    "sha256": "cdc0e74ca37182b94207a454da2429d60d0b79d4660ae7366150bff8972a0226",
+    "evidence_copy": "host-inputs.json",
+    "head": "31838929276690e2804231c7928ddd8f1e46811c",
+    "command": [
+      "python3",
+      "tool/with_ci_system_sqlite.py",
+      "python3",
+      "tool/collect_office_host_coverage.py",
+      "--flutter",
+      "/workspace/scratch/f035141943c7/toolchain/flutter/bin/flutter",
+      "build/office-fill-host-coverage-2",
+      "--",
+      "--concurrency=1",
+      "--reporter=expanded",
+      "test/office_device_export_test.dart",
+      "test/widget/office_editor_lifecycle_test.dart",
+      "test/widget/office_ribbon_state_test.dart",
+      "test/widget/office_native_workflow_test.dart",
+      "test/widget/office_save_fidelity_test.dart"
+    ],
+    "scope": "Execution inputs only; host test outcome is recorded by the host collector separately"
+  },
+  "validator_source": {
+    "path": "/workspace/scratch/f035141943c7/CrispCloud/tool/office-validation/Program.cs",
+    "sha256": "4d41f286855ed11a12ecdf0641773c33285847180a3e5cdbf43ce2385a099880"
+  },
+  "sdk_version": "8.0.428",
+  "runtime_version": "8.0.34",
+  "openxml_version": "3.3.0",
+  "file_format_validation_target": "Office2019",
+  "self_test_exit_code": 0,
+  "validation_exit_code": 1,
+  "files": 4,
+  "failures": 1,
+  "all_hashes_matched_before_during_after_validation": true,
+  "inventory": [
+    {
+      "file": "source.xlsx",
+      "role": "independently_authored_input",
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/source.xlsx",
+      "size_bytes": 4840,
+      "sha256": "ec7108cc5fc40ea71a5d37e46b8f276e17483a81fab80198dac622c1cfda39ad",
+      "validation_errors": 1,
+      "exception": null,
+      "evidence_copy": "artifacts/source.xlsx"
+    },
+    {
+      "file": "saved-1.xlsx",
+      "role": "actual_host_saved_output",
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-1.xlsx",
+      "size_bytes": 21674,
+      "sha256": "2023689e8a70fae2b59008a5012c0b13457f38cedcf83fb77b0507d6eecefe67",
+      "validation_errors": 0,
+      "exception": null,
+      "evidence_copy": "artifacts/saved-1.xlsx"
+    },
+    {
+      "file": "saved-2.xlsx",
+      "role": "actual_host_saved_output",
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-2.xlsx",
+      "size_bytes": 21674,
+      "sha256": "e1d7a525fcbed0d9edf76f4ca04f712710af13064ed54ce09d265d1613e394ea",
+      "validation_errors": 0,
+      "exception": null,
+      "evidence_copy": "artifacts/saved-2.xlsx"
+    },
+    {
+      "file": "saved-3.xlsx",
+      "role": "actual_host_saved_output",
+      "path": "/workspace/scratch/f035141943c7/CrispCloud/build/office-fill-host-acceptance/saved-3.xlsx",
+      "size_bytes": 21673,
+      "sha256": "934523594a97e6d8b933d6a7fe8b103ec6ba35fd9a0a035a00a56ce7bf0b2840",
+      "validation_errors": 0,
+      "exception": null,
+      "evidence_copy": "artifacts/saved-3.xlsx"
+    }
+  ],
+  "collector_sha256": "a0c0498d9dfcb8169285adbdd9205acf40b42ec307e8e32d4fadd7e58076dc7b",
+  "artifacts_sha256": {
+    "schema-report.json": "e7c1230ceaa90e0e8358f30759283df27cd36c137d269aec488b2100322a63fb",
+    "input-inventory.json": "3cdfc4956a999210bc56b1847a45b691bda409476f24fd7abca4767b844fb5c4",
+    "commands.json": "4aef6171dc83fa7e25bdc80afe1326d2571b288e291ff1aac89b59113017eb26",
+    "validator-self-test.log": "4945b06eb2eda6b4b7dd4ab50752ac76d91e73af5045d5bb39b3ecda55e25c56",
+    "schema-validation.log": "3ccba966171938413b28e2458943d3334e88c58e583e70da3f257d6ed288399c",
+    "host-inputs.json": "cdc0e74ca37182b94207a454da2429d60d0b79d4660ae7366150bff8972a0226"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "passed_for_declared_scopes",
+  "app_source": "9101520b12b7a9f17af10757775b9f6e98cbc4bf",
+  "canonical_source": "3543b29a2daa82279777802df8728d72dc96e9c5",
+  "managed_files_verified": 2174,
+  "host_cohort": {
+    "source": "31838929276690e2804231c7928ddd8f1e46811c",
+    "test_files": 5,
+    "tests_passed": 52,
+    "input_files": 4739,
+    "changed_inputs": [],
+    "log": "execution/attempt-2/host-tests.log",
+    "receipt": "coverage/collection-receipt.json.gz"
+  },
+  "corrected_fixture_host_recheck": {
+    "tests_passed": 1,
+    "repeats_existing_case": true,
+    "input_files": 4739,
+    "changed_inputs": [],
+    "log": "execution/attempt-3/host-tests.log",
+    "receipt": "coverage-corrected-input/collection-receipt.json.gz",
+    "delta_from_full_cohort": [
+      "packages/quds_office_engine/test/fixtures/fidelity/sheet-fill-native.xml",
+      "tool/office_fidelity_manifest.json"
+    ],
+    "production_and_test_code_changed": false
+  },
+  "schema": {
+    "validator": "OpenXML SDK 3.3.0",
+    "files": 4,
+    "failures": 0,
+    "report": "external/attempt-2/schema-report.json",
+    "summary": "external/attempt-2/validation-summary.json",
+    "original_input_failure_retained": "external/native-fill/schema-report.json",
+    "correction_proof": "external/attempt-2/fixture-correction-receipt.json"
+  },
+  "coverage": {
+    "scope": "Five-file bounded native cohort; not full host gate or branch coverage",
+    "covered_lines": 1287,
+    "instrumented_lines": 3045,
+    "percent": 42.3,
+    "uninstrumented_native_files": 8,
+    "report": "coverage/coverage-report.json"
+  },
+  "source_binding_audit": "source-audit.json",
+  "limits": [
+    "No fresh full app/suite gate is claimed.",
+    "No fresh browser, physical-device, live-provider or rendered visual acceptance is claimed.",
+    "External SDK, package, compiler and native binary payloads are not archived; versions and hashes are retained.",
+    "Repeated fixture checks overlap earlier cases and are not additional unique tests."
+  ]
+}

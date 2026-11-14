@@ -147,10 +147,9 @@ new fill cases, direct/isolate three-save round trips, namespace preservation
 and explicit style identity. The same style-level harness fails nine of thirteen
 checks against the starting source and passes all thirteen against the fix.
 The [canonical fill evidence](https://github.com/CrispStrobe/quds_office_suite/tree/0a35127bb09cdb5fdd85a054d7876c8be2892cc0/docs/evidence/office-fill-preservation-20261114)
-records the commands, observed output and limits. The six new editor-history
-regressions are committed, but the editor runner exhausted disk space before
-loading a test. No editor pass, fresh analyzer pass or full native-host rerun is
-claimed for this continuation.
+records the commands, observed output and limits. The first editor attempt
+exhausted disk space before loading a test. Its failure is retained; the resumed
+editor and analyzer results below close that execution gap.
 
 The Office fidelity workflow now runs the real browser-copy harness in a
 separate Chromium job and retains its receipts. Both acceptance source files
@@ -162,9 +161,57 @@ was blocked by the sandbox's socket restriction before assertions ran. The
 preserves that distinction. Hosted Actions jobs were queued without an assigned
 runner at the final status check; their completion remains an external gate.
 
-After the editor attempt, a full filesystem prevented any further sandbox
-command from starting. Automatic approval policy rejected removal of two
-reproducible temporary payloads outside the sandbox because escalations are
-disabled. The implementation, app source synchronization, evidence publication
-and browser CI were already saved remotely. Remaining editor validation needs
-available workspace storage or a hosted runner; it is not marked complete.
+At the end of that first attempt, a full filesystem prevented further local
+commands. The implementation, source synchronization, evidence and browser CI
+were already saved remotely. The resumed workspace has sufficient storage; the
+new results retain their own measured source and exact input snapshots.
+
+## Resumed combined-source acceptance
+
+App implementation checkpoint `31838929276690e2804231c7928ddd8f1e46811c` pins
+canonical source `c37789b596a6f6516d9e2cee78ce57ab33872b07`. The guarded sync
+verified all **2,174 managed Office files**. In addition to native fill
+preservation, this source carries cell locks and modeled PDF-border state
+through spreadsheet sorting and editor history. Speaker-note edits participate
+in undo/redo, dirty state and save revision tracking.
+
+The [combined canonical gate](https://github.com/CrispStrobe/quds_office_suite/tree/0c30f36d955e82e1b0d841f127637e87a7477ffb/docs/evidence/office-fill-preservation-20261114/integrated-followup)
+passed **60 tests**: seven engine tests and 53 editor tests. Focused analysis of
+ten production/test items found zero issues, and all 409 recorded inputs stayed
+unchanged. This includes the earlier fill/font/style regressions, so the counts
+overlap the previous cohorts. Modeled PDF-border preservation is covered; a new
+PDF rendering comparison is not claimed.
+
+The new app regression uses the actual editor dialog, Bold and Align center
+toolbar actions, and three real intercepted upload cycles. It compares each
+uploaded workbook's gradient and pattern definitions directly to independently
+authored source XML, including the first save. The
+[resumed host evidence](evidence/office-recovery-resume-20261114/host-resume/README.md)
+retains the exact 4,739-input snapshot before execution, including the complete
+resolved dependency configurations and both committed and temporary system-
+SQLite pubspec views. The five-file native cohort passed **52/52 tests** on app
+source `31838929`, with all 4,739 inputs unchanged and the committed pubspec
+restored after the existing SQLite helper. Its full log, raw LCOV, collection
+receipt and verified report are retained. Scoped coverage is 1,287/3,045
+instrumented native lines (42.3%); eight native files are uninstrumented, and
+browser/declaration-only sources are listed separately. This bounded cohort is
+not the historical full host gate.
+
+The independent OpenXML SDK check accepts all three actual fill-case uploads
+with zero errors, and identifies a font-child ordering error in the authored
+input. The original report and package bytes remain preserved. Canonical
+checkpoint `3543b29a2daa82279777802df8728d72dc96e9c5` corrects only that XML order;
+app checkpoint `9101520b12b7a9f17af10757775b9f6e98cbc4bf` synchronizes it. Production
+code and fill definitions are unchanged. The corrected canonical fixture passes
+its five engine and six editor tests, with 402 unchanged recorded inputs.
+
+The single native-fill host case was then repeated on app `9101520b` and passed,
+with all 4,739 inputs unchanged and the committed pubspec restored. Independent
+OpenXML SDK 3.3.0 validation of the corrected authored source and its three
+actual uploads passed: **four files, zero errors**. The source fixture and
+canonical manifest are the only input differences from the 52-test cohort;
+production and test code are identical. Exact original and corrected packages,
+full logs, both raw LCOV collections, verified receipts, and validator provenance
+are retained in the resumed host evidence. These are scoped current-source
+results; no fresh browser, physical-device or rendered visual acceptance is
+inferred from them.

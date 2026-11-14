@@ -1,0 +1,18 @@
+build/office-sheet-state-acceptance/source.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/rtl-enabled.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/rtl-undo.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/rtl-redo.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-selection.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-undo.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-redo.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-top-row.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-first-column.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-cleared.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/rtl-upload-before.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/rtl-upload-after.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-upload-before.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/freeze-upload-after.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/grid-delete.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/grid-undo-other-sheet.xlsx: expected one file, found 0
+build/office-sheet-state-acceptance/grid-redo-other-sheet.xlsx: expected one file, found 0
+Host inventory: 153/170 verified; 17 failures; receipt /workspace/scratch/f035141943c7/ci-acceptance-integration/artifact-flow-control/missing-office-sheet-state-acceptance.json

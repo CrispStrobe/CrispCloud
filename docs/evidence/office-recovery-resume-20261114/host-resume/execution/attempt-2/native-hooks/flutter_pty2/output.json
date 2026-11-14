@@ -1,0 +1,47 @@
+{
+  "assets": [
+    {
+      "encoding": {
+        "file": "/workspace/scratch/f035141943c7/CrispCloud/.dart_tool/hooks_runner/shared/flutter_pty2/build/6b4ebf10e7/libflutter_pty2.so",
+        "id": "package:flutter_pty2/flutter_pty2",
+        "link_mode": {
+          "type": "dynamic_loading_bundle"
+        }
+      },
+      "type": "code_assets/code"
+    }
+  ],
+  "assets_for_linking": {},
+  "dependencies": [
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/dart_api_dl.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_error.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_event.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_refcount.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_debug_stats.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_write_queue.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/unix/pty_unix_spawn.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/unix/pty_unix_session.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/pty_dart_api.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_commandline.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_commandline.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_spawn.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_environment.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_session.c",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_spawn.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/windows/pty_windows_environment.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/pty_internal.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_error.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/common/pty_event.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/flutter_pty.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/dart_api.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/dart_api_dl.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/dart_native_api.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/dart_tools_api.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/internal/dart_api_dl_impl.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/include/dart_version.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/unix/pty_unix_spawn.h",
+    "/workspace/scratch/f035141943c7/CrispCloud/packages/flutter_pty2/src/CMakeLists.txt"
+  ],
+  "status": "success",
+  "timestamp": "2026-11-14 20:04:05.000"
+}

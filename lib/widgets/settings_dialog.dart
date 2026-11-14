@@ -41,6 +41,7 @@ import 'keyboard_shortcut_dialog.dart';
 import '../l10n/workspace_ux_strings.dart';
 import '../l10n/external_terminal_strings.dart';
 import 'external_terminal_dialog.dart';
+import 'transfer_bandwidth_dialog.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -594,6 +595,7 @@ class _NetworkSectionState extends ConsumerState<_NetworkSection> {
           dense: true,
           onTap: _openProvider,
         ),
+        const TransferBandwidthSettingsTile(),
       ],
     );
   }

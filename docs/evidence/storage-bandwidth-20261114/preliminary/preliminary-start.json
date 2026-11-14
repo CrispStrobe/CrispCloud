@@ -1,0 +1,21 @@
+{
+  "classification": "Working-tree preliminary native regression run; not a source-frozen qualification",
+  "source_frozen": false,
+  "observed_head_before": "720043300630b92ee33fd95761854507c8499923",
+  "working_tree_status_before": "M lib/models/operation_progress.dart\n M lib/providers/transfer_provider.dart\n M lib/services/spooled_http_upload_web.dart\n M lib/services/transfer_queue.dart\n M lib/widgets/operations_panel.dart\n M lib/widgets/settings_dialog.dart\n M packages/crisp_storage/lib/crisp_storage.dart\n M packages/crisp_storage/lib/src/cloud/bounded_http_transfer.dart\n M packages/crisp_storage/lib/src/transfer_scheduler.dart\n?? lib/l10n/transfer_bandwidth_strings.dart\n?? lib/providers/transfer_bandwidth_provider.dart\n?? lib/widgets/transfer_bandwidth_dialog.dart\n?? packages/crisp_storage/lib/src/cloud/transfer_bandwidth_http.dart\n?? packages/crisp_storage/lib/src/transfer_bandwidth.dart\n?? test/transfer_bandwidth_provider_test.dart",
+  "started_at_utc": "2026-11-14T18:58:45.876535+00:00",
+  "command": [
+    "python3",
+    "/workspace/scratch/0140f384d23a/toolchain/run.py",
+    "flutter",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "expanded",
+    "--file-reporter",
+    "json:build/storage-bandwidth-validation/preliminary-events.json",
+    "test/transfer_queue_test.dart",
+    "test/transfer_queue_controls_test.dart",
+    "test/stream_rate_limiter_test.dart"
+  ]
+}

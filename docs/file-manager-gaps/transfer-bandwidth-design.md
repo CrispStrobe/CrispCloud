@@ -1,7 +1,12 @@
 # Shared transfer bandwidth implementation design
 
-Gap: **G29**. Status: **Scoped; implementation has not started**.
-Source review: 12 November 2026, after the G05/G09/G25/G49 continuation.
+Gap: **G29**. Status: **Partially implemented: qualified foreground native HTTP profile**.
+Original source review: 12 November 2026, after the G05/G09/G25/G49 continuation.
+The 14 November [implementation profile](transfer-bandwidth-http-profile.md)
+records actual hooks, user controls and remaining paths. The
+[incremental evidence](../evidence/storage-bandwidth-20261114/) separates saved
+implementation from source-bound acceptance. This design remains the target
+for the wider gap, including direct protocols and background ownership.
 
 The native-runtime feature is feasible with existing Dart, HTTP and preferences
 dependencies. It needs transport integration as well as a shared allocator.
@@ -100,6 +105,6 @@ client verification read must expose those different boundaries.
 5. Record actual transport coverage and target-runtime evidence before updating
    G29's status. Preserve each coherent increment on a remote feature branch.
 
-No dependency or support claim is introduced by this design. Browser upload
+No dependency is introduced by this design or its initial HTTP profile. Browser upload
 transport and cross-runtime aggregation remain explicit implementation
 boundaries, not hidden bypasses.
