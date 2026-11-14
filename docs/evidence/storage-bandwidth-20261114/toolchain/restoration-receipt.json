@@ -1,0 +1,111 @@
+{
+  "classification": "Restored original locked dependency graph and pinned toolchain; no runtime test qualification claimed",
+  "sdk": {
+    "url": "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.8-stable.tar.xz",
+    "archive_sha256": "baf7dcc5a3dbba60fe863bf493a6cf203195621f7786eaa5a1bba02cd0d87dd2",
+    "archive_bytes": 1581444364,
+    "flutter_version": "3.47.8",
+    "dart_version": "3.13.7",
+    "elapsed_seconds": 108.888
+  },
+  "native_tools": {
+    "clang": [
+      {
+        "package": "clang-19",
+        "filename": "pool/main/l/llvm-toolchain-19/clang-19_19.1.7-3+b1_amd64.deb",
+        "sha256": "bbb74458d782b7792b61b0eed92746df5e6d033778c045cf8c2b3835b7c4efc4"
+      },
+      {
+        "package": "libclang-common-19-dev",
+        "filename": "pool/main/l/llvm-toolchain-19/libclang-common-19-dev_19.1.7-3+b1_amd64.deb",
+        "sha256": "4018e40e2d4144fe38c45822e68cca63c1bf6c7872c3073ebb262ad4b2f9b8bc"
+      },
+      {
+        "package": "libclang-cpp19",
+        "filename": "pool/main/l/llvm-toolchain-19/libclang-cpp19_19.1.7-3+b1_amd64.deb",
+        "sha256": "a7d2b6df51050834f6ea5c0d5e34869c2298b0bcdaa91eff17ba3db2cd545c47"
+      },
+      {
+        "package": "libllvm19",
+        "filename": "pool/main/l/llvm-toolchain-19/libllvm19_19.1.7-3+b1_amd64.deb",
+        "sha256": "db0d614d61345ca710fb73e75105f1ec6e38898fa7b3aa99fa7eb7d8b0a11d57"
+      }
+    ],
+    "version": "Debian clang version 19.1.7 (3+b1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/0140f384d23a/toolchain/debian/root/usr/lib/llvm-19/bin\n",
+    "rustup_installer_sha256": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55",
+    "cargo": "cargo 1.100.0 (3acc79c0c 2026-11-05)",
+    "elapsed_seconds": 38.888
+  },
+  "manifests_before": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "manifests_after": {
+    "pubspec.yaml": "76799433117b092fc22766cc7a3557434813ee2d53b6ba61aa705f0532373441",
+    "pubspec.lock": "27ed26a9e89f5c9baac9ee9c78e18ec1691a4eab2ed9e53d2a278ddeb45c1c2c"
+  },
+  "manifests_unchanged": true,
+  "locked_dependency_resolution": {
+    "command": [
+      "python3",
+      "/workspace/scratch/0140f384d23a/toolchain/run.py",
+      "flutter",
+      "--verbose",
+      "pub",
+      "get",
+      "--enforce-lockfile"
+    ],
+    "exit_code": 0,
+    "log": "dependencies-verbose.log",
+    "log_sha256": "25d6e3cff015ef7a3c9ba5deafdb9d6e2c2468a1293b1c961d94062a6514e93e",
+    "reported_elapsed_ms": 392944,
+    "original_attempt_interrupted": true
+  },
+  "prefetch": {
+    "normal_pub_cache_add_commands": 285,
+    "failed": 0,
+    "results_file": "prefetch-results.json",
+    "results_sha256": "05e13056ef65564f5650396d078b001f179928985297caa4b85467764bc4d5df"
+  },
+  "package_map_sha256": "1ad837e582ef0ccad7acdfb2fb96d467631920b909113816b7a1ccfcc5f747b7",
+  "wrappers": {
+    "run.py": "db6bf4d3c4968040fa9a123e098b26d140aeb7d6eba7a569ddc2343aee4a3f58",
+    "bin/cargo": "4b70f00dbb2b25ea3b98cc484ec377ce8cbab94ac04e99b8f666763ee25b53d1",
+    "bin/clang": "f0984bce259cb3611c4b55d47d2c4a9222be76dce36cf211c9d9d490dc959a4f"
+  },
+  "chrome_note": "Browser execution not attempted; prior workspace socket restriction remains an unqualified boundary.",
+  "cargo_fetches": {
+    "catalog": {
+      "exit_code": 0,
+      "log_file": "catalog-cargo-fetch.log",
+      "log_sha256": "373d9d1a810a104801aadbdd0d0eaa6c7ef3e7b4117fba81dc0a044a4f6abbdc"
+    },
+    "ebook": {
+      "exit_code": 0,
+      "log_file": "ebook-cargo-fetch.log",
+      "log_sha256": "0d835593618477bdac9ad74d58d790fdb4cbca677729ce11757882b009a80dc0"
+    }
+  },
+  "flutter_machine_version": {
+    "frameworkVersion": "3.47.8",
+    "channel": "stable",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "737ba8f885dc774b53b442759999a312c9461e4e",
+    "frameworkCommitDate": "2026-10-22 21:37:31 -0700",
+    "engineRevision": "cf636b1dfb818dd6a3ff16e390e93b1a036969c8",
+    "engineCommitDate": "2026-10-23 02:13:38.000Z",
+    "engineContentHash": "dfd2e6cb7d319db05e3bf1503f3e2ac60f6288a2",
+    "engineBuildDate": "2026-10-22 20:34:48.330",
+    "dartSdkVersion": "3.13.7",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.8",
+    "flutterRoot": "/workspace/scratch/0140f384d23a/toolchain/flutter"
+  },
+  "wrapper_notes": {
+    "cargo": "CARGO_HOME/bin/cargo points to the scratch launcher, which explicitly selects Rust1.100.0 and its scratch registry for native-hook filtered environments.",
+    "clang": "Scratch launcher selects the verified Debian Clang19.1.7 executable and its scratch shared libraries.",
+    "home_unchanged": true,
+    "project_manifest_overrides_added": false,
+    "native_hooks_changed": false
+  }
+}

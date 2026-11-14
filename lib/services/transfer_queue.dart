@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:crisp_storage/crisp_storage.dart' as shared;
 
@@ -11,6 +13,10 @@ typedef TransferTask = shared.ScheduledTransfer<OperationProgress>;
 class TransferQueue extends ChangeNotifier {
   static const _log = Log('TransferQueue');
   late final shared.TransferScheduler<OperationProgress> _queue;
+  final shared.TransferBandwidthAllocator? _bandwidth;
+  final Future<void> Function()? _bandwidthReady;
+  final Set<shared.TransferBandwidthContext> _bandwidthContexts = {};
+  final Set<void Function()> _bandwidthReadinessWaiters = {};
   bool _disposed = false;
   TransferQueue({
     int maxConcurrent = 3,
@@ -19,7 +25,9 @@ class TransferQueue extends ChangeNotifier {
     DateTime Function()? now,
     void Function(String taskId, Object error, StackTrace stackTrace)?
     onCallbackError,
-  }) {
+    shared.TransferBandwidthAllocator? bandwidth,
+    this._bandwidthReady,
+  }) : _bandwidth = bandwidth {
     _queue = shared.TransferScheduler(
       maxConcurrent: maxConcurrent,
       maxRetries: maxRetries,
@@ -33,8 +41,76 @@ class TransferQueue extends ChangeNotifier {
             stackTrace,
           ),
       onChanged: notifyListeners,
+      executeTask: bandwidth == null ? null : _executeWithBandwidth,
     );
   }
+
+  Future<void> _executeWithBandwidth(TransferTask task) async {
+    do {
+      await _waitForBandwidthReadiness(task.operation);
+    } while (task.operation.isPaused && !task.operation.isCancelled);
+    if (_disposed || task.operation.isCancelled) {
+      throw const shared.TransferCancelled();
+    }
+    final context = _bandwidth!.openContext(task.operation.id);
+    _bandwidthContexts.add(context);
+    void synchronize() {
+      if (task.operation.isCancelled || _disposed) {
+        context.cancel();
+      } else {
+        context.setPaused(task.operation.isPaused);
+      }
+    }
+
+    task.operation.addControlListener(synchronize);
+    try {
+      synchronize();
+      await context.run(task.execute);
+    } on shared.TransferBandwidthCancelled {
+      // Keep scheduler and journal cancellation classification unchanged.
+      throw const shared.TransferCancelled();
+    } finally {
+      task.operation.removeControlListener(synchronize);
+      _bandwidthContexts.remove(context);
+      context.close();
+    }
+  }
+
+  Future<void> _waitForBandwidthReadiness(OperationProgress operation) async {
+    final done = Completer<void>();
+    var loaded = false;
+    void check() {
+      if (done.isCompleted) return;
+      if (_disposed || operation.isCancelled) {
+        done.completeError(const shared.TransferCancelled());
+      } else if (loaded && !operation.isPaused) {
+        done.complete();
+      }
+    }
+
+    operation.addControlListener(check);
+    _bandwidthReadinessWaiters.add(check);
+    try {
+      final ready = _bandwidthReady?.call() ?? Future<void>.value();
+      unawaited(
+        ready.then<void>(
+          (_) {
+            loaded = true;
+            check();
+          },
+          onError: (Object error, StackTrace stack) {
+            if (!done.isCompleted) done.completeError(error, stack);
+          },
+        ),
+      );
+      check();
+      await done.future;
+    } finally {
+      operation.removeControlListener(check);
+      _bandwidthReadinessWaiters.remove(check);
+    }
+  }
+
   int get maxConcurrent => _queue.maxConcurrent;
   int get maxRetries => _queue.maxRetries;
   Duration get retryBaseDelay => _queue.retryBaseDelay;
@@ -71,6 +147,14 @@ class TransferQueue extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    for (final wake in _bandwidthReadinessWaiters.toList()) {
+      wake();
+    }
+    for (final context in _bandwidthContexts.toList()) {
+      context.cancel();
+      context.close();
+    }
+    _bandwidthContexts.clear();
     _queue.dispose();
     super.dispose();
   }

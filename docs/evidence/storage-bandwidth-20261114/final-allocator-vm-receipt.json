@@ -1,0 +1,27 @@
+{
+  "command": [
+    "python3",
+    "/workspace/scratch/0140f384d23a/toolchain/run.py",
+    "dart",
+    "test/support/transfer_bandwidth_acceptance.dart"
+  ],
+  "elapsed_seconds": 1.983,
+  "exit_code": 0,
+  "finished_at_utc": "2026-11-14T19:20:05.994367+00:00",
+  "gate": "final-allocator-vm",
+  "log_file": "final-allocator-vm.log",
+  "log_sha256": "16c1dc31c10f3060956910de813f7a6dd35020e84decbb9858ca45bc2f630248",
+  "package_map_sha256_after": "1ad837e582ef0ccad7acdfb2fb96d467631920b909113816b7a1ccfcc5f747b7",
+  "package_map_sha256_before": "1ad837e582ef0ccad7acdfb2fb96d467631920b909113816b7a1ccfcc5f747b7",
+  "package_map_unchanged": true,
+  "runner_sha256": "349cc5e572eb67d42e44cd634b71b3780980ff7857e57569d3395e655a4aae16",
+  "source_inventory_compressed_sha256": "27b4eb5d417eea92cf34b3c92df06b3ba8943b47b6dfd9fbafe71e21aedb70de",
+  "source_inventory_file": "final-allocator-vm-source.json.gz",
+  "source_inventory_sha256": "15d8cd44ed74f1570cecc4701f86945ba553818fe3a2175dc478e15bccae25bc",
+  "source_mismatches_after": [],
+  "source_paths": 8155,
+  "source_revision": "d450a63e0041ef8d02f490b008681babf8ee6e38",
+  "source_tree": "8a5df2b78653d5f1b067f7a531391b2104e8f91f",
+  "source_unchanged": true,
+  "started_at_utc": "2026-11-14T19:20:04.011604+00:00"
+}

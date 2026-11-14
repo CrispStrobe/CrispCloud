@@ -43,6 +43,26 @@ class OperationProgress implements TransferOperation {
   // Pause/Resume support
   Completer<void>? _pauseCompleter;
   bool _isPaused = false;
+  final Set<void Function()> _controlListeners = {};
+
+  /// Foreground transport participants observe control changes synchronously,
+  /// including legacy batch jobs without a FileOperationControl. Listeners are
+  /// scoped to active scheduler attempts and removed when those attempts settle.
+  void addControlListener(void Function() listener) =>
+      _controlListeners.add(listener);
+
+  void removeControlListener(void Function() listener) =>
+      _controlListeners.remove(listener);
+
+  void _notifyControlListeners() {
+    for (final listener in List<void Function()>.of(_controlListeners)) {
+      try {
+        listener();
+      } catch (error, stack) {
+        _log.error('Transfer control observer failed', error, stack);
+      }
+    }
+  }
 
   // Speed tracking
   final DateTime? _transferStartTime;
@@ -110,6 +130,7 @@ class OperationProgress implements TransferOperation {
       if (_isPaused) {
         resume();
       }
+      _notifyControlListeners();
       _log.debug('Operation cancelled: $fileName');
     }
   }
@@ -120,6 +141,7 @@ class OperationProgress implements TransferOperation {
       _isPaused = true;
       _pauseCompleter = Completer<void>();
       _resetSpeedWindow();
+      _notifyControlListeners();
       _log.debug('Operation paused: $fileName');
     }
   }
@@ -133,6 +155,7 @@ class OperationProgress implements TransferOperation {
       }
       _pauseCompleter = null;
       _resetSpeedWindow();
+      _notifyControlListeners();
       _log.debug('Operation resumed: $fileName');
     }
   }

@@ -1,5 +1,5 @@
 {
-  "description": "All evidence files except this self-index and Python cache. Each receipt binds its own saved source revision; overlapping test cohorts are not additive.",
+  "description": "All evidence files except this self-index and Python cache. Each receipt binds its own saved source revision; overlapping test cohorts are not additive. Hosted evidence separately records later completion of the same source.",
   "files": [
     {
       "path": "PROGRESS.md",
@@ -8,8 +8,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 8029,
-      "sha256": "d8fdfd52c302f6302cbdbb23366fed183cf9678fd61ea2f2fa815867642a584a"
+      "bytes": 8849,
+      "sha256": "cbf83ecb2d258568e072674374bd1b4b41bc3acd58791626bf15c5a2747d75ec"
     },
     {
       "path": "environment-validation.json",
@@ -64,6 +64,63 @@
       "path": "final-validation.json",
       "bytes": 2387,
       "sha256": "0bd6eeaf7be74fcd241c94b595a5897f14318740ac7a9f619276d3912fb2ccc4"
+    },
+    {
+      "path": "hosted-22bd67b8/README.md",
+      "bytes": 1989,
+      "sha256": "4a3419ec3ec1326b6e288d597c05cdef0a303defaeb81bcd3d653f7607da1266"
+    },
+    {
+      "path": "hosted-22bd67b8/REVISION.txt",
+      "bytes": 41,
+      "sha256": "2b185c41378b5fb9bf4c85703dbf0fab782195991653ddea3b620cf0d3f795a2"
+    },
+    {
+      "path": "hosted-22bd67b8/binary-browser-events.json.gz",
+      "bytes": 1965,
+      "sha256": "bb58e4593342be3a9d4384728f45280f20ada8a93146190512d6831b69b41fb4",
+      "compression": "gzip",
+      "uncompressed_bytes": 13983,
+      "uncompressed_sha256": "d23ddc8d6637158ec5c034f4377b103c5cd3c77d9f4130783e9060b7d9ea490a"
+    },
+    {
+      "path": "hosted-22bd67b8/binary-browser.log.gz",
+      "bytes": 1170,
+      "sha256": "0349cdf40bef7908c6505bb1a9f42558c856c95a5893ef86c14577518b9954f8",
+      "compression": "gzip",
+      "uncompressed_bytes": 3919,
+      "uncompressed_sha256": "71612c21c1cbb712f405ce6405ee676fa6c1a1738908f8929c396efe186abfe1"
+    },
+    {
+      "path": "hosted-22bd67b8/files.json",
+      "bytes": 2240,
+      "sha256": "6f12e6b616a852110ddff575cc607df348e04e8998fc94b37aa8876b8da2dee6"
+    },
+    {
+      "path": "hosted-22bd67b8/manifest-before.txt",
+      "bytes": 158,
+      "sha256": "026bcdda9960f7f1a7449fbda74901fdddd150e5b26dbbe07cc7bab5ecb5b2aa"
+    },
+    {
+      "path": "hosted-22bd67b8/native-events.json.gz",
+      "bytes": 58611,
+      "sha256": "b76b5410af48eb85d58b6b0d028ee32b7ae755a71a51fa493833cdc096de9545",
+      "compression": "gzip",
+      "uncompressed_bytes": 669773,
+      "uncompressed_sha256": "59e70ac32c5e05f105a6415906628c22f43c660d2d8f2ba67a514a9638e3615a"
+    },
+    {
+      "path": "hosted-22bd67b8/native.log.gz",
+      "bytes": 19705,
+      "sha256": "198a741cd881d0294bd4fcae87bbb44352326737ce82deb710a56a3168918af0",
+      "compression": "gzip",
+      "uncompressed_bytes": 241635,
+      "uncompressed_sha256": "64edcf51de6080caa0b39e439497d998eef7f89c3e02f88090f843afd606ff15"
+    },
+    {
+      "path": "hosted-22bd67b8/summary.json",
+      "bytes": 1166,
+      "sha256": "402e7eead9254ed25c32f4b38adcba2d0ba5de8eef345ff52e48e346b3385829"
     },
     {
       "path": "hosted-ci-status.json",

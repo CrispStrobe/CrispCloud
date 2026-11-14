@@ -16,6 +16,7 @@ import 'transfer_history_dialog.dart';
 import 'archive_job_recovery_dialog.dart';
 import 'transfer_file_details.dart';
 import 'transfer_schedule_dialog.dart';
+import 'transfer_bandwidth_dialog.dart';
 
 enum _QueueFilter { active, queued, attention, finished, all }
 
@@ -303,12 +304,20 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
       180.0,
       420.0,
     );
+    // Large text can make the complete status header taller than a phone's
+    // remaining viewport. Keep its information in the same bounded scroll
+    // area while the expansion control stays reachable.
+    final scrollHeader =
+        MediaQuery.sizeOf(context).width < 480 &&
+        MediaQuery.textScalerOf(context).scale(16) > 24;
     return Material(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
       child: ExpansionTile(
         key: const ValueKey('operations-panel'),
-        title: _buildPanelHeader(context, transfers),
+        title: scrollHeader
+            ? Text(context.commanderTr('Operations'))
+            : _buildPanelHeader(context, transfers),
         tilePadding: const EdgeInsets.symmetric(horizontal: 12),
         initiallyExpanded: true,
         onExpansionChanged: (expanded) =>
@@ -329,10 +338,12 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (scrollHeader) _buildPanelHeader(context, transfers),
                         _buildQueueControls(context, transfers, finished, [
                           for (final operation in operations)
                             if (_canCancel(states[operation.id]!)) operation.id,
                         ]),
+                        const TransferBandwidthTrafficSummary(),
                         const SizedBox(height: 4),
                         _buildFilters(context, operations, states, order),
                         const SizedBox(height: 6),
@@ -557,6 +568,7 @@ class _OperationsPanelState extends ConsumerState<OperationsPanel> {
         icon: const Icon(Icons.history),
         label: Text(context.commanderTr('History and recovery')),
       ),
+      const TransferBandwidthActionButton(),
       Wrap(
         spacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,

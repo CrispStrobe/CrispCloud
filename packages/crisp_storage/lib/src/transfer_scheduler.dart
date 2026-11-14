@@ -191,6 +191,11 @@ class TransferScheduler<T extends TransferOperation> {
   final void Function()? onChanged;
   final void Function(String taskId, Object error, StackTrace stackTrace)?
   onCallbackError;
+
+  /// Wraps each actual attempt without changing the task's captured operation,
+  /// reservations, retry policy or finalization. Foreground hosts use this to
+  /// attach a transport context after admission and release it after the attempt.
+  final Future<void> Function(ScheduledTransfer<T> task)? executeTask;
   bool _disposed = false;
   bool _paused = false;
   bool _processing = false;
@@ -236,6 +241,7 @@ class TransferScheduler<T extends TransferOperation> {
   TransferScheduler({
     this.onChanged,
     this.onCallbackError,
+    this.executeTask,
     int maxConcurrent = 3,
     this.maxRetries = 3,
     this.retryBaseDelay = const Duration(seconds: 2),
@@ -637,7 +643,12 @@ class TransferScheduler<T extends TransferOperation> {
           await _wait(slot.difference(now), task.operation);
         }
         try {
-          await task.execute();
+          final execute = executeTask;
+          if (execute == null) {
+            await task.execute();
+          } else {
+            await execute(task);
+          }
           if (_disposed || task.operation.isCancelled) {
             throw const TransferCancelled();
           }
