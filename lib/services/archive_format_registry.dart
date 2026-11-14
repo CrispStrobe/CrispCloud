@@ -291,6 +291,20 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     notes: 'Read-only UDF physical-partition images with 2048-byte blocks. Supported revisions, allocation forms and resource limits are checked before listing; virtual, sparable and metadata partitions remain unsupported.',
   ),
   ArchiveFormatCapability(
+    id: 'fat',
+    label: 'FAT filesystem image',
+    suffixes: ['.fat', '.fat12', '.fat16', '.fat32'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read-only FAT12/16/32 filesystem images with validated allocation chains, long names and bounded positional reads. The on-disk geometry selects the FAT variant. exFAT, repairs and writes are outside this profile.',
+  ),
+  ArchiveFormatCapability(
+    id: 'disk-image',
+    label: 'Raw disk image',
+    suffixes: ['.img', '.ima', '.dd', '.raw'],
+    mimeType: 'application/octet-stream',
+    notes: 'Read supported FAT volumes or unambiguous primary MBR/GPT images. Raw partition slices remain available; supported FAT partitions expose files. Other filesystem and virtual-disk formats are not implied by the filename. Read-only; no mounting, repair or partition writes.',
+  ),
+  ArchiveFormatCapability(
     id: 'dmg',
     label: 'Apple disk image',
     suffixes: ['.dmg'],

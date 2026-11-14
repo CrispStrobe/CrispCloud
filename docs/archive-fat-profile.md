@@ -179,6 +179,42 @@ than one cache and allocation ownership map per volume.
 
 ## Ownership, cancellation and failure types
 
+### Application entry points
+
+Standalone `.fat`, `.fat12`, `.fat16` and `.fat32` volumes and raw `.img`,
+`.ima`, `.dd` and `.raw` images use the shared archive registry and read-only
+policy. Strong container signatures still take precedence over misleading
+filenames. A FAT filesystem cannot acquire ISO/ZIP writer authority from its
+filename, and a generic codec named `.img` retains its existing codec bounds.
+The larger positional member allowance is granted only to direct FAT and
+partition-image readers, not to decoded compression wrappers.
+
+Native F3 and eligible native workspaces retain their existing **8 GiB input
+image ceiling**. A workspace keeps an owned verified snapshot and counts all
+visible regular members against its existing 8 GiB expanded-content ceiling;
+raw partitions and their file views describe overlapping bytes and both count.
+The F3 viewer retains its source and access grant across mode changes, while
+closing each borrowed archive handle independently. Remote, web, buffered and
+nested paths retain their existing smaller materialization and operation limits.
+The direct-reader multi-terabyte fixtures demonstrate exact positional
+arithmetic, not physical image or host workflow qualification at those sizes.
+
+The partition inspector's **Browse image** action retains the selected sector
+geometry only for the same captured source, revalidates it, and opens through
+the normal archive workflow. Reload or source replacement resets the choice.
+FAT inside supported UDIF partitions uses the same reader and forwards its
+filesystem notices, including dirty/error flags and active-table status.
+During FAT recognition/listing, the DMG adapter separately shares ceilings of
+64 MiB logical metadata requests, 64 MiB backing-source input and 256 MiB
+expanded bytes on compression-cache misses. Cache hits do not repeat the
+decompression charge; failed reservations and attempts consume their work
+allowance. These caps prevent mirrored FAT reads from repeatedly expanding
+large compressed chunks without accounting for that work. Once a shared FAT
+allowance is exhausted, further partitions stay raw with a notice and receive
+no alternate filesystem probes. Member extraction retains its separate limits.
+
+### Reader ownership
+
 `openFatArchive` takes ownership of the supplied source as soon as it is called.
 Every opening failure, including an invalid caller limit, attempts to close the
 source without replacing the original error. A successful archive closes the

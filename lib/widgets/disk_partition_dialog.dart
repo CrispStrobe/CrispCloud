@@ -18,6 +18,11 @@ class DiskPartitionSectorSelected extends DiskPartitionDialogResult {
   final int? sectorBytes;
 }
 
+class DiskPartitionBrowseRequested extends DiskPartitionDialogResult {
+  const DiskPartitionBrowseRequested(this.sectorBytes);
+  final int sectorBytes;
+}
+
 /// The host owns the source and reinspects after a sector-size choice. This
 /// report owns no file handle and offers no partition or payload writes.
 class DiskPartitionDialog extends StatelessWidget {
@@ -26,11 +31,13 @@ class DiskPartitionDialog extends StatelessWidget {
     required this.analysis,
     required this.filename,
     this.requestedSectorBytes,
+    this.canBrowse = false,
   });
 
   final DiskPartitionAnalysis analysis;
   final String filename;
   final int? requestedSectorBytes;
+  final bool canBrowse;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +134,15 @@ class DiskPartitionDialog extends StatelessWidget {
         ),
       ),
       actions: [
+        if (canBrowse && analysis.sectorBytes != null)
+          TextButton.icon(
+            key: const ValueKey('partition-browse-image'),
+            onPressed: () =>
+                Navigator.of(context)
+                    .pop(DiskPartitionBrowseRequested(analysis.sectorBytes!)),
+            icon: const Icon(Icons.folder_open_outlined),
+            label: Text(strings.text('browse')),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(strings.common.text('close')),

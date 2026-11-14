@@ -71,7 +71,7 @@ jobs:
           retention-days: 14
 
   native:
-    name: Archive, partition, UDF and ZIP recovery regression gate
+    name: Archive, FAT, partition, UDF and ZIP recovery regression gate
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -109,6 +109,8 @@ jobs:
             test/archive_hfs_reader_test.dart test/archive_iso_reader_test.dart \
             test/archive_iso_multiextent_test.dart test/archive_format_registry_test.dart \
             test/archive_container_dispatch_test.dart \
+            test/archive_fat_*_test.dart test/archive_disk_image_reader_test.dart \
+            test/archive_dmg_fat_failure_test.dart test/archive_dmg_fat_provider_test.dart \
             test/archive_udf_*_test.dart test/archive_zip_recovery_*_test.dart \
             test/archive_job_queue_test.dart test/archive_job_recovery_test.dart \
             test/browser_menu_layout_test.dart \
@@ -120,11 +122,21 @@ jobs:
             test/widget/binary_structure_viewer_test.dart \
             test/widget/disk_partition_viewer_test.dart \
             2>&1 | tee build/storage-ci/native.log
-      - name: Run portable UDF and ZIP recovery on VM and JavaScript
+      - name: Reproduce pinned external FAT reference images
         shell: bash
         run: |
           set -euo pipefail
-          for driver in archive_udf archive_zip_recovery; do
+          curl --fail --location --retry 2 https://elm-chan.org/fsw/ff/arc/ff16.zip -o "$RUNNER_TEMP/storage-ff16.zip"
+          python3 test/support/generate_fat_reference.py \
+            --fatfs-zip "$RUNNER_TEMP/storage-ff16.zip" \
+            --output-dir "$RUNNER_TEMP/storage-fat-reference" \
+            --cc cc --dart "$(command -v dart)" --check \
+            | tee build/storage-ci/fat-reference.log
+      - name: Run portable FAT, UDF and ZIP recovery on VM and JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          for driver in archive_fat archive_udf archive_zip_recovery; do
             dart --packages=.dart_tool/package_config.json "test/support/${driver}_web_acceptance.dart" | tee "build/storage-ci/${driver}-vm.log"
             dart compile js --packages=.dart_tool/package_config.json -O2 "test/support/${driver}_web_acceptance.dart" -o "build/storage-ci/${driver}.js" | tee "build/storage-ci/${driver}-compile.log"
             node -e "global.self=global; require('./build/storage-ci/${driver}.js')" | tee "build/storage-ci/${driver}-js.log"

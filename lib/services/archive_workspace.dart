@@ -212,6 +212,14 @@ class ArchiveWorkspace {
       '.tar.gz',
       '.iso',
       '.udf',
+      '.fat',
+      '.fat12',
+      '.fat16',
+      '.fat32',
+      '.img',
+      '.ima',
+      '.dd',
+      '.raw',
       '.rar',
       '.cbr',
       '.dmg',
@@ -430,7 +438,10 @@ class ArchiveWorkspace {
         );
         opened = result.archive;
         if (!result.policy.encrypted &&
-            supportsStreamingArchiveWriting(result.policy.format)) {
+            (supportsStreamingArchiveWriting(result.policy.format) ||
+                (result.policy.format == ArchiveEndpointFormat.readOnly &&
+                    (result.archive.formatName == 'fat' ||
+                        result.archive.formatName == 'disk-image')))) {
           return ArchiveWorkspace._(
             source,
             current,

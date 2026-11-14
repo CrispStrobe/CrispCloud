@@ -17,9 +17,10 @@ void main() {
     'external FAT references and derived partition wrappers pass acceptance',
     () async {
       final result = await runFatReferenceAcceptance();
-      expect(result['groups'], hasLength(11));
+      expect(result['groups'], hasLength(15));
       expect(result['independent_reference_images'], hasLength(4));
       expect(result['derived_partition_wrappers'], hasLength(4));
+      expect(result['derived_udif_wrappers'], hasLength(3));
     },
   );
 

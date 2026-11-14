@@ -8,11 +8,14 @@ import 'package:crisp_cloud/services/disk_partition_inspector.dart';
 import 'package:crisp_cloud/widgets/disk_partition_dialog.dart';
 import 'package:crisp_cloud/widgets/hex_viewer.dart';
 import 'package:crisp_cloud/widgets/internal_viewer_dialog.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/disk_partition_fixture.dart';
+import '../support/archive_disk_image_fixture.dart';
+import '../support/archive_fat_reference_data.dart';
 
 Uint8List _mbr() {
   final bytes = Uint8List(32 * 512);
@@ -79,6 +82,33 @@ Future<void> _reveal(WidgetTester tester, Finder finder) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _revealArchiveMember(WidgetTester tester, String path) async {
+  for (
+    var i = 0;
+    i < 80 && find.textContaining('   ·   DISK-IMAGE').evaluate().isEmpty;
+    i++
+  ) {
+    await tester.pump(const Duration(milliseconds: 20));
+  }
+  await tester.pumpAndSettle();
+  expect(find.textContaining('   ·   DISK-IMAGE'), findsOneWidget);
+  final list = find
+      .descendant(
+        of: find.byType(InternalViewerDialog),
+        matching: find.byType(ListView),
+      )
+      .first;
+  await tester.scrollUntilVisible(
+    find.text(path),
+    120,
+    scrollable: find
+        .descendant(of: list, matching: find.byType(Scrollable))
+        .first,
+  );
+  await tester.pumpAndSettle();
+  expect(find.text(path), findsOneWidget);
+}
+
 void main() {
   testWidgets(
     'a short unknown file is not reported as an ambiguous sector size',
@@ -112,6 +142,10 @@ void main() {
       await _open(tester, bytes);
       final source = tester.widget<HexViewer>(find.byType(HexViewer)).source;
       await _inspect(tester);
+      expect(
+        find.byKey(const ValueKey('partition-browse-image')),
+        findsNothing,
+      );
       final primary = find.byKey(const ValueKey('partition-header-primary'));
       await _reveal(tester, primary);
       expect(
@@ -218,6 +252,10 @@ void main() {
         report.analysis.findings.map((f) => f.code),
         contains(DiskPartitionFindingCode.outOfRange),
       );
+      expect(
+        find.byKey(const ValueKey('partition-browse-image')),
+        findsNothing,
+      );
       await tester.tap(find.widgetWithText(TextButton, 'Close'));
       await tester.pumpAndSettle();
       expect(
@@ -225,6 +263,53 @@ void main() {
         same(source),
       );
       expect(bytes, original);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Browse image retains the selected 4096-byte geometry across Hex and Archive',
+    (tester) async {
+      final fixture = DiskImageFixture.mbr(
+        volumes: [FatReferenceSource('fat16-sector4096')],
+        sectorBytes: 4096,
+        types: [0x06],
+      );
+      final bytes = (await tester.runAsync(
+        () => fixture.read(0, fixture.length),
+      ))!;
+      final digest = sha256.convert(bytes);
+      await _open(tester, bytes);
+      final source = tester.widget<HexViewer>(find.byType(HexViewer)).source;
+      await _inspect(tester);
+      final selector = find.byKey(const ValueKey('partition-sector-size'));
+      await _reveal(tester, selector);
+      await tester.tap(selector);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('4096 B').last);
+      await _waitForReport(tester);
+      expect(find.text('Logical sector size: 4096 B'), findsOneWidget);
+      final browse = find.byKey(const ValueKey('partition-browse-image'));
+      expect(browse, findsOneWidget);
+      await tester.tap(browse);
+      await _revealArchiveMember(tester, 'partition-001/files/café-雪.txt');
+      expect(find.byType(DiskPartitionDialog), findsNothing);
+      expect(find.text('partition-001/files/café-雪.txt'), findsOneWidget);
+      expect(find.textContaining('   ·   DISK-IMAGE'), findsOneWidget);
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Hex'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<HexViewer>(find.byType(HexViewer)).source,
+        same(source),
+      );
+      await _inspect(tester);
+      expect(find.text('Logical sector size: 4096 B'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Close'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Archive'));
+      await _revealArchiveMember(tester, 'partition-001/files/café-雪.txt');
+      expect(find.text('partition-001/files/café-雪.txt'), findsOneWidget);
+      expect(sha256.convert(bytes), digest);
       expect(tester.takeException(), isNull);
     },
   );
@@ -295,6 +380,7 @@ void main() {
                   builder: (_) => DiskPartitionDialog(
                     analysis: analysis!,
                     filename: 'disk.img',
+                    canBrowse: true,
                   ),
                 ),
                 child: const Text('Open'),

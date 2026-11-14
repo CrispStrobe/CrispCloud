@@ -22,6 +22,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/archive_iso_fixtures.dart';
+import '../support/archive_disk_image_fixture.dart';
+import '../support/archive_fat_reference_data.dart';
 import '../support/archive_udf_reference_data.dart';
 import '../support/archive_package_fixtures.dart';
 import '../support/archive_rpm_fixtures.dart';
@@ -217,22 +219,49 @@ Future<void> _waitFor(
 ChoiceChip _chip(WidgetTester tester, String label) =>
     tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, label));
 
-Future<_NativeIso> _nativeEncryptedVolumes(WidgetTester tester) =>
-    _NativeIso.create(
-      tester,
-      name: 'locked.7z.001',
-      allowSmallReads: true,
-      writeArchive: (file) async {
-        final parts = volumeSplitBytes(
-          await File('test/fixtures/archives/encrypted.7z').readAsBytes(),
-        );
-        for (var i = 0; i < parts.length; i++) {
-          await File(
-            '${file.parent.path}/locked.7z.${(i + 1).toString().padLeft(3, '0')}',
-          ).writeAsBytes(parts[i]);
-        }
-      },
+Future<void> _revealNativeImageMember(
+  WidgetTester tester,
+  String path,
+  String format,
+) async {
+  await _waitFor(
+    tester,
+    () => find.textContaining('   ·   $format').evaluate().isNotEmpty,
+  );
+  final list = find
+      .descendant(
+        of: find.byType(InternalViewerDialog),
+        matching: find.byType(ListView),
+      )
+      .first;
+  await tester.scrollUntilVisible(
+    find.text(path),
+    120,
+    scrollable: find
+        .descendant(of: list, matching: find.byType(Scrollable))
+        .first,
+  );
+  await tester.pumpAndSettle();
+  expect(find.text(path), findsOneWidget);
+}
+
+Future<_NativeIso> _nativeEncryptedVolumes(
+  WidgetTester tester,
+) => _NativeIso.create(
+  tester,
+  name: 'locked.7z.001',
+  allowSmallReads: true,
+  writeArchive: (file) async {
+    final parts = volumeSplitBytes(
+      await File('test/fixtures/archives/encrypted.7z').readAsBytes(),
     );
+    for (var i = 0; i < parts.length; i++) {
+      await File(
+        '${file.parent.path}/locked.7z.${(i + 1).toString().padLeft(3, '0')}',
+      ).writeAsBytes(parts[i]);
+    }
+  },
+);
 
 Future<void> _writeLargeTar(File file) async {
   const memberBytes = 65 * 1024 * 1024;
@@ -448,6 +477,107 @@ void main() {
     },
   );
 
+  for (final partitioned in [false, true]) {
+    testWidgets(
+      'native F3 ${partitioned ? 'GPT' : 'FAT'} browses and previews without a full image read',
+      (tester) async {
+        final bytes = fatReferenceBytes('fat12');
+        const paddedLength = 80 * 1024 * 1024;
+        final blocks = <(int, Uint8List)>[];
+        if (partitioned) {
+          final fixture = DiskImageFixture.gpt(
+            volumes: [FatReferenceSource('fat12')],
+            totalBytes: paddedLength,
+          );
+          final gpt = fixture.gpt!;
+          blocks.addAll([
+            (0, gpt.mbr),
+            (gpt.sectorBytes, gpt.primaryHeader),
+            (gpt.primaryTableOffset, gpt.primaryTable),
+            (fixture.volumes.single.$1, bytes),
+            (gpt.backupTableOffset, gpt.backupTable),
+            (paddedLength - gpt.sectorBytes, gpt.backupHeader),
+          ]);
+        } else {
+          blocks.add((0, bytes));
+        }
+        final native = await _NativeIso.create(
+          tester,
+          name: partitioned ? 'large.img' : 'large.fat',
+          writeArchive: (file) async {
+            final handle = await file.open(mode: FileMode.write);
+            try {
+              for (final (offset, data) in blocks) {
+                await handle.setPosition(offset);
+                await handle.writeFrom(data);
+              }
+              await handle.truncate(paddedLength);
+            } finally {
+              await handle.close();
+            }
+          },
+        );
+        final path = '${partitioned ? 'partition-001/files/' : ''}café-雪.txt';
+        try {
+          await native.mount(tester);
+          await _revealNativeImageMember(
+            tester,
+            path,
+            partitioned ? 'DISK-IMAGE' : 'FAT',
+          );
+          expect(
+            find.textContaining('   ·   ${partitioned ? 'DISK-IMAGE' : 'FAT'}'),
+            findsOneWidget,
+          );
+          expect(native.file.size, paddedLength);
+          expect(native.local.fullReads, 0);
+          expect(native.local.acquisitions, 1);
+          expect(native.local.releases, 0);
+          _chip(tester, 'Hex').onSelected!(true);
+          await tester.pumpAndSettle();
+          expect(find.byType(HexViewer), findsOneWidget);
+          _chip(tester, 'Archive').onSelected!(true);
+          await _revealNativeImageMember(
+            tester,
+            path,
+            partitioned ? 'DISK-IMAGE' : 'FAT',
+          );
+          await tester.ensureVisible(find.text(path));
+          await tester.tap(find.text(path));
+          await _waitFor(
+            tester,
+            () => find
+                .textContaining(
+                  'Unicode FAT payload: café and 雪.',
+                  findRichText: true,
+                )
+                .evaluate()
+                .isNotEmpty,
+          );
+          expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+          expect(native.local.fullReads, 0);
+          expect(native.local.releases, 0);
+          await tester.runAsync(() async {
+            final handle = await File(native.file.path!).open();
+            try {
+              expect(await handle.length(), paddedLength);
+              for (final (offset, data) in blocks) {
+                await handle.setPosition(offset);
+                expect(await handle.read(data.length), data);
+              }
+            } finally {
+              await handle.close();
+            }
+          });
+          expect(tester.takeException(), isNull);
+        } finally {
+          await native.dispose(tester);
+        }
+        expect(native.local.releases, 1);
+      },
+    );
+  }
+
   for (final (name, reference) in [
     ('udf-bridge.iso', 'mastered-bridge'),
     ('udf-only.udf', 'derived-udf-only'),
@@ -597,71 +727,74 @@ void main() {
   );
 
   for (final retry in [false, true]) {
-    testWidgets(
-      'native split 7z stays readable after encrypted entry unlock '
-      '${retry ? 'with a password retry' : 'on the first password'}',
-      (tester) async {
-        final native = await _nativeEncryptedVolumes(tester);
-        try {
-          await native.mount(tester);
-          await _waitFor(
-            tester,
-            () => find.text('hello.txt').evaluate().isNotEmpty,
-          );
-          await tester.tap(find.text('hello.txt'));
-          await tester.pumpAndSettle();
-          expect(find.text('Password required'), findsOneWidget);
-          if (retry) {
-            await tester.enterText(find.byType(TextField), 'incorrect');
-            await tester.tap(find.text('OK'));
-            await tester.pumpAndSettle();
-            await _waitFor(
-              tester,
-              () => find.text('Wrong password').evaluate().isNotEmpty,
-            );
-            await tester.pumpAndSettle();
-          }
-          await tester.enterText(find.byType(TextField), 'secret');
+    testWidgets('native split 7z stays readable after encrypted entry unlock '
+        '${retry ? 'with a password retry' : 'on the first password'}', (
+      tester,
+    ) async {
+      final native = await _nativeEncryptedVolumes(tester);
+      try {
+        await native.mount(tester);
+        await _waitFor(
+          tester,
+          () => find.text('hello.txt').evaluate().isNotEmpty,
+        );
+        await tester.tap(find.text('hello.txt'));
+        await tester.pumpAndSettle();
+        expect(find.text('Password required'), findsOneWidget);
+        if (retry) {
+          await tester.enterText(find.byType(TextField), 'incorrect');
           await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
           await _waitFor(
             tester,
-            () => find
-                .textContaining('hello, 7z!', findRichText: true)
-                .evaluate()
-                .isNotEmpty,
+            () => find.text('Wrong password').evaluate().isNotEmpty,
           );
-          expect(find.byType(InternalViewerDialog), findsNWidgets(2));
-          expect(tester.takeException(), isNull);
-        } finally {
-          await native.dispose(tester);
+          await tester.pumpAndSettle();
         }
-      },
-    );
+        await tester.enterText(find.byType(TextField), 'secret');
+        await tester.tap(find.text('OK'));
+        await _waitFor(
+          tester,
+          () => find
+              .textContaining('hello, 7z!', findRichText: true)
+              .evaluate()
+              .isNotEmpty,
+        );
+        expect(find.byType(InternalViewerDialog), findsNWidgets(2));
+        expect(tester.takeException(), isNull);
+      } finally {
+        await native.dispose(tester);
+      }
+    });
   }
 
-  testWidgets('late split 7z password cannot reopen an abandoned archive mode', (
-    tester,
-  ) async {
-    final native = await _nativeEncryptedVolumes(tester);
-    try {
-      await native.mount(tester);
-      await _waitFor(tester, () => find.text('hello.txt').evaluate().isNotEmpty);
-      await tester.tap(find.text('hello.txt'));
-      await tester.pumpAndSettle();
-      expect(find.text('Password required'), findsOneWidget);
-      _chip(tester, 'Hex').onSelected!(true);
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'secret');
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-      expect(find.byType(InternalViewerDialog), findsOneWidget);
-      expect(find.byType(HexViewer), findsOneWidget);
-      expect(find.text('hello.txt'), findsNothing);
-      expect(tester.takeException(), isNull);
-    } finally {
-      await native.dispose(tester);
-    }
-  });
+  testWidgets(
+    'late split 7z password cannot reopen an abandoned archive mode',
+    (tester) async {
+      final native = await _nativeEncryptedVolumes(tester);
+      try {
+        await native.mount(tester);
+        await _waitFor(
+          tester,
+          () => find.text('hello.txt').evaluate().isNotEmpty,
+        );
+        await tester.tap(find.text('hello.txt'));
+        await tester.pumpAndSettle();
+        expect(find.text('Password required'), findsOneWidget);
+        _chip(tester, 'Hex').onSelected!(true);
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), 'secret');
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+        expect(find.byType(InternalViewerDialog), findsOneWidget);
+        expect(find.byType(HexViewer), findsOneWidget);
+        expect(find.text('hello.txt'), findsNothing);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await native.dispose(tester);
+      }
+    },
+  );
 
   testWidgets('a zlib DMG lists HFS+ members and opens a file', (tester) async {
     final image = DmgFixture(HfsFixture().bytes, method: 0x80000005);

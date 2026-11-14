@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "passed": 14,
+  "failed": 0,
+  "skipped": 0,
+  "success": true,
+  "log_sha256": "1aa3963e95eca8d0156992489ec320c41b940382db3919c7c0adfa1d3011a300",
+  "files": [
+    "test/archive_fat_reader_review_test.dart"
+  ]
+}

@@ -6,6 +6,14 @@ source. Expand a metadata group and select a field to return to Hex with the
 field's exact bytes highlighted, including backup headers beyond the old
 64 KiB binary-header prefix.
 
+When the table satisfies the [disk-image browsing profile](archive-disk-image-profile.md),
+**Browse image** opens its raw partitions and eligible FAT files in Archive
+mode. The action retains the selected 512/4096-byte geometry, validates the
+source again, and reinspects the table before publishing a listing. Switching
+between Hex and Archive retains that choice for the same captured source;
+reloading or replacing the source discards it. Damaged or ambiguous tables do
+not receive the browse action.
+
 The inspector is an original Dart implementation with an MIT notice in
 [`disk_partition_inspector.dart`](../lib/services/disk_partition_inspector.dart).
 It reuses the existing Apache-licensed binary field model. It imports no
@@ -56,8 +64,10 @@ permission or promise lazy network reads on every provider.
 
 ## Boundaries
 
-This increment does not traverse EBR chains, browse FAT/ext/NTFS/APFS through
-these tables, interpret filesystem superblocks, mount partitions, recover files,
+The inspector itself reads table metadata. The separate image adapter now
+browses supported FAT volumes; its listing is not an inference from a matching
+table CRC. Neither feature traverses EBR chains, interprets ext/NTFS/APFS,
+mounts partitions, recovers deleted files,
 repair a CRC or rewrite a partition table. Structured writes require a separate
 reviewed plan, backup and staged verification path. Existing Hex editing remains
 a separate explicit workflow.
@@ -89,4 +99,6 @@ highlighting, separate primary/backup CRC labels, sector-size reinspection,
 cancellation, narrow layouts and translated controls. Executed commands,
 source hashes and results are recorded in
 [`evidence/storage-runtime-20261114`](evidence/storage-runtime-20261114).
+The later Browse-image integration and FAT qualification have their own
+[`storage-fat-20261114`](evidence/storage-fat-20261114) evidence.
 Test source alone is not a validation result.

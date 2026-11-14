@@ -2,10 +2,13 @@
 
 Status: source-backed architecture and library assessment, followed by runtime
 implementation. **LZFSE DMG reading**, **read-only GPT/MBR inspection linked
-to Hex**, **bounded UDF reading**, and **ZIP recovery to a new file** are now
+to Hex**, **bounded UDF reading**, **ZIP recovery to a new file**, and
+**read-only FAT12/16/32 plus MBR/GPT image browsing** are now
 implemented on the integration branch. See the [DMG codec profiles](archive-dmg-codecs.md),
 [partition inspector](disk-partition-inspection.md), [UDF profile](archive-udf-profile.md)
-and [ZIP recovery profile](archive-zip-recovery.md). The [first runtime evidence](evidence/storage-runtime-20261114)
+and [ZIP recovery profile](archive-zip-recovery.md), plus the
+[FAT profile](archive-fat-profile.md) and [partition-image profile](archive-disk-image-profile.md).
+The [first runtime evidence](evidence/storage-runtime-20261114)
 and [UDF/ZIP evidence](evidence/storage-udf-zip-20261114) retain their separate
 qualified revisions. Later stages remain proposals; the initial assessment's
 documentation-only receipt stays preserved with its original source revision.
@@ -39,6 +42,13 @@ interchange (`14e022eb51c417803a1913131e78912a8a19b3be`) were brought in through
 `e49c874653f38becf0018d868c6767c264306e3f`. No fetched branch or PR head was
 discarded. Subsequent checkpoints preserve the UDF reader, recovery workflow,
 independent fixtures and qualification evidence incrementally.
+
+Before the FAT continuation, all **11 remote branch heads and 91 PR heads**
+were fetched and verified as ancestors of `25061e2250f394c41690a70aa3ac56e136b5168e`.
+Main remained at `14e022eb`; no additional reconciliation merge was needed.
+The [FAT reconciliation receipt](evidence/storage-fat-20261114/reconciliation-before-fat.json)
+preserves every fetched reference. New implementation and qualification
+checkpoints continue on the same remote branch and draft PR.
 
 ## Scope and license filter
 
@@ -260,8 +270,9 @@ is GPL/LGPL/NC-free and does not silently change those profiles.
 
 ### Reuse the current source and publication contracts
 
-The proposed layering is a design, not a report of implemented filesystem
-support:
+The shared byte-source and archive boundaries now support the admitted FAT
+and partition-image profiles. Broader filesystem and recovery stages still
+follow this design:
 
 ```mermaid
 flowchart TD
@@ -354,7 +365,8 @@ general safe APFS repair, arbitrary filesystem resizing or a universal fsck.
 These are scoped implementation stages, not estimated delivery dates. Stages
 1 (GPT/MBR tables only), 2, 3 (physical UDF profiles) and 4 (bounded ZIP
 recovery) are implemented on the integration branch. The linked profiles and
-receipts define their qualified scope. Broader filesystem metadata and
+receipts define their qualified scope. Stage 5 now has its first read-only FAT
+and partition-image increment. Broader filesystem metadata and
 container structure inspection in stage 1 remain future work.
 
 ### 1. Disk structures in the current viewer
@@ -441,10 +453,29 @@ a verified prefix; source contents and credentials are not durable job data.
 
 ### 5. Filesystems and containers
 
-Add FAT, ext and NTFS reading through a selected adapter stack. Connect each
-partition to the existing virtual-entry route. Preserve alternate-stream names,
-sparse semantics, timestamps and unsupported metadata notices where available.
-Then extend the UDF profile, add VM families or add offline OCI semantics according to actual demand.
+Implemented first profile: original MIT Dart [FAT12/16/32 reading](archive-fat-profile.md)
+and [validated primary-MBR/GPT image browsing](archive-disk-image-profile.md).
+FAT volumes can be opened directly, from eligible partition types, or inside
+supported UDIF maps. Validated allocation extents feed existing preview,
+streaming and extraction paths. Malformed chains and names fail before a child
+listing is published; supported table entries retain raw partition access.
+The Hex partition report offers **Browse image** only for an admitted table,
+retains the selected sector size, and revalidates the source during the change.
+
+This increment adds no runtime dependency. Independent FatFs R0.16 reference
+images cover FAT12/16/32, 4096-byte sectors, Unicode, surrogate pairs, nested
+files and writer-created fragmentation. A separate 7-Zip extraction checks
+their full file hashes. Those external tools are not shipped by the app.
+The [FAT evidence directory](evidence/storage-fat-20261114) records the exact
+qualified revisions and distinguishes physical fixtures from synthetic large
+offsets. Native F3/workspace inputs retain the 8 GiB host ceiling; buffered,
+remote, nested and operation-total limits remain separate.
+
+Next, add ext and NTFS reading through a separately reviewed adapter profile.
+Preserve alternate-stream names, sparse semantics, timestamps and unsupported
+metadata notices where available. Broader UDF profiles, VM container families
+and offline OCI semantics remain later increments. exFAT, deleted-file recovery,
+allocation repair and filesystem writing are outside the FAT reader profile.
 
 Cross-check representative extraction hashes with independent tools. Exercise
 fragmented files, extent loops, sparse/unallocated ranges, huge declared sizes,

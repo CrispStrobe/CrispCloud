@@ -22,6 +22,7 @@ class DiskPartitionStrings {
 
   static const _values = <String, Map<String, String>>{
     'en': {
+      'browse': 'Browse image',
       'inspect': 'Inspect partitions',
       'title': 'Disk partitions',
       'scope': 'Read-only partition tables. Select a field to highlight its bytes in Hex. Filesystems and file contents are not checked.',
@@ -42,6 +43,7 @@ class DiskPartitionStrings {
       'fields': 'Metadata fields',
     },
     'de': {
+      'browse': 'Abbild durchsuchen',
       'inspect': 'Partitionen untersuchen',
       'title': 'Datenträgerpartitionen',
       'scope': 'Partitionstabellen werden nur gelesen. Ein Feld auswählen, um seine Bytes in Hex zu markieren. Dateisysteme und Dateiinhalte werden nicht geprüft.',
@@ -62,6 +64,7 @@ class DiskPartitionStrings {
       'fields': 'Metadatenfelder',
     },
     'fr': {
+      'browse': 'Parcourir l’image',
       'inspect': 'Inspecter les partitions',
       'title': 'Partitions du disque',
       'scope': 'Tables de partitions en lecture seule. Sélectionnez un champ pour surligner ses octets en Hex. Les systèmes de fichiers et leur contenu ne sont pas vérifiés.',
@@ -83,6 +86,7 @@ class DiskPartitionStrings {
       'fields': 'Champs de métadonnées',
     },
     'es': {
+      'browse': 'Explorar imagen',
       'inspect': 'Inspeccionar particiones',
       'title': 'Particiones del disco',
       'scope': 'Tablas de particiones de solo lectura. Selecciona un campo para resaltar sus bytes en Hex. No se comprueban los sistemas de archivos ni su contenido.',
@@ -104,6 +108,7 @@ class DiskPartitionStrings {
       'fields': 'Campos de metadatos',
     },
     'pt': {
+      'browse': 'Explorar imagem',
       'inspect': 'Inspecionar partições',
       'title': 'Partições do disco',
       'scope': 'Tabelas de partições apenas para leitura. Selecione um campo para realçar os seus bytes em Hex. Os sistemas de ficheiros e conteúdos não são verificados.',
@@ -125,6 +130,7 @@ class DiskPartitionStrings {
       'fields': 'Campos de metadados',
     },
     'zh': {
+      'browse': '浏览映像',
       'inspect': '检查分区',
       'title': '磁盘分区',
       'scope': '只读检查分区表。选择字段可在十六进制视图中高亮其字节。不检查文件系统及文件内容。',
@@ -145,6 +151,7 @@ class DiskPartitionStrings {
       'fields': '元数据字段',
     },
     'ja': {
+      'browse': 'イメージを参照',
       'inspect': 'パーティションを調べる',
       'title': 'ディスクのパーティション',
       'scope': 'パーティションテーブルの読み取り専用検査です。フィールドを選ぶと Hex で該当バイトを強調表示します。ファイルシステムと内容は検査しません。',
@@ -165,6 +172,7 @@ class DiskPartitionStrings {
       'fields': 'メタデータフィールド',
     },
     'ko': {
+      'browse': '이미지 탐색',
       'inspect': '파티션 검사',
       'title': '디스크 파티션',
       'scope': '파티션 테이블을 읽기 전용으로 검사합니다. 필드를 선택하면 Hex에서 해당 바이트가 강조됩니다. 파일 시스템과 파일 내용은 검사하지 않습니다.',
@@ -185,6 +193,7 @@ class DiskPartitionStrings {
       'fields': '메타데이터 필드',
     },
     'ar': {
+      'browse': 'تصفح الصورة',
       'inspect': 'فحص الأقسام',
       'title': 'أقسام القرص',
       'scope': 'فحص جداول الأقسام للقراءة فقط. اختر حقلاً لإبراز بايتاته في العرض السداسي. لا تُفحص أنظمة الملفات أو محتوياتها.',

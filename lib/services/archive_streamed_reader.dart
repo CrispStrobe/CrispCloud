@@ -43,6 +43,7 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
   int maxBytes = kArchiveStreamingLimit,
   bool Function()? isCancelled,
   bool inspectIsoForRewrite = true,
+  int? diskImageSectorBytes,
 }) async {
   ArchiveOutputSpool? decoded;
   koni.ByteSource? decodedSource;
@@ -70,6 +71,38 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       source.length < 512 ? source.length : 512,
     );
     final descriptor = archiveFormatForName(name);
+    if (descriptor?.id == 'fat' ||
+        descriptor?.id == 'disk-image' ||
+        diskImageSectorBytes != null) {
+      inner = await openViewerArchiveSource(
+        input,
+        name: name,
+        password: password,
+        maxMemberBytes: maxBytes < kArchiveReadLimit
+            ? maxBytes
+            : kArchiveReadLimit,
+        maxDiskImageMemberBytes: maxBytes,
+        diskImageSectorBytes: diskImageSectorBytes,
+        isCancelled: isCancelled,
+      );
+      final policy = ArchiveEndpointPolicy(
+        ArchiveEndpointFormat.readOnly,
+        encrypted: inner.members.any((member) => member.isEncrypted),
+        encryptNames: false,
+        reason: 'Disk images support browsing and extraction only.',
+      );
+      check();
+      final ownedArchive = _own(
+        inner,
+        source,
+        null,
+        null,
+        inner.maxStreamingMemberBytes,
+      );
+      inner = null;
+      opening = false;
+      return StreamedArchiveOpen(archive: ownedArchive, policy: policy);
+    }
     final format = switch (descriptor?.id) {
       'zip' => ArchiveEndpointFormat.zip,
       'zip-alias' ||

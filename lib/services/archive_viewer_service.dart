@@ -22,7 +22,9 @@ import 'package:archive/archive.dart' as ar;
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'archive_cab_reader.dart';
+import 'archive_disk_image_reader.dart';
 import 'archive_dmg_reader.dart';
+import 'archive_fat_reader.dart';
 import 'archive_format_registry.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_iso_reader.dart';
@@ -52,11 +54,13 @@ Future<ViewerArchive> openViewerArchive(
   required String name,
   String? password,
   int maxMemberBytes = kArchiveReadLimit,
+  int? diskImageSectorBytes,
 }) => openViewerArchiveSource(
   koni.MemoryByteSource(bytes, name: name),
   name: name,
   password: password,
   maxMemberBytes: maxMemberBytes,
+  diskImageSectorBytes: diskImageSectorBytes,
 );
 
 /// Opens an owned random-access source without retaining a full input buffer.
@@ -68,21 +72,42 @@ Future<ViewerArchive> openViewerArchiveSource(
   String? password,
   int maxMemberBytes = kArchiveReadLimit,
   int maxBufferedContainerBytes = kArchiveReadLimit,
+  // Only direct FAT/partitioned-image readers receive this larger positional
+  // allowance. Other codecs and decoded wrappers retain their existing caps.
+  int? maxDiskImageMemberBytes,
+  int? diskImageSectorBytes,
+  bool Function()? isCancelled,
 }) async {
+  final owned = _ViewerOwnedSource(source);
   try {
     if (maxMemberBytes <= 0 || maxBufferedContainerBytes <= 0) {
       throw ArgumentError('Archive limits must be positive.');
     }
+    if (maxDiskImageMemberBytes != null &&
+        (maxDiskImageMemberBytes <= 0 ||
+            maxDiskImageMemberBytes > kArchiveStreamingLimit)) {
+      throw ArgumentError.value(
+        maxDiskImageMemberBytes,
+        'maxDiskImageMemberBytes',
+      );
+    }
     final archive = await _openSource(
-      source,
+      owned,
       name: name,
       password: password,
       maxMemberBytes: maxMemberBytes,
       maxBufferedContainerBytes: maxBufferedContainerBytes,
       depth: 0,
+      maxDiskImageMemberBytes: maxDiskImageMemberBytes,
+      diskImageSectorBytes: diskImageSectorBytes,
+      isCancelled: isCancelled,
     );
     final note = archiveFormatForName(name)?.notes ?? '';
     if (note.isEmpty) return archive;
+    final streamLimit =
+        archive.formatName == 'fat' || archive.formatName == 'disk-image'
+        ? maxDiskImageMemberBytes ?? maxMemberBytes
+        : maxMemberBytes;
     return ViewerArchive.reader(
       formatName: archive.formatName,
       maxStreamingMemberBytes: archive.maxStreamingMemberBytes,
@@ -92,15 +117,38 @@ Future<ViewerArchive> openViewerArchiveSource(
       read: (member, limit) => archive.readMember(member, maxBytes: limit),
       streamReader: (member, chunkSize) => archive.openMember(
         member,
-        maxBytes: maxMemberBytes,
+        maxBytes: streamLimit,
         chunkSize: chunkSize,
       ),
       close: archive.close,
     );
   } catch (_) {
-    await source.close();
+    try {
+      await owned.close();
+    } catch (_) {
+      // Cleanup must preserve the original parse, cancellation or I/O error.
+    }
     rethrow;
   }
+}
+
+/// Every dispatch layer may clean up a failed open, but ownership is singular.
+class _ViewerOwnedSource implements koni.ByteSource {
+  _ViewerOwnedSource(this.source);
+  final koni.ByteSource source;
+  Future<void>? _closing;
+  @override
+  String? get name => source.name;
+  @override
+  int get length => source.length;
+  @override
+  Future<Uint8List> read(int offset, int length) {
+    if (_closing != null) throw StateError('Archive source is closed.');
+    return source.read(offset, length);
+  }
+
+  @override
+  Future<void> close() => _closing ??= Future<void>.sync(source.close);
 }
 
 Future<ViewerArchive> _openSource(
@@ -110,6 +158,9 @@ Future<ViewerArchive> _openSource(
   required int maxMemberBytes,
   required int maxBufferedContainerBytes,
   required int depth,
+  int? maxDiskImageMemberBytes,
+  int? diskImageSectorBytes,
+  bool Function()? isCancelled,
 }) async {
   try {
     if (depth > 4) {
@@ -157,7 +208,11 @@ Future<ViewerArchive> _openSource(
           0x6c,
           0x79,
         ])) {
-      return await openDmgArchive(source, maxMemberBytes: maxMemberBytes);
+      return await openDmgArchive(
+        source,
+        maxMemberBytes: maxMemberBytes,
+        isCancelled: isCancelled,
+      );
     }
     if (_hasMagic(header, 0, const [0x70, 0x62, 0x7a, 0x78])) {
       if (depth >= 4) {
@@ -343,12 +398,47 @@ Future<ViewerArchive> _openSource(
         ])) {
       return await openIsoArchive(source, maxMemberBytes: maxMemberBytes);
     }
+    if (await hasFatVolumeRecognition(source)) {
+      return await openFatArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        isCancelled: isCancelled,
+      );
+    }
+    if (await hasDiskImagePartitionRecognition(source)) {
+      return await openDiskImageArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        logicalSectorBytes: diskImageSectorBytes,
+        isCancelled: isCancelled,
+      );
+    }
     if (source.length >= 1026 && _isHfsMagic(await source.read(1024, 2))) {
       return await openHfsArchive(source, maxMemberBytes: maxMemberBytes);
     }
     final lower = name.toLowerCase();
+    final descriptor = archiveFormatForName(name);
+    if (descriptor?.id == 'fat') {
+      return await openFatArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        isCancelled: isCancelled,
+      );
+    }
+    if (descriptor?.id == 'disk-image' || diskImageSectorBytes != null) {
+      return await openDiskImageArchive(
+        source,
+        maxMemberBytes: maxDiskImageMemberBytes ?? maxMemberBytes,
+        logicalSectorBytes: diskImageSectorBytes,
+        isCancelled: isCancelled,
+      );
+    }
     if (lower.endsWith('.dmg')) {
-      return await openDmgArchive(source, maxMemberBytes: maxMemberBytes);
+      return await openDmgArchive(
+        source,
+        maxMemberBytes: maxMemberBytes,
+        isCancelled: isCancelled,
+      );
     }
     if (lower.endsWith('.udf')) {
       return await openUdfArchive(source, maxMemberBytes: maxMemberBytes);
@@ -378,7 +468,11 @@ Future<ViewerArchive> _openSource(
       maxMemberBytes: maxMemberBytes,
     );
   } catch (_) {
-    await source.close();
+    try {
+      await source.close();
+    } catch (_) {
+      // Keep the failure that triggered cleanup.
+    }
     rethrow;
   }
 }

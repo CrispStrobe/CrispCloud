@@ -13,9 +13,9 @@ No native runtime, mount operation or new Pub dependency is required.
 - The anchor at sector 256, its main volume descriptor sequence, one primary
   volume, one logical volume, and up to 32 nonoverlapping physical partitions
   referenced through Type 1 maps on the same volume.
-- A bounded logical-volume integrity sequence. Direct UDF and ISO/UDF listings
-  identify open volumes in a notice; the current DMG partition wrapper does not
-  forward child filesystem notices. No repair, journal replay or consistency
+- A bounded logical-volume integrity sequence. Direct UDF, ISO/UDF and DMG
+  child listings identify open volumes in a notice. The DMG wrapper forwards
+  child filesystem notices with their partition label. No repair, journal replay or consistency
   guarantee follows from successful listing.
 - One file set, optionally followed by its terminating descriptor. Ordinary
   file entries (FE) and UDF 2.00/2.01 extended file entries (EFE), ICB strategy 4.

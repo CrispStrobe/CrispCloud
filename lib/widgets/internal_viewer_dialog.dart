@@ -53,6 +53,7 @@ import '../models/panel_side.dart';
 import '../providers/providers.dart';
 import '../providers/office_conversion_provider.dart';
 import '../services/archive_streamed_reader.dart';
+import '../services/archive_disk_image_reader.dart';
 import '../services/archive_viewer_service.dart';
 import '../services/archive_viewer_source.dart';
 import '../services/archive_viewer_streaming.dart';
@@ -454,11 +455,18 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
   List<ViewerArchiveMember>? _archiveMembers;
   String? _archivePassword;
   String? _archiveVolumeFingerprint;
+  int? _archiveDiskSectorBytes;
+  ViewBytesSource? _partitionChoiceSource;
 
   // ---- Scroll --------------------------------------------------------------
   final ScrollController _vScroll = ScrollController();
 
   String get _viewName => widget.displayName ?? widget.file.name;
+
+  int? get _activeDiskImageSectorBytes =>
+      identical(_partitionChoiceSource, _source)
+      ? _archiveDiskSectorBytes
+      : null;
 
   String get _title {
     if (_expansionName != null) return '$_viewName  →  $_expansionName';
@@ -584,6 +592,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
   Future<void> _initialLoad({ViewerMode? preferredMode}) async {
     final loadToken = ++_loadToken;
+    _archiveDiskSectorBytes = null;
+    _partitionChoiceSource = null;
     _imageDecodeFailed = false;
     _hasOversizeTextLine = false;
     bool current() => mounted && loadToken == _loadToken;
@@ -1427,11 +1437,12 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           !kIsWeb &&
           widget.bytesOverride == null &&
           _expansionName == null &&
-          isStreamedArchiveViewerName(name) &&
-          matchesStreamedArchiveViewerSignature(
-            name,
-            await borrowed.read(0, source.size < 8 ? source.size : 8),
-          );
+          (_activeDiskImageSectorBytes != null ||
+              isStreamedArchiveViewerName(name) &&
+                  matchesStreamedArchiveViewerSignature(
+                    name,
+                    await borrowed.read(0, source.size < 8 ? source.size : 8),
+                  ));
       if (streamed) {
         try {
           archive = (await openStreamedArchiveSource(
@@ -1440,6 +1451,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             password: password,
             isCancelled: () => !isCurrent(),
             inspectIsoForRewrite: false,
+            diskImageSectorBytes: _activeDiskImageSectorBytes,
           )).archive;
           // Preservation restrictions govern edits, not F3's read-only view.
         } on ArchiveViewException catch (error) {
@@ -1461,6 +1473,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             borrowed,
             name: name,
             password: password,
+            diskImageSectorBytes: _activeDiskImageSectorBytes,
+            isCancelled: () => !isCurrent(),
           );
         }
       } else {
@@ -1468,6 +1482,8 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
           borrowed,
           name: name,
           password: password,
+          diskImageSectorBytes: _activeDiskImageSectorBytes,
+          isCancelled: () => !isCurrent(),
         );
       }
       retained = true;
@@ -2420,7 +2436,7 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
 
     setState(() => _inspectingStructure = true);
     try {
-      int? sectorBytes;
+      int? sectorBytes = _activeDiskImageSectorBytes;
       while (current()) {
         final analysis = await inspectDiskPartitions(
           totalBytes: source.size,
@@ -2436,12 +2452,21 @@ class _InternalViewerDialogState extends ConsumerState<InternalViewerDialog> {
             analysis: analysis,
             filename: _expansionName ?? _viewName,
             requestedSectorBytes: sectorBytes,
+            canBrowse: diskImageAnalysisSupportsBrowsing(analysis),
           ),
         );
         if (!current() || result == null) return;
         if (result is DiskPartitionSectorSelected) {
           sectorBytes = result.sectorBytes;
           continue;
+        }
+        if (result is DiskPartitionBrowseRequested) {
+          await source.validateUnchanged();
+          if (!current()) return;
+          _archiveDiskSectorBytes = result.sectorBytes;
+          _partitionChoiceSource = source;
+          _selectMode(ViewerMode.archive);
+          return;
         }
         final field = (result as DiskPartitionFieldSelected).field;
         await source.validateUnchanged();

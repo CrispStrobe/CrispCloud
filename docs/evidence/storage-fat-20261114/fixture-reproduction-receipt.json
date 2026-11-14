@@ -43,8 +43,8 @@
   },
   "sources": {
     "test/support/fat_reference_helper.c": "ec220556efb5a96e93ddd5e44bfb2b00545bb7100fea52b9db82d1facebd012f",
-    "test/support/generate_fat_reference.py": "cd92e6230d4974169268f4f0f9eae856993e1c2c7c929acd34c8d1bd43257a2e",
-    "test/support/archive_fat_reference_data.dart": "3ffec9c03d345d71db5c2de21bc8ff0b29ac779cb43ba7d91258bbacdd981e67",
+    "test/support/generate_fat_reference.py": "080818c57beb0915035aea874bd2e937f5505f0fc0a65632eca18ffa1c986082",
+    "test/support/archive_fat_reference_data.dart": "980a6af116e0fc88bc2dbafc432d8b9b18c521adff26bc7b7c2c5f95c3ad079e",
     "test/support/check_archive_fat.py": "a5e5f74c61a39fa9f7dbbb18ce886ee49240d200ad2782a8b99f3d2701255e5a",
     "test/fixtures/archives/fat-reference-manifest.json": "913ef71dd1c057b774166fb46c798468e11bb70eb31456a8cd0fe18503b27a8b"
   },
@@ -73,5 +73,6 @@
     }
   ],
   "reference_classification": "All four images were fully formatted and populated by external FatFs; no post-writer bytes were patched. Sparse gzip representation is lossless.",
-  "reproduction_log_sha256": "8f2b5f78a2b479095615fd6eaa5ba6d384a5d046f3fd403f5413617e83333ec1"
+  "reproduction_log_sha256": "0a1d91d5d5d328c778ae838923b78bcd21adf410b6201bb91595087ab4135367",
+  "boilerplate_refresh": "Generated Dart uses a const gzip decoder and explicit braces; physical image and manifest hashes are unchanged."
 }

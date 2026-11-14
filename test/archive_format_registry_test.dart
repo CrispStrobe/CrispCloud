@@ -246,7 +246,6 @@ void main() {
         '.qcow2',
         '.vdi',
         '.apfs',
-        '.img',
         '.sparseimage',
         '.sparsebundle',
         '.lzo',

@@ -8,11 +8,13 @@ import 'package:crypto/crypto.dart';
 import 'package:koni_archive/koni_archive.dart' as koni;
 
 import 'package:crisp_cloud/services/archive_disk_image_reader.dart';
+import 'package:crisp_cloud/services/archive_dmg_reader.dart';
 import 'package:crisp_cloud/services/archive_fat_reader.dart';
 import 'package:crisp_cloud/services/archive_types.dart';
 
 import 'archive_disk_image_fixture.dart';
 import 'archive_fat_reference_data.dart';
+import 'dmg_fixture.dart';
 
 class _Checks {
   var count = 0;
@@ -249,6 +251,36 @@ Future<Map<String, Object>> runFatReferenceAcceptance() async {
   check(cancelledSource.closeCount == 1, 'Cancellation leaked source.');
   groups.add('transport-and-open-cancellation');
 
+  var cancelEmpty = false;
+  final emptySource = FatReferenceSource('fat12');
+  final emptyArchive = await openFatArchive(
+    emptySource,
+    maxMemberBytes: 1024 * 1024,
+    isCancelled: () => cancelEmpty,
+  );
+  final emptyMember = emptyArchive.members.singleWhere(
+    (row) => row.name == 'empty.bin',
+  );
+  cancelEmpty = true;
+  for (final operation in <Future<void> Function()>[
+    () => emptyArchive.readMember(emptyMember).then<void>((_) {}),
+    () => emptyArchive.openMember(emptyMember).drain<void>(),
+  ]) {
+    var stopped = false;
+    try {
+      await operation();
+    } on ArchiveFatCancelledException {
+      stopped = true;
+    }
+    check(stopped, 'An empty member bypassed cancellation.');
+  }
+  await emptyArchive.close();
+  check(
+    emptySource.closeCount == 1,
+    'Empty-member cancellation leaked source.',
+  );
+  groups.add('empty-member-cancellation');
+
   final wrappers = <(String, DiskImageFixture, int?)>[
     (
       'synthetic-mbr-fat12',
@@ -331,11 +363,65 @@ Future<Map<String, Object>> runFatReferenceAcceptance() async {
     };
     groups.add(label);
   }
+  final dmgResults = <String, Object>{};
+  for (final (label, method) in <(String, int)>[
+    ('synthetic-udif-raw', 1),
+    ('synthetic-udif-zlib', 0x80000005),
+    ('synthetic-udif-lzfse-raw-blocks', 0x80000007),
+  ]) {
+    final wrapper = DmgFixture(original, method: method, chunkBytes: 32768);
+    final wrappedSource = FatReviewSource(wrapper.bytes, borrowedReads: true);
+    final before = sha256.convert(wrapper.bytes).toString();
+    final opened = await openDmgArchive(
+      wrappedSource,
+      maxMemberBytes: 2 * 1024 * 1024,
+    );
+    check(opened.formatName == 'dmg', 'UDIF format: $label');
+    final hello = opened.members.singleWhere(
+      (row) => row.name.endsWith('/HELLO.TXT'),
+    );
+    final prefix = hello.name.substring(
+      0,
+      hello.name.length - 'HELLO.TXT'.length,
+    );
+    await _checkPayloads(opened, check, prefix: prefix);
+    final raw = opened.members.singleWhere(
+      (row) => row.name.startsWith('partitions/'),
+    );
+    check(raw.name.endsWith('.fat'), 'UDIF raw FAT identity was lost.');
+    check(
+      sha256.convert(await opened.readMember(raw)).toString() ==
+          fatReferenceImages['fat12']!.sha256,
+      'UDIF raw FAT bytes differ from the independently mastered image.',
+    );
+    check(
+      opened.notices.any((notice) => notice.contains('FAT12;')),
+      'UDIF did not retain the child FAT geometry notice.',
+    );
+    await opened.close();
+    check(wrappedSource.closeCount == 1, 'UDIF source close count: $label');
+    check(
+      sha256.convert(wrapper.bytes).toString() == before,
+      'UDIF input changed.',
+    );
+    dmgResults[label] = <String, Object>{
+      'classification':
+          'Synthetic UDIF wrapper around an unchanged external FAT12 volume.',
+      'udif_bytes': wrapper.bytes.length,
+      'payloads_verified_buffered_and_streamed': fatReferencePayloads.length,
+      'complete_raw_volume_sha256': fatReferenceImages['fat12']!.sha256,
+      'codec_scope': method == 0x80000007
+          ? 'LZFSE raw block framing; compressed FSE/LZVN blocks are covered by separate existing codec references.'
+          : label,
+    };
+    groups.add(label);
+  }
   return <String, Object>{
     'checks': check.count,
     'groups': groups,
     'independent_reference_images': referenceResults,
     'derived_partition_wrappers': wrapperResults,
+    'derived_udif_wrappers': dmgResults,
     'large_offset_scope': 'Sparse positional access to original small payloads; no complete large physical disk extraction.',
   };
 }

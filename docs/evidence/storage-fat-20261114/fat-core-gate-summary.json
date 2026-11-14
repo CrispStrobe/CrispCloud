@@ -1,0 +1,17 @@
+{
+  "files": {
+    "archive_disk_image_reader_test.dart": {
+      "success": 46
+    },
+    "archive_fat_reader_review_test.dart": {
+      "success": 14
+    },
+    "archive_fat_reader_test.dart": {
+      "success": 130
+    }
+  },
+  "total": {
+    "success": 190
+  },
+  "success": true
+}
