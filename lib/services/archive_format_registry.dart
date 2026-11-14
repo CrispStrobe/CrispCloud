@@ -281,7 +281,14 @@ const archiveFormatCapabilities = <ArchiveFormatCapability>[
     mimeType: 'application/x-iso9660-image',
     canCreate: true,
     canModify: true,
-    notes: 'Read ISO9660/Joliet/Rock Ridge and bounded multi-extent regular files. Create and rewrite inspected single-extent data images up to 8 GiB; each written file is limited to 4 GiB minus one byte. Multi-extent, boot, hybrid and UDF images remain outside the writer profile.',
+    notes: 'Read ISO9660/Joliet/Rock Ridge and bounded multi-extent regular files. UDF-only and bridge images use the separate read-only UDF profile. Create and rewrite inspected single-extent data images up to 8 GiB; each written file is limited to 4 GiB minus one byte. Multi-extent, boot, hybrid and UDF images remain outside the writer profile.',
+  ),
+  ArchiveFormatCapability(
+    id: 'udf',
+    label: 'UDF disk image',
+    suffixes: ['.udf'],
+    mimeType: 'application/x-udf-image',
+    notes: 'Read-only UDF physical-partition images with 2048-byte blocks. Supported revisions, allocation forms and resource limits are checked before listing; virtual, sparable and metadata partitions remain unsupported.',
   ),
   ArchiveFormatCapability(
     id: 'dmg',

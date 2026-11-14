@@ -11,6 +11,7 @@ import 'archive_adc_codec.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_hfs_writer.dart';
 import 'archive_iso_reader.dart';
+import 'archive_udf_reader.dart';
 import 'archive_lzfse_codec.dart';
 import 'archive_streaming_unsupported.dart';
 import 'archive_types.dart';
@@ -585,7 +586,9 @@ Future<ViewerArchive> openDmgArchive(
         }
       }
       if (extension == 'img' && partition.length >= 17 * 2048) {
-        if (_magic(await partition.read(16 * 2048 + 1, 5), 0, 'CD001')) {
+        if (await hasUdfVolumeRecognition(partition)) {
+          extension = 'udf';
+        } else if (_magic(await partition.read(16 * 2048 + 1, 5), 0, 'CD001')) {
           extension = 'iso';
         }
       }
@@ -620,6 +623,11 @@ Future<ViewerArchive> openDmgArchive(
         // Failure/closing a reader must not close the raw partition entry.
         if (extension == 'hfs') {
           filesystem = await openHfsArchive(
+            _BorrowedPartition(partition),
+            maxMemberBytes: maxMemberBytes,
+          );
+        } else if (extension == 'udf') {
+          filesystem = await openUdfArchive(
             _BorrowedPartition(partition),
             maxMemberBytes: maxMemberBytes,
           );

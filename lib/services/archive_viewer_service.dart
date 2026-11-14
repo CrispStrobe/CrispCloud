@@ -26,6 +26,7 @@ import 'archive_dmg_reader.dart';
 import 'archive_format_registry.dart';
 import 'archive_hfs_reader.dart';
 import 'archive_iso_reader.dart';
+import 'archive_udf_reader.dart';
 import 'archive_lz4_codec.dart';
 import 'archive_lzma_codec.dart';
 import 'archive_lzip_codec.dart';
@@ -84,6 +85,7 @@ Future<ViewerArchive> openViewerArchiveSource(
     if (note.isEmpty) return archive;
     return ViewerArchive.reader(
       formatName: archive.formatName,
+      maxStreamingMemberBytes: archive.maxStreamingMemberBytes,
       members: archive.members,
       notices: [note, ...archive.notices],
       isDirectCompressionPayload: archive.isDirectCompressionPayload,
@@ -325,6 +327,11 @@ Future<ViewerArchive> _openSource(
         maxMemberBytes: maxMemberBytes,
       );
     }
+    // UDF owns the namespace of bridge images. Falling back to the ISO tree
+    // after a recognized UDF failure could hide members or permit a rewrite.
+    if (await hasUdfVolumeRecognition(source)) {
+      return await openUdfArchive(source, maxMemberBytes: maxMemberBytes);
+    }
     // Filesystem signatures also win over misleading container suffixes.
     if (source.length >= 32774 &&
         _hasMagic(await source.read(32769, 5), 0, const [
@@ -342,6 +349,9 @@ Future<ViewerArchive> _openSource(
     final lower = name.toLowerCase();
     if (lower.endsWith('.dmg')) {
       return await openDmgArchive(source, maxMemberBytes: maxMemberBytes);
+    }
+    if (lower.endsWith('.udf')) {
+      return await openUdfArchive(source, maxMemberBytes: maxMemberBytes);
     }
     if (lower.endsWith('.iso')) {
       return await openIsoArchive(source, maxMemberBytes: maxMemberBytes);

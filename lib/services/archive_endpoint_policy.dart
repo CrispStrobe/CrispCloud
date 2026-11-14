@@ -72,6 +72,14 @@ class ArchiveEndpointPolicy {
     ViewerArchive archive,
     String? password,
   ) async {
+    if (archive.formatName == 'udf') {
+      return const ArchiveEndpointPolicy(
+        ArchiveEndpointFormat.readOnly,
+        encrypted: false,
+        encryptNames: false,
+        reason: 'UDF and ISO/UDF bridge images support browsing and extraction only.',
+      );
+    }
     if (archive.formatName.startsWith('volumes/')) {
       return ArchiveEndpointPolicy(
         ArchiveEndpointFormat.readOnly,

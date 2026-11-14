@@ -9,6 +9,7 @@ import 'archive_dmg_reader.dart';
 import 'archive_endpoint_policy.dart';
 import 'archive_format_registry.dart';
 import 'archive_iso_reader.dart';
+import 'archive_udf_reader.dart';
 import 'archive_iso_writer.dart';
 import 'archive_output_spool.dart';
 import 'archive_rar_stored_reader.dart';
@@ -81,6 +82,21 @@ Future<StreamedArchiveOpen> openStreamedArchiveSource(
       'dmg' => ArchiveEndpointFormat.dmg,
       _ => ArchiveEndpointFormat.readOnly,
     };
+    if ((format == ArchiveEndpointFormat.iso || descriptor?.id == 'udf') &&
+        (descriptor?.id == 'udf' || await hasUdfVolumeRecognition(input))) {
+      inner = await openUdfArchive(input, maxMemberBytes: maxBytes);
+      const policy = ArchiveEndpointPolicy(
+        ArchiveEndpointFormat.readOnly,
+        encrypted: false,
+        encryptNames: false,
+        reason: 'UDF and ISO/UDF bridge images support browsing and extraction only.',
+      );
+      check();
+      final ownedArchive = _own(inner, source, null, null, maxBytes);
+      inner = null;
+      opening = false;
+      return StreamedArchiveOpen(archive: ownedArchive, policy: policy);
+    }
     if (format == ArchiveEndpointFormat.readOnly) {
       throw const ArchiveViewException(
         'This format has no streamed writable profile.',

@@ -211,6 +211,7 @@ class ArchiveWorkspace {
       '.tgz',
       '.tar.gz',
       '.iso',
+      '.udf',
       '.rar',
       '.cbr',
       '.dmg',
